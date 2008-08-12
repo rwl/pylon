@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="financial"
+    nsURI="http:///financial.ecore" nsPrefix="financial">
+  <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+    <details key="documentation" value="This package is responsible for Settlement and Billing. These classes represent the legal entities who participate in formal or informal agreements."/>
+  </eAnnotations>
+  <eClassifiers xsi:type="ecore:EClass" name="IntSchedAgreement" eSuperTypes="iec61968.ecore#//core2/toplevel/Agreement">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A type of agreement that provides the default method by which interchange schedules are to be integrated to obtain hourly energy schedules for accounting. "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="defaultIntegrationMethod"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The default method by which interchange schedules are to be integrated to obtain hourly energy schedules for accounting. Method #1 is to integrate the instantaneous schedule between the hourly boundaries. Method #2 compensates for any up/down ramping that occurs across the hourly boundary (this is called block accounting)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="GenerationProvider" eSuperTypes="iec61968.ecore#//core2/toplevel/Organisation">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="The energy seller in the energy marketplace."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneratingUnits" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass iec61970.ecore#//generation/production/GeneratingUnit"
+        eOpposite="iec61970.ecore#//generation/production/GeneratingUnit/OperatedBy_GenerationProvider">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A GenerationProvider operates one or more GeneratingUnits."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="EnergyProducts" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass energyscheduling.ecore#//EnergyProduct"
+        eOpposite="energyscheduling.ecore#//EnergyProduct/GenerationProvider"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ServicePoint" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass reservation.ecore#//ServicePoint" eOpposite="reservation.ecore#//ServicePoint/GenerationProvider">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A GenerationProvider has one or more ServicePoints where energy is injected into the network."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ControlAreaOperator" eSuperTypes="iec61968.ecore#//core2/toplevel/Organisation">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Operates the Control Area. Approves and implements energy transactions. Verifies both Inter-Control Area and Intra-Control Area transactions for the power system  before granting approval (and implementing) the transactions."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ControlledBy" lowerBound="1"
+        eType="ecore:EClass energyscheduling.ecore#//HostControlArea" eOpposite="energyscheduling.ecore#//HostControlArea/Controls"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="AncillaryService" upperBound="-1"
+        eType="ecore:EClass reservation.ecore#//AncillaryService" eOpposite="reservation.ecore#//AncillaryService/ControlAreaOperator">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Sale of ancillary services provided by ControlAreaOperators."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TieLines" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass energyscheduling.ecore#//TieLine" eOpposite="energyscheduling.ecore#//TieLine/ControlAreaOperators">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A ControlAreaOperator has a collection of tie points that ring the ControlArea, called a TieLine."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TransmissionProvider" eSuperTypes="iec61968.ecore#//core2/toplevel/Organisation">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Provider of  the transmission capacity (interconnecting wires between Generation and Consumption) required  to fulfill and Energy Transaction's energy exchange. Posts information for transmission paths and AvailableTransmissionCapacities  on a reservation node.  Buys and sells its products and services on the same reservation node."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Flowgate" upperBound="-1"
+        eType="ecore:EClass marketoperations.ecore#//Flowgate" eOpposite="marketoperations.ecore#//Flowgate/TransmissionProvider"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SoldBy" upperBound="-1"
+        eType="ecore:EClass reservation.ecore#//ServiceReservation" eOpposite="reservation.ecore#//ServiceReservation/Sells">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionProvider sells the right to transmit energy across the wires in a ServiceReservation."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="OfferedBy" upperBound="-1"
+        eType="ecore:EClass reservation.ecore#//TransmissionService" eOpposite="reservation.ecore#//TransmissionService/Offers">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The combination of a TransmissionProduct on a TransmissionPath is a TransmissionService, for which the TransmissionProvider must post one or two ATC's (AvailableTransmissionCapacity - Amount of possible flow by &#xA;direction)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TransmissionProducts" lowerBound="1"
+        upperBound="-1" eType="#//TransmissionProduct" eOpposite="#//TransmissionProduct/TransmissionProvider">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionProvider offers a TransmissionProduct."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="AncillaryServices" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass reservation.ecore#//AncillaryService"
+        eOpposite="reservation.ecore#//AncillaryService/TransmissionProviders">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionProvider offers AncillaryServices. One type of AncillaryServices is a shipping and handling fee to manage the services purchased, another is the reactive power support used to control the voltage on the &#xA;transmission system.  This is the amount needed to support the path or amount necessary to maintain the proper voltage at a ServicePoint."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ServicePoint" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass reservation.ecore#//ServicePoint" eOpposite="reservation.ecore#//ServicePoint/TransmissionProvider">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionProvider registers one or more ServicePoints."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="For" upperBound="-1" eType="ecore:EClass energyscheduling.ecore#//LossProfile"
+        eOpposite="energyscheduling.ecore#//LossProfile/HasLoss_">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Part of the LossProfile for an EnergyTransaction may be a loss for a TransmissionProvider."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="CustomerConsumer" eSuperTypes="iec61968.ecore#//core2/toplevel/Organisation">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="The energy buyer in the energy marketplace."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ServicePoint" upperBound="-1"
+        eType="ecore:EClass reservation.ecore#//ServicePoint" eOpposite="reservation.ecore#//ServicePoint/CustomerConsumer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A CustomerConsumer may have one or more ServicePoints. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TieLines" upperBound="-1"
+        eType="ecore:EClass energyscheduling.ecore#//TieLine" eOpposite="energyscheduling.ecore#//TieLine/CustomerConsumer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A  ControlAreaOperator or CustomerConsumer may ring their perimeter with metering, which can create a unique SubControlArea at the collection of metering points, called a TieLine."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Marketer" eSuperTypes="iec61968.ecore#//core2/toplevel/Organisation">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Matches buyers and sellers, and secures transmission (and other ancillary services) needed to complete the energy transaction."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="HeldBy" upperBound="-1"
+        eType="ecore:EClass reservation.ecore#//ServiceReservation" eOpposite="reservation.ecore#//ServiceReservation/Holds">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A Marketer holds title to a ServiceReservation."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ResoldBy" eType="ecore:EClass reservation.ecore#//ServiceReservation"
+        eOpposite="reservation.ecore#//ServiceReservation/Resells">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A ServiceReservation may be resold by a Marketer."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="HoldsTitleTo_EnergyProducts"
+        upperBound="-1" eType="ecore:EClass energyscheduling.ecore#//EnergyProduct"
+        eOpposite="energyscheduling.ecore#//EnergyProduct/TitleHeldBy_Marketer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A Marketer holds title to an EnergyProduct."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Resells_EnergyProduct"
+        lowerBound="1" upperBound="-1" eType="ecore:EClass energyscheduling.ecore#//EnergyProduct"
+        eOpposite="energyscheduling.ecore#//EnergyProduct/ResoldBy_Marketers">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A Marketer may resell an EnergyProduct."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TransmissionProduct" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="transmissionProductType"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Type of the transmission product. This could be a transmission service class (firm, total transmission capability, or non-firm), transmission service period (on-peak, full-period, off-peak), transmission service increments (yearly extended, hourly fixed, monthly sliding, etc.), transmission service type (network, available transmission capability, or point-to-point, or a transmission service window (fixed hourly, sliding weekly, extended monthly, etc.)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LocationFor" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass reservation.ecore#//TransmissionPath"
+        eOpposite="reservation.ecore#//TransmissionPath/LocatedOn">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission product is located on a transmission path."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TransmissionProvider" lowerBound="1"
+        eType="#//TransmissionProvider" eOpposite="#//TransmissionProvider/TransmissionProducts">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionProvider offers a TransmissionProduct."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Offers" upperBound="-1"
+        eType="ecore:EClass reservation.ecore#//TransmissionService" eOpposite="reservation.ecore#//TransmissionService/OfferedAs">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission product is offered as a transmission service along a transmission path."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="OpenAccessProduct" eSuperTypes="iec61968.ecore#//core2/toplevel/Agreement">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Contracts for services offered commercially."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="AncillaryServices" upperBound="-1"
+        eType="ecore:EClass reservation.ecore#//AncillaryService" eOpposite="reservation.ecore#//AncillaryService/OpenAccessProduct">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="AncillaryServices are sold through a contract which offers a particular OpenAccessProduct."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ProvidedBy_TransmissionService"
+        upperBound="-1" eType="ecore:EClass reservation.ecore#//TransmissionService"
+        eOpposite="reservation.ecore#//TransmissionService/TransContractFor">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionService is sold according to the terms of a particular OpenAccessProduct agreement."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="FinancialVersion">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" eType="ecore:EDataType iec61970.ecore#//domain/String"
+        defaultValueLiteral="Financial_v001"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="date" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime"
+        defaultValueLiteral="2005-01-25"/>
+  </eClassifiers>
+</ecore:EPackage>

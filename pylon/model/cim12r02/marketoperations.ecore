@@ -1,0 +1,1360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="marketoperations"
+    nsURI="http:///marketoperations.ecore" nsPrefix="marketoperations">
+  <eClassifiers xsi:type="ecore:EClass" name="RampRateCurve" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Ramp rate as a function of resource MW output"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rampRateType" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="How ramp rate is applied (e.g., raise or lower, as when applied to a generation resource)"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneratingUnit" upperBound="-1"
+        eType="#//RegisteredGenerator" eOpposite="#//RegisteredGenerator/RampRateCurves"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ResourceBid" eSuperTypes="#//Bid">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Energy bid for generation, load, or virtual type for the whole of the market-trading period (i.e., one day in day ahead market or one hour in the real time market)"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="commodityType" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Energy product (commodity) type:&#xA; 'En' - Energy&#xA; 'Ru' - Regulation Up&#xA; 'Rd' - Regulation Dn&#xA; 'Sr' - Spinning Reserve&#xA; 'Nr' - Non-Spinning Reserve&#xA; 'Or' - Operating Reserve"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="energyMinDay" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Minimum amount of energy per day which has to be produced during the trading period in MWh"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="energyMaxDay" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum amount of energy per day which can be produced during the trading period in MWh"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="virtual" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="false">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="True if bid is virtual.  Bid is assumed to be non-virtual if attribute is absent"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="shutDownsMaxWeek" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum number of shutdowns per week."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="shutDownsMaxDay" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum number of shutdowns per day."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="startUpsMaxDay" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum number of startups per day."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="startUpsMaxWeek" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum number of startups per week."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BilateralTransaction">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Bilateral transaction"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="scope" eType="ecore:EDataType iec61970.ecore#//domain/String"
+        defaultValueLiteral="Internal">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Transaction scope:&#xA;'Internal'&#xA;'External'&#xA;"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="transactionType" eType="ecore:EDataType iec61970.ecore#//domain/String"
+        defaultValueLiteral="Fixed">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Transaction type (default 1)&#xA; 1 - Fixed&#xA; 2 - Dispatchable continuous&#xA; 3 - Dispatchable block-loading&#xA;"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="marketType" eType="ecore:EDataType iec61970.ecore#//domain/String"
+        defaultValueLiteral="DA">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Market type (default=DA)&#xA;DA - Day Ahead&#xA;RT - Real Time&#xA;HA - Hour Ahead"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="purchaseTimeMin" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Minimum purchase time in number of trading intervals"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="purchaseTimeMax" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum purchase time in number of trading intervals"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="curtailTimeMin" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Minimum curtailment time in number of trading intervals"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="curtailTimeMax" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum curtailment time in number of trading intervals"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="totalTranChargeMax" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum total transmission (congestion) charges in monetary units"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Pnode" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A pricing node is directly associated with a connectivity node.  It is a pricing location for which market participants submit their bids, offers, buy/sell CRRs, and settle. "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="beginPeriod" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Start date-time of the period in which the price node definition is valid."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="endPeriod" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="End date-time of the period in which the price node definition is valid"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="isPublic" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="True=Public; False=Private&#xA;Public Pnodes: Prices are published for DA/RT and FTR Markets.&#xA;Private Pnodes: Location is not usable by Market for Bidding/FTRs/Transactions"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Price node type: Hub (H), Zone (Z), Control Area (C), , Bus (B)"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="usage" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Price node usage: &#xA;'Control Area'&#xA;'Regulation Region'&#xA;'Price Zone'&#xA;'Spin Region'&#xA;'Non-Spin Region'&#xA;'Price Hub'&#xA;"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ConnectivityNode" eType="ecore:EClass iec61970.ecore#//topology/ConnectivityNode"
+        eOpposite="iec61970.ecore#//topology/ConnectivityNode/Pnode"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TransactionBids" upperBound="-1"
+        eType="#//TransactionBid" eOpposite="#//TransactionBid/Receipt_Pnode"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="RegisteredResources" upperBound="-1"
+        eType="#//RegisteredResource" eOpposite="#//RegisteredResource/Pnode"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="FTRs" upperBound="-1" eType="#//FTR"
+        eOpposite="#//FTR/Pnodes"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="StartUpCostCurve" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Startup costs and time as a function of down time.  Relationship between unit startup cost (Y1-axis) and unit startup time (Y2-axis) vs. unit elapsed down time (X-axis). "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneratingBids" upperBound="-1"
+        eType="#//GeneratingBid" eOpposite="#//GeneratingBid/StartUpCostCurve"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="RegisteredGenerators" upperBound="-1"
+        eType="#//RegisteredGenerator" eOpposite="#//RegisteredGenerator/StartUpCostCurves"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="EnergyPriceCurve" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Relationship between a price in $/hour (Y-axis) and a MW value (X-axis). "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="FTRs" upperBound="-1" eType="#//FTR"
+        eOpposite="#//FTR/EnergyPriceCurve"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BidClearing">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Bid clearing results posted for a given settlement period."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="startUpCost" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Start up cost in case of energy commodity in monetary units."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="noLoadCost" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="No-load cost in monetary units."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lostOpCost" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Energy lost opportunity cost in monetary units."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PnodeClearing" eSuperTypes="#//MarketFactors">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Pricing node clearing results posted for a given settlement period."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costLMP" eType="ecore:EDataType iec61970.ecore#//generation/production/CostPerEnergyUnit">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Cost component of Locational Marginal Pricing (LMP) in monetary units per MW."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lossLMP" eType="ecore:EDataType iec61970.ecore#//generation/production/CostPerEnergyUnit">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Loss component of Location Marginal Price (LMP) in monetary units per MW."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="congestLMP" eType="ecore:EDataType iec61970.ecore#//generation/production/CostPerEnergyUnit">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Congestion component of Location Marginal Price (LMP) in monetary units per MW."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="MarketCaseClearing" eSuperTypes="#//MarketFactors">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Market case clearing results are posted for a given settlement period."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="caseType" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Settlement period:&#xA; 'DA - Bid-in'&#xA; 'DA - Reliability'&#xA; 'DA - Amp1'&#xA; 'DA - Amp2'&#xA; 'RT - Ex-Ante'&#xA; 'RT - Ex-Post'&#xA; 'RT - Amp1'&#xA; 'RT - Amp2'"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="postedDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Bid clearing results posted time and date."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="modifiedDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Last time and date clearing results were manually modified."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="AncillaryServiceClearing" eSuperTypes="#//MarketFactors">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Ancillary services clearing results are posted for a given settlement period."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="commodityType" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Requirement type:&#xA; 'En' - Energy&#xA; 'Ru' - Regulation Up&#xA; 'Rd' - Regulation Dn&#xA; 'Sr' - Spinning Reserve&#xA; 'Nr' - Non-Spinning Reserve&#xA; 'Or' - Operating Reserve"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mcp" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Market clearing price (MCP) in monetary units."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="clearedMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Cleared MWs."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SecurityConstraintsClearing" eSuperTypes="#//MarketFactors">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Binding security constrained clearing results posted for a given settlement period."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mwLimit" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Binding MW limit."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mwFlow" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Optimal MW flow"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="shadowPrice" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Security constraint shadow price."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RTO" eSuperTypes="iec61968.ecore#//core2/toplevel/Organisation">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Regional transmission operator.&#xA;"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SecurityConstraints" upperBound="-1"
+        eType="#//SecurityConstraints" eOpposite="#//SecurityConstraints/RTO"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SecurityConstraintsLinear"
+        upperBound="-1" eType="#//SecurityConstraintSum" eOpposite="#//SecurityConstraintSum/RTO"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ResourceGroupReqs" upperBound="-1"
+        eType="#//ResourceGroupReq" eOpposite="#//ResourceGroupReq/RTOs"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Participation" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Participation level of a given Pnode in a given AggregatePnode."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="factor" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Used to calculate &quot;participation&quot; of Pnode in an AggregatePnode. For example, for regulation region this factor is 1 and total sum of all factors for a specific regulation region does not have to be 1. For pricing zone the total sum of all factors has to be 1."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ResourceGroupReq" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Ancillary service requirements for a market."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ResourceGroup" lowerBound="1"
+        eType="#//ResourceGroup" eOpposite="#//ResourceGroup/ResourceGroupReqs"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="RTOs" upperBound="-1" eType="#//RTO"
+        eOpposite="#//RTO/ResourceGroupReqs"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Market" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Market (e.g., DAM, HAM)&#xA;&#xA;zzMarket operation control parameters."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeIntervalLength" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Trading time interval length."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rampIntervalEnergy" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Ramping time interval for energy."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rampIntervalReg" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Ramping time interval for regulation."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rampIntervalSpinRes" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Ramping time interval for spinning reserve."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rampIntervalNonSpinRes"
+        eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Ramping time interval for non-spinning reserve."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="localTimeZone" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Local time zone."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="dst" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="True if daylight savings time (DST) is in effect."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="start" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Market start time."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="end" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Market end time."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The type of a market. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="MarketFactors" upperBound="-1"
+        eType="#//MarketFactors" eOpposite="#//MarketFactors/Market"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Bids" upperBound="-1" eType="#//Bid"
+        eOpposite="#//Bid/Market"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LossPenaltyFactor" eSuperTypes="#//MarketFactors">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Loss penalty factor applied to a ConnectivityNode for a given time interval."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lossFactor" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Loss penalty factor."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SecurityConstraints" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Typical for regional transmission operators (RTOs), these constraints include transmission as well as generation group constraints identified in both base case and critical contingency cases."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Minimum MW limit (only for transmission constraints)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maxMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum MW limit"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="actualMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Actual branch or group of branches MW flow (only for transmission constraints)"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="RTO" eType="#//RTO" eOpposite="#//RTO/SecurityConstraints"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SecurityConstraintSum" eSuperTypes="#//MarketFactors">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Typically provided by RTO systems, constraints identified in both base case and critical contingency cases have to be transferred.&#xA;A constraint has N (>=1) constraint terms. A term is represented by an&#xA;instance of TerminalConstraintTerm. &#xA;The constraint expression is:&#xA;minValue &lt;= c1*x1 + c2*x2 + .... cn*xn + k &lt;= maxValue&#xA;where:&#xA;- cn is ConstraintTerm.factor &#xA;- xn is the flow at the terminal&#xA;Flow into the associated equipment is positive for the purpose of ConnectivityNode NodeConstraintTerm&#xA;&#xA;k is SecurityConstraintsLinear.resourceMW&#xA;The units of k are assumed to be same as the units of the flows, xn.  The constants, cn, are dimensionless.&#xA;With these conventions, cn and k are all positive for a typical constraint such as &quot;weighted sum of generation must be less than limit&quot;. Furthermore, cn are all 1.0 for a case such as &quot;interface flow must be less than limit&quot;, assuming the terminals are chosen on the importing side of the interface."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ConstraintTerms" upperBound="-1"
+        eType="#//ConstraintTerm" eOpposite="#//ConstraintTerm/SecurityConstraintSum"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="RTO" eType="#//RTO" eOpposite="#//RTO/SecurityConstraintsLinear"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="DefaultConstraintLimit"
+        eType="#//DefaultConstraintLimit" eOpposite="#//DefaultConstraintLimit/SecurityConstraintSum"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="UnitInitialConditions" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Resource status at the end of a given clearing period."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="resourceStatus" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Resource status at the end of previous clearing period:&#xA; 0 - off-line&#xA; 1 - on-line production&#xA; 2 - in shutdown process&#xA; 3 - in startup process&#xA;"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeInStatus" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Time in market trading intervals the resource is in the state as of the end of the previous clearing period."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="statusDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Time and date for resourceStatus"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="cumStatusChanges" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Cumulative number of status changes of the resource."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="resourceMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Resource MW output at the end of previous clearing period."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="cumEnergy" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Cumulative energy production over trading period."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneratingUnit" eType="#//RegisteredGenerator"
+        eOpposite="#//RegisteredGenerator/UnitInitialConditions"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="MarketFactors" eSuperTypes="iec61968.ecore#//documentation/documentinheritance/Document">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Aggregation of market information relative for a specific time interval."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="intervalStartTime" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The start of the time interval for which requirement is defined."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Market" eType="#//Market"
+        eOpposite="#//Market/MarketFactors"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ErpInvoices" upperBound="-1"
+        eType="ecore:EClass iec61968.ecore#//erp_support/ErpInvoiceLineItem" eOpposite="iec61968.ecore#//erp_support/ErpInvoiceLineItem/MarketFactors"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="GeneratingBid" eSuperTypes="#//ResourceBid">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maximumEconomicMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum high economic MW limit, that should not exceed the maximum operating MW limit"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minimumEconomicMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Low economic MW limit that must be greater than or equal to the minimum operating MW limit"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minimumDownTime" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Minimum time interval between unit shutdown and startup"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="startupTime" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Time it takes to get the unit on-line, from the time that the prime mover mechanical power is applied"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="notificationTime" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Time required for crew notification prior to start up of the unit."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maxEmergencyMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Power rating available for unit under emergency conditions greater than or equal to maximum economic limit."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minEmergencyMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Minimum power rating for unit under emergency conditions, which is less than or equal to the economic minimum."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="operatingMode" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Bid operating mode ('C' - cycling, 'F' - fixed, 'M' - must run, 'U' - unavailable)"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="upTimeMax" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum up time."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="upTimeMin" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Minimum up time."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="downTimeMax" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum down time."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="noLoadCost" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Resource fixed no load cost."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="startUpType" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Resource startup type:&#xA; 1 - Fixed startup time and fixed startup cost&#xA; 2 - Startup time as a function of down time and fixed startup cost&#xA; 3 - Startup cost as a function of down time"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="startUpRampRate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Resource startup ramp rate (MW/minute)"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="StartUpCostCurve" eType="#//StartUpCostCurve"
+        eOpposite="#//StartUpCostCurve/GeneratingBids"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="NotificationTimeCurve"
+        eType="#//NotificationTimeCurve" eOpposite="#//NotificationTimeCurve/GeneratingBids"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="StartUpTimeCurve" eType="#//StartUpTimeCurve"
+        eOpposite="#//StartUpTimeCurve/GeneratingBids"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="BidSet" eType="#//BidSet"
+        eOpposite="#//BidSet/GeneratingBids"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LoadBid" eSuperTypes="#//ResourceBid">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minLoadReductionInterval"
+        eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Shortest period load reduction must be maintained before load can be restored to normal levels."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minTimeBetLoadRed" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Shortest time that load must be left at normal levels before a new load reduction."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reqNoticeTime" eType="ecore:EDataType iec61970.ecore#//domain/Minutes">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Time period that is required from an order to reduce a load to the time that it takes to get to the minimum load reduction."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="shutdownCost" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The fixed cost associated with committing a load reduction."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minLoadReduction" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Minimum MW for a load reduction (e.g., MW rating of a discrete pump."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minLoad" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Minimum MW load below which it may not be reduced."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="dropRampRate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum rate that load can be reduced (MW/minute)"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pickUpRampRate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum rate load may be restored (MW/minute)"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minLoadReductionCost" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Cost in $ at the minimum reduced load"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LoadReductionPriceCurve"
+        eType="#//LoadReductionPriceCurve" eOpposite="#//LoadReductionPriceCurve/LoadBids"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="NotificationTimeCurve" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Notification time curve as a function of down time.  Relationship between crew notification time (Y1-axis) and unit startup time (Y2-axis) vs. unit elapsed down time (X-axis)."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneratingBids" upperBound="-1"
+        eType="#//GeneratingBid" eOpposite="#//GeneratingBid/NotificationTimeCurve"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="StartUpTimeCurve" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Startup time curve as a function of down time, where time is specified in seconds.  Relationship between unit startup time (Y1-axis) vs. unit elapsed down time (X-axis)."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneratingBids" upperBound="-1"
+        eType="#//GeneratingBid" eOpposite="#//GeneratingBid/StartUpTimeCurve"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BidSet" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="As set of mutually exclusive bids for which a maximum of one may be scheduled.&#xA;Of these generating bids, only one generating bid can be scheduled at a time."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneratingBids" lowerBound="1"
+        upperBound="-1" eType="#//GeneratingBid" eOpposite="#//GeneratingBid/BidSet"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BidPriceCurve" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Relationship between unit operating price in $/hour (Y-axis) and unit output in MW (X-axis)."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ProductBids" upperBound="-1"
+        eType="#//ProductBid" eOpposite="#//ProductBid/BidPriceCurve"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LoadReductionPriceCurve" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="This is the price sensitivity that bidder expresses for allowing market load interruption.  Relationship between price (Y1-axis) vs. MW (X-axis)."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LoadBids" upperBound="-1"
+        eType="#//LoadBid" eOpposite="#//LoadBid/LoadReductionPriceCurve"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ResourceGroup" eSuperTypes="iec61968.ecore#//core2/collections/Collection">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A logical grouping of resources that are used to model location of types of requirements for ancillary services such as spinning reserve zones, regulation zones, etc.  "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ResourceGroupReqs" upperBound="-1"
+        eType="#//ResourceGroupReq" eOpposite="#//ResourceGroupReq/ResourceGroup"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SensitivityPriceCurve" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Optionally, this curve expresses elasticity of the associated requirement.  For example, used to reduce requirements when clearing price exceeds reasonable values when the supply quantity becomes scarce.  For example, a single point value of $1000/MW for a spinning reserve will cause a reduction in the required spinning reserve. &#xA;X axis is constrained quantity (e.g., MW)&#xA;Y1 axis is money per constrained quantity&#xA;"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ReserveReq" eType="#//ReserveReq"
+        eOpposite="#//ReserveReq/SensitivityPriceCurve"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ConstraintTerm" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A constraint term is one element of a linear constraint."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="factor" eType="ecore:EDataType iec61970.ecore#//domain/String"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="function" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The function is an enumerated value that can be 'active', 'reactive', or 'VA' to indicate the type of flow."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SecurityConstraintSum"
+        lowerBound="1" eType="#//SecurityConstraintSum" eOpposite="#//SecurityConstraintSum/ConstraintTerms"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="NodeConstraintTerm" eSuperTypes="#//ConstraintTerm">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="To be used only to constrain a quantity that cannot be associated with a terminal. For example, a registered generating unit that is not electrically connected to the network."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ConnectivityNode" lowerBound="1"
+        eType="ecore:EClass iec61970.ecore#//topology/ConnectivityNode" eOpposite="iec61970.ecore#//topology/ConnectivityNode/NodeConstraintTerms"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TerminalConstraintTerm" eSuperTypes="#//ConstraintTerm">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A constraint term associated with a specific terminal on a physical piece of equipment."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Terminal" lowerBound="1"
+        eType="ecore:EClass iec61970.ecore#//core/Terminal" eOpposite="iec61970.ecore#//core/Terminal/TerminalConstraints"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ReserveReqCurve" eSuperTypes="iec61970.ecore#//core/RegularIntervalSchedule">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A curve relating  reserve requirement versus time, showing the values of a specific reserve requirement for each unit of the period covered. The  curve can be based on &quot;absolute&quot; time or on &quot;normalized' time. &#xA;X is time, typically expressed in absolute time&#xA;Y1 is reserve requirement, typically expressed in MW"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ReserveReq" lowerBound="1"
+        eType="#//ReserveReq" eOpposite="#//ReserveReq/ReserveReqCurve"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TransactionBid" eSuperTypes="#//Bid">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Bilateral or scheduled transactions for energy and ancillary services considered by market clearing process"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="EnergyTransId" eType="ecore:EDataType iec61970.ecore#//domain/String"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Receipt_Pnode" eType="#//Pnode"
+        eOpposite="#//Pnode/TransactionBids"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="EnergyProfiles" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass energyscheduling.ecore#//EnergyProfile"
+        eOpposite="energyscheduling.ecore#//EnergyProfile/TransactionBid"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ProductBid" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Component of a bid that pertains to one market product."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="BidPriceCurve" eType="#//BidPriceCurve"
+        eOpposite="#//BidPriceCurve/ProductBids"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ProductBidClearing" eType="#//ProductBidClearing"
+        eOpposite="#//ProductBidClearing/ProductBids"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="MarketProduct" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A product traded by an RTO (e.g., energy, 10 minute spinning reserve).&#xA;&#xA;Ancillary service product examples include:&#xA;Regulation Up&#xA;Regulation Dn&#xA;Spinning Reserve&#xA;Non-Spinning Reserve&#xA;Operating Reserve"/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Bid" eSuperTypes="iec61968.ecore#//documentation/documentinheritance/Document">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Represents both bids to purchase and offers to sell energy or ancillary services in an RTO-sponsored market."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="startTime" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Start time and date for which bid applies."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="stopTime" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Stop time and date for which bid is applicable."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="marketType" eType="ecore:EDataType iec61970.ecore#//domain/String"
+        defaultValueLiteral="DA"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Market" lowerBound="1"
+        eType="#//Market" eOpposite="#//Market/Bids"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ProductBidClearing" eSuperTypes="#//MarketFactors">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Product Bid clearing results posted for a given settlement period."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="clearedMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Cleared MWs."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ProductBids" upperBound="-1"
+        eType="#//ProductBid" eOpposite="#//ProductBid/ProductBidClearing"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ReserveReq" eSuperTypes="#//ResourceGroupReq">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Requirements for minimum amount of reserve and/or regulation to be supplied by a set of qualified resources."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SensitivityPriceCurve"
+        eType="#//SensitivityPriceCurve" eOpposite="#//SensitivityPriceCurve/ReserveReq"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ReserveReqCurve" lowerBound="1"
+        eType="#//ReserveReqCurve" eOpposite="#//ReserveReqCurve/ReserveReq"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RegisteredResource" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A resource that is registered through the RTO participant registration system. Examples include generating unit, customer meter, and a non-physical generator or load."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rtoID" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Unique name obtained via RTO registration"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Pnode" lowerBound="1" eType="#//Pnode"
+        eOpposite="#//Pnode/RegisteredResources"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Organisation" eType="ecore:EClass iec61968.ecore#//core2/toplevel/Organisation"
+        eOpposite="iec61968.ecore#//core2/toplevel/Organisation/RegisteredResources"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RegisteredGenerator" eSuperTypes="#//RegisteredResource">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maximumOperatingMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="This is the maximum operating MW limit the dispatcher can enter for this unit"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minimumOperatingMW" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="This is the minimum operating MW limit the dispatcher can enter for this unit."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lowerRampRate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="raiseRampRate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="highControlLimit" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="High limit for secondary (AGC) control"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lowControlLImit" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Low limit for secondary (AGC) control"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lowerControlRate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Regulation down response rate in MW per minute"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="raiseControlRate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Regulation up response rate in MW per minute"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maximumAllowableSpinningReserve"
+        eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Maximum allowable spinning reserve. Spinning reserve will never be considered greater than this value regardless of the current operating point."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="spinReserveRamp" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneratingUnit" eType="ecore:EClass iec61970.ecore#//generation/production/GeneratingUnit"
+        eOpposite="iec61970.ecore#//generation/production/GeneratingUnit/RegisteredGenerator"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="RampRateCurves" upperBound="-1"
+        eType="#//RampRateCurve" eOpposite="#//RampRateCurve/GeneratingUnit"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="StartUpCostCurves" upperBound="-1"
+        eType="#//StartUpCostCurve" eOpposite="#//StartUpCostCurve/RegisteredGenerators"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="UnitInitialConditions"
+        upperBound="-1" eType="#//UnitInitialConditions" eOpposite="#//UnitInitialConditions/GeneratingUnit"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RegisteredLoad" eSuperTypes="#//RegisteredResource">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LoadArea" lowerBound="1"
+        eType="ecore:EClass iec61970.ecore#//loadmodel/LoadGroup" eOpposite="iec61970.ecore#//loadmodel/LoadGroup/RegisteredLoads"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ContingencyConstraintLimit" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Possibly time-varying max MW or MVA and optionally Min MW limit or MVA limit (Y1 and Y2, respectively) assigned to a constraint for a specific contingency. Use CurveSchedule XAxisUnits to specify MW or MVA."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Contingency" lowerBound="1"
+        eType="#//Contingency" eOpposite="#//Contingency/ContingencyConstraintLimit"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="MWLimitSchedule" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Maximum MW and optionally Minimum MW (Y1 and Y2, respectively)"/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ContingencyElement">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="An element of a system event to be studied by contingency analysis, representing a change in status of a single piece of equipment. "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Status" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Indicates status of an element included in the contingency"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Contingency" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="An event threatening system reliability, consisting of one or more consistency elements."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="MustStudy" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="false">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="False if not present"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ContingencyConstraintLimit"
+        upperBound="-1" eType="#//ContingencyConstraintLimit" eOpposite="#//ContingencyConstraintLimit/Contingency"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BaseCaseConstraintLimit" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Possibly time-varying max MW or MVA and optionally Min MW limit or MVA limit (Y1 and Y2, respectively) assigned to a contingency analysis base case. Use CurveSchedule XAxisUnits to specify MW or MVA. To be used only if the BaseCaseConstraintLimit differs from the DefaultConstraintLimit."/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="DefaultConstraintLimit" eSuperTypes="iec61970.ecore#//core/Curve">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Possibly time-varying max MW or MVA and optionally Min MW limit or MVA limit (Y1 and Y2, respectively) applied as a default value if no specific constraint limits are specified for a contingency analysis. Use CurveSchedule XAxisUnits to specify MW or MVA."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SecurityConstraintSum"
+        lowerBound="1" eType="#//SecurityConstraintSum" eOpposite="#//SecurityConstraintSum/DefaultConstraintLimit"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Flowgate" eSuperTypes="iec61970.ecore#//core/PowerSystemResource">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A flowgate, is single or group of transmission elements intended to model MW flow impact relating to transmission limitations and transmission service usage. "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="IdcAssignedId" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The registered Flowgate ID Assigned by the IDC and/or Book of Flowgate."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="IdcOperationalName" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The Registered Name utilized in the IDC and/or Book of Flowgates"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="IdcType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The type of Flowgate.  Values are &quot;PERMANENT&quot; (in Book of Flowgates) or &quot;TEMPORARY&quot;."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="inServiceDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Date at which point Flowgate becomes active.  Used to insert future Flowgates or Flowgates returning from an outage condition."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="outOfServiceDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Date at which point Flowgate becomes inactive. Used to insert outage condition."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="deletionDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Date at which point Flowgate should be removed from the Interchange Distribution Calculatin (IDC)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="AfcUseCode" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Used to indicate if FG should be used only for certain types of AFC Calculations.  Values are &quot;FIRM,&quot;  &quot;NONFIRM,&quot; and &quot;BOTH.&quot;"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="coordinationStudyDate"
+        eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Date upon which study of Flowgate to determine coordinated status was performed.  May be null is no study undertaken yet."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="AtcFlag" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Flag to indicate if Flowgate is utilized for coordination of ATC."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="coordinatedFlag" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Flag to indicate if Flowgate qualified as coordinated Flowgate"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reciprocalFlag" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Flag to indicate if Flowgate qualified as reciprocal Flowgate"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="managingEntityFlag" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Standard Reliabilty Entity (e.g. in North America NERC) that has agreed per a reciprocal agreement to manage coordination on the Flowgate.  Will always be either True or False - if not a reciprocal Flowgate, will be false."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="positiveImpactValue" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Percentage of positive impact to include in the AFC calculation.  Integer.  Must be 100 or less."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="counterFlowValue" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Percentage of counterflow to remove/exclude from the AFC calculation.  Integer.  Must be 100 or less."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ViolationLimits" upperBound="-1"
+        eType="#//ViolationLimit" eOpposite="#//ViolationLimit/Flowgate"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Lines" upperBound="-1"
+        eType="ecore:EClass iec61970.ecore#//wires/Line" eOpposite="iec61970.ecore#//wires/Line/Flowgates"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="FTRs" upperBound="-1" eType="#//FTR"
+        eOpposite="#//FTR/Flowgate"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="PowerTransormers" upperBound="-1"
+        eType="ecore:EClass iec61970.ecore#//wires/PowerTransformer" eOpposite="iec61970.ecore#//wires/PowerTransformer/Flowgates"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TransmissionProvider" upperBound="-1"
+        eType="ecore:EClass financial.ecore#//TransmissionProvider" eOpposite="financial.ecore#//TransmissionProvider/Flowgate"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SubControlArea" lowerBound="1"
+        eType="ecore:EClass iec61970.ecore#//core/SubControlArea" eOpposite="iec61970.ecore#//core/SubControlArea/Flowgate"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="CapacityBenefitMargin"
+        upperBound="-1" eType="#//CapacityBenefitMargin" eOpposite="#//CapacityBenefitMargin/Flowgate"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TransmissionReliabilityMargin"
+        eType="#//TransmissionReliabilityMargin" eOpposite="#//TransmissionReliabilityMargin/Flowgate"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="FTR" eSuperTypes="iec61968.ecore#//core2/toplevel/Agreement">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Financial Transmission Rights (FTR) regarding transmission capacity at a flowgate. "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="optimized" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Fixed (covers re-configuration, grandfathering) or Optimized (up for sale/purchase"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="action" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Buy, Sell"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="baseEnergy" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Quantity, typically MWs - Seller owns all rights being offered, MWs over time on same Point of Receipt, Point of Delivery, or Resource."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ftrType" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Type of rights being offered (product) allowed to be auctioned (option, obligation)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="class" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Peak, Off-peak, 24-hour"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Flowgate" eType="#//Flowgate"
+        eOpposite="#//Flowgate/FTRs"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Pnodes" upperBound="-1"
+        eType="#//Pnode" eOpposite="#//Pnode/FTRs"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="EnergyPriceCurve" eType="#//EnergyPriceCurve"
+        eOpposite="#//EnergyPriceCurve/FTRs"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ViolationLimit" eSuperTypes="iec61970.ecore#//meas/Limit">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A type of limit that indicates if it is enforced and, through association, the organisation responsible for setting the limit."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="enforced" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="True if limit is enforced. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Flowgate" eType="#//Flowgate"
+        eOpposite="#//Flowgate/ViolationLimits"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Organisations" upperBound="-1"
+        eType="ecore:EClass iec61968.ecore#//core2/toplevel/Organisation" eOpposite="iec61968.ecore#//core2/toplevel/Organisation/ViolationLimits"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Measurement" eType="ecore:EClass iec61970.ecore#//meas/Measurement"
+        eOpposite="iec61970.ecore#//meas/Measurement/ViolationLimits"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Season" lowerBound="1"
+        eType="ecore:EClass iec61970.ecore#//loadmodel/Season" eOpposite="iec61970.ecore#//loadmodel/Season/ViolationLimits"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BillDeterminant" eSuperTypes="iec61968.ecore#//documentation/documentinheritance/Document">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="unitOfMeasure" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The UOM for the current value of the Bill Determinant. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="numberInterval" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Number of intervals of bill determiant in trade day, eg 300 for five minute intervals."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="calculationLevel" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Level in charge calculation order."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="precisionLevel" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The level of precision in the current value. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="configVersion" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The version of configuration of calculation logic in the settlement."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ChargeProfileData" upperBound="-1"
+        eType="#//ChargeProfileData" eOpposite="#//ChargeProfileData/BillDeterminant"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="MarketStatement" eSuperTypes="iec61968.ecore#//documentation/documentinheritance/Document">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A statement is a roll up of statement line items. Each statement along with its line items provide the details of specific charges at any given time. "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="tradeDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The date of which Settlement is run."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="referenceNumber" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The version number of previous statement (in the case of true up)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="start" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The start of a bill period."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="end" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The end of a bill period."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="transactionDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The date of which this statement is issued. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="MarketStatementLineItem" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="An individual line item on a statement."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="intervalNumber" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The number of intervals. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="intervalDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The date of which the settlement is run."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="quantityUOM" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The unit of measure for the quantity element of the line item. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="previousAmount" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Previous settlement amount."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="currentAmount" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Current settlement amount."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="netAmount" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Net settlement amount."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="previousQuantity" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Previous settlement quantity, subject to the UOM. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="currentQuantity" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Current settlement quantity, subject to the UOM. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="netQuantity" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Net settlement quantity, subject to the UOM. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="previsouPrice" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Previous settlement price."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="currentPrice" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Current settlement price."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="netPrice" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Net settlement price."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="previousISOAmount" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Previous ISO settlement amount."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="currentISOAmount" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Current ISO settlement amount."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="netISOAmount" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Net ISO settlement amount."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="previousISOQuantity" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Previous ISO settlement quantity. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="currentISOQuantity" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Current ISO settlement quantity. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="netISOQuantity" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Net ISO settlement quantity. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Meter" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="This is generic logical meter object."/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SchedulingCoordinator" eSuperTypes="iec61968.ecore#//core2/toplevel/Organisation">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="In certain ISO/RTO operations, market participants are represented by Scheduling Coordinators (SCs) that are registered with the ISO/RTO. One participant can register multiple SCs with the ISO/RTO.  Many participants can do business with the ISO/RTO using a single SC. Each generator resource can only be scheduled by one SC. One SC can schedule multiple generators. A load scheduling point can be used by multiple SCs. Each SC can schedule load at multiple scheduling points. Each SC can have more than one load schedule at any load scheduling point as long as each load schedule at the same load scheduling point has a separate resource ID and settlement-quality meter. An inter-tie scheduling point can be used by multiple SCs. Each SC can schedule interchange at multiple inter-tie scheduling points. An SC can have multiple interchange schedules at the same inter-tie scheduling point by assigning a unique interchange identifier to each interchange schedule. "/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Settlement" eSuperTypes="iec61968.ecore#//documentation/documentinheritance/Document">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Specifies a settlement run."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="tradeDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The trade date on which the settlement is run. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PassThroughBill" eSuperTypes="iec61968.ecore#//documentation/documentinheritance/Document">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Pass Through Bill is used for:&#xA; 1)Two sided charge transactions with or without ISO involvement (hence the pass thru)&#xA;2) Specific direct charges or payments that are calculated outside or provided directly to settlements&#xA;3) Specific charge bill determinants that are externally supplied and used in charge calculations&#xA;"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="billStart" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Bill period start date"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="billEnd" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Bill period end date"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="transactionType" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The type of transaction. For example, charge customer, bill customer, matching AR/AP, or bill determinant "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="transactionDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The date the transaction occurs."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="tradeDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The trade date"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="serviceStart" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The start date of service provided, if periodic. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="serviceEnd" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The end date of service provided, if periodic."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="isProfiled" eType="ecore:EDataType iec61970.ecore#//domain/Boolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A flag indicating whether there is a profile data associated with the PTB."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="quantity" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The product quantity."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="price" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The price of product/service."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="amount" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The charge amount of the product/service."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="isDisputed" eType="ecore:EDataType iec61970.ecore#//domain/Boolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Disputed transaction indicator "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="taxAmount" eType="ecore:EDataType iec61970.ecore#//domain/Money">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The tax on services taken."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeZone" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The time zone code"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="effectiveDate" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The effective date of the transaction"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="previousStart" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The previous bill period start date"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="previousEnd" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The previous bill period end date"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="billedTo" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The company to which the PTB transaction is billed."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="paidTo" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The company to which the PTB transaction is paid."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="providedBy" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The company by which the PTB transaction service is provided."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="soldTo" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The company to which the PTB transaction is sold."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="productCode" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The product identifier for determining the charge type of the transaction. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="billRunType" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The settlement run type, for example: prelim, final, and rerun."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ChargeProfile" eSuperTypes="energyscheduling.ecore#//Profile">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A type of profile for financial charges"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The type of profile.  It could be amount, price, or quantity."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="frequency" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The calculation frequency, daily or monthly. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="numberInterval" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The number of intervals in the profile data."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="unitOfMeasure" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The unit of measure applied to the value attribute of the profile data."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ChargeProfileData" upperBound="-1"
+        eType="#//ChargeProfileData" eOpposite="#//ChargeProfileData/ChargeProfile"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ChargeProfileData">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="sequence" eType="ecore:EDataType iec61970.ecore#//domain/Integer">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The sequence number of the profile."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeStamp" eType="ecore:EDataType iec61970.ecore#//domain/AbsoluteDateTime">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The date and time of an interval."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The value of an interval given a profile type (amount, price, or quantity), subject to the UOM. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ChargeProfile" eType="#//ChargeProfile"
+        eOpposite="#//ChargeProfile/ChargeProfileData"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="BillDeterminant" eType="#//BillDeterminant"
+        eOpposite="#//BillDeterminant/ChargeProfileData"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="CapacityBenefitMargin" eSuperTypes="energyscheduling.ecore#//Profile">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Capacity Benefit Margin (CBM) is defined as that amount of transmission transfer capability reserved by load serving entities to ensure access to generation from interconnected systems to meet generation reliability requirements. Reservation fo CBM by a load serving entity allows that entity to reduce its installed generating capacity below that which may otherwise have been necessary without interconnections to meet its generation reliability requirements.&#xA;&#xA;CBM is modeled as a profile with values in different time periods which are represented by the profile data."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Season" lowerBound="1"
+        eType="ecore:EClass iec61970.ecore#//loadmodel/Season" eOpposite="iec61970.ecore#//loadmodel/Season/CapacityBenefitMargin"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Flowgate" upperBound="-1"
+        eType="#//Flowgate" eOpposite="#//Flowgate/CapacityBenefitMargin"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TransmissionReliabilityMargin" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Transmission Reliability Margin (TRM) is defined as that amount of transmission transfer capability necessary to ensure that the interconnected transmission network is secure under a reasonable range of uncertainties in system conditions."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="TrmType" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="the type of TRM"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="valueUnit" eType="ecore:EDataType iec61970.ecore#//domain/String">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="unit of the TRM value. Could be MW or Percentage."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="trmValue" eType="ecore:EDataType iec61970.ecore#//domain/Float">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Value of the TRM"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Flowgate" upperBound="-1"
+        eType="#//Flowgate" eOpposite="#//Flowgate/TransmissionReliabilityMargin"/>
+  </eClassifiers>
+</ecore:EPackage>
