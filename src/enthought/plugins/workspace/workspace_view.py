@@ -75,7 +75,7 @@ class WorkspaceView(WorkbenchView):
     id = "enthought.plugins.workspace.workspace_view"
 
     # The view's name:
-    name = "Project Explorer"
+    name = "Navigator"
 
     # The default position of the view relative to the item specified in the
     # "relative_to" trait:
