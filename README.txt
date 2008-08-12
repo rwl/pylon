@@ -8,13 +8,16 @@ achieved by the following:
 
 - Building on the strengths of Python as a high-level programming language, the 
   code should be easily understandable for scientists and engineers with limited 
-programming experience 
+  programming experience 
+  
 - Using the [http://code.enthought.com/traits/ Traits] package from the 
   [http://code.enthought.com/ets/ Enthought Tool Suite] to allow a power system 
   data model to be defined in strict yet simple terms, and to be extended easily 
+  
 - Performing calculations with the [http://abel.ee.ucla.edu/cvxopt CVXOPT] 
   convex optimisation package, which (along with Traits) uses C extensively to 
   enhance computational performance 
+  
 - Using CVXOPT's interfaces to packages such as LAPACK, BLAS, UMFPACK, CHOLMOD, 
   GLPK and MOSEK for matrix algebra and mathematical optimisation 
 
@@ -30,7 +33,9 @@ Pylon is a general purpose, open standards driven, cross-platform tool for
 simulation of electric power systems. Its current features include: 
 
 - DC power flow 
+
 - DC Optimal Power Flow 
+
 - AC power flow (Newton-Raphson method) 
 
 Note: Much of the code for the above features is translated from the excellent 
@@ -43,8 +48,11 @@ The GUI currently has the follwing features:
 - [http://www.graphviz.org/ Graphviz] network representation made interactive by 
   the [http://code.enthought.com/kiva/ Kiva] and 
   [https://svn.enthought.com/enthought/wiki/EnableProject Enable] packages 
+  
 - Editable tables of network plant and infrastructure data 
+
 - Plotting of results using [http://code.enthought.com/chaco/ Chaco] 
+
 - The beginnings of a GIS and network visualisation using
   [http://mapnik.org/ Mapnik] 
 
@@ -67,21 +75,31 @@ currently offers three engines that have been largely translated from the
 features: 
 
 - Linear DC load flow 
-- Uses CVXOPT's interface to [http://www.cise.ufl.edu/research/sparse/umfpack/ UMFPACK] 
+
+- Uses CVXOPT's interface to
+  [http://www.cise.ufl.edu/research/sparse/umfpack/ UMFPACK] 
+  
 - DC Optimal Power Flow 
+
 - Quadratic cost curves 
+
 - Choice of default CVXOPT QP solver or MOSEK solver 
+
 - AC load flow 
+
 - Standard Newton's method 
+
 - Full Jacobian updated each iteration 
 
 Full use is made of CVXOPT's sparse matrix support throughout these features. 
 Future Pylon releases will include (among other things): 
 
 - AC load flow using Gauss-Siedel 
+
 - Fast-decoupled load flow 
+
 - AC Optimal Power Flow using IPM translated from the wonderful 
-[http://www.power.uwaterloo.ca/~fmilano/psat.htm PSAT] project 
+  [http://www.power.uwaterloo.ca/~fmilano/psat.htm PSAT] project 
 
 Pylon may be used from the command-line or via a toolkit independant GUI 
 (screenshots are available [wiki:pylon/screenshots here]). 
