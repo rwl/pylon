@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="iec61850"
+    nsURI="http:///iec61850.ecore" nsPrefix="iec61850">
+  <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+    <details key="documentation" value="This package contains all definitions specific to 61850"/>
+  </eAnnotations>
+  <eClassifiers xsi:type="ecore:EClass" name="LNode" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Data" lowerBound="1" upperBound="-1"
+        eType="#//Data" containment="true" eOpposite="#//Data/LNode"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LNodeContainer" eType="#//LNodeContainer"
+        transient="true" eOpposite="#//LNodeContainer/LNode"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LDevice" eType="#//LDevice"
+        transient="true" eOpposite="#//LDevice/LNode"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LNClass" lowerBound="1"
+        eType="#//LNClass" eOpposite="#//LNClass/LNode"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Data">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LNode" eType="#//LNode"
+        transient="true" eOpposite="#//LNode/Data"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="DataAttribute" lowerBound="1"
+        upperBound="-1" eType="#//DataAttribute" containment="true" eOpposite="#//DataAttribute/Data"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="DataAttribute">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Data" eType="#//Data" transient="true"
+        eOpposite="#//Data/DataAttribute"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="MeasurementValue" eType="ecore:EClass iec61970.ecore#//meas/MeasurementValue"
+        eOpposite="iec61970.ecore#//meas/MeasurementValue/DataAttribute"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LNodeContainer">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LNode" upperBound="-1"
+        eType="#//LNode" containment="true" eOpposite="#//LNode/LNodeContainer"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BaseElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Text" eType="#//Text" containment="true"
+        eOpposite="#//Text/BaseElement"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Private" upperBound="-1"
+        eType="#//Private" containment="true" eOpposite="#//Private/BaseElement"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Text">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="BaseElement" eType="#//BaseElement"
+        transient="true" eOpposite="#//BaseElement/Text"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Private">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="BaseElement" eType="#//BaseElement"
+        transient="true" eOpposite="#//BaseElement/Private"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="FunctionContainer">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Function" upperBound="-1"
+        eType="#//Function" containment="true" eOpposite="#//Function/FunctionContainer"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Function" eSuperTypes="iec61970.ecore#//core/PowerSystemResource">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="FunctionContainer" eType="#//FunctionContainer"
+        transient="true" eOpposite="#//FunctionContainer/Function"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SubFunction" upperBound="-1"
+        eType="#//SubFunction" containment="true" eOpposite="#//SubFunction/Function"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneralEquipment" upperBound="-1"
+        eType="#//GeneralEquipment" eOpposite="#//GeneralEquipment/Function"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SubFunction" eSuperTypes="iec61970.ecore#//core/PowerSystemResource">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Function" eType="#//Function"
+        transient="true" eOpposite="#//Function/SubFunction"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GeneralEquipment" upperBound="-1"
+        eType="#//GeneralEquipment" eOpposite="#//GeneralEquipment/SubFunction"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SubEquipment" eSuperTypes="iec61970.ecore#//core/PowerSystemResource">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SubEquipmentContainer"
+        eType="#//SubEquipmentContainer" transient="true" eOpposite="#//SubEquipmentContainer/SubEquipment"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SubEquipmentContainer">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SubEquipment" upperBound="-1"
+        eType="#//SubEquipment" containment="true" eOpposite="#//SubEquipment/SubEquipmentContainer"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LDevice" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LNode" upperBound="-1"
+        eType="#//LNode" containment="true" eOpposite="#//LNode/LDevice"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Server" eType="#//Server"
+        transient="true" eOpposite="#//Server/LDevice"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Server" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LDevice" lowerBound="3"
+        upperBound="-1" eType="#//LDevice" containment="true" eOpposite="#//LDevice/Server"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="IED" lowerBound="1" eType="#//IED"
+        eOpposite="#//IED/Server"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="IED">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Server" upperBound="-1"
+        eType="#//Server" eOpposite="#//Server/IED"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="GeneralEquipment" eSuperTypes="iec61970.ecore#//core/Equipment">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="SubFunction" upperBound="-1"
+        eType="#//SubFunction" eOpposite="#//SubFunction/GeneralEquipment"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Function" upperBound="-1"
+        eType="#//Function" eOpposite="#//Function/GeneralEquipment"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LNClass">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LNode" upperBound="-1"
+        eType="#//LNode" eOpposite="#//LNode/LNClass"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="_61850Version"/>
+</ecore:EPackage>

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="reservation"
+    nsURI="http:///reservation.ecore" nsPrefix="reservation">
+  <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+    <details key="documentation" value="This package includes information for Transaction Scheduling for Energy, Generation Capacity, Transmission, and Ancillary Services."/>
+  </eAnnotations>
+  <eClassifiers xsi:type="ecore:EClass" name="AncillaryService" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="All of these services relate &#xA;to various aspects of insuring that the production of energy matches consumption of energy at any given time.  They are very critical to the security and reliability of the interconnected network. Some examples of AncillaryServices include Operating/Supplemental Reserve, Energy Imbalance Service, Operating/Spinning Reserve, Reactive Supply and Voltage Control, and Regulation and Frequency Response."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ReservedBy_ServiceReservation"
+        lowerBound="1" eType="#//ServiceReservation" eOpposite="#//ServiceReservation/Reserves_AncillaryServices">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A ServiceReservation guarantees a certain AncillaryService."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="OpenAccessProduct" lowerBound="1"
+        eType="ecore:EClass financial.ecore#//OpenAccessProduct" eOpposite="financial.ecore#//OpenAccessProduct/AncillaryServices">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="AncillaryServices are sold through a contract which offers a particular OpenAccessProduct."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TransmissionProviders"
+        lowerBound="1" upperBound="-1" eType="ecore:EClass financial.ecore#//TransmissionProvider"
+        eOpposite="financial.ecore#//TransmissionProvider/AncillaryServices">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionProvider offers AncillaryServices. One type of AncillaryServices is a shipping and handling fee to manage the services purchased, another is the reactive power support used to control the voltage on the &#xA;transmission system.  This is the amount needed to support the path or amount necessary to maintain the proper voltage at a ServicePoint."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ControlAreaOperator" eType="ecore:EClass financial.ecore#//ControlAreaOperator"
+        eOpposite="financial.ecore#//ControlAreaOperator/AncillaryService">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Sale of ancillary services provided by ControlAreaOperators."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TransmissionService" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Transmission products along posted transmission path."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ReservedBy_ServiceReservation"
+        lowerBound="1" upperBound="-1" eType="#//ServiceReservation" eOpposite="#//ServiceReservation/Reserves_TransmissionService">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A service reservation reserves a particular transmission service."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TransContractFor" lowerBound="1"
+        eType="ecore:EClass financial.ecore#//OpenAccessProduct" eOpposite="financial.ecore#//OpenAccessProduct/ProvidedBy_TransmissionService">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionService is sold according to the terms of a particular OpenAccessProduct agreement."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Offering" lowerBound="1"
+        upperBound="-1" eType="#//TransmissionPath" eOpposite="#//TransmissionPath/OfferedOn">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission service is offered on a transmission path."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Offers" eType="ecore:EClass financial.ecore#//TransmissionProvider"
+        eOpposite="financial.ecore#//TransmissionProvider/OfferedBy">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The combination of a TransmissionProduct on a TransmissionPath is a TransmissionService, for which the TransmissionProvider must post one or two ATC's (AvailableTransmissionCapacity - Amount of possible flow by &#xA;direction)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ScheduledBy" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass energyscheduling.ecore#//AvailableTransmissionCapacity"
+        eOpposite="energyscheduling.ecore#//AvailableTransmissionCapacity/ScheduleFor">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission schedule posts the available transmission capacity for a transmission line."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="OfferedAs" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass financial.ecore#//TransmissionProduct"
+        eOpposite="financial.ecore#//TransmissionProduct/Offers">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission product is offered as a transmission service along a transmission path."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TransmissionPath">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="An electrical connection, link, or line consisting of one or more parallel transmission elements between two areas of the interconnected electric systems, or portions thereof. TransmissionCorridor and TransmissionRightOfWay refer to legal aspects. The TransmissionPath refers to the segments between a TransmissionProvider's ServicePoints."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="availTransferCapability"
+        eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The available transmission capability of a transmission path for the reference direction"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="parallelPathFlag" eType="ecore:EDataType iec61970.ecore#//domain/Boolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Flag which indicates if the transmission path is also a designated interconnection &quot;parallel path&quot;"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="totalTransferCapability"
+        eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The total transmission capability of a transmission path in the reference direction"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LocatedOn" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass financial.ecore#//TransmissionProduct"
+        eOpposite="financial.ecore#//TransmissionProduct/LocationFor">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission product is located on a transmission path."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="OfferedOn" lowerBound="1"
+        upperBound="-1" eType="#//TransmissionService" eOpposite="#//TransmissionService/Offering">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission service is offered on a transmission path."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="DeliveryPointFor" lowerBound="1"
+        eType="#//ServicePoint" eOpposite="#//ServicePoint/HasAPOD_">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission path has a &quot;point-of-delivery&quot; service point"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="PointOfReceiptFor" lowerBound="1"
+        eType="#//ServicePoint" eOpposite="#//ServicePoint/HasAPOR_">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission path has a &quot;point-of-receipt&quot; service point"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="For" lowerBound="1" eType="ecore:EClass energyscheduling.ecore#//TransmissionCorridor"
+        eOpposite="energyscheduling.ecore#//TransmissionCorridor/ContainedIn">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionPath is contained in a TransmissionCorridor."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ServicePoint" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Each ServicePoint is contained within (or on the boundary of) an ElectronicIinterchangeArea. ServicePoints are defined termination points of a transmission path (down to distribution level or to a customer - generation or consumption or both). "/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Declare_TiePoint" eType="#//TiePoint"
+        eOpposite="#//TiePoint/Declared_ServicePoint">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A tiepoint may be declared as a service point."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="CustomerConsumer" eType="ecore:EClass financial.ecore#//CustomerConsumer"
+        eOpposite="financial.ecore#//CustomerConsumer/ServicePoint">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A CustomerConsumer may have one or more ServicePoints. "/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="GenerationProvider" lowerBound="1"
+        eType="ecore:EClass financial.ecore#//GenerationProvider" eOpposite="financial.ecore#//GenerationProvider/ServicePoint">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A GenerationProvider has one or more ServicePoints where energy is injected into the network."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="TransmissionProvider" lowerBound="1"
+        eType="ecore:EClass financial.ecore#//TransmissionProvider" eOpposite="financial.ecore#//TransmissionProvider/ServicePoint">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionProvider registers one or more ServicePoints."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="MemberOf" lowerBound="1"
+        eType="ecore:EClass iec61970.ecore#//core/SubControlArea" eOpposite="iec61970.ecore#//core/SubControlArea/PartOf">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission path's service point is part of an interchange area"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="HasAPOD_" upperBound="-1"
+        eType="#//TransmissionPath" eOpposite="#//TransmissionPath/DeliveryPointFor">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission path has a &quot;point-of-delivery&quot; service point"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="HasAPOR_" upperBound="-1"
+        eType="#//TransmissionPath" eOpposite="#//TransmissionPath/PointOfReceiptFor">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A transmission path has a &quot;point-of-receipt&quot; service point"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="EnergyProducts" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass energyscheduling.ecore#//EnergyProduct"
+        eOpposite="energyscheduling.ecore#//EnergyProduct/ServicePoint">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="An EnergyProduct injects energy into a service point."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ServiceReservation">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A ServiceReservation is a reservation for either AncillaryServices or TransmissionServices. In the case of TransmissionServices, this is the right to some amount of AvailableTransmissionCapacity for a product on a path in a direction for some specific period of time"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Reserves_TransmissionService"
+        upperBound="-1" eType="#//TransmissionService" eOpposite="#//TransmissionService/ReservedBy_ServiceReservation">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A service reservation reserves a particular transmission service."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Reserves_AncillaryServices"
+        lowerBound="1" upperBound="-1" eType="#//AncillaryService" eOpposite="#//AncillaryService/ReservedBy_ServiceReservation">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A ServiceReservation guarantees a certain AncillaryService."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Sells" eType="ecore:EClass financial.ecore#//TransmissionProvider"
+        eOpposite="financial.ecore#//TransmissionProvider/SoldBy">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A TransmissionProvider sells the right to transmit energy across the wires in a ServiceReservation."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Holds" eType="ecore:EClass financial.ecore#//Marketer"
+        eOpposite="financial.ecore#//Marketer/HeldBy">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A Marketer holds title to a ServiceReservation."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Resells" lowerBound="1"
+        eType="ecore:EClass financial.ecore#//Marketer" eOpposite="financial.ecore#//Marketer/ResoldBy">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A ServiceReservation may be resold by a Marketer."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TiePoint" eSuperTypes="iec61970.ecore#//core/IdentifiedObject">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Site of an interface between interchange areas. The tie point can be a network branch (e.g., transmission line or transformer) or a switching device. For transmission lines, the interchange area boundary is usually at a designated point such as the middle of the line. Line end metering is then corrected for line losses."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="tiePointMWRating" eType="ecore:EDataType iec61970.ecore#//domain/ActivePower">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="The MW rating of the tie point"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Declared_ServicePoint"
+        eType="#//ServicePoint" eOpposite="#//ServicePoint/Declare_TiePoint">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A tiepoint may be declared as a service point."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="For_Measurements" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass iec61970.ecore#//meas/Measurement" eOpposite="iec61970.ecore#//meas/Measurement/For_TiePoint">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A measurement is made on the A side of a tie point"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="By_Measurements" lowerBound="1"
+        upperBound="-1" eType="ecore:EClass iec61970.ecore#//meas/Measurement" eOpposite="iec61970.ecore#//meas/Measurement/By_TiePoint">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="A measurement is made on the B side of a tie point"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ReservationVersion">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" eType="ecore:EDataType iec61970.ecore#//domain/String"
+        defaultValueLiteral="Reservation_v002"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="date" eType="ecore:EDataType iec61970.ecore#//domain/String"
+        defaultValueLiteral="2007-01-25"/>
+  </eClassifiers>
+</ecore:EPackage>
