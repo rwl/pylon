@@ -135,8 +135,8 @@ class DCOPFViewModel(HasTraits):
     def _solver_changed(self, new):
         """ Sets the solver attribute of the routine """
 
-        print "SOLVER:", new_
-        self.routine.solver = new_ # NB Mapped trait
+        print "SOLVER:", self.solver_
+        self.routine.solver = self.solver_ # NB Mapped trait
 
 
     def _run_fired(self):

@@ -121,7 +121,7 @@ bus_view = View(
                 ),
                 label="Loads"
             ),
-            dock="tab"
+            dock="tab", springy=True
         ),
     ),
     id="pylon.ui.bus_view",
