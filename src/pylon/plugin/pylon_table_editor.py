@@ -99,11 +99,11 @@ class PylonTableEditor(ResourceEditor):
                         ),
                         label="_loads"
                     ),
-                    dock="tab"
+                    dock="tab", scrollable=True, springy=True
                 ),
             ),
             id="pylon.plugin.pylon_table_editor.network_view",
-            resizable=True, style="custom",
+            resizable=True, style="custom"
         )
 
         return view
