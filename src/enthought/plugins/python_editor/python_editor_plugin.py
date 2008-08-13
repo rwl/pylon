@@ -74,8 +74,9 @@ class PythonEditorPlugin(TextEditorPlugin):
     def _editors_default(self):
         """ Trait initialiser """
 
-        from python_editor_extension import PythonEditorExtension
+        from python_editor_extension import \
+            PythonEditorExtension, TextEditorExtension
 
-        return [PythonEditorExtension]
+        return [TextEditorExtension]
 
 # EOF -------------------------------------------------------------------------

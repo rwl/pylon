@@ -25,7 +25,9 @@ from enthought.io.api import File
 from enthought.pyface.api import ImageResource, FileDialog, CANCEL
 from enthought.pyface.action.api import Action
 
-from python_workbench_editor import PythonWorkbenchEditor
+from enthought.plugins.workspace.action.open_action import OpenAction
+
+#from python_workbench_editor import PythonWorkbenchEditor
 
 #------------------------------------------------------------------------------
 #  "OpenFileAction" class:
@@ -60,7 +62,10 @@ class OpenFileAction(Action):
         )
         if dialog.open() != CANCEL:
             file = File(dialog.path)
-            self.window.edit(file, PythonWorkbenchEditor)
+#            self.window.edit(file, PythonWorkbenchEditor)
+
+            self.window.selection = [file]
+            OpenAction(window=self.window).perform(event=None)
 
         return
 

@@ -25,7 +25,10 @@ from enthought.io.api import File
 from enthought.pyface.api import ImageResource, FileDialog, CANCEL
 from enthought.pyface.action.api import Action
 
-from python_workbench_editor import PythonWorkbenchEditor
+from enthought.plugins.workspace.action.open_action import OpenAction
+
+#from python_workbench_editor import PythonWorkbenchEditor
+from enthought.plugins.text_editor.editor.text_editor import TextEditor
 
 #------------------------------------------------------------------------------
 #  "NewFileAction" class:
@@ -48,7 +51,7 @@ class NewFileAction(Action):
     tooltip = "Create a File"
 
     # The action's image (displayed on tool bar tools etc):
-    image = ImageResource("document.png")
+    image = ImageResource("new")
 
     #--------------------------------------------------------------------------
     #  "Action" interface:
@@ -58,7 +61,10 @@ class NewFileAction(Action):
         """ Perform the action. """
 
         file = File("")
-        self.window.edit(file, PythonWorkbenchEditor)
+        self.window.edit(file, TextEditor)
+
+#        self.window.selection = [file]
+#        OpenAction(window=self.window).perform(event=None)
 
         return
 
