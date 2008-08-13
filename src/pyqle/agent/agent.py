@@ -101,7 +101,7 @@ class Agent(HasTraits):
                 Group(
                     ChacoPlotItem(
                         "_periods", "_rewards",
-                        type="scatter",
+                        type="line",
                         # Basic axis and label properties
                         show_label=False, resizable=True, orientation="h",
                         title="Rewards", x_label="period", y_label="Reward",

@@ -23,36 +23,41 @@
 
 from enthought.traits.api import Interface, Float
 
+from i_action import IAction
+
 #------------------------------------------------------------------------------
 #  "IProfileAction" class:
 #------------------------------------------------------------------------------
 
-class IProfileAction(Interface):
+class IProfileAction(IAction):
     """ Defines an action that may be selected according to a profile """
 
-    def copy(self):
-        """ Clone an Action """
+    # The value used by the profile selector
+    value = Float
 
-
-    def nn_coding_size(self):
-        """ Size of an Action's coding (for NN) """
-
-
-    def nn_coding(self):
-        """ Action's coding (for NN) """
-
-
-    def hash_code(self):
-        """ Q-Learning memorising techniques use hashcoding : it is necessary
-        to redefine it for each problem/game
-
-        """
-
-
-    def __eq__(self, o):
-        """ It is up to the programmer to define when two action are declared
-        equal
-
-        """
+#    def copy(self):
+#        """ Clone an Action """
+#
+#
+#    def nn_coding_size(self):
+#        """ Size of an Action's coding (for NN) """
+#
+#
+#    def nn_coding(self):
+#        """ Action's coding (for NN) """
+#
+#
+#    def hash_code(self):
+#        """ Q-Learning memorising techniques use hashcoding : it is necessary
+#        to redefine it for each problem/game
+#
+#        """
+#
+#
+#    def __eq__(self, o):
+#        """ It is up to the programmer to define when two action are declared
+#        equal
+#
+#        """
 
 # EOF -------------------------------------------------------------------------

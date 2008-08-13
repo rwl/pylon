@@ -69,10 +69,10 @@ class MarketEnvironment(Environment):
     start = Button("Initiate")
 
     # A plot of all actions performed
-    actions_plot = Instance(ActionsPlot)
+    actions_plot = Instance(ActionsPlot, transient=True)
 
     # A plot of all computed rewards
-    rewards_plot = Instance(RewardsPlot)
+    rewards_plot = Instance(RewardsPlot, transient=True)
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -162,16 +162,16 @@ class MarketEnvironment(Environment):
 
         """
 
+        if self.network is None:
+            logger.error("Market environment contains no Network")
+            return []
+
         generators = self.network.in_service_generators
         loads = self.network.in_service_loads
         n_buses = self.network.n_non_islanded_buses
         n_generators = self.network.n_in_service_generators
 
         self.actions_plot.update_action_plot(composed_action)
-
-        if self.network is None:
-            logger.error("Market environment contains no Network")
-            return []
 
         # Perform the supply actions on the environment
         for action in composed_action:
@@ -272,6 +272,12 @@ class MarketEnvironment(Environment):
                 return False
         else:
             return False
+
+
+    def _get_winner(self):
+        """ Property getter """
+
+        pass
 
 
 # EOF -------------------------------------------------------------------------

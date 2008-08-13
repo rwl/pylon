@@ -54,6 +54,6 @@ for p in n.generators+n.loads:
     a = ElementaryAgent(environment=p_env, name="Agent "+p.name)
     swarm.elementary_agents.append(a)
 
-swarm.configure_traits(filename="/tmp/swarm.pkl")
+swarm.configure_traits(filename="/tmp/swarm.pyr")
 
 # EOF -------------------------------------------------------------------------

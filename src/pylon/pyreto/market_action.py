@@ -24,7 +24,8 @@
 from enthought.traits.api import \
     HasTraits, Instance, Bool, Int, Disallow, Float, Str, implements
 
-from pyqle.environment.i_action import IAction
+#from pyqle.environment.i_action import IAction
+from pyqle.environment.i_profile_action import IProfileAction
 
 from pylon.api import Generator, Load
 
@@ -38,7 +39,7 @@ class MarketAction(HasTraits):
 
     """
 
-    implements(IAction)
+    implements(IProfileAction)
 
     #--------------------------------------------------------------------------
     #  Trait definitions:

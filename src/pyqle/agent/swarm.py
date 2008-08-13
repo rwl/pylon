@@ -67,7 +67,8 @@ elementary_agents_table_editor = TableEditor(
         ObjectColumn(name="reward", editable=False),
         ObjectColumn(
             name="selector",
-            editor=InstanceEditor(name="selectors", editable=False)
+            editor=InstanceEditor(name="selectors", editable=False),
+            format_func=lambda obj: obj.name
         )
     ],
     deletable=False, orientation="horizontal",

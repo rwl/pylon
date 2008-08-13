@@ -173,7 +173,7 @@ network_view = View(
                 ),
                 label="_loads"
             ),
-            dock="tab"
+            dock="tab", springy=True
         ),
     ),
     id="pylon.ui.network_view.network_view",

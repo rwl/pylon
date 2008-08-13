@@ -25,7 +25,7 @@ from random import Random, randint
 
 from enthought.traits.api import HasTraits, implements, Str
 
-from enthought.traits.ui.api import View
+from enthought.traits.ui.api import View, Item
 
 from pyqle.selector.i_selector import ISelector
 
@@ -46,7 +46,7 @@ class RandomSelector(HasTraits):
     name = Str("Random Selector")
 
     # The default view
-    traits_view = View()
+    traits_view = View(Item("name"))
 
     #--------------------------------------------------------------------------
     #  "ISelector" interface:
