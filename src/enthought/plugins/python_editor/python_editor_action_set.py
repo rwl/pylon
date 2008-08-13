@@ -54,6 +54,10 @@ class PythonEditorActionSet(WorkbenchActionSet):
             name="&New", path="MenuBar/File", group="OpenGroup",
             groups=["ContainerGroup", "ComponentGroup", "OtherGroup"]
         ),
+        Menu(
+            name="&Run As", path="Workspace", group="SubMenuGroup",
+            groups=["RoutineGroup"]
+        )
     ]
 
     actions = [
@@ -72,6 +76,16 @@ class PythonEditorActionSet(WorkbenchActionSet):
             id="enthought.plugins.python_editor.new_file_action",
             class_name="enthought.plugins.python_editor.new_file_action:"
             "NewFileAction"
+        ),
+        Action(
+            path="MenuBar/Run", group="RunAsGroup",
+            class_name="enthought.plugins.python_editor.python_run_action:"
+            "PythonRunAction"
+        ),
+        Action(
+            path="Workspace/Run As", group="RoutineGroup",
+            class_name="enthought.plugins.python_editor.python_run_action:"
+            "PythonRunAction"
         )
     ]
 

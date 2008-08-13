@@ -60,7 +60,7 @@ class PickledProvider(HasTraits):
         return document
 
 
-    def do_save_document(self, resource, document):
+    def do_save(self, resource, document):
         """ Pickles the resource """
 
         print "SAVING!", resource.absolute_path
@@ -182,14 +182,14 @@ class ResourceEditor(TraitsUIEditor):
                 self.name = self.name[1:]
 
 
-    def save_document(self):
+    def save(self):
         """ Calls on the document provider to persist that state of
         the document
 
         """
 
         if self.document is not None:
-            saved = self.provider.do_save_document(self.obj, self.document)
+            saved = self.provider.do_save(self.obj, self.document)
             if saved:
                 self.dirty = False
 

@@ -94,6 +94,11 @@ class WorkspaceActionSet(WorkbenchActionSet):
         ),
         Action(
             path="MenuBar/File", group="SaveGroup",
+            class_name="enthought.plugins.workspace.action.save_as_action:"
+            "SaveAsAction"
+        ),
+        Action(
+            path="MenuBar/File", group="SaveGroup",
             class_name="enthought.plugins.workspace.action.save_all_action:"
             "SaveAllAction"
         ),
@@ -146,6 +151,11 @@ class WorkspaceActionSet(WorkbenchActionSet):
             path="MenuBar/Navigate",
             class_name="enthought.plugins.workspace.action.home_action:"
             "HomeAction"
+        ),
+        Action(
+            path="MenuBar/Navigate",
+            class_name="enthought.plugins.workspace.action.location_action:"
+            "LocationAction"
         ),
         # Toolbar actions
         Action(

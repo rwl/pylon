@@ -23,24 +23,21 @@
 
 import logging
 
-from enthought.envisage.api import Application
-
-#from enthought.envisage.ui.workbench.api import WorkbenchApplication
-from pylon.plugin.workbench.pylon_workbench_application import \
-    PylonWorkbenchApplication
-
 from enthought.envisage.core_plugin import CorePlugin
-from enthought.envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
+
 from enthought.envisage.developer.developer_plugin import DeveloperPlugin
+
 from enthought.envisage.developer.ui.developer_ui_plugin import \
     DeveloperUIPlugin
 
-try:
-    from enthought.plugins.ipython_shell.ipython_shell_plugin import \
-        IPythonShellPlugin as PythonShellPlugin
-except ImportError:
-    from enthought.plugins.python_shell.python_shell_plugin import \
-        PythonShellPlugin
+#try:
+#    from enthought.plugins.ipython_shell.ipython_shell_plugin import \
+#        IPythonShellPlugin as PythonShellPlugin
+#except ImportError:
+from enthought.plugins.python_shell.python_shell_plugin import \
+    PythonShellPlugin
+
+from enthought.plugins.text_editor.text_editor_plugin import TextEditorPlugin
 
 from enthought.plugins.python_editor.python_editor_plugin import \
     PythonEditorPlugin
@@ -55,6 +52,9 @@ from enthought.logger.plugin.logger_plugin import LoggerPlugin
 #------------------------------------------------------------------------------
 #  Pylon imports:
 #------------------------------------------------------------------------------
+
+from pylon.plugin.workbench.pylon_workbench_application import \
+    PylonWorkbenchApplication
 
 from pylon.plugin.workbench.pylon_workbench_plugin import PylonWorkbenchPlugin
 
@@ -98,12 +98,11 @@ def main():
         id = "pylon",
         plugins = [
             CorePlugin(),
-#            WorkbenchPlugin(),
             DeveloperPlugin(),
             DeveloperUIPlugin(),
             PythonShellPlugin(),
-#            PythonEditorPlugin(),
-#            SingleProjectPlugin(),
+#            TextEditorPlugin(),
+            PythonEditorPlugin(),
             WorkspacePlugin(),
             PropertyViewPlugin(),
             LoggerPlugin(),

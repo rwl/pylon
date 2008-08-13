@@ -13,7 +13,7 @@
 #
 #------------------------------------------------------------------------------
 
-""" Workspace plug-in actions """
+""" Defines an action for saving to a new name """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -35,12 +35,12 @@ import enthought.plugins.workspace.api
 IMAGE_LOCATION = dirname(enthought.plugins.workspace.api.__file__)
 
 #------------------------------------------------------------------------------
-#  "SaveAction" class:
+#  "SaveAsAction" class:
 #------------------------------------------------------------------------------
 
-class SaveAction(Action):
+class SaveAsAction(Action):
     """ Defines an action that save the contents of the current editor to
-    the workspace
+    a new name.
 
     """
 
@@ -49,45 +49,19 @@ class SaveAction(Action):
     #--------------------------------------------------------------------------
 
     # A longer description of the action:
-    description = "Save the active editor's changes"
+    description = "Save the active editor's changes to a new file"
 
     # The action"s name (displayed on menus/tool bar tools etc):
-    name = "Save"
+    name = "Save As..."
 
     # A short description of the action used for tooltip text etc:
-    tooltip = "Save (Ctrl+S)"
+    tooltip = "Save As"
 
     # The action's image (displayed on tool bar tools etc):
-    image = ImageResource("save", search_path=[IMAGE_LOCATION])
-
-    # Keyboard accelerator
-    accelerator = "Ctrl+S"
+    image = ImageResource("save_as", search_path=[IMAGE_LOCATION])
 
     # Is the action enabled?
     enabled = Bool(False)
-
-    #--------------------------------------------------------------------------
-    #  "SaveAction" interface:
-    #--------------------------------------------------------------------------
-
-    window = Instance(WorkbenchWindow)
-
-    #--------------------------------------------------------------------------
-    #  "SaveAction" interface:
-    #--------------------------------------------------------------------------
-
-    def _active_editor_changed_for_window(self, obj, name, old, new):
-        """ Sets up static event handlers for change in the clean state
-        of the active editor
-
-        """
-
-        if old is not None:
-            old.on_trait_change(self.active_editor_dirt, "dirty", remove=True)
-
-        if new is not None:
-            new.on_trait_change(self.active_editor_dirt, "dirty")
-            self.active_editor_dirt(dirty=new.dirty)
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -101,11 +75,11 @@ class SaveAction(Action):
 #            traits["window"].on_trait_change(
 #                self.on_editor_change, "active_editor"
 #            )
-
-    #--------------------------------------------------------------------------
-    #  "SaveAction" interface:
-    #--------------------------------------------------------------------------
-
+#
+#    #--------------------------------------------------------------------------
+#    #  "SaveAction" interface:
+#    #--------------------------------------------------------------------------
+#
 #    def on_editor_change(self, obj, name, old, new):
 #        """ Sets up static event handlers for change in the clean state
 #        of the active editor
@@ -119,11 +93,20 @@ class SaveAction(Action):
 #            new.on_trait_change(self.active_editor_dirt, "dirty")
 #            self.active_editor_dirt(dirty=new.dirty)
 
+    #--------------------------------------------------------------------------
+    #  "SaveAction" interface:
+    #--------------------------------------------------------------------------
 
-    def active_editor_dirt(self, dirty):
-        """ Enables the action if the active editor is dirty """
+    window = Instance(WorkbenchWindow)
 
-        if dirty:
+    #--------------------------------------------------------------------------
+    #  "SaveAction" interface:
+    #--------------------------------------------------------------------------
+
+    def _active_editor_changed_for_window(self):
+        """ Enables the action if the window has editors """
+
+        if self.window.editors:
             self.enabled = True
         else:
             self.enabled = False
@@ -137,6 +120,6 @@ class SaveAction(Action):
 
         active_editor = self.window.active_editor
         if self.enabled and (active_editor is not None):
-            active_editor.save()
+            active_editor.save_as()
 
 # EOF -------------------------------------------------------------------------
