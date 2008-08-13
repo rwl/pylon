@@ -42,7 +42,7 @@ class ProfileImporter(HasTraits):
     #--------------------------------------------------------------------------
 
     # The file from which to import comma separated values
-    csv_file = File(filter=["CSV Files|*.csv", "All Files|*.*"])
+    csv_file = File(filter=["CSV Files (*.csv)|*.csv", "All Files (*.*)|*.*"])
 
     # The values imported from the csv_file
     values = List(Float)

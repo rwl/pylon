@@ -21,8 +21,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup
-
+from enthought.traits.api import on_trait_change
+from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup, Tabbed
 from enthought.plugins.workspace.resource_editor import ResourceEditor
 
 from pylon.pyreto.participant_environment import ParticipantEnvironment
@@ -67,21 +67,24 @@ class SwarmTableEditor(ResourceEditor):
         elementary_agents_table_editor.on_select = self._on_select
         elementary_agents_table_editor.row_factory = participant_factory
         elementary_agents_table_editor.row_factory_kw = {"__table_editor__":""}
+        elementary_agents_table_editor.edit_view = " "
 
         view = View(
-            HGroup(
-                Group(
-                    Item(name="environment", show_label=False, style="custom"),
-                    label="Environment", show_border=True
-                ),
+            Tabbed(
                 Group(
                     Item(
                         name="elementary_agents",
                         editor=elementary_agents_table_editor,
                         show_label=False, id=".elementary_agents_table"
                     ),
-                    label="Participants", show_border=True
+                    label="Participants"#, show_border=True
                 ),
+                Group(
+                    Item(name="environment", show_label=False, style="custom"),
+                    label="Environment",# show_border=True,
+                    scrollable=True
+                ),
+                dock="tab", springy=True
             ),
             id="pylon.plugin.pyreto.pyreto_editor.swarm_view"
         )
@@ -93,5 +96,16 @@ class SwarmTableEditor(ResourceEditor):
         """ Handle tree node selection """
 
         self.selected = object
+
+
+    @on_trait_change(
+        "document.elementary_agents.+,"
+        "document.elementary_agents.selector.+,"
+        "document.environment.+"
+    )
+    def on_swarm_modified(self):
+        """ Handle modification to the swarm """
+
+        self.dirty = True
 
 # EOF -------------------------------------------------------------------------

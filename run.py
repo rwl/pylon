@@ -47,6 +47,9 @@ from enthought.plugins.workspace.workspace_plugin import WorkspacePlugin
 from enthought.plugins.property_view.property_view_plugin import \
     PropertyViewPlugin
 
+from enthought.plugins.image_editor.image_editor_plugin import \
+    ImageEditorPlugin
+
 from enthought.logger.plugin.logger_plugin import LoggerPlugin
 
 #------------------------------------------------------------------------------
@@ -105,6 +108,7 @@ def main():
             PythonEditorPlugin(),
             WorkspacePlugin(),
             PropertyViewPlugin(),
+            ImageEditorPlugin(),
             LoggerPlugin(),
             # Pylon plug-ins:
             PylonWorkbenchPlugin(),

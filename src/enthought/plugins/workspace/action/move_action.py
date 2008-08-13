@@ -45,7 +45,7 @@ class DirectorySelection(HasTraits):
     directory = Directory
 
     traits_view = View(
-        Label("Enter or select the destination:"),
+        Label("Enter or select the directory:"),
         Item(name="directory", style="text", show_label=False),
         Item(name="directory", style="custom", show_label=False),
         title="Directory Selection",

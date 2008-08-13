@@ -25,7 +25,7 @@ from enthought.traits.api import \
     HasTraits, Instance, Property, Bool, DelegatesTo, Either, Str
 
 from enthought.traits.ui.api import View
-
+from enthought.pyface.api import ImageResource, confirm, YES
 from enthought.pyface.workbench.api import TraitsUIEditor
 
 #------------------------------------------------------------------------------
@@ -193,5 +193,17 @@ class ResourceEditor(TraitsUIEditor):
             if saved:
                 self.dirty = False
 
+
+    def _editor_closing_changed_for_window(self, editor):
+        """ Handle the editor being closed """
+
+        if (editor is self) and self.dirty:
+            retval = confirm(
+                self.window.control, title="Save Resource",
+                message="'%s' has been modified. Save changes?" % self.name[1:]
+            )
+
+            if retval == YES:
+                self.save()
 
 # EOF -------------------------------------------------------------------------

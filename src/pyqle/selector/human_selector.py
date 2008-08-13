@@ -70,7 +70,7 @@ class HumanSelector(HasTraits):
     #  Views:
     #--------------------------------------------------------------------------
 
-    traits_view = View()
+    traits_view = View(Item("name"))
 
     choice_view = View(
         Item(
