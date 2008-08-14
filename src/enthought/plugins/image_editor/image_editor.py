@@ -66,8 +66,6 @@ class ImageEditor(TraitsUIEditor):
 
         """
 
-        print "OBJECT:", self.obj.name, self.obj.parent.absolute_path
-
         view = View(
             Item(
                 name="text",

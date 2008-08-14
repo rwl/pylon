@@ -100,12 +100,15 @@ class DCPFAction(Action):
         """ Perform the action. """
 
         selected = self.window.selection[0]
-        network = PickledProvider().create_document(selected)
+        provider = PickledProvider()
+        network = provider.create_document(selected)
 
         if isinstance(network, Network):
             vm = DCPFViewModel(network=network)
             vm.run = True
             vm.edit_traits(parent=self.window.control, kind="livemodal")
+
+            provider.do_save(selected, network)
 
         return
 

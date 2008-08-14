@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2008 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,45 +15,35 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Nose test for a Pyreto swarm """
+""" Defines a plot editor for Pylon resources """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-import sys
-import logging
-logger = logging.getLogger()
-logger.addHandler(logging.StreamHandler(sys.stdout))
-logger.setLevel(logging.DEBUG)
+from enthought.plugins.workspace.resource_editor import ResourceEditor
 
-from pylon.filter.api import import_matpower
-from pylon.pyreto.market_environment import MarketEnvironment
-from pylon.pyreto.participant_environment import ParticipantEnvironment
-
-from pyqle.api import ElementaryAgent, Swarm, HumanSelector
+from pylon.ui.plot.bus_bar_plot import BusBarPlot
 
 #------------------------------------------------------------------------------
-#  Constants:
+#  "PylonPlotEditor" class:
 #------------------------------------------------------------------------------
 
-data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
-#data_file = "/home/rwl/python/aes/matpower_3.2/case14.m"
+class PylonPlotEditor(ResourceEditor):
+    """ Defines a plot editor for Pylon resources """
 
-#------------------------------------------------------------------------------
-#
-#------------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    #  "ResourceEditor" interface
+    #--------------------------------------------------------------------------
 
-n = import_matpower(data_file)
+    def create_ui(self, parent):
+        """ Creates the traits UI that represents the editor """
 
-env = MarketEnvironment(network=n, name="Market Environment")
-swarm = Swarm(environment=env, name="Participant Swarm")
+        self.document = document = self.provider.create_document(self.obj)
+        plot = BusBarPlot(network=document)
 
-for p in n.generators+n.loads:
-    p_env = ParticipantEnvironment(asset=p)
-    a = ElementaryAgent(environment=p_env, name="Agent "+p.name)
-    swarm.elementary_agents.append(a)
+        ui = plot.edit_traits(parent=parent, kind="subpanel")
 
-swarm.configure_traits()#filename="/tmp/swarm.pyr")
+        return ui
 
 # EOF -------------------------------------------------------------------------

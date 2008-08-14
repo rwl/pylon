@@ -127,10 +127,21 @@ class RewardsPlot(HasTraits):
                 plot_data.set_data(plot_name, append(past_data, reward))
             else:
                 plot_data.set_data(plot_name, [reward])
+
                 colour = dark[randint(0, len(dark)-1)]
+#                colour = self._get_colour(action.asset.id)
+
                 plot.plot(
                     ("x", plot_name), color=colour, type="line",
                     marker_size=6, market="square", line_width=4
                 )
+
+
+    def _get_colour(self, id):
+        """ Returns a colour from an id """
+
+        idx = int(id[-3:]) % len(dark)-1
+
+        return dark[idx]
 
 # EOF -------------------------------------------------------------------------

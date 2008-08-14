@@ -93,6 +93,8 @@ class DCPFRoutine:
 
         self._build_v_phase_vector()
 
+        self._update_model()
+
     #--------------------------------------------------------------------------
     #  Build voltage phase angle guess vector:
     #--------------------------------------------------------------------------
@@ -137,7 +139,7 @@ class DCPFRoutine:
 
         # Bus active power injections (generation - load)
         # FIXME: Adjust for phase shifters and real shunts
-        p = matrix(self.network.p_supply)
+        p = matrix([v.p_supply for v in buses])
         p_slack = p[slack_idx]
         p_tight = p[tight_idxs]
         logger.debug("Active power injections:\n%s" % p_tight)
