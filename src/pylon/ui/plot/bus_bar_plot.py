@@ -21,8 +21,10 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Instance, Any, on_trait_change
-from enthought.traits.ui.api import View, Group, Item, Label
+from enthought.traits.api import \
+    HasTraits, Instance, Any, on_trait_change, DelegatesTo, List
+
+from enthought.traits.ui.api import View, Group, Item, Label, SetEditor
 from enthought.traits.ui.menu import OKCancelButtons, NoButtons
 from enthought.chaco.tools.api import PanTool, SimpleZoom
 from enthought.enable.component_editor import ComponentEditor
@@ -32,7 +34,7 @@ from enthought.chaco.api import \
     ArrayDataSource, BarPlot, DataRange1D, LabelAxis, LinearMapper, Plot, \
     OverlayPlotContainer, PlotAxis, PlotGrid, VPlotContainer, HPlotContainer
 
-from pylon.api import Network
+from pylon.api import Network, Bus
 from pylon.ui.plot.colours import colours
 
 #------------------------------------------------------------------------------
@@ -49,6 +51,12 @@ class BusBarPlot(HasTraits):
     # The network containing the buses:
     network = Instance(Network)
 
+    # All buses in the network
+    all_buses = DelegatesTo("network", "buses")
+
+    # A potentially filtered list of buses to plot
+    buses = List(Instance(Bus))
+
     # Bus data plot:
     plot = Instance(BarPlot)
 
@@ -60,8 +68,15 @@ class BusBarPlot(HasTraits):
     #--------------------------------------------------------------------------
 
     traits_view = View(
-        Item(name="network", show_label=False),
         Item(name="plot", editor=ComponentEditor(), show_label=False),
+#        Item(name="network", show_label=False),
+#        Item(
+#            name="buses", editor=SetEditor(
+#                name="all_buses",
+#                left_column_title="Buses",
+#                right_column_title="Plotted Buses"
+#            )
+#        ),
         title="Bus Bar Plot", id="pylon.ui.plot.bus_bar_plot",
         resizable=True, buttons=NoButtons,
         width=.6, height=.4,
@@ -70,6 +85,12 @@ class BusBarPlot(HasTraits):
     #--------------------------------------------------------------------------
     #  Default plot:
     #--------------------------------------------------------------------------
+
+    def _buses_default(self):
+        """ Trait initialiser """
+
+        return self.network.buses
+
 
     def _plot_default(self):
         """ Trait initialiser """
@@ -85,8 +106,8 @@ class BusBarPlot(HasTraits):
 
         # Create the value range
         val_range = DataRange1D(
-            low=min(val_points)-.5,
-            high=max(val_points)+.5
+            low=min(val_points)-.1,
+            high=max(val_points)+.1
         )
         val_mapper = LinearMapper(range=val_range)
 
@@ -95,7 +116,7 @@ class BusBarPlot(HasTraits):
             index=idx, value=val,
             value_mapper=val_mapper, index_mapper=idx_mapper,
             line_color="black", fill_color="red", bgcolor="white",
-            bar_width=0.8, padding=50, antialias=False
+            bar_width=0.8, padding=75, antialias=False
         )
 
         # Create the plot axes
@@ -118,7 +139,7 @@ class BusBarPlot(HasTraits):
         return plot
 
 
-    @on_trait_change("network,network.buses.p_supply")
+    @on_trait_change("network,network.buses.v_phase")
     def _refresh_points(self):
         """ Refreshes the plot data points """
 
@@ -137,15 +158,29 @@ class BusBarPlot(HasTraits):
 
         buses = self.network.buses
         n_buses = self.network.n_buses
+#        buses = self.buses
+#        n_buses = len(buses)
 
         if buses:
             idx_points = range(1, n_buses+1)
-            val_points = [bus.p_supply for bus in buses]
+            val_points = [bus.v_phase for bus in buses]
         else:
             idx_points = [1]
             val_points = [0]
 
         return (idx_points, val_points)
+
+
+    def _all_buses_items_changed(self, event):
+        """ Handle addition and removal of buses """
+
+        buses = self.buses
+
+        for v in event.added:
+            buses.append(v)
+        for v in event.removed:
+            if v in buses:
+                buses.remove(v)
 
 #------------------------------------------------------------------------------
 #  Standalone call:
@@ -155,7 +190,7 @@ if __name__ == "__main__":
     from pylon.filter.api import import_matpower
 
     data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
-    data_file = "/home/rwl/python/aes/model/matpower/case30.m"
+#    data_file = "/home/rwl/python/aes/model/matpower/case30.m"
     n = import_matpower(data_file)
 
     plot = BusBarPlot(network=n)

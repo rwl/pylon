@@ -19,10 +19,12 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from os.path import getmtime
+
 import pickle as pickle
 
 from enthought.traits.api import \
-    HasTraits, Instance, Property, Bool, DelegatesTo, Either, Str
+    HasTraits, Instance, Property, Bool, DelegatesTo, Either, Str, Float
 
 from enthought.traits.ui.api import View
 from enthought.pyface.api import ImageResource, confirm, YES
@@ -108,6 +110,9 @@ class ResourceEditor(TraitsUIEditor):
     # Document provider that handles reading and saving resources
     provider = Instance(PickledProvider, ())
 
+    # The time of the last modification to the resource
+    m_time = Float
+
     # A View object (or its name) that defines a user interface for
     # editing trait attribute values of the current object. If the view is
     # defined as an attribute on this class, use the name of the attribute.
@@ -130,6 +135,15 @@ class ResourceEditor(TraitsUIEditor):
             return self.obj.name + self.obj.ext
         else:
             return str(self.obj)
+
+
+    def _m_time_default(self):
+        """ Trait initialiser """
+
+        if self.obj.exists:
+            return getmtime(self.obj.absolute_path)
+        else:
+            return 0.0
 
 
     def create_ui(self, parent):
@@ -205,5 +219,29 @@ class ResourceEditor(TraitsUIEditor):
 
             if retval == YES:
                 self.save()
+
+
+    def _active_editor_changed_for_window(self, new):
+        """ Handle the active editor changing """
+
+        file = self.obj
+
+        if (new is self) and file.exists \
+        and (self.m_time != getmtime(file.absolute_path)):
+            if self.dirty:
+                name = self.name[1:]
+            else:
+                name = self.name
+
+            retval = confirm(
+                self.window.control, title="Load Resource",
+                message="'%s' has been modified. Load modified resource?" %
+                name
+            )
+
+            if retval == YES:
+                raise NotImplementedError
+#                self.window.edit(self.obj, kind=type(self))
+#                self.window.close_editor(new)
 
 # EOF -------------------------------------------------------------------------

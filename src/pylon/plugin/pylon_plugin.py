@@ -133,8 +133,14 @@ class PylonPlugin(Plugin):
         """ Trait initialiser """
 
         from pylon_editor_extension import \
-            PylonTreeEditorExtension, PylonTableEditorExtension
+            PylonTreeEditorExtension, PylonTableEditorExtension, \
+            PylonPlotEditorExtension
 
-        return [PylonTreeEditorExtension, PylonTableEditorExtension]
+        editors = [
+            PylonTreeEditorExtension, PylonTableEditorExtension,
+            PylonPlotEditorExtension
+        ]
+
+        return editors
 
 # EOF -------------------------------------------------------------------------

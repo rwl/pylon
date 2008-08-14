@@ -86,4 +86,30 @@ class PylonTreeEditorExtension(Editor):
     # If true, this editor will be used as the default editor for the type
     default = True
 
+#------------------------------------------------------------------------------
+#  "PylonPlotEditorExtension" class:
+#------------------------------------------------------------------------------
+
+class PylonPlotEditorExtension(Editor):
+    """ Associates a plot editor with *.pyl files """
+
+    # The object contribution's globally unique identifier.
+    id = "pylon.plugins.pylon_plot_editor"
+
+    # A name that will be used in the UI for this editor
+    name = "Plot Editor"
+
+    # An icon that will be used for all resources that match the
+    # specified extensions
+    image = ImageResource("plot", search_path=[IMAGE_LOCATION])
+
+    # The contributed editor class
+    editor_class = "pylon.plugin.pylon_plot_editor:PylonPlotEditor"
+
+    # The list of file types understood by the editor
+    extensions = [".pyl"]
+
+    # If true, this editor will be used as the default editor for the type
+    default = False
+
 # EOF -------------------------------------------------------------------------
