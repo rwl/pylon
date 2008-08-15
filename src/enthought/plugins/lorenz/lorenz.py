@@ -9,7 +9,7 @@ from scipy.integrate import odeint
 from enthought.chaco.chaco_plot_editor import ChacoPlotItem
 from enthought.traits.api import Array, DelegatesTo, Float, HasTraits
 from enthought.traits.api import Instance, List, Trait
-from enthought.traits.ui.api import Item, HGroup, VGroup, View
+from enthought.traits.ui.api import Item, Group, View, VGrid
 
 
 class Lorenz(HasTraits):
@@ -18,12 +18,44 @@ class Lorenz(HasTraits):
     prandtl = Float(10.0, auto_set = False, enter_set = True)
     rayleigh = Float(28.0, auto_set = False, enter_set = True)
     beta = Float(8.0 / 3.0, auto_set = False, enter_set = True)
-    init = Array(value = array([0.0, 1.0, 0.0]), dtype='float')
-    time = Array(value = array([0.0, 100.0, 0.01]), dtype='float')
-    timePoints = Array()
-    data3d = Array()
+    init = Array(value=array([0.0, 1.0, 0.0]), dtype='float', transient=True)
+    time = Array(
+        value = array([0.0, 100.0, 0.01]), dtype='float', transient=True
+    )
+    timePoints = Array(transient=True)
+    data3d = Array(transient=True)
     output = Trait('x vs time', {'x vs time':0, 'y vs time':1, 'z vs time':2})
-    data2d = Array()
+    data2d = Array(transient=True)
+
+    traits_ui_view = View(
+        VGrid(
+            Item('prandtl'),
+            Item('rayleigh'),
+            Item('beta'),
+            Item('init'),
+            Item('time'),
+            columns=3
+        ),
+        Group(
+            ChacoPlotItem(
+                'timePoints', 'data2d',
+                show_label       = False,
+                resizable        = True,
+                orientation      = 'h',
+                title            = 'Plot',
+                x_label          = 'time',
+                y_label          = 'x',
+                color            = 'red',
+                bgcolor          = 'white',
+                border_visible   = False ,
+                border_width     = 1,
+                padding_bg_color = 'lightgray'
+            )
+        ),
+        Item('output'),
+        id = 'lorenz.default_view',
+        resizable = True
+    )
 
     def refresh(self):
         self.calculatePoints()
