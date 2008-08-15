@@ -113,6 +113,11 @@ class DeleteAction(Action):
         if retval == YES:
             selection.delete()
 
+            # Close any editors of the deleted resource
+            for editor in self.window.editors[:]:
+                if editor.obj is selection:
+                    self.window.close_editor(editor)
+
             # Refresh the workspace tree view
             view = self.window.get_view_by_id(WORKSPACE_VIEW)
             if view is not None:

@@ -24,17 +24,9 @@
 import logging
 
 from enthought.envisage.api import Application
-
 from enthought.envisage.ui.workbench.api import WorkbenchApplication
-#from enthought.envisage.ui.workbench.extended_workbench_application import \
-#    ExtendedWorkbenchApplication
-
 from enthought.envisage.core_plugin import CorePlugin
-
 from enthought.envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
-from enthought.envisage.ui.workbench.extended_workbench_plugin import \
-    ExtendedWorkbenchPlugin
-
 from enthought.envisage.developer.developer_plugin import DeveloperPlugin
 
 from enthought.envisage.developer.ui.developer_ui_plugin import \
@@ -54,6 +46,8 @@ from enthought.plugins.image_editor.image_editor_plugin import \
     ImageEditorPlugin
 
 from enthought.plugins.workspace.workspace_plugin import WorkspacePlugin
+
+from enthought.plugins.lorenz.lorenz_plugin import LorenzPlugin
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -83,7 +77,8 @@ def main():
             PythonShellPlugin(),
             PythonEditorPlugin(),
             ImageEditorPlugin(),
-            WorkspacePlugin()
+            WorkspacePlugin(),
+            LorenzPlugin()
         ]
     )
 

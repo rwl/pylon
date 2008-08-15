@@ -55,6 +55,10 @@ class PythonEditorActionSet(WorkbenchActionSet):
             groups=["ContainerGroup", "ComponentGroup", "OtherGroup"]
         ),
         Menu(
+            name="&Run", path="MenuBar", after="Edit",
+            groups=["ShortcutGroup", "RunAsGroup"]
+        ),
+        Menu(
             name="&Run As", path="Workspace", group="SubMenuGroup",
             groups=["RoutineGroup"]
         )
