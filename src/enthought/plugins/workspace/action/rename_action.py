@@ -121,6 +121,11 @@ class RenameAction(Action):
             destination = join(dirname(selection.absolute_path), rr.name)
             selection.move(destination)
 
+            # Close any editors of the renamed resource
+#            for editor in self.window.editors[:]:
+#                if editor.obj is selection:
+#                    self.window.close_editor(editor)
+
             # Refresh the workspace tree view
             view = self.window.get_view_by_id(WORKSPACE_VIEW)
             if view is not None:
