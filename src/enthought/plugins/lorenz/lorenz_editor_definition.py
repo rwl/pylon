@@ -29,7 +29,7 @@ class LorenzEditorDefinition(Editor):
         "LorenzEditor"
 
     # The list of file types understood by the editor
-    extensions = [".lnz"]
+    extensions = [".lnz", ".pkl"]
 
     # If true, this editor will be used as the default editor for the type
     default = True
