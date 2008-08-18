@@ -29,3 +29,46 @@ class FileIContainerAdapter(Adapter):
                 fd.close()
 
         return object
+
+class FileIEditableAdapter(Adapter):
+    """ An adapter from "File" to "IEditable" """
+
+    # Declare the interfaces this adapter implements for its client:
+    adapts(File, to=IContainer, when="adaptee.ext == '.pkl'")
+
+    # The object that is being adapted.
+    adaptee = Instance(File)
+
+    # Is the object 'dirty'?
+    dirty = Bool(False)
+
+    # The time of the last modification
+    m_time = Float
+
+#    def get_editor_input(self):
+#        """ Returns the object to be edited """
+
+    def save(self, obj):
+        """ Save to file """
+
+        fd = None
+        try:
+            fd = open(self.adaptee.absolute_path, "wb")
+            pickle.dump(obj, fd)
+        finally:
+            if fd is not None:
+                fd.close()
+
+
+    def load(self):
+        """ Load the file """
+
+        fd = None
+        try:
+            fd = open(self.adaptee.absolute_path, "rb")
+            obj = pickle.load(fd)
+        finally:
+            if fd is not None:
+                fd.close()
+
+        return obj
