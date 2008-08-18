@@ -108,6 +108,7 @@ class NewFolderAction(Action):
 
         # Open the wizard
         if wizard.open() == OK:
+            pass
             wizard.finished = True
 
 #        workspace = self.window.application.get_service(WORKSPACE_SERVICE)

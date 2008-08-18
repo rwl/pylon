@@ -21,7 +21,7 @@
 
 from os.path import getmtime
 
-import pickle as pickle
+import cPickle as pickle
 
 from enthought.traits.api import \
     HasTraits, Instance, Property, Bool, DelegatesTo, Either, Str, Float

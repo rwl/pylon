@@ -193,7 +193,7 @@ class SwarmWizard(SimpleWizard):
 
         self._open_resource(file)
 
-        self._refresh_container(None)
+        self._refresh_container(workspace)
 
 
     def _open_resource(self, file):

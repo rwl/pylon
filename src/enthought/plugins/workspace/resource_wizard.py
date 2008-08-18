@@ -191,7 +191,8 @@ class BaseResourceWizard(SimpleWizard):
 
         self._open_resource(file)
         # FIXME: Refresh the parent folder not the whole tree
-        self._refresh_container(None)
+        workspace = self.window.application.get_service(IWorkspace)
+        self._refresh_container(workspace)
 
 
     def _open_resource(self, resource):

@@ -24,7 +24,7 @@ from os.path import dirname
 from enthought.traits.api import Bool, Instance
 from enthought.pyface.api import ImageResource
 from enthought.pyface.action.api import Action
-from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
+from enthought.envisage.ui.workbench.api import WorkbenchWindow
 
 import enthought.plugins.workspace.api
 
@@ -93,6 +93,10 @@ class UpAction(Action):
 
         view = self.window.get_view_by_id(WORKSPACE_VIEW)
         if view is not None:
-            view.tree_viewer.refresh()
+            # Note that we always offer the service via its name, but look
+            # it up via the actual protocol.
+            from enthought.plugins.workspace.i_workspace import IWorkspace
+            workspace = self.window.application.get_service(IWorkspace)
+            view.tree_viewer.refresh(workspace)
 
 # EOF -------------------------------------------------------------------------

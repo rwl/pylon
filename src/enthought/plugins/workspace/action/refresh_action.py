@@ -25,6 +25,7 @@ from enthought.io.api import File
 from enthought.traits.api import Bool, Instance
 from enthought.pyface.action.api import Action
 from enthought.pyface.api import ImageResource
+from enthought.plugins.workspace.i_workspace import IWorkspace
 
 import enthought.plugins.workspace.api
 

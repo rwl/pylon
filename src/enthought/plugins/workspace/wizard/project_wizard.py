@@ -214,7 +214,7 @@ class ProjectWizard(SimpleWizard):
         # Refresh the workspace tree view
         view = self.window.get_view_by_id(WORKSPACE_VIEW)
         if view is not None:
-            wtv = view.tree_viewer.refresh()
+            wtv = view.tree_viewer.refresh(workspace)
 
 
 #    def _controller_default(self):

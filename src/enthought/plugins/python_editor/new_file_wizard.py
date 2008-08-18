@@ -184,6 +184,7 @@ class NewFileWizard(SimpleWizard):
         view = self.window.get_view_by_id(WORKSPACE_VIEW)
         if view is not None:
             # FIXME: Refresh the parent folder not the whole tree
-            wtv = view.tree_viewer.refresh()
+            workspace = self.window.application.get_service(IWorkspace)
+            wtv = view.tree_viewer.refresh(workspace)
 
 # EOF -------------------------------------------------------------------------

@@ -47,14 +47,14 @@ class ContainerSelectionPage(WizardPage):
     workspace = Instance(File)
 
     # The containing directory
-    directory = Directory
+    directory = Directory(exists=True)
 
     # The default view
     traits_view = View(
         Heading("Container"),
         Label("Enter or select the parent directory"),
-        Item(name="directory", style="text", show_label=False),
-        Item(name="directory", style="custom", show_label=False)
+#        Item(name="directory", style="text", show_label=False),
+        Item(name="directory", style="simple", show_label=False)
     )
 
     #--------------------------------------------------------------------------
@@ -64,6 +64,9 @@ class ContainerSelectionPage(WizardPage):
     def _directory_default(self):
         """ Trait initialiser """
 
+        # FIXME: Under Windows if a 'custom' directory editor is used in the
+        # view then this initialiser is called after the page has been
+        # destroyed and any call to self raises an error.
         if self.workspace is not None:
             self.complete = True
             return self.workspace.absolute_path

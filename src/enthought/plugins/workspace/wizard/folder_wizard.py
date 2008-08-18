@@ -32,11 +32,11 @@ from enthought.traits.ui.api import \
 
 from enthought.traits.ui.menu import OKCancelButtons
 from enthought.pyface.wizard.api import SimpleWizard, WizardPage
+from enthought.pyface.api import OK
+from enthought.envisage.ui.workbench.api import WorkbenchWindow
 
 from enthought.plugins.workspace.wizard.container_selection_page import \
     ContainerSelectionPage
-
-from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
 from enthought.plugins.workspace.i_workspace import IWorkspace
 
@@ -65,13 +65,13 @@ class FolderWizardPage(WizardPage):
 #    parent_folder = Delegate("csp", "folder")
 
     # Absolute path for the project
-    abs_path = Property(Str, depends_on=["folder_name"])#, "parent_folder"])
+#    abs_path = Property(Str, depends_on=["folder_name"])#, "parent_folder"])
 
     # A label with advice
-    _label = Property(
-        Str("Create a new folder resource."),
-        depends_on=["folder_name"]
-    )
+#    _label = Property(
+#        Str("Create a new folder resource."),
+#        depends_on=["folder_name"]
+#    )
 
     # Has the folder's name been changed
     _named = Bool(False)
@@ -80,43 +80,46 @@ class FolderWizardPage(WizardPage):
     traits_view = View(
         Group(
             Heading("Folder"),
-            Item("_label", style="readonly", show_label=False),
+#            Item("_label", style="readonly", show_label=False),
             "_",
         ),
         Item("folder_name")
     )
 
-    @cached_property
-    def _get_abs_path(self):
-        """ Property getter """
+#    @cached_property
+#    def _get_abs_path(self):
+#        """ Property getter """
+#
+#        return join(self.csp.directory, self.folder_name)
 
-        return join(self.csp.directory, self.folder_name)
 
-
-    @cached_property
-    def _get__label(self):
-        """ Property getter """
-
-        if (exists(self.abs_path)) and (len(self.folder_name) != 0):
-            l = "A folder with that name already exists."
-            self.complete = False
-        elif len(self.folder_name) == 0 and self._named:
-            l = "Folder name must be specified"
-            self.complete = False
-        elif len(self.folder_name) == 0:
-            l = "Create a new folder resource."
-            self.complete = False
-        else:
-            l = "Create a new folder resource."
-            self.complete = True
-
-        return l
+#    @cached_property
+#    def _get__label(self):
+#        """ Property getter """
+#
+#        abs_path = join(self.csp.directory, self.folder_name)
+#        if (exists(abs_path)) and (len(self.folder_name) != 0):
+#            l = "A folder with that name already exists."
+#            self.complete = False
+#        elif len(self.folder_name) == 0 and self._named:
+#            l = "Folder name must be specified"
+#            self.complete = False
+#        elif len(self.folder_name) == 0:
+#            l = "Create a new folder resource."
+#            self.complete = False
+#        else:
+#            l = "Create a new folder resource."
+#            self.complete = True
+#
+#        return l
 
 
     def _folder_name_changed(self):
         """ Sets a flag when the name is changed """
 
         self._named = True
+
+        self.complete = True
 
     #--------------------------------------------------------------------------
     #  "WizardPage" interface:
@@ -154,16 +157,18 @@ class FolderWizard(SimpleWizard):
     def __init__(self, window, **traits):
         """ Returns a FolderWizard """
 
-        self.window = window
-
-        workspace = window.application.get_service(IWorkspace)
+        if window is not None:
+            self.window = window
+            workspace = window.application.get_service(IWorkspace)
+        else:
+            workspace = None
 
         csp = ContainerSelectionPage(id="container_page", workspace=workspace)
-        fwp = FolderWizardPage(id="folder_page", csp=csp)
+        fwp = FolderWizardPage(id="folder_page")#, csp=csp)
 
         self.pages = [csp, fwp]
 
-        super(FolderWizard, self).__init__(**traits)
+        super(FolderWizard, self).__init__(window=window, **traits)
 
     #--------------------------------------------------------------------------
     #  "FolderWizard" interface:
@@ -175,16 +180,28 @@ class FolderWizard(SimpleWizard):
 
         """
 
+        pass
+
         csp = self.pages[0]
         fwp = self.pages[1]
 
-        folder = File(fwp.abs_path)
+        path = join(csp.directory, fwp.folder_name)
+        folder = File(path)
         folder.create_folder()
 
         # Refresh the workspace tree view
         view = self.window.get_view_by_id(WORKSPACE_VIEW)
         if view is not None:
             # FIXME: Refresh the parent folder not the whole tree
-            wtv = view.tree_viewer.refresh()
+            workspace = self.window.application.get_service(IWorkspace)
+            wtv = view.tree_viewer.refresh(workspace)
+
+if __name__ == "__main__":
+    wizard = FolderWizard(window=None)
+    # Create and open the wizard.
+    if wizard.open() == OK:
+        print 'Wizard completed successfully'
+    else:
+        print 'Wizard cancelled'
 
 # EOF -------------------------------------------------------------------------

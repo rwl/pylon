@@ -56,7 +56,7 @@ class PylonEditPerspective(Perspective):
         PerspectiveItem(
             id="enthought.logger.plugin.view.logger_view.LoggerView",
             position="with", height=0.3,
-            relative_to="enthought.plugins.ipython_shell_view"
+#            relative_to="enthought.plugins.ipython_shell_view"
         ),
         PerspectiveItem(
             id="enthought.plugins.property_view.property_view",
