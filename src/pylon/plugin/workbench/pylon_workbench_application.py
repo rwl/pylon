@@ -90,7 +90,7 @@ class PylonWorkbenchApplication(WorkbenchApplication):
 
         splash_screen = SplashScreen(
             image=ImageResource("pylon"), show_log_messages=True,
-            text_color="black", text_font="10 point Monospace"
+            text_color="black",# text_font="10 point Monospace"
         )
 
         return splash_screen

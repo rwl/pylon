@@ -121,7 +121,9 @@ class DeleteAction(Action):
             # Refresh the workspace tree view
             view = self.window.get_view_by_id(WORKSPACE_VIEW)
             if view is not None:
+                from enthought.plugins.workspace.i_workspace import IWorkspace
+                workspace = self.window.application.get_service(IWorkspace)
                 # Refresh the parent directory and not the whole tree
-                view.tree_viewer.refresh()
+                view.tree_viewer.refresh(workspace)
 
 # EOF -------------------------------------------------------------------------

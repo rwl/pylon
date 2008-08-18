@@ -414,15 +414,15 @@ if __name__ == "__main__":
     n = Network()
     v1 = Bus()
     v2 = Bus()
-    e1 = Branch(network=n, source_bus=v1, target_bus=v2)
     n.buses=[v1, v2]
-    n.branches=[e1]
-
-    n.configure_traits()
+#    e1 = Branch(network=n, source_bus=v1, target_bus=v2)
+#    n.branches=[e1]
 
 
 #    import pickle
-#    import cPickle as pickle
+    import cPickle as pickle
+    from tempfile import gettempdir
+    from os.path import join
 #    from pylon.filter.api import import_matpower
 #
 #    data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
@@ -435,14 +435,18 @@ if __name__ == "__main__":
 #    for e in n.branches:
 #        print e.source_bus, e.target_bus
 
-#    fd = open("/tmp/n.pkl", "wb")
-#    pickle.Pickler(fd, True).dump(n)
-#    fd.close()
-#
-#    fd = open("/tmp/n.pkl", "rb")
-#    n2 = pickle.Unpickler(fd).load()
-#    fd.close()
-#
+    fd_1 = open(join(gettempdir(), "n.pkl"), "wb")
+#    pickle.Pickler(fd_1, True).dump(n)
+    pickle.dump(n, fd_1)
+    fd_1.close()
+
+    fd_2 = open(join(gettempdir(), "n.pkl"), "rb")
+#    n2 = pickle.Unpickler(fd_2).load()
+    n2 = pickle.load(fd_2)
+    fd_2.close()
+
+    n2.configure_traits()
+
 #    print "AFTER:", n2.buses
 #    for e in n2.branches:
 #        print e.source_bus, e.target_bus

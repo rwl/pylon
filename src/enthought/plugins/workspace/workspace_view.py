@@ -185,7 +185,7 @@ class WorkspaceView(WorkbenchView):
             workspace = self.window.application.get_service(IWorkspace)
             workspace.path = element.absolute_path
 
-            self.tree_viewer.refresh()
+            self.tree_viewer.refresh(workspace)
         else:
             pass
 

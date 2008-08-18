@@ -93,6 +93,6 @@ class HomeAction(Action):
 
         view = self.window.get_view_by_id(WORKSPACE_VIEW)
         if view is not None:
-            view.tree_viewer.refresh()
+            view.tree_viewer.refresh(workspace)
 
 # EOF -------------------------------------------------------------------------

@@ -227,7 +227,7 @@ class WorkspaceTreeViewer(TreeViewer):
 #    show_root = False
 
 
-    def refresh(self, element=None):
+    def refresh(self, element):#=None):
         """ Refresh the tree starting from the specified element.
 
         Call this when the STRUCTURE of the content has changed.
@@ -235,11 +235,11 @@ class WorkspaceTreeViewer(TreeViewer):
         """
 
         # Refresh from the root if no element specified
-        if element is None:
-            pid = self.control.GetRootItem()
-            data = self.control.GetPyData(pid)
-            if data is not None:
-                populated, element = data
+#        if element is None:
+#            pid = self.control.GetRootItem()
+#            data = self.control.GetPyData(pid)
+#            if data is not None:
+#                populated, element = data
 
         # Has the element actually appeared in the tree yet?
         pid = self._element_to_id_map.get(self._get_key(element), None)

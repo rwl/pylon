@@ -129,7 +129,11 @@ class RenameAction(Action):
             # Refresh the workspace tree view
             view = self.window.get_view_by_id(WORKSPACE_VIEW)
             if view is not None:
+                # Note that we always offer the service via its name, but look
+                # it up via the actual protocol.
+                from enthought.plugins.workspace.i_workspace import IWorkspace
+                workspace = self.window.application.get_service(IWorkspace)
                 # Refresh the parent directory and not the whole tree
-                view.tree_viewer.refresh()
+                view.tree_viewer.refresh(workspace)
 
 # EOF -------------------------------------------------------------------------

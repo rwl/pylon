@@ -44,6 +44,8 @@ from enthought.plugins.workspace.action.open_action import OpenAction
 from enthought.plugins.workspace.wizard.container_selection_page import \
     ContainerSelectionPage
 
+from enthought.plugins.workspace.resource_editor import PickledProvider
+
 from pylon.api import Network
 
 #------------------------------------------------------------------------------
@@ -187,11 +189,12 @@ class NetworkWizard(SimpleWizard):
         if not file.exists:
             name, ext = splitext(nwp.network_name)
             n = Network(name=name, mva_base=nwp.base_mva)
-            file.create_file(contents=pickle.dumps(n))
+#            file.create_file(contents=pickle.dumps(n))
+            PickledProvider().do_save(file, n)
 
         self._open_resource(file)
 
-        self._refresh_container(None)
+        self._refresh_container(workspace)
 
 
     def _open_resource(self, file):
