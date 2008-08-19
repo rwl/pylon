@@ -127,9 +127,9 @@ class Graph(HasTraits):
             editor=GraphEditor(),
             id='.graph_container'
         ),
-        id="pylon.ui.graph.graph_view",
+        id="pylon.ui.graph.graph.view",
         resizable=True,
-        width=.6,
+        width=.4,
         height=.4
     )
 
@@ -186,5 +186,24 @@ class Graph(HasTraits):
 #        self.pos[1] += 50
 
         self.viewport.request_redraw()
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    from pylon.api import Network, Bus, Branch
+    n = Network()
+    v1 = Bus()
+    v2 = Bus()
+    v3 = Bus()
+    e1 = Branch(network=n, source_bus=v1, target_bus=v2)
+    e2 = Branch(network=n, source_bus=v1, target_bus=v3)
+    e3 = Branch(network=n, source_bus=v2, target_bus=v3)
+    n.buses=[v1, v2, v3]
+    n.branches=[e1, e2, e3]
+    
+    graph = Graph(network=n)
+    graph.configure_traits()
 
 # EOF -------------------------------------------------------------------------

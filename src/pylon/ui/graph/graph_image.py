@@ -140,7 +140,9 @@ class GraphImage(HasTraits):
             name="viewport",
             editor=GraphEditor(),
             show_label=False
-        )
+        ),
+        id="pylon.ui.graph.graph_image",
+        resizable=True
     )
 
     config = View(
@@ -243,5 +245,24 @@ class GraphImage(HasTraits):
 #        #wx.Image(GRAPH_IMAGE_FILE, wx.BITMAP_TYPE_ANY)
 #        #wx.ImageFromStream(self.image, wx.BITMAP_TYPE_PNG)
 #        #wx.ImageFromStreamMime(self.image, mimetype="image/gif")
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    from pylon.api import Network, Bus, Branch
+    n = Network()
+    v1 = Bus()
+    v2 = Bus()
+    v3 = Bus()
+    e1 = Branch(network=n, source_bus=v1, target_bus=v2)
+    e2 = Branch(network=n, source_bus=v1, target_bus=v3)
+    e3 = Branch(network=n, source_bus=v2, target_bus=v3)
+    n.buses=[v1, v2, v3]
+    n.branches=[e1, e2, e3]
+    
+    graph = GraphImage(network=n)
+    graph.configure_traits()
 
 # EOF -------------------------------------------------------------------------

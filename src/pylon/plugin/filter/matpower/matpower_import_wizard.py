@@ -38,6 +38,9 @@ from enthought.plugins.workspace.action.open_action import OpenAction
 
 from enthought.plugins.workspace.wizard.container_selection_page import \
     ContainerSelectionPage
+    
+from enthought.plugins.workspace.workspace_resource_editor import \
+    FileIResourceAdapter
 
 from pylon.filter.api import MATPOWERImporter
 
@@ -120,7 +123,9 @@ class MATPOWERImportWizard(SimpleWizard):
         file = IOFile(join(csp.directory, name+".pyl"))
         if not file.exists:
             n = MATPOWERImporter().parse_file(mip.data_file)
-            file.create_file(contents=pickle.dumps(n))
+#            file.create_file(contents=pickle.dumps(n))
+            resource = FileIResourceAdapter(file)
+            resource.save(n)
 
         self._open_resource(file)
 

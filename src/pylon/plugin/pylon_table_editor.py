@@ -47,72 +47,72 @@ class PylonTableEditor(ResourceEditor):
     #  "ResourceEditor" interface
     #--------------------------------------------------------------------------
 
-#    def _create_view(self):
-#        """ Create a view with a tree editor """
-#
-#        buses_table_editor.on_select = self._on_select
-#
-#        branches_table_editor.on_select = self._on_select
-#
-#        all_generators_table_editor.on_select = self._on_select
-#        all_generators_table_editor.editable = False
-#
-#        all_loads_table_editor.on_select = self._on_select
-#        all_loads_table_editor.editable = False
-#
-#        view = View(
-#            VGroup(
-#                HGroup(
-#                    Item(name="name", style="simple"),
-#                    Item(name="mva_base", label="Base MVA", style="simple")
-#                ),
-#                Tabbed(
-#                    Group(
-#                        Item(
-#                            name="buses", show_label=False,
-#                            editor=buses_table_editor,
-#                            id=".network_buses_table"
-#                        ),
-#                        label="Buses",
-#                    ),
-#                    Group(
-#                        Item(
-#                            name="branches", show_label=False,
-#                            editor=branches_table_editor,
-#                            id=".network_branches_table"
-#                        ),
-#                        label="Branches",
-#                    ),
-#                    Group(
-#                        Item(
-#                            name="generators", show_label=False,
-#                            editor=all_generators_table_editor,
-#                            id=".network_generators_table"
-#                        ),
-#                        label="_generators"
-#                    ),
-#                    Group(
-#                        Item(
-#                            name="loads", show_label=False,
-#                            editor=all_loads_table_editor,
-#                            id=".network_loads_table"
-#                        ),
-#                        label="_loads"
-#                    ),
-#                    dock="tab", scrollable=True, springy=True
-#                ),
-#            ),
-#            id="pylon.plugin.pylon_table_editor.network_view",
-#            resizable=True, style="custom"
-#        )
-#
-#        return view
+    def _create_view(self):
+        """ Create a view with a tree editor """
+
+        buses_table_editor.on_select = self._on_select
+
+        branches_table_editor.on_select = self._on_select
+
+        all_generators_table_editor.on_select = self._on_select
+        all_generators_table_editor.editable = False
+
+        all_loads_table_editor.on_select = self._on_select
+        all_loads_table_editor.editable = False
+
+        view = View(
+            VGroup(
+                HGroup(
+                    Item(name="name", style="simple"),
+                    Item(name="mva_base", label="Base MVA", style="simple")
+                ),
+                Tabbed(
+                    Group(
+                        Item(
+                            name="buses", show_label=False,
+                            editor=buses_table_editor,
+                            id=".network_buses_table"
+                        ),
+                        label="Buses",
+                    ),
+                    Group(
+                        Item(
+                            name="branches", show_label=False,
+                            editor=branches_table_editor,
+                            id=".network_branches_table"
+                        ),
+                        label="Branches",
+                    ),
+                    Group(
+                        Item(
+                            name="generators", show_label=False,
+                            editor=all_generators_table_editor,
+                            id=".network_generators_table"
+                        ),
+                        label="_generators"
+                    ),
+                    Group(
+                        Item(
+                            name="loads", show_label=False,
+                            editor=all_loads_table_editor,
+                            id=".network_loads_table"
+                        ),
+                        label="_loads"
+                    ),
+                    dock="tab", scrollable=True, springy=True
+                ),
+            ),
+            id="pylon.plugin.pylon_table_editor.network_view",
+            resizable=True, style="custom"
+        )
+
+        return view
 
 
-    def _view_default(self):
-        """ Trait initialiser """
-
-        return View(Item(name="name"))
+#    def _view_default(self):
+#        """ Trait initialiser """
+#
+#        return View(Item(name="name"))
 
 
     def _on_select(self, object):

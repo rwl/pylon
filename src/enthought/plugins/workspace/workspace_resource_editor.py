@@ -19,10 +19,15 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import pickle as pickle
+
+from os.path import getmtime
+
 from enthought.io.api import File
 
 from enthought.traits.api import \
-    Interface, Property, Bool, Adapter, AdaptedTo, AdaptsTo, DelegatesTo
+    Interface, Property, Bool, Adapter, AdaptedTo, AdaptsTo, DelegatesTo, \
+    adapts, Instance
 
 from enthought.traits.ui.api import View, Item, Group
 
@@ -83,7 +88,7 @@ class FileIResourceAdapter(Adapter):
             if fd is not None:
                 fd.close()
 
-        self.m_time = getmtime(self.adaptee.absolute_path)
+#        self.m_time = getmtime(self.adaptee.absolute_path)
 
 
     def load(self):

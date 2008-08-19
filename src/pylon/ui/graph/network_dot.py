@@ -77,7 +77,7 @@ class BusNode(HasTraits):
 
     """
 
-    network_dot = Instance("pylon.ui.graph.network_dot.NetworkDot")
+    network_dot = Instance(HasTraits)#"pylon.ui.graph.network_dot.NetworkDot")
 
     dot_prefs = Delegate("network_dot")
 
@@ -149,7 +149,7 @@ class BranchEdge(HasTraits):
 
     """
 
-    network_dot = Instance("pylon.ui.graph.network_dot.NetworkDot")
+    network_dot = Instance(HasTraits)#"pylon.ui.graph.network_dot.NetworkDot")
 
     dot_prefs = Delegate("network_dot")
 
