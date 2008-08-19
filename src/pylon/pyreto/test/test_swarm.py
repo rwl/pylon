@@ -21,6 +21,9 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import pickle
+from tempfile import gettemp
+from os.path import join, expanduser
 import sys
 import logging
 logger = logging.getLogger()
@@ -54,6 +57,12 @@ for p in n.generators+n.loads:
     a = ElementaryAgent(environment=p_env, name="Agent "+p.name)
     swarm.elementary_agents.append(a)
 
-swarm.configure_traits()#filename="/tmp/swarm.pyr")
+fd = None
+try:
+    fd = open(join(expanduser("~"), "swarm.pyr"), "wb")
+    pickle.dump(swarm, fd)
+finally:
+    if fd is not None:
+        fd.close()
 
 # EOF -------------------------------------------------------------------------

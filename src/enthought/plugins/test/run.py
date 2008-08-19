@@ -28,6 +28,7 @@ from enthought.envisage.ui.workbench.api import WorkbenchApplication
 from enthought.envisage.core_plugin import CorePlugin
 from enthought.envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
 from enthought.envisage.developer.developer_plugin import DeveloperPlugin
+from enthought.logger.plugin.logger_plugin import LoggerPlugin
 
 from enthought.envisage.developer.ui.developer_ui_plugin import \
     DeveloperUIPlugin
@@ -74,6 +75,7 @@ def main():
             WorkbenchPlugin(),
 #            DeveloperPlugin(),
 #            DeveloperUIPlugin(),
+            LoggerPlugin(),
             PythonShellPlugin(),
             PythonEditorPlugin(),
             ImageEditorPlugin(),

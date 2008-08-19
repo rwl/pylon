@@ -43,6 +43,9 @@ from enthought.plugins.workspace.action.open_action import OpenAction
 
 from enthought.plugins.workspace.wizard.container_selection_page import \
     ContainerSelectionPage
+    
+from enthought.plugins.workspace.workspace_resource_editor import \
+    FileIResourceAdapter
 
 from pylon.pyreto.api import MarketEnvironment
 
@@ -189,7 +192,9 @@ class SwarmWizard(SimpleWizard):
             name, ext = splitext(swp.swarm_name)
             env = MarketEnvironment(network=None)
             swarm = Swarm(name=name, environment=env)
-            file.create_file(contents=pickle.dumps(swarm))
+#            file.create_file(contents=pickle.dumps(swarm))
+            resource = FileIResourceAdapter(file)
+            resource.save(swarm)
 
         self._open_resource(file)
 

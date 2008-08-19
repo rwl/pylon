@@ -77,7 +77,6 @@ class PylonWorkbenchApplication(WorkbenchApplication):
             parent=self.workbench.active_window.control,
             image=ImageResource("pylon"),
             additions=[
-                "Photo by Luc Viatour",
                 "Routines from PSAT & MATPOWER"
             ],
         )
@@ -89,8 +88,8 @@ class PylonWorkbenchApplication(WorkbenchApplication):
         """ Trait initialiser """
 
         splash_screen = SplashScreen(
-            image=ImageResource("pylon"), show_log_messages=True,
-            text_color="black",# text_font="10 point Monospace"
+            image=ImageResource("pylon"), show_log_messages=False,
+            text_color="black"#, text_font="10 point Monospace"
         )
 
         return splash_screen
