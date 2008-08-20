@@ -15,9 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Network visualisation using Graphviz xdot output parsed with pyparsing and
-rendered with Enable.
+""" Network visualisation using Graphviz xdot output parsed with pyparsing
+and rendered with Enable.
 
 See: XDot by Jose.R.Fonseca (http://code.google.com/p/jrfonseca/wiki/XDot)
 
@@ -40,15 +39,11 @@ from enthought.traits.api import \
     Event, Tuple, Font, Bool, Range, Default, Property, Enum, Color, Any
 
 from enthought.traits.ui.api import View, Item, Group, HGroup, VGroup
-
 from enthought.traits.ui.menu import NoButtons
 
-from enthought.enable.api import Canvas
-
-from enthought.enable.tools.api import MoveTool, TraitsTool
-
+from enthought.enable.api import Container, Canvas, Viewport
+from enthought.enable.tools.api import MoveTool, TraitsTool, ViewportPanTool
 from enthought.enable.colors import color_table
-
 from enthought.kiva.fonttools.font import str_to_font
 
 from pylon.ui.graph.pydot.pydot import \
@@ -56,7 +51,7 @@ from pylon.ui.graph.pydot.pydot import \
 
 from pylon.ui.graph.graph_component import \
     Pen, TextComponent, EllipseComponent, BezierComponent, \
-    PolygonComponent, NodeComponent, EdgeComponent, GraphContainer
+    PolygonComponent#, NodeComponent, EdgeComponent, GraphContainer
 
 #------------------------------------------------------------------------------
 #  Logging
@@ -69,10 +64,7 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class XDotAttrParser(HasTraits):
-    """
-    Parse component xdot attributes
-
-    """
+    """ Parse component xdot attributes """
 
     #--------------------------------------------------------------------------
     #  Trait definitions:
@@ -218,7 +210,7 @@ class XDotAttrParser(HasTraits):
                 font_name = s.read_text()
 #                pen.font = str_to_font(font_size + font_name)
                 pen.font = str(font_size) + " point " + font_name
-            elif op == "T":
+            elif op == "T": # Text
                 x, y = s.read_point()
                 j = s.read_number()
                 w = s.read_number()
@@ -237,7 +229,7 @@ class XDotAttrParser(HasTraits):
                     position=[0, 0]#[x, y]
                 )
 #                shapes.append(tc)
-            elif op == "E":
+            elif op == "E": # Filled ellipse
                 x0, y0 = s.read_point()
                 w = s.read_number()
                 h = s.read_number()
@@ -254,7 +246,7 @@ class XDotAttrParser(HasTraits):
                     position=[0, 0] #relative to node component
                 )
                 shapes.append(ec)
-            elif op == "e":
+            elif op == "e": # Unfilled ellipse
                 x0, y0 = s.read_point()
                 w = s.read_number()
                 h = s.read_number()
@@ -267,7 +259,7 @@ class XDotAttrParser(HasTraits):
                     position=[x0, y0]
                 )
                 shapes.append(ec)
-            elif op == "B":
+            elif op == "B": # Bezier curve
                 points = self.read_polygon()
                 # width
                 x_points = [x for x, y in points]
@@ -280,8 +272,8 @@ class XDotAttrParser(HasTraits):
                     bounds=[10, 10],#[max_x-min_x, max_y-min_y],
                     position=[5, 5]
                 )
-                shapes.append(bc)
-            elif op == "P":
+#                shapes.append(bc)
+            elif op == "P": # Filled polygon
                 points = self.read_polygon()
                 logger.debug("Filled polygon points: %s" % points)
                 x_points = [x for x, y in points]
@@ -294,7 +286,7 @@ class XDotAttrParser(HasTraits):
                     position=[0, 0]
                 )
                 shapes.append(pc)
-            elif op == "p":
+            elif op == "p": # Unfilled polygon
                 points = self.read_polygon()
                 logger.debug("Unfilled polygon points: %s" % points)
                 x_points = [x for x, y in points]
@@ -313,59 +305,67 @@ class XDotAttrParser(HasTraits):
         return shapes
 
 
-    def transform(self, x, y):
-        return self.xdot_parser.transform(x, y)
+#    def transform(self, x, y):
+#        return self.xdot_parser.transform(x, y)
 
 #------------------------------------------------------------------------------
 #  "XdotParser" class:
 #------------------------------------------------------------------------------
 
 class XDotParser(HasTraits):
-    """
-    Parse Graphviz xdot code and populate the graph container
+    """ Parse Graphviz xdot code and populate the graph container """
 
-    """
+    #--------------------------------------------------------------------------
+    #  Public interface
+    #--------------------------------------------------------------------------
 
-    def parse_code(self, xdot_code, container=None):
-        """
-        Allows xdot code to be passed directly
-
-        """
+    def parse_code(self, xdot_code):#, container=None):
+        """ Allows xdot code to be passed directly """
 
         graph = graph_from_dot_data(xdot_code)
         return self.parse(graph, container)
 
 
-    def parse(self, graph, container=None):
-        """
-        Parses an xdot graph and populates or returns a container with
-        the associated components
-
-        """
+    def parse(self, graph):#, container=None):
+        """ Parses an xdot graph and returns a canvas """
 
         logger.debug("Parsing graph:\n%s" % graph.to_string())
 
-        bb = graph.get_bb()
-        bb = bb.strip('"') # Strip double-quotation marks
-        xmin, ymin, xmax, ymax = map(int, bb.split(","))
+#        bb = graph.get_bb()
+#        bb = bb.strip('"') # Strip double-quotation marks
+#        xmin, ymin, xmax, ymax = map(int, bb.split(","))
 
-        width = xmax - xmin
-        height = ymax - ymin
+#        width = xmax - xmin
+#        height = ymax - ymin
 
-        logger.debug("Graph size: (%s, %s)" % (width, height))
+#        logger.debug("Graph size: (%s, %s)" % (width, height))
+
+        canvas = Canvas()
+
+        for node in self._parse_nodes(graph):
+            canvas.add(node)
+        for edge in self._parse_edges(graph):
+            canvas.add(edge)
+
+        return canvas
+
+    #--------------------------------------------------------------------------
+    #  Private interface
+    #--------------------------------------------------------------------------
+
+    def _parse_nodes(self, graph):
+        """ Parses the xdot node data and returns a list of containers """
 
         nodes = []
-        edges = []
 
         for node in graph.get_node_list():
             if node.get_pos() is None:
                 logger.debug(
-                    "Skipping node [%s] with no position info" %
-                    node.to_string()
+                    "Skipping node [%s] with no position" % node.to_string()
                 )
                 continue
             logger.debug("Parsing node: %s" % node.to_string())
-            x, y = self.parse_node_pos(node.get_pos())
+            x, y = self._parse_node_pos(node.get_pos())
             w = float(node.get_width().strip('"'))*72
             h = float(node.get_height().strip('"'))*72
             id = node.get_name()
@@ -395,26 +395,32 @@ class XDotParser(HasTraits):
             if node_shapes:
                 # Graphviz node is positioned according to its centre, but
                 # an Enable component according to the bottom-left corner
-                nc = NodeComponent(bounds=[w, h], position=[x-w/2, y-h/2])
+                cont = Container(bounds=[w, h], position=[x-w/2, y-h/2])
                 for shape in node_shapes:
-                    nc.add(shape)
+                    cont.add(shape)
                 # Add some handy tools
-#                nc.tools.append(MoveTool(nc))
-#                nc.tools.append(TraitsTool(nc))
+#                cont.tools.append(MoveTool(cont))
+#                cont.tools.append(TraitsTool(cont))
                 # Add node component to the list to be drawn on the canvas
-                nodes.append(nc)
+                nodes.append(cont)
             logger.debug("Nodes: %s", nodes)
 
+        return nodes
+
+
+    def _parse_edges(self, graph):
+        """ Parses xdot edge data and returns a list of containers """
+
+        edges = []
 
         for edge in graph.get_edge_list():
             if edge.get_pos() is None:
                 logger.debug(
-                    "Skipping edge [%s] with no position info" %
-                    edge.to_string()
+                    "Skipping edge [%s] with no position" % edge.to_string()
                 )
                 continue
             logger.debug("Parsing edge: %s" % edge.to_string())
-            points = self.parse_edge_pos(edge.get_pos().strip('"'))
+            points = self._parse_edge_pos(edge.get_pos().strip('"'))
             # Component width
             x_points = [x for x, y in points]
             min_x, max_x = min(x_points), max(x_points)
@@ -443,30 +449,26 @@ class XDotParser(HasTraits):
                     logger.debug("Edge attr shapes: %s" % shapes)
                     edge_shapes.extend(shapes)
             if shapes:
-                ec = EdgeComponent(bounds=[100, 150], position=[min_x, min_y])
+                cont = Container(bounds=[100, 150], position=[min_x, min_y])
                 for shape in shapes:
-                    ec.add(shape)
-                edges.append(ec)
+                    cont.add(shape)
+                edges.append(cont)
 
-        if container is None:
-            container = Canvas()
-
-        for node in nodes:
-            container.add(node)
-        for edge in edges:
-            container.add(edge)
-
-        return container
+        return edges
 
 
-    def parse_node_pos(self, pos):
+    def _parse_node_pos(self, pos):
+        """ Returns a tuple of a nodes position """
+
         pos = pos.strip('"')
         x, y = pos.split(",")
 #        return self.transform(float(x), float(y))
         return float(x), float(y)
 
 
-    def parse_edge_pos(self, pos):
+    def _parse_edge_pos(self, pos):
+        """ Returns a list of tuples """
+
         points = []
         for entry in pos.split(" "):
             fields = entry.split(",")
@@ -481,10 +483,60 @@ class XDotParser(HasTraits):
         return points
 
 
-    def transform(self, x, y):
-        # FIXME: this is not the right place for this code
+#    def transform(self, x, y):
+#        # FIXME: this is not the right place for this code
 #        x = (x + self.xoffset)*self.xscale
 #        y = (y + self.yoffset)*self.yscale
-        return x, y
+#        return x, y
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    import sys
+    import logging
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+    from enthought.enable.component_editor import ComponentEditor
+
+    edge = """"v_1-#a2104c" -> "v_2-#d72da0"  [_draw_="c 5 -black B 4 27 90 27 77 27 61 27 46 ", _hdraw_="S 5 -solid S 15 -setlinewidth(1) c 5 -black C 5 -black P 3 31 46 27 36 24 46 ", lp="37,63", _ldraw_="F 14.000000 11 -Times-Roman c 5 -black T 37 58 0 21 3 -e_1 ", pos="e,27,36 27,90 27,77 27,61 27,46", label=e_1];"""
+    black_pen = "c 5 -black B 4 27 90 27 77 27 61 27 46"
+    text = "F 14.000000 11 -Times-Roman c 5 -black T 37 58 0 21 3 -e_1"
+    triangle = "S 5 -solid S 15 -setlinewidth(1) c 5 -black C 5 -black P 3 31 46 27 36 24 46"
+
+    class ComponentViewer(HasTraits):
+        canvas = Instance(Canvas)
+        viewport = Instance(Viewport)
+
+        traits_view=View(
+            Item(
+                name="viewport", editor=ComponentEditor(),
+                show_label=False, id='.viewport_view'
+            ),
+            id="pylon.ui.graph.xdot_parser",
+            resizable=True, width=.4, height=.4
+        )
+
+        def _viewport_default(self):
+            vp = Viewport(component=self.canvas, enable_zoom=True)
+            vp.view_position = [0,0]
+            vp.tools.append(ViewportPanTool(vp))
+            return vp
+
+    parser = XDotAttrParser(
+        container_x=0, container_y=0,
+        container_w=0, container_h=44,
+        buf=triangle
+    )
+
+    canvas = Canvas(bgcolor="ivory")
+#    for shape in parser.parse():
+#        canvas.add(shape)
+
+    cv = ComponentViewer(canvas=canvas)
+
+    cv.configure_traits()
 
 # EOF -------------------------------------------------------------------------
