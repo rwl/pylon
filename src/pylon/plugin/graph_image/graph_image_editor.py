@@ -24,8 +24,8 @@
 from os.path import join, dirname
 
 from enthought.pyface.image_resource import ImageResource
-
 from enthought.plugins.workspace.resource_editor import ResourceEditor
+from enthought.preferences.api import bind_preference
 
 from pylon.ui.graph.graph_image import GraphImage
 
@@ -56,11 +56,22 @@ class GraphImageEditor(ResourceEditor):
         self.document = document = self.provider.create_document(self.obj)
 
         g = GraphImage(network=document)
+
+        self._bind_preferences(g)
+
         ui = g.edit_traits(parent=parent, kind="subpanel")
 
         # Dynamic notification of document object modification
         document.on_trait_change(self.on_document_modified)
 
         return ui
+
+    def _bind_preferences(self, graph_image):
+        """ Binds the graph traits to the preferences """
+
+        bind_preference(
+            obj=graph_image, trait_name="program",
+            preference_path="pylon.graph_image.program"
+        )
 
 # EOF -------------------------------------------------------------------------
