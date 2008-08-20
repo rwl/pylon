@@ -33,7 +33,7 @@ from os.path import join, dirname, exists
 
 from enthought.traits.api import \
     HasTraits, Instance, String, Enum, Directory, Property, Bool, \
-    cached_property, on_trait_change, Delegate, Event, Any
+    cached_property, on_trait_change, Delegate, Event, Any, Trait
 
 from enthought.traits.ui.api import \
     View, Group, HGroup, VGroup, Item, ImageEditor, spring
@@ -61,10 +61,7 @@ SPLASH_LOCATION = join(ICON_LOCATION, "python_powered.png")
 #------------------------------------------------------------------------------
 
 class ImageComponent(Component):
-    """
-    Component with an image drawn in the centre
-
-    """
+    """ Defines a component with an image drawn in the centre """
 
 #    image_path = String(SPLASH_LOCATION)
 
@@ -109,48 +106,50 @@ class ImageComponent(Component):
 #------------------------------------------------------------------------------
 
 class GraphImage(HasTraits):
-    """
-    The network dot represented as a simple image
+    """ Representation of a NetworkDot as a simple image """
 
-    """
-
+    # The network being graphed
     network = Instance("pylon.network.Network")#, allow_none=False)
 
+    # The Dot representation of the network
     network_dot = Instance(NetworkDot)
 
+    # A component that draws an image of the dot representation
     image = Instance(ImageComponent)
 
-    image_dir = Directory(gettempdir())
+    # Image format of Graphviz output
+    image_format = Trait("PNG", {"PNG": "png", "JPEG": "jpg", "GIF": "gif"})
 
-    image_name = String("pylon")#+uuid.uuid4().hex[:6])
-
-    image_format = Enum("png", "jpg")
-
-    image_path = Property(
-        String,
-        depends_on=["image_dir", "image_name", "image_format"]
-    )
-
+    # The Graphviz layout program
     program = Enum("dot", "circo", "neato", "twopi", "fdp")
 
+    # A view into the image component
     viewport = Instance(Viewport)
 
+    # The default view
     traits_view = View(
+        HGroup(
+            Item(name="network", show_label=False),
+            Item(name="program", show_label=False),
+            Item(name="image_format", show_label=False)
+        ),
         Item(
             name="viewport",
             editor=GraphEditor(),
             show_label=False
         ),
+        Item(name="network_dot", style="custom", show_label=False),
         id="pylon.ui.graph.graph_image",
         resizable=True
     )
 
+    # A view for configuration of the graph
     config = View(
         Item(name="program"),
-        Item(name="image_dir"),
-        Item(name="image_name"),
+#        Item(name="image_dir"),
+#        Item(name="image_name"),
         Item(name="image_format"),
-        Item(name="image_path", style="readonly"),
+#        Item(name="image_path", style="readonly"),
         Item(name="network_dot", style="custom", show_label=False),
         title="Configuration",
         icon=frame_icon,
@@ -168,7 +167,7 @@ class GraphImage(HasTraits):
     def _image_default(self):
         """ Trait initialiser """
 
-        return ImageComponent(image_path=self.image_path)
+        return ImageComponent()#image_path=self.image_path)
 
 
     def _viewport_default(self):
@@ -182,17 +181,17 @@ class GraphImage(HasTraits):
         return viewport
 
 
-    @cached_property
-    def _get_image_path(self):
-        """
-        Property getter. Forms the image path from the directory, the
-        name and the format.
-
-        """
-
-        file_name = self.image_name+"."+self.image_format
-
-        return join(self.image_dir, file_name)
+#    @cached_property
+#    def _get_image_path(self):
+#        """
+#        Property getter. Forms the image path from the directory, the
+#        name and the format.
+#
+#        """
+#
+#        file_name = self.image_name+"."+self.image_format
+#
+#        return join(self.image_dir, file_name)
 
 
     def _network_changed(self, old, new):
@@ -202,23 +201,17 @@ class GraphImage(HasTraits):
             self.network_dot.network = new
 
 
-    def _image_path_changed(self, new):
-        """
-        Keeps the image component path up-to-date
-
-        """
-
-        self.image.image_path = new
-
-        self.image.request_redraw()
+#    def _image_path_changed(self, new):
+#        """ Keeps the image component path up-to-date """
+#
+#        self.image.image_path = new
+#
+#        self.image.request_redraw()
 
 
-    @on_trait_change("network,image_path,program,network_dot.updated")
+    @on_trait_change("network,image_format,program,network_dot.updated")
     def refresh_image(self):
-        """
-        Redraw compute the image and request that it be redrawn
-
-        """
+        """ Redraw compute the image and request that it be redrawn """
 
 #        self.network_dot.dot.write(
 #            path=self.image_path,
@@ -228,7 +221,7 @@ class GraphImage(HasTraits):
 
         image_code = self.network_dot.dot.create(
             prog=self.program,
-            format=self.image_format
+            format=self.image_format_
         )
 
         stream = StringIO()
@@ -251,17 +244,23 @@ class GraphImage(HasTraits):
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    import sys
+    import logging
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
     from pylon.api import Network, Bus, Branch
     n = Network()
-    v1 = Bus()
-    v2 = Bus()
-    v3 = Bus()
-    e1 = Branch(network=n, source_bus=v1, target_bus=v2)
-    e2 = Branch(network=n, source_bus=v1, target_bus=v3)
-    e3 = Branch(network=n, source_bus=v2, target_bus=v3)
+    v1 = Bus(name="v_1")
+    v2 = Bus(name="v_2")
+    v3 = Bus(name="v_3")
+    e1 = Branch(network=n, source_bus=v1, target_bus=v2, name="e_1")
+    e2 = Branch(network=n, source_bus=v1, target_bus=v3, name="e_2")
+    e3 = Branch(network=n, source_bus=v2, target_bus=v3, name="e_3")
     n.buses=[v1, v2, v3]
     n.branches=[e1, e2, e3]
-    
+
     graph = GraphImage(network=n)
     graph.configure_traits()
 

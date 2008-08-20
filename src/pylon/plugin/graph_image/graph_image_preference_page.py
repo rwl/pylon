@@ -15,35 +15,30 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-The preferences for the Pylon graph image
-
-"""
+""" The preferences for the Pylon graph image """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
 from tempfile import gettempdir
-
 from os.path import join, dirname, exists
 
 from enthought.traits.api import \
-    String, Enum, Directory, Property, cached_property
-
-from enthought.traits.ui.api import View, Group, HGroup, VGroup, Item, Label
-
+    String, Enum, Directory, Property, Trait, ListStr
+from enthought.traits.ui.api import \
+    View, Group, HGroup, VGroup, Item, Heading, SetEditor, Tabbed
+from enthought.enable.colors import ColorTrait as Colour
 from enthought.preferences.ui.api import PreferencesPage
+
+from pylon.ui.graph.dot_attributes import shape_trait
 
 #------------------------------------------------------------------------------
 #  "GraphImagePreferencesPage" class:
 #------------------------------------------------------------------------------
 
 class GraphImagePreferencesPage(PreferencesPage):
-    """
-    The preferences page for the Pylon graph image
-
-    """
+    """ The preferences page for the Pylon graph image """
 
     #--------------------------------------------------------------------------
     #  "PreferencesPage" interface:
@@ -67,47 +62,81 @@ class GraphImagePreferencesPage(PreferencesPage):
     #  "GraphImagePreferencesPage" interface:
     #--------------------------------------------------------------------------
 
-    # The directory for writing the temporary image
-    image_dir = Directory(gettempdir())
+    # Image format for Graphviz output
+    image_format = Trait("PNG", {"PNG": "png", "JPEG": "jpg", "GIF": "gif"})
 
-    # Temporary image name
-    image_name = String("pylon")
-
-    # Temporary image format
-    image_format = Enum("png", "jpg")
-
-    # The resulting path for the temporary image
-    image_path = Property(
-        String,
-        depends_on=["image_dir", "image_name", "image_format"]
-    )
-
-    # Graphviz layout engine
+    # The Graphviz layout program
     program = Enum("dot", "circo", "neato", "twopi", "fdp")
 
+    #--------------------------------------------------------------------------
+    #  Bus node preferences:
+    #--------------------------------------------------------------------------
+
+    # Bus node styles
+    v_style = ListStr(["rounded", "filled"], label="Bus style")
+
+    # Bus node shape
+    v_shape = shape_trait
+
+    # Bus node fill colour
+    v_fill_colour = Colour(
+        "green", desc="bus node fill colour", label="Bus fill colour"
+    )
+
+    # Bus node stroke colour
+    v_stroke_colour = Colour(
+        "blue", desc="bus node stroke colour", label="Bus stroke colour"
+    )
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
     traits_view = View(
-        Label("Graph Image"),
-        "_",
-        Group(
-            Item(name="program"),
-            Item(name="image_dir"),
-            Item(name="image_name"),
-            Item(name="image_format"),
-            Item(name="image_path", style="readonly")
+        Tabbed(
+            Group(
+                Item(name="program"),
+                Item(name="image_format"),
+                label="Image"
+            ),
+            Group(
+                Item(name="v_shape"),
+                Item(name="v_fill_colour"),
+                Item(name="v_stroke_colour"),
+                Item(
+                    name="v_style",
+                    editor=SetEditor(
+                        name="_node_styles",
+                        left_column_title="Unselected",
+                        right_column_title="Selected"
+                    )
+                ),
+                label="Bus"
+            ),
+            springy=True
         )
     )
 
+    #--------------------------------------------------------------------------
+    #  Private traits:
+    #--------------------------------------------------------------------------
 
-    @cached_property
-    def _get_image_path(self):
-        """
-        Property getter. Forms the image path from the directory, the
-        name and the format.
+    # Recognised style names for nodes and edges
+    _node_and_edge_styles = ListStr(
+        ["dashed", "dotted", "solid", "invis" "bold"]
+    )
 
-        """
+    # Recognised style names for nodes only
+    _node_styles = ListStr
 
-        file_name = self.image_name+"."+self.image_format
+    #--------------------------------------------------------------------------
+    #  "GraphImagePreferencesPage" interface:
+    #--------------------------------------------------------------------------
 
-        return join(self.image_dir, file_name)
+    def __node_styles_default(self):
+        """ Trait initialiser """
+
+        node_styles = ["rounded", "filled", "diagonals"]
+        return self._node_and_edge_styles + node_styles
 
 # EOF -------------------------------------------------------------------------
