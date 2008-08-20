@@ -115,35 +115,35 @@ class BusNode(HasTraits):
         self.updated = True
 
 
-    def _v_shape_changed_for_dot_attrs(self, new):
-        """ Handles the node shape preference changing """
-
-        self.node.set_shape(new)
-        self.updated = True
-
-
-    def _v_fill_colour_changed_for_dot_attrs(self, obj ,name, old, new):
-        """ Handles the node fill colour changing """
-
-        colour = rgba2hex(getattr(obj, name+"_"))
-        self.node.set_fillcolor(colour)
-        self.updated = True
-
-
-    def _v_stroke_colour_changed_for_dot_attrs(self, obj ,name, old, new):
-        """ Handles the node stroke colour changing """
-
-        colour = rgba2hex(getattr(obj, name+"_"))
-        self.node.set_color(colour)
-        self.updated = True
-
-
-    def _font_colour_changed_for_dot_attrs(self, obj ,name, old, new):
-        """ Handles the node font colour changing """
-
-        colour = rgba2hex(getattr(obj, name+"_"))
-        self.node.set_fontcolor(colour)
-        self.updated = True
+#    def _v_shape_changed_for_dot_attrs(self, new):
+#        """ Handles the node shape preference changing """
+#
+#        self.node.set_shape(new)
+#        self.updated = True
+#
+#
+#    def _v_fill_colour_changed_for_dot_attrs(self, obj ,name, old, new):
+#        """ Handles the node fill colour changing """
+#
+#        colour = rgba2hex(getattr(obj, name+"_"))
+#        self.node.set_fillcolor(colour)
+#        self.updated = True
+#
+#
+#    def _v_stroke_colour_changed_for_dot_attrs(self, obj ,name, old, new):
+#        """ Handles the node stroke colour changing """
+#
+#        colour = rgba2hex(getattr(obj, name+"_"))
+#        self.node.set_color(colour)
+#        self.updated = True
+#
+#
+#    def _font_colour_changed_for_dot_attrs(self, obj ,name, old, new):
+#        """ Handles the node font colour changing """
+#
+#        colour = rgba2hex(getattr(obj, name+"_"))
+#        self.node.set_fontcolor(colour)
+#        self.updated = True
 
 #------------------------------------------------------------------------------
 #  "BranchEdge" class:
@@ -300,6 +300,48 @@ class NetworkDot(HasTraits):
         else:
             for e in event.added:
                 self.add_branch_edge(e)
+
+    #--------------------------------------------------------------------------
+    #  Bus attribute handlers:
+    #--------------------------------------------------------------------------
+
+    @on_trait_change("dot_attrs.v_shape")
+    def on_v_shape_change(self, new):
+        """ Handles the node shape preference changing """
+
+        for bus_node in self.bus_nodes:
+            bus_node.node.set_shape(new)
+        self.update()
+
+
+    @on_trait_change("dot_attrs.v_fill_colour")
+    def on_v_fill_colour_change(self, obj ,name, old, new):
+        """ Handles the node fill colour changing """
+
+        colour = rgba2hex(getattr(obj, name+"_"))
+        for bus_node in self.bus_nodes:
+            bus_node.node.set_fillcolor(colour)
+        self.update()
+
+
+    @on_trait_change("dot_attrs.v_stroke_colour")
+    def on_v_stroke_colour_change(self, obj ,name, old, new):
+        """ Handles the node stroke colour changing """
+
+        colour = rgba2hex(getattr(obj, name+"_"))
+        for bus_node in self.bus_nodes:
+            bus_node.node.set_color(colour)
+        self.update()
+
+
+    @on_trait_change("dot_attrs.font_colour")
+    def on_font_colour_change(self, obj ,name, old, new):
+        """ Handles the node font colour changing """
+
+        colour = rgba2hex(getattr(obj, name+"_"))
+        for bus_node in self.bus_nodes:
+            bus_node.node.set_fontcolor(colour)
+        self.update()
 
 #------------------------------------------------------------------------------
 #  Standalone call:

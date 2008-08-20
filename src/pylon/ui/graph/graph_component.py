@@ -15,8 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Enable components for visualisation using Graphviz xdot output.
+""" Enable components for visualisation using Graphviz xdot output.
 
 See: XDot by Jose.R.Fonseca (http://code.google.com/p/jrfonseca/wiki/XDot)
 
@@ -56,17 +55,18 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class Pen(HasTraits):
-    """
-    Store pen traits
+    """ Store pen traits """
 
-    """
-
+    # Stroke colour
     colour = ColorTrait("black", desc="stroke colour")
 
+    # Fill colour
     fill_colour = ColorTrait("black", desc="fill colour")
 
+    # Stroke width in points
     line_width = Range(1, 8, 1, desc="width of the stroke in points")
 
+    # Text font
     font = Font("14 point Arial")
 
 #------------------------------------------------------------------------------
@@ -74,25 +74,28 @@ class Pen(HasTraits):
 #------------------------------------------------------------------------------
 
 class TextComponent(Component):
-    """
-    Component with text traits.
-
-    """
+    """ Component with text traits """
 
     # The background color of this component.
     bgcolor = "blue"
 
+    # Pen for drawing text
     pen = Instance(Pen, desc="pen instance with which to draw the text")
 
+    # X-axis coordinate
     text_x = Float(desc="x-axis coordinate")
 
+    # Y-axis coordinate
     text_y = Float(desc="y-axis coordinate")
 
-    # LEFT, CENTER, RIGHT = -1, 0, 1
+
+    # Text justification
     justification = Int(-1, desc="(LEFT, CENTER, RIGHT = -1, 0, 1)")
 
+    # Width of the text
     text_w = Float(desc="width of the text as computed by the library")
 
+    # Text to be drawn
     text = String(desc="text")
 
     #--------------------------------------------------------------------------
@@ -100,11 +103,13 @@ class TextComponent(Component):
     #--------------------------------------------------------------------------
 
     def _draw_mainlayer(self, gc, view_bounds=None, mode="default"):
+        """ Draws the component """
+
         gc.save_state()
 
         # Specify the font
-        font = Font(family=MODERN, size=14)
-#        font = str_to_font(self.pen.font)
+#        font = Font(family=MODERN, size=14)
+        font = str_to_font(self.pen.font)
         gc.set_font(font)
 #        gc.set_antialias(True)
 
@@ -152,23 +157,27 @@ class TextComponent(Component):
 #------------------------------------------------------------------------------
 
 class EllipseComponent(Component):
-    """
-    Component with Ellipse traits.
+    """ Component with Ellipse traits """
 
-    """
-
+    # Pen used to draw the ellipse
     pen = Instance(Pen, desc="Pen instance with which to draw the ellipse")
 
+    # X-axis coordinate of ellipse origin
     x_origin = Float(desc="x-axis coordinate of ellipse origin")
 
+    # Y-axis coordinate of ellipse origin
     y_origin = Float(desc="y-axis coordinate of ellipse origin")
 
+    # Width of the ellipse
     ew = Float(desc="Ellipse width")
 
+    # Height of the ellipse
     eh = Float(desc="Ellipse height")
 
+    # Is the ellipse filled?
     filled = Bool(False, desc="Fill the ellipse")
 
+    # Background colour for the component
     bgcolor = (0.0, 1.0, 0.0, 0.0)
 
     #--------------------------------------------------------------------------
@@ -176,6 +185,7 @@ class EllipseComponent(Component):
     #--------------------------------------------------------------------------
 
     def _draw_mainlayer(self, gc, view_bounds=None, mode="default"):
+        """ Draws the component """
 
         gc.save_state()
 
@@ -222,26 +232,28 @@ class EllipseComponent(Component):
 #------------------------------------------------------------------------------
 
 class PolygonComponent(Component):
-    """
-    Component with Polygon traits
+    """ Component with Polygon traits """
 
-    """
-
+    # Pen used to draw the polygon
     pen = Instance(Pen, desc="the pen with which to draw the polygon")
 
+    # Points defining the path of the polygon
     points = List(
         Tuple(Float, Float),
         desc="Point defining the path of the polygon"
     )
 
+    # Is the polygon filled?
     filled = Bool(False, desc="Should the component be filled")
 
+    # Rule to use to determine the inside of the polygon
     inside_rule = Trait(
         "winding",
-        {"winding":FILL_STROKE, "oddeven":EOF_FILL_STROKE },
+        {"winding":FILL_STROKE, "oddeven":EOF_FILL_STROKE},
         desc="the rule to use to determine the inside of the polygon"
     )
 
+    # Background colour of the component
     bgcolor = (1.0, 0.5, 0.5, 0.33)
 
     #--------------------------------------------------------------------------
@@ -249,10 +261,7 @@ class PolygonComponent(Component):
     #--------------------------------------------------------------------------
 
     def _draw_mainlayer(self, gc, view_bounds=None, mode="default"):
-        """
-        Draw as a closed polygon
-
-        """
+        """ Draws a closed polygon """
 
         gc.save_state()
 
@@ -318,18 +327,18 @@ class PolygonComponent(Component):
 #------------------------------------------------------------------------------
 
 class BezierComponent(Component):
-    """
-    Component with Bezier traits.
+    """ Component with Bezier traits """
 
-    """
-
+    # Pen used to draw the Bezier curve
     pen = Instance(Pen, desc="Pen instance with which to draw the component")
 
+    # Points defining the path of the polygon
     points = List(
         Tuple(Float, Float),
         desc="Point defining the path of the polygon"
     )
 
+    # Background colour of the component
     bgcolor = (1.0, 1.0, 0.5, 0.67)
 
     #--------------------------------------------------------------------------
@@ -337,6 +346,8 @@ class BezierComponent(Component):
     #--------------------------------------------------------------------------
 
     def _draw_mainlayer(self, gc, view_bounds=None, mode="default"):
+        """ Draws the Bezier component """
+
         print "DRAWING BEZIER COMPONENT!"
         gc.save_state()
 
@@ -361,10 +372,7 @@ class BezierComponent(Component):
 #------------------------------------------------------------------------------
 
 class NodeComponent(Container):
-    """
-    Component with Node traits
-
-    """
+    """ Container of components making up a node """
 
     #--------------------------------------------------------------------------
     #  Trait definitions:
@@ -461,10 +469,7 @@ class NodeComponent(Container):
 #-------------------------------------------------------------------------------
 
 class EdgeComponent(Container):
-    """
-    Component with Edge traits
-
-    """
+    """ Container of components making up an edge """
 
 #    components = List(Component, desc="Components making up the edge")
 
@@ -496,10 +501,7 @@ class EdgeComponent(Container):
 #------------------------------------------------------------------------------
 
 class GraphContainer(Container):
-    """
-    Enable container of graph components
-
-    """
+    """ Container of all graph components """
 
     #--------------------------------------------------------------------------
     #  Trait definitions:

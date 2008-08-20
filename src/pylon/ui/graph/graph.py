@@ -31,6 +31,7 @@ from enthought.enable.api import \
     Window, Viewport, Scrolled, Canvas, Container, Component
 
 from enthought.enable.tools.api import ViewportPanTool
+from enthought.enable.component_editor import ComponentEditor
 
 from pylon.api import Network
 from pylon.ui.graph.network_dot import NetworkDot
@@ -53,10 +54,11 @@ frame_icon = ImageResource(join(ICON_LOCATION, "frame.ico"))
 #------------------------------------------------------------------------------
 
 class Graph(HasTraits):
-    """
-    Interactive graph of a pylon network
+    """ Interactive graph of a Pylon network """
 
-    """
+    #--------------------------------------------------------------------------
+    #  Trait definitions:
+    #--------------------------------------------------------------------------
 
     network = Instance(
         Network,
@@ -64,33 +66,31 @@ class Graph(HasTraits):
         desc="the network being graphed"
     )
 
-#    listener = Instance(
-#        DotListener,
-#        desc="the network listener that maintains the dot representation"
-#    )
-
-    # XDot representation of the Network
+    # Graphviz dot representation of the Network
     network_dot = Instance(
-        NetworkDot,
-        NetworkDot(),
+        NetworkDot, NetworkDot(),
         allow_none=False,
         desc="dot representation of the network"
     )
 
+    # An XDot representation of the network.  XDot is an extended version of
+    # the dot format with drawing information taken from the output of the
+    # Graphviz layout program.
     xdot = Property(
         Instance(Dot),
         depends_on=["network_dot.updated", "program"],
         desc="xdot representation with additional layout information"
     )
 
+    # Graphviz layout program
     program = Enum(
         "dot", "circo", "fdp", "neato", "twopi",
         desc="graph layout engine"
     )
 
+    # Parser of XDot code
     parser = Instance(
-        XDotParser,
-        XDotParser(),
+        XDotParser, XDotParser(),
         desc=" the parser of xdot code that returns or populates a container"
     )
 
@@ -100,16 +100,20 @@ class Graph(HasTraits):
 #        desc="container of network components"
 #    )
 
+    # The canvas on which the network graph is drawn
     canvas = Instance(
-        Canvas,
-        Canvas(bgcolor="lightsteelblue"),#, draw_axes=True),
+        Canvas, Canvas(bgcolor="lightsteelblue"),#, draw_axes=True),
         desc="the canvas on to which network components are drawn"
     )
 
+    # A view into a sub-region of the canvas
     viewport = Instance(
-        Viewport,
-        desc="a view into a sub-region of the canvas"
+        Viewport, desc="a view into a sub-region of the canvas"
     )
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
 
     config = View(
         Item(name="program"),
@@ -121,23 +125,22 @@ class Graph(HasTraits):
     )
 
     traits_view=View(
+        Item(name="network_dot", style="custom", show_label=False),
         Item(
-            name="viewport",
-            show_label=False,
-            editor=GraphEditor(),
-            id='.graph_container'
+            name="viewport", editor=ComponentEditor(),
+            show_label=False, id='.graph_container'
         ),
         id="pylon.ui.graph.graph.view",
         resizable=True,
-        width=.4,
-        height=.4
+        width=.4, height=.4
     )
 
-    def _viewport_default(self):
-        """
-        Trait initialiser
+    #--------------------------------------------------------------------------
+    #  "Graph" interface:
+    #--------------------------------------------------------------------------
 
-        """
+    def _viewport_default(self):
+        """ Trait initialiser """
 
         vp = Viewport(component=self.canvas, enable_zoom=True)
         vp.view_position = [0,0]
@@ -146,18 +149,14 @@ class Graph(HasTraits):
 
 
     def _network_changed(self, new):
-        """
-        Handle the network changing
-
-        """
+        """ Handle the network changing """
 
         if self.network_dot is not None:
             self.network_dot.network = new
 
 
     def _get_xdot(self):
-        """
-        Property getter that is called when the network dot is
+        """ Property getter that is called when the network dot is
         updated or a new layout program is selected.
 
         """
@@ -167,17 +166,26 @@ class Graph(HasTraits):
 
 
     def _xdot_changed(self, new):
-        """
-        Removes all components from the canvas and gets the
+        """ Removes all components from the canvas and gets the
         xdot parser to repopulate it.
 
         """
 
         # Empty the canvas of components
-        for component in self.canvas.components:
-            self.canvas.remove(component)
+#        print "COMPONENTS (START)", self.canvas.components
+#        for component in self.canvas.components:
+#            self.canvas.remove(component)
+#
+#        print "COMPONENTS (MIDDLE)", self.canvas.components
+#        for component in self.canvas.components:
+#            self.canvas.remove(component)
+#
+#        print "COMPONENTS (END)", self.canvas.components
 
-        self.parser.parse(new, self.canvas)
+#        self.parser.parse(new, self.canvas)
+        self.canvas = canvas = self.parser.parse(new)
+        canvas.bgcolor="lightsteelblue"
+        self.viewport.component = canvas
 
 #        from enthought.enable.primitives.api import Box
 #        box = Box(color="red", bounds=[50, 50], position=self.pos, resizable="")
@@ -193,16 +201,23 @@ class Graph(HasTraits):
 
 if __name__ == "__main__":
     from pylon.api import Network, Bus, Branch
+    import sys
+    import logging
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
+    from pylon.api import Network, Bus, Branch
     n = Network()
-    v1 = Bus()
-    v2 = Bus()
-    v3 = Bus()
-    e1 = Branch(network=n, source_bus=v1, target_bus=v2)
-    e2 = Branch(network=n, source_bus=v1, target_bus=v3)
-    e3 = Branch(network=n, source_bus=v2, target_bus=v3)
-    n.buses=[v1, v2, v3]
-    n.branches=[e1, e2, e3]
-    
+    v1 = Bus(name="v_1")
+    v2 = Bus(name="v_2")
+    v3 = Bus(name="v_3")
+    e1 = Branch(network=n, source_bus=v1, target_bus=v2, name="e_1")
+    e2 = Branch(network=n, source_bus=v1, target_bus=v3, name="e_2")
+    e3 = Branch(network=n, source_bus=v2, target_bus=v3, name="e_3")
+    n.buses=[v1, v2]#, v3]
+    n.branches=[e1]#, e2, e3]
+
     graph = Graph(network=n)
     graph.configure_traits()
 

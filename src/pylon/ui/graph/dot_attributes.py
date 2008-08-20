@@ -160,26 +160,26 @@ class DotAttributes(HasTraits):
 
     # Default view:
     traits_view = View(
-#        Group(
+        Group(
 #            Item(name="bg_colour"),
-#            Item(name="font_colour"),
+            Item(name="font_colour"),
 #            Item(name="active_colour"),
 #            Item(name="reactive_colour"),
 #            label="Global"
 #        ),
-        Group(
+#        Group(
             Item(name="v_shape"),
             Item(name="v_fill_colour"),
             Item(name="v_stroke_colour"),
-            Item(
-                name="v_style",
-                editor=SetEditor(
-                    name="_node_styles",
-                    left_column_title="Unselected",
-                    right_column_title="Selected"
-                )
-            ),
-            label="Bus"
+#            Item(
+#                name="v_style",
+#                editor=SetEditor(
+#                    name="_node_styles",
+#                    left_column_title="Unselected",
+#                    right_column_title="Selected"
+#                )
+#            ),
+#            label="Bus"
         ),
 #        Group(
 #            Item(name="g_style"),
