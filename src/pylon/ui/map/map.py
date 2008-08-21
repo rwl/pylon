@@ -1,5 +1,5 @@
-#-------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+#------------------------------------------------------------------------------
+# Copyright (C) 2008 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,397 +13,388 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
-""" An Mapnik viewer for Pylon """
+""" An WMS map viewer for Pylon """
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Imports:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+import string
 
 from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Delegate, Event, \
-    Tuple, Button, Array, Bool, Range, Default, Property, Enum, Any, File
+    Tuple, Button, Array, Bool, Range, Default, Property, Enum, Any, Dict, \
+    on_trait_change
 
 from enthought.traits.ui.api import \
-    View, Item, Group, HGroup, VGroup
+    View, Item, Group, HGroup, VGroup, InstanceEditor, TableEditor, EnumEditor
 
-from enthought.traits.ui.wx.editor import \
-    Editor
-
-from enthought.traits.ui.wx.basic_editor_factory import \
-    BasicEditorFactory
-
-from enthought.kiva import Canvas
-
-from enthought.kiva.agg import GraphicsContextArray
-
-#from enthought.kiva.backend_image import Image
-import enthought.kiva.backend_image as kiva
+from enthought.traits.ui.table_column import ObjectColumn
 
 from enthought.enable.api import Component, Pointer
 
-from enthought.enable.wx_backend.api import Window
+from owslib.wms import WebMapService
 
-from enthought.traits.ui.menu import OKCancelButtons, NoButtons
-
-from mapnik import \
-    Map, Color, Layer, Shapefile, Rule, Filter, Stroke, Style, \
-    Envelope, PolygonSymbolizer, render_to_file, Image, render, rawdata, \
-    PostGIS, load_map
-
-import wx
-
-from os import path
-
-import shutil
-
-import numpy
-
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Constants:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
-ICONS_LOCATION = 'icons'
-DATA_LOCATION = 'data'
-MAP_IMAGE_FILE_PATH = "/tmp/sigis.png"
+NASA = "http://wms.jpl.nasa.gov/wms.cgi"
+GMAP = "http://www2.dmsolutions.ca/cgi-bin/mswms_gmap"
+LIZARD = "http://wms.lizardtech.com/lizardtech/iserv/ows"
 
-WIDTH = 800
-HEIGHT = 600
+#------------------------------------------------------------------------------
+#  "ServerConnection" class:
+#------------------------------------------------------------------------------
 
-#-------------------------------------------------------------------------------
-#  'MapnikMap' class:
-#-------------------------------------------------------------------------------
+class ServerConnection(HasTraits):
+    """ Connection to a WMS server """
 
-class MapnikMap(HasTraits):
-    ''' Traits wrapper around Mapnik's Map class.
-    '''
+    # Human readable identifier
+    name = String
 
-    #---------------------------------------------------------------------------
-    #  Trait definitions:
-    #---------------------------------------------------------------------------
+    # Unique resource locator
+    url = String(label="URL")
 
-    # Parent network
-    network = Instance('pylon.ui.network_vm.NetworkViewModel')
+    # WMS protocol version
+    version = String(
+        "1.1.1", desc="Currently supports only version 1.1.1 of the WMS protocol"
+    )
 
-    m = Instance(Map)
-
-    layers = List(Layer)
-
-    updated = Event
-
-    # Default view:
+    # Default view
     traits_view = View(
-        Item(name='m',
-             editor=MapnikMapEditor(),
-             show_label=False),
-        id='pylon.map.MapnikMap',
-        title = 'Map',
-        resizable = True,
-        style='custom',
-        buttons = NoButtons)
+        Item(name="name"), Item(name="url"),
+        Item(name="version", style="readonly"),
+        title="Connection details",
+        buttons=["OK", "Cancel"], width=0.3
+    )
 
-    #---------------------------------------------------------------------------
-    #  Initialise object:
-    #---------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+#  "Layer" class:
+#------------------------------------------------------------------------------
 
-    def __init__(self, network):
-        self.network = network
+class ContentLayer(HasTraits):
+    """ Defines the structure of a layer of map content """
 
-    #---------------------------------------------------------------------------
-    #  Default map instance:
-    #---------------------------------------------------------------------------
+    # Layer name
+    name = String
 
-    def _m_default(self):
-        m = Map(WIDTH, HEIGHT, "+proj=latlong +ellps=WGS84")
-        m.background = Color("white")
+    # Layer title
+    title = String
 
-        load_map(m, path.join(DATA_LOCATION, 'osm-roads.xml'))
-
-#        m.zoom_to_box(Envelope(1405120.04127408,
-#                               -247003.813399447,
-#                               1706357.31328276,
-#                               -25098.593149577))
-
-#        m.zoom_to_box(Envelope(-1000000.0, 7500000.0, -500000, 8500000))
-
-        m.zoom_to_box(Envelope(-700000.0, 7600000.0, -300000, 7800000))
-
-        return m
-
-    def _layers_items_changed(self, event):
-        for lyr in event.added:
-            self.m.layers.append(lyr)
-        for lyr in event.removed:
-            self.m.layers.remove(lyr)
-
-#-------------------------------------------------------------------------------
-#  'MapnikMapCanvas' class:
-#-------------------------------------------------------------------------------
-
-class MapnikMapCanvas(Canvas):
-    def __init__(self, m, parent, id=-1, size=wx.DefaultSize):
-        Canvas.__init__(self, parent, id, size=size)
-        self.parent = parent
-        self.m = m
-        self.gca = GraphicsContextArray((100, 100))
-        #self.img = wx.NullBitmap
-        return
-
-    def load_image(self):
-        w, h = self.parent.GetSize()
-
-        buf = Image(WIDTH, HEIGHT)
-        ren = render(self.m, buf)
-
-        #render_to_file(self.m, MAP_IMAGE_FILE_PATH, "png")
-        #self.img = kiva.Image(MAP_IMAGE_FILE_PATH)
-
-        #img = wx.ImageFromData(WIDTH, HEIGHT, rawdata(buf))
-        #self.bmp = wx.BitmapFromBufferRGBA(WIDTH, HEIGHT, rawdata(buf))
-
-        map_string = numpy.fromstring(rawdata(buf), dtype=numpy.uint8)
-
-        map_colours = map_string.reshape((HEIGHT*WIDTH, 4))
-
-        red = map_colours[:, 0].reshape((HEIGHT, WIDTH))
-        green = map_colours[:, 1].reshape((HEIGHT, WIDTH))
-        blue = map_colours[:, 2].reshape((HEIGHT, WIDTH))
-        alpha = map_colours[:, 3].reshape((HEIGHT, WIDTH))
-
-#        ARGB4 = numpy.array([A, R, G, B])
-#        ARGB = numpy.ndarray(shape=(HEIGHT, WIDTH, 4), dtype=numpy.uint8)
-#        ARGB[:,:,0] = ARGB4[0,:,:]
-#        ARGB[:,:,1] = ARGB4[1,:,:]
-#        ARGB[:,:,2] = ARGB4[2,:,:]
-#        ARGB[:,:,3] = ARGB4[3,:,:]
-
-        argb = numpy.dstack((alpha, red, green, blue)).copy()
-
-        self.gca = GraphicsContextArray(argb, pix_format="argb32")
-        self.dirty = 1
-        self.Refresh()
-
-    def do_draw(self, gc):
-
-        w = gc.width()
-        h = gc.height()
-        img_w = self.gca.width()
-        img_h = self.gca.height()
-        gc.draw_image(self.gca, ((w/2)-(img_w/2), (h/2)-(img_h/2), img_w, img_h))
-
-#-------------------------------------------------------------------------------
-#  'MapnikMapComponent' class:
-#-------------------------------------------------------------------------------
-
-class MapnikMapComponent(Component):
-    m = Instance(MapnikMap)
-
-    normal_pointer = Pointer("arrow")
-    moving_pointer = Pointer("hand")
-
-    def __init__(self, bounds, position, padding, m):
-        Component.__init__(self,
-                           bounds=bounds,
-                           position=position,
-                           padding=padding)
-        self.m = m
-
-        # A blank GraphicsContextArray
-        self.gca = GraphicsContextArray((100, 100))
-
-        self.bgcolor = 'transparent'
-
-#    def update(self, m):
-#        self.m = m
-#
-#        #w, h = self.parent.GetSize()
-#        w = self.gc.width()
-#        h = self.gc.height()
-#
-#        buf = Image(WIDTH, HEIGHT)
-#        ren = render(self.m, buf)
-#
-#        map_string = numpy.fromstring(rawdata(buf), dtype=numpy.uint8)
-#
-#        map_colours = map_string.reshape((HEIGHT*WIDTH, 4))
-#
-#        red = map_colours[:, 0].reshape((HEIGHT, WIDTH))
-#        green = map_colours[:, 1].reshape((HEIGHT, WIDTH))
-#        blue = map_colours[:, 2].reshape((HEIGHT, WIDTH))
-#        alpha = map_colours[:, 3].reshape((HEIGHT, WIDTH))
-#
-#        argb = numpy.dstack((alpha, red, green, blue)).copy()
-#
-#        self.gca = GraphicsContextArray(argb, pix_format="argb32")
-#        self.dirty = 1
-#        self.request_redraw()
-
-    def _draw_mainlayer(self, gc, view_bounds=None, mode="normal"):
-
-        gc.save_state()
-
-        x, y = self.position
-
-        w = gc.width()
-        h = gc.height()
-
-        buf = Image(w, h)
-        ren = render(self.m.m, buf)
-
-        map_string = numpy.fromstring(rawdata(buf), dtype=numpy.uint8)
-
-        map_colours = map_string.reshape((h*w, 4))
-
-        red = map_colours[:, 0].reshape((h, w))
-        green = map_colours[:, 1].reshape((h, w))
-        blue = map_colours[:, 2].reshape((h, w))
-        alpha = map_colours[:, 3].reshape((h, w))
-
-        argb = numpy.dstack((alpha, red, green, blue)).copy()
-
-        self.gca = GraphicsContextArray(argb, pix_format="argb32")
-
-        img_w = self.gca.width()
-        img_h = self.gca.height()
-
-        gc.draw_image(self.gca)#, (x+(w/2-img_w/2), y+(h/2-img_h/2), img_w, img_h))
-
-        gc.restore_state()
-
-        self.m.m.updated = True
-        return
-
-    def normal_left_down(self, event):
-        self.event_state = "moving"
-        event.window.set_pointer(self.moving_pointer)
-        self.offset_x = event.x - self.x
-        self.offset_y = event.y - self.y
-        return
-
-    def normal_right_down(self, event):
-        self.m.m.zoom(0.5)
-        self.request_redraw()
-        return
-
-    def moving_mouse_move(self, event):
-        self.position = [event.x-self.offset_x, event.y-self.offset_y]
-        #self.request_redraw()
-        return
-
-    def moving_left_up(self, event):
-        self.event_state = "normal"
-        event.window.set_pointer(self.normal_pointer)
-        self.request_redraw()
-        return
-
-    def moving_mouse_leave(self, event):
-        self.moving_left_up(event)
-        return
-
-#-------------------------------------------------------------------------------
-#  '_MapnikMapEditor' class:
-#-------------------------------------------------------------------------------
-
-class _MapnikMapEditor(Editor):
-    scrollable = True
-
-    map_component = Instance(MapnikMapComponent)
-
-    def init(self, parent):
-        self.control = wx.Panel(parent, -1, style=wx.CLIP_CHILDREN)
-        self._sizer = wx.BoxSizer(wx.VERTICAL)
-        self.control.SetSizer(self._sizer)
-
-        #self._figure = MapnikMapCanvas(self.value, self.control)
-        #self._sizer.Add(self._figure, 1, wx.EXPAND)
-
-        self.map_component = MapnikMapComponent(bounds=[100,100],
-                                          position=[100,200],
-                                          padding=5,
-                                          m=self.value)
-        self._figure = Window(self.control, -1, component=self.map_component)
-
-        self._sizer.Add(self._figure.control, 1, wx.EXPAND)
-
-        self.set_tooltip()
-
-        #
-        # Listen for the 'updated' trait of the Graph to change
-        #
-        self.value.on_trait_change(self.update_editor, 'updated')
-
-    def update_editor(self):
-
-        #self.map_component.update(self.value)
-
-        self.control.Layout()
-
-        #self._figure.component.request_redraw()
-
-#-------------------------------------------------------------------------------
-#  'MapnikMapTraitsEditor' class:
-#-------------------------------------------------------------------------------
-
-class MapnikMapEditor(BasicEditorFactory):
-    klass = _MapnikMapEditor
-
-#---------------------------------------------------------------------------
-#  Standalone call:
-#---------------------------------------------------------------------------
+    # Detailed description of the layer
+    abstract = String
+
+    # Bounding box (left, bottom, right, top) in srs units
+    bbox = Tuple(Float, Float, Float, Float)
+
+    # Spacial reference system identifier
+    srs = String
+
+    # Optional list of named styles
+    styles = Dict(String, Dict(String, String))
+
+    # Selected style
+    style = String
+
+#------------------------------------------------------------------------------
+#  "MapService" class:
+#------------------------------------------------------------------------------
+
+class MapService(HasTraits):
+    """ A Web Map Service """
+
+    #--------------------------------------------------------------------------
+    #  Private interface:
+    #--------------------------------------------------------------------------
+
+    # Reference to OWSLib map service
+    wms = Trait(WebMapService)
+
+    #--------------------------------------------------------------------------
+    #  Server connections:
+    #--------------------------------------------------------------------------
+
+    # Server connection details
+    connection = Instance(ServerConnection)
+
+    # Available connections
+    connections = List(Instance(ServerConnection))
+
+    # Connects to the service
+    connect = Button("C&onnect")
+
+    # Adds a new connection
+    new = Button("&New")
+
+    # Edits the server connection details
+    edit = Button("&Edit")
+
+    # Deletes the current connection
+    delete = Button("&Delete")
+
+    #--------------------------------------------------------------------------
+    #  Capability:
+    #--------------------------------------------------------------------------
+
+    # Image encoding
+    format = String
+
+    # Available image encoding types
+    formats = List(String)
+
+    #--------------------------------------------------------------------------
+    #  Layers:
+    #--------------------------------------------------------------------------
+
+    # Spatial reference system
+    srs = String(desc="spatial reference system")
+
+    # Available spatial reference systems
+    systems = List(String)
+
+    # Available map layers
+    layers = List(Instance(ContentLayer))
+
+    # Layers selected for addition
+    selected_layers = List(Instance(ContentLayer))
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        VGroup(
+            Group(
+                Item(
+                    name="connection", show_label=False,
+                    editor=InstanceEditor(name="connections", editable=False)
+                ),
+                HGroup(
+                    Item(
+                        name="connect", enabled_when="connection is not None",
+                        show_label=False
+                    ),
+                    Item(name="new", show_label=False),
+                    Item(
+                        name="edit", enabled_when="connection is not None",
+                        show_label=False
+                    ),
+                    Item(
+                        name="delete", enabled_when="connection is not None",
+                        show_label=False
+                    )
+                ),
+                label="Server connections", show_border=True
+            ),
+            Group(
+                Item(
+                    name="format", label="Image encoding",
+                    editor=EnumEditor(name="formats")
+                ),
+                Item(
+                    name="srs", label="Reference system",
+                    editor=EnumEditor(name="systems"),
+                ),
+            ),
+            Group(
+                Item(
+                    name="layers", show_label=False,
+                    editor=TableEditor(
+                        columns=[
+                            ObjectColumn(
+                                name="name", editable=False, width=0.2
+                            ),
+                            ObjectColumn(
+                                name="title", editable=False, width=0.4
+                            ),
+                            ObjectColumn(
+                                name="abstract", editable=False, width=0.4
+                            )
+                        ],
+                        editable=False, configurable=False, sortable=False,
+                        selection_mode="rows", selected="selected_layers",
+                        scroll_dy=10
+                    )
+                ),
+                label="Layers", show_border=True
+            ),
+        ),
+        id="pylon.ui.map.map.map_service",
+        resizable=True, buttons=["OK", "Cancel"],
+        title="Add Layer(s) from a Server"
+    )
+
+    #--------------------------------------------------------------------------
+    #  Protected interface:
+    #--------------------------------------------------------------------------
+
+    def _connection_default(self):
+        """ Trait initialiser """
+
+        if self.connections:
+            return self.connections[0]
+        else:
+            return None
+
+
+    def _connect_fired(self):
+        """ Handles connection """
+
+        connection = self.connection
+        if connection is not None:
+            try:
+                self.wms = WebMapService(connection.url, connection.version)
+            except HTTPError:
+                print "Invalid URL"
+                self.wms = None
+
+
+    def _new_fired(self):
+        """ Handles new connections """
+
+        connection = ServerConnection()
+        retval = connection.edit_traits(kind="livemodal")
+        if retval.result:
+            self.connections.append(connection)
+
+
+    def _edit_fired(self):
+        """ Handles editing server connection details """
+
+        if self.connection is not None:
+            self.connection.edit_traits(kind="livemodal")
+
+
+    def _delete_fired(self):
+        """ Handles deletion of connection details """
+
+        conn = self.connection
+        if (conn is not None) and (conn in self.connections):
+            self.connections.remove(conn)
+            conn = None
+
+
+    def _systems_changed(self, new):
+        """ Handles the list of SRS changing """
+
+        if new: self.srs = new[0]
+
+
+    def _formats_changed(self, new):
+        """ Handles the list of image encoding types changing """
+
+        if new: self.format = new[0]
+
+
+    def _wms_changed(self, new):
+        """ Handles new web map service """
+#        from xml.etree.ElementTree import tostring
+
+        cap = new.capabilities
+
+        # Image encoding
+        self.formats = [
+            f.text for f in cap.findall("Capability/Request/GetMap/Format")
+        ]
+
+        # Spatial reference system
+        self.systems = [s.text for s in cap.findall("Capability/Layer/SRS")]
+
+        for layer in cap.findall("Capability/Layer/Layer"):
+#            print "LAYER:", tostring(layer)
+
+            # Create a content layer
+            content_layer = ContentLayer()
+            content_layer.name = layer.findtext("Name")
+            content_layer.title = layer.findtext("Title")
+
+            # Layer abstract
+            abstract = layer.findtext("Abstract")
+            if abstract is not None:
+                # Turn paragraph into one long line
+                lines = [line.strip() for line in abstract.split("\n")]
+                content_layer.abstract = string.join(lines).strip()
+
+            # Bounding box
+            bbox = layer.find("LatLonBoundingBox")
+            if bbox is not None:
+                content_layer.bbox = (
+                    float(bbox.get("maxx")), float(bbox.get("maxy")),
+                    float(bbox.get("minx")), float(bbox.get("miny"))
+                )
+
+            # Layer styles
+            styles = {}
+            for style in layer.findall("Style"):
+                name = style.findtext("Name")
+                style_dict = {}
+                title = style.findtext("Title")
+                if title is not None:
+                    style_dict["title"] = title
+                styles[name] = style_dict
+            content_layer.styles = styles
+
+
+            # Add to the list of available layers
+            self.layers.append(content_layer)
+
+#        fd = open("/tmp/lizard.xml", "wb")
+#        fd.write(tostring(cap))
+#        fd.close()
+
+#------------------------------------------------------------------------------
+#  "WMSLayer" class:
+#------------------------------------------------------------------------------
+
+class WMSLayer(Component):
+    """ A map layer from a Web Map Service """
+
+#------------------------------------------------------------------------------
+#  "Map" class:
+#------------------------------------------------------------------------------
+
+class Map(HasTraits):
+    """ Viewer of map layers """
+
+#------------------------------------------------------------------------------
+#  Stand-alone call:
+#------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    mm = mm()
 
-    # Canadian Provinces (Polygons)
+    nasa = ServerConnection(
+        name="NASA (JPL)", url="http://wms.jpl.nasa.gov/wms.cgi"
+    )
+    gmap = ServerConnection(
+        name="DM Solutions GMap",
+        url="http://www2.dmsolutions.ca/cgi-bin/mswms_gmap"
+    )
+    lizard = ServerConnection(
+        name="Lizardtech server",
+        url="http://wms.lizardtech.com/lizardtech/iserv/ows"
+    )
 
-#    provpoly_lyr = Layer('Provinces')
-#    provpoly_lyr.datasource = Shapefile(file=path.join(DATA_LOCATION,
-#                                                       'boundaries'),
-#                                        encoding='latin1')
-#
-#    provpoly_style = Style()
-#
-#    provpoly_rule_on = Rule()
-#
-#    provpoly_rule_on.filter = Filter("[NAME_EN] = 'Ontario'")
-#
-#    provpoly_rule_on.symbols.append(PolygonSymbolizer(Color(250, 190, 183)))
-#    provpoly_style.rules.append(provpoly_rule_on)
-#
-#    provpoly_rule_qc = Rule()
-#    provpoly_rule_qc.filter = Filter("[NAME_EN] = 'Quebec'")
-#    provpoly_rule_qc.symbols.append(PolygonSymbolizer(Color(217, 235, 203)))
-#    provpoly_style.rules.append(provpoly_rule_qc)
-#
-#    mm.m.append_style("provinces", provpoly_style)
-#
-#    provpoly_lyr.styles.append("provinces")
-#
-#    #mm.layers.append(provpoly_lyr)
-#
-#    # OSM roads
-#
-#    roads = Layer("Roads")
-#
-#    roads.datasource = PostGIS(type="postgis",
-#                               host="/var/run/postgresql",
-#                               #port="5433",
-#                               user="rwl",
-#                               dbname="gis",
-#                               #password="blapp",
-#                               table="SELECT * from planet_osm_roads order by z_order")
-#
-#    roads_style = Style()
-#
-#    roads_motorway_level_4_5_rule = Rule()
-#    roads_motorway_level_4_5_rule.filter = Filter("[highway] = 'motorway' or [highway] = 'motorway_link'")
-#
-#    mm.layers.append(roads)
+    service = MapService(connections=[nasa, gmap, lizard])
 
-    load_map(mm.m, path.join(DATA_LOCATION, 'osm-roads.xml'))
+    service.configure_traits()
 
-    mm.m.zoom_to_box(Envelope(-1000000.0, 7500000.0, -500000, 8500000))
-    #mm.m.zoom_to_box(Envelope(-200000.0, 7500000.0, -400000, 7800000))
+    layer = service.selected_layers[0]
 
-    mm.configure_traits(view=mm_view)
+    img = service.wms.getmap(
+        layers=[layer.name],
+#        styles=['visual_bright'],
+        srs=service.srs,
+        bbox=(-112, 36, -106, 41),
+        size=(300, 250),
+        format=service.format,
+        transparent=True
+    )
+
+#    out = open("/tmp/map.jpg", "wb")
+#    out.write(img.read())
+#    out.close()
+
+# EOF -------------------------------------------------------------------------
