@@ -1,0 +1,417 @@
+<WMT_MS_Capabilities updateSequence="0" version="1.1.1">
+
+  <Service>
+    <Name>OGC:WMS</Name>
+    <Title>demo.lizardtech.com</Title>
+    <OnlineResource ns0:href="http://demo.lizardtech.com/lizardtech/iserv/ows" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+  </Service>
+
+  <Capability>
+
+    <Request>
+      <GetCapabilities>
+        <Format>application/vnd.ogc.wms_xml</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource ns0:href="http://demo.lizardtech.com/lizardtech/iserv/ows" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+            </Get>
+
+          </HTTP>
+        </DCPType>
+      </GetCapabilities>
+      <GetMap>
+        <Format>image/jpeg</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource ns0:href="http://demo.lizardtech.com/lizardtech/iserv/ows" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+
+            </Get>
+          </HTTP>
+        </DCPType>
+      </GetMap>
+    </Request>
+    <Exception>
+      <Format>application/vnd.ogc.se_xml</Format>
+    </Exception>
+
+    <Layer>
+      <Title>Top Layer</Title>
+      <SRS>EPSG:4326</SRS>
+      <Layer opaque="1">
+        <Name>Chelan</Name>
+        <Title>Chelan</Title>
+        <SRS>EPSG:26910</SRS>
+
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="-119.758747" maxy="48.640423" minx="-121.282609" miny="47.226697" />
+        <BoundingBox SRS="EPSG:26910" maxx="738911.000000" maxy="5388986.000000" minx="629936.000000" miny="5235189.000000" resx="1.000000" resy="-1.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="-119.758747" maxy="48.640423" minx="-121.282609" miny="47.226697" />
+        <ScaleHint max="724.077344" min="1.414214" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200403.topobathy</Name>
+
+        <Title>March 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+
+      <Layer opaque="1">
+        <Name>usa_srtm</Name>
+        <Title>SRTM (USA)</Title>
+        <KeywordList>
+            <Keyword>radar</Keyword>
+            <Keyword>dted</Keyword>
+            <Keyword>elevation</Keyword>
+
+      </KeywordList>  <SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="-63.999722" maxy="50.000000" minx="-126.000000" miny="16.999722" />
+        <BoundingBox SRS="EPSG:4326" maxx="-63.999722" maxy="50.000000" minx="-126.000000" miny="16.999722" resx="0.000278" resy="-0.000278" />
+        <ScaleHint max="12.872486" min="0.000393" />
+      </Layer>
+      <Layer opaque="1">
+
+        <Name>swfwmd_2004_rgb_doqq</Name>
+        <Title>Florida</Title>
+        <KeywordList>
+         <Keyword>Florida</Keyword>
+         <Keyword>ortho</Keyword>
+      </KeywordList>  <SRS>EPSG:26917</SRS>
+
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="-81.248255" maxy="29.572644" minx="-82.908008" miny="26.740052" />
+        <BoundingBox SRS="EPSG:26917" maxx="475315.500000" maxy="3271459.500000" minx="315151.500000" miny="2958993.500000" resx="1.000000" resy="-1.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="-81.248255" maxy="29.572644" minx="-82.908008" miny="26.740052" />
+        <Attribution>
+         <Title>Southwest Florida Water Management District</Title>
+         <OnlineResource ns0:href="http://www.swfwmd.state.fl.us" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+      </Attribution>  <ScaleHint max="92681.900024" min="1.414214" />
+
+      </Layer>
+      <Layer opaque="1">
+        <Name>portsmouth</Name>
+        <Title>Portsmouth, UK</Title>
+        <KeywordList>
+				      <Keyword>UK</Keyword>          
+				      <Keyword>Portsmouth</Keyword>          
+				      <Keyword>shipping</Keyword>          
+		</KeywordList>      <SRS>EPSG:4326</SRS>
+
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="-0.803391" maxy="50.932733" minx="-1.428538" miny="50.620143" />
+        <BoundingBox SRS="EPSG:4326" maxx="-0.803391" maxy="50.932733" minx="-1.428538" miny="50.620143" resx="0.000146" resy="-0.000090" />
+        <ScaleHint max="0.175987" min="0.000172" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>idaho</Name>
+        <Title>Idaho (ESPG 4269)</Title>
+
+        <KeywordList>
+         <Keyword>NAIP</Keyword>
+         <Keyword>idaho</Keyword>
+         <Keyword>USDA</Keyword>
+         <Keyword>aerial</Keyword>
+      </KeywordList>  <SRS>EPSG:4269</SRS>
+
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="-110.998838" maxy="49.001153" minx="-117.251153" miny="41.936335" />
+        <BoundingBox SRS="EPSG:4269" maxx="-110.998838" maxy="49.001153" minx="-117.251153" miny="41.936335" resx="0.000009" resy="-0.000009" />
+        <BoundingBox SRS="EPSG:4326" maxx="-110.998838" maxy="49.001153" minx="-117.251153" miny="41.936335" />
+        <Attribution>
+         <Title>The USDA National Agriculture Imagery Program</Title>
+         <OnlineResource ns0:href="http://www.apfo.usda.gov/NAIP.html" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+      </Attribution>  <ScaleHint max="3.432678" min="0.000013" />
+
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200412.topobathy</Name>
+        <Title>December 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200411.topobathy</Name>
+        <Title>November 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200410.topobathy</Name>
+        <Title>October 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200409.topobathy</Name>
+        <Title>September 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+               <Keyword>bathymetry</Keyword>
+
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200408.topobathy</Name>
+
+        <Title>August 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+
+      <Layer opaque="1">
+        <Name>bmng.200408</Name>
+        <Title>August 2004 (Blue Marble: Next Generation)</Title>
+        <KeywordList>
+            <Keyword>bmng</Keyword>
+            <Keyword>BlueMarble</Keyword>
+            <Keyword>MODIS</Keyword>
+
+      </KeywordList>  <SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <Attribution>
+         <Title>NASA's Earth Observatory</Title>
+         <OnlineResource ns0:href="http://earthobservatory.nasa.gov" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+
+      </Attribution>  <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200407.topobathy</Name>
+        <Title>July 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200406.topobathy</Name>
+        <Title>June 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200405.topobathy</Name>
+        <Title>May 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+               <Keyword>bathymetry</Keyword>
+
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200402.topobathy</Name>
+
+        <Title>February 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+
+      <Layer opaque="1">
+        <Name>bmng.200404.topobathy</Name>
+        <Title>April 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+               <Keyword>MODIS</Keyword>
+
+               <Keyword>topography</Keyword>
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+
+      </Layer>
+      <Layer opaque="1">
+        <Name>bmng.200401.topobathy</Name>
+        <Title>January 2004 Shaded Topography and Bathymetry (Blue Marble: Next Generation</Title>
+        <KeywordList>
+               <Keyword>bmng</Keyword>
+               <Keyword>BlueMarble</Keyword>
+
+               <Keyword>MODIS</Keyword>
+               <Keyword>topography</Keyword>
+               <Keyword>bathymetry</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" />
+
+        <BoundingBox SRS="EPSG:4326" maxx="180.000000" maxy="90.000000" minx="-180.000000" miny="-90.000000" resx="0.004167" resy="-0.004167" />
+        <ScaleHint max="96.543646" min="0.005893" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>bm2002</Name>
+        <Title>Blue Marble 2002</Title>
+        <KeywordList>
+               <Keyword>bluemarble</Keyword>
+
+               <Keyword>MODIS</Keyword>
+	         <Keyword>bmng</Keyword>
+         </KeywordList><SRS>EPSG:4326</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="180.004167" maxy="89.995833" minx="-179.995833" miny="-90.004167" />
+        <BoundingBox SRS="EPSG:4326" maxx="180.004167" maxy="89.995833" minx="-179.995833" miny="-90.004167" resx="0.008333" resy="-0.008333" />
+        <ScaleHint max="96.543646" min="0.011785" />
+
+      </Layer>
+      <Layer opaque="1">
+        <Name>Seattle</Name>
+        <Title>Seattle</Title>
+        <KeywordList>
+               <Keyword>Seattle</Keyword>
+               <Keyword>aerial</Keyword>
+
+         </KeywordList><SRS>EPSG:26910</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="-121.982434" maxy="48.007485" minx="-122.633049" miny="46.991471" />
+        <BoundingBox SRS="EPSG:26910" maxx="575900.149989" maxy="5317199.850000" minx="527900.150000" miny="5204699.850070" resx="0.300000" resy="-0.300000" />
+        <BoundingBox SRS="EPSG:4326" maxx="-121.982434" maxy="48.007485" minx="-122.633049" miny="46.991471" />
+        <ScaleHint max="27804.569995" min="0.424264" />
+      </Layer>
+      <Layer opaque="1">
+
+        <Name>Novato</Name>
+        <Title>Novato</Title>
+        <SRS>EPSG:26910</SRS>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox maxx="-111.100424" maxy="5.991298" minx="-111.149637" miny="5.957860" />
+        <BoundingBox SRS="EPSG:26910" maxx="1826365.328931" maxy="676657.277115" minx="1820878.917958" miny="672999.669799" resx="0.152400" resy="-0.152400" />
+        <BoundingBox SRS="EPSG:4326" maxx="-111.100424" maxy="5.991298" minx="-111.149637" miny="5.957860" />
+
+        <ScaleHint max="1765.593727" min="0.215527" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>Douglas</Name>
+        <Title>Douglas</Title>
+        <SRS>EPSG:26911</SRS>
+        <SRS>EPSG:4326</SRS>
+
+        <LatLonBoundingBox maxx="-118.900948" maxy="48.196034" minx="-120.430396" miny="47.172944" />
+        <BoundingBox SRS="EPSG:26911" maxx="356039.500000" maxy="5339903.500000" minx="244922.500000" miny="5229881.500000" resx="1.000000" resy="-1.000000" />
+        <BoundingBox SRS="EPSG:4326" maxx="-118.900948" maxy="48.196034" minx="-120.430396" miny="47.172944" />
+        <ScaleHint max="46340.950012" min="1.414214" />
+      </Layer>
+      <Layer opaque="1">
+        <Name>DC</Name>
+        <Title>DC</Title>
+
+        <KeywordList>
+            <Keyword>DC</Keyword>
+            <Keyword>Washington</Keyword>
+            <Keyword>aerial</Keyword>
+      </KeywordList>  <SRS>EPSG:26918</SRS>
+        <SRS>EPSG:4326</SRS>
+
+        <LatLonBoundingBox maxx="-76.728874" maxy="39.151198" minx="-77.643627" miny="38.607604" />
+        <BoundingBox SRS="EPSG:26918" maxx="349500.150000" maxy="4334999.850000" minx="271500.150000" miny="4276499.850000" resx="0.300000" resy="-0.300000" />
+        <BoundingBox SRS="EPSG:4326" maxx="-76.728874" maxy="39.151198" minx="-77.643627" miny="38.607604" />
+        <ScaleHint max="27804.570007" min="0.424264" />
+      </Layer>
+    </Layer>
+  </Capability>
+
+</WMT_MS_Capabilities>

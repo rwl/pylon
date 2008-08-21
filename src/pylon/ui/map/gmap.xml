@@ -1,0 +1,246 @@
+<WMT_MS_Capabilities version="1.1.1">
+
+
+
+<Service>
+  <Name>OGC:WMS</Name>
+  <Title>DM Solutions' WMS Demo Server</Title>
+  <Abstract>This demonstration server was setup by DM Solutions Group (http://www.dmsolutions.ca/) and is powered by MapServer (http://mapserver.gis.umn.edu/).  This server uses Canadian source data (c)2000, Government of Canada with permission from Natural Resources Canada from NRCan's GeoGratis web site (http://geogratis.cgdi.gc.ca/).</Abstract>
+  <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" />
+</Service>
+
+<Capability>
+  <Request>
+    <GetCapabilities>
+      <Format>application/vnd.ogc.wms_xml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetCapabilities>
+    <GetMap>
+      <Format>image/gif</Format>
+      <Format>image/png</Format>
+      <Format>image/png; mode=24bit</Format>
+      <Format>image/jpeg</Format>
+      <Format>image/wbmp</Format>
+      <Format>image/tiff</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetMap>
+    <GetFeatureInfo>
+      <Format>text/plain</Format>
+      <Format>text/html</Format>
+      <Format>application/vnd.ogc.gml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetFeatureInfo>
+    <DescribeLayer>
+      <Format>text/xml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </DescribeLayer>
+    <GetLegendGraphic>
+      <Format>image/gif</Format>
+      <Format>image/png</Format>
+      <Format>image/png; mode=24bit</Format>
+      <Format>image/jpeg</Format>
+      <Format>image/wbmp</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetLegendGraphic>
+  </Request>
+  <Exception>
+    <Format>application/vnd.ogc.se_xml</Format>
+    <Format>application/vnd.ogc.se_inimage</Format>
+    <Format>application/vnd.ogc.se_blank</Format>
+  </Exception>
+  <VendorSpecificCapabilities />
+  <UserDefinedSymbolization RemoteWFS="0" SupportSLD="1" UserLayer="0" UserStyle="1" />
+  <Layer>
+    <Name>DEMO</Name>
+    <Title>DM Solutions' WMS Demo Server</Title>
+    <SRS>EPSG:26917</SRS>
+    <SRS>EPSG:42304</SRS>
+    <SRS>EPSG:42101</SRS>
+    <SRS>EPSG:4269</SRS>
+    <SRS>EPSG:4326</SRS>
+    <SRS>EPSG:41001</SRS>
+    <LatLonBoundingBox maxx="-11.5624" maxy="83.8293" minx="-172.367" miny="35.6673" />
+    <BoundingBox SRS="EPSG:42304" maxx="3.0728e+06" maxy="3.84e+06" minx="-2.2e+06" miny="-712631" />
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>bathymetry</Name>
+        <Title>Elevation/Bathymetry</Title>
+        <SRS>EPSG:42304</SRS>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>land_fn</Name>
+        <Title>US Land</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="179.94" maxy="89.8254" minx="-178.838" miny="31.8844" />
+        <BoundingBox SRS="EPSG:42304" maxx="3.58387e+06" maxy="4.67312e+06" minx="-2.75056e+06" miny="-936638" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=land_fn&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>park</Name>
+        <Title>Parks</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="-13.3643" maxy="83.7466" minx="-173.433" miny="41.4271" />
+        <BoundingBox SRS="EPSG:42304" maxx="2.84037e+06" maxy="3.83012e+06" minx="-2.3468e+06" miny="-67422.4" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=park&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>drain_fn</Name>
+        <Title>US Lakes</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="179.92" maxy="88.06" minx="-179.973" miny="35.2464" />
+        <BoundingBox SRS="EPSG:42304" maxx="2.75882e+06" maxy="4.36727e+06" minx="-2.75056e+06" miny="-936638" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=drain_fn&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>drainage</Name>
+        <Title>Lakes</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="-15.1085" maxy="83.0129" minx="-169.629" miny="39.2232" />
+        <BoundingBox SRS="EPSG:42304" maxx="2.79747e+06" maxy="3.74336e+06" minx="-2.1694e+06" miny="-386968" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=drainage&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>prov_bound</Name>
+        <Title>Provincial Borders</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="-11.9603" maxy="83.8009" minx="-173.537" miny="35.8775" />
+        <BoundingBox SRS="EPSG:42304" maxx="3.00943e+06" maxy="3.83661e+06" minx="-2.3406e+06" miny="-719746" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=prov_bound&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>fedlimit</Name>
+        <Title>Federal Limit</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="178.833" maxy="89.9051" minx="-179.96" miny="34.2409" />
+        <BoundingBox SRS="EPSG:42304" maxx="3.38519e+06" maxy="4.6545e+06" minx="-2.69358e+06" miny="-724162" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=fedlimit&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>rail</Name>
+        <Title>Railroads</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="-46.6233" maxy="66.7201" minx="-137.447" miny="37.7146" />
+        <BoundingBox SRS="EPSG:42304" maxx="2.61606e+06" maxy="1.93097e+06" minx="-2.14572e+06" miny="-680853" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=rail&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>road</Name>
+        <Title>Roads</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="-33.7745" maxy="72.5503" minx="-148.059" miny="35.882" />
+        <BoundingBox SRS="EPSG:42304" maxx="3.00053e+06" maxy="2.56497e+06" minx="-2.30369e+06" miny="-724118" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=road&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>popplace</Name>
+        <Title>Cities</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="-12.9698" maxy="83.4832" minx="-172.301" miny="36.3541" />
+        <BoundingBox SRS="EPSG:42304" maxx="2.96177e+06" maxy="3.79886e+06" minx="-2.30386e+06" miny="-681503" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=popplace&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="1">
+        <Name>grid</Name>
+        <Title>Grid</Title>
+        <SRS>EPSG:42304</SRS>
+        <LatLonBoundingBox maxx="179.94" maxy="89.8254" minx="-178.838" miny="31.8844" />
+        <BoundingBox SRS="EPSG:42304" maxx="3.58387e+06" maxy="4.67312e+06" minx="-2.75056e+06" miny="-936639" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="12" width="18">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://dev1.dmsolutions.ca/cgi-bin/mswms_gmap?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=grid&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+  </Layer>
+</Capability>
+</WMT_MS_Capabilities>
