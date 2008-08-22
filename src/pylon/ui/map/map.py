@@ -297,7 +297,12 @@ class MapService(HasTraits):
 
     def _wms_changed(self, new):
         """ Handles new web map service """
-#        from xml.etree.ElementTree import tostring
+        from xml.etree.ElementTree import tostring
+        print tostring(new.capabilities)
+
+        fd = open("/tmp/metacarta.xml", "wb")
+        fd.write(tostring(new.capabilities))
+        fd.close()
 
         cap = new.capabilities
 
@@ -347,10 +352,6 @@ class MapService(HasTraits):
             # Add to the list of available layers
             self.layers.append(content_layer)
 
-#        fd = open("/tmp/lizard.xml", "wb")
-#        fd.write(tostring(cap))
-#        fd.close()
-
 #------------------------------------------------------------------------------
 #  "WMSLayer" class:
 #------------------------------------------------------------------------------
@@ -387,8 +388,11 @@ class Map(HasTraits):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
+    # Number of zoom levels
+    n_zoom_level = Int(19)
+
     # Range of zoom levels
-    zoom_level = Range(low=0, high=18, value=0)
+    zoom_level = Range(low=0, high=19, value=0)
 
     # Map services
     services = List(Instance(MapService))
@@ -442,7 +446,7 @@ class Map(HasTraits):
         """ Trait initialiser """
 
         canvases = {}
-        for i in range(19):
+        for i in range(self.n_zoom_level):
             canvases[i] = Canvas(bgcolor="fuchsia")
 
         return canvases
@@ -494,8 +498,21 @@ if __name__ == "__main__":
         name="Lizardtech server",
         url="http://wms.lizardtech.com/lizardtech/iserv/ows"
     )
+    nl = ServerConnection(
+        name="NL Tile Server",
+#        url="http://tile.openstreetmap.nl/"
+        url="http://tile.openstreetmap.org/"
+    )
+    metacarta = ServerConnection(
+        name="MetaCarta Labs",
+        url="http://labs.metacarta.com/wms/vmap0"
+    )
+    worldmap = ServerConnection(
+        name="World Map",
+        url="http://world.freemap.in/cgi-bin/mapserv?"
+    )
 
-    service = MapService(connections=[nasa, gmap, lizard])
+    service = MapService(connections=[nasa, gmap, lizard, metacarta, worldmap])
 
 #    service.configure_traits()
 

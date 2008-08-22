@@ -1,0 +1,437 @@
+<WMT_MS_Capabilities version="1.1.1">
+
+
+
+<Service>
+  <Name>OGC:WMS</Name>
+  <Title>Metacarta WMS VMaplv0</Title>
+  <OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" />
+</Service>
+
+<Capability>
+  <Request>
+    <GetCapabilities>
+      <Format>application/vnd.ogc.wms_xml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetCapabilities>
+    <GetMap>
+      <Format>image/jpeg</Format>
+      <Format>image/png</Format>
+      <Format>image/gif</Format>
+      <Format>image/png; mode=24bit</Format>
+      <Format>image/wbmp</Format>
+      <Format>image/tiff</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetMap>
+    <GetFeatureInfo>
+      <Format>text/plain</Format>
+      <Format>application/vnd.ogc.gml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetFeatureInfo>
+    <DescribeLayer>
+      <Format>text/xml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </DescribeLayer>
+    <GetLegendGraphic>
+      <Format>image/jpeg</Format>
+      <Format>image/png</Format>
+      <Format>image/gif</Format>
+      <Format>image/png; mode=24bit</Format>
+      <Format>image/wbmp</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetLegendGraphic>
+    <GetStyles>
+      <Format>text/xml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Get>
+          <Post><OnlineResource ns0:href="http://labs.metacarta.com/wms?" xmlns:ns0="http://www.w3.org/1999/xlink" /></Post>
+        </HTTP>
+      </DCPType>
+    </GetStyles>
+  </Request>
+  <Exception>
+    <Format>application/vnd.ogc.se_xml</Format>
+    <Format>application/vnd.ogc.se_inimage</Format>
+    <Format>application/vnd.ogc.se_blank</Format>
+  </Exception>
+  <VendorSpecificCapabilities />
+  <UserDefinedSymbolization RemoteWFS="0" SupportSLD="1" UserLayer="0" UserStyle="1" />
+  <Layer>
+    <Name>Vmap0</Name>
+    <Title>Metacarta WMS VMaplv0</Title>
+    <SRS>EPSG:4269</SRS>
+    <SRS>EPSG:4326</SRS>
+    <SRS>EPSG:900913</SRS>
+    <LatLonBoundingBox maxx="180" maxy="90" minx="-180" miny="-90" />
+    <Layer>
+      <Name>basic</Name>
+
+      <Title>basic</Title>
+      <Abstract>basic</Abstract>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>ocean</Name>
+
+        <Title>ocean</Title>
+
+      </Layer>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>ground_01</Name>
+
+        <Title>ground_01</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="90" minx="-180" miny="-90" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=ground_01&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="0" min="11973.6683623113" />
+        
+      </Layer>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>ground_02</Name>
+
+        <Title>ground_02</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="83.6274" minx="-180" miny="-90" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=ground_02&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="11973.6683623113" min="0" />
+      </Layer>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>population</Name>
+
+        <Title>population</Title>
+
+        <LatLonBoundingBox maxx="178.443" maxy="70.9927" minx="-179.13" miny="-53.1674" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=population&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="5986.83418115564" min="0" />
+      </Layer>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>river</Name>
+
+        <Title>river</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="90" minx="-180" miny="-90" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=river&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="299.341709057782" min="0" />
+      </Layer>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>stateboundary</Name>
+
+        <Title>stateboundary</Title>
+
+        <LatLonBoundingBox maxx="178.043" maxy="81.6552" minx="-139.053" miny="-49.1398" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=stateboundary&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="23947.3367246226" min="0" />
+      </Layer>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>country_01</Name>
+
+        <Title>country_01</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="90" minx="-180" miny="-90" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=country_01&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+      </Layer>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>country_02</Name>
+
+        <Title>country_02</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="72.0051" minx="-180" miny="-55.1943" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=country_02&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+      </Layer>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>disp</Name>
+
+        <Title>disp</Title>
+
+        <LatLonBoundingBox maxx="80.3432" maxy="68.0063" minx="-168.976" miny="3.97549" />
+      </Layer>
+      <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>inwater</Name>
+
+        <Title>inwater</Title>
+
+        <LatLonBoundingBox maxx="179.999" maxy="83.576" minx="-179.999" miny="-70.9173" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=inwater&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="11973.6683623113" min="0" />
+      </Layer>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>coastline_01</Name>
+
+        <Title>coastline_01</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="90" minx="-180" miny="-90" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=coastline_01&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="0" min="11973.6683623113" />
+        
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>coastline_02</Name>
+
+        <Title>coastline_02</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="83.6274" minx="-180" miny="-85.5828" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=coastline_02&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="11973.6683623113" min="0" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>depthcontour</Name>
+
+        <Title>depthcontour</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="89.9187" minx="-180" miny="-78.1118" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=depthcontour&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="17960.5025434669" min="0" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>priroad</Name>
+
+        <Title>priroad</Title>
+
+        <LatLonBoundingBox maxx="178.564" maxy="70.4843" minx="-174.009" miny="-54.7939" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=priroad&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>secroad</Name>
+
+        <Title>secroad</Title>
+
+        <LatLonBoundingBox maxx="179.999" maxy="74.7406" minx="-179.999" miny="-54.888" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=secroad&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="124.725712107409" min="0" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>rail</Name>
+
+        <Title>rail</Title>
+
+        <LatLonBoundingBox maxx="179.61" maxy="78.168" minx="-165.245" miny="-53.1384" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=rail&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="124.725712107409" min="0" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>ferry</Name>
+
+        <Title>ferry</Title>
+
+        <LatLonBoundingBox maxx="175.15" maxy="69.6709" minx="-126.191" miny="-41.8292" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=ferry&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="1197.36683623113" min="0" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>tunnel</Name>
+
+        <Title>tunnel</Title>
+
+        <LatLonBoundingBox maxx="177.891" maxy="67.2178" minx="-148.866" miny="-50.3083" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=tunnel&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="598.683418115564" min="0" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>bridge</Name>
+
+        <Title>bridge</Title>
+
+        <LatLonBoundingBox maxx="179.452" maxy="69.6586" minx="-149.703" miny="-43.5104" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=bridge&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="598.683418115564" min="0" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>trail</Name>
+
+        <Title>trail</Title>
+
+        <LatLonBoundingBox maxx="179.999" maxy="77.224" minx="-179.999" miny="-47.1622" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=trail&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="179.605025434669" min="0" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>CAUSE</Name>
+
+        <Title>CAUSE</Title>
+
+        <LatLonBoundingBox maxx="127.912" maxy="58.5718" minx="-96.5515" miny="-32.2882" />
+        <Style>
+          <Name>default</Name>
+          <Title>default</Title>
+          <LegendURL height="20" width="35">
+             <Format>image/png</Format>
+             <OnlineResource ns0:href="http://labs.metacarta.com/wms?version=1.1.1&amp;service=WMS&amp;request=GetLegendGraphic&amp;layer=CAUSE&amp;format=image/png" ns0:type="simple" xmlns:ns0="http://www.w3.org/1999/xlink" />
+          </LegendURL>
+        </Style>
+        <ScaleHint max="598.683418115564" min="0" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>clabel</Name>
+
+        <Title>clabel</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="83.6236" minx="-180" miny="-90" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>statelabel</Name>
+
+        <Title>statelabel</Title>
+
+        <LatLonBoundingBox maxx="180" maxy="83.6236" minx="-180" miny="-90" />
+    </Layer>
+    <Layer cascaded="0" opaque="0" queryable="0">
+        <Name>ctylabel</Name>
+
+        <Title>ctylabel</Title>
+
+        <LatLonBoundingBox maxx="177.13" maxy="78.2" minx="-165.27" miny="-53.15" />
+    </Layer>
+  </Layer>
+</Capability>
+</WMT_MS_Capabilities>
