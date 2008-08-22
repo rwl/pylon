@@ -23,6 +23,10 @@
 
 import string
 
+from urllib2 import HTTPError
+
+from StringIO import StringIO
+
 from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Delegate, Event, \
     Tuple, Button, Array, Bool, Range, Default, Property, Enum, Any, Dict, \
@@ -33,9 +37,12 @@ from enthought.traits.ui.api import \
 
 from enthought.traits.ui.table_column import ObjectColumn
 
-from enthought.enable.api import Component, Pointer
+from enthought.enable.api import Component, Pointer, Canvas, Viewport
+from enthought.enable.tools.api import ViewportPanTool
+from enthought.enable.component_editor import ComponentEditor
+from enthought.kiva.backend_image import Image
 
-from owslib.wms import WebMapService
+from owslib.wms import WebMapService, ServiceException
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -106,9 +113,7 @@ class ContentLayer(HasTraits):
 class MapService(HasTraits):
     """ A Web Map Service """
 
-    #--------------------------------------------------------------------------
-    #  Private interface:
-    #--------------------------------------------------------------------------
+    name = String("blapp")
 
     # Reference to OWSLib map service
     wms = Trait(WebMapService)
@@ -224,7 +229,8 @@ class MapService(HasTraits):
         ),
         id="pylon.ui.map.map.map_service",
         resizable=True, buttons=["OK", "Cancel"],
-        title="Add Layer(s) from a Server"
+        title="Add Layer(s) from a Server",
+        height=0.4
     )
 
     #--------------------------------------------------------------------------
@@ -349,8 +355,26 @@ class MapService(HasTraits):
 #  "WMSLayer" class:
 #------------------------------------------------------------------------------
 
-class WMSLayer(Component):
-    """ A map layer from a Web Map Service """
+class Tile(Component):
+    """ A map tile """
+
+    # Image as a file-like object
+    image = Any#Trait(StringIO)
+
+    #--------------------------------------------------------------------------
+    #  Draw the component in a specified graphics context:
+    #--------------------------------------------------------------------------
+
+#    def _draw(self, gc):
+    def _draw_mainlayer(self, gc, view_bounds=None, mode="default"):
+        """ Draw the component in a specified graphics context """
+
+        self.image.seek(0)
+        img = Image(self.image)
+
+        x, y = self.position
+
+        gc.draw_image(img, (x, y, img.width(), img.height()))
 
 #------------------------------------------------------------------------------
 #  "Map" class:
@@ -358,6 +382,100 @@ class WMSLayer(Component):
 
 class Map(HasTraits):
     """ Viewer of map layers """
+
+    #--------------------------------------------------------------------------
+    #  Trait definitions:
+    #--------------------------------------------------------------------------
+
+    # Range of zoom levels
+    zoom_level = Range(low=0, high=18, value=0)
+
+    # Map services
+    services = List(Instance(MapService))
+
+    #--------------------------------------------------------------------------
+    #  Enable traits:
+    #--------------------------------------------------------------------------
+
+    # Base map canvas
+    canvas = Instance(Canvas)
+
+    # Canvases mapped according to zoom level
+    canvases = Dict(Int, Instance(Canvas))
+
+    # A view into a sub-region of the canvas
+    viewport = Instance(Viewport)
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    # Default view
+    traits_view=View(
+        HGroup(
+            Group(
+                Item("services", show_label=False, width=0.3, springy=True),
+                label="Services", show_border=True
+            ),
+            Group(
+                Item(
+                    name="viewport", show_label=False,
+                    editor=ComponentEditor(), id=".map_viewport"
+                ),
+                Group(Item(name="zoom_level"))
+            )
+        ),
+        id="pylon.ui.map.map",
+        resizable=True,
+        width=.6, height=.5
+    )
+
+    def _canvas_default(self):
+        """ Trait initialiser """
+
+        if self.canvases:
+            return self.canvases[self.zoom_level]
+        else:
+            return None
+
+    def _canvases_default(self):
+        """ Trait initialiser """
+
+        canvases = {}
+        for i in range(19):
+            canvases[i] = Canvas(bgcolor="fuchsia")
+
+        return canvases
+
+
+    def _viewport_default(self):
+        """ Trait initialiser """
+
+        vp = Viewport(
+            component=self.canvas, enable_zoom=False,
+            view_position=[0,0]
+        )
+        vp.tools.append(ViewportPanTool(vp))
+
+        return vp
+
+
+    def _zoom_level_changed(self, new):
+        """ Handles the map zoom level """
+
+        self.canvas = self.canvases[new]
+
+
+    def _canvas_changed(self, new):
+        """ Handles the currently viewed canvas """
+
+        self.viewport.component = new
+        self.viewport.request_redraw()
+
+    @on_trait_change("viewport.view_position")
+    def on_view_position_change(self, new):
+
+        print "VIEW POSITION:", new, self.viewport.width
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
@@ -379,19 +497,44 @@ if __name__ == "__main__":
 
     service = MapService(connections=[nasa, gmap, lizard])
 
-    service.configure_traits()
+#    service.configure_traits()
 
-    layer = service.selected_layers[0]
+    map = Map(services=[service])
 
-    img = service.wms.getmap(
-        layers=[layer.name],
-#        styles=['visual_bright'],
-        srs=service.srs,
-        bbox=(-112, 36, -106, 41),
-        size=(300, 250),
-        format=service.format,
-        transparent=True
+    img_file = open("/tmp/map.jpg", "rb")
+    tile = Tile(
+        image=img_file, bounds=[512,512], position=[0,0]
     )
+    map.canvas.add(tile)
+
+    map.configure_traits()
+
+    img_file.close()
+
+#    for layer in service.selected_layers:
+#        try:
+#            img = service.wms.getmap(
+#                layers=[layer.name],
+#        #        styles=['visual_bright'],
+#                srs=service.srs,
+#                bbox=(-112, 36, -106, 42),
+#                size=(512, 512),
+#                format=service.format,
+#                transparent=True
+#            )
+#        except ServiceException:
+#            print "Service denied due to system overload."
+#            break
+
+#        img_file = StringIO()
+#        img_file.write(img.read())
+#
+#        tile = Tile(
+#            image=img_file, bounds=[512,512], position=[0,0]
+#        )
+#        map.canvas.add(tile)
+#
+#    map.configure_traits()
 
 #    out = open("/tmp/map.jpg", "wb")
 #    out.write(img.read())
