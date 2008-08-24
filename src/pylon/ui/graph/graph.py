@@ -125,6 +125,7 @@ class Graph(HasTraits):
     )
 
     traits_view=View(
+        Item(name="program", show_label=False),
         Item(name="network_dot", style="custom", show_label=False),
         Item(
             name="viewport", editor=ComponentEditor(),
