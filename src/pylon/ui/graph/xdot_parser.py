@@ -189,32 +189,33 @@ class XDotAttrParser(HasTraits):
 
 
     def parse(self):
+        """ Parses an attribute string and returns a list of components """
+
         shapes = []
         pen = Pen()
-        s = self
 
-        while s:
-            op = s.read_code()
+        while self:
+            op = self.read_code()
             if op == "c":
-                colour = s.read_color()
+                colour = self.read_color()
                 logger.debug("Pen stroke colour: %s" % str(colour))
                 pen.colour = colour
             elif op == "C":
-                colour = s.read_color()
+                colour = self.read_color()
                 logger.debug("Pen fill colour: %s" % str(colour))
                 pen.fill_colour = colour
             elif op == "S":
-                s.read_text()
+                self.read_text()
             elif op == "F":
-                font_size = s.read_float()
-                font_name = s.read_text()
+                font_size = self.read_float()
+                font_name = self.read_text()
 #                pen.font = str_to_font(font_size + font_name)
                 pen.font = str(font_size) + " point " + font_name
             elif op == "T": # Text
-                x, y = s.read_point()
-                j = s.read_number()
-                w = s.read_number()
-                t = s.read_text()
+                x, y = self.read_point()
+                j = self.read_number()
+                w = self.read_number()
+                t = self.read_text()
                 logger.debug(
                     "Text '%s' at (%d, %d), width %d, justified %d" %
                     (t, x, y, w, j)
@@ -230,9 +231,9 @@ class XDotAttrParser(HasTraits):
                 )
 #                shapes.append(tc)
             elif op == "E": # Filled ellipse
-                x0, y0 = s.read_point()
-                w = s.read_number()
-                h = s.read_number()
+                x0, y0 = self.read_point()
+                w = self.read_number()
+                h = self.read_number()
                 logger.debug(
                     "Filled ellipse, %d by %d, at (%d, %d)" % (w, h, x0, y0)
                 )
@@ -247,9 +248,9 @@ class XDotAttrParser(HasTraits):
                 )
                 shapes.append(ec)
             elif op == "e": # Unfilled ellipse
-                x0, y0 = s.read_point()
-                w = s.read_number()
-                h = s.read_number()
+                x0, y0 = self.read_point()
+                w = self.read_number()
+                h = self.read_number()
                 logger.debug(
                     "Unfilled ellipse, %d by %d, at (%d, %d)" % (w, h, x0, y0)
                 )
@@ -528,7 +529,7 @@ if __name__ == "__main__":
     parser = XDotAttrParser(
         container_x=0, container_y=0,
         container_w=0, container_h=44,
-        buf=triangle
+        buf=black_pen
     )
 
     canvas = Canvas(bgcolor="ivory")

@@ -176,7 +176,7 @@ class GraphImage(HasTraits):
         viewport = Viewport(component=self.image, enable_zoom=True)
         viewport.view_position = [0,0]
         viewport.zoom_tool.max_zoom = 1.0
-#        viewport.bgcolor="lightsteelblue"
+        viewport.bgcolor="lightsteelblue"
         viewport.tools.append(ViewportPanTool(viewport))
         return viewport
 
@@ -258,8 +258,8 @@ if __name__ == "__main__":
     e1 = Branch(network=n, source_bus=v1, target_bus=v2, name="e_1")
     e2 = Branch(network=n, source_bus=v1, target_bus=v3, name="e_2")
     e3 = Branch(network=n, source_bus=v2, target_bus=v3, name="e_3")
-    n.buses=[v1, v2, v3]
-    n.branches=[e1, e2, e3]
+    n.buses=[v1, v2]#, v3]
+    n.branches=[e1]#, e2, e3]
 
     graph = GraphImage(network=n)
     graph.configure_traits()
