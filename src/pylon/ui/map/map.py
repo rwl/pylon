@@ -128,11 +128,14 @@ class Map(HasTraits):
     def _viewport_default(self):
         """ Trait initialiser """
 
+        pos = [0,0]
         vp = Viewport(
             component=self.base_layer, enable_zoom=False,
-            view_position=[0,0]
+            view_position=pos
         )
         vp.tools.append(ViewportPanTool(vp))
+
+#        self.on_view_position_change(pos)
 
         return vp
 
@@ -177,9 +180,13 @@ class Map(HasTraits):
 
 
     @on_trait_change("viewport.view_position")
-    def on_view_position_change(self, new):
+    def on_view_position_change(self, pos):
 
-        print "VIEW POSITION:", new, self.viewport.width
+        width = self.viewport.width
+        height = self.viewport.height
+
+        map.base_layer.zoom_level=self.zoom_level
+        self.base_layer.add_tiles(pos, width, height)
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
