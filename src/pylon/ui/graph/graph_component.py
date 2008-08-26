@@ -64,7 +64,9 @@ class Pen(HasTraits):
     fill_colour = ColorTrait("black", desc="fill colour")
 
     # Stroke width in points
-    line_width = Range(1, 8, 1, desc="width of the stroke in points")
+    line_width = Range(
+        low=1, high=8, value=1, desc="width of the stroke in points"
+    )
 
     # Text font
     font = Font("14 point Arial")
@@ -554,5 +556,30 @@ class GraphContainer(Container):
     def normal_left_down(self, event):
         print "GRAPH_CONTAINER:", self, event
         return
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+
+    viewer = CanvasViewer()
+    pen = Pen()
+    component = EllipseComponent(
+        pen=pen, x_origin=10, y_origin=10, ew=50, eh=33,
+        bounds=[50, 50], position=[0, 0]
+
+    )
+    viewer.canvas.add(component)
+
+    from enthought.enable.primitives.api import Box
+    box = Box(
+        color="steelblue",
+        border_color="darkorchid", border_size=2,
+        bounds=[30, 30], position=[25, 25]
+    )
+    viewer.canvas.add(box)
+
+    viewer.configure_traits()
 
 # EOF -------------------------------------------------------------------------
