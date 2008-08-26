@@ -171,12 +171,12 @@ class Map(HasTraits):
 
         self.base_layer = self.levels[new]
 
-        map_size = pow(2, new) * self.base_layer.resolution
-        x, y = self.viewport.view_position
-        zoomed_x = x + (map_size/2)
-        zoomed_y = y + (map_size/2)
-        print "MOVING FROM (%f, %f) TO (%f, %F)" % (x, y, zoomed_x, zoomed_y)
-        self.viewport.view_position = [zoomed_x, zoomed_y]
+#        map_size = pow(2, new) * self.base_layer.resolution
+#        x, y = self.viewport.view_position
+#        zoomed_x = x + (map_size/2)
+#        zoomed_y = y + (map_size/2)
+#        print "MOVING FROM (%f, %f) TO (%f, %F)" % (x, y, zoomed_x, zoomed_y)
+#        self.viewport.view_position = [zoomed_x, zoomed_y]
 
 
     def _base_layer_changed(self, new):

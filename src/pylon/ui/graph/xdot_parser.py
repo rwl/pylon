@@ -49,9 +49,10 @@ from enthought.kiva.fonttools.font import str_to_font
 from pylon.ui.graph.pydot.pydot import \
     Dot, Node, Edge, Graph, graph_from_dot_data
 
-from pylon.ui.graph.graph_component import \
-    Pen, TextComponent, EllipseComponent, BezierComponent, \
-    PolygonComponent#, NodeComponent, EdgeComponent, GraphContainer
+#from pylon.ui.graph.graph_component import \
+#    Pen, TextComponent, EllipseComponent, BezierComponent, PolygonComponent
+
+from pylon.ui.graph.component.api import Pen, Text, Ellipse, Bezier, Polygon
 
 #------------------------------------------------------------------------------
 #  Logging
@@ -220,7 +221,7 @@ class XDotAttrParser(HasTraits):
                     "Text '%s' at (%d, %d), width %d, justified %d" %
                     (t, x, y, w, j)
                 )
-                tc = TextComponent(
+                tc = Text(
                     pen=pen,
                     text_x=self.container_w/2,
                     text_y=self.container_h/2,
@@ -237,7 +238,7 @@ class XDotAttrParser(HasTraits):
                 logger.debug(
                     "Filled ellipse, %d by %d, at (%d, %d)" % (w, h, x0, y0)
                 )
-                ec = EllipseComponent(
+                ec = Ellipse(
                     pen=pen,
                     x_origin=self.container_w/2,
                     y_origin=self.container_h/2,
@@ -254,7 +255,7 @@ class XDotAttrParser(HasTraits):
                 logger.debug(
                     "Unfilled ellipse, %d by %d, at (%d, %d)" % (w, h, x0, y0)
                 )
-                ec = EllipseComponent(
+                ec = Ellipse(
                     pen=pen, x_origin=x0, y_origin=y0, ew=w, eh=h,
                     bounds=[w, h],
                     position=[x0, y0]
@@ -268,7 +269,7 @@ class XDotAttrParser(HasTraits):
                 # height
                 y_points = [y for x, y in points]
                 min_y, max_y = min(y_points), max(y_points)
-                bc = BezierComponent(
+                bc = Bezier(
                     pen=pen, points=points,
                     bounds=[10, 10],#[max_x-min_x, max_y-min_y],
                     position=[5, 5]
@@ -281,7 +282,7 @@ class XDotAttrParser(HasTraits):
                 min_x, max_x = min(x_points), max(x_points)
                 y_points = [y for x, y in points]
                 min_y, max_y = min(y_points), max(y_points)
-                pc = PolygonComponent(
+                pc = Polygon(
                     pen=pen, points=points, filled=True,
                     bounds=[max_x-min_x, max_y-min_y],
                     position=[0, 0]
@@ -294,7 +295,7 @@ class XDotAttrParser(HasTraits):
                 min_x, max_x = min(x_points), max(x_points)
                 y_points = [y for x, y in points]
                 min_y, max_y = min(y_points), max(y_points)
-                pc = PolygonComponent(
+                pc = Polygon(
                     pen=pen, points=points,
                     bounds=[max_x-min_x, max_y-min_y],
                     position=[0, 0]
@@ -500,31 +501,13 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
-    from enthought.enable.component_editor import ComponentEditor
+
+    from canvas_viewer import CanvasViewer
 
     edge = """"v_1-#a2104c" -> "v_2-#d72da0"  [_draw_="c 5 -black B 4 27 90 27 77 27 61 27 46 ", _hdraw_="S 5 -solid S 15 -setlinewidth(1) c 5 -black C 5 -black P 3 31 46 27 36 24 46 ", lp="37,63", _ldraw_="F 14.000000 11 -Times-Roman c 5 -black T 37 58 0 21 3 -e_1 ", pos="e,27,36 27,90 27,77 27,61 27,46", label=e_1];"""
     black_pen = "c 5 -black B 4 27 90 27 77 27 61 27 46"
     text = "F 14.000000 11 -Times-Roman c 5 -black T 37 58 0 21 3 -e_1"
     triangle = "S 5 -solid S 15 -setlinewidth(1) c 5 -black C 5 -black P 3 31 46 27 36 24 46"
-
-    class ComponentViewer(HasTraits):
-        canvas = Instance(Canvas)
-        viewport = Instance(Viewport)
-
-        traits_view=View(
-            Item(
-                name="viewport", editor=ComponentEditor(),
-                show_label=False, id='.viewport_view'
-            ),
-            id="pylon.ui.graph.xdot_parser",
-            resizable=True, width=.4, height=.4
-        )
-
-        def _viewport_default(self):
-            vp = Viewport(component=self.canvas, enable_zoom=True)
-            vp.view_position = [0,0]
-            vp.tools.append(ViewportPanTool(vp))
-            return vp
 
     parser = XDotAttrParser(
         container_x=0, container_y=0,
@@ -532,11 +515,9 @@ if __name__ == "__main__":
         buf=black_pen
     )
 
-    canvas = Canvas(bgcolor="ivory")
+    cv = CanvasViewer(canvas=canvas)
 #    for shape in parser.parse():
-#        canvas.add(shape)
-
-    cv = ComponentViewer(canvas=canvas)
+#        cv.canvas.add(shape)
 
     cv.configure_traits()
 
