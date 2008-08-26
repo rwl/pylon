@@ -37,6 +37,8 @@ class Tile(Component):
     # Image as a file-like object
     image = Any#Trait(StringIO)
 
+    bgcolor = "transparent"
+
     #--------------------------------------------------------------------------
     #  Draw the component in a specified graphics context:
     #--------------------------------------------------------------------------

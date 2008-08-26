@@ -21,6 +21,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from math import pow
+
 from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Instance, Bool, Range, Enum, \
     Callable, Dict, on_trait_change
@@ -49,7 +51,7 @@ class Map(HasTraits):
     n_zoom_level = Int(19)
 
     # Range of zoom levels FIXME: Dynamic 'high' trait
-    zoom_level = Range(low=0, high=19, value=0)
+    zoom_level = Range(low=0, high=19, value=0, auto_set=False)
 
     # Available map layers
     layer_types = List(Callable)
@@ -89,8 +91,8 @@ class Map(HasTraits):
                 Group(Item(name="zoom_level"))
             )
         ),
-        id="pylon.ui.map.map", resizable=True,
-        width=.6, height=.5
+        id="pylon.ui.map.map", title="Map",
+        resizable=True, width=.6, height=.5
     )
 
     #--------------------------------------------------------------------------
@@ -135,8 +137,6 @@ class Map(HasTraits):
         )
         vp.tools.append(ViewportPanTool(vp))
 
-#        self.on_view_position_change(pos)
-
         return vp
 
     #--------------------------------------------------------------------------
@@ -171,6 +171,13 @@ class Map(HasTraits):
 
         self.base_layer = self.levels[new]
 
+        map_size = pow(2, new) * self.base_layer.resolution
+        x, y = self.viewport.view_position
+        zoomed_x = x + (map_size/2)
+        zoomed_y = y + (map_size/2)
+        print "MOVING FROM (%f, %f) TO (%f, %F)" % (x, y, zoomed_x, zoomed_y)
+        self.viewport.view_position = [zoomed_x, zoomed_y]
+
 
     def _base_layer_changed(self, new):
         """ Handles the currently viewed canvas """
@@ -180,13 +187,18 @@ class Map(HasTraits):
 
 
     @on_trait_change("viewport.view_position")
-    def on_view_position_change(self, pos):
+    def on_view_position_change(self):
 
-        width = self.viewport.width
-        height = self.viewport.height
+        vp = self.viewport
+
+        pos = vp.view_position
+        width = vp.width
+        height = vp.height
 
         map.base_layer.zoom_level=self.zoom_level
         self.base_layer.add_tiles(pos, width, height)
+
+        vp.request_redraw()
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
