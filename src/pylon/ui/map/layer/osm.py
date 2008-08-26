@@ -21,7 +21,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-import math
+from math import pow, ceil, floor
 from StringIO import StringIO
 
 from urllib2 import \
@@ -62,6 +62,9 @@ class OSM(Canvas):
 
     zoom_level = Int
 
+    # Tile resolution
+    resolution = Int(256)
+
     # Opener of URLs
     opener = Trait(OpenerDirector)
 
@@ -83,45 +86,66 @@ class OSM(Canvas):
     def add_tiles(self, pos, width, height):
         """ Filename(url) format is /zoom/x/y.png """
 
-        res = 256
+        res = self.resolution
         zoom = self.zoom_level
 
-        n = int(math.pow(2, zoom)) # n-by-n map
-        tiles_wide = width/res
-        tiles_high = height/res
-        if tiles_wide > n:
-            tiles_wide = n
-        if tiles_high > n:
-            tiles_high = n
+        # Viewport bounds
+        minx, miny = pos
+        maxx = minx + width
+        maxy = miny + height
 
-        print "VISIBLE:", tiles_wide, tiles_high
+        print "BOUNDS: (%f, %f) (%f, %f)" % (minx, miny, maxx, maxy)
 
-        for x in range(tiles_wide):
-            for y in range(tiles_high):
+        n = int(pow(2, zoom)) # n-by-n map
+
+        # Bounds of tiles visible in the viewport
+        minx_tile = int(floor(minx/res))
+        maxx_tile = int(ceil(maxx/res))
+        miny_tile = int(floor(miny/res))
+        maxy_tile = int(ceil(maxy/res))
+
+        print "VISIBLE: (%d, %d) (%d, %d)" % (minx_tile, miny_tile, maxx_tile, maxy_tile)
+
+        for x in range(minx_tile, maxx_tile):
+            for y in range(miny_tile, maxy_tile):
+                print "POSITION: (%d, %d)" % (x*res, y*res)
                 if not self.components_at(x*res, y*res):
+                    # Tile coords relative to map
+                    x_tile = ((x % n) + n) % n
 
-                    print x, y, pos, width, height
+                    print "TILE: (%d, %d) %d %d" % (x, y, n, x_tile)
 
-                    img = self.get_image(zoom, x, y)
+                    img = self.get_image(zoom, x_tile, n-(y+1), n)
 
                     img_file = StringIO()
                     img_file.write(img.read())
 
                     tile = Tile(
                         image=img_file, bounds=[res, res],
-                        position=[x*res, (tiles_high-(y+1))*res]
+                        position=[x*res, y*res]
                     )
                     self.add(tile)
 
+#                    from enthought.enable.primitives.api import Box
+#
+#                    box = Box(
+#                        color="steelblue",
+#                        border_color="darkorchid", border_size=2,
+#                        bounds=[res, res],
+#                        position=[x*res, y*res]
+#                    )
+#                    self.add(box)
 
-    def get_image(self, zoom, x, y):
+
+    def get_image(self, zoom, x, y, limit):
         """ Returns an image from the OSM server as a file-like object """
 
-        url = "http://tile.openstreetmap.org/%s/%s/%s.png" % (zoom, x, y)
-        try:
-            u = self.opener.open(url)
-        except URLError:
-            u = self.opener.open(MISSING_TILE_URL)
+        if (y < 0) or (y >= limit):
+            url = MISSING_TILE_URL
+        else:
+            url = "http://tile.openstreetmap.org/%s/%s/%s.png" % (zoom, x, y)
+
+        u = self.opener.open(url)
 
         return u
 
