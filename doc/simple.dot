@@ -1,0 +1,11 @@
+/*
+The command line is
+
+  dot -Txdot simple.dot > simple.xdot
+
+and the file is:
+*/
+digraph simple {
+    node1 [label="node1", shape=ellipse];
+}
+
