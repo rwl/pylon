@@ -504,6 +504,24 @@ if __name__ == "__main__":
 
     from canvas_viewer import CanvasViewer
 
+    simple = """digraph simple {
+    node [label="\N"];
+    graph [bb="0,0,74,126",
+        _draw_="c 5 -white C 5 -white P 4 0 0 0 126 74 126 74 0 ",
+        xdotversion="1.2"];
+    node1 [label=node1, shape=ellipse, pos="37,108", width="1.03", height="0.50", _draw_="c 5 -black e 37 108 37 18 ", _ldraw_="F 14.000000 11 -Times-Roman c 5 -black T 37 103 0 37 5 -node1 "];
+    node2 [label=node2, shape=rectangle, pos="37,18", width="0.75", height="0.50", _draw_="c 5 -black p 4 64 36 10 36 10 0 64 0 ", _ldraw_="F 14.000000 11 -Times-Roman c 5 -black T 37 13 0 37 5 -node2 "];
+    node1 -> node2 [label=edge1, pos="e,37,36 37,90 37,77 37,61 37,46", lp="55,63", _draw_="c 5 -black B 4 37 90 37 77 37 61 37 46 ", _hdraw_="S 5 -solid S 15 -setlinewidth(1) c 5 -black C 5 -black P 3 41 46 37 36 34 46 ", _ldraw_="F 14.000000 11 -Times-Roman c 5 -black T 55 58 0 36 5 -edge1 "];
+}"""
+
+    node = """digraph simple {
+    node [label="\N"];
+    graph [bb="0,0,74,36",
+        _draw_="c 5 -white C 5 -white P 4 0 0 0 36 74 36 74 0 ",
+        xdotversion="1.2"];
+    node1 [label=node1, shape=ellipse, pos="37,18", width="1.03", height="0.50", _draw_="c 5 -black e 37 18 37 18 ", _ldraw_="F 14.000000 11 -Times-Roman c 5 -black T 37 13 0 37 5 -node1 "];
+}"""
+
     edge = """"v_1-#a2104c" -> "v_2-#d72da0"  [_draw_="c 5 -black B 4 27 90 27 77 27 61 27 46 ", _hdraw_="S 5 -solid S 15 -setlinewidth(1) c 5 -black C 5 -black P 3 31 46 27 36 24 46 ", lp="37,63", _ldraw_="F 14.000000 11 -Times-Roman c 5 -black T 37 58 0 21 3 -e_1 ", pos="e,27,36 27,90 27,77 27,61 27,46", label=e_1];"""
     black_pen = "c 5 -black B 4 27 90 27 77 27 61 27 46"
     text = "F 14.000000 11 -Times-Roman c 5 -black T 37 58 0 21 3 -e_1"
