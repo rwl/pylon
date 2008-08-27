@@ -26,7 +26,7 @@ References:
 #  Imports:
 #------------------------------------------------------------------------------
 
-from math import pi
+from math import pi, sqrt
 
 from enthought.traits.api import Instance, Float, Int, Bool, on_trait_change
 from enthought.traits.ui.api import View, Item, Group
@@ -94,15 +94,24 @@ class Ellipse(Component):
             gc.scale_ctm(self.e_width/2, self.e_height/2)
             gc.arc(0.0, 0.0, 1.0, 0, 2.0*pi)
             gc.close_path()
+
+            # Draw stroke at same scale as graphics context
+#            ctm = gc.get_ctm()
+#            if hasattr(ctm, "__len__") and len(ctm) == 6:
+#                scale = sqrt( (ctm[0]+ctm[1]) * (ctm[0]+ctm[1]) / 2.0 + \
+#                              (ctm[2]+ctm[3]) * (ctm[2]+ctm[3]) / 2.0 )
+#            elif hasattr(gc, "get_ctm_scale"):
+#                scale = gc.get_ctm_scale()
+#            else:
+#                raise RuntimeError("Unable to get scale from GC.")
+
+            gc.set_line_width(self.pen.line_width)
+            gc.set_stroke_color(self.pen.colour_)
+
             if self.filled:
                 gc.set_fill_color(self.pen.fill_colour_)
-                # FIXME: Scale line width according to zoom level
-                gc.set_line_width(self.pen.line_width)
-                gc.set_stroke_color(self.pen.colour_)
                 gc.draw_path(FILL_STROKE)
             else:
-                gc.set_line_width(self.pen.line_width)
-                gc.set_stroke_color(self.pen.colour_)
                 gc.stroke_path()
         finally:
             gc.restore_state()
