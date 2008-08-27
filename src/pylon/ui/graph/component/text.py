@@ -17,7 +17,8 @@
 
 """ Defines a text component.
 
-See: XDot by Jose.R.Fonseca (http://code.google.com/p/jrfonseca/wiki/XDot)
+References:
+    Jose.R.Fonseca, 'XDot', http://code.google.com/p/jrfonseca/wiki/XDot
 
 """
 
@@ -25,11 +26,15 @@ See: XDot by Jose.R.Fonseca (http://code.google.com/p/jrfonseca/wiki/XDot)
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import Instance, Float, Int, String, Trait
+from math import sqrt
+
+from enthought.traits.api import \
+    Instance, Float, Int, String, Trait, on_trait_change
+
 from enthought.traits.ui.api import View, Item, Group
 from enthought.enable.api import Component
-from enthought.kiva import Font as KivaFont
-from enthought.kiva import MODERN
+#from enthought.kiva import Font as KivaFont
+#from enthought.kiva import MODERN
 from enthought.kiva.fonttools.font import str_to_font
 #from enthought.kiva import Font, MODERN
 
@@ -89,51 +94,49 @@ class Text(Component):
         """ Draws the component """
 
         gc.save_state()
+        try:
+            # Specify the font
+            font = str_to_font(str(self.pen.font))
+            gc.set_font(font)
 
-        # Specify the font
-        font = KivaFont(family=MODERN, size=14)
-#        font = str_to_font(self.pen.font)
-        gc.set_font(font)
-#        gc.set_antialias(True)
+            gc.set_fill_color(self.pen.colour_)
 
-        gc.set_fill_color(self.pen.colour_)
+            x = self.text_x
+            y = self.text_y
 
-#        gc.translate_ctm(self.text_x, self.text_y)
-#        gc.move_to(self.text_x-self.text_w/2, self.text_y)
-#
-#        width = gc.width()
-#        height = gc.height()
-#        if self.justification == -1:
-#            x = self.text_x
-#        elif self.justification == 0:
-#            x = self.text_x-0.5*width
-#        elif self.justification == 1:
-#            x = self.text_x-width
-#        else:
-#            logger.error("Invalid text justification [%d]" % self.j)
-#
-#        y = self.text_y-height
-#
-#        gc.move_to(x, y)
-#        gc.show_text(self.text, (self.x, self.y))
+            # Show text at the same scale as the graphics context
+            ctm = gc.get_ctm()
+            if hasattr(ctm, "__len__") and len(ctm) == 6:
+                scale = sqrt( (ctm[0]+ctm[1]) * (ctm[0]+ctm[1]) / 2.0 + \
+                              (ctm[2]+ctm[3]) * (ctm[2]+ctm[3]) / 2.0 )
+            elif hasattr(gc, "get_ctm_scale"):
+                scale = gc.get_ctm_scale()
+            else:
+                raise RuntimeError("Unable to get scale from GC.")
+            x *= scale
+            y *= scale
+            gc.show_text_at_point(self.text, x, y)
+        finally:
+            gc.restore_state()
 
-#        tx, ty, tw, th = gc.get_text_extent(self.text)
-#        tx = self.x + self.width/2.0 - tw/2.0
-#        ty = self.y + self.height/2.0 - th/2.0
-        gc.show_text_at_point(self.text, self.text_x, self.text_y)
 
-#        tx, ty, tw, th = gc.get_text_extent(self.text)
-#        dx, dy = self.bounds
-#        x, y = self.position
-#        gc.set_text_position(x+(dx-tw)/2, y+(dy-th)/2)
-#        gc.show_text(self.text)
+    @on_trait_change("pen.+,text_x,text_y,text_w,justification,text")
+    def _update(self):
+        if self.pen is None: return
+        x = self.text_x
+        x2 = self.text_x+self.text_w
+        y = self.text_y
+        font = str_to_font(str(self.pen.font))
+        y2 = self.text_y+font.size
+        self.position = [x, y]
+        # If bounds are set to 0, horizontal/vertical lines will not render
+        self.bounds = [max(x2-x, 1), max(y2-y, 1)]
 
-        gc.restore_state()
+        self.request_redraw()
 
 
     def normal_left_down(self, event):
-        print "TEXT left click:", self, event
-        return
+        print "Text [%s] selected at (%d, %d)" % (self.text, event.x, event.y)
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
@@ -142,20 +145,12 @@ class Text(Component):
 if __name__ == "__main__":
     from pylon.ui.graph.component_viewer import ComponentViewer
 
-
     text = Text(
-        pen=Pen(), text_x=50, text_y=50, text="Foo",
-        bounds=[50, 50], position=[0, 0]
+        pen=Pen(), text="Foo",
+        text_x=50, text_y=50, text_w=30
     )
 
     viewer = ComponentViewer(component=text)
-
-#    from enthought.enable.primitives.api import Box
-#    box = Box(
-#        color="steelblue", border_color="darkorchid", border_size=1,
-#        bounds=[50, 50], position=[50, 50]
-#    )
-#    viewer.canvas.add(box)
 
     viewer.configure_traits()
 
