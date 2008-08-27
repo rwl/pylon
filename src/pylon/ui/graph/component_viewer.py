@@ -21,28 +21,49 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.ui.api import View, Item
-from enthought.enable.api import Canvas, Viewport
+from enthought.traits.api import HasTraits, Instance
+from enthought.traits.ui.api import View, Item, HGroup
+from enthought.enable.api import Component, Canvas, Viewport
 from enthought.enable.tools.api import ViewportPanTool
 from enthought.enable.component_editor import ComponentEditor
 
 #------------------------------------------------------------------------------
-#  "CanvasViewer" class:
+#  "ComponentViewer" class:
 #------------------------------------------------------------------------------
 
-class CanvasViewer(HasTraits):
+class ComponentViewer(HasTraits):
+    """ A viewer of components for testing purposes """
+
+    # The component being viewed
+    component = Instance(Component)
+
+    # The canvas to which the component is added
     canvas = Instance(Canvas)
+
+    # A view into a subsection of the canvas
     viewport = Instance(Viewport)
+
+    # Default view
     traits_view = View(
-        Item("viewport", editor=ComponentEditor(), show_label=False),
-        resizable=True, id="canvas_viewer", width=.4, height=.4
+        HGroup(
+            Item("viewport", editor=ComponentEditor(), show_label=False), "_",
+            Item(name="component", style="custom", show_label=False)
+        ),
+        resizable=True, id="canvas_viewer", width=.6, height=.4,
+        title="Viewer"
     )
 
     def _canvas_default(self):
-        canvas = Canvas(draw_axes=True)#bgcolor="lightslategrey")
+        """ Trait initialiser """
+
+        canvas = Canvas(draw_axes=True, bgcolor="honeydew")
+        if self.component is not None:
+            canvas.add(self.component)
         return canvas
 
     def _viewport_default(self):
+        """ Trait initialiser """
+
         viewport = Viewport(component=self.canvas, enable_zoom=True)
         viewport.tools.append(ViewportPanTool(viewport))
         return viewport

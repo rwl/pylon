@@ -240,12 +240,9 @@ class XDotAttrParser(HasTraits):
                 )
                 ec = Ellipse(
                     pen=pen,
-                    x_origin=self.container_w/2,
-                    y_origin=self.container_h/2,
-                    ew=w, eh=h,
-                    filled=True,
-                    bounds=[w*2, h*2],
-                    position=[0, 0] #relative to node component
+                    x_origin=self.container_w/2, y_origin=self.container_h/2,
+                    e_width=w, e_height=h, filled=True,
+                    bounds=[w*2, h*2], position=[0, 0] #relative to node component
                 )
                 shapes.append(ec)
             elif op == "e": # Unfilled ellipse
@@ -256,9 +253,10 @@ class XDotAttrParser(HasTraits):
                     "Unfilled ellipse, %d by %d, at (%d, %d)" % (w, h, x0, y0)
                 )
                 ec = Ellipse(
-                    pen=pen, x_origin=x0, y_origin=y0, ew=w, eh=h,
-                    bounds=[w, h],
-                    position=[x0, y0]
+                    pen=pen,
+                    x_origin=x0, y_origin=y0,
+                    e_width=w, e_height=h,
+                    bounds=[w, h], position=[x0, y0]
                 )
                 shapes.append(ec)
             elif op == "B": # Bezier curve
