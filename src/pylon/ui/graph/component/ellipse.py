@@ -17,7 +17,8 @@
 
 """ Defines an ellipse component.
 
-See: XDot by Jose.R.Fonseca (http://code.google.com/p/jrfonseca/wiki/XDot)
+References:
+    Jose.R.Fonseca, 'XDot', http://code.google.com/p/jrfonseca/wiki/XDot
 
 """
 
@@ -25,8 +26,12 @@ See: XDot by Jose.R.Fonseca (http://code.google.com/p/jrfonseca/wiki/XDot)
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import Instance, Float, Int, Bool
-from enthought.enable.api import Component
+from math import pi
+
+from enthought.traits.api import Instance, Float, Int, Bool, on_trait_change
+from enthought.traits.ui.api import View, Item, Group
+from enthought.enable.api import Component, Pointer
+from enthought.kiva import FILL_STROKE
 
 from pen import Pen
 
@@ -36,6 +41,10 @@ from pen import Pen
 
 class Ellipse(Component):
     """ Component with Ellipse traits """
+
+    #--------------------------------------------------------------------------
+    #  "Ellipse" interface:
+    #--------------------------------------------------------------------------
 
     # Pen used to draw the ellipse
     pen = Instance(Pen, desc="Pen instance with which to draw the ellipse")
@@ -47,16 +56,28 @@ class Ellipse(Component):
     y_origin = Float(desc="y-axis coordinate of ellipse origin")
 
     # Width of the ellipse
-    ew = Float(desc="Ellipse width")
+    e_width = Float(desc="Ellipse width")
 
     # Height of the ellipse
-    eh = Float(desc="Ellipse height")
+    e_height = Float(desc="Ellipse height")
 
     # Is the ellipse filled?
     filled = Bool(False, desc="Fill the ellipse")
 
-    # Background colour for the component
-    bgcolor = (0.0, 1.0, 0.0, 0.0)
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        Group(
+            Item("pen", style="custom", show_label=False),
+            label="Pen", show_border=True
+        ),
+        Item("x_origin"), Item("y_origin"),
+        Item("e_width", label="Width"),
+        Item("e_height", label="Height"),
+        Item("filled")
+    )
 
     #--------------------------------------------------------------------------
     #  Draw component on the graphics context:
@@ -66,43 +87,89 @@ class Ellipse(Component):
         """ Draws the component """
 
         gc.save_state()
+        try:
+#            self._draw_bounds(gc)
+            gc.begin_path()
+            gc.translate_ctm(self.x_origin, self.y_origin)
+            gc.scale_ctm(self.e_width/2, self.e_height/2)
+            gc.arc(0.0, 0.0, 1.0, 0, 2.0*pi)
+            gc.close_path()
+            if self.filled:
+                gc.set_fill_color(self.pen.fill_colour_)
+                # FIXME: Scale line width according to zoom level
+                gc.set_line_width(self.pen.line_width)
+                gc.set_stroke_color(self.pen.colour_)
+                gc.draw_path(FILL_STROKE)
+            else:
+                gc.set_line_width(self.pen.line_width)
+                gc.set_stroke_color(self.pen.colour_)
+                gc.stroke_path()
+        finally:
+            gc.restore_state()
 
-        gc.begin_path()
-#        gc.translate_ctm(self.ew, self.eh)
-        gc.translate_ctm(self.x_origin, self.y_origin)
-        gc.scale_ctm(self.ew, self.eh)
-        gc.arc(0.0, 0.0, 1.0, 0, 2.0*pi)
-        gc.close_path()
-        if self.filled:
-            gc.set_fill_color(self.pen.fill_colour_)
-            gc.set_line_width(self.pen.line_width)
-            gc.set_stroke_color(self.pen.colour_)
-            gc.draw_path(FILL_STROKE)
-        else:
-            gc.set_line_width(self.pen.line_width)
-            gc.set_stroke_color(self.pen.colour_)
-            gc.stroke_path()
 
-        gc.restore_state()
+    def is_in(self, point_x, point_y):
+        """ Test if the point is within this ellipse """
+
+        x = self.x_origin
+        y = self.y_origin
+        a = self.e_width/2 # FIXME: Why divide by two
+        b = self.e_height/2
+
+        return ((point_x-x)**2/(a**2)) + ((point_y-y)**2/(b**2)) < 1.0
 
 
-#    def _is_in(self, point):
-#        """
-#        Test if the point (an x, y tuple) is within this ellipse
-#
-#        """
-#
-#        raise NotImplementedError
-#
-#
-#    def _distance_between(self, (x1, y1), (x2, y2)):
-#        """ Return the distance between two points. """
-#
-#        return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2))
+    def _draw_bounds(self, gc):
+        """ Draws the component bounds for testing purposes """
+
+        dx, dy = self.bounds
+        x, y = self.position
+        gc.rect(x, y, dx, dy)
+        gc.stroke_path()
 
 
     def normal_left_down(self, event):
-        print "ELLIPSE CLICKED", self, event
-        return
+        """ Handles left mouse button clicks in 'normal' mode """
+
+        print "Ellipse selected at (%d, %d)" % (event.x, event.y)
+
+
+    @on_trait_change("pen.+,x_origin,y_origin,e_width,e_height,filled")
+    def _update(self):
+        x = self.x_origin-(self.e_width/2)
+        x2 = self.x_origin+(self.e_width/2)
+        y = self.y_origin-(self.e_height/2)
+        y2 = self.y_origin+(self.e_height/2)
+        self.position = [x,y]
+        # If bounds are set to 0, horizontal/vertical lines will not render
+        self.bounds = [max(x2-x,1), max(y2-y,1)]
+
+        self.request_redraw()
+
+#------------------------------------------------------------------------------
+#  Stand-alone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    from pylon.ui.graph.component_viewer import ComponentViewer
+
+    pen = Pen()
+    ellipse = Ellipse(
+#        filled=True,
+        pen=pen, x_origin=50, y_origin=50, e_width=100, e_height=50,
+#        bounds=[50, 50], position=[0, 0]
+
+    )
+
+    viewer = ComponentViewer(component=ellipse)
+
+    from enthought.enable.primitives.api import Box
+    box = Box(
+        color="steelblue", border_color="darkorchid", border_size=1,
+        bounds=[50, 50], position=[50, 50]
+    )
+    viewer.canvas.add(box)
+
+    viewer.configure_traits()
 
 # EOF -------------------------------------------------------------------------

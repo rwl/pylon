@@ -25,8 +25,12 @@ See: XDot by Jose.R.Fonseca (http://code.google.com/p/jrfonseca/wiki/XDot)
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import Instance, Float, Int, String
+from enthought.traits.api import Instance, Float, Int, String, Trait
+from enthought.traits.ui.api import View, Item, Group
 from enthought.enable.api import Component
+from enthought.kiva import Font as KivaFont
+from enthought.kiva import MODERN
+from enthought.kiva.fonttools.font import str_to_font
 #from enthought.kiva import Font, MODERN
 
 from pen import Pen
@@ -38,8 +42,12 @@ from pen import Pen
 class Text(Component):
     """ Component with text traits """
 
+    #--------------------------------------------------------------------------
+    #  "Text" interface:
+    #--------------------------------------------------------------------------
+
     # The background color of this component.
-    bgcolor = "blue"
+    bgcolor = "fuchsia"
 
     # Pen for drawing text
     pen = Instance(Pen, desc="pen instance with which to draw the text")
@@ -51,13 +59,27 @@ class Text(Component):
     text_y = Float(desc="y-axis coordinate")
 
     # Text justification
-    justification = Int(-1, desc="(LEFT, CENTER, RIGHT = -1, 0, 1)")
+#    justification = Int(-1, desc="(LEFT, CENTER, RIGHT = -1, 0, 1)")
+    justification = Trait("Left", {"Left": -1, "Centre": 0, "Right": 1})
 
     # Width of the text
     text_w = Float(desc="width of the text as computed by the library")
 
     # Text to be drawn
     text = String(desc="text")
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        Group(
+            Item("pen", style="custom", show_label=False),
+            label="Pen", show_border=True
+        ),
+        Item("text_x"), Item("text_y"), Item("text_w"),
+        Item("justification"), Item("text")
+    )
 
     #--------------------------------------------------------------------------
     #  Draw component on the graphics context:
@@ -69,8 +91,8 @@ class Text(Component):
         gc.save_state()
 
         # Specify the font
-#        font = Font(family=MODERN, size=14)
-        font = str_to_font(self.pen.font)
+        font = KivaFont(family=MODERN, size=14)
+#        font = str_to_font(self.pen.font)
         gc.set_font(font)
 #        gc.set_antialias(True)
 
@@ -112,5 +134,29 @@ class Text(Component):
     def normal_left_down(self, event):
         print "TEXT left click:", self, event
         return
+
+#------------------------------------------------------------------------------
+#  Stand-alone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    from pylon.ui.graph.component_viewer import ComponentViewer
+
+
+    text = Text(
+        pen=Pen(), text_x=50, text_y=50, text="Foo",
+        bounds=[50, 50], position=[0, 0]
+    )
+
+    viewer = ComponentViewer(component=text)
+
+#    from enthought.enable.primitives.api import Box
+#    box = Box(
+#        color="steelblue", border_color="darkorchid", border_size=1,
+#        bounds=[50, 50], position=[50, 50]
+#    )
+#    viewer.canvas.add(box)
+
+    viewer.configure_traits()
 
 # EOF -------------------------------------------------------------------------
