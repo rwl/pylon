@@ -26,17 +26,52 @@ References:
 #  Imports:
 #------------------------------------------------------------------------------
 
+from itertools import izip
+
 from enthought.traits.api import Instance, Float, List, Tuple, on_trait_change
 from enthought.traits.ui.api import View, Item, Group
 from enthought.enable.api import Component
 
 from pen import Pen
+from recipes import cubic
+
+#def calculate_bezier(p, steps = 30):
+#    """ Calculate a bezier curve from 4 control points and return a
+#    list of the resulting points.
+#
+#    The function uses the forward differencing algorithm described here:
+#    http://www.niksula.cs.hut.fi/~hkankaan/Homepages/bezierfast.html
+#
+#    """
+#
+#    t = 1.0 / steps
+#    temp = t*t
+#
+#    f = p[0]
+#    fd = 3 * (p[1] - p[0]) * t
+#    fdd_per_2 = 3 * (p[0] - 2 * p[1] + p[2]) * temp
+#    fddd_per_2 = 3 * (3 * (p[1] - p[2]) + p[3] - p[0]) * temp * t
+#
+#    fddd = fddd_per_2 + fddd_per_2
+#    fdd = fdd_per_2 + fdd_per_2
+#    fddd_per_6 = fddd_per_2 * (1.0 / 3)
+#
+#    points = []
+#    for x in range(steps):
+#        points.append(f)
+#        f = f + fd + fdd_per_2 + fddd_per_6
+#        fd = fd + fdd + fddd_per_2
+#        fdd = fdd + fddd
+#        fdd_per_2 = fdd_per_2 + fddd_per_2
+#    points.append(f)
+#    return points
+
 
 def nsplit(seq, n=2):
     """Split a sequence into pieces of length n
 
-    If the lengt of the sequence isn't a multiple of n, the rest is discareded.
-    Note that nsplit will strings into individual characters.
+    If the length of the sequence isn't a multiple of n, the rest is discarded.
+    Note that nsplit will split strings into individual characters.
 
     Examples:
     >>> nsplit('aabbcc')
@@ -47,7 +82,9 @@ def nsplit(seq, n=2):
     # Note that cc is discarded
     >>> nsplit('aabbcc',n=4)
     [('a', 'a', 'b', 'b')]
+
     """
+
     return [xy for xy in izip(*[iter(seq)]*n)]
 
 #------------------------------------------------------------------------------
@@ -88,6 +125,7 @@ class Bezier(Component):
     def _draw_mainlayer(self, gc, view_bounds=None, mode="default"):
         """ Draws the Bezier component """
 
+        if not self.points: return
         gc.save_state()
         try:
             gc.set_fill_color(self.pen.fill_colour_)
@@ -96,15 +134,15 @@ class Bezier(Component):
             gc.set_stroke_color(self.pen.colour_)
 
             gc.begin_path()
-            x0, y0 = self.points[0]
-            gc.lines(self.points)
-            gc.move_to(x0, y0)
-            for i in xrange(0, len(self.points), 3):
-                x1, y1 = self.points[i]
-                x2, y2 = self.points[i + 1]
-                x3, y3 = self.points[i + 2]
-                gc.curve_to(x1, y1, x2, y2, x3, y3)
-#            gc.close_path()
+            start_x, start_y = self.points[0]
+            gc.move_to(start_x, start_y)
+            for triple in nsplit(self.points[1:], 3):
+                x1, y1 = triple[0]
+                x2, y2 = triple[1]
+                end_x, end_y = triple[2]
+                gc.curve_to(x1, y1, x2, y2, end_x, end_y)
+                # One point overlap
+                gc.move_to(end_x, end_y)
             gc.stroke_path()
         finally:
             gc.restore_state()
@@ -122,21 +160,39 @@ class Bezier(Component):
 #    def is_in(self, x, y):
 #        """ Tests if a point is within a certain tolerance of the line """
 #
-#        # FIXME: This is likely slow for large numbers of lines
-#        pt1 = self.points[0]
-#        pt2 = self.points[-1]
-#        mouse = [x, y]
+#        if not self.points: return False
 #
-#        # How close to the line do we have to be?
-#        tolerance = 3
+#        # First-pass bounding box check
+#        minx, miny = self.position
+#        maxx = minx + self.bounds[0]
+#        maxy = miny + self.bounds[1]
+#        if (minx <= x <= maxx) and (miny <= y <= maxy):
+#            print "IS IN?"
+#            # P(t) = (1-t)^3 P0 + 3t(1-t)^2 P1 + 3(1-t)t^2 P2 + t^3 P3
+#            x0, y0 = self.points[0]
+#            for triple in nsplit(self.points[1:], 3):
+#                x1, y1 = triple[0]
+#                x2, y2 = triple[1]
+#                x3, y3 = triple[2]
 #
-#        # If the length of the enable_line is 0, returning False
-#        xdiff, ydiff = pt1[0]-pt2[0], pt1[1]-pt2[1]
+#                a = -x0 + 3*x1 - 3*x2 + x3
+#                b = 3*x0 - 6*x1 + 3*x2
+#                c = -3*x0 + 3*x1
+#                d = x0 - x
+#                r1, r2, r3 = cubic(a, b, c, d)
 #
-#        if xdiff <= 0 or ydiff <= 0:
-#            result = False
-#        elif (distance_to_line(pt1, pt2, mouse) < tolerance and
-#            point_in_box(pt1, pt2, mouse, tolerance)):
+#                ay = -y0 + 3*y1 - 3*y2 + y3
+#                print "A:", y, ay
+#                by = 3*y0 - 6*y1 + 3*y2
+#                cy = -3*y0 + 3*y1
+#                dy = y0 - y
+#                ry1, ry2, ry3 = cubic(ay, by, cy, dy)
+#
+#                print "Root 1:", r1 - ry1
+#                print "Root 2:", r2 - ry2
+#                print "Root 3:", r3 - ry3
+#
+#                x0, y0 = triple[2]
 #            result = True
 #        else:
 #            result = False
@@ -157,23 +213,24 @@ class Bezier(Component):
         y = min(y_points)
         y2 = max(y_points)
         self.position = [x, y]
-        # Don't let bounds be set to 0, otherwise, horizontal and vertical
-        # lines will not render because enable skips rendering items with
-        # bounds=[0,0]
+        # If bounds are set to 0, horizontal/vertical lines will not render
         self.bounds = [max(x2-x,1), max(y2-y,1)]
 
         self.request_redraw()
 
 #------------------------------------------------------------------------------
-#  Stand-alone call:
+#  Standalone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     from pylon.ui.graph.component_viewer import ComponentViewer
 
     bezier = Bezier(
-        pen=Pen(line_width=1), points=[(50, 50), (75, 100), (50, 150)],
-#        bounds=[50, 50], position=[50, 50]
+        pen=Pen(line_width=1), points=[
+            (50, 50), (75, 100), (50, 150), (0, 250),
+#            (25, 225), (75, 300), (100, 275),
+#            (125, 200), (150, 100), (200, 25)
+        ],
     )
 
     viewer = ComponentViewer(component=bezier)
