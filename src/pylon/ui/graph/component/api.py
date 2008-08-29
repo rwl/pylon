@@ -32,5 +32,7 @@ from bezier import Bezier
 from ellipse import Ellipse
 from polygon import Polygon
 from text import Text
+from node import Node
+from edge import Edge
 
 # EOF -------------------------------------------------------------------------

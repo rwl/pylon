@@ -55,14 +55,17 @@ class Ellipse(Component):
     # Y-axis coordinate of ellipse origin
     y_origin = Float(desc="y-axis coordinate of ellipse origin")
 
-    # Width of the ellipse
+    # Width of the ellipse (semi-major axis)
     e_width = Float(desc="Ellipse width")
 
-    # Height of the ellipse
+    # Height of the ellipse (semi-minor axis)
     e_height = Float(desc="Ellipse height")
 
     # Is the ellipse filled?
     filled = Bool(False, desc="Fill the ellipse")
+
+    # The background color of this component.
+    bgcolor = "fuchsia"
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -86,12 +89,15 @@ class Ellipse(Component):
     def _draw_mainlayer(self, gc, view_bounds=None, mode="default"):
         """ Draws the component """
 
+        x_origin = self.x_origin
+        y_origin = self.y_origin
+
         gc.save_state()
         try:
 #            self._draw_bounds(gc)
             gc.begin_path()
-            gc.translate_ctm(self.x_origin, self.y_origin)
-            gc.scale_ctm(self.e_width/2, self.e_height/2)
+            gc.translate_ctm(x_origin, y_origin)
+            gc.scale_ctm(self.e_width, self.e_height)
             gc.arc(0.0, 0.0, 1.0, 0, 2.0*pi)
             gc.close_path()
 
@@ -122,8 +128,8 @@ class Ellipse(Component):
 
         x = self.x_origin
         y = self.y_origin
-        a = self.e_width/2 # FIXME: Why divide by two
-        b = self.e_height/2
+        a = self.e_width#/2 # FIXME: Why divide by two
+        b = self.e_height#/2
 
         return ((point_x-x)**2/(a**2)) + ((point_y-y)**2/(b**2)) < 1.0
 
@@ -143,15 +149,19 @@ class Ellipse(Component):
         print "Ellipse selected at (%d, %d)" % (event.x, event.y)
 
 
-    @on_trait_change("pen.+,x_origin,y_origin,e_width,e_height,filled")
+    @on_trait_change("pen.+,x_origin,y_origin,e_width,e_height,filled,container")
     def _update(self):
-        x = self.x_origin-(self.e_width/2)
-        x2 = self.x_origin+(self.e_width/2)
-        y = self.y_origin-(self.e_height/2)
-        y2 = self.y_origin+(self.e_height/2)
+
+        x_origin = self.x_origin
+        y_origin = self.y_origin
+
+        x = x_origin-(self.e_width)
+        x2 = x_origin+(self.e_width)
+        y = y_origin-(self.e_height)
+        y2 = y_origin+(self.e_height)
         self.position = [x,y]
         # If bounds are set to 0, horizontal/vertical lines will not render
-        self.bounds = [max(x2-x,1), max(y2-y,1)]
+        self.bounds = [max(x2-x, 1), max(y2-y, 1)]
 
         self.request_redraw()
 
@@ -165,12 +175,16 @@ if __name__ == "__main__":
     pen = Pen()
     ellipse = Ellipse(
 #        filled=True,
-        pen=pen, x_origin=50, y_origin=50, e_width=100, e_height=50,
+        pen=pen, x_origin=150, y_origin=100, e_width=100, e_height=50,
 #        bounds=[50, 50], position=[0, 0]
 
     )
 
-    viewer = ComponentViewer(component=ellipse)
+    from enthought.enable.api import Container
+    con = Container(bounds=[100, 50], position=[200, 200], bgcolor="green")
+    con.add(ellipse)
+
+    viewer = ComponentViewer(component=con)
 
     from enthought.enable.primitives.api import Box
     box = Box(

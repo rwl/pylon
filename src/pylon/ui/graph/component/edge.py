@@ -15,39 +15,45 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a pen for drawing Graphviz xdot output.
-
-See: XDot by Jose.R.Fonseca (http://code.google.com/p/jrfonseca/wiki/XDot)
-
-"""
+""" Defines an edge container """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Range, Font
+from enthought.traits.api import Instance
+from enthought.enable.api import Container
 
-from enthought.enable.colors import ColorTrait
+from text import Text
+from node import Node
 
 #------------------------------------------------------------------------------
-#  "Pen" class:
+#  "Edge" class:
 #------------------------------------------------------------------------------
 
-class Pen(HasTraits):
-    """ Store pen traits """
+class Edge(Container):
+    """ Defines a container for all components constituting an edge """
 
-    # Stroke colour
-    colour = ColorTrait("black", desc="stroke colour")
+    # Main text label of the edge
+    label = Instance(Text)
 
-    # Fill colour
-    fill_colour = ColorTrait("black", desc="fill colour")
+    # Text label positioned near the head of the edge
+    head_label = Instance(Text)
 
-    # Stroke width in points
-    line_width = Range(
-        low=1, high=8, value=1, desc="width of the stroke in points"
-    )
+    # Text label positioned near the tail of the edge
+    tail_label = Instance(Text)
 
-    # Text font
-    font = Font#("14 point Arial")
+    # From/source/start node container
+    source_node = Instance(Node)
+
+    # To/target/end node container
+    target_node = Instance(Node)
+
+    #--------------------------------------------------------------------------
+    #  Component interface
+    #--------------------------------------------------------------------------
+
+    # The background colour of this component.
+    bgcolor = "transparent"
 
 # EOF -------------------------------------------------------------------------

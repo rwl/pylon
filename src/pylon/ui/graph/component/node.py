@@ -15,39 +15,41 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a pen for drawing Graphviz xdot output.
-
-See: XDot by Jose.R.Fonseca (http://code.google.com/p/jrfonseca/wiki/XDot)
-
-"""
+""" Defines a node container """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Range, Font
+from enthought.traits.api import Instance, Either
+from enthought.enable.api import Container
 
-from enthought.enable.colors import ColorTrait
+from text import Text
+from ellipse import Ellipse
+from polygon import Polygon
 
 #------------------------------------------------------------------------------
-#  "Pen" class:
+#  "Node" class:
 #------------------------------------------------------------------------------
 
-class Pen(HasTraits):
-    """ Store pen traits """
+class Node(Container):
+    """ Defines a container for all components constituting a node """
 
-    # Stroke colour
-    colour = ColorTrait("black", desc="stroke colour")
+    # Main node label
+    label = Instance(Text)
 
-    # Fill colour
-    fill_colour = ColorTrait("black", desc="fill colour")
+    # Outermost shape
+    node = Either(Ellipse, Polygon)
 
-    # Stroke width in points
-    line_width = Range(
-        low=1, high=8, value=1, desc="width of the stroke in points"
-    )
+    #--------------------------------------------------------------------------
+    #  Component interface
+    #--------------------------------------------------------------------------
 
-    # Text font
-    font = Font#("14 point Arial")
+    # The background colour of this component.
+    bgcolor = "transparent"
+
+    def _position_changed(self, new):
+
+        print "Node position:", new
 
 # EOF -------------------------------------------------------------------------

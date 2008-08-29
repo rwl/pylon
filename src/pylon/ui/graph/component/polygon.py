@@ -68,7 +68,7 @@ class Polygon(Component):
     )
 
     # Background colour of the component
-    bgcolor = (1.0, 0.5, 0.5, 0.33)
+    bgcolor = "transparent"#(1.0, 0.5, 0.5, 0.33)
 
     #--------------------------------------------------------------------------
     #  Views:

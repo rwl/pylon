@@ -125,8 +125,8 @@ class Graph(HasTraits):
     )
 
     traits_view=View(
-        Item(name="program", show_label=False),
-        Item(name="network_dot", style="custom", show_label=False),
+#        Item(name="program", show_label=False),
+#        Item(name="network_dot", style="custom", show_label=False),
         Item(
             name="viewport", editor=ComponentEditor(),
             show_label=False, id='.graph_container'
@@ -216,8 +216,8 @@ if __name__ == "__main__":
     e1 = Branch(network=n, source_bus=v1, target_bus=v2, name="e_1")
     e2 = Branch(network=n, source_bus=v1, target_bus=v3, name="e_2")
     e3 = Branch(network=n, source_bus=v2, target_bus=v3, name="e_3")
-    n.buses=[v1, v2]#, v3]
-    n.branches=[e1]#, e2, e3]
+    n.buses=[v1, v2, v3]
+    n.branches=[e1, e2, e3]
 
     graph = Graph(network=n)
     graph.configure_traits()
