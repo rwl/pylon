@@ -104,7 +104,7 @@ class Bezier(Component):
     )
 
     # Background colour of the component
-    bgcolor = (1.0, 0.5, 0.5, 1.0)
+    bgcolor = "transparent"#(1.0, 0.5, 0.5, 1.0)
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -179,20 +179,23 @@ class Bezier(Component):
 #                b = 3*x0 - 6*x1 + 3*x2
 #                c = -3*x0 + 3*x1
 #                d = x0 - x
-#                r1, r2, r3 = cubic(a, b, c, d)
+#                t, r2, r3 = cubic(a, b, c, d)
+#
+#                ans = ((1-t)**3)*x0 + 3*t*((1-t)**2)*x1 + 3*(1-t)*(t**2)*x2 + (t**3)*x3
+#
+#                print "ANS:", ans
 #
 #                ay = -y0 + 3*y1 - 3*y2 + y3
-#                print "A:", y, ay
 #                by = 3*y0 - 6*y1 + 3*y2
 #                cy = -3*y0 + 3*y1
 #                dy = y0 - y
 #                ry1, ry2, ry3 = cubic(ay, by, cy, dy)
 #
-#                print "Root 1:", r1 - ry1
-#                print "Root 2:", r2 - ry2
-#                print "Root 3:", r3 - ry3
+#                print "Root 1:", t, ry1
+#                print "Root 2:", r2, ry2
+#                print "Root 3:", r3, ry3
 #
-#                x0, y0 = triple[2]
+##                x0, y0 = triple[2]
 #            result = True
 #        else:
 #            result = False
@@ -226,11 +229,12 @@ if __name__ == "__main__":
     from pylon.ui.graph.component_viewer import ComponentViewer
 
     bezier = Bezier(
-        pen=Pen(line_width=1), points=[
-            (50, 50), (75, 100), (50, 150), (0, 250),
+        pen=Pen(line_width=1),
+        points=[(37.0, 90.0), (37.0, 77.0), (37.0, 61.0), (37.0, 46.0)]#[
+#            (0, 50), (50, 0), (150, 0), (200, 150),
 #            (25, 225), (75, 300), (100, 275),
 #            (125, 200), (150, 100), (200, 25)
-        ],
+#        ],
     )
 
     viewer = ComponentViewer(component=bezier)

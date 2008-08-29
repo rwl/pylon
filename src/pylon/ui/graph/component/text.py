@@ -52,7 +52,7 @@ class Text(Component):
     #--------------------------------------------------------------------------
 
     # The background color of this component.
-    bgcolor = "fuchsia"
+    bgcolor = "transparent"#"fuchsia"
 
     # Pen for drawing text
     pen = Instance(Pen, desc="pen instance with which to draw the text")
@@ -64,8 +64,8 @@ class Text(Component):
     text_y = Float(desc="y-axis coordinate")
 
     # Text justification
-#    justification = Int(-1, desc="(LEFT, CENTER, RIGHT = -1, 0, 1)")
-    justification = Trait("Left", {"Left": -1, "Centre": 0, "Right": 1})
+    justification = Int(-1, desc="(LEFT, CENTER, RIGHT = -1, 0, 1)")
+#    justification = Trait("Left", {"Left": -1, "Centre": 0, "Right": 1})
 
     # Width of the text
     text_w = Float(desc="width of the text as computed by the library")
@@ -101,8 +101,8 @@ class Text(Component):
 
             gc.set_fill_color(self.pen.colour_)
 
-            x = self.text_x
-            y = self.text_y
+            x = self.text_x - (self.text_w/2)
+            y = self.text_y# - (font.size/2)
 
             # Show text at the same scale as the graphics context
             ctm = gc.get_ctm()
@@ -123,11 +123,11 @@ class Text(Component):
     @on_trait_change("pen.+,text_x,text_y,text_w,justification,text")
     def _update(self):
         if self.pen is None: return
-        x = self.text_x
-        x2 = self.text_x+self.text_w
-        y = self.text_y
+        x = self.text_x - (self.text_w/2)
+        x2 = x+self.text_w
+        y = self.text_y# - (font.size/2)
         font = str_to_font(str(self.pen.font))
-        y2 = self.text_y+font.size
+        y2 = y+font.size
         self.position = [x, y]
         # If bounds are set to 0, horizontal/vertical lines will not render
         self.bounds = [max(x2-x, 1), max(y2-y, 1)]
