@@ -24,7 +24,7 @@ import logging
 from os import listdir, mkdir
 from os.path import join, isdir, dirname
 
-from configobj import ConfigObj
+#from configobj import ConfigObj
 
 from enthought.io.api import File as IOFile
 
@@ -223,10 +223,10 @@ class Project(Folder):
         mkdir(self.path)
 
         # Create the ".project" file that turns the folder into a project!
-        config = ConfigObj()
-        config.filename = join(self.absolute_path, ".project")
-        config["name"] = self.name
-        config.write()
+#        config = ConfigObj()
+#        config.filename = join(self.absolute_path, ".project")
+#        config["name"] = self.name
+#        config.write()
 
         # Add oneself to the workspace
 #        self.workspace.add_project(self)
