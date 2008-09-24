@@ -15,30 +15,38 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    author = "Richard W. Lincoln",
-    author_email = "richard.lincoln@eee.strath.ac.uk",
-    description = "Open source power system analysis",
-#    entry_points = {},
-#    extras_require = {},
-#    ext_modules = [],
-#    install_requires = [],
-    license = "GPLv2",
-    name = "pylon",
-#    namespace_packages = [
-#        "pylon",
-#        "pylon.ui",
-#        "pylon.engine",
-#        ],
-    include_package_data = True,
-    url = "https://pylon.eee.strath.ac.uk",
-    version = "0.1.0",
-    packages = [
-        "pylon", "pyqle"],
-    package_dir = {'': 'src'},
-    zip_safe = False
+    author="Richard W. Lincoln",
+    author_email="richard.lincoln@eee.strath.ac.uk",
+    description="Open source power system and energy market analysis",
+    url="https://pylon.eee.strath.ac.uk",
+    version="0.1.0",
+    entry_points={
+        "gui_scripts": [
+            "pylon = pylon.plugin.main:main",
+            "pylon_vm = pylon.ui.model_view.main:main"
+        ]
+    },
+#    extras_require={},
+#    ext_modules=[],
+    install_requires=[
+        "Traits", "TraitsBackendWX", "Chaco", "EnvisagePlugins", "ConfigObj"
+    ],
+    license="GPLv2",
+    name="Pylon",
+    include_package_data=True,
+#    exclude_package_data={"": ["*.ecore"]},
+#    package_data={"": ["*.txt", "*.rst", "*.png", "*.jpg", "*.ini"]},
+    package_dir={"": "src"},
+    packages=find_packages("src"),#exclude=["docs", "docs.*"]),
+    namespace_packages=[
+        "enthought", "enthought.pyface", "enthought.pyface.ui",
+        "enthought.plugins"
+    ],
+    platforms = ["Windows", "Linux", "Mac OS-X", "Unix", "Solaris"],
+    zip_safe=False
 )
 
 # EOF -------------------------------------------------------------------------

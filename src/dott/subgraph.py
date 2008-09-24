@@ -37,35 +37,35 @@ from enthought.traits.api import \
 class Subgraph(HasTraits):
     """
     subgraphempty
-    
+
     """
 
     #--------------------------------------------------------------------------
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    # 
-				<html:p xmlns:html="http://www.w3.org/1999/xhtml">
-					Rank 
-constraints on the nodes in a subgraph.
-					If <html:span class="val">same</html:span>, all nodes are placed on the same rank. 
-					If <html:span class="val">min</html:span>, all nodes are placed on the minimum rank. 
-					If <html:span class="val">source</html:span>, all nodes are placed on the minimum rank, and
-					the only nodes on the minimum rank belong to some subgraph whose
-					rank attribute is "source" or "min". 
-					Analogous criteria hold for <html:a rel="attr">rank</html:a>=<html:span class="val">max</html:span> and <html:a rel="attr">rank</html:a>=<html:span class="val">sink</html:span>.
-					(Note: the
-					minimum rank is topmost or leftmost, and the maximum rank is bottommost
-					or rightmost.)
-				</html:p>
-			attributerank##targetNamespace
-    rank = Any
+    #
+#				<html:p xmlns:html="http://www.w3.org/1999/xhtml">
+#					Rank
+#constraints on the nodes in a subgraph.
+#					If <html:span class="val">same</html:span>, all nodes are placed on the same rank.
+#					If <html:span class="val">min</html:span>, all nodes are placed on the minimum rank.
+#					If <html:span class="val">source</html:span>, all nodes are placed on the minimum rank, and
+#					the only nodes on the minimum rank belong to some subgraph whose
+#					rank attribute is "source" or "min".
+#					Analogous criteria hold for <html:a rel="attr">rank</html:a>=<html:span class="val">max</html:span> and <html:a rel="attr">rank</html:a>=<html:span class="val">sink</html:span>.
+#					(Note: the
+#					minimum rank is topmost or leftmost, and the maximum rank is bottommost
+#					or rightmost.)
+#				</html:p>
+#			attributerank##targetNamespace
+#    rank = Any
 
 
     #--------------------------------------------------------------------------
     #  Private interface:
     #--------------------------------------------------------------------------
-    
+
     #--------------------------------------------------------------------------
     #  Public interface:
     #--------------------------------------------------------------------------
@@ -78,5 +78,5 @@ constraints on the nodes in a subgraph.
 
 if __name__ == "__main__":
     Subgraph().configure_traits()
-    
+
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
