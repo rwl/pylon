@@ -21,6 +21,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from logging import Logger, getLogger, DEBUG
+
 try:
     import enthought.sweet_pickle as pickle
 except ImportError:
@@ -28,7 +30,7 @@ except ImportError:
 
 from os.path import join, dirname, expanduser
 
-from enthought.traits.api import Instance, File, Bool
+from enthought.traits.api import HasTraits, Instance, File, Bool, Str, List
 
 from enthought.traits.ui.api import \
     View, Handler, UIInfo, Group, Item, TableEditor, InstanceEditor, \
@@ -39,6 +41,8 @@ from enthought.traits.ui.menu import NoButtons, OKCancelButtons, Separator
 from enthought.pyface.api import error
 from enthought.pyface.image_resource import ImageResource
 from enthought.naming.unique_name import make_unique_name
+from enthought.logger.api import add_log_queue_handler
+from enthought.logger.log_queue_handler import LogQueueHandler
 
 from pylon.api import Network, Bus, Branch
 from pylon.routine.api import DCPFRoutine, DCOPFRoutine
@@ -63,6 +67,8 @@ import pylon.ui.api
 ICON_LOCATION = dirname(pylon.ui.api.__file__)
 
 frame_icon = ImageResource("frame.ico", search_path=[ICON_LOCATION])
+
+LOG_LEVEL = DEBUG
 
 #------------------------------------------------------------------------------
 #  Traits:
@@ -110,6 +116,11 @@ graph_file_trait = File(
     desc="location of graph export"
 )
 
+class LogEntry(HasTraits):
+    level_name = Str
+    time = Str
+    message = Str
+
 #------------------------------------------------------------------------------
 #  "NetworkModelView" class:
 #------------------------------------------------------------------------------
@@ -131,7 +142,19 @@ class NetworkModelView(ModelView):
     is_interactive = Bool(True, desc="disables the interactive graph")
 
     # Is the tree view of the network displayed?
-    show_tree = Bool(True, desc="that the network tree view is visible")
+    show_tree = Bool(False, desc="that the network tree view is visible")
+
+    # The current status of the model (as yet unused)
+    status = Str
+
+    # A single logging channel
+#    logger = Instance(Logger)
+
+    # Buffers up the log messages so that they can be displayed later
+    handler = Instance(LogQueueHandler)
+
+    # Log history
+    log_entries = List(Instance(LogEntry))
 
     # Path to a file for loading/saving/importing/exporting
     file = File(
@@ -152,11 +175,11 @@ class NetworkModelView(ModelView):
             ),
             Item(
                 name="graph_image", show_label=False,
-                visible_when="is_interactive==True", width=.8
+                visible_when="is_interactive==False", width=.8
             ),
             Item(
                 name="graph", show_label=False,
-                visible_when="is_interactive==False", width=.8
+                visible_when="is_interactive==True", width=.8
             ),
             id=".split"#, layout="split"
         ),
@@ -164,26 +187,71 @@ class NetworkModelView(ModelView):
         resizable=True, style="custom",
         width=.81, height=.81, kind="live",
         buttons=NoButtons,
-        menubar=menubar, toolbar=toolbar#, statusbar=[
-#            StatusItem(name="file", width=0.5),
-#            StatusItem(name="info.ui.title", width=85)
-#        ],
-#        dock="vertical"
+        menubar=menubar, toolbar=toolbar,
+        statusbar=[
+            StatusItem(name="status", width=0.5),
+            StatusItem(name="status", width=200)
+        ],
+        dock="vertical"
     )
 
     # A file selection view
     file_view = View(
-        Item(name="file", id="file", editor=FileEditor(entries=6)),
+        Item(name="file", id="file"),#, editor=FileEditor(entries=6)),
         id="network_mv.file_view", title="Select a file",
         icon=frame_icon, resizable=True, width=.3, kind="livemodal",
         buttons=OKCancelButtons
     )
+
+
+    def _handler_default(self):
+        """ Trait initialiser """
+
+        logger = getLogger()#__name__)
+        handler = add_log_queue_handler(logger, level=LOG_LEVEL)
+        # set the view to update when something is logged.
+        handler._view = self
+
+        print "INSTANTIATING HANDLER", handler
+
+        return handler
+
+
+    def update(self):
+        """ Update the table if new records are available """
+
+
+
+        if self.handler.has_new_records():
+
+            records = self.handler.get()
+
+            self.log_entries = []
+            for record in records[:]:
+                print "BLAPP ", record.message
+
+#                level_name = record.levelname
+#                time=record.asctime
+#                message=record.message
+
+                entry = LogEntry(level_name="name", time="12:00", message="foo")
+                print entry
+                self.log_entries.append(entry)
+
+            print "RECORDS", len(records), len(self.log_entries)
+
+
+            if self.log_entries:
+                self.status = self.log_entries[-1].message
+
 
     def _is_interactive_changed(self, is_interactive):
         """ Removes the reference to the model from the appropriate
         graph to prevent it from listening to further changes.
 
         """
+
+        print dir(self)
 
         if is_interactive:
             self.graph.network = self.model
@@ -197,19 +265,19 @@ class NetworkModelView(ModelView):
         """ Handles new models by updating the graph references """
 
         if self.is_interactive:
-            self.graph_image.network = new
-        else:
             self.graph.network = new
+        else:
+            self.graph_image.network = new
 
 
-    def new(self, info):
+    def new_model(self, info):
         """ Handles creation of a new network model """
 
         if info.initialized:
             self.model = Network()
 
 
-    def open(self, info):
+    def open_file(self, info):
         """ Handles opening an existing network model """
 
         if not info.initialized:
@@ -257,11 +325,11 @@ class NetworkModelView(ModelView):
                     fd.close()
 
 
-    def _import_data_file(self, filter):
+    def _import_data_file(self, parent, filter):
         """ Imports a data file using a filter """
 
         retval = self.edit_traits(
-            parent=info.ui.control, view="file_view", kind="livemodal"
+            parent=parent, view="file_view", kind="livemodal"
         )
 
         if retval.result:
@@ -272,28 +340,28 @@ class NetworkModelView(ModelView):
         """ Handles importing MATPOWER data files """
 
         if info.initialized:
-            self._import_data_file(filter=MATPOWERImporter())
+            self._import_data_file(info.ui.control, MATPOWERImporter())
 
 
     def import_psse(self, info):
         """ Handles importing PSS/E data files """
 
         if info.initialized:
-            self._import_data_file(filter=PSSEImporter())
+            self._import_data_file(info.ui.control, PSSEImporter())
 
 
     def import_psat(self, info):
         """ Handles importing PSAT data files """
 
         if info.initialized:
-            self._import_data_file(filter=PSATImporter())
+            self._import_data_file(info.ui.control, PSATImporter())
 
 
-    def _export_network(self, filter):
+    def _export_network(self, parent, filter):
         """ Exports the current network using a filter """
 
         retval = self.edit_traits(
-                parent=info.ui.control, view="file_view", kind="livemodal"
+            parent=parent, view="file_view", kind="livemodal"
         )
 
         if retval.result:
@@ -303,7 +371,7 @@ class NetworkModelView(ModelView):
     def export_matpower(self, info):
         """ Handles exporting to a MATPOWER data file """
 
-        self._export_network(filter=MATPOWERExporter())
+        self._export_network(info.ui.control, MATPOWERExporter())
 
 
     def toggle_tree(self, info):
@@ -324,9 +392,7 @@ class NetworkModelView(ModelView):
         """ Handles display of the table view """
 
         if info.initialized:
-            self.model.edit_traits(
-                view="buses_view", parent=info.ui.control, kind="livemodal"
-            )
+            self.model.edit_traits(parent=info.ui.control, kind="livemodal")
 
 
     def add_bus(self, info):

@@ -96,7 +96,7 @@ network_tree_editor = TreeEditor(
             node_for=[Load], label="name", view=load_view
         ),
     ],
-    orientation="horizontal"
+    orientation="horizontal", editable=False
 )
 
 # EOF -------------------------------------------------------------------------
