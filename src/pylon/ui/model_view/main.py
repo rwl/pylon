@@ -125,7 +125,7 @@ def main(argv=sys.argv):
 
     model_view = NetworkModelView(model=n)
 
-    model_view.configure_traits(file=filename)
+    model_view.configure_traits()#file=filename)
 
 #-----------------------------------------------------------------------------
 #  Standalone call:
