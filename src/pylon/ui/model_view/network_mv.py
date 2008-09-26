@@ -15,10 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Controllers for network view model.
-
-"""
+""" Defines a controller for network models """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -39,18 +36,21 @@ from enthought.traits.ui.api import \
     spring
 
 from enthought.traits.ui.menu import NoButtons, OKCancelButtons, Separator
-
+from enthought.pyface.api import error
 from enthought.pyface.image_resource import ImageResource
-
 from enthought.naming.unique_name import make_unique_name
 
 from pylon.api import Network, Bus, Branch
 from pylon.routine.api import DCPFRoutine, DCOPFRoutine
-from pylon.filter.api import MATPOWERImporter, PSSEImporter, PSATImporter
+
+from pylon.filter.api import \
+    MATPOWERImporter, PSSEImporter, PSATImporter, MATPOWERExporter
+
 from pylon.ui.network_tree import network_tree_editor
 from pylon.ui.graph.graph_image import GraphImage
 from pylon.ui.graph.graph_editor import GraphEditor
 from pylon.ui.graph.graph import Graph
+from pylon.ui.about_view import about_view
 
 from network_menu import menubar, toolbar
 
@@ -60,391 +60,286 @@ import pylon.ui.api
 #  Constants:
 #------------------------------------------------------------------------------
 
-ICON_LOCATION = join(dirname(pylon.ui.api.__file__), "images")
+ICON_LOCATION = dirname(pylon.ui.api.__file__)
 
 frame_icon = ImageResource("frame.ico", search_path=[ICON_LOCATION])
+
+#------------------------------------------------------------------------------
+#  Traits:
+#------------------------------------------------------------------------------
+
+graph_file_trait = File(
+    value=expanduser("~"),
+    filter=[
+        "By Extension|*.*|"
+        "Windows Bitmap Format (*.bmp)|*.bmp|"
+        "Prettyprinted dot files (*.canon)|*.canon|"
+        "Dot files (*.dot)|*.dot|"
+        "XDot files (*.xdot)|*.xdot|"
+        "Dia files (*.dia)|*.dia|"
+        "Encapsulated PostScript (*.eps)|*.eps|"
+        "Xfig files (*.fig)|*.fig|"
+        "GD format files (*.gd)|*.gd|"
+        "GD2 format files (.gd2)|*.gd2|"
+        "GIF files (*.gif)|*.gif|"
+        "GTK canvas (*.gtk)|*.gtk|"
+        "HP-GL/2 format files (*.hpgl)|*.hpgl|"
+        "Icon Image File Format (*.ico)|*.ico|"
+        "Server and client-side imagemaps (*.cmapx, *.imap)|*.cmapx;*.imap|"
+        "Server and client-side rectangular imagemaps (*.cmapx_np, *.imap_np)|"
+            "*.cmapx_np;*.imap_np|"
+        "JPEG files (*.jpe, *.jpeg, *.jpg)|*.jpe;*.jpeg;*.jpg|"
+        "FrameMaker MIF files (*.mif)|*.mif|"
+        "MetaPost files (*.mp)|*.mp|"
+        "PCL files (*.pcl)|*.pcl|"
+        "Portable Document Format files (*.pdf)|*.pdf|"
+        "PIC files (*.pic)|*.pic|"
+        "Simple text files (*.plain, *.plain-ext)|*.plain;*.plain-ext|"
+        "Portable Network Graphics files (*.png)|*.png|"
+        "PostScript files (*.ps)|*.ps|"
+        "PostScript for PDF files (*.ps2)|*.ps2|"
+        "Scalable Vector Graphics files (*.svg, *.svgz)|*.svg;*.svgz|"
+        "Truevision Targa Format files (*.tga)|*.tga|"
+        "Tag Image File Format files (*.tif, *.tiff)|*.tif;*.tiff|"
+        "Vector Markup Language files (*.vml, *.vmlz)|*.vml;*.vmlz|"
+        "Virtual Reality Modeling Language files (*.vrml)|*.vrml|"
+        "Visual Thought files (*.vtx)|*.vtx|"
+        "Wireless BitMap (*.wbmp)|*.wbmp|"
+        "Xlib canvas files (*.xlib)|*.xlib"
+    ],
+    desc="location of graph export"
+)
 
 #------------------------------------------------------------------------------
 #  "NetworkModelView" class:
 #------------------------------------------------------------------------------
 
 class NetworkModelView(ModelView):
-    """
-    Handler for the "Network" class.
-
-    """
+    """ Defines a handler for network models """
 
     #--------------------------------------------------------------------------
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
+    # A graph representation of the network model as a scrollable image
     graph_image = Instance(GraphImage, GraphImage(), desc="image of the graph")
 
+    # Interactive graph representaion of the network
     graph = Instance(Graph, Graph(), desc="interactive graph")
 
-    fast_draw = Bool(True, desc="disables the interactive graph")
+    # Is the interactive version fo the graph displayed?
+    is_interactive = Bool(True, desc="disables the interactive graph")
 
-    # "Bitmap files|*.bmp|JPEG files|*.jpg|GIF files|*.gif"
-    # filters="Image files (*.gif;*.png;*.jpg)|*.gif;*.png;*.jpg",
-    # "MayaVi2 files (*.mv2)|*.mv2|"
-
-#    "canon", "cmap", "cmapx", "cmapx_np", "dia", "dot",
-#    "fig", "gd", "gd2", "gif", "hpgl", "imap", "imap_np", "ismap",
-#    "jpe", "jpeg", "jpg", "mif", "mp", "pcl", "pdf", "pic", "plain",
-#    "plain-ext", "png", "ps", "ps2", "svg", "svgz", "vml", "vmlz",
-#    "vrml", "vtx", "wbmp", "xdot", "xlib"
-
-# 'bmp', 'eps', 'gtk', 'ico', 'tga', 'tif', 'tiff'
-
-    file = File(
-        value=expanduser("~"),
-        desc="location of a pickled Network instance"
-    )
-
-    graph_file = File(
-        value=expanduser("~"),
-        filter=[
-            "By Extension|*.*|"
-            "Windows Bitmap Format (*.bmp)|*.bmp|"
-            "Prettyprinted dot files (*.canon)|*.canon|"
-            "Dot files (*.dot)|*.dot|"
-            "XDot files (*.xdot)|*.xdot|"
-            "Dia files (*.dia)|*.dia|"
-            "Encapsulated PostScript (*.eps)|*.eps|"
-            "Xfig files (*.fig)|*.fig|"
-            "GD format files (*.gd)|*.gd|"
-            "GD2 format files (.gd2)|*.gd2|"
-            "GIF files (*.gif)|*.gif|"
-            "GTK canvas (*.gtk)|*.gtk|"
-            "HP-GL/2 format files (*.hpgl)|*.hpgl|"
-            "Icon Image File Format (*.ico)|*.ico|"
-            "Server and client-side imagemaps (*.cmapx, *.imap)|*.cmapx;*.imap|"
-            "Server and client-side rectangular imagemaps (*.cmapx_np, *.imap_np)|"
-                "*.cmapx_np;*.imap_np|"
-            "JPEG files (*.jpe, *.jpeg, *.jpg)|*.jpe;*.jpeg;*.jpg|"
-            "FrameMaker MIF files (*.mif)|*.mif|"
-            "MetaPost files (*.mp)|*.mp|"
-            "PCL files (*.pcl)|*.pcl|"
-            "Portable Document Format files (*.pdf)|*.pdf|"
-            "PIC files (*.pic)|*.pic|"
-            "Simple text files (*.plain, *.plain-ext)|*.plain;*.plain-ext|"
-            "Portable Network Graphics files (*.png)|*.png|"
-            "PostScript files (*.ps)|*.ps|"
-            "PostScript for PDF files (*.ps2)|*.ps2|"
-            "Scalable Vector Graphics files (*.svg, *.svgz)|*.svg;*.svgz|"
-            "Truevision Targa Format files (*.tga)|*.tga|"
-            "Tag Image File Format files (*.tif, *.tiff)|*.tif;*.tiff|"
-            "Vector Markup Language files (*.vml, *.vmlz)|*.vml;*.vmlz|"
-            "Virtual Reality Modeling Language files (*.vrml)|*.vrml|"
-            "Visual Thought files (*.vtx)|*.vtx|"
-            "Wireless BitMap (*.wbmp)|*.wbmp|"
-            "Xlib canvas files (*.xlib)|*.xlib"
-        ],
-        desc="location of graph export"
-    )
-
+    # Is the tree view of the network displayed?
     show_tree = Bool(True, desc="that the network tree view is visible")
 
+    # Path to a file for loading/saving/importing/exporting
+    file = File(
+        filter=[
+            "All Files (*.*)|*.*|Pylon Files (*.pyl)|*.pyl|"
+            "MATPOWER Files (*.m)|*.m|PSAT Files (*.m)|*.m|"
+            "PSS/E Files (.raw)|*.raw|"
+        ]
+    )
+
+    # The default view
     traits_view = View(
         HGroup(
             Item(
-                name="model",
-                editor=network_tree_editor,
-                show_label=False,
-                id=".tree_editor",
-                width=.2,
-                visible_when="show_tree==True"
+                name="model", editor=network_tree_editor,
+                show_label=False, id=".tree_editor",
+                visible_when="show_tree==True", width=.2
             ),
             Item(
-                name="graph_image",
-                show_label=False,
-                width=.8,
-                visible_when="fast_draw==True"
+                name="graph_image", show_label=False,
+                visible_when="is_interactive==True", width=.8
             ),
             Item(
-                name="graph",
-                show_label=False,
-                width=.8,
-                visible_when="fast_draw==False"
+                name="graph", show_label=False,
+                visible_when="is_interactive==False", width=.8
             ),
-            id=".split",
-#            layout="split"
+            id=".split"#, layout="split"
         ),
-        id="network_vm.view",
-        title="Pylon",
-        icon=frame_icon,
-        resizable=True,
-        style="custom",
-    #    buttons=NoButtons,
-        width=.81,
-        height=.81,
-        kind="live",
+        id="network_vm.view", title="Pylon", icon=frame_icon,
+        resizable=True, style="custom",
+        width=.81, height=.81, kind="live",
         buttons=NoButtons,
-        menubar=menubar,
-        toolbar=toolbar,
-#        statusbar=[
+        menubar=menubar, toolbar=toolbar#, statusbar=[
 #            StatusItem(name="file", width=0.5),
 #            StatusItem(name="info.ui.title", width=85)
 #        ],
 #        dock="vertical"
     )
 
+    # A file selection view
     file_view = View(
-        Item(
-            name="file",
-            id="data_file",
-            label="File",
-#            editor=FileEditor(entries=6)
-        ),
-        id="network_mv.file_view",
-        title="Select a file",
-        icon=frame_icon,
-        resizable=True,
-        style="simple",
-        width=.3,
-        kind="livemodal",
+        Item(name="file", id="file", editor=FileEditor(entries=6)),
+        id="network_mv.file_view", title="Select a file",
+        icon=frame_icon, resizable=True, width=.3, kind="livemodal",
         buttons=OKCancelButtons
     )
 
-    export_graph_view = View(
-        Item(
-            name="graph_file",
-            id="graph_export_file",
-            label="File",
-#            editor=FileEditor(entries=6)
-        ),
-        id="network_mv.export_graph_view",
-        title="Select a file",
-        icon=frame_icon,
-        resizable=True,
-        style="simple",
-        width=.3,
-        kind="livemodal",
-        buttons=OKCancelButtons
-    )
-
-
-    def _fast_draw_changed(self, new):
-        """
-        Removes the reference to the model from the appropriate
-        NetworkDot instance to prevent it from listening to
-        further changes.
+    def _is_interactive_changed(self, is_interactive):
+        """ Removes the reference to the model from the appropriate
+        graph to prevent it from listening to further changes.
 
         """
 
-        if new:
-            self.graph.network = None
-            self.graph_image.network = self.model
-        else:
+        if is_interactive:
             self.graph.network = self.model
             self.graph_image.network = None
+        else:
+            self.graph.network = None
+            self.graph_image.network = self.model
 
 
     def _model_changed(self, new):
-        """
-        Gives any new network model a selection of routines and
-        updates the network dot reference.
+        """ Handles new models by updating the graph references """
 
-        """
-
-#        if new is not None:
-#            new.pf_routines = PF_ROUTINES
-#            new.opf_routines = OPF_ROUTINES
-
-        if self.fast_draw:
+        if self.is_interactive:
             self.graph_image.network = new
         else:
             self.graph.network = new
 
 
     def new(self, info):
-        if not info.initialized:
-            return
+        """ Handles creation of a new network model """
 
-        self.model = Network()
+        if info.initialized:
+            self.model = Network()
 
 
     def open(self, info):
+        """ Handles opening an existing network model """
+
         if not info.initialized:
             return
-        retval = self.edit_traits(
-            parent=info.ui.control,
-            view="file_view"
-        )
+
+        retval = self.edit_traits(parent=info.ui.control, view="file_view")
+
         if retval.result:
-            fd = open(self.file, "rb")
-            self.model = pickle.load(fd)
-            fd.close()
+            fd = None
+            try:
+                fd = open(self.file, "rb")
+                self.model = pickle.load(fd)
+            except:
+                error(
+                    parent=info.ui.control, title="Load Error",
+                    message="An error was encountered when loading\nfrom %s"
+                    % self.file
+                )
+            finally:
+                if fd is not None:
+                    fd.close()
 
 
     def save(self, info):
+        """ Handles saving the current model to file """
+
         if not info.initialized:
             return
+
+        retval = self.edit_traits(parent=info.ui.control, view="file_view")
+
+        if retval.result:
+            fd = None
+            try:
+                fd = open(self.file, "wb")
+                pickle.dump(self.model, fd)
+            except:
+                error(
+                    parent=info.ui.control, title="Save Error",
+                    message="An error was encountered when saving\nto %s"
+                    % self.file
+                )
+            finally:
+                if fd is not None:
+                    fd.close()
+
+
+    def _import_data_file(self, filter):
+        """ Imports a data file using a filter """
 
         retval = self.edit_traits(
-            parent=info.ui.control,
-            view="file_view"
+            parent=info.ui.control, view="file_view", kind="livemodal"
         )
 
         if retval.result:
-            fd = open(self.file, "wb")
-            pickle.dump(self.model, fd)
-            fd.close()
+            self.model = filter.parse_file(self.file)
 
 
-    def matpower(self, info):
-        if not info.initialized:
-            return
+    def import_matpower(self, info):
+        """ Handles importing MATPOWER data files """
 
-        filter = MATPOWERImporter()
-
-        retval = filter.edit_traits(
-            parent=info.ui.control,
-            kind="livemodal"
-        )
-
-        if retval.result:
-            n = filter.network
-            if n is not None:
-                self.model = n
-
-        del filter
+        if info.initialized:
+            self._import_data_file(filter=MATPOWERImporter())
 
 
-    def psse(self, info):
-        if not info.initialized:
-            return
+    def import_psse(self, info):
+        """ Handles importing PSS/E data files """
 
-        filter = PSSEImporter()
-
-        retval = filter.edit_traits(
-            parent=info.ui.control,
-            kind="livemodal"
-        )
-
-        if retval.result:
-            n = filter.network
-            if n is not None:
-                self.model = n
-
-        del filter
+        if info.initialized:
+            self._import_data_file(filter=PSSEImporter())
 
 
-    def psat(self, info):
-        if not info.initialized:
-            return
+    def import_psat(self, info):
+        """ Handles importing PSAT data files """
 
-        filter = PSATImporter()
-
-        retval = filter.edit_traits(
-            parent=info.ui.control,
-            kind="livemodal"
-        )
-
-        if retval.result:
-            n = filter.network
-            if n is not None:
-                self.model = n
-
-        del filter
+        if info.initialized:
+            self._import_data_file(filter=PSATImporter())
 
 
-    def export_graph(self, info):
-        """
-        Allows the dot represntation of the network to be in exported as:
-        "canon", "cmap", "cmapx", "cmapx_np", "dia", "dot",
-        "fig", "gd", "gd2", "gif", "hpgl", "imap", "imap_np", "ismap",
-        "jpe", "jpeg", "jpg", "mif", "mp", "pcl", "pdf", "pic", "plain",
-        "plain-ext", "png", "ps", "ps2", "svg", "svgz", "vml", "vmlz",
-        "vrml", "vtx", "wbmp", "xdot", "xlib"
-
-        """
-
-        if not info.initialized:
-            return
+    def _export_network(self, filter):
+        """ Exports the current network using a filter """
 
         retval = self.edit_traits(
-            parent=info.ui.control,
-            view="export_graph_view"
+                parent=info.ui.control, view="file_view", kind="livemodal"
         )
 
-#        if retval.result:
-#            dot = self.graph_image.network_dot.dot
-#            if dot is not None:
-#                dot.write(
-#                    path=self.file,
-#                    prog=self.graph_image.program,
-#                    format="png"
-#                )
+        if retval.result:
+            filter.export_network(self.model, self.file)
 
 
-    def preferences(self, info):
-        if not info.initialized:
-            return
+    def export_matpower(self, info):
+        """ Handles exporting to a MATPOWER data file """
 
-        if self.fast_draw:
-            self.graph_image.edit_traits(
-                view="config",
-                parent=info.ui.control,
-                kind="livemodal"
-            )
-        else:
-            self.graph.edit_traits(
-                view="config",
-                parent=info.ui.control,
-                kind="livemodal"
-            )
+        self._export_network(filter=MATPOWERExporter())
 
 
     def toggle_tree(self, info):
-        if not info.initialized:
-            return
+        """ Handles displaying the tree view """
 
-        self.show_tree = not self.show_tree
-
-
-    def draw_fast(self, info):
-        if not info.initialized:
-            return
-
-        self.fast_draw = not self.fast_draw
+        if info.initialized:
+            self.show_tree = not self.show_tree
 
 
-    def show_buses(self, info):
-        if not info.initialized:
-            return
+    def toggle_interactive(self, info):
+        """ Handles switching between interactive and passive graphs """
 
-        self.model.edit_traits(
-            view="buses_view",
-            parent=info.ui.control,
-            kind="live"
-        )
+        if info.initialized:
+            self.is_interactive = not self.is_interactive
 
 
-    def show_branches(self, info):
-        if not info.initialized:
-            return
+    def show_table(self, info):
+        """ Handles display of the table view """
 
-        self.model.edit_traits(
-            view="branches_view",
-            parent=info.ui.control,
-            kind="live"
-        )
+        if info.initialized:
+            self.model.edit_traits(
+                view="buses_view", parent=info.ui.control, kind="livemodal"
+            )
 
 
     def add_bus(self, info):
-        if not info.initialized:
-            return
+        """ Handles adding a bus to the network """
 
-        network = self.model
-
-        name = make_unique_name("v", network.bus_names)
-
-        bus = Bus(name=name)
-        network.buses.append(bus)
+        if info.initialized:
+            name = make_unique_name("v", self.model.bus_names)
+            self.model.buses.append(Bus(name=name))
 
 
     def add_branch(self, info):
+        """ Handles adding a branch to the network """
+
         if not info.initialized:
             return
 
@@ -465,13 +360,7 @@ class NetworkModelView(ModelView):
 
 
     def dcopf(self, info):
-        """
-        Runs the models DC OPF routine
-
-        """
-
-#        self.model.opf_routine = OPF_ROUTINES[0]
-#        self.model.solve_opf()
+        """ Runs the model using a DC OPF routine """
 
         routine = DCOPFRoutine(network=self.model)
         routine.edit_traits(parent=info.ui.control, kind="livemodal")
@@ -479,27 +368,12 @@ class NetworkModelView(ModelView):
         del routine
 
 
-#    def dot(self, info):
-#        if not info.initialized:
-#            return
-#
-#        self.network_vm.png_graph.network_dot.edit_traits(
-#            parent=info.ui.control,
-#            kind="live"
-#        )
-
     def about(self, info):
-        """ Displays the model's about view """
+        """ Handles displaying a view about Pylon """
 
-        if not info.initialized:
-            return
-
-        from pylon.ui.about_view import about_view
-
-        self.model.edit_traits(
-            view=about_view,
-            parent=info.ui.control,
-            kind="livemodal"
-        )
+        if info.initialized:
+            self.edit_traits(
+                view=about_view, parent=info.ui.control, kind="livemodal"
+            )
 
 # EOF -------------------------------------------------------------------------
