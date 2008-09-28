@@ -144,7 +144,7 @@ class NetworkModelView(ModelView):
     # Is the tree view of the network displayed?
     show_tree = Bool(False, desc="that the network tree view is visible")
 
-    # The current status of the model (as yet unused)
+    # The current status of the model
     status = Str
 
     # A single logging channel
@@ -210,9 +210,7 @@ class NetworkModelView(ModelView):
         logger = getLogger()#__name__)
         handler = add_log_queue_handler(logger, level=LOG_LEVEL)
         # set the view to update when something is logged.
-        handler._view = self
-
-        print "INSTANTIATING HANDLER", handler
+#        handler._view = self
 
         return handler
 

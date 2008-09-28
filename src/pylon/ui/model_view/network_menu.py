@@ -15,10 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Controllers for network view model.
-
-"""
+""" Model view menus and menu items """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -46,6 +43,12 @@ new_action = Action(
     name="&New", accelerator="Ctrl+N", action="new_model",
     image=ImageResource("new.png", search_path=[ICON_LOCATION]),
     tooltip="New (Ctrl+N)"
+)
+
+new_network_action = Action(
+    name="&New Network", accelerator="Ctrl+Shift+N", action="new_network",
+    image=ImageResource("new.png", search_path=[ICON_LOCATION]),
+    tooltip="New Network (Ctrl+Shift+N)"
 )
 
 open_action = Action(
@@ -120,26 +123,32 @@ RedoAction = Action(
     tooltip="Redo (Ctrl+Y)"
 )
 
-preferences_action = Action(
-    name="&Preferences...", action="preferences",#accelerator="Ctrl+E",
-    image=ImageResource("preferences.png", search_path=[ICON_LOCATION]),
-    tooltip="Preferences"
-)
+#preferences_action = Action(
+#    name="&Preferences...", action="preferences",#accelerator="Ctrl+E",
+#    image=ImageResource("preferences.png", search_path=[ICON_LOCATION]),
+#    tooltip="Preferences"
+#)
 
 #------------------------------------------------------------------------------
 #  View actions:
 #------------------------------------------------------------------------------
 
-tree_view_action = Action(
-    name="Tree", accelerator="F1", action="toggle_tree",
-    image=ImageResource("tree.png", search_path=[ICON_LOCATION]),
-    tooltip="Tree view (F1)"
+#tree_view_action = Action(
+#    name="Tree", accelerator="F1", action="toggle_tree",
+#    image=ImageResource("tree.png", search_path=[ICON_LOCATION]),
+#    tooltip="Tree view (F1)"
+#)
+
+swarm_table_action = Action(
+    name="Swarm Table", accelerator="F1", action="show_swarm_table",
+    image=ImageResource("bus_table.png", search_path=[ICON_LOCATION]),
+    tooltip="Swarm Table (F2)"
 )
 
-table_view_action = Action(
-    name="Table View", accelerator="F2", action="show_table",
-    image=ImageResource("bus_table.png", search_path=[ICON_LOCATION]),
-    tooltip="Table View (F2)"
+network_table_action = Action(
+    name="Network Table", accelerator="F2", action="show_network_table",
+    image=ImageResource("branch_table.png", search_path=[ICON_LOCATION]),
+    tooltip="Network Table (F2)"
 )
 
 interactive_graph_action = Action(
@@ -149,17 +158,17 @@ interactive_graph_action = Action(
     style="toggle"
 )
 
-bus_plot_action = Action(
-    name="Bu&s Plot", accelerator="F5", action="bus_plot",
-    image=ImageResource("bus_plot.png", search_path=[ICON_LOCATION]),
-    tooltip="Bus Plot (F5)"
-)
+#bus_plot_action = Action(
+#    name="Bu&s Plot", accelerator="F5", action="bus_plot",
+#    image=ImageResource("bus_plot.png", search_path=[ICON_LOCATION]),
+#    tooltip="Bus Plot (F5)"
+#)
 
-branch_plot_action = Action(
-    name="Br&anch Plot", accelerator="F6", action="branch_plot",
-    image=ImageResource("branch_plot.png", search_path=[ICON_LOCATION]),
-    tooltip="Branch Plot (F6)"
-)
+#branch_plot_action = Action(
+#    name="Br&anch Plot", accelerator="F6", action="branch_plot",
+#    image=ImageResource("branch_plot.png", search_path=[ICON_LOCATION]),
+#    tooltip="Branch Plot (F6)"
+#)
 
 #------------------------------------------------------------------------------
 #  Network actions:
@@ -224,11 +233,12 @@ file_menu = Menu(
 
 view_menu = Menu(
     "|",
-    tree_view_action, table_view_action,
+#    tree_view_action,
+    swarm_table_action, network_table_action,
     "_",
     interactive_graph_action,
-    "_",
-    bus_plot_action, branch_plot_action,
+#    "_",
+#    bus_plot_action, branch_plot_action,
     name="&View"
 )
 
@@ -253,8 +263,8 @@ toolbar = ToolBar(
     "_",
     UndoAction, RedoAction,
     "_",
-    bus_action, branch_action, table_view_action,
-    bus_plot_action, branch_plot_action,
+    bus_action, branch_action, swarm_table_action, network_table_action,
+#    bus_plot_action, branch_plot_action,
     show_tool_names=False,
 #    show_divider=False
 )

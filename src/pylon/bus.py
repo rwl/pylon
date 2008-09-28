@@ -90,7 +90,7 @@ class Bus(HasTraits):
         depends_on=["loads"]
     )
 
-    type = Property(
+    mode = Property(
         Enum("PV", "PQ", "Slack", "Isolated"),
         desc="bus type as determined by the connected plant",
         depends_on=["slack", "generators", "loads"]
@@ -308,7 +308,7 @@ class Bus(HasTraits):
     #  Maintain an indicator of the mode in which the bus is:
     #--------------------------------------------------------------------------
 
-    def _get_type(self):
+    def _get_mode(self):
         if self.slack:
             return "Slack"
         elif len(self.generators) > 0 and not self.q_limited:

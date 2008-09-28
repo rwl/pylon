@@ -118,6 +118,7 @@ branches_table_editor = TableEditor(
 #            editable=False
 #        )
     ],
+    show_toolbar=True,
     deletable=True,
     orientation="horizontal",
 #    edit_view=branch_view,

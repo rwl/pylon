@@ -49,7 +49,7 @@ minimal_view = View(
         name="slack", enabled_when="has_generation",
         tooltip="To be slack one or more attached Generator required"
     ),
-    Item(name="type", style="readonly"),
+    Item(name="mode", style="readonly"),
     "_",
     Item(name="v_amplitude_guess", style="text"),
     Item(name="v_phase_guess"),
@@ -79,7 +79,7 @@ bus_view = View(
                     tooltip="To be made slack one or more "
                         "attached Generator is requisite"
                 ),
-                Item(name="type", style="readonly"),
+                Item(name="mode", style="readonly"),
 #                Item(name="n_generators", style="readonly"),
 #                Item(name="n_loads", style="readonly"),
 #                Item(name="p_supply", style="readonly"),
