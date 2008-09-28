@@ -56,7 +56,7 @@ def bus_factory(**row_factory_kw):
 buses_table_editor = TableEditor(
     columns = [
         ObjectColumn(name="name"),
-        ObjectColumn(name="type", editable=False),
+        ObjectColumn(name="mode", editable=False),
         ObjectColumn(name="n_generators", label="G", editable=False),
         ObjectColumn(name="n_loads", label="L", editable=False),
         ObjectColumn(name="p_supply", label="Ps", editable=False),
@@ -72,6 +72,7 @@ buses_table_editor = TableEditor(
     #    ObjectColumn(name="v_amplitude", editable=False, label="Vm"),
     #    ObjectColumn(name="v_phase", editable=False, label="Va")
     ],
+    show_toolbar=True,
     deletable=True,
     orientation="horizontal",
 #    edit_view=bus_view,

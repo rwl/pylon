@@ -132,6 +132,24 @@ q_string = (sglQuotedString | dblQuotedString).setName("q_string")
 #
 #q_string_junk = SkipTo(q_string).setName("q_string_junk")
 
+# punctuation
+colon  = Literal(":")
+lbrace = Literal("{")
+rbrace = Literal("}")
+lbrack = Literal("[")
+rbrack = Literal("]")
+lparen = Literal("(")
+rparen = Literal(")")
+equals = Literal("=")
+comma  = Literal(",")
+dot    = Literal(".")
+slash  = Literal("/")
+bslash = Literal("\\")
+star   = Literal("*")
+semi   = Literal(";")
+at     = Literal("@")
+minus  = Literal("-")
+
 #------------------------------------------------------------------------------
 #  A convenient function for calculating a unique name given a list of
 #  existing names.

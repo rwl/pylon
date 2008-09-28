@@ -149,4 +149,87 @@ class OSM(Canvas):
 
         return u
 
+class parallelFetcher:
+    '''This class is capable of downloading a list of URLs in parallel.
+       This is merely an urllib2.open().read() executed by a pool of threads.
+       It's handy to get multiple pages in parallel, while limiting the
+       number of simultaneous connections.
+
+       WARNING:This class is a quick hack and has been specialized for myRadioPlayer.
+       - If an URL is wrong (wrong URL, HTTP error 404, etc.) the URL will simply
+         be dropped.
+       - Data returned is limited to 200 kb.
+
+       Example:
+            urls = ['http://google.com','http://sebsauvage.net','http://spamgourmet.com']
+            p = parallelFetcher(urls)
+            for (url,data) in p.fetch():
+                print url,len(data)  # Data if the data returned from the URL.
+    '''
+    def __init__(self,urls,numberOfThreads=6):
+        '''Go and get these URLs.
+
+           Input:
+               urls (list of string): The list of URLs to get.
+               numberOfThreads (integer): The number of simultaneous threads
+                                          It is not recommended to go over 8.
+        '''
+        self.inQueue  = Queue.Queue()  # The list of URLs to process
+        self.outQueue = Queue.Queue()  # Processed URLs (list of tuples in the form (url,data))
+        self.numberOfThreads = numberOfThreads
+        for url in urls: # Put all URLs in the queue.
+            self.inQueue.put(url)
+
+    def fetch(self):
+        ''' Start to fetch all URLs in parallel '''
+        # Create and start all threads.
+        threads = []
+        for i in range(self.numberOfThreads):
+            thread = threading.Thread(target=self._fetchURL)
+            thread.setDaemon(True)
+            thread.start()
+            threads.append(thread)
+
+        # Wait for all URLs to be processed.
+        self.inQueue.join()  # Wait until the queue of URLs to process is empty
+        for thread in threads: # And wait for threads to die (in order to avoid nasty error message when program exits)
+            thread.join()
+
+        # Get all processed URLs
+        results = []
+        while True:
+            try:
+                results.append(self.outQueue.get_nowait())
+            except Queue.Empty:  # Empty exception means the Queue is empty.
+                break # Exit the while loop.
+        return results
+
+    def _fetchURL(self):
+        ''' Fetch data from an URL. This method will be called in parallel by several threads. '''
+        headers = { 'User-Agent': 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)',
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-cache'   }
+        while True:
+            try:
+                url = self.inQueue.get(block=True,timeout=1)  # Get an URL to process
+            except Queue.Empty:  # No more URLs to process in the Queue
+                break  # Exit this thread
+            sys.stdout.write(".")
+            data = None
+            urlfile = None
+            try:
+                # Get the page:
+                request = urllib2.Request(url, None, headers)
+                urlfile = urllib2.urlopen(request)
+                data = urlfile.read(200000)
+            except urllib2.HTTPError,ex:
+                pass
+            except urllib2.URLError,ex:
+                pass
+            if urlfile:
+                urlfile.close()
+            if data:
+                self.outQueue.put((url,data))
+            self.inQueue.task_done()   # Tell the Queue I'm done with this URL.
+
 # EOF -------------------------------------------------------------------------

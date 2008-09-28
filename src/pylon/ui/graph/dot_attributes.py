@@ -23,7 +23,9 @@
 
 from os import path
 
-from enthought.traits.api import HasTraits, Enum, String, Float, List, ListStr
+from enthought.traits.api import \
+    HasTraits, Enum, String, Float, List, ListStr, Bool
+    
 #from enthought.traits.api import Color as Colour
 #from enthought.enable.traits.api import RGBAColor as Colour
 from enthought.enable.colors import ColorTrait as Colour
@@ -31,6 +33,26 @@ from enthought.traits.ui.api import View, Item, Group, SetEditor
 from enthought.traits.ui.menu import NoButtons
 
 from enthought.pyface.image_resource import ImageResource
+
+#------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+BACKGROUND_COLOUR = "white"
+FONT_COLOUR = "white"
+ACTIVE_COLOUR = "red"
+REACTIVE_COLOUR = "blue"
+NODE_STYLE = ["rounded", "filled"]
+NODE_SHAPE = "rectangle"
+NODE_FILL_COLOUR = "black"
+NODE_STROKE_COLOUR = "green"
+NODE_HEIGHT = "0.5"
+NODE_WIDTH = "0.0"
+FIXED_SIZE = "False"
+PV_SHAPE = "rectangle"
+PQ_SHAPE = "invtriangle"
+SLACK_SHAPE = "ellipse"
+ISOLATED_SHAPE = "rectangle"
 
 #------------------------------------------------------------------------------
 #  Trait definitions:
@@ -125,6 +147,27 @@ class DotAttributes(HasTraits):
     v_stroke_colour = Colour(
         "blue", desc="bus node stroke colour", label="Bus stroke colour"
     )
+    
+    # Bus node height
+    v_height = Float(NODE_HEIGHT)
+    
+    # Bus node width
+    v_width = Float(NODE_WIDTH)
+    
+    # Is the node height and width expnaded to fit the label
+    fixedsize = Bool(FIXED_SIZE)
+    
+    # Bus node shape for PV mode
+    pv_shape = shape_trait
+    
+    # Bus node shape for PQ mode
+    pq_shape = shape_trait
+    
+    # Bus node shape for slack mode
+    slack_shape = shape_trait
+    
+    # Bus node shape when isolated
+    isolated_shape = shape_trait
 
     # Branch properties -------------------------------------------------------
 
@@ -215,7 +258,31 @@ class DotAttributes(HasTraits):
     def _v_shape_default(self):
         """ Trait initialiser """
 
-        return "rectangle"
+        return NODE_SHAPE
+
+
+    def _pv_shape_default(self):
+        """ Trait initialiser """
+        
+        return PV_SHAPE
+
+
+    def _pq_shape_default(self):
+        """ Trait initialiser """
+    
+        return PQ_SHAPE
+
+
+    def _slack_shape_default(self):
+        """ Trait initialiser """
+
+        return SLACK_SHAPE
+
+
+    def _isolated_shape_default(self):
+        """ Trait intialiser """
+
+        return ISOLATED_SHAPE
 
 
     def _g_shape_default(self):

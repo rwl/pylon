@@ -96,13 +96,19 @@ class BusNode(HasTraits):
             node.set_label(bus.name)
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
-                node.set_shape(prefs.v_shape)
+                node.set_shape(self._get_node_shape(bus.mode))
+#                bus.trait_property_changed("mode", "ISOLATED", bus.mode)
                 node.set_fillcolor(rgba2hex(prefs.v_fill_colour_))
                 node.set_color(rgba2hex(prefs.v_stroke_colour_))
                 node.set_fontcolor(rgba2hex(prefs.font_colour_))
                 # TODO: Check that set_style() does not take a list
                 for sty in prefs.v_style:
                     node.set_style(sty)
+                if prefs.v_height != 0.0:
+                    node.set_width(prefs.v_height)
+                if prefs.v_width != 0.0:
+                    node.set_height(prefs.v_width)
+                node.set_fixedsize(prefs.fixedsize)
             return node
         else:
             return None
@@ -113,6 +119,29 @@ class BusNode(HasTraits):
 
         self.node.set_label(new)
         self.updated = True
+ 
+
+    def _mode_changed_for_bus(self, new):
+        """ Handles the bus mode changing """
+
+        self.node.set_shape(self_get_node_shape(new))
+
+
+    def _get_node_shape(self, mode):
+        """ Returns a shape according to the bus mode """
+
+        prefs = self.dot_attrs
+        
+        if mode == "PV":
+            shape = prefs.pv_shape
+        elif mode == "PQ":
+            shape = prefs.pq_shape
+        elif mode == "Slack":
+            shape = prefs.slack_shape
+        else:
+            shape = prefs.isolated_shape
+
+        return shape
 
 
 #    def _v_shape_changed_for_dot_attrs(self, new):
