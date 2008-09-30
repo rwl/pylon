@@ -35,6 +35,7 @@ from enthought.enable.component_editor import ComponentEditor
 
 from pylon.api import Network
 from pylon.ui.graph.network_dot import NetworkDot
+from pylon.ui.graph.one_line_dot import OneLineDot
 from pylon.ui.graph.pydot.pydot import Dot, graph_from_dot_data
 
 from xdot_parser import XDotParser
@@ -68,8 +69,7 @@ class Graph(HasTraits):
 
     # Graphviz dot representation of the Network
     network_dot = Instance(
-        NetworkDot, NetworkDot(),
-        allow_none=False,
+        NetworkDot, OneLineDot(), allow_none=False,
         desc="dot representation of the network"
     )
 

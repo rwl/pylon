@@ -22,7 +22,7 @@ setup(
     author_email="richard.lincoln@eee.strath.ac.uk",
     description="Open source power system and energy market analysis",
     url="https://pylon.eee.strath.ac.uk",
-    version="0.1.0",
+    version="0.1.1",
     entry_points={
         "gui_scripts": [
             "pylon = pylon.plugin.main:main",

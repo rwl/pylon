@@ -33,7 +33,7 @@ from pylon.ui.graph.pydot.pydot import Dot, Node, Edge
 
 from pylon.ui.graph.dot_attributes import DotAttributes
 
-from pylon.api import Network, Bus, Branch, Generator
+from pylon.api import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -265,14 +265,20 @@ class NetworkDot(HasTraits):
         self.dot = Dot(graph_name="Pylon", graph_type="digraph")
         self.bus_nodes = self.branch_edges = []
         if n is not None:
-            for v in n.buses:
-                self.add_bus_node(v)
-            for e in n.branches:
-                self.add_branch_edge(e)
+            self.map_network(n)
 
         logger.debug("Resuming graph updates")
         self.suspend_update = False
         self.update()
+
+
+    def map_network(self, network):
+        """ Creates mapping between network components and graph features """
+
+        for v in network.buses:
+            self.add_bus_node(v)
+        for e in network.branches:
+            self.add_branch_edge(e)
 
 
     @on_trait_change("bus_nodes.updated,branch_edges.updated")
