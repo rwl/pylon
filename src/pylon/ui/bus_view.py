@@ -124,10 +124,9 @@ bus_view = View(
             dock="tab", springy=True
         ),
     ),
-    id="pylon.ui.bus_view",
 #    dock="fixed",
-#    title="Bus properties",
-    icon=ImageResource(path.join(ICON_LOCATION, "frame.ico")),
+    id="pylon.ui.bus_view", title="Bus properties",
+    icon=ImageResource("frame.ico", search_path=[ICON_LOCATION]),
     resizable=True,
 #    scrollable=True,
     buttons=OKCancelButtons

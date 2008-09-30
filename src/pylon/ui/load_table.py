@@ -91,6 +91,7 @@ loads_table_editor = TableEditor(
 #        ObjectColumn(name="min_period_up"),
 #        ObjectColumn(name="min_period_down"),
     ],
+    show_toolbar=True,
     deletable=True,
     orientation="vertical",
 #    edit_view=load_view,

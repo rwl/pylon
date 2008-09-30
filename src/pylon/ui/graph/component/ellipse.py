@@ -65,7 +65,7 @@ class Ellipse(Component):
     filled = Bool(False, desc="Fill the ellipse")
 
     # The background color of this component.
-    bgcolor = "fuchsia"
+    bgcolor = "transparent" #"fuchsia"
 
     #--------------------------------------------------------------------------
     #  Views:

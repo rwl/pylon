@@ -151,8 +151,8 @@ network_view = View(
             Group(
                 Item(
                     name="branches", show_label=False,
-                    editor=branches_table_editor,
-                    id=".network_branches_table"
+                    editor=branches_table_editor
+                    scrollable=True,
                 ),
                 label="Branches",
 #                dock="tab"

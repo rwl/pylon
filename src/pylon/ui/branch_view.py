@@ -142,7 +142,7 @@ branch_view = View(
             label="Transformer"
         )
     ),
-#    title="Branch properties",
+    id="pylon.ui.branch_view", title="Branch properties",
 #    icon = ImageResource(path.join(ICON_LOCATION, "frame.ico")),
     resizable = True,
     scrollable=True,

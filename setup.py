@@ -26,7 +26,8 @@ setup(
     entry_points={
         "gui_scripts": [
             "pylon = pylon.plugin.main:main",
-            "pylon_vm = pylon.ui.model_view.main:main"
+            "pylon_vm = pylon.ui.model_view.main:main",
+            "pyreto = pylon.ui.model_view.pyreto:main"
         ]
     },
 #    extras_require={},

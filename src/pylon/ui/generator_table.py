@@ -114,6 +114,7 @@ generators_table_editor = TableEditor(
 #        GeneratorColumn(name="initial_period_down"),
 #        GeneratorColumn(name="cost_startup"),
     ],
+    show_toolbar=True,
     deletable=True,
     orientation="vertical",
 #    edit_view=generator_view,

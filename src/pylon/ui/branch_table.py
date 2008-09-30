@@ -56,7 +56,7 @@ def branch_factory(**row_factory_kw):
             return None
         else:
             branch = Branch(
-                name=make_unique_name("e", network.branch_names),
+                name=make_unique_name("branch", network.branch_names),
                 network=network,
                 source_bus=network.buses[0],
                 target_bus=network.buses[1]
@@ -121,7 +121,7 @@ branches_table_editor = TableEditor(
     show_toolbar=True,
     deletable=True,
     orientation="horizontal",
-#    edit_view=branch_view,
+    edit_view=branch_view,
 #    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter(),
     row_factory=branch_factory,

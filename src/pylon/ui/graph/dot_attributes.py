@@ -44,15 +44,23 @@ ACTIVE_COLOUR = "red"
 REACTIVE_COLOUR = "blue"
 NODE_STYLE = ["rounded", "filled"]
 NODE_SHAPE = "rectangle"
-NODE_FILL_COLOUR = "black"
-NODE_STROKE_COLOUR = "green"
-NODE_HEIGHT = "0.5"
-NODE_WIDTH = "0.0"
+NODE_FILL_COLOUR = "blue"
+NODE_STROKE_COLOUR = "black"
+NODE_HEIGHT = "0.1"
+NODE_WIDTH = "1.1"
 FIXED_SIZE = "False"
 PV_SHAPE = "rectangle"
-PQ_SHAPE = "invtriangle"
-SLACK_SHAPE = "ellipse"
+PQ_SHAPE = "rectangle"
+SLACK_SHAPE = "rectangle"
 ISOLATED_SHAPE = "rectangle"
+
+GENERATOR_STYLE = ["rounded", "filled"]
+GENERATOR_SHAPE = "circle"
+GENERATOR_FILL_COLOUR = "red"
+GENERATOR_STROKE_COLOUR = "black"
+GENERATOR_HEIGHT = "0.5"
+GENERATOR_WIDTH = "0.5"
+GENERATOR_FIXED_SIZE = "True"
 
 #------------------------------------------------------------------------------
 #  Trait definitions:
@@ -140,12 +148,13 @@ class DotAttributes(HasTraits):
 
     # Bus node fill colour
     v_fill_colour = Colour(
-        "green", desc="bus node fill colour", label="Bus fill colour"
+        NODE_FILL_COLOUR, desc="bus node fill colour", label="Bus fill colour"
     )
 
     # Bus node stroke colour
     v_stroke_colour = Colour(
-        "blue", desc="bus node stroke colour", label="Bus stroke colour"
+        NODE_STROKE_COLOUR, desc="bus node stroke colour",
+        label="Bus stroke colour"
     )
     
     # Bus node height
@@ -175,17 +184,24 @@ class DotAttributes(HasTraits):
 
     # Generator properties ----------------------------------------------------
 
-#    g_style = List(String, ["rounded", "filled"])
-#
-#    g_shape = shape_trait
-#
-#    g_fill_colour = Colour("white", desc="generator node background colour")
-#
-#    g_stroke_colour = Colour("black", desc="generator stroke colour")
-#
-#    g_width = Float(desc="generator node width")
-#
-#    g_height = Float(desc="generator node height")
+    g_style = List(String, ["rounded", "filled"])
+
+    g_shape = shape_trait
+
+    g_fill_colour = Colour(
+        GENERATOR_FILL_COLOUR, desc="generator node background colour"
+    )
+
+    g_stroke_colour = Colour(
+        GENERATOR_STROKE_COLOUR, desc="generator stroke colour"
+    )
+
+    g_width = Float(GENERATOR_WIDTH, desc="generator node width")
+
+    g_height = Float(GENERATOR_HEIGHT, desc="generator node height")
+
+    # Is the node height and width expnaded to fit the label
+    g_fixed_size = Bool(GENERATOR_FIXED_SIZE)
 
     # Load properties ---------------------------------------------------------
 
@@ -288,13 +304,7 @@ class DotAttributes(HasTraits):
     def _g_shape_default(self):
         """ Trait initialiser """
 
-        return "circle"
-
-
-    def _l_shape_default(self):
-        """ Trait initialiser """
-
-        return "invtriangle"
+        return GENERATOR_SHAPE
 
 
 #    def _get_e_colour(self):
