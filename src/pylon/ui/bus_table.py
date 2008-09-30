@@ -47,7 +47,7 @@ def bus_factory(**row_factory_kw):
     if "__table_editor__" in row_factory_kw:
         network = row_factory_kw["__table_editor__"].object
         del row_factory_kw["__table_editor__"]
-        return Bus(name=make_unique_name("v", network.bus_names))
+        return Bus(name=make_unique_name("bus", network.bus_names))
 
 #------------------------------------------------------------------------------
 #  Buses "TableEditor" instance:
@@ -75,7 +75,7 @@ buses_table_editor = TableEditor(
     show_toolbar=True,
     deletable=True,
     orientation="horizontal",
-#    edit_view=bus_view,
+    edit_view=bus_view,
 #    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter(),
     row_factory=bus_factory,

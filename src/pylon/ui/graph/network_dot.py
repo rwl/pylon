@@ -105,9 +105,9 @@ class BusNode(HasTraits):
                 for sty in prefs.v_style:
                     node.set_style(sty)
                 if prefs.v_height != 0.0:
-                    node.set_width(prefs.v_height)
+                    node.set_height(prefs.v_height)
                 if prefs.v_width != 0.0:
-                    node.set_height(prefs.v_width)
+                    node.set_width(prefs.v_width)
                 node.set_fixedsize(prefs.fixedsize)
             return node
         else:
@@ -124,7 +124,7 @@ class BusNode(HasTraits):
     def _mode_changed_for_bus(self, new):
         """ Handles the bus mode changing """
 
-        self.node.set_shape(self_get_node_shape(new))
+        self.node.set_shape(self._get_node_shape(new))
 
 
     def _get_node_shape(self, mode):
@@ -211,9 +211,9 @@ class BranchEdge(HasTraits):
             return None
 
 
-#    def _name_changed_for_bus(self, new):
-#        self.edge.set_label(new)
-#        self.updated = True
+    def _name_changed_for_branch(self, new):
+        self.edge.set_label(new)
+        self.updated = True
 
 #------------------------------------------------------------------------------
 #  "NetworkDot" class:

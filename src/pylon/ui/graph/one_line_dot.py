@@ -33,7 +33,7 @@ from pylon.ui.graph.pydot.pydot import Dot, Node, Edge
 from pylon.ui.graph.dot_attributes import DotAttributes
 from pylon.api import Network, Bus, Branch, Generator, Load
 
-from network_dot import NetworkDot, BusNode, BranchEdge
+from network_dot import NetworkDot, BusNode, BranchEdge, rgba2hex
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -78,9 +78,20 @@ class GeneratorNodeEdge(HasTraits):
             node.set_label(g.name)
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
-                node.set_shape(prefs.v_shape)
+                node.set_shape(prefs.g_shape)
+                node.set_fillcolor(rgba2hex(prefs.g_fill_colour_))
+                node.set_color(rgba2hex(prefs.g_stroke_colour_))
+                node.set_fixedsize(prefs.g_fixed_size)
+                for sty in prefs.g_style:
+                    node.set_style(sty)
+                if prefs.g_height != 0.0:
+                    node.set_width(prefs.g_height)
+                if prefs.g_width != 0.0:
+                    node.set_height(prefs.g_width)
+                node.set_fixedsize(prefs.g_fixed_size)
             return node
         else:
+            logger.warning("GeneratorNodeEdge has no generator reference")
             return None
 
 
@@ -92,6 +103,7 @@ class GeneratorNodeEdge(HasTraits):
             edge = Edge(g.id, self.bus.id)
             return edge
         else:
+            logger.warning("GeneratorNodeEdge has no generator reference")
             return None
 
 
@@ -140,10 +152,18 @@ class OneLineDot(NetworkDot):
 
 
     @on_trait_change("network.generators")
-    def on_generators_change(self, event):
+    def on_generators_change(self, obj, name, old, new):
         """ Handles the population of generators changing """
 
-        print "GENERATORS:", event
-#        self.update()
+        print "GENERATORS:", obj, name, old, new
+
+        self.regraph()
+
+
+    @on_trait_change("generator_node_edges.updated")
+    def on_node_edge_update(self):
+        """ Updates the dot when mappings are updated """
+        
+        self.update()
 
 # EOF -------------------------------------------------------------------------
