@@ -21,10 +21,11 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import uuid
 import logging
 
 from enthought.traits.api import \
-    HasTraits, Instance, Bool, List, Delegate, Event, Property, \
+    HasTraits, Instance, Bool, List, Delegate, Event, Property, String, \
     on_trait_change
 
 from enthought.traits.ui.api import View, Group, HGroup, VGroup, Item
@@ -114,6 +115,165 @@ class GeneratorNodeEdge(HasTraits):
         self.updated = True
 
 #------------------------------------------------------------------------------
+#  "LoadNodeEdge" class:
+#------------------------------------------------------------------------------
+
+class LoadNodeEdge(HasTraits):
+    """ Maps a Generator to a Node and an Edge """
+
+    # Parent bus
+    bus = Instance(Bus)
+
+    # Attributes used by various Graphviz tools
+    dot_attrs = Instance(DotAttributes)
+
+    # Mapped load
+    load = Instance(Load)
+
+    # Graph node for the load
+    node = Instance(Node)
+
+    # Graph edge connecting the load node to that of the host bus
+    edge = Instance(Edge)
+
+    # An event fired when the edge or node is updated significantly
+    updated = Event
+
+    def _node_default(self):
+        """ Trait initialiser """
+
+        l = self.load
+        if l is not None:
+            node = Node(l.id)
+            node.set_name(l.id)
+            node.set_label(l.name)
+            if self.dot_attrs is not None:
+                prefs = self.dot_attrs
+                node.set_shape(prefs.l_shape)
+                node.set_fillcolor(rgba2hex(prefs.l_fill_colour_))
+                node.set_color(rgba2hex(prefs.l_stroke_colour_))
+                node.set_fixedsize(prefs.l_fixed_size)
+                for sty in prefs.l_style:
+                    node.set_style(sty)
+                if prefs.l_height != 0.0:
+                    node.set_width(prefs.l_height)
+                if prefs.l_width != 0.0:
+                    node.set_height(prefs.l_width)
+                node.set_fixedsize(prefs.l_fixed_size)
+            return node
+        else:
+            logger.warning("LoadNodeEdge has no load reference")
+            return None
+
+
+    def _edge_default(self):
+        """ Trait initialiser """
+
+        l = self.load
+        if l is not None:
+            edge = Edge(l.id, self.bus.id)
+            return edge
+        else:
+            logger.warning("LoadNodeEdge has no load reference")
+            return None
+
+
+    def _name_changed_for_load(self, new):
+        """ Handles the name of the load changing """
+
+        self.node.set_label(new)
+        self.updated = True
+
+#------------------------------------------------------------------------------
+#  "TransformerEdgeNodeEdge" class:
+#------------------------------------------------------------------------------
+
+class TransformerEdgeNodeEdge(BranchEdge):
+    """ Maps a branch in transformer mode to two edges and a node """
+
+    id = String(desc="unique node identifier")
+
+    # Attributes used by various Graphviz tools
+#    dot_attrs = Instance(DotAttributes)
+
+    # The branch being represented
+#    branch = Instance(Branch)
+
+    # Pydot edge for the primary winding
+    primary_edge = Instance(Edge)
+
+    # Pydot node for the transformer
+    node = Instance(Node)
+
+    # Pydot edge for the secondary winding
+    secondary_edge = Instance(Edge)
+
+    # An event fired when the edge has been updated significantly
+#    updated = Event
+
+    def _node_default(self):
+        """ Trait initialiser """
+
+        t = self.branch
+        if t is not None:
+            node = Node(self.id)
+            node.set_name(self.id)
+            node.set_label(" ")#t.name)
+            if self.dot_attrs is not None:
+                prefs = self.dot_attrs
+                node.set_shape(prefs.t_shape)
+                node.set_fillcolor(rgba2hex(prefs.t_fill_colour_))
+                node.set_color(rgba2hex(prefs.t_stroke_colour_))
+                node.set_fontcolor(rgba2hex(prefs.font_colour_))
+                # TODO: Check that set_style() does not take a list
+                for sty in prefs.t_style:
+                    node.set_style(sty)
+                if prefs.t_height != 0.0:
+                    node.set_height(prefs.t_height)
+                if prefs.t_width != 0.0:
+                    node.set_width(prefs.t_width)
+                node.set_fixedsize(prefs.fixedsize)
+            return node
+        else:
+            return None
+
+
+    def _primary_edge_default(self):
+        """ Trait initialiser """
+
+        return self._get_winding_edge(self.branch.source_bus.id, self.id)
+
+
+    def _secondary_edge_default(self):
+        """ Trait initialiser """
+
+        return self._get_winding_edge(self.id, self.branch.target_bus.id)
+
+
+    def _get_winding_edge(self, source_bus_id, target_bus_id):
+        """ Trait initialiser """
+
+        br = self.branch
+        if br is not None:
+            edge = Edge(source_bus_id, target_bus_id)
+#            node.set_name(br.id)
+#            edge.set_label(br.name)
+            if self.dot_attrs is not None:
+                prefs = self.dot_attrs
+
+            return edge
+        else:
+            return None
+
+    # Unique identifier -------------------------------------------------------
+
+    def _id_default(self):
+        """ Trait initialiser """
+
+        return uuid.uuid4().hex[:6]
+
+
+#------------------------------------------------------------------------------
 #  "OneLineDot" class:
 #------------------------------------------------------------------------------
 
@@ -122,6 +282,10 @@ class OneLineDot(NetworkDot):
 
     generator_node_edges = List(Instance(GeneratorNodeEdge))
 
+    load_node_edges = List(Instance(LoadNodeEdge))
+
+    transformer_edge_node_edges = List(Instance(TransformerEdgeNodeEdge))
+
     def map_network(self, network):
         """ Creates mapping between network components and graph features """
 
@@ -129,13 +293,15 @@ class OneLineDot(NetworkDot):
             self.add_bus_node(v)
             for g in v.generators:
                 self.add_generator_node_edge(g, v)
+            for l in v.loads:
+                self.add_load_node_edge(l, v)
         for e in network.branches:
             self.add_branch_edge(e)
 
     # Generator ---------------------------------------------------------------
 
     def add_generator_node_edge(self, generator, bus):
-        """ Adds a generator node and edge with references ro the parent bus
+        """ Adds a generator node and edge with references to the parent bus
         and the graph attribute preferences.
 
         """
@@ -155,15 +321,53 @@ class OneLineDot(NetworkDot):
     def on_generators_change(self, obj, name, old, new):
         """ Handles the population of generators changing """
 
-        print "GENERATORS:", obj, name, old, new
+        self.regraph()
+
+    # Load --------------------------------------------------------------------
+
+    def add_load_node_edge(self, load, bus):
+        """ Adds a load node and edge with references to the parent bus and
+        the graph attribute preferences.
+
+        """
+
+        logger.debug("Adding LoadNodeEdge for load: %s" % load.name)
+        lne = LoadNodeEdge(load=load, bus=bus, dot_attrs=self.dot_attrs)
+        self.dot.add_node(lne.node)
+        self.dot.add_edge(lne.edge)
+        self.load_node_edges.append(lne)
+
+
+    @on_trait_change("network.loads")
+    def on_loads_change(self, obj, old, new):
+        """ Handles the population of loads changing """
 
         self.regraph()
 
 
-    @on_trait_change("generator_node_edges.updated")
-    def on_node_edge_update(self):
-        """ Updates the dot when mappings are updated """
-        
-        self.update()
+    # Transformer -------------------------------------------------------------
+
+    def add_branch_edge(self, branch):
+        """ Handles adding new branch edges """
+
+        logger.debug(
+            "Adding TransformerEdgeNodeEdge for branch: %s" % branch.name
+        )
+        tene = TransformerEdgeNodeEdge(branch=branch, dot_attrs=self.dot_attrs)
+        if branch.mode == "Line":
+            self.dot.add_edge(tene.edge)
+        elif branch.mode == "Transformer":
+            self.dot.add_edge(tene.primary_edge)
+            self.dot.add_node(tene.node)
+            self.dot.add_edge(tene.secondary_edge)
+        else:
+            logger.error("Unrecognised branch mode")
+
+        self.transformer_edge_node_edges.append(tene)
+
+
+    @on_trait_change("network.branches.mode")
+    def on_branch_mode_change(self, new):
+        print "TRANSFORMERS:", new
 
 # EOF -------------------------------------------------------------------------

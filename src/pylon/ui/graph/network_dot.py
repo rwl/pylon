@@ -204,8 +204,9 @@ class BranchEdge(HasTraits):
             edge = Edge(br.source_bus.id, br.target_bus.id)
 #            node.set_name(br.id)
             edge.set_label(br.name)
-            if self.network_dot is not None:
+            if self.dot_attrs is not None:
                 prefs = self.dot_attrs
+
             return edge
         else:
             return None
@@ -320,7 +321,7 @@ class NetworkDot(HasTraits):
         """
 
         logger.debug("Adding BranchEdge for branch: %s" % branch.name)
-        be = BranchEdge(network_dot=self, branch=branch)
+        be = BranchEdge(branch=branch, dot_attrs=self.dot_attrs)
         self.dot.add_edge(be.edge)
         self.branch_edges.append(be)
 

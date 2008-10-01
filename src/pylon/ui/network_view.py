@@ -152,7 +152,6 @@ network_view = View(
                 Item(
                     name="branches", show_label=False,
                     editor=branches_table_editor
-                    scrollable=True,
                 ),
                 label="Branches",
 #                dock="tab"

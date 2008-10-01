@@ -62,6 +62,22 @@ GENERATOR_HEIGHT = "0.5"
 GENERATOR_WIDTH = "0.5"
 GENERATOR_FIXED_SIZE = "True"
 
+LOAD_STYLE = ["filled"]
+LOAD_SHAPE = "invtriangle"
+LOAD_FILL_COLOUR = "green"
+LOAD_STROKE_COLOUR = "black"
+LOAD_HEIGHT = "0.5"
+LOAD_WIDTH = "0.5"
+LOAD_FIXED_SIZE = "True"
+
+TRANSFORMER_STYLE = ["filled"]
+TRANSFORMER_SHAPE = "doublecircle"
+TRANSFORMER_FILL_COLOUR = "white"
+TRANSFORMER_STROKE_COLOUR = "black"
+TRANSFORMER_HEIGHT = "0.5"
+TRANSFORMER_WIDTH = "0.5"
+TRANSFORMER_FIXED_SIZE = "True"
+
 #------------------------------------------------------------------------------
 #  Trait definitions:
 #------------------------------------------------------------------------------
@@ -184,7 +200,7 @@ class DotAttributes(HasTraits):
 
     # Generator properties ----------------------------------------------------
 
-    g_style = List(String, ["rounded", "filled"])
+    g_style = List(String, GENERATOR_STYLE)
 
     g_shape = shape_trait
 
@@ -205,19 +221,44 @@ class DotAttributes(HasTraits):
 
     # Load properties ---------------------------------------------------------
 
-#    l_style = List(String, ["filled"])
-#
-#    l_shape = shape_trait
-#
-#    l_fill_colour = Colour("white", desc="load node background colour")
-#
-#    l_stroke_colour = Colour("black", desc="load node stroke colour")
-#
-#    l_width = Float(desc="load node width")
-#
-#    l_height = Float(desc="load node height")
+    l_style = List(String, LOAD_STYLE)
 
-    # Default view:
+    l_shape = shape_trait
+
+    l_fill_colour = Colour(LOAD_FILL_COLOUR, desc="load node background colour")
+
+    l_stroke_colour = Colour(LOAD_STROKE_COLOUR, desc="load node stroke colour")
+
+    l_width = Float(LOAD_WIDTH, desc="load node width")
+
+    l_height = Float(LOAD_HEIGHT, desc="load node height")
+
+    # Is the node height and width expnaded to fit the label
+    l_fixed_size = Bool(LOAD_FIXED_SIZE)
+
+    # Transformer properties --------------------------------------------------
+
+    t_style = List(String, TRANSFORMER_STYLE)
+
+    t_shape = shape_trait
+
+    t_fill_colour = Colour(
+        TRANSFORMER_FILL_COLOUR, desc="load node background colour"
+    )
+
+    t_stroke_colour = Colour(
+        TRANSFORMER_STROKE_COLOUR, desc="load node stroke colour"
+    )
+
+    t_width = Float(TRANSFORMER_WIDTH, desc="load node width")
+
+    t_height = Float(TRANSFORMER_HEIGHT, desc="load node height")
+
+    # Is the node height and width expnaded to fit the label
+    t_fixed_size = Bool(TRANSFORMER_FIXED_SIZE)
+
+    # Views -------------------------------------------------------------------
+
     traits_view = View(
         Group(
 #            Item(name="bg_colour"),
@@ -305,6 +346,18 @@ class DotAttributes(HasTraits):
         """ Trait initialiser """
 
         return GENERATOR_SHAPE
+
+
+    def _l_shape_default(self):
+        """ Trait initialiser """
+
+        return LOAD_SHAPE
+
+
+    def _t_shape_default(self):
+        """ Trait initialiser """
+
+        return TRANSFORMER_SHAPE
 
 
 #    def _get_e_colour(self):

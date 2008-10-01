@@ -24,6 +24,7 @@ Power system branch components
 #  Imports:
 #------------------------------------------------------------------------------
 
+import uuid
 import logging
 
 from enthought.traits.api import \
@@ -54,6 +55,8 @@ class Branch(HasTraits):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
+    id = String(desc="unique branch identifier")
+
     source_bus = Instance(
         Bus, desc="source/from/start Bus instance", allow_none=False
     )
@@ -77,6 +80,9 @@ class Branch(HasTraits):
 #    to_buses = Property(List(Bus), depends_on=["buses", "buses_items"])
 
     name = String("e", desc="Branch name")
+
+    # Is the branch operating as line or a transformer?
+    mode = Enum("Transformer", "Line")
 
     v_source = Float
 #    Delegate(
@@ -288,6 +294,12 @@ class Branch(HasTraits):
 #        super(Branch, self).__init__(
 #            source_bus=source_bus, target_bus=target_bus, **traits
 #        )
+
+
+    def _id_default(self):
+        """ Unique identifier initialiser """
+
+        return self.name + "-#" + uuid.uuid4().hex[:6]
 
     #--------------------------------------------------------------------------
     #  Default source bus:
