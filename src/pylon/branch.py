@@ -15,10 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Power system branch components
-
-"""
+""" Power system branch components """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -46,10 +43,7 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class Branch(HasTraits):
-    """
-    Abstract class that links two Bus objects
-
-    """
+    """ Graph edge that links two Bus objects """
 
     #--------------------------------------------------------------------------
     #  Trait definitions:
@@ -58,11 +52,11 @@ class Branch(HasTraits):
     id = String(desc="unique branch identifier")
 
     source_bus = Instance(
-        Bus, desc="source/from/start Bus instance", allow_none=False
+        Bus, desc="source/from/start Bus instance"#, allow_none=False
     )
 
     target_bus = Instance(
-        Bus, desc="target/to/end Bus instance", allow_none=False
+        Bus, desc="target/to/end Bus instance"#, allow_none=False
     )
 
     # A default view
@@ -82,7 +76,7 @@ class Branch(HasTraits):
     name = String("e", desc="Branch name")
 
     # Is the branch operating as line or a transformer?
-    mode = Enum("Transformer", "Line")
+    mode = Property(Enum("Line", "Transformer"), depends_on=["v_ratio"])
 
     v_source = Float
 #    Delegate(
@@ -209,7 +203,9 @@ class Branch(HasTraits):
 #    tau = Float(desc="primary and secondary voltage ratio (kV/kV)")
 
     # Ratio between the source_bus voltage and the target_bus voltage:
-    v_ratio = Property(Float, depends_on=['v_source', 'v_target'])
+    v_ratio = Property(
+        Float, depends_on=["source_bus.v_amplitude", "target_bus.v_amplitude"]
+    )
 
 #    winding = Enum(
 #        "Source winding", "Target winding", "Phase shift",
@@ -309,9 +305,7 @@ class Branch(HasTraits):
         if self.network is not None:
             return self.network.buses[0]
         else:
-            logger.warning(
-                "Branch [%s] source bus not set to default" % self
-            )
+            logger.warning("Branch [%s] source bus not set to default" % self)
             return None
 
     #--------------------------------------------------------------------------
@@ -319,29 +313,32 @@ class Branch(HasTraits):
     #--------------------------------------------------------------------------
 
     def _target_bus_default(self):
+        """ Trait initialiser """
+        
         if self.network is not None:
             return self.network.buses[1]
         else:
-            logger.warning(
-                "Branch [%s] source bus not set to default" % self
-            )
+            logger.warning("Branch [%s] target bus not set to default" % self)
             return None
 
 
-    def _get_p_losses(self):
-        """
-        Property getter
+    def _get_mode(self):
+        """ Property getter """
 
-        """
+        if 0.99 <= self.v_ratio <= 1.01:
+            return "Line"
+        else:
+            return "Transformer"
+
+
+    def _get_p_losses(self):
+        """ Property getter """
 
         return self.p_source - self.p_target
 
 
     def _get_q_losses(self):
-        """
-        Property getter
-
-        """
+        """ Property getter """
 
         return self.q_source - self.q_target
 
@@ -351,7 +348,16 @@ class Branch(HasTraits):
     #--------------------------------------------------------------------------
 
     def _get_v_ratio(self):
-        return self.source_volt/self.target_volt
+        """ Property getter """
+
+        sb = self.source_bus
+        tb = self.target_bus
+        if (sb is not None) and (tb is not None) and (tb.v_amplitude != 0.0):
+            v_ratio = sb.v_amplitude/tb.v_amplitude
+            print "VOLTAGE RATIO:", v_ratio
+            return v_ratio
+        else:
+            return 1.0
 
 #-------------------------------------------------------------------------------
 #  "ThreeWindingTransformer" class:

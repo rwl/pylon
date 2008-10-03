@@ -73,6 +73,7 @@ branch_view = View(
         Group(
             Item(name="name"),
             Item(name="in_service"),
+            Item(name="mode", style="readonly"),
             "_",
             Item(
                 name="source_bus",

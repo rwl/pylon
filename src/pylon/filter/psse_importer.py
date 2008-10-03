@@ -377,6 +377,8 @@ class PSSEImporter:
 
         bus.v_amplitude_default=tokens["PU_Volt"]
         bus.v_phase_default=tokens["Angle"]
+        bus.v_amplitude=tokens["PU_Volt"]
+        bus.v_phase=tokens["Angle"]
 
         # Bus type 3 denotes a slack bus in MATPOWER
 #        if int(tokens[1]) == 3: v.slack = True

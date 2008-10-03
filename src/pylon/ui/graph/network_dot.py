@@ -206,7 +206,7 @@ class BranchEdge(HasTraits):
             edge.set_label(br.name)
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
-
+                edge.set_arrowhead("none")
             return edge
         else:
             return None

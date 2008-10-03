@@ -185,7 +185,8 @@ class Graph(HasTraits):
 
 #        self.parser.parse(new, self.canvas)
         self.canvas = canvas = self.parser.parse(new)
-        canvas.bgcolor="lightsteelblue"
+        if self.network_dot is not None:
+            canvas.bgcolor = self.network_dot.dot_attrs.bg_colour
         self.viewport.component = canvas
 
 #        from enthought.enable.primitives.api import Box

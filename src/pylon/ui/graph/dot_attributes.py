@@ -38,14 +38,14 @@ from enthought.pyface.image_resource import ImageResource
 #  Constants:
 #------------------------------------------------------------------------------
 
-BACKGROUND_COLOUR = "white"
-FONT_COLOUR = "white"
+BACKGROUND_COLOUR = (0.894, 0.894, 0.894)
+FONT_COLOUR = (0.1, 0.1, 0.1) #"white"
 ACTIVE_COLOUR = "red"
 REACTIVE_COLOUR = "blue"
 NODE_STYLE = ["rounded", "filled"]
 NODE_SHAPE = "rectangle"
-NODE_FILL_COLOUR = "blue"
-NODE_STROKE_COLOUR = "black"
+NODE_FILL_COLOUR = (0.7059, 0.7059, 0.7059) #"transparent"
+NODE_STROKE_COLOUR = (0.412, 0.412, 0.412) #"black"
 NODE_HEIGHT = "0.1"
 NODE_WIDTH = "1.1"
 FIXED_SIZE = "False"
@@ -54,26 +54,26 @@ PQ_SHAPE = "rectangle"
 SLACK_SHAPE = "rectangle"
 ISOLATED_SHAPE = "rectangle"
 
-GENERATOR_STYLE = ["rounded", "filled"]
+GENERATOR_STYLE = ["filled"]
 GENERATOR_SHAPE = "circle"
-GENERATOR_FILL_COLOUR = "red"
-GENERATOR_STROKE_COLOUR = "black"
+GENERATOR_FILL_COLOUR = (0.7059, 0.7059, 0.7059)
+GENERATOR_STROKE_COLOUR = (0.412, 0.412, 0.412)
 GENERATOR_HEIGHT = "0.5"
 GENERATOR_WIDTH = "0.5"
 GENERATOR_FIXED_SIZE = "True"
 
 LOAD_STYLE = ["filled"]
 LOAD_SHAPE = "invtriangle"
-LOAD_FILL_COLOUR = "green"
-LOAD_STROKE_COLOUR = "black"
+LOAD_FILL_COLOUR = (0.7059, 0.7059, 0.7059)
+LOAD_STROKE_COLOUR = (0.412, 0.412, 0.412)
 LOAD_HEIGHT = "0.5"
 LOAD_WIDTH = "0.5"
 LOAD_FIXED_SIZE = "True"
 
 TRANSFORMER_STYLE = ["filled"]
 TRANSFORMER_SHAPE = "doublecircle"
-TRANSFORMER_FILL_COLOUR = "white"
-TRANSFORMER_STROKE_COLOUR = "black"
+TRANSFORMER_FILL_COLOUR = (0.7059, 0.7059, 0.7059)
+TRANSFORMER_STROKE_COLOUR = (0.412, 0.412, 0.412)
 TRANSFORMER_HEIGHT = "0.5"
 TRANSFORMER_WIDTH = "0.5"
 TRANSFORMER_FIXED_SIZE = "True"
@@ -133,10 +133,10 @@ class DotAttributes(HasTraits):
     #--------------------------------------------------------------------------
 
     # The graph background colour
-#    bg_colour = Colour("white", desc="graph background colour")
+    bg_colour = Colour(BACKGROUND_COLOUR, desc="graph background colour")
 
     # Graph font colour
-    font_colour = Colour("black", desc="general font colour")
+    font_colour = Colour(FONT_COLOUR, desc="general font colour")
 
 #    # Colour representing active power
 #    active_colour = Colour("black", desc="colour representing active power")

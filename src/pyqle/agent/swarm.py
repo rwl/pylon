@@ -71,6 +71,7 @@ elementary_agents_table_editor = TableEditor(
             format_func=lambda obj: obj.name
         )
     ],
+    show_toolbar=True,
     deletable=False, orientation="horizontal",
     edit_view="traits_view",
     row_factory=ElementaryAgent,
@@ -121,7 +122,8 @@ class Swarm(Agent):
         ),
         id="pyqle.agent.swarm.swarm_view",
         resizable=True, style="custom",
-        title="Swarm", height=.4
+        title="Swarm", height=.4,
+        buttons=["OK", "Cancel"]
     )
 
     #--------------------------------------------------------------------------
