@@ -73,6 +73,7 @@ branches_table_editor = TableEditor(
     columns = [
         ObjectColumn(name="name"),
         ObjectColumn(name="in_service", label="On"),
+        ObjectColumn(name="mode", editable=False),
         ObjectColumn(
             name="source_bus",
             editor=InstanceEditor(name="buses", editable=False),

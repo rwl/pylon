@@ -102,6 +102,9 @@ class GeneratorNodeEdge(HasTraits):
         g = self.generator
         if g is not None:
             edge = Edge(g.id, self.bus.id)
+            if self.dot_attrs is not None:
+                prefs = self.dot_attrs
+                edge.set_arrowhead("none")
             return edge
         else:
             logger.warning("GeneratorNodeEdge has no generator reference")
@@ -172,6 +175,9 @@ class LoadNodeEdge(HasTraits):
         l = self.load
         if l is not None:
             edge = Edge(l.id, self.bus.id)
+            if self.dot_attrs is not None:
+                prefs = self.dot_attrs
+                edge.set_arrowhead("none")
             return edge
         else:
             logger.warning("LoadNodeEdge has no load reference")
@@ -260,6 +266,7 @@ class TransformerEdgeNodeEdge(BranchEdge):
 #            edge.set_label(br.name)
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
+                edge.set_arrowhead("none")
 
             return edge
         else:
@@ -368,6 +375,9 @@ class OneLineDot(NetworkDot):
 
     @on_trait_change("network.branches.mode")
     def on_branch_mode_change(self, new):
+        """ Handles branches changing mode """
+        
         print "TRANSFORMERS:", new
+        self.regraph()
 
 # EOF -------------------------------------------------------------------------

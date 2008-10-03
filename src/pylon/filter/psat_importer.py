@@ -379,6 +379,8 @@ class PSATImporter:
         bus.name = tokens["bus_no"]
         bus.v_amplitude_guess=float(tokens["v_amplitude_guess"])
         bus.v_phase_guess=float(tokens["v_phase_guess"])
+        bus.v_amplitude=float(tokens["v_amplitude_guess"])
+        bus.v_phase=float(tokens["v_phase_guess"])
 
         self.network.buses.append(bus)
 

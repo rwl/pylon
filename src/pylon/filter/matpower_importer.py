@@ -295,6 +295,8 @@ class MATPOWERImporter:
         bus.b_shunt=tokens["Bs"]/self.base_mva
         bus.v_amplitude_guess=tokens["Vm"]
         bus.v_phase_guess=tokens["Va"]
+        bus.v_amplitude=tokens["Vm"]
+        bus.v_phase=tokens["Va"]
 
         # Bus type 3 denotes a slack bus in MATPOWER
         if tokens["bus_type"] == 3:

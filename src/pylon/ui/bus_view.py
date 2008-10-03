@@ -88,7 +88,7 @@ bus_view = View(
 #                Item(name="q_demand", style="readonly")
             ),
             Group(
-#                Item(name="v_nominal"),
+                Item(name="v_amplitude"),
                 Group(
                     Item(name="v_amplitude_guess"),
                     Item(name="v_phase_guess"),

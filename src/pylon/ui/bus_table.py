@@ -64,13 +64,13 @@ buses_table_editor = TableEditor(
         ObjectColumn(name="p_demand", label="Pd", editable=False),
         ObjectColumn(name="q_demand", label="Qd", editable=False),
         ObjectColumn(name="slack", label="slack"),
-    #    ObjectColumn(name="v_nominal", label="Vnom"),
+#        ObjectColumn(name="v_amplitude", label="Vnom"),
         ObjectColumn(name="v_amplitude_guess", label="Vm0"),
         ObjectColumn(name="v_phase_guess", label="Va0"),
     #    ObjectColumn(name="v_max", label="Vmax"),
     #    ObjectColumn(name="v_min", label="Vmin"),
-    #    ObjectColumn(name="v_amplitude", editable=False, label="Vm"),
-    #    ObjectColumn(name="v_phase", editable=False, label="Va")
+        ObjectColumn(name="v_amplitude", editable=False, label="Va"),
+    #    ObjectColumn(name="v_phase", editable=False, label="Vp")
     ],
     show_toolbar=True,
     deletable=True,
