@@ -158,6 +158,12 @@ interactive_graph_action = Action(
     style="toggle"
 )
 
+map_view_action = Action(
+    name="&Map", accelerator="F4", action="show_map_view",
+    image=ImageResource("graph.png", search_path=[ICON_LOCATION]),
+    tooltip="Map View (F4)"
+)
+
 #bus_plot_action = Action(
 #    name="Bu&s Plot", accelerator="F5", action="bus_plot",
 #    image=ImageResource("bus_plot.png", search_path=[ICON_LOCATION]),
@@ -235,6 +241,7 @@ view_menu = Menu(
     "|",
     tree_view_action,
     swarm_table_action, network_table_action,
+    map_view_action,
     "_",
     interactive_graph_action,
 #    "_",

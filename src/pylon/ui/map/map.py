@@ -195,7 +195,7 @@ class Map(HasTraits):
         width = vp.width
         height = vp.height
 
-        map.base_layer.zoom_level=self.zoom_level
+        self.base_layer.zoom_level=self.zoom_level
         self.base_layer.add_tiles(pos, width, height)
 
         vp.request_redraw()
