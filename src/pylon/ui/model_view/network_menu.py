@@ -133,11 +133,11 @@ RedoAction = Action(
 #  View actions:
 #------------------------------------------------------------------------------
 
-#tree_view_action = Action(
-#    name="Tree", accelerator="F1", action="toggle_tree",
-#    image=ImageResource("tree.png", search_path=[ICON_LOCATION]),
-#    tooltip="Tree view (F1)"
-#)
+tree_view_action = Action(
+    name="Tree", accelerator="F1", action="toggle_tree",
+    image=ImageResource("tree.png", search_path=[ICON_LOCATION]),
+    tooltip="Tree view (F1)"
+)
 
 swarm_table_action = Action(
     name="Swarm Table", accelerator="F1", action="show_swarm_table",
@@ -233,7 +233,7 @@ file_menu = Menu(
 
 view_menu = Menu(
     "|",
-#    tree_view_action,
+    tree_view_action,
     swarm_table_action, network_table_action,
     "_",
     interactive_graph_action,
