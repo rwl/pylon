@@ -1,19 +1,21 @@
 #------------------------------------------------------------------------------
+# Copyright (C) 2007 Richard W. Lincoln
 #
-#  Copyright (c) 2008, Richard W. Lincoln
-#  All rights reserved.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 dated June, 1991.
 #
-#  This software is provided without warranty under the terms of the BSD
-#  license included in enthought/LICENSE.txt and may be redistributed only
-#  under the conditions described in the aforementioned license.  The license
-#  is also available online at http://www.enthought.com/licenses/BSD.txt
+# This software is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANDABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
 #
-#  Author: Richard W. Lincoln
-#  Date:   09/07/2008
-#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a tree view of the workspace for the workbench """
+""" Defines a tree view of resources for the workbench """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -23,15 +25,16 @@ from enthought.traits.api import Instance, Delegate
 from enthought.pyface.action.api import MenuManager, Group
 from enthought.pyface.image_resource import ImageResource
 from enthought.pyface.workbench.api import View as WorkbenchView
-from enthought.plugins.workspace.workspace_resource import File
-from enthought.plugins.workspace.action.open_action import OpenAction
-
-from enthought.plugins.workspace.workspace_tree_viewer import \
-    WorkspaceTreeViewer, FileSorter, WorkspaceTreeLabelProvider, \
-    HideHiddenFiles
 
 from enthought.envisage.ui.workbench.workbench_action_manager_builder import \
     WorkbenchActionManagerBuilder
+
+from resource import File
+from action.open_action import OpenAction
+
+from resource_tree_viewer import \
+    ResourceTreeViewer, FileSorter, ResourceTreeLabelProvider, \
+    HideHiddenFiles
 
 #from enthought.pyface.action.api import ToolBarManager, Action
 
@@ -42,18 +45,18 @@ from enthought.envisage.ui.workbench.workbench_action_manager_builder import \
 ACTION_SETS = "enthought.envisage.ui.workbench.action_sets"
 
 #------------------------------------------------------------------------------
-#  "WorkspaceView" class:
+#  "ResourceView" class:
 #------------------------------------------------------------------------------
 
-class WorkspaceView(WorkbenchView):
-    """ Defines a tree view of the workspace for the workbench """
+class ResourceView(WorkbenchView):
+    """ Defines a tree view of resources for the workbench """
 
     #--------------------------------------------------------------------------
     #  "WorkspaceView" interface:
     #--------------------------------------------------------------------------
 
-    # A view of the workspace based on a tree control
-    tree_viewer = Instance(WorkspaceTreeViewer)
+    # A view of resources based on a tree control
+    tree_viewer = Instance(ResourceTreeViewer)
 
     # That which is currently selected in the tree
     selection = Delegate("tree_viewer")
@@ -65,14 +68,14 @@ class WorkspaceView(WorkbenchView):
     context_menu = Instance(MenuManager)
 
     # A tree label provider that uses contributed editor icons
-    label_provider = Instance(WorkspaceTreeLabelProvider)
+    label_provider = Instance(ResourceTreeLabelProvider)
 
     #--------------------------------------------------------------------------
     #  "IView" interface:
     #--------------------------------------------------------------------------
 
     # The view's globally unique identifier:
-    id = "enthought.plugins.workspace.workspace_view"
+    id = "pylon.plugin.resource.resource_view"
 
     # The view's name:
     name = "Navigator"
@@ -105,7 +108,7 @@ class WorkspaceView(WorkbenchView):
         workspace = self.window.application.get_service(IWorkspace)
 
         # Create a tree viewer with the workspace as input
-        self.tree_viewer = tree_viewer = WorkspaceTreeViewer(
+        self.tree_viewer = tree_viewer = ResourceTreeViewer(
             parent, input=workspace,
             label_provider=self.label_provider,
             sorter=FileSorter(),
@@ -124,13 +127,13 @@ class WorkspaceView(WorkbenchView):
         return tree_viewer.control
 
     #--------------------------------------------------------------------------
-    #  "WorkspaceView" interface:
+    #  "ResourceView" interface:
     #--------------------------------------------------------------------------
 
     def _label_provider_default(self):
         """ Trait initialiser """
 
-        return WorkspaceTreeLabelProvider(window=self.window)
+        return ResourceTreeLabelProvider(window=self.window)
 
 
     def _action_manager_builder_default(self):
@@ -150,11 +153,11 @@ class WorkspaceView(WorkbenchView):
         """ Trait initialiser """
 
         context_menu_manager = MenuManager(
-            name="Workspace", id="enthought.plugins.workspace.context_menu"
+            name="Resource", id="pylon.plugin.resource.context_menu"
         )
 
         self.action_manager_builder.initialize_action_manager(
-            context_menu_manager, "Workspace"
+            context_menu_manager, "Resource"
         )
 
         return context_menu_manager

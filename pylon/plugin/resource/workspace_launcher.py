@@ -32,7 +32,7 @@ from enthought.traits.ui.api import \
 
 from enthought.traits.ui.menu import OKCancelButtons
 
-from enthought.plugins.workspace.workspace_resource import Workspace
+from resource import Workspace
 
 #------------------------------------------------------------------------------
 #  "WorkspaceLauncher" class:

@@ -1,19 +1,21 @@
 #------------------------------------------------------------------------------
+# Copyright (C) 2007 Richard W. Lincoln
 #
-#  Copyright (c) 2008, Richard W. Lincoln
-#  All rights reserved.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 dated June, 1991.
 #
-#  This software is provided without warranty under the terms of the BSD
-#  license included in enthought/LICENSE.txt and may be redistributed only
-#  under the conditions described in the aforementioned license.  The license
-#  is also available online at http://www.enthought.com/licenses/BSD.txt
+# This software is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANDABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
 #
-#  Author: Richard W. Lincoln
-#  Date:   09/07/2008
-#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a workspace tree viewer """
+""" Defines a resource tree viewer """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -28,19 +30,19 @@ from enthought.traits.api import Instance, List
 from enthought.pyface.api import ImageResource, ApplicationWindow, GUI
 from enthought.pyface.action.api import MenuManager, Action, ToolBarManager
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
-from enthought.plugins.workspace.editor import Editor
 
 from enthought.pyface.viewer.api import \
     TreeContentProvider, TreeLabelProvider, ViewerFilter, \
     TreeViewer, ViewerSorter
 
-from workspace_resource import Project, Workspace
+from resource import Project, Workspace
+from editor import Editor
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-EDITORS = "enthought.plugins.workspace.editors"
+EDITORS = "pylon.plugin.resource.editors"
 
 #------------------------------------------------------------------------------
 #  "HideHiddenFiles" class:
@@ -88,11 +90,11 @@ class FileSorter(ViewerSorter):
         return category
 
 #------------------------------------------------------------------------------
-#  "WorkspaceTreeContentProvider" class:
+#  "ResourceTreeContentProvider" class:
 #------------------------------------------------------------------------------
 
-class WorkspaceTreeContentProvider(TreeContentProvider):
-    """ Defines a workspace tree content provider """
+class ResourceTreeContentProvider(TreeContentProvider):
+    """ Defines a resource tree content provider """
 
     #--------------------------------------------------------------------------
     #  "TreeContentProvider" interface.
@@ -132,11 +134,11 @@ class WorkspaceTreeContentProvider(TreeContentProvider):
             return False
 
 #------------------------------------------------------------------------------
-#  "WorkspaceTreeLabelProvider" class:
+#  "ResourceTreeLabelProvider" class:
 #------------------------------------------------------------------------------
 
-class WorkspaceTreeLabelProvider(TreeLabelProvider):
-    """ Defines a workspace tree label provider """
+class ResourceTreeLabelProvider(TreeLabelProvider):
+    """ Defines a resource tree label provider """
 
     # The image used to represent folders that are NOT expanded.
     CLOSED_FOLDER = ImageResource('closed_folder')
@@ -148,7 +150,7 @@ class WorkspaceTreeLabelProvider(TreeLabelProvider):
     DOCUMENT = ImageResource('document')
 
     #--------------------------------------------------------------------------
-    #  "WorkspaceTreeLabelProvider" interface
+    #  "ResourceTreeLabelProvider" interface
     #--------------------------------------------------------------------------
 
     # A window reference to allow retrieval of editor icons
@@ -190,7 +192,7 @@ class WorkspaceTreeLabelProvider(TreeLabelProvider):
         return element.name+element.ext
 
     #--------------------------------------------------------------------------
-    #  "WorkspaceTreeLabelProvider" interface
+    #  "ResourceTreeLabelProvider" interface
     #--------------------------------------------------------------------------
 
     def _editors_default(self):
@@ -203,10 +205,10 @@ class WorkspaceTreeLabelProvider(TreeLabelProvider):
             return []
 
 #------------------------------------------------------------------------------
-#  "WorkspaceTreeViewer" class:
+#  "ResourceTreeViewer" class:
 #------------------------------------------------------------------------------
 
-class WorkspaceTreeViewer(TreeViewer):
+class ResourceTreeViewer(TreeViewer):
     """ A tree viewer for local file systems. """
 
     #--------------------------------------------------------------------------
@@ -214,11 +216,11 @@ class WorkspaceTreeViewer(TreeViewer):
     #--------------------------------------------------------------------------
 
     # The content provider provides the actual tree data.
-    content_provider = Instance(WorkspaceTreeContentProvider, ())
+    content_provider = Instance(ResourceTreeContentProvider, ())
 
     # The label provider provides, err, the labels for the items in the tree
     # (a label can have text and/or an image).
-    label_provider = Instance(WorkspaceTreeLabelProvider, ())
+    label_provider = Instance(ResourceTreeLabelProvider, ())
 
     # Selection mode (must be either of 'single' or 'extended').
     selection_mode = "single"
@@ -296,7 +298,7 @@ class WorkspaceTreeViewer(TreeViewer):
         return
 
     #--------------------------------------------------------------------------
-    #  "WorkspaceTreeViewer" interface
+    #  "ResourceTreeViewer" interface
     #--------------------------------------------------------------------------
 
     def _element_right_clicked_changed(self, event):
@@ -313,11 +315,11 @@ class WorkspaceTreeViewer(TreeViewer):
 
 if __name__ == "__main__":
 
-    class WorkspaceTreeViewerWindow(ApplicationWindow):
+    class ResourceTreeViewerWindow(ApplicationWindow):
 
         def __init__(self, **traits):
             # Base class constructor.
-            super(WorkspaceTreeViewerWindow, self).__init__(**traits)
+            super(ResourceTreeViewerWindow, self).__init__(**traits)
 
             # Add a tool bar.
             self.tool_bar_manager = ToolBarManager(
@@ -330,7 +332,7 @@ if __name__ == "__main__":
         def _create_contents(self, parent):
             """ Creates the window contents. """
 
-            self.tree_viewer = tree_viewer = WorkspaceTreeViewer(
+            self.tree_viewer = tree_viewer = ResourceTreeViewer(
                 parent, input=File(expanduser("~")),
                 sorter=FileSorter()
             )
@@ -355,7 +357,7 @@ if __name__ == "__main__":
     gui = GUI()
 
     # Create and open the main window.
-    window = WorkspaceTreeViewerWindow(size=(300, 600), position=(200,200))
+    window = ResourceTreeViewerWindow(size=(300, 600), position=(200,200))
     window.open()
 
     # Start the GUI event loop!

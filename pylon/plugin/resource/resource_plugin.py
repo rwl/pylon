@@ -1,19 +1,21 @@
 #------------------------------------------------------------------------------
+# Copyright (C) 2007 Richard W. Lincoln
 #
-#  Copyright (c) 2008, Richard W. Lincoln
-#  All rights reserved.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 dated June, 1991.
 #
-#  This software is provided without warranty under the terms of the BSD
-#  license included in enthought/LICENSE.txt and may be redistributed only
-#  under the conditions described in the aforementioned license.  The license
-#  is also available online at http://www.enthought.com/licenses/BSD.txt
+# This software is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANDABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
 #
-#  Author: Richard W. Lincoln
-#  Date:   09/07/2008
-#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Workspace plug-in """
+""" Resource plug-in """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -31,7 +33,8 @@ from enthought.etsconfig.api import ETSConfig
 from enthought.envisage.api import Plugin, ExtensionPoint, ServiceOffer
 from enthought.traits.api import List, Instance, String, Callable
 from enthought.pyface.api import error
-from enthought.plugins.workspace.workspace_launcher import WorkspaceLauncher
+
+from workspace_launcher import WorkspaceLauncher
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -40,30 +43,30 @@ from enthought.plugins.workspace.workspace_launcher import WorkspaceLauncher
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "WorkspacePlugin" class:
+#  "ResourcePlugin" class:
 #------------------------------------------------------------------------------
 
-class WorkspacePlugin(Plugin):
-    """ Workspace plug-in """
+class ResourcePlugin(Plugin):
+    """ Resource plug-in """
 
     # Extension point IDs
     SERVICE_OFFERS = "enthought.envisage.service_offers"
     VIEWS = "enthought.envisage.ui.workbench.views"
     PREFERENCES_PAGES = "enthought.envisage.ui.workbench.preferences_pages"
     ACTION_SETS = "enthought.envisage.ui.workbench.action_sets"
-#    BINDINGS = "enthought.plugins.python_shell.bindings"
-    BINDINGS = "enthought.plugins.ipython_shell.bindings"
-    # Workspace extension point IDs
-    NEW_WIZARDS = "enthought.plugins.workspace.new_wizards"
-    IMPORT_WIZARDS = "enthought.plugins.workspace.import_wizards"
-    EXPORT_WIZARDS = "enthought.plugins.workspace.export_wizards"
-    EDITORS = "enthought.plugins.workspace.editors"
+    BINDINGS = "enthought.plugins.python_shell.bindings"
+#    BINDINGS = "enthought.plugins.ipython_shell.bindings"
+    # Resource extension point IDs
+    NEW_WIZARDS = "pylon.plugin.resource.new_wizards"
+    IMPORT_WIZARDS = "pylon.plugin.resource.import_wizards"
+    EXPORT_WIZARDS = "pylon.plugin.resource.export_wizards"
+    EDITORS = "pylon.plugin.resource.editors"
 
     # Unique plugin identifier
-    id = "enthought.plugins.workspace"
+    id = "pylon.plugin.resource"
 
     # Human readable plugin name
-    name = "Workspace"
+    name = "Resource"
 
     #--------------------------------------------------------------------------
     #  Extension points:
@@ -82,7 +85,7 @@ class WorkspacePlugin(Plugin):
     #--------------------------------------------------------------------------
 
     # Contributed services:
-    workspace_service_offers = List(contributes_to=SERVICE_OFFERS)
+    resource_service_offers = List(contributes_to=SERVICE_OFFERS)
 
     # Contributed views:
     contributed_views = List(contributes_to=VIEWS)
@@ -97,13 +100,13 @@ class WorkspacePlugin(Plugin):
     bindings_extensions = List(contributes_to=BINDINGS)
 
     # Contributed new element wizards:
-    workspace_new_wizards = List(contributes_to=NEW_WIZARDS)
+    new_resource_wizards = List(contributes_to=NEW_WIZARDS)
 
     # Contributed resource import wizards:
-    workspace_import_wizards = List(contributes_to=IMPORT_WIZARDS)
+    import_resource_wizards = List(contributes_to=IMPORT_WIZARDS)
 
     # Contributed export wizards:
-    workspace_export_wizards = List(contributes_to=EXPORT_WIZARDS)
+    export_resource_wizards = List(contributes_to=EXPORT_WIZARDS)
 
     #--------------------------------------------------------------------------
     #  "Plugin" interface:
@@ -172,49 +175,49 @@ class WorkspacePlugin(Plugin):
         workspace = self.application.get_service(IWorkspace)
 
         self.application.preferences.set(
-            "enthought.plugins.workspace.default",
+            "pylon.plugin.resource.default",
             workspace.absolute_path
         )
 
     #--------------------------------------------------------------------------
-    #  "WorkspacePlugin" interface:
+    #  "ResourcePlugin" interface:
     #--------------------------------------------------------------------------
 
-    def _workspace_service_offers_default(self):
+    def _resource_service_offers_default(self):
         """ Trait initialiser """
 
-        workspace_service_offer = ServiceOffer(
-            protocol="enthought.plugins.workspace.i_workspace.IWorkspace",
+        resource_service_offer = ServiceOffer(
+            protocol="pylon.plugin.resource.i_workspace.IWorkspace",
             factory=self._create_workspace_service
         )
 
-        return [workspace_service_offer]
+        return [resource_service_offer]
 
 
     def _contributed_views_default(self):
         """ Trait initialiser """
 
-        from workspace_view import WorkspaceView
-        from workspace_tree_view import WorkspaceTreeView
+        from resource_view import ResourceView
+        from resource_tree_view import ResourceTreeView
 
-        return [WorkspaceView]
+        return [ResourceView]
 
 
     def _preferences_pages_default(self):
         """ Trait initialiser """
 
-        from workspace_preferences_page import WorkspacePreferencesPage
+        from resource_preferences_page import ResourcePreferencesPage
 
-        return [WorkspacePreferencesPage]
+        return [ResourcePreferencesPage]
 
 
     def _action_sets_default(self):
         """ Trait initialiser """
 
-        from workspace_action_set import \
-            WorkspaceActionSet, ContextMenuActionSet
+        from resource_action_set import \
+            ResourceActionSet, ContextMenuActionSet
 
-        return [WorkspaceActionSet, ContextMenuActionSet]
+        return [ResourceActionSet, ContextMenuActionSet]
 
 
     def _bindings_extensions_default(self):
@@ -227,23 +230,23 @@ class WorkspacePlugin(Plugin):
         return [{"workspace": workspace}]
 
 
-    def _workspace_new_wizards_default(self):
+    def _new_resource_wizards_default(self):
         """ Trait initialiser """
 
-        from workspace_wizard import FolderWizardExtension
+        from resource_wizard import FolderWizardExtension
 
         return [FolderWizardExtension]
 
 
-    def _workspace_import_wizards_default(self):
+    def _import_resource_wizards_default(self):
         """ Trait initialiser """
 
-        from workspace_wizard import ImportFileSystemWizardExtension
+        from resource_wizard import ImportFileSystemWizardExtension
 
         return []
 
 
-    def _workspace_export_wizards_default(self):
+    def _export_resource_wizards_default(self):
         """ Trait initialiser """
 
         return []
@@ -257,10 +260,10 @@ class WorkspacePlugin(Plugin):
 
         # Only do imports when you need to! This makes sure that the import
         # only happens when somebody needs an "IWorkspace" service.
-        from enthought.plugins.workspace.workspace_resource import File
+        from resource import File
 
         path = self.application.preferences.get(
-            "enthought.plugins.workspace.default", expanduser("~")
+            "pylon.plugin.resource.default", expanduser("~")
         )
 
         return File(path)

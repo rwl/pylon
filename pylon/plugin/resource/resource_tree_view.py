@@ -1,19 +1,21 @@
 #------------------------------------------------------------------------------
+# Copyright (C) 2007 Richard W. Lincoln
 #
-#  Copyright (c) 2008, Richard W. Lincoln
-#  All rights reserved.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 dated June, 1991.
 #
-#  This software is provided without warranty under the terms of the BSD
-#  license included in enthought/LICENSE.txt and may be redistributed only
-#  under the conditions described in the aforementioned license.  The license
-#  is also available online at http://www.enthought.com/licenses/BSD.txt
+# This software is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANDABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
 #
-#  Author: Richard W. Lincoln
-#  Date:   09/07/2008
-#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a workbench tree view of the workspace """
+""" Defines a workbench tree view of resources """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -29,9 +31,7 @@ from enthought.pyface.action.api import MenuManager, Group
 from enthought.envisage.ui.workbench.workbench_action_manager_builder import \
     WorkbenchActionManagerBuilder
 
-#from workspace_browser import WorkspaceBrowser
-
-from workspace_tree_node import FileTreeNode
+from resource_tree_node import FileTreeNode
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -40,14 +40,14 @@ from workspace_tree_node import FileTreeNode
 ACTION_SETS = "enthought.envisage.ui.workbench.action_sets"
 
 #------------------------------------------------------------------------------
-#  "WorkspaceTreeView" class:
+#  "ResourceTreeView" class:
 #------------------------------------------------------------------------------
 
-class WorkspaceTreeView(WorkbenchView):
-    """ Defines a workbench tree view of the workspace """
+class ResourceTreeView(WorkbenchView):
+    """ Defines a workbench tree view of resources """
 
     #--------------------------------------------------------------------------
-    #  "WorkspaceTreeView" interface:
+    #  "ResourceTreeView" interface:
     #--------------------------------------------------------------------------
 
     workspace = Instance(File)
@@ -63,7 +63,7 @@ class WorkspaceTreeView(WorkbenchView):
     #--------------------------------------------------------------------------
 
     # The view's globally unique identifier:
-    id = "enthought.plugins.workspace.workspace_tree_view"
+    id = "pylon.plugin.resource.resource_tree_view"
 
     # The view's name:
     name = "Navigator"
@@ -97,7 +97,7 @@ class WorkspaceTreeView(WorkbenchView):
         return ui.control
 
     #--------------------------------------------------------------------------
-    #  "WorkspaceTreeView" interface:
+    #  "ResourceTreeView" interface:
     #--------------------------------------------------------------------------
 
     def _workspace_default(self):
@@ -122,11 +122,11 @@ class WorkspaceTreeView(WorkbenchView):
         )
 
         context_menu_manager = MenuManager(
-            name="Workspace", id="enthought.plugins.workspace.context_menu"
+            name="Resource", id="pylon.plugin.resource.context_menu"
         )
 
         action_manager_builder.initialize_action_manager(
-            context_menu_manager, "Workspace"
+            context_menu_manager, "Resource"
         )
 
         return context_menu_manager
