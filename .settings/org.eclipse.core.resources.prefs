@@ -1,5 +1,5 @@
-#Tue Aug 26 15:33:23 GMT 2008
+#Tue Oct 07 10:48:43 GMT 2008
 eclipse.preferences.version=1
-encoding//src/enthought/pyface/ui/wx/ipython_view.py=iso-8859-15
-encoding//src/pylon/ui/graph/pydot/dot_parser.py=latin1
-encoding//src/pylon/ui/graph/pydot/pydot.py=latin1
+encoding//enthought/pyface/ui/wx/ipython_view.py=iso-8859-15
+encoding//pylon/ui/graph/pydot/dot_parser.py=latin1
+encoding//pylon/ui/graph/pydot/pydot.py=latin1
