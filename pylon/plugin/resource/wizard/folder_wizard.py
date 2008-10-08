@@ -1,16 +1,18 @@
 #------------------------------------------------------------------------------
+# Copyright (C) 2007 Richard W. Lincoln
 #
-#  Copyright (c) 2008, Richard W. Lincoln
-#  All rights reserved.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 dated June, 1991.
 #
-#  This software is provided without warranty under the terms of the BSD
-#  license included in enthought/LICENSE.txt and may be redistributed only
-#  under the conditions described in the aforementioned license.  The license
-#  is also available online at http://www.enthought.com/licenses/BSD.txt
+# This software is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANDABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
 #
-#  Author: Richard W. Lincoln
-#  Date:   14/06/2008
-#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
 """ Defines classes for creating a new folder with a wizard """
@@ -38,13 +40,13 @@ from enthought.envisage.ui.workbench.api import WorkbenchWindow
 from enthought.plugins.workspace.wizard.container_selection_page import \
     ContainerSelectionPage
 
-from enthought.plugins.workspace.i_workspace import IWorkspace
+from pylon.plugin.resource.i_workspace import IWorkspace
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-WORKSPACE_VIEW = "enthought.plugins.workspace.workspace_view"
+WORKSPACE_VIEW = "pylon.plugin.resource.resource_view"
 
 #------------------------------------------------------------------------------
 #  "FolderWizardPage" class:
@@ -179,8 +181,6 @@ class FolderWizard(SimpleWizard):
         finished successfully.
 
         """
-
-        pass
 
         csp = self.pages[0]
         fwp = self.pages[1]
