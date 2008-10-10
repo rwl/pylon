@@ -198,4 +198,887 @@ class WireData:
     # Diameter; Alternative method for entering radius.
     diam = -1
 
+#------------------------------------------------------------------------------
+#  "LineGeometry" class:
+#------------------------------------------------------------------------------
+
+class LineGeometry:
+    """ The LineGeometry object is a general DSS object used by all circuits
+    as a reference for obtaining line impedances.
+
+    Defines the positions of the conductors.
+
+    """
+
+    # Number of conductors in this geometry.
+    n_conds = 3
+
+    # Number of phases.  All other conductors are considered neutrals and might
+    # be reduced out.
+    n_phases = 3
+
+    # Set this = number of the conductor you wish to define.
+    cond = 1
+
+    # Code from WireData. MUST BE PREVIOUSLY DEFINED. no default.
+    wire = ""
+
+    # x coordinate.
+    x = 0
+
+    # Height of conductor.
+    h = 32
+
+    # Units for x and h: {mi|kft|km|m|Ft|in|cm } Initial default is "ft", but
+    # defaults to last unit defined
+    units = "ft"
+
+    # Normal ampacity, amperes for the line. Defaults to first conductor if not
+    # specified.
+    norm_amps = 0
+
+    # Emergency ampacity, amperes. Defaults to first conductor if not
+    # specified.
+    emerg_amps = 0
+
+    # {Yes | No} Default = no. Reduce to n_phases (Kron Reduction). Reduce out
+    # neutrals.
+    reduce = "No"
+
+#------------------------------------------------------------------------------
+#  "LoadShape" class:
+#------------------------------------------------------------------------------
+
+class LoadShape:
+    """ The LoadShape object is a general DSS object used by all circuits
+    as a reference for obtaining yearly, daily, and other load shapes.
+
+    Loadshapes default to fixed interval data.  If the Interval is specified to
+    be 0.0, then both time and multiplier data are expected.  If the Interval
+    is  greater than 0.0, the user specifies only the multipliers.  The Hour
+    command is ignored and the files are assumed to contain only the multiplier
+    data.
+
+    The user may place the data in CSV or binary files as well as passing
+    through the command interface. Obviously, for large amounts of data such as
+    8760 load curves, the command interface is cumbersome.  CSV files are text
+    separated by commas, one interval to a line. There are two binary formats
+    permitted: 1) a file of Singles; 2) a file of Doubles.
+
+    For fixed interval data, only the multiplier is expected.  Therefore, the
+    CSV format would contain only one number per line.  The two binary formats
+    are packed.
+
+    For variable interval data, (hour, multiplier) pairs are expected in both
+    formats.
+
+    The Mean and Std Deviation are automatically computed when a new series of
+    points is entered.
+
+    The data may also be entered in unnormalized form.  The normalize=Yes
+    command will force normalization.  That is, the multipliers are scaled so
+    that the maximum value is 1.0.
+
+
+    A LoadShape object consists of a series of multipliers, nominally ranging
+    from 0.0 to 1.0 that are applied to the base kW values of the load to
+    represent variation of the load over some time period.
+
+    Load shapes are generally fixed interval, but may also be variable
+    interval.  For the latter, both the time, hr, and the multiplier must be
+    specified.
+
+    All loadshapes, whether they be daily, yearly, or some arbitrary duty
+    cycle, are maintained in this class.  Each load simply refers to the
+    appropriate shape by name.
+
+    The loadshape arrays may be entered directly in command line, or the load
+    shapes may be stored in one of three different types of files from which
+    the shapes are loaded into memory.
+
+    """
+
+    # Max number of points to expect in load shape vectors. This gets reset to
+    # the number of multiplier values found (in files only) if less than
+    # specified.
+    n_pts = 0
+
+    # Time interval (hrs) for fixed interval data.  If set = 0 then time data
+    # (in hours) is expected using either the Hour property or input files.
+    interval = 1
+
+    # Array of multiplier values for active power (P).  Can also use the
+    # syntax: mult = (file=filename) where the file contains one value per
+    # line. In "file=" syntax, the number of points may be altered.
+    mult = ""
+
+    # Array of hour values. Only necessary to define for variable interval
+    # data.  If the data are fixed interval, do not use this property.  Can
+    # also use the syntax: mult = (file=filename) where the file contains one
+    # value per line.
+    hour = ""
+
+    # Mean of the active power multipliers.  Automatically computed when a
+    # curve is defined.  However, you may set it independently.  Used for Monte
+    # Carlo load simulations.
+    #
+    # The mean and standard deviation are always computed after an array of
+    # points are entered or normalized (see below).  However, if you are doing
+    # only parametric load studies using the Monte Carlo solution mode, only
+    # the Mean and Std Deviation are required to define a loadshape.  These two
+    # values may be defined directly rather than by supplying the curve.  Of
+    # course, the multiplier points are not generated.
+    mean = 0
+
+    # Standard deviation of active power multipliers.  This is automatically
+    # computed when a vector or file of multipliers is entered.  However, you
+    # may set it to another value indepently.  Is overwritten if you
+    # subsequently read in a curve.  Used for Monte Carlo load simulations.
+    std_dev = 0
+
+    # The next three parameters instruct the LoadShape object to get its data
+    # from a file.  Three different formats are allowed. If Interval>0 then
+    # only the multiplier is entered.  For variable interval data, set
+    # Interval=0.0 and enter both the time (in hours) and multiplier, in that
+    # order for each interval.
+
+    # Switch input of active power load curve data to a csv file containing
+    # (hour, mult) points, or simply (mult) values for fixed time interval
+    # data, one per line.
+    #
+    # NOTE: This action may reset the number of points to a lower value.
+    csv_file = ""
+
+    # Switch input of active power load curve data to a binary file of singles
+    # containing (hour, mult) points, or simply (mult) values for fixed time
+    # interval data, packed one after another.
+    #
+    # NOTE: This action may reset the number of points to a lower value.
+    sng_file = ""
+
+    # Switch input of active power load curve data to a binary file of doubles
+    # containing (hour, mult) points, or simply (mult) values for fixed time
+    # interval data, packed one after another.
+    #
+    # NOTE: This action may reset the number of points to a lower value.
+    dbl_file = ""
+
+    # NORMALIZE is only defined action. After defining load curve data, setting
+    # action=normalize will modify the multipliers so that the peak is 1.0.
+    # The mean and std deviation are recomputed.
+    #
+    # Many times the raw load shape data is in actual kW or some other unit.
+    # The load shapes normally will have a maximum value of 1.0.  Specifying
+    # this parameter as "Action=N" after the load shape multiplier data are
+    # imported will force the normalization of the data in memory and
+    # recalculation of the mean and standard deviation.
+    action = "normalise"
+
+    # Array of multiplier values for reactive power (Q).  Can also use the
+    # syntax: qmult = (file=filename) where the file contains one value per
+    # line.
+    q_mult = ""
+
+#------------------------------------------------------------------------------
+#  "GrowthShape" class:
+#------------------------------------------------------------------------------
+
+class GrowthShape:
+    """ The GrowthShape object is a general DSS object used by all circuits
+    as a reference for obtaining yearly growth curves.
+
+    A GrowthShape object is similar to a Loadshape object.  However, it is
+    intended to represent the growth in load year-by-year and the way the curve
+    is specified is entirely different.  You must enter the growth for the
+    first year.  Thereafter, only the years where there is a change must be
+    entered.  Otherwise it is assumed the growth stays the same.
+
+    Growth shapes are entered as multipliers for the previous year's load.  If
+    the load grows by 2.5% in a year, the multiplier is entered as 1.025.  You
+    do not need to enter subsequent years if the multiplier remains the same.
+    You need only enter the years in which the growth rate is assumed to have
+    changed.
+
+    The user may place the data in CSV or binary files as well as passing
+    through the command interface. The rules are the same as for LoadShapes
+    except that the year is always entered.  CSV files are text separated by
+    commas, one interval to a line. There are two binary formats permitted:
+    1) a file of Singles; 2) a file of Doubles.
+
+    """
+
+    # Number of points to expect in subsequent vector.
+    n_pts = 0
+
+    # Array of year values, or a text file spec, corresponding to the
+    # multipliers.  Enter only those years where the growth changes.  May be
+    # any integer sequence -- just so it is consistent. See help on mult.
+    # Setting the global solution variable Year=0 causes the growth factor to
+    # default to 1.0, effectively neglecting growth.  This is what you would do
+    # for all base year analyses.  You may also use the syntax:
+    # year=(file=filename.ext) in which the array values are entered one per
+    # line in the text file referenced.
+    year = ""
+
+    # Array of growth multiplier values, or a text file spec, corresponding to
+    # the year values.  Enter the multiplier by which you would multiply the
+    # previous year''s load to get the present year''s.  Examples:
+    #    Year = "1, 2, 5"   Mult="1.05, 1.025, 1.02".
+    #    Year= (File=years.txt) Mult= (file=mults.txt).
+    # Text files contain one value per line.
+    #
+    # Normally, only a few points need be entered and the above parameters will
+    # be quite sufficient.  However, provision has been made to enter the
+    # (year, multiplier) points from files just like the LoadShape objects.
+    # You may also use the syntax: mult=(file=filename.ext) in which the array
+    # values are entered one per line in the text file referenced.
+    mult = ""
+
+    # Switch input of growth curve data to a csv file containing (year, mult)
+    # points, one per line.
+    csv_file = ""
+
+    # Switch input of growth curve data to a binary file of singles containing
+    # (year, mult) points, packed one after another.
+    sng_file = ""
+
+    # Switch input of growth curve data to a binary file of doubles containing
+    # (year, mult) points, packed one after another.
+    dbl_file = ""
+
+#------------------------------------------------------------------------------
+#  "TimeCurrentCurve" class:
+#------------------------------------------------------------------------------
+
+class TimeCurrentCurve:
+    """ Nominally, a time-current curve, but also used for volt-time curves.
+
+    Collections of time points.  Return values can be interpolated either
+    Log-Log as traditional TCC or as over- or under-voltage definite time.
+
+    A TCC_Curve object is defined similarly to Loadshape and Growthshape
+    objects in that they all are defined by curves consisting of arrays of
+    points.  Intended to model time-current characteristics for overcurrent
+    relays, TCC_Curve objects are also used for other relay types requiring
+    time curves.  Both the time array and the C array must be entered.
+
+    """
+
+    # Number of points to expect in time-current arrays.
+    n_pts = 0
+
+    # Array of current (or voltage) values corresponding to time values.
+    c_array = ""
+
+    # Array of time values in sec. Typical array syntax:
+    #     t_array = (1, 2, 3, 4, ...)
+    # Can also substitute a file designation:
+    #     t_array =  (file=filename)
+    # The specified file has one value per line.
+    t_array = ""
+
+#------------------------------------------------------------------------------
+#  Circuit Elements:
+#------------------------------------------------------------------------------
+
+""" The following DSS objects are circuit elements.  The DSS contains
+collections of each class that are treated as libraries of objects of each
+class.  However, individual dircuit element objects are owned by a Circuit
+object.
+
+"""
+
+#------------------------------------------------------------------------------
+#  "VSource" class:
+#------------------------------------------------------------------------------
+
+class VSource:
+    """ This is a special power conversion element.  It is special because
+    voltage sources must be identified to initialize the solution with all
+    other injection sources set to zero.
+
+    A Vsource object is simply a multi-phase Thevenin equivalent with data
+    specified as it would commonly be for a power system source equivalent:
+    Line-line voltage (kV) and short circuit MVA.
+
+    """
+
+    # Name of bus to which the source's one terminal is connected.  Remember
+    # to specify the node order if the terminals are connected in some unusual
+    # manner.
+    bus_1 = None
+
+    # Base Source kV, usually L-L unless you are making a positive-sequence
+    # model in which case, it will be L-N.
+    base_kv = 115
+
+    # Per unit of the base voltage that the source is actually operating at.
+    # Assumed balanced for all phases.
+    pu = 1
+
+    # Phase angle in degrees of first phase.
+    angle = 0
+
+    # Source frequency.
+    frequency = 60
+
+    # Number of phases.
+    phases = 3
+
+    # MVA Short circuit, 3-phase fault.  Z1 is determined by squaring the base
+    # kv and dividing by this value.  For single-phase source, this value is
+    # not used.
+    mva_sc3 = 2000
+
+    # MVA Short Circuit, 1-phase fault.  The "single-phase impedance", Zs, is
+    # determined by squaring the base kV and dividing by this value.  Then Z0
+    # is determined by Z0 = 3Zs - 2Z1.  For 1-phase sources, Zs is used
+    # directly. Use x0_r0 to define X/R ratio for 1-phase source.
+    mva_sc1 = 2100
+
+    # Positive-sequence X/R ratio.
+    x1_r1 = 4
+
+    # Zero-sequence X/R ratio.
+    x0_r0 = 3
+
+    # Alternate method of defining the source impedance. 3-phase short circuit
+    # current, amps.
+    i_sc3 = 10000
+
+    # Alternate method of defining the source impedance. Single-phase short
+    # circuit current, amps.
+    i_sc1 = 10500
+
+    # Alternate method of defining the source impedance. Positive-sequence
+    # resistance, ohms.
+    r1 = 1.65
+
+    # Alternate method of defining the source impedance. Positive-sequence
+    # reactance, ohms.
+    x1 = 6.6
+
+    # Alternate method of defining the source impedance. Zero-sequence
+    # resistance, ohms.
+    r0 = 1.9
+
+    # Alternate method of defining the source impedance. Zero-sequence
+    # reactance, ohms.
+    x0 = 5.7
+
+    # Base Frequency for impedance specifications.
+    base_freq = 60
+
+    # {pos*| zero | none} Maintain specified sequence for harmonic solution.
+    # Default is positive sequence. Otherwise, angle between phases rotates
+    # with harmonic.
+    scan_type = "Pos"
+
+#------------------------------------------------------------------------------
+#  "Line" class:
+#------------------------------------------------------------------------------
+
+class Line:
+    """ Line impedances are specified in per unit length and are multiplied by
+    the length when the primitive Y matrix is computed.
+
+    You may specify the impedances of the line either by symmetrical components
+    or by R, X, and nodal C matrices  (also per unit length).
+
+    All C's is entered in nano farads.
+
+    The ultimate values are in the matrices.  If you specify matrices, then the
+    symmetrical component values are ignored.  However, if you change any of
+    the symmetrical component values the matrices will be recomputed.  It is
+    assumed you want to use symmetrical component values.  Don't mix data entry
+    by matrix and by symmetrical components.
+
+    Note that if you change the number of phases, the matrices are reallocated
+    and reinitialized with whatever is currently in the symmetrical component
+    data.
+
+
+    Multi-phase, two-port line or cable.  Pi model.  Power delivery element
+    described by its impedance.  Impedances may be specified by symmetrical
+    component values or by matrix values.  Alternatively, you may simply refer
+    to an existing LineCode object from which the impedance values will be
+    copied.  Then you need only specify the length.
+
+    You can define the line impedance at a base frequency directly in a Line
+    object definition or you can import the impedance definition from a
+    LineCode object. Both of these definitions of impedance are quite similar
+    except that the LineCode object can perform Kron reduction.
+
+    If the geometry property is specified all previous definitions are ignored.
+    The DSS will compute the impedance matrices from the specified geometry
+    each time the frequency changes.
+
+    Whichever definition is the most recent applies, as with nearly all DSS
+    functions.
+
+    Note the units property; you can declare any length measurement in whatever
+    units you please.  Internally, everything is converted to meters. Just be
+    sure to declare the units. Otherwise, they are assumed to be compatible
+    with other data or irrelevant.
+
+    """
+
+    # Name of bus for terminal 1. Node order definitions optional.
+    bus_1 = None
+
+    # Name of bus for terminal 2.
+    bus_2 = None
+
+    # Name of linecode object describing line impedances.
+    # If you use a line code, you do not need to specify the impedances here.
+    # The line code must have been PREVIOUSLY defined.  The values specified
+    # last will prevail over those specified earlier (left-to-right sequence
+    # of properties).  If no line code or impedance data are specified, line
+    # object defaults to 336 MCM ACSR on 4 ft spacing.
+    line_code = ""
+
+    # Length of line. If units do not match the impedance data, specify "units"
+    # property.
+    length = 1.0
+
+    # No. of phases.  A line has the same number of conductors per terminal as
+    # phases.  Neutrals are not explicitly modeled unless declared as a phase
+    # and the impedance matrices adjusted accordingly.
+    phases = 3
+
+    # Positive-sequence Resistance, ohms per unit length.
+    r1 = 0.058
+
+    # Positive-sequence Reactance, ohms per unit length.
+    x1 = 0.1206
+
+    # Zero-sequence Resistance, ohms per unit length.
+    r0 = 0.1784
+
+    # Zero-sequence Reactance, ohms per unit length.
+    x0 = 0.4047
+
+    # Positive-sequence capacitance, nF per unit length.
+    c1 = 3.4
+
+    # Zero-sequence capacitance, nF per unit length.
+    c0 = 1.6
+
+    # Resistance matrix, lower triangle, ohms per unit length. Order of the
+    # matrix is the number of phases. May be used to specify the impedance of
+    # any line configuration.  For balanced line models, you may use the
+    # standard symmetrical component data definition instead.
+    r_matrix = ""
+
+    # Reactance matrix, lower triangle, ohms per unit length. Order of the
+    # matrix is the number of phases. May be used to specify the impedance of
+    # any line configuration.  For balanced line models, you may use the
+    # standard symmetrical component data definition instead.
+    x_matrix = ""
+
+    # Nodal Capacitance matrix, lower triangle, nf per unit length.Order of the
+    # matrix is the number of phases.  May be used to specify the shunt
+    # capacitance of any line configuration.  For balanced line models, you may
+    # use the standard symmetrical component data definition instead.
+    c_matrix = ""
+
+    # {Y/N | T/F}  Default= No/False.  Designates this line as a switch for
+    # graphics and algorithmic purposes.
+    # SIDE EFFECT: Sets R1=0.001 X1=0.0. You must reset if you want something
+    # different.
+    switch = False
+
+    # Carson earth return resistance per unit length used to compute impedance
+    # values at base frequency.  For making better frequency adjustments.
+    rg = 0.0
+
+    # Carson earth return reactance per unit length used to compute impedance
+    # values at base frequency.  For making better frequency adjustments.
+    xg = 0.0
+
+    # Earth resitivity used to compute earth correction factor. Overrides Line
+    # geometry definition if specified.
+    rho = 100
+
+    # Geometry code for LineGeometry Object. Supercedes any previous definition
+    # of line impedance. Line constants are computed for each frequency change
+    # or rho change. CAUTION: may alter number of phases.
+    geometry = ""
+
+    # Length Units = {none | mi|kft|km|m|Ft|in|cm } Default is None - assumes
+    # length units match impedance units.
+    units = None
+
+#------------------------------------------------------------------------------
+#  "Load" class:
+#------------------------------------------------------------------------------
+
+class Load:
+    """ The load is assumed balanced over the no. of phases defined.  To model
+    unbalanced loads, define separate single-phase loads.
+
+    If you do not specify load shapes defaults are:
+        Yearly:  Defaults to No variation or Daily when Daily is defined
+        Daily:   Defaults to No variation  (i.e. multiplier = 1.0 always)
+        Dutycycle: Defaults to Daily shape
+        Growth: Circuit default growth factor
+
+
+    A Load is a complicated Power Conversion element that is at the heart of
+    many analyses.  It is basically defined by its nominal kW and PF or its kW
+    and kvar.  Then it may be modified by a number of multipliers, including
+    the global circuit load multiplier, yearly load shape, daily load shape,
+    and a dutycycle load shape.
+
+    The default is for the load to be a current injection source.  Thus, its
+    primitive Y matrix contains only the impedance that might exist from the
+    neutral of a wye-connected load to ground.  However, if the load model is
+    switched to Admittance from PowerFlow (see Set LoadModel command), the load
+    is converted to an admittance and included in the system Y matrix.  This
+    would be the model used for fault studies where convergence might not be
+    achieved because of low voltages.
+
+    Loads are assumed balanced for the number of phases specified.  If you
+    would like unbalanced loads, enter separate single-phase loads.
+
+    There are three legal ways to specify the base load:
+        1.kW, PF
+        2.kw, kvar
+        3.kVA, PF
+
+    If you sent these properties in the order shown, the definition should
+    work. If you deviate from these procedures, the result may or may not be
+    what you want.  (To determine if it has accomplished the desired effect,
+    execute the Dump command for the desired load(s) and observe the settings.)
+
+    """
+
+    # Name of bus to which the load is connected.  Include node definitions if
+    # the terminal conductors are connected abnormally.  3-phase Wye-connected
+    # loads have 4 conductors; Delta-connected have 3.  Wye-connected loads, in
+    # general, have one more conductor than phases.  1-phase Delta has 2
+    # conductors; 2-phase has 3.  The remaining Delta, or line-line,
+    # connections have the same number of conductors as phases.
+    bus_1 = None
+
+    # Number of Phases, this load.  Load is evenly divided among phases.
+    n_phases = 3
+
+    # Nominal rated (1.0 per unit) voltage, kV, for load. For 2- and 3-phase
+    # loads, specify phase-phase kV.  Otherwise, specify actual kV across each
+    # branch of the load.  If wye (star), specify phase-neutral kV.  If delta
+    # or phase-phase connected, specify phase-phase kV.
+    kv = 12.47
+
+    # Total base kW for the load.  Normally, you would enter the maximum kW for
+    # the load for the first year and allow it to be adjusted by the load
+    # shapes, growth shapes, and global load multiplier.
+    # Legal ways to define base load:
+    #    kW, PF
+    #    kW, kvar
+    #    kVA, PF
+    kw = 10
+
+    # Load power factor.  Enter negative for leading powerfactor (when kW and
+    # kvar have opposite signs.)
+    pf = 0.88
+
+    # Integer code for the model to use for load variation with voltage.
+    # Valid values are:
+    # 1:Standard constant P+jQ load. (Default)
+    # 2:Constant impedance load.
+    # 3:Const P, Quadratic Q (like a motor).
+    # 4:Nominal Linear P, Quadratic Q (feeder mix). Use this with CVRfactor.
+    # 5:Constant Current Magnitude
+    # 6:Const P, Fixed Q
+    # 7:Const P, Fixed Impedance Q
+    # For Types 6 and 7, only the P is modified by load multipliers.
+    model = 1
+
+    # Load shape to use for yearly simulations.  Must be previously defined
+    # as a Loadshape object. Defaults to Daily load shape when Daily is
+    # defined.  The daily load shape is repeated in this case. Otherwise, the
+    # default is no variation.
+    yearly = ""
+
+    # Load shape to use for daily simulations.  Must be previously defined
+    # as a Loadshape object of 24 hrs, typically. Default is no variation
+    # (constant) if not defined. Side effect: Sets Yearly load shape if not
+    # already defined.
+    daily = ""
+
+    # Load shape to use for duty cycle simulations.  Must be previously defined
+    # as a Loadshape object.  Typically would have time intervals less than
+    # 1 hr. Designate the number of points to solve using the Set Number=xxxx
+    # command. If there are fewer points in the actual shape, the shape is
+    # assumed to repeat. Defaults to Daily curve If not specified.
+    duty = ""
+
+    # Characteristic  to use for growth factors by years.  Must be previously
+    # defined as a Growthshape object. Defaults to circuit default growth
+    # factor
+    growth = ""
+
+    # {wye or LN | delta or LL}.
+    conn = "wye"
+
+    # Specify the base kvar for specifying load as kW & kvar.  Assumes kW has
+    # been already defined.  Alternative to specifying the power factor.  Side
+    # effect: the power factor and kVA is altered to agree.
+    kvar = 5
+
+    # Neutral resistance of wye (star)-connected load in actual ohms. If
+    # entered as a negative value, the neutral is assumed to be open, or
+    # floating.
+    r_neut = -1
+
+    # Neutral reactance of wye(star)-connected load in actual ohms.  May be
+    # + or -.
+    x_neut = 0
+
+    # {Variable | Fixed | Exempt}.  Default is variable. If Fixed, no load
+    # multipliers apply;  however, growth multipliers do apply.  All
+    # multipliers apply to Variable loads.  Exempt loads are not modified by
+    # the global load multiplier, such as in load duration curves, etc.  Daily
+    # multipliers do apply, so this is a good way to represent industrial load
+    # that stays the same for the period study.
+    status = "variable"
+
+    # An arbitrary integer number representing the class of load so that load
+    # values may be segregated by load value. Default is 1; not used
+    # internally.
+    klass = 1
+
+    # Minimum per unit voltage for which the MODEL is assumed to apply.
+    # Below this value, the load model reverts to a constant impedance model.
+    v_min_pu = 0.95
+
+    # Maximum per unit voltage for which the MODEL is assumed to apply.
+    # Above this value, the load model reverts to a constant impedance model.
+    v_max_pu = 1.05
+
+    # Minimum per unit voltage for load EEN evaluations, Normal limit.
+    # Default = 0, which defaults to system "vminnorm" property (see Set
+    # Command under Executive).  If this property is specified, it ALWAYS
+    # overrides the system specification. This allows you to have different
+    # criteria for different loads. Set to zero to revert to the default system
+    # value.
+    v_min_norm = 0.0
+
+    # Minimum per unit voltage for load UE evaluations, Emergency limit.
+    # Default = 0, which defaults to system "vminemerg" property (see Set
+    # Command under Executive).  If this property is specified, it ALWAYS
+    # overrides the system specification. This allows you to have different
+    # criteria for different loads.  Set to zero to revert to the default
+    # system value.
+    v_min_emerg = 0.0
+
+    # Rated kVA of service transformer for allocating loads based on connected
+    # kVA at a bus. Side effect:  kW, PF, and kvar are modified.
+    xf_kva = 0.0
+
+    # Allocation factor for allocating loads based on connected kVA at a bus.
+    # Side effect:  kW, PF, and kvar are modified by multiplying this factor
+    # times the XFKVA (if > 0).
+    allocation_factor = 0.5
+
+    # Specify base Load in kVA (and power factor).  This is intended to be used
+    # in combination with the power factor (PF) to determine the actual load.
+    kva = 11.3636
+
+    # Percent mean value for load to use for monte carlo studies if no
+    # loadshape is assigned to this load.
+    pct_mean = 50
+
+    # Percent Std deviation value for load to use for monte carlo studies if no
+    # loadshape is assigned to this load.
+    pct_std_dev = 10
+
+    # Percent reduction in active power (watts) per 1% reduction in voltage
+    # from 100% rated. Typical values range from 0.4 to 0.8. Applies to Model=4
+    # only. Intended to represent conservation voltage reduction or voltage
+    # optimization measures.
+    cvr_watts = 1
+
+    # Percent reduction in reactive power (vars) per 1% reduction in voltage
+    # from 100% rated. Typical values range from 2 to 3. Applies to Model=4
+    # only. Intended to represent conservation voltage reduction or voltage
+    # optimization measures.
+    cvr_vars = 2
+
+#------------------------------------------------------------------------------
+#  "Generator" class:
+#------------------------------------------------------------------------------
+
+class Generator:
+    """ The generator is essentially a negative load that can be dispatched.
+
+    If the dispatch value (DispValue) is 0, the generator always follows the
+    appropriate dispatch curve, which are simply load curves. If DispValue>0
+    then the generator only comes on when the global circuit load multiplier
+    exceeds DispValue.  When the generator is on, it always follows the
+    dispatch curve appropriate for the type of solution being performed.
+
+    If you want to model a generator that is fully on whenever it is dispatched
+    on, simply designate "Status=Fixed".  The default is "Status=Variable"
+    (i.e., it follows a dispatch curve.  You could also define a dispatch curve
+    that is always 1.0.
+
+    Generators have their own energy meters that record:
+        1. Total kwh
+        2. Total kvarh
+        3. Max kW
+        4. Max kVA
+        5. Hours in operation
+        6. Price * kwH
+
+    Generator meters reset with the circuit energy meters and take a sample
+    with the circuit energy meters as well. The Energy meters also used
+    trapezoidal integration so that they are compatible with Load-Duration
+    simulations.
+
+    Generator models are:
+        1. Constant P, Q  (* dispatch curve, if appropriate).
+        2. Constant Z  (For simple solution)
+        3. Constant P, |V|  like a standard power flow  [not implemented]
+        4. Constant P, Fixed Q  (vars)
+        5. Constant P, Fixed Q  (reactance)
+
+    Most of the time you will use #1 for planning studies.
+
+    The default is for the generator to be a current injection source.  Thus,
+    its primitive Y matrix contains only the impedance that might exist from
+    the neutral of a wye-connected generator to ground.  However, if the
+    generator model is switched to Admittance from PowerFlow (see Set Mode
+    command), the generator is converted to an admittance and included in the
+    system Y matrix.
+
+    Generators are assumed balanced for the number of phases specified.  If you
+    would like unbalanced generators, enter separate single-phase generators.
+
+    """
+
+    # Number of Phases, this Generator.  Power is evenly divided among phases.
+    n_phases = 3
+
+    # Bus to which the Generator is connected.  May include specific node
+    # specification.
+    bus_1 = None
+
+    # Nominal rated (1.0 per unit) voltage, kV, for Generator. For 2- and
+    # 3-phase Generators, specify phase-phase kV. Otherwise, specify actual kV
+    # across each branch of the Generator. If wye (star), specify phase-neutral
+    # kV.  If delta or phase-phase connected, specify phase-phase kV.
+    kv = 12.47
+
+    # Total base kW for the Generator.  A positive value denotes power coming
+    # OUT of the element, which is the opposite of a load. This value is
+    # modified depending on the dispatch mode.  Unaffected by the global load
+    # multiplier and growth curves.  If you want there to be more generation,
+    # you must add more generators or change this value.
+    kw = 100
+
+    # Generator power factor. Default is 0.80. Enter negative for leading
+    # powerfactor (when kW and kvar have opposite signs.) A positive power
+    # factor for a generator signifies that the generator produces vars as is
+    # typical for a synchronous generator.  Induction machines would be
+    # specified with a negative power factor.
+    pf = 0.80
+
+    # Specify the base kvar.  Alternative to specifying the power factor.  Side
+    # effect: the power factor value is altered to agree based on present value
+    # of kW.
+    kvar = 5
+
+    # Integer code for the model to use for generation variation with voltage.
+    # Valid values are:
+    #    1:Generator injects a constant kW at specified power factor.
+    #    2:Generator is modeled as a constant admittance.
+    #    3:Const kW, constant kV.  Somewhat like a conventional transmission
+    #    power flow P-V generator.
+    #    4:Const kW, Fixed Q (Q never varies)
+    #    5:Const kW, Fixed Q(as a constant reactance)
+    #    6:Compute load injection from User-written Model.(see usage of Xd,Xdp)
+    #    7:Constant kW, kvar, but current limited below Vminpu
+    model = 1
+
+    # Minimum per unit voltage for which the Model is assumed to apply. Below
+    # this value, the load model reverts to a constant impedance model.
+    v_min_pu = 0.95
+
+    # Maximum per unit voltage for which the Model is assumed to apply. Above
+    # this value, the load model reverts to a constant impedance model.
+    v_max_pu = 1.05
+
+    # Dispatch shape to use for yearly simulations.  Must be previously defined
+    # as a Loadshape object. If this is not specified, the daily dispatch shape
+    # is repeated. If the generator is assumed to be ON continuously, specify
+    # this value as FIXED, or designate a curve that is 1.0 per unit at all
+    # times. Nominally for 8760 simulations.  If there are fewer points in the
+    # designated shape than the number of points in the solution, the curve is
+    # repeated.
+    yearly = ""
+
+    # Dispatch shape to use for daily simulations.  Must be previously defined
+    # as a Loadshape object of 24 hrs, typically.  If generator is assumed to
+    # be ON continuously, specify this value as FIXED, or designate a Loadshape
+    # object that is 1.0 perunit for all hours.
+    daily = ""
+
+    # Load shape to use for duty cycle dispatch simulations such as for wind
+    # generation. Must be previously defined as a Loadshape object. Typically
+    # would have time intervals less than 1 hr -- perhaps, in seconds.
+    # Designate the number of points to solve using the Set Number=xxxx
+    # command.  If there are fewer points in the actual shape, the shape is
+    # assumed to repeat.
+    duty = ""
+
+    disp_mode
+
+    disp_value
+
+    conn = "wye"
+
+    r_neut = -1
+
+    x_neut = 0
+
+    status = "variable"
+
+    klass = 1
+
+    v_pu = 1.0
+
+    max_kvar
+
+    min_kvar
+
+    pv_factor = 0.1
+
+    force_on = "no"
+
+    kva
+
+    mva
+
+    x_d
+
+    x_dp
+
+    x_dpp
+
+    h
+
+    d
+
+    user_model
+
+    user_data
+
+    shaft_model
+
+    shaft_data
+
+    debug_trace
+
 # EOF -------------------------------------------------------------------------
