@@ -18,6 +18,1265 @@
 """ Defines objects common to all circuits in the DSS """
 
 #------------------------------------------------------------------------------
+#  "ExecOptions" class:
+#------------------------------------------------------------------------------
+
+class ExecOptions:
+    """ Defines options for an executive """
+
+    # Sets the active DSS class type.
+    type
+
+    # Sets the active DSS element by name. You can use the complete object spec
+    # (class.name) or just the name.  if full name is specifed, class becomes
+    # the active class, also.
+    element
+
+    # Sets the hour used for the start time of the solution.
+    hour
+
+    # Sets the seconds from the hour for the start time of the solution.
+    sec
+
+    # Sets the Year (integer number) to be used for the solution. For certain
+    # solution types, this determines the growth multiplier.
+    year
+
+    # Sets the frequency for the solution of the active circuit.
+    frequency
+
+    # Sets the time step in sec for the active circuit.  Nominally for dynamics
+    # solution.
+    step_size
+
+    # Set the solution Mode: One of
+    #    Snapshot,
+    #    Daily,
+    #    DIrect,
+    #    DUtycycle,
+    #    Dynamic,
+    #    Harmonic,
+    #    M1 (Monte Carlo 1),
+    #    M2 (Monte Carlo 2),
+    #    M3 (Monte Carlo 3),
+    #    Faultstudy,
+    #    Yearly (follow Yearly curve),
+    #    MF (monte carlo fault study)
+    #    Peakday,
+    #    LD1 (load-duration 1)
+    #    LD2 (load-duration 2)
+    #    AutoAdd (see AddType)
+    #
+    # Side effect: setting the Mode propergy resets all monitors and energy
+    # meters. It also resets the time step, etc. to defaults for each mode.
+    # After the initial reset, the user must explicitly reset the monitors
+    # and/or meters until another Set Mode= command.
+    mode = ""
+
+    # One of [Uniform | Gaussian | Lognormal | None ] for Monte Carlo
+    # Variables.
+    random = ""
+
+    # Number of solutions to perform for Monte Carlo or dutycycle solutions.
+    number = 2
+
+    # Specify the solution start time as an array: time=(hour, secs)
+    time = (12, 60)
+
+    # Synonym for type
+    klass
+
+    # Synonym for element
+    object
+
+    # Set the active circuit by name.
+    circuit
+
+    # Set the command string required to start up the editor preferred by the
+    # user. Does not require a circuit defined.
+    editor
+
+    # Sets the solution tolerance.
+    tolerance = 0.0001
+
+    # = Sets the maximum allowable iterations for power flow solutions.
+    max_iter = 15
+
+    # Alternate name for time step size.
+    h
+
+    # {Powerflow | Admittance} depending on the type of solution you wish to
+    # perform. If admittance, a non-iterative, direct solution is done with all
+    # loads and generators modeled by their equivalent admittance.
+    load_model = "PowerFlow"
+
+    # Global load multiplier for this circuit.  Does not affect loads
+    # designated to be "fixed".  All other base kW values are multiplied by
+    # this number. Defaults to 1.0 when the circuit is created. As with other
+    # values, it always stays at the last value to which it was set until
+    # changed again.
+    load_mult = 1.0
+
+    # Minimum permissible per unit voltage for normal conditions.
+    norm_vmin_pu = 0.95
+
+    # Maximum permissible per unit voltage for normal conditions.
+    norm_vmax_pu = 1.05
+
+    # Minimum permissible per unit voltage for emergency (contingency)
+    # conditions.
+    emerg_vmin_pu = 0.90
+
+    # Maximum permissible per unit voltage for emergency (contingency)
+    # conditions.
+    emerg_vmax_pu = 1.08
+
+    # Percent mean to use for global load multiplier.
+    pct_mean = 65
+
+    # Percent Standard deviation to use for global load multiplier.
+    pct_std_dev = 9
+
+    # Set Load-Duration Curve. Global load multiplier is defined by this curve
+    # for LD1 and LD2 solution modes.
+    ld_curve = 0
+
+    # Set default annual growth rate, percent, for loads with no growth curve
+    # specified.
+    pct_growth = 2.5
+
+    # Size of generator, kW, to automatically add to system.
+    gen_kw = 1000.0
+
+    # Power factor of generator to assume for automatic addition.
+    gen_pf = 1.0
+
+    # Size of capacitor, kVAR, to automatically add to system.
+    cap_kvar = 600.0
+
+    # {Generator | Capacitor} Type of device for AutoAdd Mode.
+    add_type = "Generator"
+
+    # {YES/TRUE | NO/FALSE}   Default is No. Flag to indicate if it is OK to
+    # have devices of same name in the same class. If No, then a New command is
+    # treated as an Edit command.
+    # If Yes, then a New command will always result in a device being added.
+    allow_duplicates
+
+    # {YES/TRUE | NO/FALSE}  Default is No. if No, then meter zones are
+    # recomputed each time there is a change in the circuit. If Yes, then meter
+    # zones are not recomputed unless they have not yet been computed. Meter
+    # zones are normally recomputed on Solve command following a circuit
+    # change.
+    zone_lock
+
+    # Weighting factor for UE/EEN in AutoAdd functions.
+    # Autoadd mode minimizes (Lossweight * Losses + UEweight * UE).
+    # If you wish to ignore UE, set to 0.
+    # This applies only when there are EnergyMeter objects. Otherwise, AutoAdd
+    # mode minimizes total system losses.
+    ue_weight = 1.0
+
+    # Weighting factor for Losses in AutoAdd functions. Autoadd mode minimizes
+    # (Lossweight * Losses + UEweight * UE).
+    # If you wish to ignore Losses, set to 0. This applies only when there are
+    # EnergyMeter objects. Otherwise, AutoAdd mode minimizes total system
+    # losses.
+    loss_weight = 1.0
+
+    # Which EnergyMeter register(s) to use for UE in AutoAdd Mode. May be one
+    # or more registers.  if more than one, register values are summed
+    # together. Array of integer values > 0.  Defaults to 11 (for Load EEN).
+    # For a list of EnergyMeter register numbers, do the "Show Meters" command
+    # after defining a circuit.
+    ue_regs = 11
+
+    # Which EnergyMeter register(s) to use for Losses in AutoAdd Mode. May be
+    # one or more registers.  If more than one, register values are summed
+    # together. Array of integer values > 0.  Defaults to 13 (for Zone kWh
+    # Losses). For a list of EnergyMeter register numbers, do the "Show Meters"
+    # command after defining a circuit.
+    loss_regs = 13
+
+    # Define legal bus voltage bases for this circuit.  Enter an array
+    # of the legal voltage bases, in phase-to-phase voltages, for example:
+    # set voltagebases=".208, .480, 12.47, 24.9, 34.5, 115.0, 230.0"
+    # When the CalcVoltageBases command is issued, a snapshot solution is
+    # performed with no load injections and the bus base voltage is set to the
+    # nearest legal voltage base. The defaults are as shown in the example
+    # above.
+    voltage_bases
+
+    # {Normal | Newton}  Solution algorithm type.  Normal is a fixed point
+    # iteration that is a little quicker than the Newton iteration.  Normal is
+    # adequate for most radial distribution circuits.  Newton is more robust
+    # for circuits that are difficult to solve.
+    algorithm = "Normal"
+
+    # Specifies whether to use trapezoidal integration for accumulating energy
+    # meter registers. Applies to EnergyMeter and Generator objects.  Default
+    # method simply multiplies the present value of the registers times the
+    # width of the interval. Trapezoidal is more accurate when there are sharp
+    # changes in a load shape or unequal intervals. Trapezoidal is
+    # automatically used for some load-duration curve simulations where the
+    # interval size varies considerably. Keep in mind that for Trapezoidal, you
+    # have to solve one more point than the number of intervals. That is, to do
+    # a Daily simulation on a 24-hr load shape, you would set Number=25 to
+    # force a solution at the first point again to establish the last (24th)
+    # interval.
+    trapezoidal = False
+
+    # Array of bus names to include in AutoAdd searches. Or, you can specify a
+    # text file holding the names, one to a line, by using the syntax
+    # (file=filename) instead of the actual array elements. Default is null,
+    # which results in the program using either the buses in the EnergyMeter
+    # object zones or, if no EnergyMeters, all the buses, which can make for
+    # lengthy solution times. Examples:
+    #    Set autobuslist=(bus1, bus2, bus3, ... )
+    #    Set autobuslist=(file=buslist.txt)
+    auto_bus_list
+
+    # Control mode for the solution.
+    # Set to OFF to prevent controls from changing.
+    #
+    #    STATIC = Time does not advance.  Control actions are executed in order
+    #    of shortest time to act until all actions are cleared from the control
+    #    queue.  Use this mode for power flow solutions which may require
+    #    several regulator tap changes per solution.
+    #
+    #    EVENT = solution is event driven.  Only the control actions nearest in
+    #    time are executed and the time is advanced automatically to the time
+    #    of the event.
+    #
+    #    TIME = solution is time driven.  Control actions are executed when the
+    #    time for the pending action is reached or surpassed. Controls may
+    #    reset and may choose not to act when it comes their time.
+    #    Use TIME mode when modeling a control externally to the DSS and a
+    #    solution mode such as DAILY or DUTYCYCLE that advances time, or set
+    #    the time (hour and sec) explicitly from the external program.
+    control_mode = "Static"
+
+    # Set to YES to trace the actions taken in the control queue. Creates a
+    # file named TRACE_CONTROLQUEUE.CSV in the default directory. The names of
+    # all circuit elements taking an action are logged.
+    trace_mode = False
+
+    # Global multiplier for the kW output of every generator in the circuit.
+    # Applies to all but Autoadd solution modes. Ignored for generators
+    # designated as Status=Fixed.
+    gen_mult = 1.0
+
+    # Default daily load shape name. Default value is "default", which is a
+    # 24-hour curve defined when the DSS is started.
+    default_daily = "default"
+
+    # Default yearly load shape name. Default value is "default", which is a
+    # 24-hour curve defined when the DSS is started.
+    default_yearly = "default"
+
+    # Sets all allocation factors for all loads in the active circuit to the
+    # value given.
+    allocation_factors
+
+    # {Multiphase | Positive}  Default = Multiphase.  Designates whether
+    # circuit model is to interpreted as a normal multi-phase model or a
+    #positive-sequence only model
+    ckt_model = "Multiphase"
+
+    # Sets the price signal ($/MWh) for the circuit.
+    price_signal = 25
+
+    # Sets the curve to use to obtain for price signal. Default is none
+    # (null string). If none, price signal either remains constant or is set by
+    # an external process. Curve is defined as a loadshape (not normalized) and
+    # should correspond to the type of analysis being performed (daily, yearly,
+    # load-duration, etc.).
+    price_curve = None
+
+    # Set the active terminal of the active circuit element. May also be done
+    # with select command.
+    terminal
+
+    # Set the fundamental frequency for harmonic solution and the default base
+    # frequency for all impedance quantities. Side effect: also changes the
+    # value of the solution frequency.
+    base_frequency = 60
+
+    # Array of harmonics for which to perform a solution in Harmonics mode. If
+    # ALL, then solution is performed for all harmonics defined in spectra
+    # currently being used. Otherwise, specify a more limited list such as:
+    #    set_harmonics=(1, 5, 7, 11, 13,)
+    harmonics = "All"
+
+    # Max control iterations per solution.
+    max_controller = 10
+
+    # Set Active Bus by name.  Can also be done with Select and SetkVBase
+    # commands and the "Set Terminal="  option. The bus connected to the active
+    # terminal becomes the active bus. See z_sc and z_sc012 commands.
+    bus = ""
+
+    # Set the data path for files written or read by the DSS.  Defaults to the
+    # startup path. May be Null.  Executes a CHDIR to this path if non-null.
+    # Does not require a circuit defined.
+    data_path
+
+    # Array of bus names to keep when performing circuit reductions. You can
+    # specify a text file holding the names, one to a line, by using the syntax
+    # (file=filename) instead of the actual array elements. Command is
+    # cumulative (reset keeplist first). Reduction algorithm may keep other
+    # buses automatically. Examples:
+    #    Reset Keeplist (sets all buses to FALSE (no keep))
+    #    Set KeepList=(bus1, bus2, bus3, ... )
+    #    Set KeepList=(file=buslist.txt)
+    keep_list
+
+    # Strategy for reducing feeders.
+    # Default is to eliminate all dangling end buses and buses without load,
+    # caps, or taps.
+    #    "Stubs [Zmag=0.02]" merges short branches with impedance less than
+    #    Zmag (default = 0.02 ohms)
+    #
+    #    "MergeParallel" merges lines that have been found to be in parallel
+    #
+    #    "Breakloops" disables one of the lines at the head of a loop.
+    #
+    #    "Tapends [maxangle=15]" eliminates all buses except those at the
+    #    feeder ends, at tap points and where the feeder turns by greater than
+    #    maxangle degrees.
+    #
+    #    "Ends" eliminates dangling ends only.
+    #
+    #    "Switches" merges switches with downline lines and eliminates dangling
+    #    switches.
+    #
+    #    Marking buses with "Keeplist" will prevent their elimination.
+    reduce_option
+
+    # Set for keeping demand interval data for daily, yearly, etc, simulations.
+    # Side Effect:  Resets all meters!!!
+    demand_interval = False
+
+    # Sets the Normal rating of all lines to a specified percent of the
+    # emergency rating.  Note: This action takes place immediately. Only the
+    # in-memory value is changed for the duration of the run.
+    pct_normal
+
+    # Set to Yes/True if you wish a separate demand interval (DI) file written
+    # for each meter.  Otherwise, only the totalizing meters are written.
+    di_verbose = False
+
+    # Name of case for yearly simulations with demand interval data.
+    # Becomes the name of the subdirectory under which all the year data are
+    # stored. Default = circuit name. Side Effect: Sets the prefix for output
+    # files
+    case_name = ""
+
+    # Number code for node marker on circuit plots (SDL MarkAt options).
+    marker_code = ""
+
+    # Width of node marker.
+    node_width = 1
+
+    # Significant solution events are added to the Event Log, primarily for
+    # debugging.
+    log = False
+
+    # Opens DSSRecorder.DSS in DSS install folder and enables recording of all
+    # commands that come through the text command interface. Closed by either
+    # setting to NO/FALSE or exiting the program. When closed by this command,
+    # the file name can be found in the Result. Does not require a circuit
+    # defined.
+    recorder = False
+
+    # For yearly solution mode, sets overload reporting on/off. DemandInterval
+    # must be set to true for this to have effect.
+    overload_report = False
+
+    # For yearly solution mode, sets voltage exception reporting on/off.
+    # DemandInterval must be set to true for this to have effect.
+    voltage_exception_report = False
+
+#------------------------------------------------------------------------------
+#  "ExecCommand" class:
+#------------------------------------------------------------------------------
+
+class ExecCommand:
+    """ Defines commands for the executive """
+
+    def new(self):
+        """ Create a new object within the DSS. Object becomes the active
+        object.
+
+        """
+
+        pass
+
+
+    def edit(self):
+        """ Edit an object. The object is selected and it then becomes the
+        active object.
+
+        Note that Edit is the default command.  You many change a property
+        value simply by giving the full property name and the new value.
+
+        """
+
+        pass
+
+
+    def more(self):
+        """ Continuation of editing on the active object. """
+
+        pass
+
+
+    def select(self):
+        """ Selects an element and makes it the active element.  You can also
+        specify the active terminal (default = 1).
+
+        Syntax:
+            Select [element=]elementname  [terminal=]terminalnumber
+
+        Example:
+            Select Line.Line1
+            ~ R1=.1'+CRLF+'(continue editing)
+            Select Line.Line1 2
+            Voltages  (returns voltages at terminal 2 in Result)
+
+        """
+
+        pass
+
+
+    def save(self, klass, dir):
+        """ Default class = Meters, which saves the present values in both
+        monitors and energy meters in the active circuit.
+        "Save Circuit" saves the present enabled circuit elements to the
+        specified subdirectory in standard DSS form with a Master.txt file and
+        separate files for each class of data. If Dir= not specified a unique
+        name based on the circuit name is created automatically.  If dir= is
+        specified, any existing files are overwritten.
+        "Save Voltages" saves the present solution in a simple CSV format in a
+        file called DSS_SavedVoltages.
+        Used for VDIFF command.
+        Any class can be saved to a file.  If no filename specified, the
+        classname is used.
+
+        """
+
+        pass
+
+
+    def show(self):
+        """ Writes selected results to a text file and brings up the editor
+        (see Set Editor=....) with the file for you to browse.
+
+        Valid Options (*=default):
+            Show Buses
+            Show Currents  [[residual=]yes|no*] [Seq* | Elements]
+            Show COnvergence  (convergence report)
+            Show ELements [Classname] (shows names of all elements in circuit
+            or all elements of a class)
+            Show Faults (after Fault Study)
+            Show Generators
+            Show Losses
+            Show Meters
+            Show Monitor Monitorname
+            Show Panel (control panel)
+            Show Powers [MVA|kVA*] [Seq* | Elements]
+            Show Voltages [LL |LN*]  [Seq* | Nodes | Elements]
+            Show Zone  EnergyMeterName [Treeview]
+            Show AutoAdded  (see AutoAdd solution mode)
+            Show Taps  (regulated transformers)
+            Show Overloads (overloaded PD elements)
+            Show Unserved [UEonly] (unserved loads)
+            Show EVentlog
+            Show VAriables
+            Show Isolated
+            Show Ratings
+            Show Loops
+            Show Yprim  (shows Yprim for active ckt element)
+            Show Y      (shows system Y)
+            Show BusFlow busname [MVA|kVA*] [Seq* | Elements]
+            Show LineConstants [frequency] [none|mi|km|kft|m|me|ft|in|cm]
+
+        Default is "show voltages LN Seq".
+
+        """
+
+        pass
+
+
+    def solve(self):
+        """ Perform the solution of the present solution mode. You can set any
+        option that you can set with the Set command (see Set). The Solve
+        command is virtually synonymous with the Set command except that
+        a solution is performed after the options are processed.
+
+        """
+
+        pass
+
+
+    def enable(self):
+        """ Enables a circuit element or entire class """
+
+        pass
+
+
+    def disable(self):
+        """ Disables a circuit element or entire class. The item remains
+        defined, but is not included in the solution.
+
+        """
+
+        pass
+
+
+    def plot(self, type, quantity, max, dots, labels, object, show_loops,
+             c1, c2, c3, r3=0.85, r2=0.50, channels=[], bases=[], subs=False,
+             thinkness=7):
+        """ Plots results in a variety of manners.
+
+        Implemented options (in order):
+
+            Type = {Circuit | Monitor | Daisy | Zones | AutoAdd | General}
+
+            Quantity = {Voltage | Current | Power | Losses | Capacity |
+            (Value Index for General, AutoAdd, or Circuit[w/ file]) }
+
+            Max = {0 | value corresponding to max scale or line thickness}
+
+            Dots = {Y | N}
+
+            Labels = {Y | N}
+
+            Object = [metername for Zone plot | Monitor name | File Name for
+            General bus data or Circuit branch data]
+
+            ShowLoops = {Y | N} (default=N)
+
+            R3 = pu value for tri-color plot max range [.85] (Color C3)
+
+            R2 = pu value for tri-color plot mid range [.50] (Color C2)
+
+            C1, C2, C3 = {RGB color number}
+
+            Channels=(array of channel numbers for monitor plot)
+
+            Bases=(array of base values for each channel for monitor plot).
+            Default is 1.0 for each.  Set Base= after defining channels.
+
+            Subs={Y | N} (default=N) (show substations)
+
+            Thickness=max thickness allowed for lines in circuit plots
+            (default=7)
+
+        """
+
+        pass
+
+
+    def reset(self):
+        """ {MOnitors | MEters | Faults | Controls | Eventlog | Keeplist |
+        (no argument) }
+
+        Resets all Monitors, Energymeters, etc.
+
+        If no argument specified, resets all options listed.
+
+        """
+
+        pass
+
+
+    def compile(self):
+        """ Reads the designated file name containing DSS commands and
+        processes them as if they were entered directly into the command line.
+        The file is said to be "compiled."
+
+        Similar to "redirect" except changes the default directory to the path
+        of the specified file.
+
+        Syntax:
+            Compile filename
+
+        """
+
+        pass
+
+
+    def set_value(self):
+        """ Used to set various DSS solution modes and options.  You may also
+        set the options with the Solve command.
+
+        See "Options" for help.
+
+        """
+
+
+        pass
+
+
+    def dump(self):
+        """ Display the properties of either a specific DSS object or a
+        complete dump on all variables in the problem (Warning! Could be very
+        large!).
+
+        Brings up the default text editor with the text file written by this
+        command.
+
+        Syntax: dump [class.obj] [debug]
+
+        Examples:
+            Dump line.line1
+            Dump solution  (dumps all solution vars)
+            Dump commands  (dumps all commands to a text file)
+            Dump transformer.*  (dumps all transformers)
+            Dump ALLOCationfactors  (load allocation factors)
+            Dump (dumps all objects in circuit)
+
+        """
+
+        pass
+
+
+    def open(self):
+        """ Opens the specified terminal and conductor of the specified circuit
+        element. If the conductor is not specified, all phase conductors of the
+        terminal are opened.
+
+        Examples:
+            Open line.line1 2 (opens all phases of terminal 2)
+            Open line.line1 2 3 (opens the 3rd conductor of terminal 2)
+
+        """
+
+        pass
+
+
+    def close(self):
+        """ Opposite of the Open command """
+
+        pass
+
+
+    def redirect(self):
+        """ Reads the designated file name containing DSS commands and
+        processes them as if they were entered directly into the command line.
+        Similar to "Compile", but leaves current directory where it was when
+        Redirect command is invoked. Can temporarily change to subdirectories
+        if nested Redirect commands require.
+
+        """
+
+        pass
+
+
+    def help(self):
+        """ Handles display of help """
+
+        pass
+
+
+    def quit(self):
+        """ Handles closing the application """
+
+        pass
+
+
+    def what(self):
+        """ Inquiry for property value.  Result is put into GlobalReault and
+        can be seen in the Result Window. Specify the full property name.
+
+        Example: ? Line.Line1.R1
+
+        Note you can set this property merely by saying:
+            Line.line1.r1=.058
+
+        """
+
+        pass
+
+
+    def next(self):
+        """ {Year | Hour | t}  Increments year, hour, or time as specified.  If
+        "t" is specified, then increments time by current step size.
+
+        """
+
+        pass
+
+
+    def panel(self):
+        """ Displays main control panel window. """
+
+        pass
+
+
+    def sample(self):
+        """ Force all monitors and meters to take a sample now """
+
+        pass
+
+
+    def clear(self):
+        """ Clear all circuits currently in memory """
+
+        pass
+
+
+    def about(self):
+        """ Handles display of the 'About' dialog box """
+
+        pass
+
+
+    def calc_voltage_bases(self):
+        """ Calculates voltagebase for buses based on voltage bases defined
+        with Set voltagebases=... command.
+
+        """
+
+        pass
+
+
+    def set_kv_base(self):
+        """ Command to explicitly set the base voltage for a bus.
+
+        Bus must be previously defined. Parameters in order are:
+
+            Bus = {bus name}
+            kVLL = (line-to-line base kV)
+            kVLN = (line-to-neutral base kV)
+
+        kV base is normally given in line-to-line kV (phase-phase). However,
+        it may also be specified by line-to-neutral kV.
+
+        The following exampes are equivalent:
+
+            setkvbase Bus=B9654 kVLL=13.2
+            setkvbase B9654 13.2
+            setkvbase B9654 kvln=7.62
+
+        """
+
+        pass
+
+
+    def build_y(self):
+        """ Forces rebuild of Y matrix upon next Solve command regardless of
+        need. The usual reason for doing this would be to reset the matrix for
+        another load level when using LoadModel=PowerFlow (the default) when
+        the system is difficult to solve when the load is far from its base
+        value.  Works by invalidating the Y primitive matrices for all the
+        Power Conversion elements.
+
+        """
+
+        pass
+
+
+    def get_value(self):
+        """ Returns DSS property values set using the Set command. Result is
+        return in Result property of the Text interface.
+
+        VBA Example:
+            DSSText.Command = "Get mode"
+            Answer = DSSText.Result
+            Multiple properties may be requested on one get.  The results are
+            appended and the individual values separated by commas.
+
+        See help on set_value() command for property names.
+
+        """
+
+        pass
+
+
+    def initialise(self):
+        """ This command forces reinitialization of the solution for the next
+        Solve command. To minimize iterations, most solutions start with the
+        previous solution unless there has been a circuit change.  However, if
+        the previous solution is bad, it may be necessary to re-initialize. In
+        most cases, a re-initiallization results in a zero-load power flow
+        solution with only the series power delivery elements considered.
+
+        """
+
+        pass
+
+
+    def export(self):
+        """ Export various solution values to CSV files for import into other
+        programs.
+
+        Creates a new CSV file except for Energymeter and Generator objects,
+        for which the results for each device of this class are APPENDED to the
+        CSV File. You may export to a specific file by specifying the file name
+        as the LAST parameter on the line. Otherwise, the default file names
+        shown below are used. For Energymeter and Generator, specifying the
+        switch "/multiple" (or /m) for the file name will cause a separate file
+        to be written for each meter or generator. The default is for a single
+        file containing all elements.
+
+        Syntax for Implemented Exports:
+
+            Export Voltages  [Filename]   (EXP_VOLTAGES.CSV)
+            Export SeqVoltages [Filename] (EXP_SEQVOLTAGES.CSV)
+            Export Currents [Filename]    (EXP_CURRENTS.CSV)
+            Export Overloads [Filename]    EXP_OVERLOADS.CSV)
+            Export Unserved  [UEonly] [Filename]   EXP_UNSERVED.CSV)
+            Export SeqCurrents [Filename] (EXP_SEQCURRENTS.CSV)
+            Export Powers [MVA] [Filename](EXP_POWERS.CSV)
+            Export Faultstudy [Filename]  (EXP_FAULTS.CSV)
+            Export Generators [Filename | /m ]  (EXP_GENMETERS.CSV)
+            Export Loads [Filename]       (EXP_LOADS.CSV)
+            Export Meters [Filename |/m ] (EXP_METERS.CSV)
+            Export Monitors monitorname   (file name is assigned)
+            Export Yprims  [Filename]     (EXP_Yprims.CSV) (all YPrim matrices)
+            Export Y  [Filename]          (EXP_Y.CSV)   (system Y matrix)
+
+        May be abreviated Export V, Export C, etc.  Default is "V".
+
+        """
+
+        pass
+
+
+    def file_edit(self):
+        """ Edit specified file in default text file editor (see set_editor=
+        option). Fileedit EXP_METERS.CSV (brings up the meters export file)
+        "FileEdit" may be abbreviated to a unique character string.
+
+        """
+
+        pass
+
+
+    def voltages(self):
+        """ Returns the voltages for the ACTIVE BUS in the Result string.
+        For setting the active Bus, use the Select command or the
+        set_bus= option.
+
+        Returned as magnitude and angle quantities, comma separated, one set
+        per conductor of the terminal.
+
+        """
+
+        pass
+
+
+    def currents(self):
+        """ Returns the currents for each conductor of ALL terminals of the
+        active circuit element in the Result string/ (See select command.)
+        Returned as comma-separated magnitude and angle.
+
+        """
+
+        pass
+
+
+    def powers(self):
+        """ Returns the powers (complex) going into each conductors of ALL
+        terminals of the active circuit element in the Result string.
+        (See select command.)
+
+        Returned as comma-separated kW and kvar.
+
+        """
+
+        pass
+
+
+    def seq_voltages(self):
+        """ Returns the sequence voltages at all terminals of the active
+        circuit element (see Select command) in Result string.  Returned as
+        comma-separated magnitude only values.
+
+        Order of returned values: 0, 1, 2  (for each terminal).
+
+        """
+
+        pass
+
+
+    def seq_currents(self):
+        """ Returns the sequence currents into all terminals of the active
+        circuit element (see Select command) in Result string.  Returned as
+        comma-separated magnitude only values.
+
+        Order of returned values: 0, 1, 2  (for each terminal).
+
+        """
+
+        pass
+
+
+    def seq_power(self):
+        """ Returns the sequence powers into all terminals of the active
+        circuit element (see Select command) in Result string.  Returned as
+        comma-separated kw, kvar pairs.
+
+        Order of returned values: 0, 1, 2  (for each terminal).
+
+        """
+
+        pass
+
+
+    def losses(self):
+        """ Returns the total losses for the active circuit element in the
+        Result string in kW, kvar.
+
+        """
+
+        pass
+
+
+    def phase_losses(self):
+        """ Returns the losses for the active circuit element for each PHASE in
+        the Result string in comma-separated kW, kvar pairs.
+
+        """
+
+        pass
+
+
+    def ckt_losses(self):
+        """ Returns the total losses for the active circuit in the Result
+        string in kW, kvar.
+
+        """
+
+        pass
+
+
+    def allocate_loads(self):
+        """ Estimates the allocation factors for loads that are defined using
+        the XFKVA property. Requires that energymeter objects be defined with
+        the PEAKCURRENT property set. Loads that are not in the zone of an
+        energymeter cannot be allocated.
+
+        """
+
+        pass
+
+
+    def form_edit(self):
+        """ FormEdit [class.object].  Brings up form editor on active DSS
+        object.
+
+        """
+
+        pass
+
+
+    def totals(self):
+        """ Totals all EnergyMeter objects in the circuit and reports register
+        totals in the result string.
+
+        """
+
+        pass
+
+
+    def capacity(self):
+        """ Find the maximum load the active circuit can serve in the PRESENT
+        YEAR. Uses the EnergyMeter objects with the registers set with the
+        SET UEREGS= (..) command for the AutoAdd functions.
+
+        Syntax (defaults shown):
+            capacity [start=]0.9 [increment=]0.005
+
+        Returns the metered kW (load + losses - generation) and per unit load
+        multiplier for the loading level at which something in the system
+        reports an overload or undervoltage. If no violations, then it returns
+        the metered kW for peak load for the year (1.0 multiplier). Aborts and
+        returns 0 if no energymeters.
+
+        """
+
+        pass
+
+
+    def classes(self):
+        """ List of intrinsic DSS Classes. Returns comma-separated list in
+        Result variable.
+
+        """
+
+        pass
+
+
+    def user_classes(self):
+        """ List of user-defined DSS Classes. Returns comma-separated list in
+        Result variable.
+
+        """
+
+        pass
+
+
+    def z_sc(self):
+        """ Returns full Zsc matrix for the ACTIVE BUS in comma-separated
+        complex number form.
+
+        """
+
+        pass
+
+
+    def z_sc10(self):
+        """ Returns symmetrical component impedances, Z1, Z0 for the ACTIVE BUS
+        in comma-separated R+jX form.
+
+        """
+
+        pass
+
+
+    def z_sc_refresh(self):
+        """ Refreshes Zsc matrix for the ACTIVE BUS. """
+
+        pass
+
+
+    def y_sc(self):
+        """ Returns full Ysc matrix for the ACTIVE BUS in comma-separated
+        complex number form G + jB.
+
+        """
+
+        pass
+
+
+    def pu_voltages(self):
+        """ Just like the Voltages command, except the voltages are in per unit
+        if the kVbase at the bus is defined.
+
+        """
+
+        pass
+
+
+    def var_values(self):
+        """ Returns variable values for active element if PC element.
+        Otherwise, returns null.
+
+        """
+
+        pass
+
+
+    def var_names(self):
+        """ Returns variable names for active element if PC element. Otherwise,
+        returns null.
+
+        """
+
+        pass
+
+
+    def bus_coords(self):
+        """ Define x,y coordinates for buses.  Execute after Solve command
+        performed so that bus lists are defined. Reads coordinates from a CSV
+        file with records of the form: busname, x, y.
+
+        Example: BusCoords [file=]xxxx.csv
+
+        """
+
+        pass
+
+
+    def make_bus_list(self):
+        """ Updates the buslist using the currently enabled circuit elements.
+        (This happens automatically for Solve command.)
+
+        """
+
+        pass
+
+
+    def make_pos_sequence(self):
+        """ Attempts to convert present circuit model to a positive sequence
+        equivalent. It is recommended to Save the circuit after this and edit
+        the saved version to correct possible misinterpretations.
+
+        """
+
+        pass
+
+
+    def reduce(self):
+        """ {All | MeterName}  Default is "All".  Reduce the circuit according
+        to reduction options. See "Set ReduceOptions" and "Set Keeplist"
+        options.
+
+        Energymeter objects actually perform the reduction.  "All" causes all
+        meters to reduce their zones.
+
+        """
+
+        pass
+
+
+    def interpolate(self):
+        """ {All | MeterName}  Default is "All". Interpolates coordinates for
+        missing bus coordinates in meter zone'
+
+        """
+
+        pass
+
+
+    def align_file(self):
+        """ Alignfile [file=]filename.  Aligns DSS script files in columns for
+        easier reading.
+
+        """
+
+        pass
+
+
+    def top(self):
+        """ [class=]{Loadshape | Monitor  } [object=]{ALL (Loadshapes only) |
+        objectname}.
+
+        Send specified object to TOP.  Loadshapes must be hourly fixed
+        interval.
+
+        """
+
+        pass
+
+
+    def rotate(self):
+        """ Rotate circuit plotting coordinates by specified angle """
+
+        pass
+
+
+    def v_diff(self):
+        """ Displays the difference between the present solution and the last
+        on saved using the SAVE VOLTAGES command.
+
+        """
+
+        pass
+
+
+    def summary(self):
+        """ Displays a power flow summary of the most recent solution. """
+
+        pass
+
+
+    def distribute(self):
+        """ {Proportional | Uniform |Random | Skip} skip=nn PF=nn file=filename
+        MW=nn
+
+        Distributes generators on the system in the manner specified by "how".
+
+            kW = total generation to be distributed (default=1000)
+            how= process name as indicated (default=proportional to load)
+            skip = no. of buses to skip for "How=Skip" (default=1)
+            PF = power factor for new generators (default=1.0)
+            file = name of file to save (default=distgenerators.txt)
+            MW = alternate way to specify kW (default = 1)
+
+        """
+
+        pass
+
+
+    def di_plot(self):
+        """ [case=]casename [year=]yr [registers=](reg1, reg2,...)  [peak=]y/n
+        [meter=]metername
+
+        Plots demand interval (DI) results from yearly simulation cases.
+        Plots selected registers from selected meter file (default =
+        DI_Totals.CSV).
+        Peak defaults to NO.  If YES, only daily peak of specified registers
+        is plotted. Example:
+
+        DI_Plot basecase year=5 registers=(9,11) no
+
+        """
+
+        pass
+
+
+    def compare_cases(self):
+        """ [Case1=]casename [case2=]casename [register=](register number)
+        [meter=]{Totals* | SystemMeter | metername}.
+
+        Compares yearly simulations of two specified cases with respect to the
+        quantity in the designated register from the designated meter file.
+
+        Defaults:
+            Register=9 meter=Totals.
+
+        Example:
+            Comparecases base pvgens 10
+
+        """
+
+        pass
+
+
+    def yearly_curves(self):
+        """ [cases=](case1, case2, ...) [registers=](reg1, reg2, ...)
+        [meter=]{Totals* | SystemMeter | metername}
+
+        Plots yearly curves for specified cases and registers.
+
+        Default: meter=Totals.
+        Example: yearlycurves cases=(basecase, pvgens) registers=9
+
+        """
+
+        pass
+
+
+    def cd(self):
+        """ Change default directory to specified directory """
+
+        pass
+
+
+    def visualise(self):
+        """ [What=] {Currents* | Voltages | Powers} [element=]full_element_name
+        (class.name). Shows the currents for selected element on a drawing in
+        polar coordinates.
+
+        """
+
+        pass
+
+
+    def close_di(self):
+        """ Close all DI files ... useful at end of yearly solution where DI
+        files are left open.
+
+        (Reset and Set Year=nnn will also close the DI files)
+
+        """
+
+        pass
+
+
+    def estimate(self):
+        """ Execute state estimator on present circuit given present sensor
+        values.
+
+        """
+
+        pass
+
+#------------------------------------------------------------------------------
 #  "LineCode" class:
 #------------------------------------------------------------------------------
 
@@ -1033,52 +2292,724 @@ class Generator:
     # assumed to repeat.
     duty = ""
 
+    # In default mode, gen is either always on or follows dispatch curve as
+    # specified.  Otherwise, the gen comes on when either the global default
+    # load level or the price level exceeds the dispatch value.
     disp_mode
 
+    # If = 0.0 Then Generator follow dispatch curves, if any.  If > 0  Then
+    # Generator is ON only when either the price signal exceeds this value or
+    # the load multiplier (set loadmult=) times the default yearly growth
+    # factor exceeds this value.  Then the generator follows dispatch curves,
+    # if any (see also Status).
     disp_value
 
+    # ={wye|LN|delta|LL}
     conn = "wye"
 
+    # Removed due to causing confusion - Add neutral impedance externally.
     r_neut = -1
 
+    # Removed due to causing confusion - Add neutral impedance externally.
     x_neut = 0
 
+    # {Fixed|Variable}.  If Fixed, then dispatch multipliers do not apply. The
+    #  generator is alway at full power when it is ON. Default is Variable
+    # (follows curves).
     status = "variable"
 
+    # An arbitrary integer number representing the class of Generator so that
+    # Generator values may be segregated by class.
     klass = 1
 
+    # Per Unit voltage set point for Model = 3  (typical power flow model).
     v_pu = 1.0
 
+    # Maximum kvar limit for Model = 3.  Defaults to twice the specified load
+    # kvar. Always reset this if you change PF or kvar properties.
     max_kvar
 
+    # Minimum kvar limit for Model = 3. Enter a negative number if generator
+    # can absorb vars.  Defaults to negative of Maxkvar.  Always reset this if
+    # you change PF or kvar properties.
     min_kvar
 
+    # Deceleration factor for P-V generator model (Model=3).  Default is 0.1.
+    # If the circuit converges easily, you may want to use a higher number such
+    # as 1.0. Use a lower number if solution diverges. Use Debugtrace=yes to
+    # create a file that will trace the convergence of a generator model.
     pv_factor = 0.1
 
+    # {Yes | No}  Forces generator ON despite requirements of other dispatch
+    # modes.  Stays ON until this property is set to NO, or an internal
+    # algorithm cancels the forced ON state.
     force_on = "no"
 
+    # kVA rating of electrical machine. Defaults to 1.2* kW if not specified.
+    # Applied to machine or inverter definition for Dynamics mode solutions.
     kva
 
+    # MVA rating of electrical machine.  Alternative to using kVA=.
     mva
 
+    # Per unit synchronous reactance of machine. Presently used only for
+    # Thevinen impedance for power flow calcs of user models (model=6).
+    # Typically use a value 0.4 to 1.0. Default is 1.0
     x_d
 
+    # Per unit transient reactance of the machine.  Used for Dynamics mode and
+    # Fault studies.  Default is 0.27.  For user models, this value is used for
+    # the Thevinen/Norton impedance for Dynamics Mode.
     x_dp
 
+    # Per unit subtransient reactance of the machine.  Used for Harmonics.
+    # Default is 0.20.
     x_dpp
 
+    # Per unit mass constant of the machine.  MW-sec/MVA.
     h
 
+    # Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get
+    # damping
     d
 
+    # Name of DLL containing user-written model, which computes the terminal
+    # currents for Dynamics studies, overriding the default model.  Set to
+    # "none" to negate previous setting.
     user_model
 
+    # String (in quotes or parentheses) that gets passed to user-written model
+    # for defining the data required for that model.
     user_data
 
+    # Name of user-written DLL containing a Shaft model, which models the prime
+    # mover and determines the power on the shaft for Dynamics studies.
+    # Models additional mass elements other than the single-mass model in the
+    # DSS default model. Set to "none" to negate previous setting.
     shaft_model
 
+    # String (in quotes or parentheses) that gets passed to user-written shaft
+    # dynamic model for defining the data for that model.
     shaft_data
 
+    # {Yes | No }  Default is no.  Turn this on to capture the progress of the
+    # generator model for each iteration.  Creates a separate file for each
+    # generator named "GEN_name.CSV".
     debug_trace
+
+#------------------------------------------------------------------------------
+#  "EnergyMeter" class:
+#------------------------------------------------------------------------------
+
+class EnergyMeter:
+    """ This class of device accumulates the energy of the voltage and current
+    in the terminal of the device to which it is connected.
+
+    It is an intelligent energy meter capable of measuring losses of all
+    devices within its "zone".
+
+    The Zone is determined automatically after a circuit change.  The Zone
+    starts on the opposite side of the branch on which the meter is located and
+    continues in the same direction through the network until
+        a) an open point is encountered
+        b) an open terminal or switch is encountered
+        c) another energy meter is encountered
+        d) a branch that is already included in a zone is encountered
+
+    It keeps track of kwh, kvarh, UE,  EEN, Losses, etc., having registers FOR
+    each of these quantities.
+
+    In EEN/UE calculations, line overload takes precedence.
+
+    If the Max Zone kW limits are specified, then these replace the line
+    overload UE/EEN numbers. These limits were added so that the user can
+    override line limits in cases such as networks where it is difficult to
+    judge the UE from the individual line limits.
+
+    Only the maximum |kVA| overload is accumulated, not all.  Loads downline
+    from an overload are marked WITH a factor representing the degree of
+    overload.  This is used to compute EEN/UE FOR loads.
+
+    FOR low voltages, the full kW FOR loads below the emergency min voltage are
+    counted. The EEN is proportioned based on how low the voltage is.
+
+    Emergency min voltage must be less than normal min voltage.
+
+
+    An EnergyMeter object is an intelligent meter connected to a terminal of a
+    circuit element.  It simulates the behavior of an actual energy meter.
+    However, it has more capability because it can access values at other
+    places in the circuit rather than simply at the location at which it is
+    installed.  It measures not only power and energy values at its location,
+    but losses and overload values within a defined region of the circuit.
+    The operation of the object is simple.  It has several registers that
+    accumulate certain values.  At the beginning of a study, the registers are
+    cleared (reset) to zero.  At the end of each subsequent solution, the meter
+    is instructed to take a sample.  Energy values are then integrated using
+    the interval of time that has passed since the previous solution.
+
+    Registers
+
+    There are two types of registers:
+        1.Energy Accumulators (for energy values)
+        2.Maximum power values ("drag hand" registers).
+
+    The energy registers use trapezoidal integration, which allows to use
+    somewhat arbitrary time step sizes between solutions with less integration
+    error. This is important for using load duration curves approximated with
+    straight lines, for example.
+
+    The present definitions of the registers are:
+        1.KWh at the meter location.
+        2.Kvarh at the meter location.
+        3.Maximum kW at the meter location.
+        4.Maximum kVA at the meter location.
+        5.KWh in the meter zone.
+        6.Kvarh in the meter zone.
+        7.Maximum kW in the meter zone.
+        8.Maximum kVA in the meter zone.
+        9.Overload kWh in the meter zone, normal ratings.
+        10.Overload kWh in the meter zone, emergency ratings.
+        11.Energy Exceeding Normal (EEN) in the loads in the meter zone.
+        12.Unserved Energy (UE) in the loads in the meter zone.
+        13.Losses (kWh) in power delivery elements in the meter zone.
+        14.Reactive losses (kvarh) in power delivery elements in the meter
+        zone.
+        15.Maximum losses (kW) in  power delivery elements in the meter zone.
+        16.Maximum reactive losses (kvar) in power delivery elements in the
+        meter zone.
+
+    Zones
+
+    The EnergyMeter object uses the concept of a zone.  This is an area of the
+    circuit for which the meter is responsible.  It can compute energies,
+    losses, etc for any power delivery object and Load object in its zone
+    (Generator objects have their own intrinsic meters).
+
+
+    A zone is a collection of circuit elements "downline" from the meter.  This
+    concept is nominally applicable to radial circuits, but also has some
+    applicability to meshed circuits.  The zones are automatically determined
+    according to the following rules:
+        1.Start with the circuit element in which the meter is located.  Ignore
+        the terminal on which the meter is connected.  This terminal is the
+        start of the zone. Begin tracing with the other terminal(s).
+        2.Trace out the circuit, finding all other circuit elements (loads and
+        power delivery elements) connected to the zone.  Continue tracing out
+        every branch of the circuit. Stop tracing a branch when:
+        The end of the circuit branch is reached
+    A circuit element containing another EnergyMeter object is encountered
+    A OPEN terminal is encountered.  (all phases in the terminal are open.)
+    A disabled device is encountered.
+    A circuit element already included in another zone is encountered.
+    There are no more circuit elements to consider.
+    Zones are automatically updated after a change in the circuit unless
+    the ZONELOCK option (Set command) is set to true (Yes).  Then zones
+    remain fixed after initial determination.
+
+    """
+
+    # Name (Full Object name) of element to which the monitor is connected.
+    element
+
+    # Number of the terminal of the circuit element to which the monitor is
+    # connected.  1 or 2, typically.
+    terminal
+
+    # {Clear (reset) | Save | Take | Zonedump | Allocate | Reduce}
+    # (A)llocate = Allocate loads on the meter zone to match PeakCurrent.
+    # (C)lear = reset all registers to zero
+    # (R)educe = reduces zone by merging lines (see Set Keeplist &
+    # ReduceOption)
+    # (S)ave = saves the current register values to a file. File name is
+    # "MTR_metername.CSV". (T)ake = Takes a sample at present solution
+    # (Z)onedump = Dump names of elements in meter zone to a file
+    # File name is "Zone_metername.CSV".
+    action
+
+    # Enter a string ARRAY of any combination of the following. Options
+    # processed left-to-right:
+    #     (E)xcess : (default) UE/EEN is estimate of energy over capacity
+    #     (T)otal : UE/EEN is total energy after capacity exceeded
+    #     (R)adial : (default) Treats zone as a radial circuit
+    #     (M)esh : Treats zone as meshed network (not radial).
+    #     (C)ombined : (default) Load UE/EEN computed from combination of
+    #     overload and undervoltage.
+    #     (V)oltage : Load UE/EEN computed based on voltage only.
+    # Example: option=(E, R)
+    option
+
+    # Upper limit on kVA load in the zone, Normal configuration. Default is 0.0
+    # (ignored).  Overrides limits on individual lines for overload EEN. With
+    # "LocalOnly=Yes" option, uses only load in metered branch.
+    kva_norm
+
+    # Upper limit on kVA load in the zone, Emergency configuration. Default is
+    # 0.0 (ignored). Overrides limits on individual lines for overload UE.
+    # With "LocalOnly=Yes" option, uses only load in metered branch.
+    kva_emerg
+
+    # ARRAY of current magnitudes representing the peak currents measured at
+    # this location for the load allocation function.  Default is (400, 400,
+    # 400). Enter one current for each phase
+    peak_current
+
+    # ARRAY of full element names for this meter''s zone.  Default is for meter
+    # to find it''s own zone. If specified, DSS uses this list instead.  Can
+    # access the names in a single-column text file.  Examples:
+    # zonelist=[line.L1, transformer.T1, Line.L3]
+    # zonelist=(file=branchlist.txt)
+    zone_list
+
+    # {Yes | No}  Default is NO.  If Yes, meter considers only the monitored
+    # element for EEN and UE calcs.  Uses whole zone for losses.
+    local_only
+
+    # Mask for adding registers whenever all meters are totalized.  Array of
+    # floating point numbers representing the multiplier to be used for summing
+    # each register from this meter.  Default = (1, 1, 1, 1, ... ).  You only
+    # have to enter as many as are changed (positional). Useful when two meters
+    # monitor same energy, etc.
+    mask
+
+    # {Yes | No}  Default is YES. Compute Zone losses. If NO, then no losses at
+    # all are computed.
+    losses
+
+    # {Yes | No}  Default is YES. Compute Line losses. If NO, then none of the
+    # losses are computed.
+    line_losses
+
+    # {Yes | No}  Default is YES. Compute Transformer losses. If NO,
+    # transformers are ignored in loss calculations.
+    xfmr_losses
+
+    # {Yes | No}  Default is YES. Compute Sequence losses in lines and
+    # segregate by line mode losses and zero mode losses.
+    seq_losses
+
+    # {Yes | No}  Default is YES. Compute losses and segregate by voltage base.
+    # If NO, then voltage-based tabulation is not reported.
+    v_base_losses
+
+    # {Yes | No}  Default is YES. When YES, write Overload exception report
+    # when Demand Intervals are written.
+    overload_report
+
+#------------------------------------------------------------------------------
+#  "MonitorObject" class:
+#------------------------------------------------------------------------------
+
+class MonitorObject:
+    """ A monitor is a circuit element that is connected to a terminal of
+    another circuit element.  It records the voltages and currents at that
+    terminal as a function of time and can report those values upon demand.
+
+    A Monitor is defined by a New commands:
+
+    New Type=Monitor Name=myname Element=elemname Terminal=[1,2,...]
+    Buffer=clear|save
+
+    Upon creation, the monitor buffer is established.  There is a file
+    associated with the buffer.  It is named "Mon_elemnameN.mon"  where N is
+    the terminal no. The file is truncated to zero at creation or buffer
+    clearing.
+
+    The Monitor keeps results in the in-memory buffer until it is filled.  Then
+    it appends the buffer to the associated file and resets the in-memory
+    buffer.
+
+    For buffer=save, the present in-memory buffer is appended to the disk file
+    so that it is saved for later reference.
+
+    The Monitor is a passive device that takes a sample whenever its
+    "TakeSample" method is invoked.  The SampleAll method of the Monitor ckt
+    element class will force all monitors elements to take a sample.  If the
+    present time (for the most recent solution is greater than the last time
+    entered in to the monitor buffer, the sample is appended to the buffer.
+    Otherwise, it replaces the last entry.
+
+    Monitor Files are simple binary files of doubles.  The first record
+    contains the number of conductors per terminal (NCond). (always use 'round'
+    function when converting this to an integer). Then subsequent records
+    consist of time and voltage and current samples for each terminal (all
+    complex doubles) in the order shown below:
+
+    The time values will not necessarily be in a uniform time step;  they will
+    be at times samples or solutions were taken.  This could vary from several
+    hours down to a few milliseconds.
+
+    The monitor ID can be determined from the file name.  Thus, these values
+    can be post-processed at any later time, provided that the monitors are not
+    reset.
+
+    Modes are:
+        0: Standard mode - V and I,each phase, Mag and Angle
+        1: Power each phase, complex (kw and kvars)
+        2: Transformer Tap
+        3: State Variables
+        +16: Sequence components: V012, I012
+        +32: Magnitude Only
+        +64: Pos Seq only or Average of phases
+
+
+    A monitor is a benign circuit element that is associated with a terminal of
+    another circuit element.  It takes a sample when instructed, recording the
+    time and the complex values of voltage and current, or power, at all
+    phases.
+
+    The data are saved in a file (separate one for each monitor) at the
+    conclusion of a multistep solution or each solution in a Monte Carlo
+    calculation.  In essence, it works like a real power monitor.  The data in
+    the file may be converted to csv form and, for example, brought into
+    (EPRI provides VBA routines to read the monitor files directly and import
+    either complex voltages and currents or their magnitudes.)  The binary form
+    of the monitor file is
+        Signature (4-byte Integer) signifies that this is a
+        DSS monitor file = 43756
+        Version (4-byte integer)    version number of the file
+        Sample Size (4-byte integer)    No. of quantities saved per sample
+        Mode (4-byte integer)         Monitor mode
+
+    Records follow
+    <--- All voltages first ---------------->|<--- All currents ----->|
+    <hour 1> <sec 1> <V1.re>  <V1.im>  <V2.re>  <V2.im>  .... <I1.re>  <I1.im>
+    <hour 2> <sec 1> <V1.re>  <V1.im>  <V2.re>  <V2.im>  .... <I1.re>  <I1.im>
+    <hour 3> <sec 1> <V1.re>  <V1.im>  <V2.re>  <V2.im>  .... <I1.re>  <I1.im>
+
+    If powers are saved then the record has only the power for each phase.
+
+    All values are Singles (32-bit). Hours and Seconds values are not included
+    in Sample Size. Recorded values are not necessarily saved as illustrated,
+    depending on Mode (see below).  However, the file is always packed singles
+    with each record beginning with the hour and seconds past the hour.
+
+    For Monte Carlo runs, the hour is set to the number of the solution and
+    seconds is set to zero.
+
+    Monitors may be connected to both power delivery elements and power
+    conversion elements.
+
+    """
+
+    # Name (Full Object name) of element to which the monitor is connected.
+    element = ""
+
+    # Number of the terminal of the circuit element to which the monitor is
+    # connected.  1 or 2, typically. For monitoring states, attach monitor to
+    # terminal 1.
+    terminal = 1
+
+    # Bitmask integer designating the values the monitor is to capture:
+    #    0 = Voltages and currents
+    #    1 = Powers
+    #    2 = Tap Position (Transformers only)
+    #    3 = State Variables (PCElements only)
+    # Normally, these would be actual phasor quantities from solution.
+    # Combine with adders below to achieve other results for terminal
+    # quantities:
+    #     +16 = Sequence quantities
+    #     +32 = Magnitude only
+    #     +64 = Positive sequence only or avg of all phases
+
+    # Mix adder to obtain desired results. For example:
+    # Mode=112 will save positive sequence voltage and current magnitudes only
+    # Mode=48 will save all sequence voltages and currents, but magnitude only.
+    mode = 0
+
+    # {Clear | Save | Take}
+    # (C)lears or (S)aves current buffer.
+    # (T)ake action takes a sample.
+    # Note that monitors are automatically reset (cleared) when the
+    # Set Mode= command is issued.
+    # Otherwise, the user must explicitly reset all monitors (reset monitors
+    # command) or individual monitors with the Clear action.
+    action = ""
+
+    # {Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all
+    # phases) for voltage and current.
+    # Does not apply to sequence quantity modes or power modes.
+    residual = False
+
+    # {Yes/True | No/False} Default = YES. Report voltage and current in polar
+    # form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.
+    v_i_polar = True
+
+    # {Yes/True | No/False} Default = YES. Report power in Apparent power, S,
+    # in polar form (Mag/Angle).(default)  Otherwise, is P and Q
+    p_polar = False
+
+#------------------------------------------------------------------------------
+#  "Capacitor" class:
+#------------------------------------------------------------------------------
+
+class Capacitor:
+    """ Basic  capacitor
+
+    Implemented as a two-terminal constant impedance (Power Delivery Element)
+
+    Bus2 connection defaults to 0 node of Bus1 (if Bus2 has the default bus
+    connection at the time Bus1 is defined.  Therefore, if only Bus1 is
+    specified, a shunt capacitor results.
+    If delta connected, Bus2 is set to node zero of Bus1 and nothing is
+    returned in the lower half of YPrim - all zeroes.
+
+    If an ungrounded wye is desired, explicitly set Bus2= and set all nodes the
+    same, e.g. Bus1.4.4.4   (uses 4th node of Bus1 as neutral point)
+    or BusNew.1.1.1  (makes a new bus for the neutral point)
+    You must specify the nodes or you will get a series capacitor!
+
+    A series capacitor is specified simply by setting bus2 and declaring the
+    connection to be Wye.  If the connection is specified as delta, nothing
+    will be connected to Bus2. In fact the number of terminals is set to 1.
+
+    Capacitance may be specified as:
+
+     1.  kvar and kv ratings at base frequency.  impedance.  Specify kvar as total for
+         all phases (all cans assumed equal). For 1-phase, kV = capacitor can kV rating.
+         For 2 or 3-phase, kV is line-line three phase. For more than 3 phases, specify
+         kV as actual can voltage.
+     2.  Capacitance in uF to be used in each phase.  If specified in this manner,
+         the given value is always used whether wye or delta.
+     3.  A nodal C matrix (like a nodal admittance matrix).
+         If conn=wye then 2-terminal through device
+         If conn=delta then 1-terminal.
+         Microfarads.
+
+    """
+
+    # Name of first bus. Examples:
+    #     bus1=busname bus1=busname.1.2.3
+    bus_1 = None
+
+    # Name of 2nd bus. Defaults to all phases connected to first bus, node 0.
+    # (Shunt Wye Connection) Not necessary to specify for delta (LL) connection
+    bus_2 = None
+
+    # Number of phases.
+    phases = 3
+
+    # Total kvar, if one step, or ARRAY of kvar ratings for each step.  Evenly
+    # divided among phases. See rules for NUMSTEPS.
+    kvar = 1200
+
+    # For 2, 3-phase, kV phase-phase. Otherwise specify actual can rating.
+    kv = 12.47
+
+    # {wye | delta |LN |LL}  Default is wye, which is equivalent to LN
+    conn = "wye"
+
+    # Nodal cap. matrix, lower triangle, microfarads, of the following form:
+    #     cmatrix="c11 | -c21 c22 | -c31 -c32 c33"
+    # All steps are assumed the same if this property is used.
+    cmatrix = ""
+
+    # ARRAY of Capacitance, each phase, for each step, microfarads.
+    # See Rules for NumSteps.
+    cuf = ""
+
+    # ARRAY of series resistance in each phase (line), ohms.
+    r = 0
+
+    # ARRAY of series inductive reactance(s) in each phase (line) for filter,
+    # ohms at base frequency. Use this OR "h" property to define filter.
+    xl = 0
+
+    # ARRAY of harmonics to which each step is tuned. Zero is interpreted as
+    # meaning zero reactance (no filter).
+    harm = 0
+
+    # Number of steps in this capacitor bank. Default = 1. Forces reallocation
+    # of the capacitance, reactor, and states array.  Rules:
+    # If this property was previously =1, the value in the kvar property is
+    # divided equally among the steps. The kvar property does not need to be
+    # reset if that is accurate.  If the Cuf or Cmatrix property was used
+    # previously, all steps are set to the value of the first step.
+    # The states property is set to all steps on. All filter steps are set to
+    # the same harmonic.
+    # If this property was previously >1, the arrays are reallocated, but no
+    # values are altered. You must SUBSEQUENTLY assign all array properties.
+    n_steps = 1
+
+    # ARRAY of integers {1|0} states representing the state of each step
+    # (on|off). Defaults to 1 when reallocated (on).
+    # Capcontrol will modify this array as it turns steps on or off.
+    states = 1
+
+#------------------------------------------------------------------------------
+#  "Transformer" class:
+#------------------------------------------------------------------------------
+
+class Transformer:
+    """ The Transfomer model is implemented as a multi-terminal (two or more)
+    power delivery element.
+
+    A transfomer consists of two or more Windings, connected in somewhat
+    arbitray fashion (with the standard Wye-Delta defaults, of course).  You
+    can specify the parameters of a winding one winding at a time or use arrays
+    to set all the values.  Use the "wdg=..." parameter to select a winding.
+
+    Transformers have one or more phases.  The number of conductors per
+    terminal is always one more than the number of phases.  For wye- or
+    star-connected windings, the extra conductor is the neutral point.  For
+    delta-connected windings, the extra terminal is open internally (you
+    normally leave this connected to node 0).
+
+    """
+
+    # Number of phases this transformer.
+    phases = 3
+
+    # Number of windings, this transformers. (Also is the number of terminals)
+    windings = 2
+
+    # Winding Defintion -------------------------------------------------------
+
+    # Set this = to the number of the winding you wish to define.  Then set
+    # the values for this winding.  Repeat for each winding.  Alternatively,
+    # use the array collections (buses, kvas, etc.) to define the windings.
+    # Note: impedances are BETWEEN pairs of windings; they are not the property
+    # of a single winding.
+    wdg = 1
+
+    # Bus to which this winding is connected.
+    bus = None
+
+    # Connection of this winding. Default is "wye" with the neutral solidly
+    # grounded.
+    conn = "wye"
+
+    # For 2-or 3-phase, enter phase-phase kV rating.  Otherwise, kV rating of
+    # the actual winding
+    kv = 12.47
+
+    # Base kVA rating of the winding. Side effect: forces change of max normal
+    # and emerg kva ratings.
+    kva = 1000
+
+    # Per unit tap that this winding is on.
+    tap = 1.0
+
+    # Percent resistance this winding.  (half of total for a 2-winding).
+    pct_r = 0.2
+
+    # Neutral resistance of wye (star)-connected winding in actual ohms. If
+    # entered as a negative value, the neutral is assumed to be open, or
+    # floating.
+    r_neut = -1
+
+    # Neutral reactance of wye(star)-connected winding in actual ohms. May
+    # be + or -.
+    x_neut = 0
+
+    # General Data ------------------------------------------------------------
+
+    # Use the following parameters to set the winding values using arrays
+    # (setting of wdg=... is ignored).
+
+    # Use this to specify all the bus connections at once using an array.
+    # Example:
+    #     New Transformer.T1 buses="Hibus, lowbus"
+    buses = ""
+
+    # Use this to specify all the Winding connections at once using an array.
+    # Example:
+    #    New Transformer.T1 buses="Hibus, lowbus" ~ conns=(delta, wye)
+    conns = ""
+
+    # Use this to specify the kV ratings of all windings at once using an
+    # array. Example:
+    # New Transformer.T1 buses="Hibus, lowbus"
+    # ~ conns=(delta, wye)
+    # ~ kvs=(115, 12.47)
+    # See kV= property for voltage rules.
+    kv_s = ""
+
+    # Use this to specify the kVA ratings of all windings at once using an
+    # array.
+    kva_s = ""
+
+    # Use this to specify the p.u. tap of all windings at once using an array.
+    taps = ""
+
+    # Use this to specify the percent reactance, H-L (winding 1 to winding 2).
+    # Use for 2- or 3-winding transformers. On the kva base of winding 1.
+    x_hl = 7
+
+    # Use this to specify the percent reactance, H-T (winding 1 to winding 3).
+    # Use for 3-winding transformers only. On the kVA base of winding 1.
+    x_ht = 35
+
+    # Use this to specify the percent reactance, L-T (winding 2 to winding 3).
+    # Use for 3-winding transformers only. On the kVA base of winding 1.
+    x_lt = 30
+
+    # Use this to specify the percent reactance between all pairs of windings
+    # as an array.
+    # All values are on the kVA base of winding 1.  The order of the values is
+    # as follows:
+    #    (x12 13 14... 23 24.. 34 ..)
+    # There will be n(n-1)/2 values, where n=number of windings.
+    x_sc_array = ""
+
+    # Thermal time constant of the transformer in hours.  Typically about 2.
+    thermal = 2
+
+    # n Exponent for thermal properties in IEEE C57.  Typically 0.8.
+    n = 0.8
+
+    # m Exponent for thermal properties in IEEE C57.  Typically 0.9 - 1.0
+    m = 0.8
+
+    # Temperature rise, deg C, for full load.
+    fl_rise = 65
+
+    # Hot spot temperature rise, deg C.
+    hs_rise = 15
+
+    # Percent load loss at full load. The %R of the High and Low windings (1
+    # and 2) are adjusted to agree at rated kVA loading.
+    pct_load_loss = 0
+
+    # Percent no load losses at rated excitatation voltage. Converts to a
+    # resistance in parallel with the magnetizing impedance in each winding.
+    pct_no_load_loss = 0
+
+    # Normal maximum kVA rating of H winding (winding 1).  Usually 100% - 110%
+    # of maximum nameplate rating, depending on load shape. Defaults to 110% of
+    # kVA rating of Winding 1.
+    norm_h_kva = ""
+
+    # Emergency (contingency)  kVA rating of H winding (winding 1).  Usually
+    # 140% - 150% of
+    # maximum nameplate rating, depending on load shape. Defaults to 150% of
+    # kVA rating of Winding 1.
+    emerg_h_kva = ""
+
+    # {Yes|No}  Designates whether this transformer is to be considered a
+    # substation.
+    sub = "No"
+
+    # Max per unit tap for the active winding.
+    max_tap = 1.10
+
+    # Min per unit tap for the active winding.
+    min_tap = 0.90
+
+    # Total number of taps between min and max tap.
+    num_taps = 32
+
+    # Substation Name. Optional. If specified, printed on plots
+    subname = ""
+
+    # Percent magnetizing current. Default=0.0. Magnetizing branch is in
+    # parallel with windings in each phase. Also, see "ppm_antifloat".
+    pct_image = 0
+
+    # Default=1 ppm.  Parts per million by which the reactive term is increased
+    # to protect against accidentally floating a winding.
+    # If positive then the effect is adding a small reactor to ground. If
+    # negative, then a capacitor.
+    ppm_antifloat = 1
 
 # EOF -------------------------------------------------------------------------
