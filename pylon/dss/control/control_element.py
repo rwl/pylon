@@ -18,26 +18,34 @@
 """ Defines a base class for control elements """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Bool, Str
+
+from pylon.dss.common.bus import Bus
+
+#------------------------------------------------------------------------------
 #  "ControlElement" class:
 #------------------------------------------------------------------------------
 
 class ControlElement(CircuitElement):
     """ Base for control classes """
 
-    element_name = ""
+    element_name = Str
 
-    element_terminal = 1
+    element_terminal = Int(1)
 
-    controlled_bus_name = ""
+    controlled_bus_name = Str
 
-    controlled_bus = None
+    controlled_bus = Instance(Bus)
 
-    monitored_variable = ""
+    monitored_variable = Str
 
-    monitored_var_index = 1
+    monitored_var_index = Int(1)
 
-    time_delay = 0
+    time_delay = Float(0.0)
 
-    dbl_trace_param = 0.0
+    dbl_trace_param = Float(0.0)
 
 # EOF -------------------------------------------------------------------------
