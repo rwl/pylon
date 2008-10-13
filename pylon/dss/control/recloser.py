@@ -21,7 +21,7 @@
 #  "Recloser" class:
 #------------------------------------------------------------------------------
 
-class Recloser:
+class Recloser(ControlElement):
     """ A Recloser is a control element that is connected to a terminal of a
     circuit element and controls the switches in the same or another terminal.
 

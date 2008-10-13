@@ -21,7 +21,7 @@
 #  "RegControl" class:
 #------------------------------------------------------------------------------
 
-class RegControl:
+class RegControl(ControlElement):
     """ A RegControl is a control element that is connected to a terminal of
     another circuit element that must be a transformer.
 
