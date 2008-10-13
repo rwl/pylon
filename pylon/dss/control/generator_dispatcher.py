@@ -18,6 +18,17 @@
 """ Defines a generator controller """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Bool
+
+from pylon.dss.common.circuit_element import CircuitElement
+from pylon.dss.delivery.api import PowerDeliveryElement
+
+from pylon.dss.conversion.api import Generator
+
+#------------------------------------------------------------------------------
 #  "GeneratorDispatcher" class:
 #------------------------------------------------------------------------------
 
@@ -30,33 +41,38 @@ class GeneratorDispatcher(ControlElement):
 
     # Full object name of the circuit element, typically a line or transformer,
     # which the control is monitoring. There is no default; must be specified.
-    element = None
+    element = Instance(CircuitElement, allow_none=False)
 
     # Number of the terminal of the circuit element to which the GenDispatcher
     # control is connected. 1 or 2, typically.  Default is 1. Make sure you
     # have the direction on the power matching the sign of kWLimit.
-    terminal = 1
+    terminal = Int(1, desc="Connected terminal")
 
     # kW Limit for the monitored element. The generators are dispatched to hold
     # the power in band.the object class.
-    kw_limit = 8000
+    kw_limit = Float(8000.0, desc="kW Limit for the monitored element")
 
     # Bandwidth (kW) of the dead band around the target limit. No dispatch
     # changes are attempted if the power in the monitored terminal stays within
     # this band.
-    kw_band = 100
+    kw_band = Float(
+        100.0, desc="Bandwidth (kW) of the dead band around the target limit."
+    )
 
     # Max kvar to be delivered through the element.  Uses same dead band as kW.
-    kvar_limit = 0
+    kvar_limit = Float(0.0, desc="Max kVar through the element")
 
     # Array list of generators to be dispatched.  If not specified, all
     # generators in the circuit are assumed dispatchable.
-    gen_list = []
+    gen_list = List(Instance(Generator), desc="generators to be dispatched")
 
     # Array of proportional weights corresponding to each generator in the
     # gen_list. The needed kW to get back to center band is dispatched to each
     # generator according to these weights. Default is to set all weights to
     # 1.0.
-    weights = [1.0]
+    weights = List(
+        Float, [1.0],
+        desc="proportional weights corresponding to each generator"
+    )
 
 # EOF -------------------------------------------------------------------------

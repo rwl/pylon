@@ -18,6 +18,14 @@
 """ Defines a capacitor controller """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Bool, Enum
+
+from pylon.dss.delivery.api import PowerDeliveryElement, Capacitor
+
+#------------------------------------------------------------------------------
 #  "CapacitorControl" class:
 #------------------------------------------------------------------------------
 
@@ -34,31 +42,41 @@ class CapacitorControl(ControlElement):
     # Full object name of the circuit element, typically a line or transformer,
     # to which the capacitor control's PT and/or CT are connected. There is no
     # default; must be specified.
-    element = None
+    element = Instance(
+        PowerDeliveryElement, allow_none=False, desc="Circuit element to which"
+        "the capacitor control's PT and/or CT is connected"
+    )
 
     # Number of the terminal of the circuit element to which the CapControl is
     # connected. 1 or 2, typically.  Default is 1.
-    terminal = 1
+    terminal = Int(1, desc="Connected terminal of the circuit element")
 
     # Name of Capacitor element which the CapControl controls. No Default; Must
     # be specified.Do not specify the full object name; "Capacitor" is assumed
     # for the object class.
-    capacitor = None
+    capacitor = Instance(
+        Capacitor, allow_none=False, desc="Capacitor being controlled"
+    )
 
     # {Current | voltage | kvar |time } Control type.  Specify the ONsetting
     # and OFFsetting appropriately with the type of control. (See help for
     # ONsetting)
-    type = "Current"
+    type = Enum("Current", "Voltage", "kVar", "Time", desc="Control type")
 
     # Ratio of the PT that converts the monitored voltage to the control
     # voltage. Default is 60.  If the capacitor is Wye, the 1st phase
     # line-to-neutral voltage is monitored.  Else, the line-to-line voltage
     # (1st - 2nd phase) is monitored.
-    pt_ratio = 60
+    pt_ratio = Float(
+        60.0, desc="Ratio of the PT that converts the monitored voltage to "
+        "the control voltage"
+    )
 
     # Ratio of the CT from line amps to control ampere setting for current and
     # kvar control types.
-    ct_ratio = 60.0
+    ct_ratio = Float(
+        60.0, desc="Ratio of the CT from line amps to control amps"
+    )
 
     # Value at which the control arms to switch the capacitor ON (or ratchet up
     # a step).  Type of Control:
@@ -68,39 +86,46 @@ class CapacitorControl(ControlElement):
     #    directional.
     #    Time:    Hrs from Midnight as a floating point number (decimal).
     #    7:30am would be entered as 7.5.
-    on_setting = 300
+    on_setting = Float(
+        300.0, desc="Value at which the control switches the capacitor on"
+    )
 
     # Value at which the control arms to switch the capacitor OFF. (See help
     # for ONsetting)
-    off_setting = 200
+    off_setting = Float(
+        200.0, desc="Value at which the control switches the capacitor off"
+    )
 
     # Time delay, in seconds, from when the control is armed before it sends
     # out the switching command to turn ON.  The control may reset before the
     # action actually occurs. This is used to determine which capacity control
     # will act first. Default is 15.  You may specify any floating point number
     # to achieve a model of whatever condition is necessary.
-    delay = 15.0
+    delay = Float(
+        15.0, desc="Time delay, in seconds, from when the control is armed "
+        "before it sends out the switching command to turn on"
+    )
 
     # Switch to indicate whether VOLTAGE OVERRIDE is to be considered. Vmax and
     # Vmin must be set to reasonable values if this property is Yes.
-    volt_override = False
+    volt_override = Bool(False)
 
     # Maximum voltage, in volts.  If the voltage across the capacitor divided
     # by the PTRATIO is greater than this voltage, the capacitor will switch
     # OFF regardless of other control settings. Default is 126 (goes with a PT
     # ratio of 60 for 12.47 kV system).
-    v_max = 126
+    v_max = Float(126.0)
 
     # Minimum voltage, in volts.  If the voltage across the capacitor divided
     # by the PTRATIO is less than this voltage, the capacitor will switch ON
     # regardless of other control settings. Default is 115 (goes with a PT
     # ratio of 60 for 12.47 kV system).
-    v_min = 115
+    v_min = Float(115.0)
 
     # Time delay, in seconds, for control to turn OFF when present state is ON.
-    delay_off = 15.0
+    delay_off = Float(15.0)
 
     # Dead time after capacitor is turned OFF before it can be turned back ON.
-    dead_time = 300.0
+    dead_time = Float(300.0)
 
 # EOF -------------------------------------------------------------------------
