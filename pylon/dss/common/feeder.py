@@ -18,10 +18,16 @@
 """ Defines a feeder """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, Instance, List, Str, Float, Bool
+
+#------------------------------------------------------------------------------
 #  "Feeder" class:
 #------------------------------------------------------------------------------
 
-class Feeder:
+class Feeder(HasTraits):
     """ User cannot instantiate this object.  Feeders are created on the fly
     when a radial system is specified.  Feeders are created from Energymeters
     and are given the same name.
@@ -40,12 +46,12 @@ class Feeder:
     """
 
     # Name of harmonic spectrum for this device.
-    spectrum = ""
+    spectrum = Str
 
     # Base Frequency for ratings.
-    base_freq = 60
+    base_freq = Float(60.0)
 
     # Indicates whether this element is enabled.
-    enabled = True
+    enabled = Bool(True)
 
 # EOF -------------------------------------------------------------------------

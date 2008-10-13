@@ -15,46 +15,27 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines an element terminal """
+""" Defines a conductor """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Instance, List, Int, Float, Bool
-
-from conductor import Conductor
+from enthought.traits.api import HasTraits, Instance, List, Str, Float, Bool
 
 #------------------------------------------------------------------------------
-#  "Terminal" class:
+#  "Conductor" class:
 #------------------------------------------------------------------------------
 
-class Terminal(HasTraits):
-    """ Each electrical element in the power system has one or more terminals.
-    Each terminal has one or more conductors.  Each conductor contains a
-    disconnect switch and a TCC (fuse) curve[Fuse has been disabled and is
-    being redesigned; a Relay object can be used if needed to control the
-    switches].  The conductors are numbered [1,2,3,...].
+class Conductor(HasTraits):
+    """ A power conductor """
 
-    If the terminal is connected to an N-phase device, the first N conductors
-    are assumed to correspond to the phases, in order.  The remaining
-    conductors may be neutrals or whatever.
+    closed = Bool(True)
 
-    """
+    fuse_blown = Bool(False)
 
-    bus_ref = Int
+    _accum_isqt = Float
 
-    # Need to get to this fast
-    term_node_ref = List(Int)
-
-    conductors = List(Instance(Conductor))
-
-    checked = Bool(False)
-
-    # Private interface -------------------------------------------------------
-
-    _n_cond = Int
-
-    _active_conductor = Int(1)
+    _tcc_name = Str
 
 # EOF -------------------------------------------------------------------------

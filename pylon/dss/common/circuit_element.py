@@ -18,74 +18,84 @@
 """ Defines a base class for all elements of a circuit """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, Instance, List, Int, Float, Bool
+
+from terminal import Terminal
+
+#------------------------------------------------------------------------------
 #  "CircuitElement" class:
 #------------------------------------------------------------------------------
 
-class CircuitElement:
+class CircuitElement(HasTraits):
     """ Base class for all elements of a circuit """
 
     # Indicates whether this element is enabled.
-    enabled = True
+    enabled = Bool(True)
 
     # Base Frequency for ratings.
-    base_freq = 60
+    base_freq = Float(60.0, desc="base frequency for ratings")
 
     # Need fast access to this
-    node_ref = []
+    node_ref = List(Int)
 
-    y_order = 0
+    y_order = Int
 
     # Flag used in tree searches
-    last_terminal_checked = 0
+    last_terminal_checked = Int
 
     # Flag used in tree searches etc
-    checked = False
+    checked = Bool(False)
 
-    has_meter = False
+    has_meter = Bool(False)
 
-    is_isolated = False
+    is_isolated = Bool(False)
 
-    has_control = False
+    has_control = Bool(False)
 
-    is_part_of_feeder = True
+    is_part_of_feeder = Bool(True)
 
     # Pointer to control for this device
-    control_element = None
+    control_element = Instance(
+        "pylon.dss.control.control_element:ControlElement"
+    )
 
-    terminals = []
+    terminals = List(Instance(Terminal))
 
-    active_terminal = None
+    active_terminal = Instance(Terminal)
 
     # Private interface -------------------------------------------------------
 
-    _bus_names = []
+    _bus_names = List(String)
 
-    _enabled = True
+    _enabled = Bool(True)
 
-    _active_terminal = 1
+    _active_terminal = Int(1)
 
-    _y_prim_invalid = False
+    _y_prim_invalid = Bool(False)
 
     # Protected interface -----------------------------------------------------
 
-    _n_terms = 0
+    _n_terms = Int
 
     # No. conductors per terminal
-    _n_conds = 0
+    _n_conds = Int
 
     # No. of phases
-    _n_phases = 0
+    _n_phases = Int
 
-    _bus_idx = 1
+    _bus_idx = Int(1)
 
     _y_prim_series = None
 
     _y_prim_shunt = None
 
     # Order will be NTerms * Ncond
-    _y_prim = []
+    _y_prim = List(Float)
 
     # Frequency at which YPrim has been computed
-    _y_prim_freq = 0.0
+    _y_prim_freq = Float
 
 # EOF -------------------------------------------------------------------------
