@@ -21,8 +21,8 @@
 #  "Capacitor" class:
 #------------------------------------------------------------------------------
 
-class Capacitor:
-    """ Basic  capacitor
+class Capacitor(PowerDeliveryElement):
+    """ Basic capacitor
 
     Implemented as a two-terminal constant impedance (Power Delivery Element)
 

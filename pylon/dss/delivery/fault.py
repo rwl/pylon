@@ -21,7 +21,7 @@
 #  "Fault" class:
 #------------------------------------------------------------------------------
 
-class Fault:
+class Fault(PowerDeliveryElement):
     """ One or more faults can be placed across any two buses in the circuit.
     Like the capacitor, the second bus defaults to the ground node of the
     same bus that bus1 is connected to.

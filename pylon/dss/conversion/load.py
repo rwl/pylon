@@ -21,7 +21,7 @@
 #  "Load" class:
 #------------------------------------------------------------------------------
 
-class Load:
+class Load(PowerConversionElement):
     """ The load is assumed balanced over the no. of phases defined.  To model
     unbalanced loads, define separate single-phase loads.
 

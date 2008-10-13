@@ -21,7 +21,7 @@
 #  "Reactor" class:
 #------------------------------------------------------------------------------
 
-class Reactor:
+class Reactor(PowerDeliveryElement):
     """ Uses same rules as Capacitor and Fault for connections
 
     Implemented as a two-terminal constant impedance (Power Delivery Element)
