@@ -2779,7 +2779,7 @@ class EnergyMeter:
 #  "MonitorObject" class:
 #------------------------------------------------------------------------------
 
-class MonitorObject:
+class Monitor:
     """ A monitor is a circuit element that is connected to a terminal of
     another circuit element.  It records the voltages and currents at that
     terminal as a function of time and can report those values upon demand.
@@ -3016,6 +3016,92 @@ class Capacitor:
     states = 1
 
 #------------------------------------------------------------------------------
+#  "CapacitorControl" class:
+#------------------------------------------------------------------------------
+
+class CapacitorControl:
+    """ A CapControl is a control element that is connected to a terminal of
+    another circuit element and controls a capacitor.  The control is usually
+    placed in the terminal of a line or transformer, although a voltage control
+    device could be placed in the terminal of the capacitor it controls.
+
+    Capacitor to be controlled must already exist.
+
+    """
+
+    # Full object name of the circuit element, typically a line or transformer,
+    # to which the capacitor control's PT and/or CT are connected. There is no
+    # default; must be specified.
+    element = None
+
+    # Number of the terminal of the circuit element to which the CapControl is
+    # connected. 1 or 2, typically.  Default is 1.
+    terminal = 1
+
+    # Name of Capacitor element which the CapControl controls. No Default; Must
+    # be specified.Do not specify the full object name; "Capacitor" is assumed
+    # for the object class.
+    capacitor = None
+
+    # {Current | voltage | kvar |time } Control type.  Specify the ONsetting
+    # and OFFsetting appropriately with the type of control. (See help for
+    # ONsetting)
+    type = "Current"
+
+    # Ratio of the PT that converts the monitored voltage to the control
+    # voltage. Default is 60.  If the capacitor is Wye, the 1st phase
+    # line-to-neutral voltage is monitored.  Else, the line-to-line voltage
+    # (1st - 2nd phase) is monitored.
+    pt_ratio = 60
+
+    # Ratio of the CT from line amps to control ampere setting for current and
+    # kvar control types.
+    ct_ratio = 60.0
+
+    # Value at which the control arms to switch the capacitor ON (or ratchet up
+    # a step).  Type of Control:
+    #    Current: Line Amps / CTratio
+    #    Voltage: Line-Neutral (or Line-Line for delta) Volts / PTratio
+    #    kvar:    Total kvar, all phases (3-phase for pos seq model). This is
+    #    directional.
+    #    Time:    Hrs from Midnight as a floating point number (decimal).
+    #    7:30am would be entered as 7.5.
+    on_setting = 300
+
+    # Value at which the control arms to switch the capacitor OFF. (See help
+    # for ONsetting)
+    off_setting = 200
+
+    # Time delay, in seconds, from when the control is armed before it sends
+    # out the switching command to turn ON.  The control may reset before the
+    # action actually occurs. This is used to determine which capacity control
+    # will act first. Default is 15.  You may specify any floating point number
+    # to achieve a model of whatever condition is necessary.
+    delay = 15.0
+
+    # Switch to indicate whether VOLTAGE OVERRIDE is to be considered. Vmax and
+    # Vmin must be set to reasonable values if this property is Yes.
+    volt_override = False
+
+    # Maximum voltage, in volts.  If the voltage across the capacitor divided
+    # by the PTRATIO is greater than this voltage, the capacitor will switch
+    # OFF regardless of other control settings. Default is 126 (goes with a PT
+    # ratio of 60 for 12.47 kV system).
+    v_max = 126
+
+    # Minimum voltage, in volts.  If the voltage across the capacitor divided
+    # by the PTRATIO is less than this voltage, the capacitor will switch ON
+    # regardless of other control settings. Default is 115 (goes with a PT
+    # ratio of 60 for 12.47 kV system).
+    v_min = 115
+
+    # Time delay, in seconds, for control to turn OFF when present state is ON.
+    delay_off = 15.0
+
+    # Dead time after capacitor is turned OFF before it can be turned back ON.
+    dead_time = 300.0
+
+#------------------------------------------------------------------------------
 #  "Transformer" class:
 #------------------------------------------------------------------------------
 
@@ -3190,5 +3276,715 @@ class Transformer:
     # If positive then the effect is adding a small reactor to ground. If
     # negative, then a capacitor.
     ppm_antifloat = 1
+
+#------------------------------------------------------------------------------
+#  "Fault" class:
+#------------------------------------------------------------------------------
+
+class Fault:
+    """ One or more faults can be placed across any two buses in the circuit.
+    Like the capacitor, the second bus defaults to the ground node of the
+    same bus that bus1 is connected to.
+
+    The fault is basically an uncoupled, multiphase resistance branch. however,
+    you may also specify it as NODAL CONDUCTANCE (G) matrix, which will give
+    you complete control of a complex fault situation.
+
+    To eliminate a fault from the system after it has been defined, disable it.
+
+    In Monte Carlo Fault mode, the fault resistance is varied by the % std dev
+    specified If %Stddev is specified as zero (default), the resistance is
+    varied uniformly.
+
+    Fault may have its "ON" time specified (defaults to 0). When Time (t)
+    exceeds this value, the fault will be enabled.  Else it is disabled.
+
+    Fault may be designated as Temporary.  That is, after it is enabled, it
+    will disable itself if the fault current drops below the MinAmps value.
+
+    """
+
+    # Name of first bus.
+    bus_1 = None
+
+    # Name of 2nd bus.
+    bus_2 = None
+
+    # Number of phases.
+    phases = 1
+
+    # Resistance, each phase, ohms. Default is 0.0001. Assumed to be Mean value
+    # if gaussian random mode.Max value if uniform mode.  A Fault is actually a
+    # series resistance that defaults to a wye connection to ground on the
+    # second terminal.  You may reconnect the 2nd terminal to achieve whatever
+    # connection.  Use the Gmatrix property to specify an arbitrary conductance
+    # matrix.
+    r = 0.0001
+
+    # Percent standard deviation in resistance to assume for Monte Carlo fault
+    # (MF) solution mode for GAUSSIAN distribution. Default is 0 (no variation
+    # from mean).
+    pct_std_dev = 0
+
+    # Use this to specify a nodal conductance (G) matrix to represent some
+    # arbitrary resistance network. Specify in lower triangle form as usual for
+    # DSS matrices.
+    g_matrix
+
+    # Time (sec) at which the fault is established for time varying
+    # simulations. Default is 0.0 (on at the beginning of the simulation)
+    on_time = 0.0
+
+    # Designate whether the fault is temporary.  For Time-varying simulations,
+    # the fault will be removed if the current through the fault drops below
+    # the MINAMPS criteria.
+    temporary = False
+
+    # Minimum amps that can sustain a temporary fault.
+    min_amps = 5
+
+#------------------------------------------------------------------------------
+#  "Feeder" class:
+#------------------------------------------------------------------------------
+
+class Feeder:
+    """ User cannot instantiate this object.  Feeders are created on the fly
+    when a radial system is specified.  Feeders are created from Energymeters
+    and are given the same name.
+
+    Feeders get created from energy meters if Radial is set to yes and meter
+    zones are already computed.  If Radial=Yes and the meterzones are reset,
+    then the feeders are redefined.  If Radial is subsequently set to NO or a
+    solution mode is used that doesn't utilize feeders, the get currents
+    routines will not do anything.
+
+    Feeders cannot be re-enabled unless the energymeter object allows them to
+    be.
+
+    Feeders are not saved.  This is implicit with the Energymeter saving.
+
+    """
+
+    # Name of harmonic spectrum for this device.
+    spectrum = ""
+
+    # Base Frequency for ratings.
+    base_freq = 60
+
+    # Indicates whether this element is enabled.
+    enabled = True
+
+#------------------------------------------------------------------------------
+#  "GeneratorDispatcher" class:
+#------------------------------------------------------------------------------
+
+class GeneratorDispatcher:
+    """ A GenDispatcher is a control element that is connected to a terminal of
+    another circuit element and sends dispatch kW signals to a set of
+    generators it controls.
+
+    """
+
+    # Full object name of the circuit element, typically a line or transformer,
+    # which the control is monitoring. There is no default; must be specified.
+    element = None
+
+    # Number of the terminal of the circuit element to which the GenDispatcher
+    # control is connected. 1 or 2, typically.  Default is 1. Make sure you
+    # have the direction on the power matching the sign of kWLimit.
+    terminal = 1
+
+    # kW Limit for the monitored element. The generators are dispatched to hold
+    # the power in band.the object class.
+    kw_limit = 8000
+
+    # Bandwidth (kW) of the dead band around the target limit. No dispatch
+    # changes are attempted if the power in the monitored terminal stays within
+    # this band.
+    kw_band = 100
+
+    # Max kvar to be delivered through the element.  Uses same dead band as kW.
+    kvar_limit = 0
+
+    # Array list of generators to be dispatched.  If not specified, all
+    # generators in the circuit are assumed dispatchable.
+    gen_list = []
+
+    # Array of proportional weights corresponding to each generator in the
+    # gen_list. The needed kW to get back to center band is dispatched to each
+    # generator according to these weights. Default is to set all weights to
+    # 1.0.
+    weights = [1.0]
+
+#------------------------------------------------------------------------------
+#  "CurrentSource" class:
+#------------------------------------------------------------------------------
+
+class CurrentSource:
+    """ Ideal current source
+
+    Stick'em on wherever you want as many as you want
+
+    ISource maintains a positive sequence for harmonic scans.  If you want zero
+    sequence, use three single-phase ISource.
+
+    """
+
+    # Name of bus to which source is connected.
+    bus_1 = None
+
+    # Magnitude of current source, each phase, in Amps.
+    amps = 0
+
+    # Phase angle in degrees of first phase. Phase shift between phases is
+    # assumed 120 degrees when number of phases <= 3
+    angle = 0
+
+    # Source frequency.  Defaults to  circuit fundamental frequency.
+    frequency = 60
+
+    # Number of phases. For 3 or less, phase shift is 120 degrees.
+    phases = 3
+
+    # {pos*| zero | none} Maintain specified sequence for harmonic solution.
+    # Otherwise, angle between phases rotates with harmonic.
+    scantype = "pos"
+
+#------------------------------------------------------------------------------
+#  "Reactor" class:
+#------------------------------------------------------------------------------
+
+class Reactor:
+    """ Uses same rules as Capacitor and Fault for connections
+
+    Implemented as a two-terminal constant impedance (Power Delivery Element)
+    Defaults to a Shunt Reactor but can be connected as a two-terminal series
+    reactor
+
+    If Parallel=Yes, then the R and X components are treated as being in
+    parallel.
+
+    Bus2 connection defaults to 0 node of Bus1 (if Bus2 has the default bus
+    connection at the time Bus1 is defined.  Therefore, if only Bus1 is
+    specified, a shunt Reactor results. If delta connected, Bus2 is set to node
+    zero of Bus1 and nothing is returned in the lower half of YPrim - all
+    zeroes.
+
+    If an ungrounded wye is desired, explicitly set Bus2= and set all nodes the
+    same, e.g.
+        Bus1.4.4.4   (uses 4th node of Bus1 as neutral point)
+        or BusNew.1.1.1  (makes a new bus for the neutral point)
+    You must specify the nodes or you will get a series Reactor!
+
+    A series Reactor is specified simply by setting bus2 and declaring the
+    connection to be Wye.  If the connection is specified as delta, nothing
+    will be connected to Bus2. In fact the number of terminals is set to 1.
+
+    Reactance may be specified as:
+
+     1.  kvar and kv ratings at base frequency.  impedance.  Specify kvar as
+         total for all phases. For 1-phase, kV = Reactor coil kV rating.
+         For 2 or 3-phase, kV is line-line three phase. For more than 3 phases,
+         specify kV as actual coil voltage.
+     2.  Series Resistance and Reactance in ohns at base frequency to be used
+         in each phase.  If specified in this manner, the given value is always
+         used whether wye or delta.
+     3.  A R and X  matrices. If conn=wye then 2-terminal through device
+         If conn=delta then 1-terminal. Ohms at base frequency
+         Note that Rmatix may be in parallel with Xmatric (set parallel = Yes)
+
+    """
+
+    # Name of first bus.
+    bus_1 = None
+
+    # Name of 2nd bus. Defaults to all phases connected to first bus, node 0.
+    # (Shunt Wye Connection)Not necessary to specify for delta (LL)
+    # connection
+    bus_2 = None
+
+    # Number of phases.
+    phases = 3
+
+    # Total kvar, all phases.  Evenly divided among phases. Only determines X.
+    # Specify R separately
+    k_var = 1200
+
+    # For 2, 3-phase, kV phase-phase. Otherwise specify actual coil rating.
+    kv = 12.47
+
+    # {wye | delta |LN |LL}  Default is wye, which is equivalent to LN. If
+    # Delta, then only one terminal.
+    conn = "wye"
+
+    # Resistance matrix, lower triangle, ohms at base frequency. Order of the
+    # matrix is the number of phases.
+    r_matrix = []
+
+    # Reactance matrix, lower triangle, ohms at base frequency. Order of the
+    # matrix is the number of phases.
+    x_matrix = []
+
+    # Signifies R and X are to be interpreted as being in parallel.
+    parallel = False
+
+    # Resistance, each phase, ohms.
+    r = 0
+
+    # Reactance, each phase, ohms at base frequency.
+    x = 0
+
+    # Resistance in parallel with R and X (the entire branch). Assumed infinite
+    # if not specified.
+    rp = 0
+
+#------------------------------------------------------------------------------
+#  "Recloser" class:
+#------------------------------------------------------------------------------
+
+class Recloser:
+    """ A Recloser is a control element that is connected to a terminal of a
+    circuit element and controls the switches in the same or another terminal.
+
+    The control is usually placed in the terminal of a line or transformer, but
+    it could be any element
+
+    CktElement to be controlled must already exist.
+
+    """
+
+    # Full object name of the circuit element, typically a line, transformer,
+    # load, or generator, to which the Recloser's PT and/or CT are connected.
+    # This is the "monitored" element. There is no default; must be specified.
+    monitored_obj = None
+
+    # Number of the terminal of the circuit element to which the Recloser is
+    # connected. 1 or 2, typically.
+    monitored_term = 1
+
+    # Name of circuit element switch that the Recloser controls. Specify the
+    # full object name.Defaults to the same as the Monitored element. This is
+    # the "controlled" element.
+    switched_obj = None
+
+    # Number of the terminal of the controlled element in which the switch is
+    # controlled by the Recloser. 1 or 2, typically.
+    switched_term = 1
+
+    # Number of Fast (fuse saving) operations. (See "Shots")
+    n_fast = 1
+
+    # Name of the TCC Curve object that determines the Phase Fast trip. Must
+    # have been previously defined as a TCC_Curve object. Default is "A".
+    # Multiplying the current values in the curve by the "phasetrip" value
+    # gives the actual current.
+    phase_fast = "A"
+
+    # Name of the TCC Curve object that determines the Phase Delayed trip. Must
+    # have been previously defined as a TCC_Curve object. Default is "D".
+    # Multiplying the current values in the curve by the "phasetrip" value
+    # gives the actual current.
+    phase_delayed = "D"
+
+    # Name of the TCC Curve object that determines the Ground Fast trip.  Must
+    # have been previously defined as a TCC_Curve object. Multiplying the
+    # current values in the curve by the "groundtrip" value gives the actual
+    # current.
+    ground_fast = None
+
+    # Name of the TCC Curve object that determines the Ground Delayed trip.
+    # Must have been previously defined as a TCC_Curve object. Multiplying the
+    # current values in the curve by the "groundtrip" value gives the actual
+    # current.
+    ground_delayed = None
+
+    phase_trip = 1.0
+
+    # Multiplier or actual ground amps (3I0) for the ground TCC curve.
+    ground_trip = 1.0
+
+    # Multiplier or actual phase amps for the phase TCC curve.
+    phase_inst = 1.0
+
+    # Actual amps for instantaneous ground trip which is assumed to happen in
+    # 0.01 sec + Delay Time.Default is 0.0, which signifies no inst trip.
+    ground_inst = 0
+
+    # Reset time in sec for Recloser.
+    reset = 15
+
+    # Total Number of fast and delayed shots to lockout. This is one more than
+    # the number of reclose intervals.
+    shots = 4
+
+    # Array of reclose intervals.  Default for Recloser is (0.5, 2.0, 2.0)
+    # seconds. A locked out Recloser must be closed manually (action=close).
+    reclose_intervals = (0.5, 2.0, 2.0)
+
+    # Fixed delay time (sec) added to Recloser trip time. Used to represent
+    # breaker time or any other delay.
+    delay = 0.0
+
+    # {Trip/Open | Close}  Action that overrides the Recloser control.
+    # Simulates manual control on recloser "Trip" or "Open" causes the
+    # controlled element to open and lock out. "Close" causes the controlled
+    # element to close and the Recloser to reset to its first operation.
+    action = "Trip/Open"
+
+    # Time dial for Phase Fast trip curve. Multiplier on time axis of specified
+    # curve.
+    td_ph_fast = 1.0
+
+    # Time dial for Ground Fast trip curve. Multiplier on time axis of
+    # specified curve.
+    td_gr_fast = 1.0
+
+    # Time dial for Phase Delayed trip curve. Multiplier on time axis of
+    # specified curve.
+    td_ph_delayed = 1.0
+
+    # Time dial for Ground Delayed trip curve. Multiplier on time axis of
+    # specified curve.
+    td_gr_delayed = 1.0
+
+#------------------------------------------------------------------------------
+#  "RegControl" class:
+#------------------------------------------------------------------------------
+
+class RegControl:
+    """ A RegControl is a control element that is connected to a terminal of
+    another circuit element that must be a transformer.
+
+    """
+
+    # Name of Transformer element to which the RegControl is connected. Do not
+    # specify the full object name; "Transformer" is assumed for the object
+    # class.
+    transformer = None
+
+    # Number of the winding of the transformer element that the RegControl is
+    # monitoring. 1 or 2, typically.  Side Effect: Sets TAPWINDING property to
+    # the same winding.
+    winding = 1
+
+    # Voltage regulator setting, in VOLTS, for the winding being controlled.
+    # Multiplying this value times the ptratio should yield the voltage across
+    # the WINDING of the controlled transformer.
+    v_reg = 120.0
+
+    # Bandwidth in VOLTS for the controlled bus (see help for ptratio property)
+    band = 3.0
+
+    # Ratio of the PT that converts the controlled winding voltage to the
+    # regulator voltage. If the winding is Wye, the line-to-neutral voltage is
+    # used.  Else, the line-to-line voltage is used.
+    pt_ratio = 60.0
+
+    # Rating, in Amperes, of the primary CT rating for converting the line amps
+    # to control amps.The typical default secondary ampere rating is 5 Amps.
+    ct_prim = 300
+
+    # R setting on the line drop compensator in the regulator, expressed in
+    # VOLTS.
+    r = 0.0
+
+    # X setting on the line drop compensator in the regulator, expressed in
+    # VOLTS.
+    x = 0.0
+
+    # Name of a bus in the system to use as the controlled bus instead of the
+    # bus to which the winding is connected or the R and X line drop
+    # compensator settings.  Do not specify this value if you wish to use the
+    # line drop compensator settings.  Default is null string. Assumes the base
+    # voltage for this bus is the same as the transformer winding base
+    # specified above. Note: This bus WILL BE CREATED by the regulator control
+    # upon SOLVE if not defined by some other device.
+    bus = None
+
+    # Time delay, in seconds, from when the voltage goes out of band to when
+    # the tap changing begins. This is used to determine which regulator
+    # control will act first. You may specify any floating point number to
+    # achieve a model of whatever condition is necessary.
+    delay = 15
+
+    # Indicates whether or not the regulator can be switched to regulate in the
+    # reverse direction. Default is No.Typically applies only to line
+    # regulators and not to LTC on a substation transformer.
+    reversible = False
+
+    # Voltage setting in volts for operation in the reverse direction.
+    rev_v_reg = 120
+
+    # Bandwidth for operating in the reverse direction.
+    rev_band = 3
+
+    # R line drop compensator setting for reverse direction.
+    rev_r = 0.0
+
+    # X line drop compensator setting for reverse direction.
+    rev_x = 0.0
+
+    # Delay in sec between tap changes. This is how long it takes between
+    # changes after the first change.
+    tap_delay = 2
+
+    # Turn this on to capture the progress of the regulator model for each
+    # control iteration.  Creates a separate file for each RegControl named
+    # "REG_name.CSV".
+    debug_trace = False
+
+    # Maximum allowable tap change per control iteration in STATIC control
+    # mode. Set this to 1 to better approximate actual control action. Set this
+    # to 0 to fix the tap in the current position.
+    max_tap_change = 16
+
+    # The time delay is adjusted inversely proportional to the amount the
+    # voltage is outside the band down to 10%.
+    inverse_time = False
+
+    # Winding containing the actual taps, if different than the WINDING
+    # property. Defaults to the same winding as specified by the WINDING
+    # property.
+    tap_winding = 1
+
+#------------------------------------------------------------------------------
+#  "Relay" class:
+#------------------------------------------------------------------------------
+
+class Relay:
+    """ A Relay is a control element that is connected to a terminal of a
+    circuit element and controls the switches in the same or another terminal.
+
+    The control is usually placed in the terminal of a line or transformer, but
+    it could be any element.
+
+    Voltage relay is a definite time relay that operates after the voltage
+    stays out of bounds for a fixed time interval.  It will then reclose a set
+    time after the voltage comes back in the normal range.
+
+    """
+
+    # Full object name of the circuit element, typically a line, transformer,
+    # load, or generator, to which the relay's PT and/or CT are connected. This
+    # is the "monitored" element. There is no default; must be specified.
+    monitored_obj = None
+
+    # Number of the terminal of the circuit element to which the Relay is
+    # connected. 1 or 2, typically.
+    monitored_term = 1
+
+    # Name of circuit element switch that the Relay controls. Specify the full
+    # object name. Defaults to the same as the Monitored element. This is the
+    # "controlled" element.
+    switched_obj = None
+
+    # Number of the terminal of the controlled element in which the switch is
+    # controlled by the Relay. 1 or 2, typically.
+    switched_term = 1
+
+    # One of a legal relay type:
+    #    Current Voltage Reversepower 46 (neg seq current)
+    #    47 (neg seq voltage)
+    #    Generic (generic over/under relay) Default is overcurrent relay
+    #    (Current) Specify the curve and pickup settings appropriate for each
+    #    type. Generic relays monitor PC Element Control variables and trip on
+    #    out of over/under range in definite time.
+    type = "current"
+
+    # Name of the TCC Curve object that determines the phase trip.  Must have
+    # been previously defined as a TCC_Curve object. Default is none (ignored).
+    # For overcurrent relay, multiplying the current values in the curve by the
+    # "phasetrip" value gives the actual current.
+    phase_curve = None
+
+    # Name of the TCC Curve object that determines the ground trip. Must have
+    # been previously defined as a TCC_Curve object. For overcurrent relay,
+    # multiplying the current values in the curve by the "groundtrip" value
+    # gives the actual current.
+    ground_curve = None
+
+    # Multiplier or actual phase amps for the phase TCC curve.
+    phase_trip = 1.0
+
+    # Multiplier or actual ground amps (3I0) for the ground TCC curve.
+    ground_trip = 1.0
+
+    # Time dial for Phase trip curve. Multiplier on time axis of specified
+    # curve.
+    td_phase
+
+    # Time dial for Ground trip curve. Multiplier on time axis of specified
+    # curve.
+    td_ground
+
+    # Actual  amps (Current relay) or kW (reverse power relay) for
+    # instantaneous phase trip which is assumed to happen in 0.01 sec + Delay
+    # Time. Default is 0.0, which signifies no inst trip. Use this value for
+    # specifying the Reverse Power threshold (kW) for reverse power relays.
+    phase_inst = 0.0
+
+    # Actual  amps for instantaneous ground trip which is assumed to happen in
+    # 0.01 sec + Delay Time.Default is 0.0, which signifies no inst trip.
+    ground_inst
+
+    # Reset time in sec for relay.
+    reset = 15
+
+    # Number of shots to lockout. This is one more than the number of reclose
+    # intervals.
+    shots = 4
+
+    # Array of reclose intervals. If none, specify "NONE". Default for
+    # overcurrent relay is (0.5, 2.0, 2.0) seconds. Default for a voltage relay
+    # is (5.0). In a voltage relay, this is  seconds after restoration of
+    # voltage that the reclose occurs. Reverse power relay is one shot to
+    # lockout, so this is ignored.  A locked out relay must be closed manually
+    # (set action=close).
+    reclose_intervals = (0.5, 2.0, 2.0)
+
+    # Trip time delay (sec) for definite time relays. Default is 0.0 for
+    # current and voltage relays.  If >0 then this value is used instead of
+    # curves.  Used exclusively by RevPower, 46 and 47 relays at this release.
+    # Defaults to 0.1 s for these relays.
+    delay = 0.0
+
+    # TCC Curve object to use for overvoltage relay.  Curve is assumed to be
+    # defined with per unit voltage values. Voltage base should be defined for
+    # the relay.
+    overvolt_curve = None
+
+    # TCC Curve object to use for undervoltage relay.  Curve is assumed to be
+    # defined with per unit voltage values. Voltage base should be defined for
+    # the relay.
+    undervolt_curve = None
+
+    # Voltage base (kV) for the relay. Specify line-line for 3 phase devices);
+    # line-neutral for 1-phase devices.  Relay assumes the number of phases of
+    # the monitored element.  Default is 0.0, which results in assuming the
+    # voltage values in the "TCC" curve are specified in actual line-to-neutral
+    # volts.
+    kv_base = 0.0
+
+    # Percent voltage pickup for 47 relay (Neg seq voltage). Specify also base
+    # voltage (kvbase) and delay time value.
+    pct_pickup_47 = 2
+
+    # Base current, Amps, for 46 relay (neg seq current). Used for establishing
+    # pickup and per unit I-squared-t.
+    base_amps_46
+
+    # Percent pickup current for 46 relay (neg seq current). When current
+    # exceeds this value * BaseAmps, I-squared-t calc starts.
+    pct_pickup_46 = 20.0
+
+    # Negative Sequence I-squared-t trip value for 46 relay (neg seq current).
+    # Default is 1 (trips in 1 sec for 1 per unit neg seq current).
+    # Should be 1 to 99.
+    isqt_46 = 1
+
+    # Name of variable in PC Elements being monitored.  Only applies to Generic
+    # relay.
+    variable
+
+    # Trip setting (high value) for Generic relay variable. Relay trips in
+    # definite time if value of variable exceeds this value.
+    overtrip
+
+    # Trip setting (low value) for Generic relay variable.  Relay trips in
+    # definite time if value of variable is less than this value.
+    undertrip
+
+    # Fixed delay time (sec) added to relay time. Designed to represent breaker
+    # time or some other delay after a trip decision is made.Use Delay_Time
+    # property for setting a fixed trip time delay.Added to trip time of
+    # current and voltage relays. Could use in combination with inst trip value
+    # to obtain a definite time overcurrent relay.
+    breaker_time = 0.0
+
+    # {Trip/Open | Close} Action that overrides the relay control. Simulates
+    # manual control on breaker. "Trip" or "Open" causes the controlled element
+    # to open and lock out. "Close" causes the controlled element to close and
+    # the relay to reset to its first operation.
+    action = "Trip/Open"
+
+#------------------------------------------------------------------------------
+#  "Sensor" class:
+#------------------------------------------------------------------------------
+
+class Sensor:
+    """ """
+
+    # Name (Full Object name) of element to which the Sensor is connected.
+    element = None
+
+    # Number of the terminal of the circuit element to which the Sensor is
+    # connected. 1 or 2, typically. For Sensoring states, attach Sensor to
+    # terminal 1.
+    terminal = 1
+
+    # Array of any of { Voltage | Current | kW | kvar } in any order.
+    # Quantities being sensed. Scalar magnitudes only.
+    modes = ["v"]
+
+    # Array of Voltages (kV) measured by the voltage sensor.
+    v = 7.2
+
+    # Array of Currents (amps) measured by the current sensor.
+    i = 0.0
+
+    # Array of Active power (kW) measurements at the sensor.
+    p = 0.0
+
+    # Array of Reactive power (kvar) measurements at the sensor.
+    q = 0.0
+
+    # Array of phases being monitored by this sensor. [1, 2, 3] or [2 3 1] or
+    # [1], etc.  Corresponds to the order that the measurement arrays will be
+    # supplied. Defaults to same number of quantities as phases in the
+    # monitored element.
+    phases = [1, 2, 3]
+
+    # Connection: { wye | delta | LN | LL }. Applies to voltage measurement. If
+    # wye or LN, voltage is assumed measured line-neutral; otherwise,
+    # line-line.
+    conn = "wye"
+
+    # Assumed percent error in the measurement.
+    pct_error = 1
+
+    # Action options: SQERROR: Show square error of the present value of the
+    # monitored terminal quantity vs the sensor value. Actual values - convert
+    # to per unit in calling program.  Value reported in result window/result
+    # variable.
+    action = None
+
+#------------------------------------------------------------------------------
+#  "Spectrum" class:
+#------------------------------------------------------------------------------
+
+class Spectrum:
+    """ Spectrum specified as Harmonic, pct magnitude and angle
+
+    Spectrum is shifted by the fundamental angle and stored in MultArray
+    so that the fundamental is at zero degrees phase shift.
+
+    """
+
+    # Number of frequencies in this spectrum. (See CSVFile)
+    n_harm = 0
+
+    # Array of harmonic values.
+    harmonic = []
+
+    # Array of magnitude values, assumed to be in PERCENT.
+    pct_mag = []
+
+    # Array of phase angle values, degrees.
+    angle = []
+
+    # File of spectrum points with (harmonic, magnitude-percent, angle-degrees)
+    # values, one set of 3 per line, in CSV format. If fewer than NUMHARM
+    # frequencies found in the file, NUMHARM is set to the smaller value.
+    csv_file = ""
 
 # EOF -------------------------------------------------------------------------
