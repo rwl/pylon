@@ -21,7 +21,7 @@
 #  "Line" class:
 #------------------------------------------------------------------------------
 
-class Line:
+class Line(PowerDeliveryElement):
     """ Line impedances are specified in per unit length and are multiplied by
     the length when the primitive Y matrix is computed.
 

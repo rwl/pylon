@@ -15,40 +15,37 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines an ideal current source """
+""" Defines a base class for power delivery elements """
 
 #------------------------------------------------------------------------------
-#  "CurrentSource" class:
+#  "DeliveryElement" class:
 #------------------------------------------------------------------------------
 
-class CurrentSource:
-    """ Ideal current source
-
-    Stick'em on wherever you want as many as you want
-
-    ISource maintains a positive sequence for harmonic scans.  If you want zero
-    sequence, use three single-phase ISource.
+class PowerDeliveryElement(CircuitElement):
+    """ Power delivery elements usually consist of two or more multiphase
+    terminals.  Their basic function is to transport energy from one point to
+    another.  On the power system, the most common power delivery elements are
+    lines and transformers.  Thus, they generally have more than one terminal
+    (capacitors and reactors can be an exception when shunt-connected rather
+    than series-connected).  Power delivery elements are standard electrical
+    elements generally completely defined in the rms steady state by their
+    impedances.
 
     """
 
-    # Name of bus to which source is connected.
-    bus_1 = None
+    # Normal rated current.
+    norm_amps = 400
 
-    # Magnitude of current source, each phase, in Amps.
-    amps = 0
+    # Maximum current.
+    emerg_amps = 600
 
-    # Phase angle in degrees of first phase. Phase shift between phases is
-    # assumed 120 degrees when number of phases <= 3
-    angle = 0
+    # No. of failures per year.
+    fault_rate = 0.1
 
-    # Source frequency.  Defaults to  circuit fundamental frequency.
-    frequency = 60
+    # Percent of failures that become permanent.
+    pct_perm = 20
 
-    # Number of phases. For 3 or less, phase shift is 120 degrees.
-    phases = 3
-
-    # {pos*| zero | none} Maintain specified sequence for harmonic solution.
-    # Otherwise, angle between phases rotates with harmonic.
-    scantype = "pos"
+    # Hours to repair.
+    repair = 3
 
 # EOF -------------------------------------------------------------------------

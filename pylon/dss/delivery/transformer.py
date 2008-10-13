@@ -21,7 +21,7 @@
 #  "Transformer" class:
 #------------------------------------------------------------------------------
 
-class Transformer:
+class Transformer(PowerDeliveryElement):
     """ The Transfomer model is implemented as a multi-terminal (two or more)
     power delivery element.
 

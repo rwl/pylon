@@ -21,7 +21,7 @@
 #  "Generator" class:
 #------------------------------------------------------------------------------
 
-class Generator:
+class Generator(PowerConversionElement):
     """ The generator is essentially a negative load that can be dispatched.
 
     If the dispatch value (DispValue) is 0, the generator always follows the

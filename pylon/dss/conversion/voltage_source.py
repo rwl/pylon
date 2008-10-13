@@ -21,7 +21,7 @@
 #  "VoltageSource" class:
 #------------------------------------------------------------------------------
 
-class VoltageSource:
+class VoltageSource(PowerConversionElement):
     """ This is a special power conversion element.  It is special because
     voltage sources must be identified to initialize the solution with all
     other injection sources set to zero.
