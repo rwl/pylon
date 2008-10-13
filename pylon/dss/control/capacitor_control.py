@@ -21,7 +21,7 @@
 #  "CapacitorControl" class:
 #------------------------------------------------------------------------------
 
-class CapacitorControl:
+class CapacitorControl(ControlElement):
     """ A CapacitorControl is a control element that is connected to a terminal of
     another circuit element and controls a capacitor.  The control is usually
     placed in the terminal of a line or transformer, although a voltage control

@@ -21,7 +21,7 @@
 #  "GeneratorDispatcher" class:
 #------------------------------------------------------------------------------
 
-class GeneratorDispatcher:
+class GeneratorDispatcher(ControlElement):
     """ A GenDispatcher is a control element that is connected to a terminal of
     another circuit element and sends dispatch kW signals to a set of
     generators it controls.

@@ -21,7 +21,7 @@
 #  "Relay" class:
 #------------------------------------------------------------------------------
 
-class Relay:
+class Relay(ControlElement):
     """ A Relay is a control element that is connected to a terminal of a
     circuit element and controls the switches in the same or another terminal.
 
