@@ -21,7 +21,7 @@
 #  "MonitorObject" class:
 #------------------------------------------------------------------------------
 
-class Monitor:
+class Monitor(MeterElement):
     """ A monitor is a circuit element that is connected to a terminal of
     another circuit element.  It records the voltages and currents at that
     terminal as a function of time and can report those values upon demand.

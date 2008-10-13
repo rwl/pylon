@@ -21,7 +21,7 @@
 #  "EnergyMeter" class:
 #------------------------------------------------------------------------------
 
-class EnergyMeter:
+class EnergyMeter(MeterElement):
     """ This class of device accumulates the energy of the voltage and current
     in the terminal of the device to which it is connected.
 

@@ -18,10 +18,16 @@
 """ Defines a bus """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, Instance, List, Int, Float, Bool
+
+#------------------------------------------------------------------------------
 #  "Bus" class:
 #------------------------------------------------------------------------------
 
-class Bus:
+class Bus(HasTraits):
     """ A bus is a circuit element having [1..N] nodes. Buses are the
     connection point for all other circuit elements. The main electrical
     property of a Bus is voltage.  Each node has a voltage with respect to the
@@ -46,40 +52,42 @@ class Bus:
 
     """
 
-    _nodes = []
+    _nodes = List
 
-    _n_nodes = 0
+    _n_nodes = Int
 
-    _allocation = 0
+    _allocation = Int
 
-    _ref_no = []
+    _ref_no = List
 
 
-    v_bus = 115
+    v_bus = Float(115.0, label="Vbus")
 
-    bus_current = []
+    bus_current = List(Float, label="Ibus")
 
-    z_sc
+    z_sc = Float(label="Zsc")
 
-    y_sc
+    y_sc = Float(label="Ysc")
 
     # X coordinate
-    x
+    x = Float(desc="X-coordinate", label="x")
 
     # Y coordinate
-    y
+    y = Float(desc="Y-coordinate", label="y")
 
     # Base kV for each node to ground
-    kv_base = 0
+    kv_base = Float(
+        0.0, desc="Base kV for each node to ground", label="kV base"
+    )
 
     # Are the coordinates defines?
-    coords_defined = False
+    coords_defined = Bool(False)
 
-    bus_checked = False
+    bus_checked = Bool(False)
 
-    keep = True
+    keep = Bool(True)
 
     # Flag for general use in bus searches
-    is_radial_bus = False
+    is_radial_bus = Bool(False)
 
 # EOF -------------------------------------------------------------------------

@@ -21,7 +21,7 @@
 #  "Sensor" class:
 #------------------------------------------------------------------------------
 
-class Sensor:
+class Sensor(MeterElement):
     """ """
 
     # Name (Full Object name) of element to which the Sensor is connected.
