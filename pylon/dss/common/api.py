@@ -19,7 +19,7 @@
 Use this module for importing Pylon names into your namespace.
 
 For example:
-    from pylon.dss.delivery.api import Line, Transformer
+    from pylon.dss.common.api import Bus
 
 """
 
@@ -27,18 +27,18 @@ For example:
 #  Imports:
 #------------------------------------------------------------------------------
 
-from power_delivery_element import PowerDeliveryElement
+from bus import Bus
 
-from capacitor import Capacitor
+from circuit_element import CircuitElement
 
-from fault import Fault
+from circuit import Circuit
 
-from fuse import Fuse
+from collection import Collection
 
-from line import Line
+from conductor import Conductor
 
-from reactor import Reactor
+from feeder import Feeder
 
-from transformer import Transformer
+from terminal import Terminal
 
 # EOF -------------------------------------------------------------------------

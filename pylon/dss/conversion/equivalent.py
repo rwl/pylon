@@ -18,7 +18,15 @@
 """ Defines a Thevinen equivalent short circuit """
 
 #------------------------------------------------------------------------------
-#  "Eqivalent" class:
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Enum
+
+from pylon.common.bus import Bus
+
+#------------------------------------------------------------------------------
+#  "Equivalent" class:
 #------------------------------------------------------------------------------
 
 class Equivalent(PowerConversionElement):
@@ -30,37 +38,37 @@ class Equivalent(PowerConversionElement):
     """
 
     # Number of terminals. Set this BEFORE defining matrices.
-    terminals = 1
+    terminals = Int(1)
 
     # Array of Bus Names to which equivalent source is connected.
-    buses = []
+    buses = List(Instance(Bus))
 
     # Base Source kV, usually L-L unless you are making a positive-sequence
     # model in which case, it will be L-N.
-    base_kv = 115
+    base_kv = Float(115.0)
 
     # Per unit of the base voltage that the source is actually operating at.
-    pu = 1
+    pu = Float(1.0, desc="Per unit of the base voltage")
 
     # Phase angle in degrees of first phase.
-    angle = 0
+    angle = Float(0.0, desc="Phase angle in degrees of first phase")
 
     # Source frequency.
-    frequency = 60
+    frequency = Float(60.0)
 
     # Number of phases.
-    phases = 3
+    phases = Int(3)
 
     # Positive-sequence resistance matrix, lower triangle.
-    r1 = 1.65
+    r1 = Float(1.65)
 
     # Positive-sequence reactance matrix, lower triangle.
-    x1 = 6.6
+    x1 = Float(6.6)
 
     # Zero-sequence resistance matrix, lower triangle.
-    r0 = 1.9
+    r0 = Float(1.9)
 
     # Zero-sequence reactance matrix, lower triangle.
-    x0 = 5.7
+    x0 = Float(5.7)
 
 # EOF -------------------------------------------------------------------------
