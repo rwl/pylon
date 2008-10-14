@@ -18,13 +18,19 @@
 """ Defines an ideal current source """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Enum
+
+from pylon.common.bus import Bus
+
+#------------------------------------------------------------------------------
 #  "CurrentSource" class:
 #------------------------------------------------------------------------------
 
 class CurrentSource(PowerConversionElement):
-    """ Ideal current source
-
-    Stick'em on wherever you want as many as you want
+    """ Ideal current source.
 
     ISource maintains a positive sequence for harmonic scans.  If you want zero
     sequence, use three single-phase ISource.
@@ -32,23 +38,23 @@ class CurrentSource(PowerConversionElement):
     """
 
     # Name of bus to which source is connected.
-    bus_1 = None
+    bus_1 = Instance(Bus)
 
     # Magnitude of current source, each phase, in Amps.
-    amps = 0
+    amps = Float(0.0, desc="Current source magnitude")
 
     # Phase angle in degrees of first phase. Phase shift between phases is
     # assumed 120 degrees when number of phases <= 3
-    angle = 0
+    angle = Float(0.0, desc="Phase angle of the first phase")
 
     # Source frequency.  Defaults to  circuit fundamental frequency.
-    frequency = 60
+    frequency = Float(60.0)
 
     # Number of phases. For 3 or less, phase shift is 120 degrees.
-    phases = 3
+    phases = Int(3)
 
     # {pos*| zero | none} Maintain specified sequence for harmonic solution.
     # Otherwise, angle between phases rotates with harmonic.
-    scantype = "pos"
+    scantype = Enum("Positive", "Zero", "None")
 
 # EOF -------------------------------------------------------------------------

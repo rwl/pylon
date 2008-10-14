@@ -18,6 +18,14 @@
 """ Defines the load element """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Enum, Trait, Str
+
+from pylon.common.bus import Bus
+
+#------------------------------------------------------------------------------
 #  "Load" class:
 #------------------------------------------------------------------------------
 
@@ -67,16 +75,16 @@ class Load(PowerConversionElement):
     # general, have one more conductor than phases.  1-phase Delta has 2
     # conductors; 2-phase has 3.  The remaining Delta, or line-line,
     # connections have the same number of conductors as phases.
-    bus_1 = None
+    bus_1 = Instance(Bus, allow_none=False)
 
     # Number of Phases, this load.  Load is evenly divided among phases.
-    n_phases = 3
+    n_phases = Int(3, desc="Load is evenly divided among phases")
 
     # Nominal rated (1.0 per unit) voltage, kV, for load. For 2- and 3-phase
     # loads, specify phase-phase kV.  Otherwise, specify actual kV across each
     # branch of the load.  If wye (star), specify phase-neutral kV.  If delta
     # or phase-phase connected, specify phase-phase kV.
-    kv = 12.47
+    kv = Float(12.47, desc="Nominal rated voltage, kV, for load")
 
     # Total base kW for the load.  Normally, you would enter the maximum kW for
     # the load for the first year and allow it to be adjusted by the load
@@ -85,11 +93,11 @@ class Load(PowerConversionElement):
     #    kW, PF
     #    kW, kvar
     #    kVA, PF
-    kw = 10
+    kw = Float(10.0, desc="Total base kW for the load")
 
     # Load power factor.  Enter negative for leading powerfactor (when kW and
     # kvar have opposite signs.)
-    pf = 0.88
+    pf = Float(0.88, desc="Load power factor")
 
     # Integer code for the model to use for load variation with voltage.
     # Valid values are:
@@ -101,48 +109,54 @@ class Load(PowerConversionElement):
     # 6:Const P, Fixed Q
     # 7:Const P, Fixed Impedance Q
     # For Types 6 and 7, only the P is modified by load multipliers.
-    model = 1
+    model = Trait(
+        "PQ", {
+            "PQ": 1, "Const Y": 2, "Motor": 3, "Linear P, Quad Q": 4,
+            "Const I": 5, "Const P, Fixed Q": 6, "Const P, Fixed Z": 7
+        },
+        desc="Model to use for load variation with voltage"
+    )
 
     # Load shape to use for yearly simulations.  Must be previously defined
     # as a Loadshape object. Defaults to Daily load shape when Daily is
     # defined.  The daily load shape is repeated in this case. Otherwise, the
     # default is no variation.
-    yearly = ""
+    yearly = Str(desc="Load shape to use for yearly simulations")
 
     # Load shape to use for daily simulations.  Must be previously defined
     # as a Loadshape object of 24 hrs, typically. Default is no variation
     # (constant) if not defined. Side effect: Sets Yearly load shape if not
     # already defined.
-    daily = ""
+    daily = Str(desc="Load shape to use for daily simulations")
 
     # Load shape to use for duty cycle simulations.  Must be previously defined
     # as a Loadshape object.  Typically would have time intervals less than
     # 1 hr. Designate the number of points to solve using the Set Number=xxxx
     # command. If there are fewer points in the actual shape, the shape is
     # assumed to repeat. Defaults to Daily curve If not specified.
-    duty = ""
+    duty = Str(desc="Load shape to use for duty cycle simulations")
 
     # Characteristic  to use for growth factors by years.  Must be previously
     # defined as a Growthshape object. Defaults to circuit default growth
     # factor
-    growth = ""
+    growth = Str(desc="Characteristic to use for growth factors by years")
 
-    # {wye or LN | delta or LL}.
-    conn = "wye"
+    # Connection type
+    conn = Enum("Wye", "LN", "Delta", "LL", desc="Connection type")
 
     # Specify the base kvar for specifying load as kW & kvar.  Assumes kW has
     # been already defined.  Alternative to specifying the power factor.  Side
     # effect: the power factor and kVA is altered to agree.
-    kvar = 5
+    kvar = Float(5.0, desc="Specify the base kvar for specifying load as PQ")
 
     # Neutral resistance of wye (star)-connected load in actual ohms. If
     # entered as a negative value, the neutral is assumed to be open, or
     # floating.
-    r_neut = -1
+    r_neut = Float(-1.0, desc="Neutral resistance of wye/star-connected load")
 
     # Neutral reactance of wye(star)-connected load in actual ohms.  May be
     # + or -.
-    x_neut = 0
+    x_neut = Float(0.0, desc="Neutral reactance of wye/star-connected load")
 
     # {Variable | Fixed | Exempt}.  Default is variable. If Fixed, no load
     # multipliers apply;  however, growth multipliers do apply.  All
@@ -150,20 +164,20 @@ class Load(PowerConversionElement):
     # the global load multiplier, such as in load duration curves, etc.  Daily
     # multipliers do apply, so this is a good way to represent industrial load
     # that stays the same for the period study.
-    status = "variable"
+    status = Enum("Variable", "Fixed", "Exempt")
 
     # An arbitrary integer number representing the class of load so that load
     # values may be segregated by load value. Default is 1; not used
     # internally.
-    klass = 1
+    klass = Int(1)
 
     # Minimum per unit voltage for which the MODEL is assumed to apply.
     # Below this value, the load model reverts to a constant impedance model.
-    v_min_pu = 0.95
+    v_min_pu = Float(0.95, desc="Minimum per unit voltage")
 
     # Maximum per unit voltage for which the MODEL is assumed to apply.
     # Above this value, the load model reverts to a constant impedance model.
-    v_max_pu = 1.05
+    v_max_pu = Float(1.05, desc="Maximum per unit voltage")
 
     # Minimum per unit voltage for load EEN evaluations, Normal limit.
     # Default = 0, which defaults to system "vminnorm" property (see Set
@@ -171,7 +185,7 @@ class Load(PowerConversionElement):
     # overrides the system specification. This allows you to have different
     # criteria for different loads. Set to zero to revert to the default system
     # value.
-    v_min_norm = 0.0
+    v_min_norm = Float(0.0, desc="Normal limit")
 
     # Minimum per unit voltage for load UE evaluations, Emergency limit.
     # Default = 0, which defaults to system "vminemerg" property (see Set
@@ -179,39 +193,46 @@ class Load(PowerConversionElement):
     # overrides the system specification. This allows you to have different
     # criteria for different loads.  Set to zero to revert to the default
     # system value.
-    v_min_emerg = 0.0
+    v_min_emerg = Float(0.0, desc="Emergency limit")
 
     # Rated kVA of service transformer for allocating loads based on connected
     # kVA at a bus. Side effect:  kW, PF, and kvar are modified.
-    xf_kva = 0.0
+    xf_kva = Float(0.0, desc="Rated kVA of service transformer")
 
     # Allocation factor for allocating loads based on connected kVA at a bus.
     # Side effect:  kW, PF, and kvar are modified by multiplying this factor
     # times the XFKVA (if > 0).
-    allocation_factor = 0.5
+    allocation_factor = Float(0.5)
 
     # Specify base Load in kVA (and power factor).  This is intended to be used
     # in combination with the power factor (PF) to determine the actual load.
-    kva = 11.3636
+    kva = Float(11.3636, desc="Specify base Load in kVA")
 
     # Percent mean value for load to use for monte carlo studies if no
     # loadshape is assigned to this load.
-    pct_mean = 50
+    pct_mean = Float(50.0, desc="Percent mean value for Monte-Carlo studies")
 
     # Percent Std deviation value for load to use for monte carlo studies if no
     # loadshape is assigned to this load.
-    pct_std_dev = 10
+    pct_std_dev = Float(
+        10.0, desc="Percent Std deviation value for Monte-Carlo studies"
+    )
 
     # Percent reduction in active power (watts) per 1% reduction in voltage
     # from 100% rated. Typical values range from 0.4 to 0.8. Applies to Model=4
     # only. Intended to represent conservation voltage reduction or voltage
     # optimization measures.
-    cvr_watts = 1
+    cvr_watts = Float(
+        1.0, desc="Percent reduction in power per 1% reduction in voltage"
+    )
 
     # Percent reduction in reactive power (vars) per 1% reduction in voltage
     # from 100% rated. Typical values range from 2 to 3. Applies to Model=4
     # only. Intended to represent conservation voltage reduction or voltage
     # optimization measures.
-    cvr_vars = 2
+    cvr_vars = Float(
+        2.0,
+        desc="Percent reduction in reactive power per 1% reduction in voltage"
+    )
 
 # EOF -------------------------------------------------------------------------

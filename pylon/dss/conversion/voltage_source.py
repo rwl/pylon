@@ -18,6 +18,14 @@
 """ Defines a voltage source """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Enum
+
+from pylon.common.bus import Bus
+
+#------------------------------------------------------------------------------
 #  "VoltageSource" class:
 #------------------------------------------------------------------------------
 
@@ -35,72 +43,72 @@ class VoltageSource(PowerConversionElement):
     # Name of bus to which the source's one terminal is connected.  Remember
     # to specify the node order if the terminals are connected in some unusual
     # manner.
-    bus_1 = None
+    bus_1 = Instance(Bus)
 
     # Base Source kV, usually L-L unless you are making a positive-sequence
     # model in which case, it will be L-N.
-    base_kv = 115
+    base_kv = Float(115.0)
 
     # Per unit of the base voltage that the source is actually operating at.
     # Assumed balanced for all phases.
-    pu = 1
+    pu = Float(1.0, desc="Per unit of the base voltage")
 
     # Phase angle in degrees of first phase.
-    angle = 0
+    angle = Float(0.0, desc="Phase angle of the first phase")
 
     # Source frequency.
-    frequency = 60
+    frequency = Float(60.0)
 
     # Number of phases.
-    phases = 3
+    phases = Int(3)
 
     # MVA Short circuit, 3-phase fault.  Z1 is determined by squaring the base
     # kv and dividing by this value.  For single-phase source, this value is
     # not used.
-    mva_sc3 = 2000
+    mva_sc3 = Float(2000.0, desc="MVA Short circuit, 3-phase fault")
 
     # MVA Short Circuit, 1-phase fault.  The "single-phase impedance", Zs, is
     # determined by squaring the base kV and dividing by this value.  Then Z0
     # is determined by Z0 = 3Zs - 2Z1.  For 1-phase sources, Zs is used
     # directly. Use x0_r0 to define X/R ratio for 1-phase source.
-    mva_sc1 = 2100
+    mva_sc1 = Float(2100, desc="MVA Short Circuit, 1-phase fault")
 
     # Positive-sequence X/R ratio.
-    x1_r1 = 4
+    x1_r1 = Float(4.0, desc="Positive-sequence X/R ratio")
 
     # Zero-sequence X/R ratio.
-    x0_r0 = 3
+    x0_r0 = Float(3.0, desc="Zero-sequence X/R ratio")
 
     # Alternate method of defining the source impedance. 3-phase short circuit
     # current, amps.
-    i_sc3 = 10000
+    i_sc3 = Float(10000.0, desc="3-phase short circuit (alt)")
 
     # Alternate method of defining the source impedance. Single-phase short
     # circuit current, amps.
-    i_sc1 = 10500
+    i_sc1 = Float(10500.0, desc="Single-phase short (alt)")
 
     # Alternate method of defining the source impedance. Positive-sequence
     # resistance, ohms.
-    r1 = 1.65
+    r1 = Float(1.65, desc="Positive-sequence resistance")
 
     # Alternate method of defining the source impedance. Positive-sequence
     # reactance, ohms.
-    x1 = 6.6
+    x1 = Float(6.6, desc="Positive-sequence reactance")
 
     # Alternate method of defining the source impedance. Zero-sequence
     # resistance, ohms.
-    r0 = 1.9
+    r0 = Float(1.9, desc="Zero-sequence resistance")
 
     # Alternate method of defining the source impedance. Zero-sequence
     # reactance, ohms.
-    x0 = 5.7
+    x0 = Float(5.7, desc="Zero-sequence reactance")
 
     # Base Frequency for impedance specifications.
-    base_freq = 60
+    base_freq = Float(60.0, desc="Base frequency for impedance specifications")
 
     # {pos*| zero | none} Maintain specified sequence for harmonic solution.
     # Default is positive sequence. Otherwise, angle between phases rotates
     # with harmonic.
-    scan_type = "Pos"
+    scan_type = Enum("Positive", "Zero", "None")
 
 # EOF -------------------------------------------------------------------------

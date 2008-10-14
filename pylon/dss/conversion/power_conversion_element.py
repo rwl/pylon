@@ -18,6 +18,12 @@
 """ Defines a base class for all power conversion elements """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, Instance, Float, Str
+
+#------------------------------------------------------------------------------
 #  "ConversionElement" class:
 #------------------------------------------------------------------------------
 
@@ -47,11 +53,11 @@ class PowerConversionElement(CircuitElement):
     """
 
     # Name of harmonic spectrum for this device.
-    spectrum = ""
+    spectrum = Str(desc="Harmonic spectrum name")
 
     # The harmonic spectrum for this device.
-    spectrum_obj = None
+    spectrum_obj = Instance(HasTraits, desc="Harmonic spectrum")
 
-    inj_current = 0.0
+    inj_current = Float(0.0)
 
 # EOF -------------------------------------------------------------------------
