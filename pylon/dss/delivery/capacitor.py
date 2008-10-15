@@ -18,6 +18,17 @@
 """ Defines a capacitor """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import \
+    Instance, List, Int, Float, Enum, Either, Array
+
+from pylon.dss.common.bus import Bus
+
+from power_delivery_element import PowerDeliveryElement
+
+#------------------------------------------------------------------------------
 #  "Capacitor" class:
 #------------------------------------------------------------------------------
 
@@ -43,12 +54,13 @@ class Capacitor(PowerDeliveryElement):
 
     Capacitance may be specified as:
 
-     1.  kvar and kv ratings at base frequency.  impedance.  Specify kvar as total for
-         all phases (all cans assumed equal). For 1-phase, kV = capacitor can kV rating.
-         For 2 or 3-phase, kV is line-line three phase. For more than 3 phases, specify
-         kV as actual can voltage.
-     2.  Capacitance in uF to be used in each phase.  If specified in this manner,
-         the given value is always used whether wye or delta.
+     1.  kvar and kv ratings at base frequency.  impedance.  Specify kvar as
+         total for
+         all phases (all cans assumed equal). For 1-phase, kV = capacitor can
+         kV rating. For 2 or 3-phase, kV is line-line three phase. For more
+         than 3 phases, specify kV as actual can voltage.
+     2.  Capacitance in uF to be used in each phase.  If specified in this
+         manner, the given value is always used whether wye or delta.
      3.  A nodal C matrix (like a nodal admittance matrix).
          If conn=wye then 2-terminal through device
          If conn=delta then 1-terminal.
@@ -58,21 +70,21 @@ class Capacitor(PowerDeliveryElement):
 
     # Name of first bus. Examples:
     #     bus1=busname bus1=busname.1.2.3
-    bus_1 = None
+    bus_1 = Instance(Bus)
 
     # Name of 2nd bus. Defaults to all phases connected to first bus, node 0.
     # (Shunt Wye Connection) Not necessary to specify for delta (LL) connection
-    bus_2 = None
+    bus_2 = Instance(Bus)
 
     # Number of phases.
-    phases = 3
+    phases = Int(3)
 
-    # Total kvar, if one step, or ARRAY of kvar ratings for each step.  Evenly
+    # Total kvar, if one step, or ARRAY of kvar ratings for each step. Evenly
     # divided among phases. See rules for NUMSTEPS.
-    kvar = 1200
+    kvar = Either(Float(1200.0), List(Float))
 
     # For 2, 3-phase, kV phase-phase. Otherwise specify actual can rating.
-    kv = 12.47
+    kv = Float(12.47)
 
     # {wye | delta |LN |LL}  Default is wye, which is equivalent to LN
     conn = "wye"
@@ -80,22 +92,22 @@ class Capacitor(PowerDeliveryElement):
     # Nodal cap. matrix, lower triangle, microfarads, of the following form:
     #     cmatrix="c11 | -c21 c22 | -c31 -c32 c33"
     # All steps are assumed the same if this property is used.
-    cmatrix = ""
+    cmatrix = Array(desc="Nodal capacitance matrix")
 
     # ARRAY of Capacitance, each phase, for each step, microfarads.
     # See Rules for NumSteps.
-    cuf = ""
+    cuf = List(Float, desc="Capacitance for each phase")
 
     # ARRAY of series resistance in each phase (line), ohms.
-    r = 0
+    r = List(Float, desc="Series resistance in each phase")
 
     # ARRAY of series inductive reactance(s) in each phase (line) for filter,
     # ohms at base frequency. Use this OR "h" property to define filter.
-    xl = 0
+    xl = List(Float, desc="Series inductive reactance in each phase")
 
     # ARRAY of harmonics to which each step is tuned. Zero is interpreted as
     # meaning zero reactance (no filter).
-    harm = 0
+    harm = List(Float, desc="Harmonics to which each step is tuned")
 
     # Number of steps in this capacitor bank. Default = 1. Forces reallocation
     # of the capacitance, reactor, and states array.  Rules:
@@ -107,11 +119,11 @@ class Capacitor(PowerDeliveryElement):
     # the same harmonic.
     # If this property was previously >1, the arrays are reallocated, but no
     # values are altered. You must SUBSEQUENTLY assign all array properties.
-    n_steps = 1
+    n_steps = Int(1, desc="Number of steps in this capacitor bank")
 
     # ARRAY of integers {1|0} states representing the state of each step
     # (on|off). Defaults to 1 when reallocated (on).
     # Capcontrol will modify this array as it turns steps on or off.
-    states = 1
+    states = List(Bool)
 
 # EOF -------------------------------------------------------------------------

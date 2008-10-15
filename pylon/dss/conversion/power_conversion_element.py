@@ -23,6 +23,8 @@
 
 from enthought.traits.api import HasTraits, Instance, Float, Str
 
+from pylon.dss.common.circuit_element import CircuitElement
+
 #------------------------------------------------------------------------------
 #  "ConversionElement" class:
 #------------------------------------------------------------------------------

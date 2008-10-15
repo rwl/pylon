@@ -18,10 +18,16 @@
 """ Defines the GrowthShape object """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, List, Int, Float, File
+
+#------------------------------------------------------------------------------
 #  "GrowthShape" class:
 #------------------------------------------------------------------------------
 
-class GrowthShape:
+class GrowthShape(HasTraits):
     """ The GrowthShape object is a general DSS object used by all circuits
     as a reference for obtaining yearly growth curves.
 
@@ -46,7 +52,7 @@ class GrowthShape:
     """
 
     # Number of points to expect in subsequent vector.
-    n_pts = 0
+    n_pts = Int(desc="Number of points in subsequent vector")
 
     # Array of year values, or a text file spec, corresponding to the
     # multipliers.  Enter only those years where the growth changes.  May be
@@ -56,7 +62,7 @@ class GrowthShape:
     # for all base year analyses.  You may also use the syntax:
     # year=(file=filename.ext) in which the array values are entered one per
     # line in the text file referenced.
-    year = ""
+    year = List(Float, desc="Array of year values")
 
     # Array of growth multiplier values, or a text file spec, corresponding to
     # the year values.  Enter the multiplier by which you would multiply the
@@ -70,18 +76,22 @@ class GrowthShape:
     # (year, multiplier) points from files just like the LoadShape objects.
     # You may also use the syntax: mult=(file=filename.ext) in which the array
     # values are entered one per line in the text file referenced.
-    mult = ""
+    mult = List(Float, desc="Array of growth multiplier values")
 
     # Switch input of growth curve data to a csv file containing (year, mult)
     # points, one per line.
-    csv_file = ""
+    csv_file = File(desc="CSV file containing (year, mult) points")
 
     # Switch input of growth curve data to a binary file of singles containing
     # (year, mult) points, packed one after another.
-    sng_file = ""
+    sng_file = File(
+        desc="binary file of singles containing (year, mult) points"
+    )
 
     # Switch input of growth curve data to a binary file of doubles containing
     # (year, mult) points, packed one after another.
-    dbl_file = ""
+    dbl_file = File(
+        desc="binary file of doubles containing (year, mult) points"
+    )
 
 # EOF -------------------------------------------------------------------------
