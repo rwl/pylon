@@ -18,6 +18,14 @@
 """ Defines a reactor """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, Int, Float, Enum, Array, Bool
+
+from power_delivery_element import PowerDeliveryElement
+
+#------------------------------------------------------------------------------
 #  "Reactor" class:
 #------------------------------------------------------------------------------
 
@@ -63,46 +71,46 @@ class Reactor(PowerDeliveryElement):
     """
 
     # Name of first bus.
-    bus_1 = None
+    bus_1 = Instance(Bus)
 
     # Name of 2nd bus. Defaults to all phases connected to first bus, node 0.
     # (Shunt Wye Connection)Not necessary to specify for delta (LL)
     # connection
-    bus_2 = None
+    bus_2 = Instance(Bus)
 
     # Number of phases.
-    phases = 3
+    phases = Int(3)
 
     # Total kvar, all phases.  Evenly divided among phases. Only determines X.
     # Specify R separately
-    k_var = 1200
+    k_var = Float(1200.0)
 
     # For 2, 3-phase, kV phase-phase. Otherwise specify actual coil rating.
-    kv = 12.47
+    kv = Float(12.47, desc="For 2, 3-phase, kV phase-phase")
 
     # {wye | delta |LN |LL}  Default is wye, which is equivalent to LN. If
     # Delta, then only one terminal.
-    conn = "wye"
+    conn = Enum("Wye", "Delta", "LN", "LL")
 
     # Resistance matrix, lower triangle, ohms at base frequency. Order of the
     # matrix is the number of phases.
-    r_matrix = []
+    r_matrix = Array
 
     # Reactance matrix, lower triangle, ohms at base frequency. Order of the
     # matrix is the number of phases.
-    x_matrix = []
+    x_matrix = Array
 
     # Signifies R and X are to be interpreted as being in parallel.
-    parallel = False
+    parallel = Bool(False, desc="R and X in parallel")
 
     # Resistance, each phase, ohms.
-    r = 0
+    r = Float(0.0)
 
     # Reactance, each phase, ohms at base frequency.
-    x = 0
+    x = Float(0.0)
 
     # Resistance in parallel with R and X (the entire branch). Assumed infinite
     # if not specified.
-    rp = 0
+    rp = Float(0.0, desc="Resistance in parallel with R and X")
 
 # EOF -------------------------------------------------------------------------

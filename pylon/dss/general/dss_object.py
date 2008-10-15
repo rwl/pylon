@@ -18,27 +18,36 @@
 """ Defines a base class for DSS objects """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import \
+    HasTraits, Instance, List, Int, Float, Bool, Str
+
+from pylon.dss.common.collection import Collection
+
+#------------------------------------------------------------------------------
 #  "DSSObject" class:
 #------------------------------------------------------------------------------
 
-class DSSObject:
+class DSSObject(HasTraits):
     """ A base class for DSS objects """
 
     # PD, PC, Monitor, CondCode, etc.
-    dss_obj_type = 0
+    dss_obj_type = Int(0)
 
-    dss_class_name = ""
+    dss_class_name = Str
 
-    parent_class = Collection
+    parent_class = Instance(Collection)
 
     # Index into the class collection list
-    class_index = 0
+    class_index = Int(0)
 
-    dirty = False
+    dirty = Bool(False)
 
     # General purpose Flag for each object - don't assume inited
-    flag = False
+    flag = Bool(False)
 
-    prop_sequence = []
+    prop_sequence = List(Float)
 
 # EOF -------------------------------------------------------------------------

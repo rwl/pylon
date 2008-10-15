@@ -18,6 +18,14 @@
 """ Defines a base class for power delivery elements """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Float, Int
+
+from pylon.dss.common.circuit_element import CircuitElement
+
+#------------------------------------------------------------------------------
 #  "DeliveryElement" class:
 #------------------------------------------------------------------------------
 
@@ -34,18 +42,18 @@ class PowerDeliveryElement(CircuitElement):
     """
 
     # Normal rated current.
-    norm_amps = 400
+    norm_amps = Float(400.0)
 
     # Maximum current.
-    emerg_amps = 600
+    emerg_amps = Float(600.0, desc="Maximum current")
 
     # No. of failures per year.
-    fault_rate = 0.1
+    fault_rate = Float(0.1, desc="Failures per year")
 
     # Percent of failures that become permanent.
-    pct_perm = 20
+    pct_perm = Float(20.0, desc="Failures that become permanent")
 
     # Hours to repair.
-    repair = 3
+    repair = Int(3, desc="Hours to repair")
 
 # EOF -------------------------------------------------------------------------

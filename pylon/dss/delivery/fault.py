@@ -18,6 +18,16 @@
 """ Defines a fault """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Enum, Array, Bool
+
+from pylon.dss.common.bus import Bus
+
+from power_delivery_element import PowerDeliveryElement
+
+#------------------------------------------------------------------------------
 #  "Fault" class:
 #------------------------------------------------------------------------------
 
@@ -45,13 +55,13 @@ class Fault(PowerDeliveryElement):
     """
 
     # Name of first bus.
-    bus_1 = None
+    bus_1 = Instance(Bus)
 
     # Name of 2nd bus.
-    bus_2 = None
+    bus_2 = Instance(Bus)
 
     # Number of phases.
-    phases = 1
+    phases = Int(1)
 
     # Resistance, each phase, ohms. Default is 0.0001. Assumed to be Mean value
     # if gaussian random mode.Max value if uniform mode.  A Fault is actually a
@@ -59,28 +69,30 @@ class Fault(PowerDeliveryElement):
     # second terminal.  You may reconnect the 2nd terminal to achieve whatever
     # connection.  Use the Gmatrix property to specify an arbitrary conductance
     # matrix.
-    r = 0.0001
+    r = Float(0.0001)
 
     # Percent standard deviation in resistance to assume for Monte Carlo fault
     # (MF) solution mode for GAUSSIAN distribution. Default is 0 (no variation
     # from mean).
-    pct_std_dev = 0
+    pct_std_dev = Float(0.0, desc="Percent standard deviation in resistance")
 
     # Use this to specify a nodal conductance (G) matrix to represent some
     # arbitrary resistance network. Specify in lower triangle form as usual for
     # DSS matrices.
-    g_matrix
+    g_matrix = Array(desc="Nodal conductance matrix")
 
     # Time (sec) at which the fault is established for time varying
     # simulations. Default is 0.0 (on at the beginning of the simulation)
-    on_time = 0.0
+    on_time = Float(0.0, desc="Time at which the fault is established")
 
     # Designate whether the fault is temporary.  For Time-varying simulations,
     # the fault will be removed if the current through the fault drops below
     # the MINAMPS criteria.
-    temporary = False
+    temporary = Bool(False)
 
     # Minimum amps that can sustain a temporary fault.
-    min_amps = 5
+    min_amps = Float(
+        5.0, desc="Minimum amps that can sustain a temporary fault"
+    )
 
 # EOF -------------------------------------------------------------------------

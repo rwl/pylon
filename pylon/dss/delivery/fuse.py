@@ -18,6 +18,16 @@
 """ Defines a fuse """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Enum, Array, Str
+
+from pylon.dss.control.control_element import ControlElement
+
+from pylon.dss.common.circuit_element import CircuitElement
+
+#------------------------------------------------------------------------------
 #  "Fuse" class:
 #------------------------------------------------------------------------------
 
@@ -33,39 +43,41 @@ class Fuse(ControlElement):
     # Full object name of the circuit element, typically a line, transformer,
     # load, or generator, to which the Fuse is connected. This is the
     # "monitored" element. There is no default; must be specified.
-    monitored_obj = None
+    monitored_obj = Instance(CircuitElement)
 
     # Number of the terminal of the circuit element to which the Fuse is
     # connected.  1 or 2, typically.
-    monitor_term = 1
+    monitor_term = Int(1)
 
     # Name of circuit element switch that the Fuse controls. Specify the full
     # object name. Defaults to the same as the Monitored element. This is the
     # "controlled" element.
-    switched_obj = None
+    switched_obj = Instance(CircuitElement)
 
     # Number of the terminal of the controlled element in which the switch is
     # controlled by the Fuse. 1 or 2, typically.  Assumes all phases of the
     # element have a fuse of this type.
-    switched_term = 1
+    switched_term = Int(1)
 
     # Name of the TCC Curve object that determines the fuse blowing.  Must have
     # been previously defined as a TCC_Curve object. Default is "Tlink".
     # Multiplying the current values in the curve by the "RatedCurrent" value
     # gives the actual current.
-    fuse_curve = "Tlink"
+    fuse_curve = Str(
+        "Tlink", desc="TCC Curve object that determines the fuse blowing"
+    )
 
     # Multiplier or actual phase amps for the phase TCC curve.
-    rated_current = 1.0
+    rated_current = Float(1.0)
 
     # Fixed delay time (sec) added to Fuse blowing time determined from the TCC
     # curve. Used to represent fuse clearing time or any other delay.
-    delay = 0
+    delay = Float(0.0)
 
     # {Trip/Open | Close}  Action that overrides the Fuse control. Simulates
     # manual control on Fuse "Trip" or "Open" causes the controlled element to
     # open and lock out. "Close" causes the controlled element to close and the
     # Fuse to reset.
-    action = "Trip/Open"
+    action = Enum("Trip/Open", "Close")
 
 # EOF -------------------------------------------------------------------------

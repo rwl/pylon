@@ -25,6 +25,8 @@ from enthought.traits.api import Instance, List, Int, Float, Enum, Trait, Str
 
 from pylon.common.bus import Bus
 
+from power_conversion_element import PowerConversionElement
+
 #------------------------------------------------------------------------------
 #  "Load" class:
 #------------------------------------------------------------------------------

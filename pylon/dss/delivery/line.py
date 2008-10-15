@@ -18,6 +18,18 @@
 """ Defines the line element """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, Str, Int, Float, Enum, Array, Bool
+
+from pylon.dss.common.bus import Bus
+
+from pylon.dss.general.line_code import LineCode
+
+from power_delivery_element import PowerDeliveryElement
+
+#------------------------------------------------------------------------------
 #  "Line" class:
 #------------------------------------------------------------------------------
 
@@ -67,10 +79,10 @@ class Line(PowerDeliveryElement):
     """
 
     # Name of bus for terminal 1. Node order definitions optional.
-    bus_1 = None
+    bus_1 = Instance(Bus)
 
     # Name of bus for terminal 2.
-    bus_2 = None
+    bus_2 = Instance(Bus)
 
     # Name of linecode object describing line impedances.
     # If you use a line code, you do not need to specify the impedances here.
@@ -78,78 +90,82 @@ class Line(PowerDeliveryElement):
     # last will prevail over those specified earlier (left-to-right sequence
     # of properties).  If no line code or impedance data are specified, line
     # object defaults to 336 MCM ACSR on 4 ft spacing.
-    line_code = ""
+    line_code = Instance(LineCode)
 
     # Length of line. If units do not match the impedance data, specify "units"
     # property.
-    length = 1.0
+    length = Float(1.0)
 
     # No. of phases.  A line has the same number of conductors per terminal as
     # phases.  Neutrals are not explicitly modeled unless declared as a phase
     # and the impedance matrices adjusted accordingly.
-    phases = 3
+    phases = Int(3)
 
     # Positive-sequence Resistance, ohms per unit length.
-    r1 = 0.058
+    r1 = Float(
+        0.058, desc="Positive-sequence resistance, ohms per unit length"
+    )
 
     # Positive-sequence Reactance, ohms per unit length.
-    x1 = 0.1206
+    x1 = Float(
+        0.1206, desc="Positive-sequence reactance, ohms per unit length"
+    )
 
-    # Zero-sequence Resistance, ohms per unit length.
-    r0 = 0.1784
+    # Zero-sequence resistance, ohms per unit length.
+    r0 = Float(0.1784, desc="Zero-sequence resistance, ohms per unit length")
 
     # Zero-sequence Reactance, ohms per unit length.
-    x0 = 0.4047
+    x0 = Float(0.4047, desc="Zero-sequence reactance, ohms per unit length")
 
     # Positive-sequence capacitance, nF per unit length.
-    c1 = 3.4
+    c1 = Float(3.4, desc="Positive-sequence capacitance, nF per unit length")
 
     # Zero-sequence capacitance, nF per unit length.
-    c0 = 1.6
+    c0 = Float(1.6, desc="Zero-sequence capacitance, nF per unit length")
 
     # Resistance matrix, lower triangle, ohms per unit length. Order of the
     # matrix is the number of phases. May be used to specify the impedance of
     # any line configuration.  For balanced line models, you may use the
     # standard symmetrical component data definition instead.
-    r_matrix = ""
+    r_matrix = Array
 
     # Reactance matrix, lower triangle, ohms per unit length. Order of the
     # matrix is the number of phases. May be used to specify the impedance of
     # any line configuration.  For balanced line models, you may use the
     # standard symmetrical component data definition instead.
-    x_matrix = ""
+    x_matrix = Array
 
     # Nodal Capacitance matrix, lower triangle, nf per unit length.Order of the
     # matrix is the number of phases.  May be used to specify the shunt
     # capacitance of any line configuration.  For balanced line models, you may
     # use the standard symmetrical component data definition instead.
-    c_matrix = ""
+    c_matrix = Array
 
     # {Y/N | T/F}  Default= No/False.  Designates this line as a switch for
     # graphics and algorithmic purposes.
     # SIDE EFFECT: Sets R1=0.001 X1=0.0. You must reset if you want something
     # different.
-    switch = False
+    switch = Bool(False)
 
     # Carson earth return resistance per unit length used to compute impedance
     # values at base frequency.  For making better frequency adjustments.
-    rg = 0.0
+    rg = Float(0.0, desc="Carson earth return resistance per unit length")
 
     # Carson earth return reactance per unit length used to compute impedance
     # values at base frequency.  For making better frequency adjustments.
-    xg = 0.0
+    xg = Float(0.0, desc="Carson earth return reactance per unit length")
 
-    # Earth resitivity used to compute earth correction factor. Overrides Line
+    # Earth resistivity used to compute earth correction factor. Overrides Line
     # geometry definition if specified.
-    rho = 100
+    rho = Float(100.0, desc="Earth resistivity")
 
     # Geometry code for LineGeometry Object. Supercedes any previous definition
     # of line impedance. Line constants are computed for each frequency change
     # or rho change. CAUTION: may alter number of phases.
-    geometry = ""
+    geometry = Str
 
     # Length Units = {none | mi|kft|km|m|Ft|in|cm } Default is None - assumes
     # length units match impedance units.
-    units = None
+    units = Enum("None", "mi", "kft", "km", "m", "ft", "in", "cm")
 
 # EOF -------------------------------------------------------------------------
