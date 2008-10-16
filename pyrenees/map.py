@@ -34,7 +34,7 @@ from enthought.enable.api import Component, Pointer, Canvas, Viewport
 from enthought.enable.tools.api import ViewportPanTool
 from enthought.enable.component_editor import ComponentEditor
 
-from pylon.ui.map.layer.i_layer import ILayer
+from pyrenees.layer.i_layer import ILayer
 
 #------------------------------------------------------------------------------
 #  "Map" class:
