@@ -25,6 +25,8 @@ from enthought.traits.api import Instance, List, Int, Float, Bool, Enum
 
 from pylon.dss.delivery.api import PowerDeliveryElement, Capacitor
 
+from control_element import ControlElement
+
 #------------------------------------------------------------------------------
 #  "CapacitorControl" class:
 #------------------------------------------------------------------------------

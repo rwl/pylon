@@ -34,7 +34,8 @@ from pylon.dss.conversion.api import \
 from pylon.dss.delivery.api import \
     PowerDeliveryElement, Fault, Transformer, Line, Capacitor
 
-from pylon.dss.control.api import ControlElement, CapacitorControl, RegControl
+from pylon.dss.control.api import \
+    ControlElement, CapacitorControl, RegulatorControl
 
 from pylon.dss.meter.api import MeterElement
 
@@ -45,7 +46,7 @@ from pylon.dss.meter.api import MeterElement
 class Circuit(HasTraits):
     """ Defines a container of circuit elements """
 
-    case_name = String
+    case_name = Str
 
     active_bus_idx = Int(1)
 
@@ -79,7 +80,7 @@ class Circuit(HasTraits):
 
     cap_controls = List(Instance(CapacitorControl))
 
-    reg_controls = List(Instance(RegControl))
+    reg_controls = List(Instance(RegulatorControl))
 
     lines = List(Instance(Line))
 

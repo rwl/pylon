@@ -23,6 +23,8 @@
 
 from enthought.traits.api import Instance, List, Int, Float, Bool, Str
 
+from pylon.dss.common.circuit_element import CircuitElement
+
 from pylon.dss.common.bus import Bus
 
 #------------------------------------------------------------------------------

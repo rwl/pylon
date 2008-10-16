@@ -57,8 +57,8 @@ from pylon.ui.graph.graph_editor import GraphEditor
 from pylon.ui.graph.graph import Graph
 from pylon.ui.about_view import about_view
 
-from pylon.ui.map.map import Map
-from pylon.ui.map.layer.osm import OSM
+from pyrenees.map import Map
+from pyrenees.layer.osm import OSM
 
 from pylon.pyreto.api import MarketEnvironment, ParticipantEnvironment
 from pyqle.api import Swarm

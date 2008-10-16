@@ -23,7 +23,7 @@
 
 from os.path import join, dirname
 
-from enthought.pyface.image_resource import ImageResource
+from enthought.pyface.api import ImageResource
 
 from enthought.traits.ui.menu import MenuBar, ToolBar, Menu, Action
 

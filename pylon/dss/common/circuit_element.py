@@ -21,7 +21,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Instance, List, Int, Float, Bool
+from enthought.traits.api import \
+    HasTraits, Instance, List, Int, Float, Bool, Str
 
 from terminal import Terminal
 
@@ -68,7 +69,7 @@ class CircuitElement(HasTraits):
 
     # Private interface -------------------------------------------------------
 
-    _bus_names = List(String)
+    _bus_names = List(Str)
 
     _enabled = Bool(True)
 

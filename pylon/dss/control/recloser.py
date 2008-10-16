@@ -21,11 +21,13 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import Instance, List, Int, Float, Bool, Enum
+from enthought.traits.api import Instance, List, Int, Float, Bool, Enum, Str
 
 from pylon.dss.common.circuit_element import CircuitElement
 
 from pylon.dss.general.api import TimeCurrentCurve
+
+from control_element import ControlElement
 
 #------------------------------------------------------------------------------
 #  "Recloser" class:

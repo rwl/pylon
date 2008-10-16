@@ -23,6 +23,8 @@
 
 from enthought.traits.api import Instance, Int, Float, Enum, Array, Bool
 
+from pylon.dss.common.bus import Bus
+
 from power_delivery_element import PowerDeliveryElement
 
 #------------------------------------------------------------------------------

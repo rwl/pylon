@@ -15,13 +15,19 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" """
+""" Defines a spectrum """
+
+#------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, List, Int, Float, File
 
 #------------------------------------------------------------------------------
 #  "Spectrum" class:
 #------------------------------------------------------------------------------
 
-class Spectrum:
+class Spectrum(HasTraits):
     """ Spectrum specified as Harmonic, pct magnitude and angle
 
     Spectrum is shifted by the fundamental angle and stored in MultArray
@@ -29,21 +35,24 @@ class Spectrum:
 
     """
 
-    # Number of frequencies in this spectrum. (See CSVFile)
-    n_harm = 0
+    # Number of frequencies in this spectrum. (See csv_file)
+    n_harm = Int(desc="Number of frequencies in this spectrum")
 
     # Array of harmonic values.
-    harmonic = []
+    harmonic = List(Float, desc="harmonic values")
 
     # Array of magnitude values, assumed to be in PERCENT.
-    pct_mag = []
+    pct_mag = List(Float, desc="Percent magnitude values")
 
     # Array of phase angle values, degrees.
-    angle = []
+    angle = List(Float, desc="Phase angle values in degrees")
 
     # File of spectrum points with (harmonic, magnitude-percent, angle-degrees)
     # values, one set of 3 per line, in CSV format. If fewer than NUMHARM
     # frequencies found in the file, NUMHARM is set to the smaller value.
-    csv_file = ""
+    csv_file = File(
+        desc="Spectrum points with (harmonic, magnitude, angle) values, one "
+        "set of 3 per line, in CSV format"
+    )
 
 # EOF -------------------------------------------------------------------------

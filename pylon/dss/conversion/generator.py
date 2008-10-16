@@ -21,9 +21,10 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import Instance, List, Int, Float, Str, Trait, Enum
+from enthought.traits.api import \
+    Instance, List, Int, Float, Str, Trait, Enum, Bool
 
-from pylon.common.bus import Bus
+from pylon.dss.common.bus import Bus
 
 from power_conversion_element import PowerConversionElement
 

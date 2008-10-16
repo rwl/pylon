@@ -15,13 +15,19 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" """
+""" Defines a time-current curve """
+
+#------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, List, Int, Float, File
 
 #------------------------------------------------------------------------------
 #  "TimeCurrentCurve" class:
 #------------------------------------------------------------------------------
 
-class TimeCurrentCurve:
+class TimeCurrentCurve(HasTraits):
     """ Nominally, a time-current curve, but also used for volt-time curves.
 
     Collections of time points.  Return values can be interpolated either
@@ -36,16 +42,16 @@ class TimeCurrentCurve:
     """
 
     # Number of points to expect in time-current arrays.
-    n_pts = 0
+    n_pts = Int(0)
 
     # Array of current (or voltage) values corresponding to time values.
-    c_array = []
+    c_array = List(Float, desc="Current (or voltage) values")
 
     # Array of time values in sec. Typical array syntax:
     #     t_array = (1, 2, 3, 4, ...)
     # Can also substitute a file designation:
     #     t_array =  (file=filename)
     # The specified file has one value per line.
-    t_array = []
+    t_array = List(Float, desc="Array of time values in sec")
 
 # EOF -------------------------------------------------------------------------

@@ -27,6 +27,8 @@ from pylon.dss.delivery.api import Transformer
 
 from pylon.dss.common.bus import Bus
 
+from control_element import ControlElement
+
 #------------------------------------------------------------------------------
 #  "RegControl" class:
 #------------------------------------------------------------------------------

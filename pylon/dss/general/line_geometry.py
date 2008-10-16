@@ -18,10 +18,18 @@
 """ Defines the LineGeometry object """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, Instance, Enum, Int, Float
+
+from wire_data import WireData
+
+#------------------------------------------------------------------------------
 #  "LineGeometry" class:
 #------------------------------------------------------------------------------
 
-class LineGeometry:
+class LineGeometry(HasTraits):
     """ The LineGeometry object is a general DSS object used by all circuits
     as a reference for obtaining line impedances.
 
@@ -30,38 +38,37 @@ class LineGeometry:
     """
 
     # Number of conductors in this geometry.
-    n_conds = 3
+    n_conds = Int(3)
 
     # Number of phases.  All other conductors are considered neutrals and might
     # be reduced out.
-    n_phases = 3
+    n_phases = Int(3)
 
     # Set this = number of the conductor you wish to define.
-    cond = 1
+    cond = Int(1)
 
     # Code from WireData. MUST BE PREVIOUSLY DEFINED. no default.
-    wire = ""
+    wire = Instance(WireData)
 
     # x coordinate.
-    x = 0
+    x = Float(desc="X coordinate")
 
     # Height of conductor.
-    h = 32
+    h = Float(32.0, desc="Conductor height")
 
     # Units for x and h: {mi|kft|km|m|Ft|in|cm } Initial default is "ft", but
     # defaults to last unit defined
-    units = "ft"
+    units = Enum("mi", "kft", "km", "m", "ft", "in", "cm")
 
     # Normal ampacity, amperes for the line. Defaults to first conductor if not
     # specified.
-    norm_amps = 0
+    norm_amps = Float(0.0, desc="Normal ampacity for the line")
 
     # Emergency ampacity, amperes. Defaults to first conductor if not
     # specified.
-    emerg_amps = 0
+    emerg_amps = Float(0, desc="Emergency ampacity for the line")
 
-    # {Yes | No} Default = no. Reduce to n_phases (Kron Reduction). Reduce out
-    # neutrals.
-    reduce = "No"
+    # Reduce to n_phases (Kron Reduction). Reduce out neutrals.
+    reduce = Bool(False, desc="Reduce to n_phases (Kron Reduction)")
 
 # EOF -------------------------------------------------------------------------
