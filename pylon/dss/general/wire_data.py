@@ -18,10 +18,16 @@
 """ Defines a WireData object """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, List, Int, Float, Enum
+
+#------------------------------------------------------------------------------
 #  "WireData" class:
 #------------------------------------------------------------------------------
 
-class WireData:
+class WireData(HasTraits):
     """ The WireData object is a general DSS object used by all circuits
     as a reference for obtaining line impedances.
 
@@ -38,35 +44,35 @@ class WireData:
 
     # DC resistance, ohms per unit length (see r_units). Defaults to r_ac if
     # not specified.
-    r_dc = -1
+    r_dc = Float(-1.0, desc="DC resistance, ohms per unit length")
 
     # Resistance at 60 Hz per unit length. Defaults to r_dc if not specified.
-    r_ac = -1
+    r_ac = Float(-1, desc="Resistance at 60 Hz per unit length")
 
     # Length units for resistance: ohms per {mi|kft|km|m|Ft|in|cm}
-    r_units = None
+    r_units = Enum("mi", "kft", "km", "m", "ft", "in", "cm")
 
     # GMR at 60 Hz. Defaults to .7788*radius if not specified.
-    gmr_ac = -1
+    gmr_ac = Float(-1, desc="GMR at 60 Hz")
 
     # Units for GMR: {mi|kft|km|m|Ft|in|cm}
-    gmr_units = None
+    gmr_units = Enum("mi", "kft", "km", "m", "ft", "in", "cm")
 
     # Outside radius of conductor. Defaults to GMR/0.7788 if not specified.
-    radius = -1
+    radius = Float(-1.0, desc="Outside radius of conductor")
 
     # Units for outside radius: {mi|kft|km|m|Ft|in|cm}
-    rad_units = None
+    rad_units = Enum("mi", "kft", "km", "m", "ft", "in", "cm")
 
     # Normal ampacity, amperes. Defaults to Emergency amps/1.5 if not
     # specified.
-    norm_amps = -1
+    norm_amps = Float(-1.0, desc="Normal ampacity")
 
     # Emergency ampacity, amperes. Defaults to 1.5 * Normal Amps if not
     # specified.
-    emer_gamps = -1
+    emer_gamps = Float(-1.0, desc="Emergency ampacity")
 
     # Diameter; Alternative method for entering radius.
-    diam = -1
+    diam = Float(-1.0)
 
 # EOF -------------------------------------------------------------------------

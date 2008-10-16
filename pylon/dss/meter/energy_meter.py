@@ -18,6 +18,16 @@
 """ Defines energy meter objects """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, List, Int, Float, Enum, Set, Bool
+
+from pylon.dss.common.circuit_element import CircuitElement
+
+from meter_element import MeterElement
+
+#------------------------------------------------------------------------------
 #  "EnergyMeter" class:
 #------------------------------------------------------------------------------
 
@@ -130,11 +140,11 @@ class EnergyMeter(MeterElement):
     """
 
     # Name (Full Object name) of element to which the monitor is connected.
-    element
+    element = Instance(CircuitElement)
 
     # Number of the terminal of the circuit element to which the monitor is
     # connected.  1 or 2, typically.
-    terminal
+    terminal = Int(1)
 
     # {Clear (reset) | Save | Take | Zonedump | Allocate | Reduce}
     # (A)llocate = Allocate loads on the meter zone to match PeakCurrent.
@@ -145,7 +155,9 @@ class EnergyMeter(MeterElement):
     # "MTR_metername.CSV". (T)ake = Takes a sample at present solution
     # (Z)onedump = Dump names of elements in meter zone to a file
     # File name is "Zone_metername.CSV".
-    action
+    action = Enum(
+        "Clear (reset)", "Save", "Take", "Zonedump", "Allocate", "Reduce"
+    )
 
     # Enter a string ARRAY of any combination of the following. Options
     # processed left-to-right:
@@ -157,63 +169,68 @@ class EnergyMeter(MeterElement):
     #     overload and undervoltage.
     #     (V)oltage : Load UE/EEN computed based on voltage only.
     # Example: option=(E, R)
-    option
+    option = Set(
+        Enum("Excess", "Total", "Radial", "Mesh", "Combined", "Voltage")
+    )
 
     # Upper limit on kVA load in the zone, Normal configuration. Default is 0.0
     # (ignored).  Overrides limits on individual lines for overload EEN. With
     # "LocalOnly=Yes" option, uses only load in metered branch.
-    kva_norm
+    kva_norm = Float(desc="Normal kVA upper limit")
 
     # Upper limit on kVA load in the zone, Emergency configuration. Default is
     # 0.0 (ignored). Overrides limits on individual lines for overload UE.
     # With "LocalOnly=Yes" option, uses only load in metered branch.
-    kva_emerg
+    kva_emerg = Float(desc="Emergency kVA upper limit")
 
     # ARRAY of current magnitudes representing the peak currents measured at
     # this location for the load allocation function.  Default is (400, 400,
     # 400). Enter one current for each phase
-    peak_current
+    peak_current = List(Float, [400, 400, 400])
 
     # ARRAY of full element names for this meter''s zone.  Default is for meter
     # to find it''s own zone. If specified, DSS uses this list instead.  Can
     # access the names in a single-column text file.  Examples:
     # zonelist=[line.L1, transformer.T1, Line.L3]
     # zonelist=(file=branchlist.txt)
-    zone_list
+    zone_list = List(Instance(CircuitElement))
 
-    # {Yes | No}  Default is NO.  If Yes, meter considers only the monitored
-    # element for EEN and UE calcs.  Uses whole zone for losses.
-    local_only
+    # If Yes, meter considers only the monitored element for EEN and UE calcs.
+    # Uses whole zone for losses.
+    local_only = Bool(False)
 
     # Mask for adding registers whenever all meters are totalized.  Array of
     # floating point numbers representing the multiplier to be used for summing
     # each register from this meter.  Default = (1, 1, 1, 1, ... ).  You only
     # have to enter as many as are changed (positional). Useful when two meters
     # monitor same energy, etc.
-    mask
+    mask = List(Float)
 
-    # {Yes | No}  Default is YES. Compute Zone losses. If NO, then no losses at
-    # all are computed.
-    losses
+    # Compute Zone losses. If NO, then no losses at all are computed.
+    losses = Bool(True, desc="Compute Zone losses")
 
-    # {Yes | No}  Default is YES. Compute Line losses. If NO, then none of the
-    # losses are computed.
-    line_losses
+    # Compute Line losses. If NO, then none of the losses are computed.
+    line_losses = Bool(True, desc="Compute Line losses")
 
-    # {Yes | No}  Default is YES. Compute Transformer losses. If NO,
-    # transformers are ignored in loss calculations.
-    xfmr_losses
+    # Compute Transformer losses. If NO, transformers are ignored in loss
+    # calculations.
+    xfmr_losses = Bool(True, desc="Compute Transformer losses")
 
-    # {Yes | No}  Default is YES. Compute Sequence losses in lines and
-    # segregate by line mode losses and zero mode losses.
-    seq_losses
+    # Compute Sequence losses in lines and segregate by line mode losses and
+    # zero mode losses.
+    seq_losses = Bool(
+        True, desc="Compute Sequence losses in lines and segregate by line "
+        "mode losses and zero mode losses"
+    )
 
-    # {Yes | No}  Default is YES. Compute losses and segregate by voltage base.
-    # If NO, then voltage-based tabulation is not reported.
-    v_base_losses
+    # Compute losses and segregate by voltage base. If NO, then voltage-based
+    # tabulation is not reported.
+    v_base_losses = Bool(
+        True, desc="Compute losses and segregate by voltage base"
+    )
 
-    # {Yes | No}  Default is YES. When YES, write Overload exception report
-    # when Demand Intervals are written.
-    overload_report
+    # When true, write Overload exception report when Demand Intervals are
+    # written.
+    overload_report = Bool(True)
 
 # EOF -------------------------------------------------------------------------

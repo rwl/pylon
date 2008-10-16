@@ -18,6 +18,16 @@
 """ Defines the monitor circuit element """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance, Int, Enum, Bool
+
+from pylon.dss.common.circuit_element import CircuitElement
+
+from meter_element import MeterElement
+
+#------------------------------------------------------------------------------
 #  "MonitorObject" class:
 #------------------------------------------------------------------------------
 
@@ -114,12 +124,12 @@ class Monitor(MeterElement):
     """
 
     # Name (Full Object name) of element to which the monitor is connected.
-    element = ""
+    element = Instance(CircuitElement)
 
     # Number of the terminal of the circuit element to which the monitor is
     # connected.  1 or 2, typically. For monitoring states, attach monitor to
     # terminal 1.
-    terminal = 1
+    terminal = Int(1)
 
     # Bitmask integer designating the values the monitor is to capture:
     #    0 = Voltages and currents
@@ -132,11 +142,11 @@ class Monitor(MeterElement):
     #     +16 = Sequence quantities
     #     +32 = Magnitude only
     #     +64 = Positive sequence only or avg of all phases
-
+    #
     # Mix adder to obtain desired results. For example:
     # Mode=112 will save positive sequence voltage and current magnitudes only
     # Mode=48 will save all sequence voltages and currents, but magnitude only.
-    mode = 0
+    mode = Enum("V & I", "P & Q", "Tap Position", "State Variables")
 
     # {Clear | Save | Take}
     # (C)lears or (S)aves current buffer.
@@ -145,19 +155,21 @@ class Monitor(MeterElement):
     # Set Mode= command is issued.
     # Otherwise, the user must explicitly reset all monitors (reset monitors
     # command) or individual monitors with the Clear action.
-    action = ""
+    action = Enum("Clear", "Save", "Take")
 
-    # {Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all
-    # phases) for voltage and current.
+    # Include Residual channel (sum of all phases) for voltage and current.
     # Does not apply to sequence quantity modes or power modes.
-    residual = False
+    residual = Bool(
+        False, desc="Include Residual channel (sum of all phases) for voltage "
+        "and current"
+    )
 
-    # {Yes/True | No/False} Default = YES. Report voltage and current in polar
-    # form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.
-    v_i_polar = True
+    # Report voltage and current in polar form (Mag/Angle). Otherwise, it will
+    # be real and imaginary.
+    v_i_polar = Bool(True, desc="Report voltage and current in polar form")
 
-    # {Yes/True | No/False} Default = YES. Report power in Apparent power, S,
-    # in polar form (Mag/Angle).(default)  Otherwise, is P and Q
-    p_polar = False
+    # Report power in Apparent power, S, in polar form (Mag/Angle). Otherwise,
+    # is P and Q
+    p_polar = Bool(False, desc="Report apparent power, in polar form")
 
 # EOF -------------------------------------------------------------------------

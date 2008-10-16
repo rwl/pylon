@@ -18,10 +18,16 @@
 """ Defines the LoadShape object """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, Enum, Int, Float, List, File
+
+#------------------------------------------------------------------------------
 #  "LoadShape" class:
 #------------------------------------------------------------------------------
 
-class LoadShape:
+class LoadShape(HasTraits):
     """ The LoadShape object is a general DSS object used by all circuits
     as a reference for obtaining yearly, daily, and other load shapes.
 
@@ -73,22 +79,22 @@ class LoadShape:
     # Max number of points to expect in load shape vectors. This gets reset to
     # the number of multiplier values found (in files only) if less than
     # specified.
-    n_pts = 0
+    n_pts = Int(0, desc="Number of points to expect in load shape vectors")
 
     # Time interval (hrs) for fixed interval data.  If set = 0 then time data
     # (in hours) is expected using either the Hour property or input files.
-    interval = 1
+    interval = Int(1, desc="Time interval (hrs) for fixed interval data")
 
     # Array of multiplier values for active power (P).  Can also use the
     # syntax: mult = (file=filename) where the file contains one value per
     # line. In "file=" syntax, the number of points may be altered.
-    mult = ""
+    mult = List(Float, desc="Multiplier values for active power")
 
     # Array of hour values. Only necessary to define for variable interval
     # data.  If the data are fixed interval, do not use this property.  Can
     # also use the syntax: mult = (file=filename) where the file contains one
     # value per line.
-    hour = ""
+    hour = List(Float, desc="Hour values")
 
     # Mean of the active power multipliers.  Automatically computed when a
     # curve is defined.  However, you may set it independently.  Used for Monte
@@ -100,13 +106,13 @@ class LoadShape:
     # the Mean and Std Deviation are required to define a loadshape.  These two
     # values may be defined directly rather than by supplying the curve.  Of
     # course, the multiplier points are not generated.
-    mean = 0
+    mean = Float(0.0, desc="Mean of the active power multipliers")
 
     # Standard deviation of active power multipliers.  This is automatically
     # computed when a vector or file of multipliers is entered.  However, you
     # may set it to another value indepently.  Is overwritten if you
     # subsequently read in a curve.  Used for Monte Carlo load simulations.
-    std_dev = 0
+    std_dev = Float(0.0, desc="Standard deviation of active power multipliers")
 
     # The next three parameters instruct the LoadShape object to get its data
     # from a file.  Three different formats are allowed. If Interval>0 then
@@ -119,21 +125,25 @@ class LoadShape:
     # data, one per line.
     #
     # NOTE: This action may reset the number of points to a lower value.
-    csv_file = ""
+    csv_file = File(desc="CSV file containing (hour, mult) points")
 
     # Switch input of active power load curve data to a binary file of singles
     # containing (hour, mult) points, or simply (mult) values for fixed time
     # interval data, packed one after another.
     #
     # NOTE: This action may reset the number of points to a lower value.
-    sng_file = ""
+    sng_file = File(
+        desc="binary file of singles containing (hour, mult) points"
+    )
 
     # Switch input of active power load curve data to a binary file of doubles
     # containing (hour, mult) points, or simply (mult) values for fixed time
     # interval data, packed one after another.
     #
     # NOTE: This action may reset the number of points to a lower value.
-    dbl_file = ""
+    dbl_file = File(
+        desc="binary file of doubles containing (hour, mult) points"
+    )
 
     # NORMALIZE is only defined action. After defining load curve data, setting
     # action=normalize will modify the multipliers so that the peak is 1.0.
@@ -144,11 +154,11 @@ class LoadShape:
     # this parameter as "Action=N" after the load shape multiplier data are
     # imported will force the normalization of the data in memory and
     # recalculation of the mean and standard deviation.
-    action = "normalise"
+    action = Enum("normalise")
 
     # Array of multiplier values for reactive power (Q).  Can also use the
     # syntax: qmult = (file=filename) where the file contains one value per
     # line.
-    q_mult = ""
+    q_mult = List(Float, desc="Multiplier values for reactive power")
 
 # EOF -------------------------------------------------------------------------

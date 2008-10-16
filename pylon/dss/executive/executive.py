@@ -18,13 +18,56 @@
 """ Defines commands for the executive """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Instance
+
+from enthought.traits.ui.api import ModelView, View, Item, Group
+
+from enthought.traits.ui.menu import NoButtons
+
+from pylon.dss.common.circuit import Circuit
+
+from executive_options import ExecutiveOptions
+
+from executive_menu import menu_bar, tool_bar
+
+#------------------------------------------------------------------------------
 #  "ExecCommand" class:
 #------------------------------------------------------------------------------
 
-class ExecCommand:
+class Executive(ModelView):
     """ Defines commands for the executive """
 
-    def new(self):
+    #--------------------------------------------------------------------------
+    #  Trait Definitions:
+    #--------------------------------------------------------------------------
+
+    # The model this handler defines a view and controller for
+#    model = Instance(Circuit)
+
+    # Options for DSS
+    options = Instance(ExecutiveOptions, ())
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        Item(
+            name="model", show_label=False, id=".table_editor", style="custom"
+        ),
+        id="circuit_vm.view", title="Pylon", resizable=True,
+        width=.81, height=.81, kind="live",
+        buttons=NoButtons, menubar=menu_bar, toolbar=tool_bar
+    )
+
+    #--------------------------------------------------------------------------
+    #  Action handlers:
+    #--------------------------------------------------------------------------
+
+    def new(self, info):
         """ Create a new object within the DSS. Object becomes the active
         object.
 
@@ -33,7 +76,7 @@ class ExecCommand:
         pass
 
 
-    def edit(self):
+    def edit(self, info):
         """ Edit an object. The object is selected and it then becomes the
         active object.
 
@@ -45,13 +88,13 @@ class ExecCommand:
         pass
 
 
-    def more(self):
+    def more(self, info):
         """ Continuation of editing on the active object. """
 
         pass
 
 
-    def select(self):
+    def select(self, info):
         """ Selects an element and makes it the active element.  You can also
         specify the active terminal (default = 1).
 
@@ -69,7 +112,7 @@ class ExecCommand:
         pass
 
 
-    def save(self, klass, dir):
+    def save(self, info, klass, dir):
         """ Default class = Meters, which saves the present values in both
         monitors and energy meters in the active circuit.
         "Save Circuit" saves the present enabled circuit elements to the
@@ -88,7 +131,7 @@ class ExecCommand:
         pass
 
 
-    def show(self):
+    def show(self, info):
         """ Writes selected results to a text file and brings up the editor
         (see Set Editor=....) with the file for you to browse.
 
@@ -128,7 +171,7 @@ class ExecCommand:
         pass
 
 
-    def solve(self):
+    def solve(self, info):
         """ Perform the solution of the present solution mode. You can set any
         option that you can set with the Set command (see Set). The Solve
         command is virtually synonymous with the Set command except that
@@ -139,13 +182,13 @@ class ExecCommand:
         pass
 
 
-    def enable(self):
+    def enable(self, info):
         """ Enables a circuit element or entire class """
 
         pass
 
 
-    def disable(self):
+    def disable(self, info):
         """ Disables a circuit element or entire class. The item remains
         defined, but is not included in the solution.
 
@@ -154,7 +197,7 @@ class ExecCommand:
         pass
 
 
-    def plot(self, type, quantity, max, dots, labels, object, show_loops,
+    def plot(self, info, type, quantity, max, dots, labels, object, show_loops,
              c1, c2, c3, r3=0.85, r2=0.50, channels=[], bases=[], subs=False,
              thinkness=7):
         """ Plots results in a variety of manners.
@@ -198,7 +241,7 @@ class ExecCommand:
         pass
 
 
-    def reset(self):
+    def reset(self, info):
         """ {MOnitors | MEters | Faults | Controls | Eventlog | Keeplist |
         (no argument) }
 
@@ -211,7 +254,7 @@ class ExecCommand:
         pass
 
 
-    def compile(self):
+    def compile(self, info):
         """ Reads the designated file name containing DSS commands and
         processes them as if they were entered directly into the command line.
         The file is said to be "compiled."
@@ -227,7 +270,7 @@ class ExecCommand:
         pass
 
 
-    def set_value(self):
+    def set_value(self, info):
         """ Used to set various DSS solution modes and options.  You may also
         set the options with the Solve command.
 
@@ -239,7 +282,7 @@ class ExecCommand:
         pass
 
 
-    def dump(self):
+    def dump(self, info):
         """ Display the properties of either a specific DSS object or a
         complete dump on all variables in the problem (Warning! Could be very
         large!).
@@ -262,7 +305,7 @@ class ExecCommand:
         pass
 
 
-    def open(self):
+    def open(self, info):
         """ Opens the specified terminal and conductor of the specified circuit
         element. If the conductor is not specified, all phase conductors of the
         terminal are opened.
@@ -276,13 +319,13 @@ class ExecCommand:
         pass
 
 
-    def close(self):
+    def close(self, info):
         """ Opposite of the Open command """
 
         pass
 
 
-    def redirect(self):
+    def redirect(self, info):
         """ Reads the designated file name containing DSS commands and
         processes them as if they were entered directly into the command line.
         Similar to "Compile", but leaves current directory where it was when
@@ -294,19 +337,19 @@ class ExecCommand:
         pass
 
 
-    def help(self):
+    def help(self, info):
         """ Handles display of help """
 
         pass
 
 
-    def quit(self):
+    def quit(self, info):
         """ Handles closing the application """
 
         pass
 
 
-    def what(self):
+    def what(self, info):
         """ Inquiry for property value.  Result is put into GlobalReault and
         can be seen in the Result Window. Specify the full property name.
 
@@ -320,7 +363,7 @@ class ExecCommand:
         pass
 
 
-    def next(self):
+    def next(self, info):
         """ {Year | Hour | t}  Increments year, hour, or time as specified.  If
         "t" is specified, then increments time by current step size.
 
@@ -329,31 +372,31 @@ class ExecCommand:
         pass
 
 
-    def panel(self):
+    def panel(self, info):
         """ Displays main control panel window. """
 
         pass
 
 
-    def sample(self):
+    def sample(self, info):
         """ Force all monitors and meters to take a sample now """
 
         pass
 
 
-    def clear(self):
+    def clear(self, info):
         """ Clear all circuits currently in memory """
 
         pass
 
 
-    def about(self):
+    def about(self, info):
         """ Handles display of the 'About' dialog box """
 
         pass
 
 
-    def calc_voltage_bases(self):
+    def calc_voltage_bases(self, info):
         """ Calculates voltagebase for buses based on voltage bases defined
         with Set voltagebases=... command.
 
@@ -362,7 +405,7 @@ class ExecCommand:
         pass
 
 
-    def set_kv_base(self):
+    def set_kv_base(self, info):
         """ Command to explicitly set the base voltage for a bus.
 
         Bus must be previously defined. Parameters in order are:
@@ -385,7 +428,7 @@ class ExecCommand:
         pass
 
 
-    def build_y(self):
+    def build_y(self, info):
         """ Forces rebuild of Y matrix upon next Solve command regardless of
         need. The usual reason for doing this would be to reset the matrix for
         another load level when using LoadModel=PowerFlow (the default) when
@@ -398,7 +441,7 @@ class ExecCommand:
         pass
 
 
-    def get_value(self):
+    def get_value(self, info):
         """ Returns DSS property values set using the Set command. Result is
         return in Result property of the Text interface.
 
@@ -415,7 +458,7 @@ class ExecCommand:
         pass
 
 
-    def initialise(self):
+    def initialise(self, info):
         """ This command forces reinitialization of the solution for the next
         Solve command. To minimize iterations, most solutions start with the
         previous solution unless there has been a circuit change.  However, if
@@ -428,7 +471,7 @@ class ExecCommand:
         pass
 
 
-    def export(self):
+    def export(self, info):
         """ Export various solution values to CSV files for import into other
         programs.
 
@@ -465,7 +508,7 @@ class ExecCommand:
         pass
 
 
-    def file_edit(self):
+    def file_edit(self, info):
         """ Edit specified file in default text file editor (see set_editor=
         option). Fileedit EXP_METERS.CSV (brings up the meters export file)
         "FileEdit" may be abbreviated to a unique character string.
@@ -475,7 +518,7 @@ class ExecCommand:
         pass
 
 
-    def voltages(self):
+    def voltages(self, info):
         """ Returns the voltages for the ACTIVE BUS in the Result string.
         For setting the active Bus, use the Select command or the
         set_bus= option.
@@ -488,7 +531,7 @@ class ExecCommand:
         pass
 
 
-    def currents(self):
+    def currents(self, info):
         """ Returns the currents for each conductor of ALL terminals of the
         active circuit element in the Result string/ (See select command.)
         Returned as comma-separated magnitude and angle.
@@ -498,7 +541,7 @@ class ExecCommand:
         pass
 
 
-    def powers(self):
+    def powers(self, info):
         """ Returns the powers (complex) going into each conductors of ALL
         terminals of the active circuit element in the Result string.
         (See select command.)
@@ -510,7 +553,7 @@ class ExecCommand:
         pass
 
 
-    def seq_voltages(self):
+    def seq_voltages(self, info):
         """ Returns the sequence voltages at all terminals of the active
         circuit element (see Select command) in Result string.  Returned as
         comma-separated magnitude only values.
@@ -522,7 +565,7 @@ class ExecCommand:
         pass
 
 
-    def seq_currents(self):
+    def seq_currents(self, info):
         """ Returns the sequence currents into all terminals of the active
         circuit element (see Select command) in Result string.  Returned as
         comma-separated magnitude only values.
@@ -534,7 +577,7 @@ class ExecCommand:
         pass
 
 
-    def seq_power(self):
+    def seq_power(self, info):
         """ Returns the sequence powers into all terminals of the active
         circuit element (see Select command) in Result string.  Returned as
         comma-separated kw, kvar pairs.
@@ -546,7 +589,7 @@ class ExecCommand:
         pass
 
 
-    def losses(self):
+    def losses(self, info):
         """ Returns the total losses for the active circuit element in the
         Result string in kW, kvar.
 
@@ -555,7 +598,7 @@ class ExecCommand:
         pass
 
 
-    def phase_losses(self):
+    def phase_losses(self, info):
         """ Returns the losses for the active circuit element for each PHASE in
         the Result string in comma-separated kW, kvar pairs.
 
@@ -564,7 +607,7 @@ class ExecCommand:
         pass
 
 
-    def ckt_losses(self):
+    def ckt_losses(self, info):
         """ Returns the total losses for the active circuit in the Result
         string in kW, kvar.
 
@@ -573,7 +616,7 @@ class ExecCommand:
         pass
 
 
-    def allocate_loads(self):
+    def allocate_loads(self, info):
         """ Estimates the allocation factors for loads that are defined using
         the XFKVA property. Requires that energymeter objects be defined with
         the PEAKCURRENT property set. Loads that are not in the zone of an
@@ -584,7 +627,7 @@ class ExecCommand:
         pass
 
 
-    def form_edit(self):
+    def form_edit(self, info):
         """ FormEdit [class.object].  Brings up form editor on active DSS
         object.
 
@@ -593,7 +636,7 @@ class ExecCommand:
         pass
 
 
-    def totals(self):
+    def totals(self, info):
         """ Totals all EnergyMeter objects in the circuit and reports register
         totals in the result string.
 
@@ -602,7 +645,7 @@ class ExecCommand:
         pass
 
 
-    def capacity(self):
+    def capacity(self, info):
         """ Find the maximum load the active circuit can serve in the PRESENT
         YEAR. Uses the EnergyMeter objects with the registers set with the
         SET UEREGS= (..) command for the AutoAdd functions.
@@ -621,7 +664,7 @@ class ExecCommand:
         pass
 
 
-    def classes(self):
+    def classes(self, info):
         """ List of intrinsic DSS Classes. Returns comma-separated list in
         Result variable.
 
@@ -630,7 +673,7 @@ class ExecCommand:
         pass
 
 
-    def user_classes(self):
+    def user_classes(self, info):
         """ List of user-defined DSS Classes. Returns comma-separated list in
         Result variable.
 
@@ -639,7 +682,7 @@ class ExecCommand:
         pass
 
 
-    def z_sc(self):
+    def z_sc(self, info):
         """ Returns full Zsc matrix for the ACTIVE BUS in comma-separated
         complex number form.
 
@@ -648,7 +691,7 @@ class ExecCommand:
         pass
 
 
-    def z_sc10(self):
+    def z_sc10(self, info):
         """ Returns symmetrical component impedances, Z1, Z0 for the ACTIVE BUS
         in comma-separated R+jX form.
 
@@ -657,13 +700,13 @@ class ExecCommand:
         pass
 
 
-    def z_sc_refresh(self):
+    def z_sc_refresh(self, info):
         """ Refreshes Zsc matrix for the ACTIVE BUS. """
 
         pass
 
 
-    def y_sc(self):
+    def y_sc(self, info):
         """ Returns full Ysc matrix for the ACTIVE BUS in comma-separated
         complex number form G + jB.
 
@@ -672,7 +715,7 @@ class ExecCommand:
         pass
 
 
-    def pu_voltages(self):
+    def pu_voltages(self, info):
         """ Just like the Voltages command, except the voltages are in per unit
         if the kVbase at the bus is defined.
 
@@ -681,7 +724,7 @@ class ExecCommand:
         pass
 
 
-    def var_values(self):
+    def var_values(self, info):
         """ Returns variable values for active element if PC element.
         Otherwise, returns null.
 
@@ -690,7 +733,7 @@ class ExecCommand:
         pass
 
 
-    def var_names(self):
+    def var_names(self, info):
         """ Returns variable names for active element if PC element. Otherwise,
         returns null.
 
@@ -699,7 +742,7 @@ class ExecCommand:
         pass
 
 
-    def bus_coords(self):
+    def bus_coords(self, info):
         """ Define x,y coordinates for buses.  Execute after Solve command
         performed so that bus lists are defined. Reads coordinates from a CSV
         file with records of the form: busname, x, y.
@@ -711,7 +754,7 @@ class ExecCommand:
         pass
 
 
-    def make_bus_list(self):
+    def make_bus_list(self, info):
         """ Updates the buslist using the currently enabled circuit elements.
         (This happens automatically for Solve command.)
 
@@ -720,7 +763,7 @@ class ExecCommand:
         pass
 
 
-    def make_pos_sequence(self):
+    def make_pos_sequence(self, info):
         """ Attempts to convert present circuit model to a positive sequence
         equivalent. It is recommended to Save the circuit after this and edit
         the saved version to correct possible misinterpretations.
@@ -730,7 +773,7 @@ class ExecCommand:
         pass
 
 
-    def reduce(self):
+    def reduce(self, info):
         """ {All | MeterName}  Default is "All".  Reduce the circuit according
         to reduction options. See "Set ReduceOptions" and "Set Keeplist"
         options.
@@ -743,7 +786,7 @@ class ExecCommand:
         pass
 
 
-    def interpolate(self):
+    def interpolate(self, info):
         """ {All | MeterName}  Default is "All". Interpolates coordinates for
         missing bus coordinates in meter zone'
 
@@ -752,7 +795,7 @@ class ExecCommand:
         pass
 
 
-    def align_file(self):
+    def align_file(self, info):
         """ Alignfile [file=]filename.  Aligns DSS script files in columns for
         easier reading.
 
@@ -761,7 +804,7 @@ class ExecCommand:
         pass
 
 
-    def top(self):
+    def top(self, info):
         """ [class=]{Loadshape | Monitor  } [object=]{ALL (Loadshapes only) |
         objectname}.
 
@@ -773,13 +816,13 @@ class ExecCommand:
         pass
 
 
-    def rotate(self):
+    def rotate(self, info):
         """ Rotate circuit plotting coordinates by specified angle """
 
         pass
 
 
-    def v_diff(self):
+    def v_diff(self, info):
         """ Displays the difference between the present solution and the last
         on saved using the SAVE VOLTAGES command.
 
@@ -788,13 +831,13 @@ class ExecCommand:
         pass
 
 
-    def summary(self):
+    def summary(self, info):
         """ Displays a power flow summary of the most recent solution. """
 
         pass
 
 
-    def distribute(self):
+    def distribute(self, info):
         """ {Proportional | Uniform |Random | Skip} skip=nn PF=nn file=filename
         MW=nn
 
@@ -812,7 +855,7 @@ class ExecCommand:
         pass
 
 
-    def di_plot(self):
+    def di_plot(self, info):
         """ [case=]casename [year=]yr [registers=](reg1, reg2,...)  [peak=]y/n
         [meter=]metername
 
@@ -829,7 +872,7 @@ class ExecCommand:
         pass
 
 
-    def compare_cases(self):
+    def compare_cases(self, info):
         """ [Case1=]casename [case2=]casename [register=](register number)
         [meter=]{Totals* | SystemMeter | metername}.
 
@@ -847,7 +890,7 @@ class ExecCommand:
         pass
 
 
-    def yearly_curves(self):
+    def yearly_curves(self, info):
         """ [cases=](case1, case2, ...) [registers=](reg1, reg2, ...)
         [meter=]{Totals* | SystemMeter | metername}
 
@@ -861,13 +904,13 @@ class ExecCommand:
         pass
 
 
-    def cd(self):
+    def cd(self, info):
         """ Change default directory to specified directory """
 
         pass
 
 
-    def visualise(self):
+    def visualise(self, info):
         """ [What=] {Currents* | Voltages | Powers} [element=]full_element_name
         (class.name). Shows the currents for selected element on a drawing in
         polar coordinates.
@@ -877,7 +920,7 @@ class ExecCommand:
         pass
 
 
-    def close_di(self):
+    def close_di(self, info):
         """ Close all DI files ... useful at end of yearly solution where DI
         files are left open.
 
@@ -888,12 +931,21 @@ class ExecCommand:
         pass
 
 
-    def estimate(self):
+    def estimate(self, info):
         """ Execute state estimator on present circuit given present sensor
         values.
 
         """
 
         pass
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    circuit = Circuit()
+    executive = Executive(model=circuit)
+    executive.configure_traits(filename="/tmp/circuit.pkl")
 
 # EOF -------------------------------------------------------------------------

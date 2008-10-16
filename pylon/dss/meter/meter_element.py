@@ -18,16 +18,24 @@
 """ Defines a base class for all meters """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import Str, Instance, Int
+
+from pylon.dss.common.circuit_element import CircuitElement
+
+#------------------------------------------------------------------------------
 #  "MeterElement" class:
 #------------------------------------------------------------------------------
 
 class MeterElement(CircuitElement):
     """ Base for all meters """
 
-    element_name = ""
+    element_name = Str
 
-    metered_element = None
+    metered_element = Instance(CircuitElement)
 
-    metered_terminal = 1
+    metered_terminal = Int(1)
 
 # EOF -------------------------------------------------------------------------

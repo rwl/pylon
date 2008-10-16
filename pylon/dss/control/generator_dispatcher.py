@@ -28,6 +28,8 @@ from pylon.dss.delivery.api import PowerDeliveryElement
 
 from pylon.dss.conversion.api import Generator
 
+from control_element import ControlElement
+
 #------------------------------------------------------------------------------
 #  "GeneratorDispatcher" class:
 #------------------------------------------------------------------------------

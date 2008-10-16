@@ -22,7 +22,7 @@
 #------------------------------------------------------------------------------
 
 from enthought.traits.api import \
-    Instance, List, Int, Float, Enum, Either, Array
+    Instance, List, Int, Float, Enum, Either, Array, Bool
 
 from pylon.dss.common.bus import Bus
 

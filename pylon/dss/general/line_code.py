@@ -18,10 +18,16 @@
 """ Defines the LineCode object """
 
 #------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from enthought.traits.api import HasTraits, List, Int, Float, Enum, Array, Bool
+
+#------------------------------------------------------------------------------
 #  "LineCode" class:
 #------------------------------------------------------------------------------
 
-class LineCode:
+class LineCode(HasTraits):
     """ The Linecode object is a general DSS object used by all circuits
     as a reference for obtaining line impedances.
 
@@ -65,85 +71,89 @@ class LineCode:
     # Number of phases in the line this line code data represents.  Setting
     # this property reinitializes the line code.  Impedance matrix is reset
     # for default symmetrical component.
-    n_phases = 3
+    n_phases = Int(3)
 
     # Positive-sequence Resistance, ohms per unit length.  See also r_matrix.
-    r1 = 0.058
+    r1 = Float(
+        0.058, desc="Positive-sequence resistance, ohms per unit length"
+    )
 
     # Positive-sequence Reactance, ohms per unit length.  See also x_matrix.
-    x1 = 0.1206
+    x1 = Float(
+        0.1206, desc="Positive-sequence reactance, ohms per unit length"
+    )
 
     # Zero-sequence Resistance, ohms per unit length.
-    r0 = 0.1784
+    r0 = Float(0.1784, desc="Zero-sequence resistance, ohms per unit length")
 
     # Zero-sequence Reactance, ohms per unit length.
-    x0 = 0.4047
+    x0 = Float(0.4047, desc="Zero-sequence reactance, ohms per unit length")
 
     # Positive-sequence capacitance, nF per unit length. See also c_matrix.
-    c1 = 3.4
+    c1 = Float(3.4, desc="Positive-sequence capacitance, nF per unit length")
 
     # Zero-sequence capacitance, nF per unit length.
-    c0 = 1.6
+    c0 = Float(1.6, desc="Zero-sequence capacitance, nF per unit length")
 
     # One of (ohms per ...) {none|mi|km|kft|m|me|ft|in|cm}.  Default is none;
     # assumes units agree with length units given in Line object.
-    units = None
+    units = Enum("None", "mi", "km", "kft", "m", "me", "ft", "in", "cm")
 
 
     # Resistance matrix, lower triangle, ohms per unit length. Order of the
     # matrix is the number of phases.  May be used to specify the impedance of
     # any line configuration.  For balanced line models, you may use the
     # standard symmetrical component data definition instead.
-    r_matrix = ""
+    r_matrix = Array
 
     # Reactance matrix, lower triangle, ohms per unit length. Order of the
     # matrix is the number of phases.  May be used to specify the impedance of
     # any line configuration.  For balanced line models, you may use the
     # standard symmetrical component data definition instead.
-    x_matrix = ""
+    x_matrix = Array
 
     # Nodal Capacitance matrix, lower triangle, nf per unit length.Order of the
     # matrix is the number of phases.  May be used to specify the shunt
     # capacitance of any line configuration.  For balanced line models, you may
     # use the standard symmetrical component data definition instead.
-    c_matrix = ""
+    c_matrix = Array
 
     # Frequency (Hz) at which impedances are specified.
-    base_freq = 60
+    base_freq = Float(60.0, desc="Frequency at which impedances are specified")
 
     # Normal ampere limit on line.  This is the so-called Planning Limit. It
     # may also be the value above which load will have to be dropped in a
     # contingency.  Usually about 75% - 80% of the emergency (one-hour) rating.
-    norm_amps = 400
+    norm_amps = Float(400.0, desc="Normal ampere limit on line")
 
     # Emergency ampere limit on line (usually one-hour rating).
-    emerg_amps = 600
+    emerg_amps = Float(600.0, desc="Emergency ampere limit on line")
 
     # Number of faults per unit length per year.
-    fault_rate = 0.1
+    fault_rate = Float(0.1, desc="Number of faults per unit length per year")
 
     # Percentage of the faults that become permanent (requiring a line crew to
     # repair and a sustained interruption).
-    pct_perm = 20
+    pct_perm = Float(20.0, desc="Percentage of faults that become permanent")
 
     # Hours to repair.
-    repair = 3
+    repair = Int(3, desc="Hours to repair")
 
     # Kron = Y/N. Default=N.  Perform Kron reduction on the impedance matrix
     # after it is formed, reducing order by 1.  Do this only on initial
     # definition after matrices are defined. Ignored for symmetrical
     # components.
-    kron = "N"
+    kron = Bool(False)
 
     # Carson earth return resistance per unit length used to compute impedance
     # values at base frequency.  For making better frequency adjustments.
-    rg = 0
+    rg = Float(0.0, desc="Carson earth return resistance per unit length")
 
     # Carson earth return reactance per unit length used to compute impedance
     # values at base frequency.  For making better frequency adjustments.
-    xg = 0
+    xg = Float(0.0, desc="Carson earth return reactance per unit length")
 
-    # Earth resitivity (meter ohmsused to compute earth correction factor.
-    rho = 100
+    # Earth resitivity (meter ohms used to compute earth correction factor.
+    rho = Float(100.0, desc="Earth resitivity")
 
 # EOF -------------------------------------------------------------------------

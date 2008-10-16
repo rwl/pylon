@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2008 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Use this module for importing Pylon names into your namespace.
+""" Use this module for importing Pylon names into your namespace.
 
 For example:
     from pylon.dss.general.api import TimeCurrentCurve
