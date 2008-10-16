@@ -67,6 +67,16 @@ class Executive(ModelView):
     #  Action handlers:
     #--------------------------------------------------------------------------
 
+    def preferences(self, info):
+        """ Handles display of the preferences dialog """
+
+        options = self.options
+
+        if info.initialized and (options is not None):
+            options.edit_traits(parent=info.ui.control, kind="livemodal")
+
+
+
     def new(self, info):
         """ Create a new object within the DSS. Object becomes the active
         object.
@@ -319,10 +329,10 @@ class Executive(ModelView):
         pass
 
 
-    def close(self, info):
-        """ Opposite of the Open command """
-
-        pass
+#    def close(self, info):
+#        """ Opposite of the Open command """
+#
+#        pass
 
 
     def redirect(self, info):
