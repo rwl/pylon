@@ -43,10 +43,7 @@ from pylon.ui.generator_view import generator_view
 #------------------------------------------------------------------------------
 
 def generator_factory(**row_factory_kw):
-    """
-    Require one or more Bus for instantiation
-
-    """
+    """ Require one or more Bus for instantiation """
 
     if "__table_editor__" in row_factory_kw:
         bus = row_factory_kw["__table_editor__"].object
@@ -63,8 +60,7 @@ def generator_factory(**row_factory_kw):
 #------------------------------------------------------------------------------
 
 class GeneratorColumn(ObjectColumn):
-    """
-    A specialised column to set the text color differently
+    """ A specialised column to set the text color differently
     based upon whether or not the generator is in service
 
     """
@@ -73,7 +69,7 @@ class GeneratorColumn(ObjectColumn):
 
     horizontal_alignment = "center"
 
-    def get_text_color ( self, object ):
+    def get_text_color(self, object):
         return ["light grey", "black"][object.in_service]
 
 #------------------------------------------------------------------------------

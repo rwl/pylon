@@ -21,7 +21,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Instance, List, Int, Float, Bool
+from enthought.traits.api import HasTraits, Str, List, Int, Float, Bool
 
 #------------------------------------------------------------------------------
 #  "Bus" class:
@@ -60,6 +60,9 @@ class Bus(HasTraits):
 
     _ref_no = List
 
+
+    # Human readable identifier
+    name = Str
 
     v_bus = Float(115.0, label="Vbus")
 

@@ -23,6 +23,16 @@
 
 from enthought.traits.api import Instance, List, Int, Float, Enum
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
+
 from pylon.dss.common.bus import Bus
 
 from power_conversion_element import PowerConversionElement
@@ -57,6 +67,58 @@ class CurrentSource(PowerConversionElement):
 
     # {pos*| zero | none} Maintain specified sequence for harmonic solution.
     # Otherwise, angle between phases rotates with harmonic.
-    scantype = Enum("Positive", "Zero", "None")
+    scan_type = Enum("Positive", "Zero", "None")
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        [
+            # CircuitElement traits
+            "enabled", "base_freq",
+            # PowerConversionElement traits
+            "spectrum", "inj_current",
+            # VoltageSource traits
+            "bus_1", "amps", "angle", "frequency", "phases", "scan_type"
+        ],
+        id="pylon.conversion.current_source",
+        resizable=True
+    )
+
+#------------------------------------------------------------------------------
+#  CurrentSource table editor:
+#------------------------------------------------------------------------------
+
+current_sources_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # PowerConversionElement traits
+        CircuitElementColumn(name="spectrum"),
+        CircuitElementColumn(name="inj_current"),
+        # VoltageSource traits
+        CircuitElementColumn(name="bus_1"),
+        CircuitElementColumn(name="amps"),
+        CircuitElementColumn(name="angle"),
+        CircuitElementColumn(name="frequency"),
+        CircuitElementColumn(name="phases"),
+        CircuitElementColumn(name="scan_type"),
+    ],
+    show_toolbar=True,
+    deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=CurrentSource,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    CurrentSource().configure_traits()
 
 # EOF -------------------------------------------------------------------------

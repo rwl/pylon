@@ -23,6 +23,16 @@
 
 from enthought.traits.api import Instance, Str, Int, Float, Enum, Array, Bool
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
+
 from pylon.dss.common.bus import Bus
 
 from pylon.dss.general.line_code import LineCode
@@ -167,5 +177,90 @@ class Line(PowerDeliveryElement):
     # Length Units = {none | mi|kft|km|m|Ft|in|cm } Default is None - assumes
     # length units match impedance units.
     units = Enum("None", "mi", "kft", "km", "m", "ft", "in", "cm")
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        [
+            # CircuitElement traits
+            "enabled", "base_freq",
+            # PowerDeliveryElement traits
+            "norm_amps", "emerg_amps", "fault_rate", "pct_perm", "repair",
+            # Line traits
+            "bus_1", "bus_2", "line_code", "length", "phases", "r1", "x1",
+            "r0", "x0", "c1", "c0", "r_matrix", "x_matrix", "c_matrix",
+            "switch", "rg", "xg", "rho", "geometry", "units"
+        ],
+        id="pylon.delivery.line",
+        resizable=True, title="Line"
+    )
+
+#------------------------------------------------------------------------------
+#  Line table editor:
+#------------------------------------------------------------------------------
+
+lines_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # PowerDeliveryElement traits
+        CircuitElementColumn(name="norm_amps"),
+        CircuitElementColumn(name="emerg_amps"),
+        CircuitElementColumn(name="fault_rate"),
+        CircuitElementColumn(name="pct_perm"),
+        CircuitElementColumn(name="repair"),
+        # Line traits
+        CircuitElementColumn(
+            name="bus_1",
+#            editor=InstanceEditor(name="buses", editable=False),
+            label="Source", format_func=lambda obj: obj.name
+        ),
+        CircuitElementColumn(
+            name="bus_2",
+#            editor=InstanceEditor(name="buses", editable=False),
+            label="Target", format_func=lambda obj: obj.name
+        ),
+        CircuitElementColumn(
+            name="line_code",
+#            editor=InstanceEditor(name="buses", editable=False),
+            format_func=lambda obj: obj.name
+        ),
+        CircuitElementColumn(name="length"),
+        CircuitElementColumn(name="phases"),
+        CircuitElementColumn(name="r1"),
+        CircuitElementColumn(name="x1"),
+        CircuitElementColumn(name="r0"),
+        CircuitElementColumn(name="x0"),
+        CircuitElementColumn(name="c1"),
+        CircuitElementColumn(name="c0"),
+    ],
+    other_columns = [  # not initially displayed
+        CircuitElementColumn(name="r_matrix"),
+        CircuitElementColumn(name="x_matrix"),
+        CircuitElementColumn(name="c_matrix"),
+        CircuitElementColumn(name="switch"),
+        CircuitElementColumn(name="rg"),
+        CircuitElementColumn(name="xg"),
+        CircuitElementColumn(name="rho"),
+        CircuitElementColumn(name="geometry"),
+        CircuitElementColumn(name="units")
+    ],
+    show_toolbar=True, deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=Line,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    Line().configure_traits()
+
 
 # EOF -------------------------------------------------------------------------

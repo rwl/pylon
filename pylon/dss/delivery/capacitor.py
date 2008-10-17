@@ -24,6 +24,16 @@
 from enthought.traits.api import \
     Instance, List, Int, Float, Enum, Either, Array, Bool
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
+
 from pylon.dss.common.bus import Bus
 
 from power_delivery_element import PowerDeliveryElement
@@ -81,18 +91,18 @@ class Capacitor(PowerDeliveryElement):
 
     # Total kvar, if one step, or ARRAY of kvar ratings for each step. Evenly
     # divided among phases. See rules for NUMSTEPS.
-    kvar = Either(Float(1200.0), List(Float))
+    kvar = Float(1200.0) #Either(Float(1200.0), List(Float))
 
     # For 2, 3-phase, kV phase-phase. Otherwise specify actual can rating.
     kv = Float(12.47)
 
     # {wye | delta |LN |LL}  Default is wye, which is equivalent to LN
-    conn = "wye"
+    conn = Enum("Wye", "Delta", "LN", "LL")
 
     # Nodal cap. matrix, lower triangle, microfarads, of the following form:
     #     cmatrix="c11 | -c21 c22 | -c31 -c32 c33"
     # All steps are assumed the same if this property is used.
-    cmatrix = Array(desc="Nodal capacitance matrix")
+    c_matrix = Array(desc="Nodal capacitance matrix")
 
     # ARRAY of Capacitance, each phase, for each step, microfarads.
     # See Rules for NumSteps.
@@ -125,5 +135,69 @@ class Capacitor(PowerDeliveryElement):
     # (on|off). Defaults to 1 when reallocated (on).
     # Capcontrol will modify this array as it turns steps on or off.
     states = List(Bool)
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        [
+            # CircuitElement traits
+            "enabled", "base_freq",
+            # PowerDeliveryElement traits
+            "norm_amps", "emerg_amps", "fault_rate", "pct_perm", "repair",
+            # Capacitor traits
+            "bus_1", "bus_2", "phases", "kvar", "kv", "conn", "c_matrix",
+            "cuf", "r", "xl", "harm", "n_steps", "states"
+        ],
+        id="pylon.delivery.capacitor",
+        resizable=True, title="Capacitor"
+    )
+
+#------------------------------------------------------------------------------
+#  Capacitor table editor:
+#------------------------------------------------------------------------------
+
+capacitors_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # PowerDeliveryElement traits
+        CircuitElementColumn(name="norm_amps"),
+        CircuitElementColumn(name="emerg_amps"),
+        CircuitElementColumn(name="fault_rate"),
+        CircuitElementColumn(name="pct_perm"),
+        CircuitElementColumn(name="repair"),
+        # Capacitor traits
+        CircuitElementColumn(name="bus_1"),
+        CircuitElementColumn(name="bus_2"),
+        CircuitElementColumn(name="phases"),
+    ],
+    other_columns = [  # not initially displayed
+        CircuitElementColumn(name="kvar"),
+        CircuitElementColumn(name="kv"),
+        CircuitElementColumn(name="conn"),
+        CircuitElementColumn(name="c_matrix"),
+        CircuitElementColumn(name="cuf"),
+        CircuitElementColumn(name="r"),
+        CircuitElementColumn(name="xl"),
+        CircuitElementColumn(name="harm"),
+        CircuitElementColumn(name="n_steps"),
+        CircuitElementColumn(name="states")
+    ],
+    show_toolbar=True, deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=Capacitor,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    Capacitor().configure_traits()
 
 # EOF -------------------------------------------------------------------------

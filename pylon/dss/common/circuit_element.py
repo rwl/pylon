@@ -24,6 +24,10 @@
 from enthought.traits.api import \
     HasTraits, Instance, List, Int, Float, Bool, Str
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.table_column import ObjectColumn
+
 from terminal import Terminal
 
 #------------------------------------------------------------------------------
@@ -32,6 +36,9 @@ from terminal import Terminal
 
 class CircuitElement(HasTraits):
     """ Base class for all elements of a circuit """
+
+    # Human readable identifer
+    name = Str
 
     # Indicates whether this element is enabled.
     enabled = Bool(True)
@@ -98,5 +105,31 @@ class CircuitElement(HasTraits):
 
     # Frequency at which YPrim has been computed
     _y_prim_freq = Float
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        Item("enabled"),
+        Item("base_freq")
+    )
+
+#------------------------------------------------------------------------------
+#  "CircuitElementColumn" class:
+#------------------------------------------------------------------------------
+
+class CircuitElementColumn(ObjectColumn):
+    """ A specialised column to set the text color differently
+    based upon whether or not the circuit element is enabled.
+
+    """
+
+#    width = 0.08
+
+#    horizontal_alignment = "center"
+
+    def get_text_color(self, object):
+        return ["light grey", "black"][object.enabled]
 
 # EOF -------------------------------------------------------------------------

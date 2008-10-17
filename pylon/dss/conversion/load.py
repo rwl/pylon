@@ -23,6 +23,16 @@
 
 from enthought.traits.api import Instance, List, Int, Float, Enum, Trait, Str
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
+
 from pylon.dss.common.bus import Bus
 
 from power_conversion_element import PowerConversionElement
@@ -236,5 +246,84 @@ class Load(PowerConversionElement):
         2.0,
         desc="Percent reduction in reactive power per 1% reduction in voltage"
     )
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        [
+            # CircuitElement traits
+            "enabled", "base_freq",
+            # PowerConversionElement traits
+            "spectrum", "inj_current",
+            # Load traits
+            "bus_1", "n_phases", "kv", "kw", "pf", "model", "yearly", "daily",
+            "duty", "growth", "conn", "kvar", "r_neut", "x_neut", "status",
+            "klass", "v_min_pu", "v_max_pu", "v_min_norm", "v_min_emerg",
+            "xf_kva", "allocation_factor", "kva", "pct_mean", "pct_std_dev",
+            "cvr_watts", "cvr_vars"
+        ],
+        id="pylon.conversion.load",
+        resizable=True, title="Load"
+    )
+
+#------------------------------------------------------------------------------
+#  Load table editor:
+#------------------------------------------------------------------------------
+
+loads_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # PowerConversionElement traits
+        CircuitElementColumn(name="spectrum"),
+        CircuitElementColumn(name="inj_current"),
+        # Load traits
+        CircuitElementColumn(name="bus_1"),
+        CircuitElementColumn(name="n_phases"),
+        CircuitElementColumn(name="kv"),
+        CircuitElementColumn(name="kw"),
+        CircuitElementColumn(name="pf"),
+        CircuitElementColumn(name="model"),
+    ],
+    other_columns = [  # not initially displayed
+        CircuitElementColumn(name="model"),
+        CircuitElementColumn(name="yearly"),
+        CircuitElementColumn(name="daily"),
+        CircuitElementColumn(name="duty"),
+        CircuitElementColumn(name="growth"),
+        CircuitElementColumn(name="conn"),
+        CircuitElementColumn(name="kvar"),
+        CircuitElementColumn(name="r_neut"),
+        CircuitElementColumn(name="x_neut"),
+        CircuitElementColumn(name="status"),
+        CircuitElementColumn(name="klass"),
+        CircuitElementColumn(name="v_min_pu"),
+        CircuitElementColumn(name="v_max_pu"),
+        CircuitElementColumn(name="v_min_norm"),
+        CircuitElementColumn(name="v_min_emerg"),
+        CircuitElementColumn(name="xf_kva"),
+        CircuitElementColumn(name="allocation_factor"),
+        CircuitElementColumn(name="kva"),
+        CircuitElementColumn(name="pct_mean"),
+        CircuitElementColumn(name="pct_std_dev"),
+        CircuitElementColumn(name="cvr_watts"),
+        CircuitElementColumn(name="cvr_vars")
+    ],
+    show_toolbar=True, deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=Load,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    Load().configure_traits()
 
 # EOF -------------------------------------------------------------------------

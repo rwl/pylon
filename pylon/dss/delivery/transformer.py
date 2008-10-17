@@ -24,6 +24,16 @@
 from enthought.traits.api import \
     Instance, Int, Float, Enum, Array, Bool, List, Str
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
+
 from pylon.dss.common.bus import Bus
 
 from power_delivery_element import PowerDeliveryElement
@@ -208,5 +218,101 @@ class Transformer(PowerDeliveryElement):
         1.0, desc="Parts per million by which the reactive term is increased"
         "to protect against accidentally floating a winding"
     )
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        [
+            # CircuitElement traits
+            "enabled", "base_freq",
+            # PowerDeliveryElement traits
+            "norm_amps", "emerg_amps", "fault_rate", "pct_perm", "repair",
+            # Transformer traits
+            "phases", "windings", "wdg", "bus", "conn", "kv", "kva", "tap",
+            "pct_r", "r_neut", "x_neut", "buses", "conns", "kv_s", "kva_s",
+            "taps", "x_hl", "x_ht", "x_lt", "x_sc_array", "thermal", "n", "m",
+            "fl_rise", "hs_rise", "pct_load_loss", "pct_no_load_loss",
+            "norm_h_kva", "emerg_h_kva", "substation", "max_tap", "min_tap",
+            "num_taps", "sub_name", "pct_image", "ppm_antifloat"
+        ],
+        id="pylon.delivery.transformer",
+        resizable=True, title="Transformer"
+    )
+
+#------------------------------------------------------------------------------
+#  Transformer table editor:
+#------------------------------------------------------------------------------
+
+transformers_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # PowerDeliveryElement traits
+        CircuitElementColumn(name="norm_amps"),
+        CircuitElementColumn(name="emerg_amps"),
+        CircuitElementColumn(name="fault_rate"),
+        CircuitElementColumn(name="pct_perm"),
+        CircuitElementColumn(name="repair"),
+        # Transformer traits
+        CircuitElementColumn(name="phases"),
+        CircuitElementColumn(name="windings"),
+        CircuitElementColumn(name="wdg"),
+        CircuitElementColumn(
+            name="bus",
+#            editor=InstanceEditor(name="buses", editable=False),
+            label="Source", format_func=lambda obj: obj.name
+        ),
+    ],
+    other_columns = [  # not initially displayed
+        CircuitElementColumn(name="conn"),
+        CircuitElementColumn(name="kv"),
+        CircuitElementColumn(name="kva"),
+        CircuitElementColumn(name="tap"),
+        CircuitElementColumn(name="pct_r"),
+        CircuitElementColumn(name="r_neut"),
+        CircuitElementColumn(name="x_neut"),
+        CircuitElementColumn(name="buses"),
+        CircuitElementColumn(name="conns"),
+        CircuitElementColumn(name="kv_s"),
+        CircuitElementColumn(name="kva_s"),
+        CircuitElementColumn(name="taps"),
+        CircuitElementColumn(name="x_hl"),
+        CircuitElementColumn(name="x_ht"),
+        CircuitElementColumn(name="x_lt"),
+        CircuitElementColumn(name="x_sc_array"),
+        CircuitElementColumn(name="thermal"),
+        CircuitElementColumn(name="n"),
+        CircuitElementColumn(name="m"),
+        CircuitElementColumn(name="fl_rise"),
+        CircuitElementColumn(name="hs_rise"),
+        CircuitElementColumn(name="pct_load_loss"),
+        CircuitElementColumn(name="pct_no_load_loss"),
+        CircuitElementColumn(name="norm_h_kva"),
+        CircuitElementColumn(name="emerg_h_kva"),
+        CircuitElementColumn(name="substation"),
+        CircuitElementColumn(name="max_tap"),
+        CircuitElementColumn(name="min_tap"),
+        CircuitElementColumn(name="num_taps"),
+        CircuitElementColumn(name="sub_name"),
+        CircuitElementColumn(name="pct_image"),
+        CircuitElementColumn(name="ppm_antifloat"),
+    ],
+    show_toolbar=True,
+    deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=Transformer,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    Transformer().configure_traits()
 
 # EOF -------------------------------------------------------------------------

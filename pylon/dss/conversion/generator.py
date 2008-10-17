@@ -24,6 +24,16 @@
 from enthought.traits.api import \
     Instance, List, Int, Float, Str, Trait, Enum, Bool
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
+
 from pylon.dss.common.bus import Bus
 
 from power_conversion_element import PowerConversionElement
@@ -266,5 +276,92 @@ class Generator(PowerConversionElement):
     # generator model for each iteration.  Creates a separate file for each
     # generator named "GEN_name.CSV".
     debug_trace = Bool(False)
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        [
+            # CircuitElement traits
+            "enabled", "base_freq",
+            # PowerConversionElement traits
+            "spectrum", "inj_current",
+            # Generator traits
+            "bus_1", "kv", "kw", "pf", "kvar", "model", "v_min_pu", "v_max_pu",
+            "yearly", "daily", "duty", "disp_mode", "disp_value", "conn",
+            "r_neut", "x_neut", "status", "klass", "v_pu", "max_kvar",
+            "min_kvar", "pv_factor", "force_on", "kva", "mva", "x_d", "x_dp",
+            "x_dpp", "h", "d", "user_model", "user_data", "shaft_model",
+            "shaft_data", "debug_trace"
+        ],
+        id="pylon.conversion.generator",
+        resizable=True, title="Generator"
+    )
+
+#------------------------------------------------------------------------------
+#  Generator table editor:
+#------------------------------------------------------------------------------
+
+generators_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # PowerConversionElement traits
+        CircuitElementColumn(name="spectrum"),
+        CircuitElementColumn(name="inj_current"),
+        # Generator traits
+        CircuitElementColumn(name="bus_1"),
+        CircuitElementColumn(name="kv"),
+        CircuitElementColumn(name="kw"),
+        CircuitElementColumn(name="pf"),
+        CircuitElementColumn(name="kvar"),
+    ],
+    other_columns = [  # not initially displayed
+        CircuitElementColumn(name="model"),
+        CircuitElementColumn(name="v_min_pu"),
+        CircuitElementColumn(name="v_max_pu"),
+        CircuitElementColumn(name="yearly"),
+        CircuitElementColumn(name="daily"),
+        CircuitElementColumn(name="duty"),
+        CircuitElementColumn(name="disp_mode"),
+        CircuitElementColumn(name="disp_value"),
+        CircuitElementColumn(name="conn"),
+        CircuitElementColumn(name="r_neut"),
+        CircuitElementColumn(name="x_neut"),
+        CircuitElementColumn(name="status"),
+        CircuitElementColumn(name="klass"),
+        CircuitElementColumn(name="v_pu"),
+        CircuitElementColumn(name="max_kvar"),
+        CircuitElementColumn(name="min_kvar"),
+        CircuitElementColumn(name="pv_factor"),
+        CircuitElementColumn(name="force_on"),
+        CircuitElementColumn(name="kva"),
+        CircuitElementColumn(name="mva"),
+        CircuitElementColumn(name="x_d"),
+        CircuitElementColumn(name="x_dp"),
+        CircuitElementColumn(name="x_dpp"),
+        CircuitElementColumn(name="h"),
+        CircuitElementColumn(name="d"),
+        CircuitElementColumn(name="user_model"),
+        CircuitElementColumn(name="user_data"),
+        CircuitElementColumn(name="shaft_model"),
+        CircuitElementColumn(name="shaft_data"),
+        CircuitElementColumn(name="debug_trace"),
+    ],
+    show_toolbar=True, deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=Generator,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    Generator().configure_traits()
 
 # EOF -------------------------------------------------------------------------

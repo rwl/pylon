@@ -23,6 +23,16 @@
 
 from enthought.traits.api import Instance, List, Int, Float, Bool
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
+
 from pylon.dss.delivery.api import Transformer
 
 from pylon.dss.common.bus import Bus
@@ -137,5 +147,87 @@ class RegulatorControl(ControlElement):
     # property. Defaults to the same winding as specified by the WINDING
     # property.
     tap_winding = Int(1)
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        [
+            # CircuitElement traits
+            "enabled", "base_freq",
+            # ControlElement traits
+            "element_name", "element_terminal", "controlled_bus_name",
+            "controlled_bus", "monitored_variable", "monitored_var_index",
+            "time_delay", "dbl_trace_param",
+            # RegulatorControl traits
+            "transformer", "winding", "v_reg", "band", "pt_ratio", "ct_prim",
+            "r", "x", "bus", "delay", "reversible", "rev_v_reg", "rev_band",
+            "rev_r", "rev_x", "tap_delay", "debug_trace", "max_tap_change",
+            "inverse_time", "tap_winding"
+        ],
+        id="pylon.control.regulator_control",
+        resizable=True, title="Regulator Control"
+    )
+
+#------------------------------------------------------------------------------
+#  RegulatorControl table editor:
+#------------------------------------------------------------------------------
+
+regulator_controls_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # ControlElement traits
+        CircuitElementColumn(name="element_name"),
+        CircuitElementColumn(name="element_terminal"),
+        CircuitElementColumn(name="controlled_bus_name"),
+        CircuitElementColumn(name="controlled_bus"),
+        CircuitElementColumn(name="monitored_variable"),
+        CircuitElementColumn(name="monitored_var_index"),
+        CircuitElementColumn(name="time_delay"),
+        CircuitElementColumn(name="dbl_trace_param"),
+        # RegulatorControl traits
+        CircuitElementColumn(name="element"),
+        CircuitElementColumn(name="terminal"),
+        CircuitElementColumn(name="capacitor"),
+    ],
+    other_columns = [  # not initially displayed
+        CircuitElementColumn(name="transformer"),
+        CircuitElementColumn(name="winding"),
+        CircuitElementColumn(name="v_reg"),
+        CircuitElementColumn(name="band"),
+        CircuitElementColumn(name="pt_ratio"),
+        CircuitElementColumn(name="ct_prim"),
+        CircuitElementColumn(name="r"),
+        CircuitElementColumn(name="x"),
+        CircuitElementColumn(name="bus"),
+        CircuitElementColumn(name="delay"),
+        CircuitElementColumn(name="reversible"),
+        CircuitElementColumn(name="rev_v_reg"),
+        CircuitElementColumn(name="rev_band"),
+        CircuitElementColumn(name="rev_r"),
+        CircuitElementColumn(name="rev_x"),
+        CircuitElementColumn(name="tap_delay"),
+        CircuitElementColumn(name="debug_trace"),
+        CircuitElementColumn(name="max_tap_change"),
+        CircuitElementColumn(name="inverse_time"),
+        CircuitElementColumn(name="tap_winding"),
+    ],
+    show_toolbar=True,
+    deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=RegulatorControl,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    RegulatorControl().configure_traits()
 
 # EOF -------------------------------------------------------------------------

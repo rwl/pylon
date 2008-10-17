@@ -39,6 +39,8 @@ from pylon.dss.control.api import \
 
 from pylon.dss.meter.api import MeterElement
 
+from circuit_view import circuit_view
+
 #------------------------------------------------------------------------------
 #  "Circuit" class:
 #------------------------------------------------------------------------------
@@ -67,7 +69,9 @@ class Circuit(HasTraits):
 
     dss_controls = List(Instance(ControlElement))
 
-    sources = List(Instance(VoltageSource))
+    voltage_sources = List(Instance(VoltageSource))
+
+    current_sources = List(Instance(CurrentSource))
 
     meter_elements = List(Instance(MeterElement))
 
@@ -217,5 +221,9 @@ class Circuit(HasTraits):
     reduction_strategy_string = Str
 
     pct_normal_factor = Float
+
+    # Views -------------------------------------------------------------------
+
+    traits_view = circuit_view
 
 # EOF -------------------------------------------------------------------------
