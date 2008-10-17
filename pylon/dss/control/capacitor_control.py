@@ -23,6 +23,16 @@
 
 from enthought.traits.api import Instance, List, Int, Float, Bool, Enum
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
+
 from pylon.dss.delivery.api import PowerDeliveryElement, Capacitor
 
 from control_element import ControlElement
@@ -129,5 +139,77 @@ class CapacitorControl(ControlElement):
 
     # Dead time after capacitor is turned OFF before it can be turned back ON.
     dead_time = Float(300.0)
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        [
+            # CircuitElement traits
+            "enabled", "base_freq",
+            # ControlElement traits
+            "element_name", "element_terminal", "controlled_bus_name",
+            "controlled_bus", "monitored_variable", "monitored_var_index",
+            "time_delay", "dbl_trace_param",
+            # CacacitorControl traits
+            "element", "terminal", "capacitor", "type", "pt_ratio", "ct_ratio",
+            "on_setting", "off_setting", "delay", "volt_override", "v_max",
+            "v_min", "delay_off", "dead_time"
+        ],
+        id="pylon.conversion.capacitor_control",
+        resizable=True, title="Capacitor Control"
+    )
+
+#------------------------------------------------------------------------------
+#  CapacitorControl table editor:
+#------------------------------------------------------------------------------
+
+capacitor_controls_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # ControlElement traits
+        CircuitElementColumn(name="element_name"),
+        CircuitElementColumn(name="element_terminal"),
+        CircuitElementColumn(name="controlled_bus_name"),
+        CircuitElementColumn(name="controlled_bus"),
+        CircuitElementColumn(name="monitored_variable"),
+        CircuitElementColumn(name="monitored_var_index"),
+        CircuitElementColumn(name="time_delay"),
+        CircuitElementColumn(name="dbl_trace_param"),
+        # CapacitorControl traits
+        CircuitElementColumn(name="element"),
+        CircuitElementColumn(name="terminal"),
+        CircuitElementColumn(name="capacitor"),
+    ],
+    other_columns = [  # not initially displayed
+        CircuitElementColumn(name="type"),
+        CircuitElementColumn(name="pt_ratio"),
+        CircuitElementColumn(name="ct_ratio"),
+        CircuitElementColumn(name="on_setting"),
+        CircuitElementColumn(name="off_setting"),
+        CircuitElementColumn(name="delay"),
+        CircuitElementColumn(name="volt_override"),
+        CircuitElementColumn(name="v_max"),
+        CircuitElementColumn(name="v_min"),
+        CircuitElementColumn(name="delay_off"),
+        CircuitElementColumn(name="dead_time"),
+    ],
+    show_toolbar=True,
+    deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=CapacitorControl,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    CapacitorControl().configure_traits()
 
 # EOF -------------------------------------------------------------------------

@@ -23,9 +23,19 @@
 
 from enthought.traits.api import Instance, List, Int, Float, Enum, Array, Bool
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
 from pylon.dss.common.bus import Bus
 
 from power_delivery_element import PowerDeliveryElement
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
 
 #------------------------------------------------------------------------------
 #  "Fault" class:
@@ -94,5 +104,84 @@ class Fault(PowerDeliveryElement):
     min_amps = Float(
         5.0, desc="Minimum amps that can sustain a temporary fault"
     )
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        # CircuitElement traits
+        Item("enabled"),
+        Item("base_freq"),
+        # PowerDeliveryElement traits
+        Item("norm_amps"),
+        Item("emerg_amps"),
+        Item("fault_rate"),
+        Item("pct_perm"),
+        Item("repair"),
+        # Fault traits
+        Item("bus_1"),
+        Item("bus_2"),
+        Item("phases"),
+        Item("r"),
+        Item("pct_std_dev"),
+        Item("g_matrix"),
+        Item("on_time"),
+        Item("temporary"),
+        Item("min_amps"),
+        id="pylon.delivery.fault",
+        resizable=True,
+        buttons=["OK", "Cancel", "Help"]
+    )
+
+#------------------------------------------------------------------------------
+#  Faults table editor:
+#------------------------------------------------------------------------------
+
+faults_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # PowerDeliveryElement traits
+        CircuitElementColumn(name="norm_amps"),
+        CircuitElementColumn(name="emerg_amps"),
+        CircuitElementColumn(name="fault_rate"),
+        CircuitElementColumn(name="pct_prem"),
+        CircuitElementColumn(name="repair"),
+        # Fault traits
+        CircuitElementColumn(
+            name="bus_1",
+#            editor=InstanceEditor(name="buses", editable=False),
+            label="Source", format_func=lambda obj: obj.name
+        ),
+        CircuitElementColumn(
+            name="bus_2",
+#            editor=InstanceEditor(name="buses", editable=False),
+            label="Target", format_func=lambda obj: obj.name
+        ),
+        CircuitElementColumn(name="phases"),
+        CircuitElementColumn(name="r"),
+    ],
+    other_columns = [  # not initially displayed
+        CircuitElementColumn(name="pct_std_dev"),
+        CircuitElementColumn(name="on_time"),
+        CircuitElementColumn(name="temporary"),
+        CircuitElementColumn(name="min_amps")
+    ],
+#    show_toolbar=True,
+    deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=Fault,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    Fault().configure_traits()
 
 # EOF -------------------------------------------------------------------------

@@ -23,9 +23,19 @@
 
 from enthought.traits.api import Instance, List, Int, Float, Enum
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
 from pylon.dss.common.bus import Bus
 
 from power_conversion_element import PowerConversionElement
+
+from pylon.dss.common.circuit_element import CircuitElementColumn
 
 #------------------------------------------------------------------------------
 #  "VoltageSource" class:
@@ -106,11 +116,78 @@ class VoltageSource(PowerConversionElement):
     x0 = Float(5.7, desc="Zero-sequence reactance")
 
     # Base Frequency for impedance specifications.
-    base_freq = Float(60.0, desc="Base frequency for impedance specifications")
+#    base_freq = Float(60.0, desc="Base frequency for impedance specifications")
 
     # {pos*| zero | none} Maintain specified sequence for harmonic solution.
     # Default is positive sequence. Otherwise, angle between phases rotates
     # with harmonic.
     scan_type = Enum("Positive", "Zero", "None")
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        [
+            # CircuitElement traits
+            "enabled", "base_freq",
+            # PowerConversionElement traits
+            "spectrum", "inj_current",
+            # VoltageSource traits
+            "bus_1", "base_kv", "pu", "angle", "frequency", "phases",
+            "mva_sc3", "mva_sc1", "x1_r1", "x0_r0", "i_sc3", "i_sc1",
+            "r1", "x1", "r0", "x0", "scan_type"
+        ],
+        id="pylon.conversion.voltage_source",
+        resizable=True
+    )
+
+#------------------------------------------------------------------------------
+#  VoltageSource table editor:
+#------------------------------------------------------------------------------
+
+voltage_sources_table_editor = TableEditor(
+    columns=[
+        # CircuitElement traits
+        CheckboxColumn(name="enabled"),
+        CircuitElementColumn(name="base_freq"),
+        # PowerConversionElement traits
+        CircuitElementColumn(name="spectrum"),
+        CircuitElementColumn(name="inj_current"),
+        # VoltageSource traits
+        CircuitElementColumn(name="bus_1"),
+        CircuitElementColumn(name="base_kv"),
+        CircuitElementColumn(name="pu"),
+        CircuitElementColumn(name="angle"),
+        CircuitElementColumn(name="frequency")
+    ],
+    other_columns = [  # not initially displayed
+        CircuitElementColumn(name="phases"),
+        CircuitElementColumn(name="mva_sc3"),
+        CircuitElementColumn(name="mva_sc1"),
+        CircuitElementColumn(name="x1_r1"),
+        CircuitElementColumn(name="x0_r0"),
+        CircuitElementColumn(name="i_sc3"),
+        CircuitElementColumn(name="i_sc1"),
+        CircuitElementColumn(name="r1"),
+        CircuitElementColumn(name="x1"),
+        CircuitElementColumn(name="r0"),
+        CircuitElementColumn(name="x0"),
+        CircuitElementColumn(name="scan_type"),
+    ],
+    show_toolbar=True,
+    deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=VoltageSource,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    VoltageSource().configure_traits()
 
 # EOF -------------------------------------------------------------------------
