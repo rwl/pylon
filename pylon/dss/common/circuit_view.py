@@ -72,6 +72,28 @@ circuit_view = View(
             label="Buses", id=".buses_table"
         ),
         Group(
+            Item(name="lines", editor=lines_table_editor, show_label=False),
+            label="Lines", id=".lines_table"
+        ),
+        Group(
+            Item(
+                name="transformers", editor=transformers_table_editor,
+                show_label=False, id=".transformers_table"
+            ),
+            label="Transformers"
+        ),
+        Group(
+            Item(
+                name="generators", editor=generators_table_editor,
+                show_label=False, id=".generators_table"
+            ),
+            label="Generators"
+        ),
+        Group(
+            Item(name="loads", editor=loads_table_editor, show_label=False),
+            label="Loads", id=".loads_table"
+        ),
+        Group(
             Item(name="faults", editor=faults_table_editor, show_label=False),
             label="Faults", id=".faults_table"
         ),
@@ -89,21 +111,14 @@ circuit_view = View(
             ),
             label="Current Sources"
         ),
+        Group(
+            Item(
+                name="shunt_capacitors", editor=capacitors_table_editor,
+                show_label=False
+            ),
+            label="Shunt Capacitors", id=".capacitors_table"
+        ),
 #        Group(Item(name="meter_elements"), label="Meters"),
-        Group(
-            Item(
-                name="generators", editor=generators_table_editor,
-                show_label=False, id=".generators_table"
-            ),
-            label="Generators"
-        ),
-        Group(
-            Item(
-                name="transformers", editor=transformers_table_editor,
-                show_label=False, id=".transformers_table"
-            ),
-            label="Transformers"
-        ),
         Group(
             Item(
                 name="cap_controls", editor=capacitor_controls_table_editor,
@@ -117,21 +132,6 @@ circuit_view = View(
                 show_label=False, id=".regulator_controls_table"
             ),
             label="Regulator Controls"
-        ),
-        Group(
-            Item(name="lines", editor=lines_table_editor, show_label=False),
-            label="Lines", id=".lines_table"
-        ),
-        Group(
-            Item(name="loads", editor=loads_table_editor, show_label=False),
-            label="Loads", id=".loads_table"
-        ),
-        Group(
-            Item(
-                name="shunt_capacitors", editor=capacitors_table_editor,
-                show_label=False
-            ),
-            label="Shunt Capacitors", id=".capacitors_table"
         ),
         dock="tab", springy=True
     ),
