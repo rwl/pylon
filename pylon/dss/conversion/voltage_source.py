@@ -139,7 +139,9 @@ class VoltageSource(PowerConversionElement):
             "r1", "x1", "r0", "x0", "scan_type"
         ],
         id="pylon.conversion.voltage_source",
-        resizable=True
+        resizable=True,
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

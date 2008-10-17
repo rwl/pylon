@@ -23,6 +23,15 @@
 
 from enthought.traits.api import HasTraits, Str, List, Int, Float, Bool
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.table_column import ObjectColumn
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
 #------------------------------------------------------------------------------
 #  "Bus" class:
 #------------------------------------------------------------------------------
@@ -92,5 +101,46 @@ class Bus(HasTraits):
 
     # Flag for general use in bus searches
     is_radial_bus = Bool(False)
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        ["name", "v_bus", "bus_current", "z_sc", "y_sc", "x", "y", "kv_base"],
+        id="pylon.common.bus",
+        resizable=True, title="Bus",
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
+    )
+
+#------------------------------------------------------------------------------
+#  Bus table editor:
+#------------------------------------------------------------------------------
+
+buses_table_editor = TableEditor(
+    columns = [
+        ObjectColumn(name="name"),
+        ObjectColumn(name="v_bus"),
+        ObjectColumn(name="bus_current"),
+        ObjectColumn(name="z_sc"),
+        ObjectColumn(name="y_sc"),
+        ObjectColumn(name="x"),
+        ObjectColumn(name="y"),
+        ObjectColumn(name="kv_base")
+    ],
+    show_toolbar=True, deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=Bus,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    Bus().configure_traits()
 
 # EOF -------------------------------------------------------------------------

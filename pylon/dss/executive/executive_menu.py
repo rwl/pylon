@@ -109,6 +109,25 @@ transformer_action = Action(name="&Transformer", action="new_transformer")
 generator_action = Action(name="&Generator", action="new_generator")
 load_action = Action(name="&Load", action="new_load")
 
+voltage_source_action = Action(
+    name="&Voltage Source", action="new_voltage_source"
+)
+
+current_source_action = Action(
+    name="&Current Source", action="new_current source"
+)
+
+fault_action = Action(name="&Fault", action="new_fault")
+capacitor_action = Action(name="C&apacitor", action="new_capacitor")
+
+capacitor_control_action = Action(
+    name="Ca&pacitor Control", action="new_capacitor_control"
+)
+
+regulator_control_action = Action(
+    name="&Regulator Control", action="new_regulator_control"
+)
+
 #------------------------------------------------------------------------------
 #  Help actions:
 #------------------------------------------------------------------------------
@@ -139,10 +158,12 @@ edit_menu = Menu(
 
 circuit_menu = Menu(
     "|", bus_action, line_action, transformer_action, generator_action,
-    load_action, name="&Circuit"
+    load_action, voltage_source_action, current_source_action, fault_action,
+    capacitor_action, capacitor_control_action, regulator_control_action,
+    name="&Circuit"
 )
 
-help_menu = Menu("|", help_action, "_", about_action, name="&Help")
+help_menu = Menu(about_action, name="&Help")
 
 menu_bar = MenuBar(file_menu, edit_menu, circuit_menu, help_menu)
 

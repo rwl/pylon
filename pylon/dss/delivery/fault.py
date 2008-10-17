@@ -131,7 +131,8 @@ class Fault(PowerDeliveryElement):
         Item("min_amps"),
         id="pylon.delivery.fault",
         resizable=True,
-        buttons=["OK", "Cancel", "Help"]
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

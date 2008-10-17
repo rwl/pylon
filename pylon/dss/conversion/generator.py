@@ -296,7 +296,9 @@ class Generator(PowerConversionElement):
             "shaft_data", "debug_trace"
         ],
         id="pylon.conversion.generator",
-        resizable=True, title="Generator"
+        resizable=True, title="Generator",
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

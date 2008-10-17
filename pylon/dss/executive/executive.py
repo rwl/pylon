@@ -33,6 +33,14 @@ from executive_options import ExecutiveOptions
 
 from executive_menu import menu_bar, tool_bar
 
+from pylon.dss.common.bus import Bus
+from pylon.dss.delivery.api import Fault, Transformer, Line, Capacitor
+from pylon.dss.control.api import CapacitorControl
+from pylon.dss.control.api import RegulatorControl
+
+from pylon.dss.conversion.api import \
+    VoltageSource, CurrentSource, Generator, Load
+
 #------------------------------------------------------------------------------
 #  "ExecCommand" class:
 #------------------------------------------------------------------------------
@@ -74,6 +82,138 @@ class Executive(ModelView):
 
         if info.initialized and (options is not None):
             options.edit_traits(parent=info.ui.control, kind="livemodal")
+
+
+    def new_bus(self, info):
+        """ Handles adding a new bus to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = Bus()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.buses.append(e)
+
+
+    def new_line(self, info):
+        """ Handles adding a new line to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = Line()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.lines.append(e)
+
+
+    def new_transformer(self, info):
+        """ Handles adding a new transformer to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = Transformer()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.transformers.append(e)
+
+
+    def new_generator(self, info):
+        """ Handles adding a new generator to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = Generator()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.generators.append(e)
+
+
+    def new_load(self, info):
+        """ Handles adding a new load to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = Load()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.loads.append(e)
+
+
+    def new_voltage_source(self, info):
+        """ Handles adding a new voltage source to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = VoltageSource()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.voltage_sources.append(e)
+
+
+    def new_current_source(self, info):
+        """ Handles adding a new current source to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = VoltageSource()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.voltage_sources.append(e)
+
+
+    def new_fault(self, info):
+        """ Handles adding a new line to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = Fault()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.faults.append(e)
+
+
+    def new_capacitor(self, info):
+        """ Handles adding a new capacitor to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = Capacitor()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.shunt_capacitors.append(e)
+
+
+    def new_capacitor_control(self, info):
+        """ Handles adding a new capacitor control to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = CapacitorControl()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.cap_controls.append(e)
+
+
+    def new_regulator_control(self, info):
+        """ Handles adding a new regulator control to the circuit """
+
+        circuit = self.model
+
+        if info.initialized and (circuit is not None):
+            e = RegulatorControl()
+            retval = e.edit_traits(parent=info.ui.control, kind="livemodal")
+            if retval.result:
+                circuit.reg_controls.append(e)
 
 
 

@@ -167,7 +167,9 @@ class RegulatorControl(ControlElement):
             "inverse_time", "tap_winding"
         ],
         id="pylon.control.regulator_control",
-        resizable=True, title="Regulator Control"
+        resizable=True, title="Regulator Control",
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

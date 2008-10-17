@@ -23,6 +23,7 @@
 
 from enthought.traits.ui.api import View, Item, Group, HGroup, Tabbed
 
+from pylon.dss.common.bus import buses_table_editor
 from pylon.dss.delivery.fault import faults_table_editor
 from pylon.dss.conversion.voltage_source import voltage_sources_table_editor
 from pylon.dss.conversion.current_source import current_sources_table_editor
@@ -65,6 +66,10 @@ circuit_view = View(
                 Item("price_signal"),
             ),
             label="General"
+        ),
+        Group(
+            Item(name="buses", editor=buses_table_editor, show_label=False),
+            label="Buses", id=".buses_table"
         ),
         Group(
             Item(name="faults", editor=faults_table_editor, show_label=False),
