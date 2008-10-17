@@ -265,7 +265,9 @@ class Load(PowerConversionElement):
             "cvr_watts", "cvr_vars"
         ],
         id="pylon.conversion.load",
-        resizable=True, title="Load"
+        resizable=True, title="Load",
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

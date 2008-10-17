@@ -83,7 +83,9 @@ class CurrentSource(PowerConversionElement):
             "bus_1", "amps", "angle", "frequency", "phases", "scan_type"
         ],
         id="pylon.conversion.current_source",
-        resizable=True
+        resizable=True,
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

@@ -194,7 +194,9 @@ class Line(PowerDeliveryElement):
             "switch", "rg", "xg", "rho", "geometry", "units"
         ],
         id="pylon.delivery.line",
-        resizable=True, title="Line"
+        resizable=True, title="Line",
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

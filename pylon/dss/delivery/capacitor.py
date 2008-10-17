@@ -151,7 +151,9 @@ class Capacitor(PowerDeliveryElement):
             "cuf", "r", "xl", "harm", "n_steps", "states"
         ],
         id="pylon.delivery.capacitor",
-        resizable=True, title="Capacitor"
+        resizable=True, title="Capacitor",
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

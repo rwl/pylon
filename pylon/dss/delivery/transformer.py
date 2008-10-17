@@ -238,7 +238,9 @@ class Transformer(PowerDeliveryElement):
             "num_taps", "sub_name", "pct_image", "ppm_antifloat"
         ],
         id="pylon.delivery.transformer",
-        resizable=True, title="Transformer"
+        resizable=True, title="Transformer",
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

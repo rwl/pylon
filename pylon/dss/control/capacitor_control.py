@@ -158,7 +158,9 @@ class CapacitorControl(ControlElement):
             "v_min", "delay_off", "dead_time"
         ],
         id="pylon.conversion.capacitor_control",
-        resizable=True, title="Capacitor Control"
+        resizable=True, title="Capacitor Control",
+        buttons=["OK", "Cancel", "Help"],
+        close_result=False
     )
 
 #------------------------------------------------------------------------------

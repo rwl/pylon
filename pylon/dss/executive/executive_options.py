@@ -25,6 +25,8 @@ from enthought.traits.api import \
     HasTraits, Instance, Int, Float, Enum, Tuple, Str, Range, Bool, \
     Directory, List
 
+from enthought.traits.ui.api import View, Item, Group, HGroup
+
 from pylon.dss.common.circuit_element import CircuitElement
 
 from pylon.dss.common.circuit import Circuit
@@ -442,5 +444,46 @@ class ExecutiveOptions(HasTraits):
     # For yearly solution mode, sets voltage exception reporting on/off.
     # DemandInterval must be set to true for this to have effect.
     voltage_exception_report = Bool(False)
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(HGroup(
+        Group(
+            [
+                "marker_code", "random", "ld_curve", "number", "load_mult",
+                "pct_mean", "load_model", "log", "trace_mode", "ue_regs",
+                "add_type", "gen_pf", "terminal", "harmonics", "type",
+                "default_yearly", "max_controller", "pct_growth",
+                "demand_interval", "bus", "case_name", "hour", "loss_regs",
+                "auto_bus_list", "keep_list", "norm_vmax_pu", "pct_normal",
+                "price_signal", "trait_modified", "node_width", "data_path",
+                "norm_vmin_pu", "frequency", "sec", "cap_kvar", "year"
+            ]
+        ),
+        Group(
+            [
+                "price_curve", "pct_std_dev", "ckt_model", "trait_added",
+                "allow_duplicates", "emerg_vmin_pu", "step_size",
+                "reduce_option", "voltage_bases", "recorder", "loss_weight",
+                "tolerance", "gen_mult", "zone_lock", "default_daily",
+                "ue_weight", "allocation_factors", "di_verbose", "gen_kw",
+                "base_frequency", "algorithm", "overload_report",
+                "voltage_exception_report", "element", "circuit", "time",
+                "control_mode", "emerg_vmax_pu", "mode", "trapezoidal",
+                "max_iter"
+            ]
+        )),
+        id="pylon.executive.executive_options",
+        resizable=True, title="Preferences"
+    )
+
+#------------------------------------------------------------------------------
+#  Standalone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    ExecutiveOptions().configure_traits()
 
 # EOF -------------------------------------------------------------------------
