@@ -28,11 +28,13 @@ from text import Text
 from ellipse import Ellipse
 from polygon import Polygon
 
+from godot.node import DotGraphNode
+
 #------------------------------------------------------------------------------
 #  "Node" class:
 #------------------------------------------------------------------------------
 
-class Node(Container):
+class DiagramNode(Container):
     """ Defines a container for all components constituting a node """
 
     # Main node label
@@ -40,6 +42,8 @@ class Node(Container):
 
     # Outermost shape
     node = Either(Ellipse, Polygon)
+
+    dot_attrs = Instance(DotGraphNode, ())
 
     #--------------------------------------------------------------------------
     #  Component interface
