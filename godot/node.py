@@ -25,7 +25,7 @@ from enthought.traits.api import HasTraits, Color, String
 #  "Node" class:
 #------------------------------------------------------------------------------
 
-class Node(HasTraits):
+class DotGraphNode(HasTraits):
     """ A graph node """
 
     # Basic drawing color for graphics, not text. For the latter, use the
