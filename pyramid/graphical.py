@@ -25,7 +25,7 @@ from pylon.ui.graph.component.text import Text
 
 class DiagramCanvas(HasTraits):
 
-    figures = List(Instance(Component))
+#    figures = List(Instance(Component))
 
     nodes = List(Instance(DiagramNode))
 

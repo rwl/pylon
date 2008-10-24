@@ -21,7 +21,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import Instance, Either
+from enthought.traits.api import HasTraits, Instance, Either
 from enthought.enable.api import Container
 
 from text import Text
@@ -36,6 +36,9 @@ from godot.node import DotGraphNode
 
 class DiagramNode(Container):
     """ Defines a container for all components constituting a node """
+
+    # Object represented by the node
+    element = Instance(HasTraits)
 
     # Main node label
     label = Instance(Text)
@@ -55,5 +58,13 @@ class DiagramNode(Container):
     def _position_changed(self, new):
 
         print "Node position:", new
+
+
+    def normal_left_dclick(self, event):
+        """ Handles activation of the node """
+
+        if self.element is not None:
+            self.element.edit_traits(kind="livemodal")
+            event.handled = True
 
 # EOF -------------------------------------------------------------------------
