@@ -17,10 +17,7 @@
 
 #  Generated from Attributes.ecore on Wed 27/08/2008 at 09:14
 
-"""
-mixed
-
-"""
+""" mixed """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -39,10 +36,7 @@ from ecore.e_string_to_string_map_entry import EStringToStringMapEntry
 #------------------------------------------------------------------------------
 
 class DocumentRoot(HasTraits):
-    """
-    mixed
-
-    """
+    """ mixed """
 
     #--------------------------------------------------------------------------
     #  Trait definitions:

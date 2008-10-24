@@ -49,8 +49,8 @@ from pylon.ui.graph.pydot.pydot import \
     Dot, Node, Edge, Graph, graph_from_dot_data
 
 from pylon.ui.graph.component.api import Pen, Text, Ellipse, Bezier, Polygon
-from pylon.ui.graph.component.node import Node as NodeContainer
-from pylon.ui.graph.component.edge import Edge as EdgeContainer
+from pylon.ui.graph.component.node import DiagramNode
+from pylon.ui.graph.component.edge import DiagramEdge
 
 #------------------------------------------------------------------------------
 #  Logging
@@ -347,9 +347,9 @@ class XDotParser(HasTraits):
 
         canvas = Canvas()
 
-        for node in self._parse_nodes(graph):
+        for node in self.parse_nodes(graph):
             canvas.add(node)
-        for edge in self._parse_edges(graph):
+        for edge in self.parse_edges(graph):
             canvas.add(edge)
 
         return canvas
@@ -358,7 +358,7 @@ class XDotParser(HasTraits):
     #  Private interface
     #--------------------------------------------------------------------------
 
-    def _parse_nodes(self, graph):
+    def parse_nodes(self, graph):
         """ Parses the xdot node data and returns a list of containers """
 
         nodes = []
@@ -400,20 +400,21 @@ class XDotParser(HasTraits):
             if node_shapes:
                 # Graphviz node is positioned according to its centre, but
                 # an Enable component according to the bottom-left corner
-                cont = NodeContainer(position=pos, bounds=bounds)
+                dn = DiagramNode(position=pos, bounds=bounds)
+                dn.dot_attrs.name=id
                 for shape in node_shapes:
-                    cont.add(shape)
+                    dn.add(shape)
                 # Add some handy tools
-                cont.tools.append(MoveTool(cont))
-#                cont.tools.append(TraitsTool(cont))
+                dn.tools.append(MoveTool(dn))
+#                dn.tools.append(TraitsTool(dn))
                 # Add node component to the list to be drawn on the canvas
-                nodes.append(cont)
+                nodes.append(dn)
             logger.debug("Nodes: %s", nodes)
 
         return nodes
 
 
-    def _parse_edges(self, graph):
+    def parse_edges(self, graph):
         """ Parses xdot edge data and returns a list of containers """
 
         edges = []
@@ -464,7 +465,7 @@ class XDotParser(HasTraits):
 #                for node in graph.get_node_list():
 #                    name = node.get_name()
 
-                cont = EdgeContainer(bounds=bounds, position=pos)
+                cont = DiagramEdge(bounds=bounds, position=pos)
                 for shape in edge_shapes:
                     cont.add(shape)
                 # Add some handy tools

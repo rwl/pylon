@@ -19,7 +19,21 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Color, String
+from enthought.traits.api import \
+    HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
+    List, Tuple
+
+#------------------------------------------------------------------------------
+#  Trait definitions:
+#------------------------------------------------------------------------------
+
+shape_trait = Enum(
+   "rectangle", "ellipse", "circle", "invtriangle", "invtrapezium", "point",
+   "egg", "triangle", "plaintext", "diamond" "trapezium", "parallelogram",
+   "house", "pentagon", "hexagon", "septagon", "octagon", "doublecircle",
+   "doubleoctagon", "tripleoctagon", "invhouse", "none", "note", "tab",
+   "box3d", "component", desc="node shape", label="Node shape"
+)
 
 #------------------------------------------------------------------------------
 #  "Node" class:
@@ -27,6 +41,8 @@ from enthought.traits.api import HasTraits, Color, String
 
 class DotGraphNode(HasTraits):
     """ A graph node """
+
+    name = Str
 
     # Basic drawing color for graphics, not text. For the latter, use the
     # <html:a rel="attr">fontcolor</html:a> attribute.
@@ -49,7 +65,13 @@ class DotGraphNode(HasTraits):
     # If no color scheme is set, the standard X11 naming is used.
     # For example, if <html:code>colorscheme=bugn9</html:code>, then <html:code>color=7</html:code>
     # is interpreted as <html:code>/bugn9/7</html:code>.
-    colorscheme = Enum(desc="a color scheme namespace")
+    colorscheme = Enum(
+        "X11", "Accent", "Blues", "BRBG", "BUGN", "BUPU", "Dark", "GUBU",
+        "Greens", "Greys", "Oranges", "OORD", "Paired", "Pastel", "PIYG",
+        "PRGN", "PUBU", "PUBUGN", "PUOR", "PURD", "Purples", "RDBU", "RDGY",
+        "RDPU", "RDYLBU", "RDYLGN", "Reds", "Set", "Spectral", "YLGN",
+        "YLGNBU", "YLORBR", "YLORRD", desc="a color scheme namespace"
+    )
 
 	# Comments are inserted into output. Device-dependent.
     comment = Str(desc="comments inserted into output")
@@ -71,7 +93,9 @@ class DotGraphNode(HasTraits):
     # Note that a cluster inherits the root graph's attributes if defined.
     # Thus, if the root graph has defined a <html:a rel="attr">fillcolor</html:a>, this will override a
     # <html:a rel="attr">color</html:a> or <html:a rel="attr">bgcolor</html:a> attribute set for the cluster.
-    fillcolor = Color(desc="fill color for background of a node or cluster")
+    fillcolor = Color(
+        "black", desc="fill color for background of a node or cluster"
+    )
 
     # If true, the node size is specified by the values of the
     # <html:a rel="attr">width</html:a>
@@ -80,7 +104,7 @@ class DotGraphNode(HasTraits):
     fixedsize = Float(desc="node size to be specified by 'width' and 'height'")
 
 	# Color used for text.
-    fontcolor = Color(desc="color used for text")
+    fontcolor = Color("black", desc="color used for text")
 
     # Font used for text. This very much depends on the output format and, for
     # non-bitmap output such as PostScript or SVG, the availability of the font
@@ -250,7 +274,7 @@ class DotGraphNode(HasTraits):
     # If the object has a URL, this attribute determines which window
     # of the browser is used for the URL.
     # See <html:a href="http://www.w3.org/TR/html401/present/frames.html#adef-target">W3C documentation</html:a>.
-    target = EscString
+    target = Str# EscString
 
     # Tooltip annotation attached to the node or edge. If unset, Graphviz
     # will use the object's <html:a rel="attr">label</html:a> if defined.
@@ -258,7 +282,7 @@ class DotGraphNode(HasTraits):
     # label, the resulting tooltip may be unhelpful. In this case, if
     # tooltips will be generated, the user should set a <html:tt>tooltip</html:tt>
     # attribute explicitly.
-    tooltip = EscString(desc="tooltip annotation attached to the node or edge")
+    tooltip = Str# EscString(desc="tooltip annotation attached to the node or edge")
 
     # Hyperlinks incorporated into device-dependent output.
     # At present, used in ps2, cmap, i*map and svg formats.
@@ -284,7 +308,7 @@ class DotGraphNode(HasTraits):
     # <html:a rel="attr">edgeURL</html:a> allow control of various parts of an
     # edge. Also note that, if active areas of two edges overlap, it is unspecified
     # which area dominates.
-    url = String(desc="hyperlinks incorporated into device-dependent output")
+    url = Str(desc="hyperlinks incorporated into device-dependent output")
 
     # If the input graph defines this attribute, the node is polygonal,
     # and output is dot or xdot, this attribute provides the

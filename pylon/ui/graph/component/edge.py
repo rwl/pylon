@@ -25,13 +25,13 @@ from enthought.traits.api import Instance
 from enthought.enable.api import Container
 
 from text import Text
-from node import Node
+from node import DiagramNode
 
 #------------------------------------------------------------------------------
-#  "Edge" class:
+#  "DiagramEdge" class:
 #------------------------------------------------------------------------------
 
-class Edge(Container):
+class DiagramEdge(Container):
     """ Defines a container for all components constituting an edge """
 
     # Main text label of the edge
@@ -44,10 +44,10 @@ class Edge(Container):
     tail_label = Instance(Text)
 
     # From/source/start node container
-    source_node = Instance(Node)
+    source_node = Instance(DiagramNode)
 
     # To/target/end node container
-    target_node = Instance(Node)
+    target_node = Instance(DiagramNode)
 
     #--------------------------------------------------------------------------
     #  Component interface
