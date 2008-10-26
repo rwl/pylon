@@ -16,11 +16,13 @@
 #------------------------------------------------------------------------------
 
 from enthought.traits.api import \
-    HasTraits, Instance, List, ListStr, Enum, Callable, Str, Dict
+    HasTraits, Instance, List, ListStr, Enum, Callable, Str, Dict, \
+    Event, Button, on_trait_change
+
 from enthought.traits.ui.api import View, Group, Item
 
 from enthought.enable.api import Canvas, Viewport, Container
-from enthought.enable.tools.api import ViewportPanTool, MoveTool
+from enthought.enable.tools.api import ViewportPanTool, MoveTool, ResizeTool
 from enthought.enable.base_tool import BaseTool
 from enthought.enable.component_editor import ComponentEditor
 
@@ -30,6 +32,9 @@ from pylon.ui.graph.xdot_parser import XDotParser
 
 from godot.node import DotGraphNode as GodotNode
 from godot.edge import Edge as GodotEdge
+
+from element_tool import ElementTool
+from context_menu_tool import ContextMenuTool
 
 class CanvasMapping(HasTraits):
 
@@ -41,6 +46,8 @@ class CanvasMapping(HasTraits):
     diagram_canvas = Instance(Canvas)
 
     domain_model = Instance(HasTraits)
+
+    tools = List(Callable)#Instance(BaseTool))
 
 #    palette
 
@@ -58,6 +65,17 @@ class CanvasMapping(HasTraits):
         id="pyramid.canvas_mapping", resizable=True
     )
 
+    def _diagram_canvas_default(self):
+        """ Trait initialiser """
+
+        canvas = Canvas()
+
+        for tool in self.tools:
+            canvas.tools.append(tool(canvas))
+
+        return canvas
+
+
     def _viewport_default(self):
         """ Trait initialiser """
 
@@ -67,10 +85,39 @@ class CanvasMapping(HasTraits):
         return vp
 
 
-    def _domain_model_changed(self, new):
-        """ Handles change of the domain model """
+    @on_trait_change("tools")
+    def _diagram_canvas_changed(self, new):
+        """ Handles the diagram canvas being set """
 
-        self.diagram_canvas = Canvas(bgcolor="lightslategrey", draw_axes=True)
+        canvas = self.diagram_canvas
+
+        for tool in self.tools:
+            if canvas is not None:
+                print "Adding tool: %s" % tool
+                canvas.tools.append(tool(canvas))
+
+
+#    def _domain_model_changed(self, new):
+#        """ Handles change of the domain model """
+#
+#        self.clear_canvas()
+
+
+    def clear_canvas(self):
+        """ Removes all components from the canvas """
+
+        canvas = self.diagram_canvas
+
+#        print "COMPONENTS (START)", canvas.components
+        for component in canvas.components:
+            canvas.remove(component)
+#        print "COMPONENTS (MIDDLE)", canvas.components
+        for component in canvas.components:
+            canvas.remove(component)
+        canvas.request_redraw()
+#        print "COMPONENTS (END)", canvas.components
+
+        return
 
 
 class LabelMapping(HasTraits):
@@ -91,7 +138,7 @@ class NodeMapping(HasTraits):
 
     dot_node = Instance(GodotNode)
 
-    tools = List(Instance(BaseTool))
+    tools = List(Callable)#Instance(BaseTool))
 
     label = Instance(LabelMapping)
 
@@ -121,14 +168,53 @@ class Mapping(HasTraits):
     program = Enum("dot", "circo", "fdp", "neato", "twopi")
 
     # XDot code parser
-    parser = Instance(XDotParser, XDotParser())
+#    parser = Instance(XDotParser, XDotParser())
 
-    _map = Dict(Instance(HasTraits), Instance(Container))
+#    _map = Dict(Instance(HasTraits), Instance(Container))
+
+    refresh = Button
+
+    traits_view = View(
+        Item(name="refresh", show_label=False),
+        Item(name="diagram", style="custom", show_label=False),
+        id="pyramid.mapping", resizable=True
+    )
+
+    @on_trait_change("refresh")
+    def refresh_diagram(self):
+        """ Refresh the map of the domain model """
+
+        self.map_model(self.diagram.domain_model)
+
 
     def _domain_model_changed_for_diagram(self, obj, name, old, new):
         """ Handles the domain model changing """
 
+        if old is not None:
+            self.unmap_model(old)
+        if new is not None:
+            self.map_model(new)
+
+
+    def unmap_model(self, old):
+        """ Removes listeners from a domain model """
+
+        for node_mapping in self.nodes:
+            ct = node_mapping.containment_trait
+            if hasattr(old, ct):
+                old_elements = getattr(old, ct)
+                for old_element in old_elements:
+                    old.on_trait_change(
+                        self.map_element, ct+"_items", remove=True
+                    )
+
+
+    def map_model(self, new):
+        """ Maps a domain model to the diagram """
+
         dot = Dot()
+
+        self.diagram.clear_canvas()
 
         for node_mapping in self.nodes:
             ct = node_mapping.containment_trait
@@ -148,32 +234,35 @@ class Mapping(HasTraits):
 
                     new.on_trait_change(self.map_element, ct+"_items")
 
-            if hasattr(old, ct):
-                old_elements = getattr(old, ct)
-                for old_element in old_elements:
-                    old.on_trait_change(
-                        self.map_element, ct+"_items", remove=True
-                    )
-
         code = dot.create(self.program, "xdot")
         xdot = graph_from_dot_data(code)
+        parser = XDotParser()
 
         for node in xdot.get_node_list():
-            diagram_node = self.parse_node(node)
-            for element in elements:
-                if str(id(element)) == diagram_node.dot_node.get_name():
-                    diagram_node.element = element
-                    break
-            else:
-                print "Warning: Element for diagram node not found"
+            diagram_node = parser.parse_node(node)
+            if diagram_node is not None:
+                for element in elements:
+                    if str(id(element)) == diagram_node.dot_node.get_name():
+                        diagram_node.element = element
+                        break
+                else:
+                    print "Warning: Element for diagram node not found"
 
-            self.diagram.diagram_canvas.add(diagram_node)
+                # Tools
+                if isinstance(diagram_node.element, node_mapping.element):
+                    for tool in node_mapping.tools:
+                        diagram_node.tools.append(tool(diagram_node))
+
+                self.diagram.diagram_canvas.add(diagram_node)
+
+        del parser
 
 
     def map_element(self, obj, name, event):
         """ Handles mapping elements to diagram components """
 
         canvas = self.diagram.diagram_canvas
+        parser = XDotParser()
 
         for element in event.added:
             for node_mapping in self.nodes:
@@ -184,9 +273,16 @@ class Mapping(HasTraits):
                     graph_node = Node(str(id(element)), shape=dot_attrs.shape)
                     dot.add_node(graph_node)
                     xdot = graph_from_dot_data(dot.create(self.program,"xdot"))
-                    diagram_nodes = XDotParser().parse_nodes(xdot)
-                    canvas.add(diagram_nodes[0])
-                    canvas.request_redraw()
+                    diagram_nodes = parser.parse_nodes(xdot)#.get_node_list())
+                    for dn in diagram_nodes:
+                        if dn is not None:
+                            dn.element = element
+                            # Tools
+                            for tool in node_mapping.tools:
+                                dn.tools.append(tool(dn))
+
+                            canvas.add(dn)
+                            canvas.request_redraw()
 
         for element in event.removed:
             for component in canvas.components:
@@ -196,16 +292,20 @@ class Mapping(HasTraits):
                     break
 
 
-    def get_graph_node(self, element, dot_attrs):
-        pass
+#    def get_graph_node(self, element, dot_attrs):
+#        pass
 
 
 if __name__ == "__main__":
     from pylon.dss.common.api import Circuit, Bus
     from pylon.dss.delivery.api import Line, Transformer
 
-    circuit = Circuit(buses=[Bus(), Bus()])
-    diagram = CanvasMapping()
+    diagram = CanvasMapping(
+        domain_model=Circuit(buses=[Bus(), Bus()]),
+        diagram_canvas=Canvas(bgcolor="lightslategrey", draw_axes=True),
+        tools=[ContextMenuTool]
+    )
+
     node_mappings = [
 #        NodeMapping(containment_trait="buses", diagram_node=DiagramNode),
         NodeMapping(
@@ -214,7 +314,7 @@ if __name__ == "__main__":
                 shape="rectangle", fixed_size=True, width=0.5, height=0.1,
                 colour="black", stroke_colour="orange"
             ),
-            tools=[MoveTool]
+            tools=[MoveTool, ElementTool, ResizeTool]
         )
 #        NodeMapping(containment_trait="generators"),
 #        NodeMapping(containment_trait="loads"),
@@ -230,8 +330,9 @@ if __name__ == "__main__":
         LinkMapping(containment_trait="transformers"),
     ]
     mapping = Mapping(diagram=diagram, nodes=node_mappings)
-    diagram.domain_model=circuit
-    diagram.configure_traits()
+    mapping.refresh_diagram()
+#    diagram.domain_model = None
+    mapping.configure_traits()
 
 #diagram_editor = DiagramEditor(
 #    diagram = CanvasMapping(domain_model=Circuit()),
