@@ -21,7 +21,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Instance, Either
+from enthought.traits.api import HasTraits, Instance, Either, Str
 from enthought.enable.api import Container
 
 from text import Text
@@ -29,6 +29,8 @@ from ellipse import Ellipse
 from polygon import Polygon
 
 from godot.node import DotGraphNode
+
+from pylon.ui.graph.pydot.pydot import Node as PydotNode
 
 #------------------------------------------------------------------------------
 #  "Node" class:
@@ -40,13 +42,15 @@ class DiagramNode(Container):
     # Object represented by the node
     element = Instance(HasTraits)
 
+    id = Str
+
     # Main node label
     label = Instance(Text)
 
     # Outermost shape
     node = Either(Ellipse, Polygon)
 
-    dot_attrs = Instance(DotGraphNode, ())
+    dot_node = Instance(PydotNode)
 
     #--------------------------------------------------------------------------
     #  Component interface
@@ -60,11 +64,11 @@ class DiagramNode(Container):
         print "Node position:", new
 
 
-    def normal_left_dclick(self, event):
-        """ Handles activation of the node """
-
-        if self.element is not None:
-            self.element.edit_traits(kind="livemodal")
-            event.handled = True
+#    def normal_left_dclick(self, event):
+#        """ Handles activation of the node """
+#
+#        if self.element is not None:
+#            self.element.edit_traits(kind="livemodal")
+#            event.handled = True
 
 # EOF -------------------------------------------------------------------------

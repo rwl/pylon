@@ -373,10 +373,10 @@ class OneLineDot(NetworkDot):
         self.transformer_edge_node_edges.append(tene)
 
 
-    @on_trait_change("network.branches.mode")
+#    @on_trait_change("network.branches.mode")
     def on_branch_mode_change(self, new):
         """ Handles branches changing mode """
-        
+
         print "TRANSFORMERS:", new
         self.regraph()
 
