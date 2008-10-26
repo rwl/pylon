@@ -305,7 +305,7 @@ class SwarmModelView(ModelView):
 
     def open_file(self, info):
         """ Handles opening an existing network model """
-
+        print dir(info)
         if not info.initialized:
             return
 

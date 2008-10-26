@@ -19,7 +19,23 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Any
+from enthought.traits.api import \
+    HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
+    List, Tuple
+
+arrow_trait = Enum(
+    "normal", "inv", "dot", "invdot", "odot", "invodot", "none", "tee",
+    "empty", "invempty", "diamond", "odiamond", "ediamond", "crow", "box",
+    "obox", "open", "halfopen", "vee"
+)
+
+dir_trait = Enum("forward", "back", "both", "none")
+
+# Additional styles are available in device-dependent form. Style lists are
+# passed to device drivers, which can use this to generate appropriate output.
+edge_styles = ["dashed", "dotted", "solid", "invis", "bold"]
+cluster_styles = ["filled", "rounded"]
+node_style = edge_styles + cluster_styles + ["diagonals"]
 
 #------------------------------------------------------------------------------
 #  "Edge" class:
@@ -31,7 +47,7 @@ class Edge(HasTraits):
     # Style of arrowhead on the head node of an edge.
     # See also the <html:a rel="attr">dir</html:a> attribute,
     # and the <html:a rel="note">undirected</html:a> note.
-    arrowhead = Enum
+    arrowhead = arrow_trait
 
 	# Multiplicative scale factor for arrowheads.
     arrowsize = Float
@@ -39,7 +55,7 @@ class Edge(HasTraits):
     # Style of arrowhead on the tail node of an edge.
     # See also the <html:a rel="attr">dir</html:a> attribute,
     # and the <html:a rel="note">undirected</html:a> note.
-    arrowtail = Enum
+    arrowtail = arrow_trait
 
     # Basic drawing color for graphics, not text. For the latter, use the
     # <html:a rel="attr">fontcolor</html:a> attribute.
@@ -79,7 +95,7 @@ class Edge(HasTraits):
     # arrowhead can be specified using the <html:a rel="attr">arrowhead</html:a>
     # and <html:a rel="attr">arrowtail</html:a> attributes.
     # See <html:a rel="note">undirected</html:a>.
-    dir = DirType
+    dir = dir_trait
 
 	# Synonym for <html:a rel="attr">edgeURL</html:a>.
     edgehref = Str
@@ -89,7 +105,7 @@ class Edge(HasTraits):
     # Tooltip annotation attached to the non-label part of an edge.
     # This is used only if the edge has a <html:a rel="attr">URL</html:a>
     # or <html:a rel="attr">edgeURL</html:a> attribute.
-    edgetooltip = EscString
+    edgetooltip = Str #EscString
 
     # If <html:a rel="attr">edgeURL</html:a> is defined, this is the link used for the non-label
     # parts of an edge. This value overrides any <html:a rel="attr">URL</html:a>
@@ -141,11 +157,11 @@ class Edge(HasTraits):
 
     headport = Any
 
-    headtarget = EscString
+    headtarget = Str #EscString
 
     # Tooltip annotation attached to the head of an edge. This is used only
     # if the edge has a <html:a rel="attr">headURL</html:a> attribute.
-    headtooltip = EscString
+    headtooltip = Str #EscString
 
     # If <html:a rel="attr">headURL</html:a> is defined, it is
     # output as part of the head label of the edge.
@@ -199,12 +215,12 @@ class Edge(HasTraits):
 	# Synonym for <html:a rel="attr">labelURL</html:a>.
     labelhref = Str
 
-    labeltarget = EscString
+    labeltarget = Str #EscString
 
     # Tooltip annotation attached to label of an edge.
     # This is used only if the edge has a <html:a rel="attr">URL</html:a>
     # or <html:a rel="attr">labelURL</html:a> attribute.
-    labeltooltip = EscString
+    labeltooltip = Str #EscString
 
     # If <html:a rel="attr">labelURL</html:a> is defined, this is the link used for the label
     # of an edge. This value overrides any <html:a rel="attr">URL</html:a>
@@ -260,7 +276,7 @@ class Edge(HasTraits):
 
     # Set style for node or edge. For cluster subgraph, if "filled", the
     # cluster box's background is filled.
-    style = Enum("filled")
+    style = Enum(edge_styles)
 
     # If <html:span class="val">true</html:span>, the tail of an edge is clipped to the boundary of the tail node;
     # otherwise, the end of the edge goes to the center of the node, or the
@@ -280,7 +296,7 @@ class Edge(HasTraits):
 
 	# Tooltip annotation attached to the tail of an edge. This is used only
 	# if the edge has a <html:a rel="attr">tailURL</html:a> attribute.
-    tailtooltip = EscString
+    tailtooltip = Str #EscString
 
     # If <html:a rel="attr">tailURL</html:a> is defined, it is
     # output as part of the tail label of the edge.
@@ -292,7 +308,7 @@ class Edge(HasTraits):
 	# If the object has a URL, this attribute determines which window
 	# of the browser is used for the URL.
 	# See <html:a href="http://www.w3.org/TR/html401/present/frames.html#adef-target">W3C documentation</html:a>.
-    target = EscString
+    target = Str #EscString
 
     # Tooltip annotation attached to the node or edge. If unset, Graphviz
     # will use the object's <html:a rel="attr">label</html:a> if defined.
@@ -300,7 +316,7 @@ class Edge(HasTraits):
     # label, the resulting tooltip may be unhelpful. In this case, if
     # tooltips will be generated, the user should set a <html:tt>tooltip</html:tt>
     # attribute explicitly.
-    tooltip = EscString
+    tooltip = Str #EscString
 
     # Hyperlinks incorporated into device-dependent output.
     # At present, used in ps2, cmap, i*map and svg formats.

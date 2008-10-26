@@ -364,54 +364,66 @@ class XDotParser(HasTraits):
         nodes = []
 
         for node in graph.get_node_list():
-            if node.get_pos() is None:
-                logger.debug(
-                    "Skipping node [%s] with no position" % node.to_string()
-                )
-                continue
-            logger.debug("Parsing node: %s" % node.to_string())
-            x, y = self._parse_node_pos(node.get_pos())
-            w = float(node.get_width().strip('"'))*72
-            h = float(node.get_height().strip('"'))*72
-            id = node.get_name()
-            logger.debug(
-                "Node [%s] at position (%d, %d) with size (%d, %d)" %
-                (id, x, y, w, h)
-            )
-
-            pos = [x-w/2, y-h/2]
-            bounds = [w, h]
-
-            node_shapes = []
-            for attr in ('_draw_', '_ldraw_'):
-                # FIXME: hasattr does not work for pydot Node class, but
-                # the get() method will return None if there is no attr
-                if node.get(attr) is not None:
-#                if hasattr(node, attr):
-#                    attr = getattr(node, attr)
-                    value = node.get(attr).strip('"')
-                    parser = XDotAttrParser(
-                        container_pos=pos, container_bounds=bounds, buf=value
-                    )
-                    logger.debug("Parsing attr: %s" % value)
-                    shapes = parser.parse()
-                    node_shapes.extend(shapes)
-            logger.debug("Node shapes: %s" % node_shapes)
-            if node_shapes:
-                # Graphviz node is positioned according to its centre, but
-                # an Enable component according to the bottom-left corner
-                dn = DiagramNode(position=pos, bounds=bounds)
-                dn.dot_attrs.name=id
-                for shape in node_shapes:
-                    dn.add(shape)
-                # Add some handy tools
-                dn.tools.append(MoveTool(dn))
-#                dn.tools.append(TraitsTool(dn))
+            container = self.parse_node(node)
+            if container is not None:
                 # Add node component to the list to be drawn on the canvas
-                nodes.append(dn)
-            logger.debug("Nodes: %s", nodes)
+                nodes.append(container)
+        logger.debug("Resulting nodes: %s", nodes)
 
         return nodes
+
+
+    def parse_node(self, node):
+        """ Parses a pydot node with xdot attributes and returns a container.
+
+        """
+
+        if node.get_pos() is None:
+            logger.debug(
+                "Skipping node [%s] with no position" % node.to_string()
+            )
+            return None
+        logger.debug("Parsing node: %s" % node.to_string())
+        x, y = self._parse_node_pos(node.get_pos())
+        w = float(node.get_width().strip('"'))*72
+        h = float(node.get_height().strip('"'))*72
+        id = node.get_name()
+        logger.debug(
+            "Node [%s] at position (%d, %d) with size (%d, %d)" %
+            (id, x, y, w, h)
+        )
+
+        pos = [x-w/2, y-h/2]
+        bounds = [w, h]
+
+        node_shapes = []
+        for attr in ('_draw_', '_ldraw_'):
+            # FIXME: hasattr does not work for pydot Node class, but
+            # the get() method will return None if there is no attr
+            if node.get(attr) is not None:
+#                if hasattr(node, attr):
+#                    attr = getattr(node, attr)
+                value = node.get(attr).strip('"')
+                parser = XDotAttrParser(
+                    container_pos=pos, container_bounds=bounds, buf=value
+                )
+                logger.debug("Parsing attr: %s" % value)
+                shapes = parser.parse()
+                node_shapes.extend(shapes)
+        logger.debug("Node shapes: %s" % node_shapes)
+        if node_shapes:
+            # Graphviz node is positioned according to its centre, but
+            # an Enable component according to the bottom-left corner
+            dn = DiagramNode(position=pos, bounds=bounds)
+#            dn.id=id
+            dn.dot_node = node
+            for shape in node_shapes:
+                dn.add(shape)
+            # Add some handy tools
+#                dn.tools.append(MoveTool(dn))
+#                dn.tools.append(TraitsTool(dn))
+
+        return dn
 
 
     def parse_edges(self, graph):
