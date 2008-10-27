@@ -57,6 +57,7 @@ from pylon.ui.graph.component.edge import DiagramEdge
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 #------------------------------------------------------------------------------
 #  "XdotAttrParser" class:

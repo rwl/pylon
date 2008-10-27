@@ -27,10 +27,11 @@ from enthought.traits.ui.api import ModelView, View, Item, Group
 
 from enthought.traits.ui.menu import NoButtons
 
+#from enthought.enable.tools.api import MoveTool
+
+
 from pylon.dss.common.circuit import Circuit
-
 from executive_options import ExecutiveOptions
-
 from executive_menu import menu_bar, tool_bar
 
 from pylon.dss.common.bus import Bus
@@ -40,6 +41,12 @@ from pylon.dss.control.api import RegulatorControl
 
 from pylon.dss.conversion.api import \
     VoltageSource, CurrentSource, Generator, Load
+
+from pyramid.mapping import Mapping, CanvasMapping, NodeMapping
+from pyramid.element_tool import ElementTool
+from pyramid.context_menu_tool import ContextMenuTool
+
+from godot.node import DotGraphNode as GodotNode
 
 #------------------------------------------------------------------------------
 #  "ExecCommand" class:
@@ -58,18 +65,91 @@ class Executive(ModelView):
     # Options for DSS
     options = Instance(ExecutiveOptions, ())
 
+    diagram = Instance(Mapping)
+
     #--------------------------------------------------------------------------
     #  Views:
     #--------------------------------------------------------------------------
 
     traits_view = View(
+#        Item(
+#            name="model", show_label=False, id=".table_editor", style="custom"
+#        ),
         Item(
-            name="model", show_label=False, id=".table_editor", style="custom"
+            name="diagram", show_label=False, id=".diagram_editor",
+            style="custom"
         ),
         id="circuit_vm.view", title="Pylon", resizable=True,
         width=.81, height=.81, kind="live",
         buttons=NoButtons, menubar=menu_bar, toolbar=tool_bar
     )
+
+    def _diagram_default(self):
+        """ Trait initialiser """
+
+        mapping = Mapping(
+            diagram = CanvasMapping(
+                domain_model=self.model,
+#                diagram_canvas=Canvas(bgcolor="lightslategrey", draw_axes=True),
+                tools=[ContextMenuTool]
+            ),
+            node_mappings = [
+                NodeMapping(
+                    containment_trait="buses", element=Bus,
+                    dot_node=GodotNode(
+                        shape="rectangle", fixed_size=True,
+                        width=1.5, height=0.5,
+                        fill_color="white", color="orange",
+                        style=["filled"]
+                    ),
+                    tools=[ElementTool] #, MoveTool]
+                ),
+                NodeMapping(
+                    containment_trait="generators", element=Generator,
+                    dot_node=GodotNode(
+                        shape="circle", color="red", style=["filled"],
+                        fill_color="blue"
+                    ),
+                    tools=[ElementTool] #, MoveTool]
+                ),
+                NodeMapping(
+                    containment_trait="loads", element=Load,
+                    dot_node=GodotNode(shape="invtriangle"),
+                    tools=[ElementTool] #, MoveTool]
+                ),
+                NodeMapping(
+                    containment_trait="voltage_sources", element=VoltageSource,
+                    dot_node=GodotNode(shape="doublecircle"),
+                    tools=[ElementTool] #, MoveTool]
+                ),
+                NodeMapping(
+                    containment_trait="current_sources", element=CurrentSource,
+                    dot_node=GodotNode(shape="pentagon"),
+                    tools=[ElementTool] #, MoveTool]
+                ),
+                NodeMapping(
+                    containment_trait="cap_controls", element=CapacitorControl,
+                    dot_node=GodotNode(shape="invhouse"),
+                    tools=[ElementTool] #, MoveTool]
+                ),
+                NodeMapping(
+                    containment_trait="reg_controls", element=RegulatorControl,
+                    dot_node=GodotNode(shape="egg"),
+                    tools=[ElementTool] #, MoveTool]
+                )
+            ],
+            program="dot"
+        )
+        mapping.refresh_diagram()
+
+        return mapping
+
+
+    def _model_changed(self, new):
+        """ Handles the model changing """
+
+        self.diagram.diagram.domain_model = new
+
 
     #--------------------------------------------------------------------------
     #  Action handlers:

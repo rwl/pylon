@@ -21,7 +21,7 @@
 
 from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
-    List, Tuple
+    List, Tuple, ListStr
 
 #------------------------------------------------------------------------------
 #  Trait definitions:
@@ -65,7 +65,7 @@ class DotGraphNode(HasTraits):
     # If no color scheme is set, the standard X11 naming is used.
     # For example, if <html:code>colorscheme=bugn9</html:code>, then <html:code>color=7</html:code>
     # is interpreted as <html:code>/bugn9/7</html:code>.
-    colorscheme = Enum(
+    color_scheme = Enum(
         "X11", "Accent", "Blues", "BRBG", "BUGN", "BUPU", "Dark", "GUBU",
         "Greens", "Greys", "Oranges", "OORD", "Paired", "Pastel", "PIYG",
         "PRGN", "PUBU", "PUBUGN", "PUOR", "PURD", "Purples", "RDBU", "RDGY",
@@ -93,7 +93,7 @@ class DotGraphNode(HasTraits):
     # Note that a cluster inherits the root graph's attributes if defined.
     # Thus, if the root graph has defined a <html:a rel="attr">fillcolor</html:a>, this will override a
     # <html:a rel="attr">color</html:a> or <html:a rel="attr">bgcolor</html:a> attribute set for the cluster.
-    fillcolor = Color(
+    fill_color = Color(
         "black", desc="fill color for background of a node or cluster"
     )
 
@@ -101,10 +101,10 @@ class DotGraphNode(HasTraits):
     # <html:a rel="attr">width</html:a>
     # and <html:a rel="attr">height</html:a> attributes only
     # and is not expanded to contain the text label.
-    fixedsize = Float(desc="node size to be specified by 'width' and 'height'")
+    fixed_size = Float(desc="node size to be specified by 'width' and 'height'")
 
 	# Color used for text.
-    fontcolor = Color("black", desc="color used for text")
+    font_color = Color("black", desc="color used for text")
 
     # Font used for text. This very much depends on the output format and, for
     # non-bitmap output such as PostScript or SVG, the availability of the font
@@ -125,10 +125,10 @@ class DotGraphNode(HasTraits):
     # in one of the directories specified by
     # the <html:a rel="attr">fontpath</html:a> attribute.
     # The lookup does support various aliases for the common fonts.
-    fontname = Font(desc="font used for text")
+    font_name = Font(desc="font used for text")
 
     # Font size, in <html:a rel="note">points</html:a>, used for text.
-    fontsize = Float(desc="font size in points")
+    font_size = Float(desc="font size in points")
 
     # If the end points of an edge belong to the same group, i.e., have the
     # same group attribute, parameters are set to avoid crossings and keep
@@ -176,7 +176,7 @@ class DotGraphNode(HasTraits):
     # image is scaled down to fit the node. As with the case of
     # expansion, if <html:code>imagescale=true</html:code>, width and height are
     # scaled uniformly.
-    imagescale = Float
+    image_scale = Float
 
     # Text label attached to objects.
     # If a node's <html:a rel="attr">shape</html:a> is record, then the label can
@@ -200,7 +200,7 @@ class DotGraphNode(HasTraits):
     # By default, the value is <html:code>0.11,0.055</html:code>.
     margin = Float(desc="x and y margins of canvas, in inches")
 
-    nojustify = Bool
+    no_justify = Bool
 
     # Set number of peripheries used in polygonal shapes and cluster
     # boundaries. Note that
@@ -252,16 +252,16 @@ class DotGraphNode(HasTraits):
     # the number of points used for a node whose shape is a circle or ellipse.
     # It plays the same role in neato, when adjusting the layout to avoid
     # overlapping nodes, and in image maps.
-    samplepoints = Int
+    sample_points = Int
 
 	# Set polygon to be regular.
     shape = shape_trait(desc="polygon to be regular")
 
-    shapefile = File
+    shape_file = File
 
     # Print guide boxes in PostScript at the beginning of
     # routesplines if 1, or at the end if 2. (Debugging)
-    showboxes = Trait("beginning", {"beginning": 1, "end": 2})
+    show_boxes = Trait("beginning", {"beginning": 1, "end": 2})
 
     sides = Int
 
@@ -269,7 +269,7 @@ class DotGraphNode(HasTraits):
 
     # Set style for node or edge. For cluster subgraph, if "filled", the
     # cluster box's background is filled.
-    style = Any(desc="style for node or edge")
+    style = ListStr(["filled"]) #Any(desc="style for node or edge")
 
     # If the object has a URL, this attribute determines which window
     # of the browser is used for the URL.

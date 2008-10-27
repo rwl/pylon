@@ -59,9 +59,9 @@ class DiagramNode(Container):
     # The background colour of this component.
     bgcolor = "transparent"
 
-    def _position_changed(self, new):
-
-        print "Node position:", new
+#    def _position_changed(self, new):
+#
+#        print "Node position:", new
 
 
 #    def normal_left_dclick(self, event):

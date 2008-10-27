@@ -38,13 +38,13 @@ from enthought.traits.ui.menu import OKCancelButtons
 from enthought.pyface.wizard.api import SimpleWizard, WizardPage
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
-from enthought.plugins.workspace.i_workspace import IWorkspace
-from enthought.plugins.workspace.action.open_action import OpenAction
+from pylon.plugin.resource.i_workspace import IWorkspace
+from pylon.plugin.resource.action.open_action import OpenAction
 
-from enthought.plugins.workspace.wizard.container_selection_page import \
+from pylon.plugin.resource.wizard.container_selection_page import \
     ContainerSelectionPage
 
-from enthought.plugins.workspace.resource_editor import PickledProvider
+from pylon.plugin.resource.resource_editor import PickledProvider
 
 from pylon.api import Network
 

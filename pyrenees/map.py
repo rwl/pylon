@@ -205,7 +205,7 @@ class Map(HasTraits):
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    from pylon.ui.map.layer.osm import OSM
+    from pyrenees.layer.osm import OSM
 
     map = Map(layer_types=[OSM])
     map.configure_traits()
