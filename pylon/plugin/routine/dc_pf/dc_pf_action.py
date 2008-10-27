@@ -25,7 +25,7 @@ from enthought.io.api import File
 from enthought.traits.api import Instance, Callable
 from enthought.traits.ui.menu import Action
 from enthought.pyface.api import ImageResource
-from enthought.plugins.workspace.resource_editor import PickledProvider
+from pylon.plugin.resource.resource_editor import PickledProvider
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
 from pylon.api import Network

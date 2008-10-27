@@ -1,4 +1,4 @@
-from enthought.traits.api import HasTraits, Interface, implements
+from enthought.traits.api import HasTraits, Interface, implements, Instance
 from enthought.enable.api import BaseTool
 from enthought.enable.tools.traits_tool import Fifo, get_nested_components
 
@@ -49,7 +49,6 @@ class ContextMenuTool(BaseTool):
         for tool in component.tools:
             component.active_tool = self
             # Do it
-            if tool
             event.handled = True
             component.active_tool = None
             component.request_redraw()

@@ -39,16 +39,16 @@ from enthought.plugins.python_shell.python_shell_plugin import \
 
 from enthought.plugins.text_editor.text_editor_plugin import TextEditorPlugin
 
-from enthought.plugins.python_editor.python_editor_plugin import \
-    PythonEditorPlugin
+#from enthought.plugins.python_editor.python_editor_plugin import \
+#    PythonEditorPlugin
 
-from enthought.plugins.workspace.workspace_plugin import WorkspacePlugin
+from pylon.plugin.resource.resource_plugin import ResourcePlugin
 
-from enthought.plugins.property_view.property_view_plugin import \
-    PropertyViewPlugin
-
-from enthought.plugins.image_editor.image_editor_plugin import \
-    ImageEditorPlugin
+#from enthought.plugins.property_view.property_view_plugin import \
+#    PropertyViewPlugin
+#
+#from enthought.plugins.image_editor.image_editor_plugin import \
+#    ImageEditorPlugin
 
 from enthought.logger.plugin.logger_plugin import LoggerPlugin
 
@@ -105,10 +105,10 @@ def main():
             DeveloperUIPlugin(),
             PythonShellPlugin(),
 #            TextEditorPlugin(),
-            PythonEditorPlugin(),
-            WorkspacePlugin(),
-            PropertyViewPlugin(),
-            ImageEditorPlugin(),
+#            PythonEditorPlugin(),
+#            ResourcePlugin(),
+#            PropertyViewPlugin(),
+#            ImageEditorPlugin(),
             LoggerPlugin(),
             # Pylon plug-ins:
             PylonWorkbenchPlugin(),
@@ -118,12 +118,12 @@ def main():
             PSSEPlugin(),
             M3Plugin(),
             DCPFPlugin(),
-            DCOPFPlugin(),
-            ACPFPlugin(),
-            ACOPFPlugin(),
+#            DCOPFPlugin(),
+#            ACPFPlugin(),
+#            ACOPFPlugin(),
             GraphImagePlugin(),
             GraphPlugin(),
-            PyretoPlugin()
+#            PyretoPlugin()
         ]
     )
 
