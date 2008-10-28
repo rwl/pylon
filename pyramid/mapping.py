@@ -173,7 +173,7 @@ class LinkMapping(HasTraits):
 
 class Mapping(HasTraits):
 
-    diagram = Instance(CanvasMapping)
+    diagram = Instance(CanvasMapping, ())
 
     nodes = List(Instance(NodeMapping))
 

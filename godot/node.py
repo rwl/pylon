@@ -23,6 +23,8 @@ from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
     List, Tuple, ListStr
 
+from common import color_scheme_trait
+
 #------------------------------------------------------------------------------
 #  Trait definitions:
 #------------------------------------------------------------------------------
@@ -65,13 +67,7 @@ class DotGraphNode(HasTraits):
     # If no color scheme is set, the standard X11 naming is used.
     # For example, if <html:code>colorscheme=bugn9</html:code>, then <html:code>color=7</html:code>
     # is interpreted as <html:code>/bugn9/7</html:code>.
-    color_scheme = Enum(
-        "X11", "Accent", "Blues", "BRBG", "BUGN", "BUPU", "Dark", "GUBU",
-        "Greens", "Greys", "Oranges", "OORD", "Paired", "Pastel", "PIYG",
-        "PRGN", "PUBU", "PUBUGN", "PUOR", "PURD", "Purples", "RDBU", "RDGY",
-        "RDPU", "RDYLBU", "RDYLGN", "Reds", "Set", "Spectral", "YLGN",
-        "YLGNBU", "YLORBR", "YLORRD", desc="a color scheme namespace"
-    )
+    color_scheme = color_scheme_trait
 
 	# Comments are inserted into output. Device-dependent.
     comment = Str(desc="comments inserted into output")
