@@ -5,7 +5,8 @@ color_scheme_trait = Enum(
     "Greens", "Greys", "Oranges", "OORD", "Paired", "Pastel", "PIYG",
     "PRGN", "PUBU", "PUBUGN", "PUOR", "PURD", "Purples", "RDBU", "RDGY",
     "RDPU", "RDYLBU", "RDYLGN", "Reds", "Set", "Spectral", "YLGN",
-    "YLGNBU", "YLORBR", "YLORRD", desc="a color scheme namespace"
+    "YLGNBU", "YLORBR", "YLORRD", desc="a color scheme namespace",
+    label="Color scheme"
 )
 
 def Alias(name, desc=""):
