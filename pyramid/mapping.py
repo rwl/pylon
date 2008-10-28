@@ -137,6 +137,8 @@ class CanvasMapping(HasTraits):
 
 class LabelMapping(HasTraits):
 
+    label_trait = Str("name")
+
     diagram_label = Instance(HasTraits)
 
     node_mapping = Instance(HasTraits)
@@ -155,7 +157,7 @@ class NodeMapping(HasTraits):
 
     tools = List(Callable)#Instance(BaseTool))
 
-    label = Instance(LabelMapping)
+    label = Instance(LabelMapping, ())
 
 
 class LinkMapping(HasTraits):
@@ -327,7 +329,15 @@ class Mapping(HasTraits):
                     break
 
 
+    def _label_node(self, node, element):
+        """ Adds a label to a node """
+
+        
+
+
     def _style_node(self, pydot_node, dot_attrs):
+        """ Styles a node """
+
         pydot_node.set_shape(dot_attrs.shape)
         pydot_node.set_fixedsize(str(dot_attrs.fixed_size))
         pydot_node.set_width(str(dot_attrs.width))
@@ -368,7 +378,7 @@ if __name__ == "__main__":
                 shape="rectangle", fixed_size=True, width=1.5, height=0.5,
                 fill_color="white", color="orange", style=["filled"]
             ),
-            tools=[MoveTool, ElementTool]
+            tools=[MoveTool, ElementTool], label=LabelMapping()
         ),
         NodeMapping(
             containment_trait="generators", element=Generator,
