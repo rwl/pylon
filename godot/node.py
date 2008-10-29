@@ -34,7 +34,8 @@ from common import \
     color_scheme_trait, comment_trait, fontcolor_trait, fontname_trait, \
     fontsize_trait, label_trait, layer_trait, margin_trait, nojustify_trait, \
     peripheries_trait, pos_trait, rectangle_trait, root_trait, \
-    showboxes_trait, target_trait, tooltip_trait, url_trait, pointf_trait
+    showboxes_trait, target_trait, tooltip_trait, url_trait, pointf_trait, \
+    color_trait
 
 #------------------------------------------------------------------------------
 #  Trait definitions:
@@ -69,7 +70,7 @@ class DotGraphNode(HasTraits):
     # and the tail arrow, if any, the second color. This supports the common
     # case of drawing opposing edges, but using parallel splines instead of
     # separately routed multiedges.
-    color = Color("black", desc="drawing color for graphics, not text")
+    color = color_trait
 
     # This attribute specifies a color scheme namespace. If defined, it
     # specifies the context for interpreting color names. In particular, if a

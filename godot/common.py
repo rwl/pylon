@@ -18,6 +18,8 @@ color_scheme_trait = Enum(
     label="Color scheme"
 )
 
+color_trait = Color("black", desc="drawing color for graphics, not text")
+
 def Alias(name, desc=""):
     """ Syntactically concise alias trait but creates a pair of lambda
     functions for every alias you declare.
