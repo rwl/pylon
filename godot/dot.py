@@ -20,7 +20,7 @@
 #  IN THE SOFTWARE.
 #------------------------------------------------------------------------------
 
-""" Defines a representation of a graph in Graphviz's dot language """
+""" Defines a representation of a graph in Graphviz"s dot language """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -37,6 +37,21 @@ from enthought.traits.ui.api import View, Group, Item, Tabbed
 
 from common import Alias, color_scheme_trait
 
+GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
+    "charset", "clusterrank", "colorscheme", "comment", "compound",
+    "concentrate", "defaultdist", "dim", "diredgeconstraints", "dpi",
+    "epsilon", "esep", "fontcolor", "fontname", "fontnames", "fontpath",
+    "fontsize", "label", "labeljust", "labelloc", "landscape", "layers",
+    "layersep", "levelsgap", "lp", "margin", "maxiter", "mclimit", "mindist",
+    "mode", "model", "mosek", "nodesep", "nojustify", "normalize", "nslimit",
+    "nslimit1", "ordering", "outputorder", "overlap", "pack", "packmode",
+    "pad", "page", "pagedir", "quantum", "rank", "rankdir", "ranksep",
+    "ratio", "remincross", "resolution", "root", "rotate", "searchsize",
+    "sep", "showboxes", "size", "splines", "start", "stylesheet", "target",
+    "truecolor", "viewport", "voro_margin"]
+
+MAPPED_GRAPH_ATTRIBUTES = ["labeljust", "labelloc", "showboxes"]
+
 #------------------------------------------------------------------------------
 #  Trait definitions:
 #------------------------------------------------------------------------------
@@ -45,18 +60,6 @@ cluster_mode_trait = Enum(
     "local", "global", "none", desc="mode used for handling clusters",
     label="Cluster rank"
 )
-
-rectangle_trait = Float#Tuple(
-#    Float, Float, Float, Float,
-#    desc="The rect llx,lly,urx,ury gives the coordinates, in points, of the "
-#    "lower-left corner (llx,lly) and the upper-right corner (urx,ury)."
-#)
-
-pointf_trait = Float#Tuple(Float, Float, desc="the point (x,y)")
-
-point_trait = Float #Either(
-#    pointf_trait, Tuple(Float, Float, Float, desc="the point (x,y,z)")
-#)
 
 start_trait = Enum("regular", "self", "random")
 
@@ -139,7 +142,7 @@ class Graph(HasTraits):
     # Factor damping force motions. On each iteration, a nodes movement
     # is limited to this factor of its potential motion. By being less than
     # 1.0, the system tends to "cool", thereby preventing cycling.
-    damping = Float(0.99, desc="factor damping force motions")
+    Damping = Float(0.99, desc="factor damping force motions")
 
     # This specifies the distance between nodes in separate connected
     # components. If set too small, connected components may overlap.
@@ -188,7 +191,7 @@ class Graph(HasTraits):
     )
 
 	# Color used for text.
-    fontcolor = Color("black", desc="color used for text", label="Font color")
+    fontcolor = fontcolor_trait
 
     # Font used for text. This very much depends on the output format and, for
     # non-bitmap output such as PostScript or SVG, the availability of the font
@@ -209,7 +212,7 @@ class Graph(HasTraits):
     # in one of the directories specified by
     # the <html:a rel="attr">fontpath</html:a> attribute.
     # The lookup does support various aliases for the common fonts.
-    fontname = Font("Times-Roman", desc="font used for text", label="Font name")
+    fontname = fontname_trait
 
     # Allows user control of how basic fontnames are represented in SVG output.
     # If <html:a rel="attr">fontnames</html:a> is undefined or <html:span class="val">svg</html:span>,
@@ -238,21 +241,19 @@ class Graph(HasTraits):
     fontpath = List(Directory, label="Font path")
 
 	# Font size, in <html:a rel="note">points</html:a>, used for text.
-    fontsize = Float(
-        14.0, desc="size, in points, used for text", label="Font size"
-    )
+    fontsize = fontsize_trait
 
     # Spring constant used in virtual physical model. It roughly corresponds to
     # an ideal edge length (in inches), in that increasing K tends to increase
     # the distance between nodes. Note that the edge attribute len can be used
     # to override this value for adjacent nodes.
-    k = Float(0.3, desc="spring constant used in virtual physical model")
+    K = Float(0.3, desc="spring constant used in virtual physical model")
 
     # Text label attached to objects.
     # If a node's <html:a rel="attr">shape</html:a> is record, then the label can
     # have a <html:a href="http://www.graphviz.org/doc/info/shapes.html#record">special format</html:a>
     # which describes the record layout.
-    label = Str(desc="text label attached to objects")
+    label = label_trait
 
     # Justification for cluster labels. If <html:span class="val">r</html:span>, the label
     # is right-justified within bounding rectangle; if <html:span class="val">l</html:span>, left-justified;
@@ -397,10 +398,7 @@ class Graph(HasTraits):
     # second is shorter and left-justified, the second will align with the
     # left-most character in the first line, regardless of how large the node
     # might be.
-    nojustify = Bool(
-        False, label="No justify",
-        desc="multi-line labels will be justified in the context of itself"
-    )
+    nojustify = nojustify_trait
 
     # If set, normalize coordinates of final
     # layout so that the first point is at the origin, and then rotate the
@@ -443,15 +441,15 @@ class Graph(HasTraits):
     )
 
     # These specify the order in which nodes and edges are drawn in concrete
-    # output. The default 'breadthfirst' is the simplest, but when the graph
+    # output. The default "breadthfirst" is the simplest, but when the graph
     # layout does not avoid edge-node overlap, this mode will sometimes have
     # edges drawn over nodes and sometimes on top of nodes. If the mode
-    # 'nodesfirst' is chosen, all nodes are drawn first, followed by the
+    # "nodesfirst" is chosen, all nodes are drawn first, followed by the
     # edges. This guarantees an edge-node overlap will not be mistaken for
     # an edge ending at a node. On the other hand, usually for aesthetic
     # reasons, it may be desirable that all edges appear beneath nodes,
     # even if the resulting drawing is ambiguous. This can be achieved by
-    # choosing 'edgesfirst'.
+    # choosing "edgesfirst".
     outputorder = Enum(
         "breadthfirst", "nodesfirst", "edgesfirst",
         desc="order in which nodes and edges are drawn",
@@ -566,6 +564,17 @@ class Graph(HasTraits):
         "area needed to draw the graph"
     )
 
+    # Width and height of output pages, in inches. If this is set and is
+    # smaller than the size of the layout, a rectangular array of pages of the
+    # specified page size is overlaid on the layout, with origins aligned in
+    # the lower-left corner, thereby partitioning the layout into pages. The
+    # pages are then produced one at a time, in pagedir order.
+    #
+    # At present, this only works for PostScript output. For other types of
+    # output, one should use another tool to split the output into multiple
+    # output files. Or use the viewport to generate multiple files.
+    page = pointf_trait
+
 
     # Width and height of output pages, in inches. If this is set and is
     # smaller than the size of the layout, a rectangular array of pages of
@@ -595,6 +604,18 @@ class Graph(HasTraits):
     quantum = Float(
         0.0, desc="If quantum > 0.0, node label dimensions will be rounded to "
         "integral multiples of the quantum."
+    )
+
+    # Rank constraints on the nodes in a subgraph. If rank="same", all nodes
+    # are placed on the same rank. If rank="min", all nodes are placed on the
+    # minimum rank. If rank="source", all nodes are placed on the minimum rank,
+    # and the only nodes on the minimum rank belong to some subgraph whose rank
+    # attribute is "source" or "min". Analogous criteria hold for rank="max"
+    # and rank="sink". (Note: the minimum rank is topmost or leftmost, and the
+    # maximum rank is bottommost or rightmost.)
+    rank = Enum(
+        "same", "min", "source", "max", "sink",
+        desc="rank constraints on the nodes in a subgraph"
     )
 
     # Sets direction of graph layout. For example, if <html:a rel="attr">rankdir</html:a>="LR",
@@ -672,10 +693,7 @@ class Graph(HasTraits):
     # the node will be central in the drawing of its connected component.
     # If not defined,
     # twopi will pick a most central node, and circo will pick a random node.
-    root = Str(
-        desc="nodes to be used as the center of the layout and the root of "
-        "the generated spanning tree"
-    )
+    root = root_trait
 
 	# If 90, set drawing orientation to landscape.
     rotate = Range(0, 360, desc="drawing orientation")
@@ -705,9 +723,7 @@ class Graph(HasTraits):
 
 	# Print guide boxes in PostScript at the beginning of
 	# routesplines if 1, or at the end if 2. (Debugging)
-    showboxes = Trait(
-        "beginning", {"beginning": 1, "end": 2}, label="Show boxes"
-    )
+    showboxes = showboxes_trait
 
     # Maximum width and height of drawing, in inches.
     # If defined and the drawing is too large, the drawing is uniformly
@@ -778,10 +794,7 @@ class Graph(HasTraits):
     # If the object has a URL, this attribute determines which window
     # of the browser is used for the URL.
     # See <html:a href="http://www.w3.org/TR/html401/present/frames.html#adef-target">W3C documentation</html:a>.
-    target = Str(
-        desc="if the object has a URL, this attribute determines which window "
-        "of the browser is used"
-    )
+    target = target_trait
 
     # If set explicitly to true or false, the value determines whether or not
     # internal bitmap rendering relies on a truecolor color model or uses
@@ -800,7 +813,7 @@ class Graph(HasTraits):
     # a color palette, font
     # antialiasing can show up as a fuzzy white area around characters.
     # Using <html:a rel="attr">truecolor</html:a>=true avoids this problem.
-#    truecolor = Bool(True)
+    truecolor = Bool(True)
 
     # Hyperlinks incorporated into device-dependent output.
     # At present, used in ps2, cmap, i*map and svg formats.
@@ -826,14 +839,14 @@ class Graph(HasTraits):
     # <html:a rel="attr">edgeURL</html:a> allow control of various parts of an
     # edge. Also note that, if active areas of two edges overlap, it is unspecified
     # which area dominates.
-    url = Str(
+    URL = Str(
         desc="hyperlinks incorporated into device-dependent output",
         label="URL"
     )
 
     # Clipping window on final drawing.
     #
-    # "%lf,%lf,%lf,%lf,%lf" or "%lf,%lf,%lf,'%s'"
+    # "%lf,%lf,%lf,%lf,%lf" or "%lf,%lf,%lf,"%s""
     #
     # The viewPort W,H,Z,x,y or W,H,Z,N specifies a viewport for the final
     # image. The pair (W,H) gives the dimensions (width and height) of the
@@ -849,7 +862,8 @@ class Graph(HasTraits):
     # Sample values: 50,50,.5,'2.8 BSD' or 100,100,2,450,300. The first will
     # take the 100x100 point square centered on the node 2.8 BSD and scale it
     # down by 0.5, yielding a 50x50 point final image.
-#    viewport = Either(
+    viewport = Tuple(Float, Float, Float, Float, Float)
+#    Either(
 #        Tuple(Float, Float, Float, Float, Float),
 #        Tuple(Float, Float, Float, Str),
 #        desc="clipping window on final drawing"
@@ -888,7 +902,8 @@ class Graph(HasTraits):
             ),
             Group(
                 ["center", "dim", "normalize", "outputorder", "overlap", "pack",
-                 "packmode", "pad", "rankdir", "ranksep", "ratio", "root", "voro_margin"],
+                 "packmode", "pad", "rankdir", "ranksep", "ratio", "root",
+                 "voro_margin"],
                  label="Layout"
             ),
             Group(
@@ -903,11 +918,11 @@ class Graph(HasTraits):
                     show_border=True
                 ),
                 Group(
-                    ["damping", "defaultdist", "mindist", "nodesep", "quantum",
+                    ["Damping", "defaultdist", "mindist", "nodesep", "quantum",
                      "sep", "start"], label="Node", show_border=True
                 ),
                 Group(
-                    ["concentrate", "diredgeconstraints", "esep", "k",
+                    ["concentrate", "diredgeconstraints", "esep", "K",
                      "ordering", "splines"], label="Edge", show_border=True
                 ),
                 label="Children"
@@ -916,7 +931,7 @@ class Graph(HasTraits):
                 ["dpi", "landscape", "margin", "pagedir", "resolution",
                  "rotate", "showboxes", "size", "stylesheet"],
                 Group(
-                    ["comment", "target", "url"], label="Misc",
+                    ["comment", "target", "URL"], label="Misc",
                     show_border=True
                 ),
                 label="Output"
@@ -965,10 +980,25 @@ class Graph(HasTraits):
     #--------------------------------------------------------------------------
 
     def _anytrait_changed(self, name, new):
-        """ Handles any graph trait changing """
+        """ Handles any graph trait changing
 
-        self.set_node_attribute("godot", (name, new))
+        Sets the graph attribute for any trait that is a valid unless it is
+        mapped.  If it is mapped then the mapped trait (ending in '_') value
+        is set, but without the underscore.
+
+        """
+
+        if name in MAPPED_GRAPH_ATTRIBUTES:
+            return
+        elif name[:-1] in MAPPED_GRAPH_ATTRIBUTES:
+            self.set_node_attribute("godot", (name[:-1], new))
+        elif (name in GRAPH_ATTRIBUTES):
+            self.set_node_attribute("godot", (name, new))
+
+
         print self._graph.get_node_attributes("godot")
+#        print hasattr(self, name+"_")
+#        print self.trait(name).is_trait_type(Trait)
 
 
     def set_node_attribute(self, node, attr):

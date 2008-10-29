@@ -31,12 +31,6 @@ arrow_trait = Enum(
 
 dir_trait = Enum("forward", "back", "both", "none")
 
-# Additional styles are available in device-dependent form. Style lists are
-# passed to device drivers, which can use this to generate appropriate output.
-edge_styles = ["dashed", "dotted", "solid", "invis", "bold"]
-cluster_styles = ["filled", "rounded"]
-node_style = edge_styles + cluster_styles + ["diagonals"]
-
 #------------------------------------------------------------------------------
 #  "Edge" class:
 #------------------------------------------------------------------------------
