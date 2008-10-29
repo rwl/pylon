@@ -1,16 +1,23 @@
 #------------------------------------------------------------------------------
+#  Copyright (c) 2008 Richard W. Lincoln
 #
-#  Copyright (c) 2008, Richard W. Lincoln
-#  All rights reserved.
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to
+#  deal in the Software without restriction, including without limitation the
+#  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+#  sell copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
 #
-#  This software is provided without warranty under the terms of the BSD
-#  license included in enthought/LICENSE.txt and may be redistributed only
-#  under the conditions described in the aforementioned license.  The license
-#  is also available online at http://www.enthought.com/licenses/BSD.txt
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
 #
-#  Author: Richard W. Lincoln
-#  Date:   27/08/2008
-#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+#  IN THE SOFTWARE.
 #------------------------------------------------------------------------------
 
 """ A graph node """
@@ -23,7 +30,11 @@ from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
     List, Tuple, ListStr
 
-from common import color_scheme_trait
+from common import \
+    color_scheme_trait, comment_trait, fontcolor_trait, fontname_trait, \
+    fontsize_trait, label_trait, layer_trait, margin_trait, nojustify_trait, \
+    peripheries_trait, pos_trait, rectangle_trait, root_trait, \
+    showboxes_trait, target_trait, tooltip_trait, url_trait, pointf_trait
 
 #------------------------------------------------------------------------------
 #  Trait definitions:
@@ -58,7 +69,7 @@ class DotGraphNode(HasTraits):
     # and the tail arrow, if any, the second color. This supports the common
     # case of drawing opposing edges, but using parallel splines instead of
     # separately routed multiedges.
-    color = Color(desc="drawing color for graphics, not text")
+    color = Color("black", desc="drawing color for graphics, not text")
 
     # This attribute specifies a color scheme namespace. If defined, it
     # specifies the context for interpreting color names. In particular, if a
@@ -70,11 +81,11 @@ class DotGraphNode(HasTraits):
     color_scheme = color_scheme_trait
 
 	# Comments are inserted into output. Device-dependent.
-    comment = Str(desc="comments inserted into output")
+    comment = comment_trait
 
     # Distortion factor for <html:a rel="attr">shape</html:a>=polygon.
     # Positive values cause top part to be larger than bottom; negative values do the opposite.
-    distortion = Float(desc="distortion factor for polygons")
+    distortion = Float(0.0, desc="distortion factor for polygons")
 
     # Color used to fill the background of a node or cluster
     # assuming <html:a rel="attr">style</html:a>=filled.
@@ -89,18 +100,21 @@ class DotGraphNode(HasTraits):
     # Note that a cluster inherits the root graph's attributes if defined.
     # Thus, if the root graph has defined a <html:a rel="attr">fillcolor</html:a>, this will override a
     # <html:a rel="attr">color</html:a> or <html:a rel="attr">bgcolor</html:a> attribute set for the cluster.
-    fill_color = Color(
-        "black", desc="fill color for background of a node or cluster"
+    fillcolor = Color(
+        "grey", desc="fill color for background of a node"
     )
 
     # If true, the node size is specified by the values of the
     # <html:a rel="attr">width</html:a>
     # and <html:a rel="attr">height</html:a> attributes only
     # and is not expanded to contain the text label.
-    fixed_size = Float(desc="node size to be specified by 'width' and 'height'")
+    fixedsize = Bool(
+        False, desc="node size to be specified by 'width' and 'height'",
+        label="Fixed size"
+    )
 
 	# Color used for text.
-    font_color = Color("black", desc="color used for text")
+    fontcolor = fontcolor_trait
 
     # Font used for text. This very much depends on the output format and, for
     # non-bitmap output such as PostScript or SVG, the availability of the font
@@ -121,17 +135,27 @@ class DotGraphNode(HasTraits):
     # in one of the directories specified by
     # the <html:a rel="attr">fontpath</html:a> attribute.
     # The lookup does support various aliases for the common fonts.
-    font_name = Font(desc="font used for text")
+    fontname = fontname_trait
 
     # Font size, in <html:a rel="note">points</html:a>, used for text.
-    font_size = Float(desc="font size in points")
+    fontsize = fontsize_trait
 
     # If the end points of an edge belong to the same group, i.e., have the
     # same group attribute, parameters are set to avoid crossings and keep
     # the edges straight.
-    group = Str
+    group = Str(
+        "", desc="If the end points of an edge belong to the same group, "
+        "i.e., have the same group attribute, parameters are set to avoid "
+        "crossings and keep the edges straight."
+    )
 
-    height = Float
+    # Height of node, in inches. This is taken as the initial, minimum height
+    # of the node. If fixedsize is true, this will be the final height of the
+    # node. Otherwise, if the node label requires more height to fit, the
+    # node's height will be increased to contain the label. Note also that, if
+    # the output format is dot, the value given to height will be the final
+    # value.
+    height = Float(0.5, desc="node height, in inches")
 
     # Gives the name of a file containing an image to be displayed inside
     # a node. The image file must be in one of the recognized formats,
@@ -142,7 +166,9 @@ class DotGraphNode(HasTraits):
     # the image is treated as node
     # content rather than the entire node. In particular, an image can
     # be contained in a node of any shape, not just a rectangle.
-    image = Str
+    image = Str(
+        "", desc="file name containing an image to be displayed inside a node"
+    )
 
     # Attribute controlling how an image fills its
     # containing node. In general, the image is given its natural size,
@@ -172,16 +198,19 @@ class DotGraphNode(HasTraits):
     # image is scaled down to fit the node. As with the case of
     # expansion, if <html:code>imagescale=true</html:code>, width and height are
     # scaled uniformly.
-    image_scale = Float
+    imagescale = Str(
+        "false", desc="how an image fills its containing node",
+        label="Image scale"
+    )
 
     # Text label attached to objects.
     # If a node's <html:a rel="attr">shape</html:a> is record, then the label can
     # have a <html:a href="http://www.graphviz.org/doc/info/shapes.html#record">special format</html:a>
     # which describes the record layout.
-    label = Str(desc="text label attached to objects")
+    label = label_trait
 
     # Specifies layers in which the node or edge is present.
-    layer = Any
+    layer = layer_trait
 
     # For graphs, this sets x and y margins of canvas, in inches. If the margin
     # is a single double, both margins are set equal to the given value.
@@ -194,9 +223,9 @@ class DotGraphNode(HasTraits):
     #
     # For nodes, this attribute specifies space left around the node's label.
     # By default, the value is <html:code>0.11,0.055</html:code>.
-    margin = Float(desc="x and y margins of canvas, in inches")
+    margin = margin_trait
 
-    no_justify = Bool
+    nojustify = nojustify_trait
 
     # Set number of peripheries used in polygonal shapes and cluster
     # boundaries. Note that
@@ -205,9 +234,23 @@ class DotGraphNode(HasTraits):
     # peripheries value is 1 and the user-defined shape will be drawn in
     # a bounding rectangle. Setting <html:code>peripheries=0</html:code> will turn this off.
     # Also, 1 is the maximum peripheries value for clusters.
-    peripheries = Int
+    peripheries = peripheries_trait
 
-    pin = Bool
+    # If true and the node has a pos attribute on input, neato prevents the
+    # node from moving from the input position. This property can also be
+    # specified in the pos attribute itself (cf. the point type).
+    #
+    # Note: Due to an artifact of the implementation, final coordinates are
+    # translated to the origin. Thus, if you look at the output coordinates
+    # given in the (x)dot or plain format, pinned nodes will not have the same
+    # output coordinates as were given on input. If this is important, a simple
+    # workaround is to maintain the coordinates of a pinned node. The vector
+    # difference between the old and new coordinates will give the translation,
+    # which can then be subtracted from all of the appropriate coordinates.
+    pin = Bool(
+        False, desc="neato to prevent the node from moving from the input "
+        "position"
+    )
 
     # Position of node, or spline control points.
     # For nodes, the position indicates the center of the node.
@@ -223,13 +266,13 @@ class DotGraphNode(HasTraits):
     # programs, and are therefore in points. Thus, <html:code>neato -n</html:code> can accept
     # input correctly without requiring a <html:code>-s</html:code> flag and, in fact,
     # ignores any such flag.
-    pos = Float(desc="position of node, or spline control points")
+    pos = pos_trait
 
 	# Rectangles for fields of records, in <html:a rel="note">points</html:a>.
-    rects = Float
+    rects = rectangle_trait
 
     # If true, force polygon to be regular.
-    regular = Bool(desc="polygon to be regular")
+    regular = Bool(False, desc="polygon to be regular")
 
 
     # This specifies nodes to be used as the center of the
@@ -240,7 +283,7 @@ class DotGraphNode(HasTraits):
     # the node will be central in the drawing of its connected component.
     # If not defined,
     # twopi will pick a most central node, and circo will pick a random node.
-    root = Str
+    root = root_trait
 
     # If the input graph defines the <html:a rel="attr">
     # <html:a rel="attr">vertices</html:a></html:a>
@@ -248,29 +291,42 @@ class DotGraphNode(HasTraits):
     # the number of points used for a node whose shape is a circle or ellipse.
     # It plays the same role in neato, when adjusting the layout to avoid
     # overlapping nodes, and in image maps.
-    sample_points = Int
+    samplepoints = Int(
+        8, desc="number of points used for a node whose shape is a circle or "
+        "ellipse", label="Sample points"
+    )
 
 	# Set polygon to be regular.
-    shape = shape_trait(desc="polygon to be regular")
+    shape = shape_trait#(desc="polygon to be regular")
 
-    shape_file = File
+    # (Deprecated) If defined, shapefile specifies a file containing
+    # user-supplied node content. The shape of the node is set to box. The
+    # image in the shapefile must be rectangular. The image formats supported
+    # as well as the precise semantics of how the file is used depends on the
+    # output format.
+    shapefile = File(
+        desc="file containing user-supplied node content", label="Shape file"
+    )
 
     # Print guide boxes in PostScript at the beginning of
     # routesplines if 1, or at the end if 2. (Debugging)
-    show_boxes = Trait("beginning", {"beginning": 1, "end": 2})
+    showboxes = showboxes_trait
 
-    sides = Int
+    # Number of sides if shape=polygon.
+    sides = Int(4, desc="number of sides if shape=polygon")
 
-    skew = Float
+    # Skew factor for shape=polygon. Positive values skew top of polygon to
+    # right; negative to left.
+    skew = Float(0.0, desc="skew factor for shape=polygon")
 
     # Set style for node or edge. For cluster subgraph, if "filled", the
     # cluster box's background is filled.
-    style = ListStr(["filled"]) #Any(desc="style for node or edge")
+    style = ListStr(desc="style for node")
 
     # If the object has a URL, this attribute determines which window
     # of the browser is used for the URL.
     # See <html:a href="http://www.w3.org/TR/html401/present/frames.html#adef-target">W3C documentation</html:a>.
-    target = Str# EscString
+    target = target_trait
 
     # Tooltip annotation attached to the node or edge. If unset, Graphviz
     # will use the object's <html:a rel="attr">label</html:a> if defined.
@@ -278,7 +334,7 @@ class DotGraphNode(HasTraits):
     # label, the resulting tooltip may be unhelpful. In this case, if
     # tooltips will be generated, the user should set a <html:tt>tooltip</html:tt>
     # attribute explicitly.
-    tooltip = Str# EscString(desc="tooltip annotation attached to the node or edge")
+    tooltip = tooltip_trait
 
     # Hyperlinks incorporated into device-dependent output.
     # At present, used in ps2, cmap, i*map and svg formats.
@@ -304,7 +360,7 @@ class DotGraphNode(HasTraits):
     # <html:a rel="attr">edgeURL</html:a> allow control of various parts of an
     # edge. Also note that, if active areas of two edges overlap, it is unspecified
     # which area dominates.
-    url = Str(desc="hyperlinks incorporated into device-dependent output")
+    URL = url_trait
 
     # If the input graph defines this attribute, the node is polygonal,
     # and output is dot or xdot, this attribute provides the
@@ -312,7 +368,9 @@ class DotGraphNode(HasTraits):
     # If the node is an ellipse or circle, the
     # <html:a rel="attr">samplepoints</html:a> attribute affects
     # the output.
-    vertices = List(Tuple(Float, Float))
+    vertices = List(
+        pointf_trait, desc="coordinates of the vertices of the node's polygon"
+    )
 
     # Width of node, in inches. This is taken as the initial, minimum width
     # of the node. If <html:a rel="attr">fixedsize</html:a> is true, this
@@ -320,7 +378,7 @@ class DotGraphNode(HasTraits):
     # requires more width to fit, the node's width will be increased to
     # contain the label. Note also that, if the output format is dot, the
     # value given to <html:a rel="attr">width</html:a> will be the final value.
-    width = Float(desc="width of node, in inches")
+    width = Float(0.75, desc="width of node, in inches")
 
     # Provides z coordinate value for 3D layouts and displays. If the
     # graph has <html:a rel="attr">dim</html:a> set to 3 (or more),
@@ -336,13 +394,16 @@ class DotGraphNode(HasTraits):
     # layout the graph in 3D but project the layout onto the xy-plane
     # for the rendering. If the <html:a rel="attr">z</html:a> attribute is declared, the final rendering
     # will be in 3D.
-    z = Float(desc="z coordinate value for 3D layouts and displays")
+    z = Float(
+        0.0, desc="z coordinate value for 3D layouts and displays",
+        label="z-coordinate"
+    )
 
 #------------------------------------------------------------------------------
 #  Standalone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    Node().configure_traits()
+    DotGraphNode().configure_traits()
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
