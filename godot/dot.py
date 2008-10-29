@@ -35,7 +35,10 @@ from enthought.traits.api import \
 
 from enthought.traits.ui.api import View, Group, Item, Tabbed
 
-from common import Alias, color_scheme_trait
+from common import \
+    Alias, color_scheme_trait, rectangle_trait, fontcolor_trait, \
+    fontname_trait, fontsize_trait, label_trait, point_trait, pointf_trait, \
+    nojustify_trait, root_trait, showboxes_trait, target_trait
 
 GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
     "charset", "clusterrank", "colorscheme", "comment", "compound",
@@ -997,6 +1000,7 @@ class Graph(HasTraits):
 
 
         print self._graph.get_node_attributes("godot")
+        print self.trait(name).default
 #        print hasattr(self, name+"_")
 #        print self.trait(name).is_trait_type(Trait)
 
