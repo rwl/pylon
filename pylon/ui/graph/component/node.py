@@ -28,7 +28,7 @@ from text import Text
 from ellipse import Ellipse
 from polygon import Polygon
 
-from godot.node import DotGraphNode
+from godot.node import Node as DotGraphNode
 
 from pylon.ui.graph.pydot.pydot import Node as PydotNode
 
