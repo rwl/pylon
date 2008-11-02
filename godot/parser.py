@@ -23,7 +23,10 @@
 """ Defines a Graphviz dot language parser.
 
 The parser parses graphviz files dot code and files and transforms them
-into a class representation defined by dott.
+into a class representation defined by godot.
+
+References:
+    Michael Krause, Ero Carrera, "pydot"
 
 """
 
@@ -36,7 +39,7 @@ from pyparsing import \
     NotAny, delimitedList, oneOf, Group, Optional, Combine, alphas, nums, \
     restOfLine, cStyleComment, nums, alphanums, printables, empty, \
     quotedString, ParseException, ParseResults, CharsNotIn, _noncomma, \
-    dblQuotedString, QuotedString, ParserElement, Suppress,Regex, \
+    dblQuotedString, QuotedString, ParserElement, Suppress, Regex, \
     removeQuotes, nestedExpr
 
 #------------------------------------------------------------------------------

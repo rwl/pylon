@@ -30,6 +30,17 @@ from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
     List, Tuple, ListStr
 
+from enthought.traits.ui.api import View, Item, Group
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.table_column import ObjectColumn
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from dot2tex.dotparsing import quote_if_necessary
+
 from common import \
     color_scheme_trait, comment_trait, fontcolor_trait, fontname_trait, \
     fontsize_trait, label_trait, layer_trait, margin_trait, nojustify_trait, \
@@ -53,7 +64,7 @@ shape_trait = Enum(
 #  "Node" class:
 #------------------------------------------------------------------------------
 
-class DotGraphNode(HasTraits):
+class Node(HasTraits):
     """ A graph node """
 
     name = Str
@@ -400,11 +411,73 @@ class DotGraphNode(HasTraits):
         label="z-coordinate"
     )
 
+    def __str__(self):
+        """ Return a string representing the node when requested by str()
+        (or print).
+
+        @rtype:  string
+        @return: String representing the node.
+
+        """
+
+#        return "<node object " + self.name + " " + self.label + ">"
+
+        attrstr = ",".join(["%s=%s" % \
+            (quote_if_necessary(key), quote_if_necessary(val)) \
+                for key, val in self.get_node_attributes()])
+        if attrstr:
+            attrstr = "[%s]" % attrstr
+        return "%s%s;\n" % (quote_if_necessary(self.name), attrstr)
+
+
+    def __hash__(self):
+        return hash(self.name)
+
+
+    def get_node_attributes(self):
+        """ Return the node attributes.
+
+        @rtype:  list
+        @return: List of attributes specified tuples in the form (attr, value).
+
+        """
+
+        return [
+            (node_attr, self.get_attr(node_attr)) \
+                for node_attr in NODE_ATTRIBUTES
+        ]
+
+#------------------------------------------------------------------------------
+#  Node table editor:
+#------------------------------------------------------------------------------
+
+node_table_editor = TableEditor(
+    columns=[
+        ObjectColumn(name="name"),
+        ObjectColumn(name="label"),
+        ObjectColumn(name="shape"),
+        ObjectColumn(name="fixedsize"),
+        ObjectColumn(name="width"),
+        ObjectColumn(name="height"),
+        ObjectColumn(name="pos"),
+        ObjectColumn(name="style"),
+        ObjectColumn(name="z")
+    ],
+    other_columns = [  # not initially displayed
+        ObjectColumn(name="sides")
+    ],
+    show_toolbar=True, deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+    row_factory=Node,
+#    row_factory_kw={"__table_editor__": ""}
+)
+
 #------------------------------------------------------------------------------
 #  Standalone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    DotGraphNode().configure_traits()
+    Node().configure_traits()
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

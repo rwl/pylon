@@ -21,9 +21,20 @@
 
 from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
-    List, Tuple, ListStr
+    List, Tuple, ListStr, Instance
 
 from enthought.traits.ui.api import View, Group, Item, Tabbed
+
+from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.table_column import ObjectColumn
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
+from enthought.traits.ui.table_filter import \
+    EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from dot2tex.dotparsing import quote_if_necessary
+
+from node import Node
 
 from common import \
     Alias, color_trait, color_scheme_trait, comment_trait, fontcolor_trait, \
@@ -71,6 +82,10 @@ port_pos_trait = Str(desc="port position")
 
 class Edge(HasTraits):
     """ Defines a graph edge """
+
+    from_node = Instance(Node)
+
+    to_node = Instance(Node)
 
     # Style of arrowhead on the head node of an edge.
     # See also the <html:a rel="attr">dir</html:a> attribute,
@@ -515,6 +530,73 @@ class Edge(HasTraits):
         title="Edge", id="godot.edge", buttons=["OK", "Cancel", "Help"],
         resizable=True
     )
+
+
+    def __str__(self):
+        """ Return a string representing the edge when requested by str()
+        (or print).
+
+        @rtype:  string
+        @return: String representing the edge.
+
+        """
+
+        attrstr = ",".join(["%s=%s" % \
+            (quote_if_necessary(key),quote_if_necessary(val)) \
+                for key,val in self.attr.items()])
+        if attrstr:
+            attrstr = "[%s]" % attrstr
+        return "%s%s %s %s%s %s;\n" % (quote_if_necessary(self.src.name),\
+            self.src_port,self.conn, \
+            quote_if_necessary(self.dst.name),self.dst_port,attrstr)
+
+
+    def get_edge_attributes(self):
+        """ Return the attributes of an edge.
+
+        @rtype:  list
+        @return: List of attributes specified tuples in the form (attr, value).
+
+        """
+
+        return [(edge_attr, self.get_attr(edge_attr)) \
+             for edge_attr in EDGE_ATTRIBUTES]
+
+#------------------------------------------------------------------------------
+#  Edge table editor:
+#------------------------------------------------------------------------------
+
+edge_table_editor = TableEditor(
+    columns=[
+        ObjectColumn(name="label"),
+        ObjectColumn(name="lp"),
+        ObjectColumn(name="style"),
+        ObjectColumn(name="arrowsize"),
+        ObjectColumn(name="minlen"),
+        ObjectColumn(name="weight"),
+        ObjectColumn(name="len"),
+        ObjectColumn(name="pos"),
+        ObjectColumn(name="lhead"),
+        ObjectColumn(name="headlabel"),
+        ObjectColumn(name="arrowhead"),
+        ObjectColumn(name="ltail"),
+        ObjectColumn(name="taillabel"),
+        ObjectColumn(name="arrowtail")
+    ],
+    other_columns = [  # not initially displayed
+        ObjectColumn(name="dir"),
+        ObjectColumn(name="color"),
+        ObjectColumn(name="colorscheme"),
+        ObjectColumn(name="constraint"),
+        ObjectColumn(name="decorate"),
+        ObjectColumn(name="showboxes"),
+    ],
+    show_toolbar=True, deletable=True,
+    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
+    search=RuleTableFilter(),
+#    row_factory=edge_factory,
+#    row_factory_kw={"__table_editor__": ""}
+)
 
 #------------------------------------------------------------------------------
 #  Standalone call:
