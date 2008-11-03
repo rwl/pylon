@@ -83,9 +83,20 @@ port_pos_trait = Str(desc="port position")
 class Edge(HasTraits):
     """ Defines a graph edge """
 
-    from_node = Instance(Node)
+    from_node = Str#Instance(Node)
 
-    to_node = Instance(Node)
+    to_node = Str#Instance(Node)
+
+    # For a given graph object, one will typically a draw directive before the
+    # label directive. For example, for a node, one would first use the
+    # commands in _draw_ followed by the commands in _ldraw_.
+    _draw_ = Str
+    _ldraw_ = Str
+
+    _hdraw_ = Str # Head arrowhead
+    _tdraw_ = Str # Tail arrowhead
+    _hldraw_ = Str # Head label
+    _tldraw_ = Str # Tail label
 
     # Style of arrowhead on the head node of an edge.
     # See also the <html:a rel="attr">dir</html:a> attribute,

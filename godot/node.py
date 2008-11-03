@@ -28,7 +28,7 @@
 
 from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
-    List, Tuple, ListStr
+    List, Tuple, ListStr, Range
 
 from enthought.traits.ui.api import View, Item, Group
 
@@ -68,6 +68,12 @@ class Node(HasTraits):
     """ A graph node """
 
     name = Str
+
+    # For a given graph object, one will typically a draw directive before the
+    # label directive. For example, for a node, one would first use the
+    # commands in _draw_ followed by the commands in _ldraw_.
+    _draw_ = Str
+    _ldraw_ = Str
 
     # Basic drawing color for graphics, not text. For the latter, use the
     # <html:a rel="attr">fontcolor</html:a> attribute.
@@ -238,6 +244,10 @@ class Node(HasTraits):
     margin = margin_trait
 
     nojustify = nojustify_trait
+
+    # Angle, in degrees, used to rotate polygon node shapes. For any number of
+    # polygon sides, 0 degrees rotation results in a flat base.
+    orientation = Range(0.0, 360.0, desc="polygon rotation angle")
 
     # Set number of peripheries used in polygonal shapes and cluster
     # boundaries. Note that

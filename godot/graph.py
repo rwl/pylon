@@ -1113,6 +1113,26 @@ class Graph(HasTraits):
     #  Event handlers:
     #--------------------------------------------------------------------------
 
+    def _edges_changed(self, new):
+        """ Handles the list of edges changing """
+
+        for each_edge in new:
+            if each_edge.from_node not in self.nodes:
+                self.nodes.append(each_edge.from_node)
+            if each_edge.to_node not in self.nodes:
+                self.nodes.append(each_edge.to_node)
+
+
+    def _edges_items_changed(self, event):
+        """ Handles edges being added and removed """
+
+        for each_edge in event.added:
+            if each_edge.from_node not in self.nodes:
+                self.nodes.append(each_edge.from_node)
+            if each_edge.to_node not in self.nodes:
+                self.nodes.append(each_edge.to_node)
+
+
 #    def _anytrait_changed(self, name, new):
 #        """ Handles any graph trait changing
 #
