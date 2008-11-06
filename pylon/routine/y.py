@@ -32,6 +32,64 @@ from cvxopt.base import matrix, spmatrix, sparse
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+def make_susceptance(network):
+    """ Returns the susceptance and source bus susceptance matrices for the
+    given network.
+
+    """
+
+    buses = network.non_islanded_buses
+    branches = network.in_service_branches
+    n_buses = network.n_non_islanded_buses
+    n_branches = network.n_in_service_branches
+
+    # Create an empty sparse susceptance matrix.
+    # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node32.html
+    b = spmatrix([], [], [], (n_buses, n_buses))
+
+    # Make an empty sparse source bus susceptance matrix
+    b_source = spmatrix([], [], [], (n_branches, n_buses))
+
+    # Filter out branches that are out of service
+#        active_branches = [e for e in branches if e.in_service]
+
+    for e in branches:
+        e_idx = branches.index(e)
+        # Find the indexes of the buses at either end of the branch
+        src_idx = buses.index(e.source_bus)
+        dst_idx = buses.index(e.target_bus)
+
+        # B = 1/X
+        if e.x != 0.0: # Avoid zero division
+            b_branch = 1/e.x
+        else:
+            # infinite susceptance for zero reactance branch
+            b_branch = 1e12#numpy.Inf
+
+        # Divide by the branch tap ratio
+        if e.ratio != 0.0:
+            b_branch /= e.ratio
+
+        # Off-diagonal matrix elements (i,j) are the negative
+        # susceptance of branches between buses[i] and buses[j]
+        b[src_idx, dst_idx] += -b_branch
+        b[dst_idx, src_idx] += -b_branch
+        # Diagonal matrix elements (k,k) are the sum of the
+        # susceptances of the branches connected to buses[k]
+        b[src_idx, src_idx] += b_branch
+        b[dst_idx, dst_idx] += b_branch
+
+        # Build Bf such that Bf * Va is the vector of real branch
+        # powers injected at each branch's "source" bus
+        b_source[e_idx, src_idx] = b_branch
+        b_source[e_idx, dst_idx] = -b_branch
+
+    logger.debug("Built branch susceptance matrix:\n%s" % b)
+
+    logger.debug("Built source bus susceptance matrix:\n%s" % b_source)
+
+    return b, b_source
+
 #------------------------------------------------------------------------------
 #  "SusceptanceMatrix" class:
 #------------------------------------------------------------------------------
@@ -50,12 +108,30 @@ class SusceptanceMatrix:
 
     """
 
-    def build(self, network):
+    # Network represented by the matrix
+    network = None
+
+    # Suceptance matrix
+    B = spmatrix
+
+    # Source bus susceptance matrix
+    B_source = spmatrix
+
+    def __init__(self, network):
+        """ Returns a new SusceptanceMatrix instance """
+
+        self.network
+        self.B, self.B_source = self.build()
+
+
+    def build(self):
         """ Build the matrices """
 
-#        if not isinstance(network, Network):
-#            raise ValueError, "The network argument of the build method "
-#        "must be an instance of pylon.network.Network"
+        if self.network is None:
+            logger.error("network unspecified")
+            return
+        else:
+            network = self.network
 
         buses = network.buses
         branches = network.branches

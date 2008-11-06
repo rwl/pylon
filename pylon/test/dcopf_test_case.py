@@ -15,71 +15,133 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #-------------------------------------------------------------------------------
 
-"""
-Test case for the DC Optimal Power Flow routine
-
-"""
+""" Test case for the DC Optimal Power Flow routine """
 
 #-------------------------------------------------------------------------------
 #  Imports:
 #-------------------------------------------------------------------------------
 
 from os.path import join, dirname
-
-from unittest import TestCase
-
-from pylon.network import Network
-
-from pylon.bus import Bus
+from unittest import TestCase, main
 
 from pylon.filter.api import MATPOWERImporter
+from pylon.routine.api import DCOPFRoutine
 
 #-------------------------------------------------------------------------------
 #  Constants:
 #-------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data/3bus.m")
+DATA_FILE = join(dirname(__file__), "data/case6ww.m")
 
 #-------------------------------------------------------------------------------
 #  "DCOPFTest" class:
 #-------------------------------------------------------------------------------
 
 class DCOPFTest(TestCase):
-    """
-    We use a MATPOWER data file and validate the results against those
-    obtained from running the MATPOWER rundcopf.m script with the same
-    data file. See filter_test_case.py for validation of MATPOWER data
-    file parsing.
+    """ We use a MATPOWER data file and validate the results against those
+    obtained from running the MATPOWER rundcopf.m script with the same data
+    file. See filter_test_case.py for validation of MATPOWER data file parsing.
 
     """
 
-    def setUp(self):
-        """
-        The test runner will execute this method prior to each test
+    routine = DCOPFRoutine
+
+    def __init__(self, *args, **kw):
+        """ Returns a new DCPFTest instance """
+
+        TestCase.__init__(self, *args, **kw)
+
+        network = MATPOWERImporter(DATA_FILE).network
+        self.routine = DCOPFRoutine(network)
+
+
+    def test_theta_injection_source(self):
+        """ Tests computation of the phase shift 'quiescent' injections, used
+        for calculating branch real power flows at the from end.
+
+        Pfinj =
+
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
 
         """
 
-        mf = MATPOWERImporter()
-        self.network = mf.parse_file(DATA_FILE)
+        theta_inj = self.routine._theta_inj_source
+
+        self.assertEqual(len(theta_inj), 11)
+        # FIXME: Require a case with transformers or shunt capacitors
+        self.assertEqual(theta_inj[0], 0.0)
+        self.assertEqual(theta_inj[10], 0.0)
 
 
-    def test_dcopf(self):
+    def test_theta_injection_bus(self):
+        """ Tests phase shift injection vector used for bus real power
+        injection calcualtion.
+
+        Pbusinj =
+
+             0
+             0
+             0
+             0
+             0
+             0
+
         """
-        The routine is essentially a method class so we have on one
-        test.  In this test we validate each stage of the computation.
+
+        theta_inj = self.routine._theta_inj_bus
+
+        self.assertEqual(len(theta_inj), 6)
+        # FIXME: Require a case with transformers or shunt capacitors
+        self.assertEqual(theta_inj[0], 0.0)
+        self.assertEqual(theta_inj[5], 0.0)
+
+
+    def test_cost_model(self):
+        """ Tests selection of a quadratic solver if polynomial cost models
+        are used.
 
         """
 
-        self.validate_v_phases()
+        self.assertEqual(self.routine._solver_type, "quadratic")
 
 
-    def validate_v_phases(self):
+    def test_x_vector(self):
+        """ Tests the the x vector where AA * x <= bb
+
+        x =
+
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+            1.6300
+            0.8500
+
         """
-        Validate the vector of initial bus voltage phases
 
-        """
+        x = self.routine._build_x()
 
-        pass
+#        print x
+
+#        self.assertEqual(len(x), 12)
+
+
 
 
 #    def test_admittance_formation(self):
@@ -287,6 +349,6 @@ class DCOPFTest(TestCase):
 #                    )
 
 if __name__ == "__main__":
-    unittest.main()
+    main()
 
 # EOF -------------------------------------------------------------------------

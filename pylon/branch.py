@@ -52,11 +52,11 @@ class Branch(HasTraits):
     id = String(desc="unique branch identifier")
 
     source_bus = Instance(
-        Bus, desc="source/from/start Bus instance"#, allow_none=False
+        Bus, desc="source/from/start Bus instance", allow_none=False
     )
 
     target_bus = Instance(
-        Bus, desc="target/to/end Bus instance"#, allow_none=False
+        Bus, desc="target/to/end Bus instance", allow_none=False
     )
 
     # A default view
@@ -301,25 +301,27 @@ class Branch(HasTraits):
     #  Default source bus:
     #--------------------------------------------------------------------------
 
-    def _source_bus_default(self):
-        if self.network is not None:
-            return self.network.buses[0]
-        else:
-            logger.warning("Branch [%s] source bus not set to default" % self)
-            return None
+#    def _source_bus_default(self):
+#        """ Trait initialiser """
+#
+#        if self.network is not None:
+#            return self.network.buses[0]
+#        else:
+#            logger.warning("Branch [%s] source bus not set to default" % self)
+#            return None
 
     #--------------------------------------------------------------------------
     #  Default destination bus:
     #--------------------------------------------------------------------------
 
-    def _target_bus_default(self):
-        """ Trait initialiser """
-
-        if self.network is not None:
-            return self.network.buses[1]
-        else:
-            logger.warning("Branch [%s] target bus not set to default" % self)
-            return None
+#    def _target_bus_default(self):
+#        """ Trait initialiser """
+#
+#        if self.network is not None:
+#            return self.network.buses[1]
+#        else:
+#            logger.warning("Branch [%s] target bus not set to default" % self)
+#            return None
 
 
     def _get_mode(self):

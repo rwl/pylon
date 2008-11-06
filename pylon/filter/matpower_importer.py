@@ -64,6 +64,11 @@ class MATPOWERImporter:
     # is checked at the end of the parsing operation.
     generators = []
 
+    def __init__(self, file_or_filename):
+        """ Returns a new MATPOWERImporter instance """
+
+        self.network = self.parse_file(file_or_filename)
+
     #--------------------------------------------------------------------------
     #  Parse a MATPOWER data file and return a network object
     #--------------------------------------------------------------------------
@@ -353,9 +358,9 @@ class MATPOWERImporter:
         target_bus = self.network.buses[tokens["tbus"]-1]
 
         e = Branch(
+            network=self.network,
             source_bus=source_bus, target_bus=target_bus,
-            name=make_unique_name("e", self.network.branch_names),
-            network=self.network
+            name=make_unique_name("e", self.network.branch_names)
         )
         e.r = tokens["r"]
         e.x = tokens["x"]
@@ -461,9 +466,9 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
+    data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
     #data_file = "/home/rwl/python/aes/model/matpower/case30.m"
-    filter = MATPOWERImporter()
-    print filter.parse_file(data_file)
+    filter = MATPOWERImporter(data_file)
+    filter.network.configure_traits()
 
 # EOF -------------------------------------------------------------------------
