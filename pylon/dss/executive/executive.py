@@ -46,7 +46,7 @@ from pyramid.mapping import Mapping, CanvasMapping, NodeMapping
 from pyramid.element_tool import ElementTool
 from pyramid.context_menu_tool import ContextMenuTool
 
-from godot.node import DotGraphNode as GodotNode
+from godot.node import Node as GodotNode
 
 #------------------------------------------------------------------------------
 #  "ExecCommand" class:

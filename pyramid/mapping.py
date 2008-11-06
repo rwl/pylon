@@ -34,7 +34,7 @@ from pylon.ui.graph.pydot.pydot import Dot, Node, Edge, graph_from_dot_data
 from pylon.ui.graph.xdot_parser import XDotParser
 from pylon.ui.graph.network_dot import rgba2hex
 
-from godot.node import DotGraphNode as GodotNode
+from godot.node import Node as GodotNode
 from godot.edge import Edge as GodotEdge
 
 from element_tool import ElementTool
@@ -332,7 +332,7 @@ class Mapping(HasTraits):
     def _label_node(self, node, element):
         """ Adds a label to a node """
 
-        
+
 
 
     def _style_node(self, pydot_node, dot_attrs):
