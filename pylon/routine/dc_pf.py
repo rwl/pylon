@@ -78,22 +78,18 @@ class DCPFRoutine:
     #--------------------------------------------------------------------------
 
     def solve(self):
+        """ Solves DC power flow for the current network """
 
-        if not self.network.slack_model == "Single":
-            logger.error(
-                "Performing a DC power flow requires a single slack bus"
-            )
-            return
-
-        self._build_v_phase_guess_vector()
-
-        sm = SusceptanceMatrix()
-        self.B, self.B_source = sm.build(self.network)
-        del sm
-
-        self._build_v_phase_vector()
-
-        self._update_model()
+        # FIXME: Should this be here? Validation
+        if self.network is None:
+            logger.error("Network unspecified")
+        elif not self.network.slack_model == "Single":
+            logger.error("DC power flow requires a single slack bus")
+        else:
+            self._build_v_phase_guess_vector()
+            self.B, self.B_source = SusceptanceMatrix().build(self.network)
+            self._build_v_phase_vector()
+            self._update_model()
 
     #--------------------------------------------------------------------------
     #  Build voltage phase angle guess vector:
@@ -120,29 +116,26 @@ class DCPFRoutine:
         # Remove the column and row from the susceptance matrix that
         # correspond to the slack bus
         slack_idxs = [buses.index(v) for v in buses if v.slack]
-        # Assume a single slack bus model
         slack_idx = slack_idxs[0]
 
-        tight_idxs = [buses.index(v) for v in buses if not v.slack]
+        pv_idxs = [buses.index(v) for v in buses if v.mode == "PV"]
+        pq_idxs = [buses.index(v) for v in buses if v.mode == "PQ"]
+        pvpq_idxs = pv_idxs + pq_idxs
 
-        B_tight = self.B[tight_idxs, tight_idxs]
-        B_slack = self.B[tight_idxs, slack_idx]
+        B_pvpq = self.B[pvpq_idxs, pvpq_idxs]
+        logger.debug("Susceptance matrix with the row and column "
+            "corresponding to the slack bus removed:\n%s" % B_pvpq)
 
-        logger.debug(
-            "Susceptance matrix with the row and column corresponding to "
-            "the slack bus removed:\n%s" % B_tight
-        )
-        logger.debug(
-            "Susceptance matrix column corresponding to the slack bus:\n%s"
-            % B_slack
-        )
+        B_slack = self.B[pvpq_idxs, slack_idx]
+        logger.debug("Susceptance matrix column corresponding to the slack "
+            "bus:\n%s" % B_slack)
 
         # Bus active power injections (generation - load)
         # FIXME: Adjust for phase shifters and real shunts
         p = matrix([v.p_supply for v in buses])
         p_slack = p[slack_idx]
-        p_tight = p[tight_idxs]
-        logger.debug("Active power injections:\n%s" % p_tight)
+        p_pvpq = p[pvpq_idxs]
+        logger.debug("Active power injections:\n%s" % p_pvpq)
 
         v_phase_slack = self.v_phase_guess[slack_idx]
         logger.debug("Slack bus voltage angle:\n%s" % v_phase_slack)
@@ -150,17 +143,19 @@ class DCPFRoutine:
         # Solves the sparse set of linear equations Ax=b where A is a
         # sparse matrix and B is a dense matrix of the same type ('d'
         # or 'z') as A. On exit B contains the solution.
-        A = B_tight
-        b = p_tight-p_slack*v_phase_slack
+        A = B_pvpq
+        b = p_pvpq-p_slack*v_phase_slack
         linsolve(A, b)
         logger.debug("UMFPACK linsolve solution:\n%s" % b)
 
+#        v_phase = matrix([b[:slack_idx], [v_phase_slack], b[slack_idx:]])
         import numpy
         # Insert the reference voltage angle of the slack bus
-        v_phase = matrix(numpy.insert(b, slack_idx, 0.0))
+        v_phase = matrix(numpy.insert(b, slack_idx, v_phase_slack))
         logger.debug("Bus voltage phase angles:\n%s" % v_phase)
 
         self.v_phase = v_phase
+
         return v_phase
 
     #--------------------------------------------------------------------------
@@ -206,8 +201,8 @@ if __name__ == "__main__":
     data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
     n = filter.parse_file(data_file)
 
-    dc_pf = DCPFRoutine(network=n)
-    dc_pf.configure_traits()
-#   dc_pf.solve()
+    dc_pf = DCPFRoutine()
+    dc_pf.network = n
+    dc_pf.solve()
 
 # EOF -------------------------------------------------------------------------

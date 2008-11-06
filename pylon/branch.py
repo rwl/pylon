@@ -314,7 +314,7 @@ class Branch(HasTraits):
 
     def _target_bus_default(self):
         """ Trait initialiser """
-        
+
         if self.network is not None:
             return self.network.buses[1]
         else:
@@ -354,7 +354,7 @@ class Branch(HasTraits):
         tb = self.target_bus
         if (sb is not None) and (tb is not None) and (tb.v_amplitude != 0.0):
             v_ratio = sb.v_amplitude/tb.v_amplitude
-            print "VOLTAGE RATIO:", v_ratio
+#            print "VOLTAGE RATIO:", v_ratio
             return v_ratio
         else:
             return 1.0

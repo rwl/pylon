@@ -309,6 +309,8 @@ class Bus(HasTraits):
     #--------------------------------------------------------------------------
 
     def _get_mode(self):
+        """ Property getter """
+
         if self.slack:
             return "Slack"
         elif len(self.generators) > 0 and not self.q_limited:
@@ -318,6 +320,8 @@ class Bus(HasTraits):
 
 
     def _get_p_supply(self):
+        """ Property getter """
+
         p_supply = 0
 
         for g in self.generators:
@@ -327,6 +331,8 @@ class Bus(HasTraits):
 
 
     def _get_p_demand(self):
+        """ Property getter """
+
         p_demand = 0
 
         for l in self.loads:
@@ -336,10 +342,14 @@ class Bus(HasTraits):
 
 
     def _get_p_surplus(self):
+        """ Property getter """
+
         return self.p_supply - self.p_demand
 
 
     def _get_q_supply(self):
+        """ Property getter """
+
         q_supply = 0
 
         for g in self.generators:
@@ -349,6 +359,8 @@ class Bus(HasTraits):
 
 
     def _get_q_demand(self):
+        """ Property getter """
+
         q_demand = 0
 
         for l in self.loads:
@@ -358,6 +370,8 @@ class Bus(HasTraits):
 
 
     def _get_q_surplus(self):
+        """ Property getter """
+
         return self.q_supply - self.q_demand
 
     #--------------------------------------------------------------------------
