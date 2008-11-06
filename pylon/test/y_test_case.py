@@ -25,7 +25,7 @@ from os.path import join, dirname
 from unittest import TestCase, main
 
 from pylon.filter.api import MATPOWERImporter
-from pylon.routine.api import SusceptanceMatrix
+from pylon.routine.y import make_susceptance
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -53,8 +53,8 @@ class BTestCase(TestCase):
         """ The test runner will execute this method prior to each test """
 
         if self.mi is None:
-            self.mi = MATPOWERImporter()
-            self.network = self.mi.parse_file(DATA_FILE)
+            self.mi = mi = MATPOWERImporter(DATA_FILE)
+            self.network = mi.network
         else:
             self.network = Network().copy_traits(self.mi.network)
 
@@ -65,7 +65,7 @@ class BTestCase(TestCase):
 
         """
 
-        B, B_source = SusceptanceMatrix().build(self.network)
+        B, B_source = make_susceptance(self.network)
         self._validate_susceptance_diagonal_values(B)
         self._validate_suseptance_off_diagonal_equality(B)
 
@@ -171,6 +171,11 @@ class BTestCase(TestCase):
                     )
 
 if __name__ == "__main__":
+    import logging, sys
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
     main()
 
 # EOF -------------------------------------------------------------------------

@@ -35,7 +35,7 @@ from math import pi
 from cvxopt.base import matrix, spmatrix, sparse
 from cvxopt.umfpack import linsolve
 
-from pylon.routine.y import SusceptanceMatrix
+from pylon.routine.y import make_susceptance
 from pylon.network import Network
 #from pylon.pypylon import Network
 
@@ -61,17 +61,27 @@ class DCPFRoutine:
     # The network on which the routine is performed
     network = Network
 
-    # Vector of voltage angle guesses
-    v_phase_guess = matrix
-
     # Branch susceptance matrix
     B = spmatrix([], [], [])
 
     # Branch source bus susceptance matrix
     B_source = spmatrix([], [], [])
 
+    # Vector of voltage angle guesses
+    v_phase_guess = matrix
+
     # Vector of voltage phase angles
     v_phase = matrix
+
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __init__(self, network):
+        """ Returns a DCPFRoutine instance """
+
+        self.network = network
+        self.solve()
 
     #--------------------------------------------------------------------------
     #  Solve power flow:
@@ -86,32 +96,32 @@ class DCPFRoutine:
         elif not self.network.slack_model == "Single":
             logger.error("DC power flow requires a single slack bus")
         else:
-            self._build_v_phase_guess_vector()
-            self.B, self.B_source = SusceptanceMatrix().build(self.network)
-            self._build_v_phase_vector()
+            self.B, self.B_source = make_susceptance(self.network)
+            self._make_v_phase_guess_vector()
+            self._make_v_phase_vector()
             self._update_model()
 
     #--------------------------------------------------------------------------
     #  Build voltage phase angle guess vector:
     #--------------------------------------------------------------------------
 
-    def _build_v_phase_guess_vector(self):
-        """ Build the vector of voltage phase guesses """
+    def _make_v_phase_guess_vector(self):
+        """ Make the vector of voltage phase guesses """
 
-        vpg = matrix([v.v_phase_guess for v in self.network.buses])
-        logger.debug("Built vector of voltage phase guesses:\n%s" % vpg)
-
-        self.v_phase_guess = vpg
-        return vpg
+        if self.network is not None:
+            buses = self.network.non_islanded_buses
+            guesses = [v.v_phase_guess for v in buses]
+            self.v_phase_guess = matrix(guesses)
+            logger.debug("Vector of voltage phase guesses:\n%s" % guesses)
 
     #--------------------------------------------------------------------------
     #  Calculate voltage angles:
     #--------------------------------------------------------------------------
 
-    def _build_v_phase_vector(self):
+    def _make_v_phase_vector(self):
         """ Caluclates the voltage phase angles """
 
-        buses = self.network.buses
+        buses = self.network.non_islanded_buses
 
         # Remove the column and row from the susceptance matrix that
         # correspond to the slack bus
@@ -132,7 +142,7 @@ class DCPFRoutine:
 
         # Bus active power injections (generation - load)
         # FIXME: Adjust for phase shifters and real shunts
-        p = matrix([v.p_supply for v in buses])
+        p = matrix([v.p_surplus for v in buses])
         p_slack = p[slack_idx]
         p_pvpq = p[pvpq_idxs]
         logger.debug("Active power injections:\n%s" % p_pvpq)
@@ -149,7 +159,7 @@ class DCPFRoutine:
         logger.debug("UMFPACK linsolve solution:\n%s" % b)
 
 #        v_phase = matrix([b[:slack_idx], [v_phase_slack], b[slack_idx:]])
-        import numpy
+        import numpy # FIXME: remove numpy dependency
         # Insert the reference voltage angle of the slack bus
         v_phase = matrix(numpy.insert(b, slack_idx, v_phase_slack))
         logger.debug("Bus voltage phase angles:\n%s" % v_phase)
@@ -168,10 +178,11 @@ class DCPFRoutine:
 
         """
 
-        buses = self.network.buses
-        branches = self.network.branches
+        base_mva = self.network.mva_base
+        buses = self.network.non_islanded_buses
+        branches = self.network.in_service_branches
 
-        p_source = self.B_source * self.v_phase
+        p_source = self.B_source * self.v_phase * base_mva
         p_target = -p_source
 
         for i in range(len(branches)):
@@ -197,12 +208,9 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
     from pylon.filter.api import MATPOWERImporter
-    filter = MATPOWERImporter()
-    data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
-    n = filter.parse_file(data_file)
+    data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
+    filter = MATPOWERImporter(data_file)
 
-    dc_pf = DCPFRoutine()
-    dc_pf.network = n
-    dc_pf.solve()
+    dc_pf = DCPFRoutine(filter.network)
 
 # EOF -------------------------------------------------------------------------

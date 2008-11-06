@@ -37,7 +37,7 @@ from cvxopt.umfpack import linsolve
 from cvxopt.solvers import qp
 
 from pylon.api import Network
-from pylon.routine.y import SusceptanceMatrix
+from pylon.routine.y import make_susceptance
 from pylon.traits import Matrix, SparseMatrix
 
 #------------------------------------------------------------------------------
@@ -134,6 +134,7 @@ class DCOPFRoutine:
         """ Returns a new DCOPFRoutine instance """
 
         self.network = network
+        self.solve()
 
     #--------------------------------------------------------------------------
     #  Solve DC Optimal Power Flow problem:
@@ -146,8 +147,7 @@ class DCOPFRoutine:
 
         solution = None
 
-        sm = SusceptanceMatrix()
-        self._B, self._B_source = sm.build(self.network)
+        self._B, self._B_source = make_susceptance(self.network)
         self._build_theta_inj_source()
         self._build_theta_inj_bus()
         self._check_cost_model_consistency()
@@ -191,7 +191,14 @@ class DCOPFRoutine:
 
         branches = self.network.in_service_branches
 
-        b = matrix([1/e.x * e.in_service for e in branches])
+#        b = matrix([1/e.x * e.in_service for e in branches])
+        susc = []
+        for branch in branches:
+            if branch.x != 0.0:
+                susc.append(branch.x)
+            else:
+                susc.append(1e12)
+        b = matrix(susc)
         angle = matrix([-e.phase_shift*pi/180 for e in branches])
 
         # Element-wise multiply
@@ -199,13 +206,12 @@ class DCOPFRoutine:
         source_inj = mul(b, angle)
 
         logger.debug(
-            "Built source bus phase shift injection vector:\n%s" %
-            source_inj
+            "Built source bus phase shift injection vector:\n%s" % source_inj
         )
 
         self._theta_inj_source = source_inj
 
-        return source_inj
+        return
 
 
     def _build_theta_inj_bus(self):
@@ -219,29 +225,23 @@ class DCOPFRoutine:
         # Build incidence matrices
         source_incd = matrix(0, (n_buses, n_branches), tc="i")
         target_incd = matrix(0, (n_buses, n_branches), tc="i")
-
-        i = 0
-        for e in branches:
+        for branch_idx, branch in enumerate(branches):
             # Find the indexes of the buses at either end of the branch
-            source_idx = buses.index(e.source_bus)
-            target_idx = buses.index(e.target_bus)
+            source_idx = buses.index(branch.source_bus)
+            target_idx = buses.index(branch.target_bus)
 
-            source_incd[source_idx, i] = 1
-            target_incd[target_idx, i] = 1
+            source_incd[source_idx, branch_idx] = 1
+            target_incd[target_idx, branch_idx] = 1
 
-            i += 1
-
-        # matrix multiply
+        # Matrix multiply
         source_inj = self._theta_inj_source
         bus_inj = source_incd * source_inj + target_incd * -source_inj
 
-        logger.debug(
-            "Built bus phase shift injection vector:\n%s" % bus_inj
-        )
+        logger.debug("Bus phase shift injection vector:\n%s" % bus_inj)
 
         self._theta_inj_bus = bus_inj
 
-        return bus_inj
+        return
 
     #--------------------------------------------------------------------------
     #  Cost models:
@@ -815,14 +815,12 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    filter = MATPOWERImporter()
 #    data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
-    data_file = "/home/rwl/python/aes/matpower_3.2/case30.m"
-    n = filter.parse_file(data_file)
+    data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
+    filter = MATPOWERImporter(data_file)
 
-    dc_opf = DCOPFRoutine(network=n)
-    dc_opf.configure_traits()
-#    dc_opf.solve()
+    dc_opf = DCOPFRoutine(network=filter.network)
+#    dc_opf.configure_traits()
 
 
 # EOF -------------------------------------------------------------------------
