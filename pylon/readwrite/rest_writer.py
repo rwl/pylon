@@ -18,10 +18,6 @@
 """ Defines a class for writing network data to a ReStructuredText file """
 
 #------------------------------------------------------------------------------
-#  Imports:
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
 #  "ReSTWriter" class:
 #------------------------------------------------------------------------------
 
@@ -30,10 +26,18 @@ class ReSTWriter:
 
     network = None
 
-    def write(self, network, file_or_filename):
+    file_or_filename = ""
+
+    def __init__(self, network, file_or_filename):
+        self.network = network
+        self.file_or_filename = file_or_filename
+
+
+    def write(self):
         """ Writes network data to file in ReStructuredText format """
 
-        self.network = network
+        network = self.network
+        file_or_filename = self.file_or_filename
 
         if isinstance(file_or_filename, basestring):
             file = open(file_or_filename, "wb")
@@ -48,15 +52,45 @@ class ReSTWriter:
         file.write("System Summary\n")
         file.write("--------------\n")
 
+        self._write_how_many(file)
+
         file.close()
+
+
+    def _write_how_many(self, file):
+        """ Writes component numbers to a table """
+
+        network = self.network
+
+        components = [("Bus", "n_buses"), ("Generator", "n_generators"),
+            ("Committed Generator", "n_committed_generators"),
+            ("Load", "n_loads"), ("Fixed Load", "n_fixed"),
+            ("Despatchable Load", "n_despatchable"), ("Shunt", "n_shunts"),
+            ("Branch", "n_branches"), ("Transformer", "n_transformers"),
+            ("Inter-tie", "n_inter_ties"), ("Area", "n_areas")]
+
+        longest = max([len(c[0]) for c in components])
+
+        sep = "="*longest + " " + "="*len("Quantity") + "\n"
+
+        file.write(sep)
+        file.write("Object")
+        file.write(" "*(longest-len("Object")+1))
+        file.write("Quantity\n")
+        file.write(sep)
+
+        for label, attr in components:
+            col1 = label + " "*(longest-len(label))
+            file.write("%s %d\n" % (col1, getattr(network, attr)))
+        else:
+            file.write(sep)
 
 #------------------------------------------------------------------------------
 #  Standalone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    import sys
-    import logging
+    import sys, logging
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
@@ -66,6 +100,6 @@ if __name__ == "__main__":
 
     n = read_matpower(data_file)
 
-    RSTWriter().write(n, "/tmp/test.m")
+    ReSTWriter(n, "/tmp/test.rst").write()
 
 # EOF -------------------------------------------------------------------------
