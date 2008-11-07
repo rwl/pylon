@@ -442,7 +442,8 @@ class SwarmModelView(ModelView):
 
         if info.initialized:
             n = self.model.environment.network
-            bus = Bus(name=make_unique_name("bus", n.bus_names))
+            bus_names = [v.name for v in n.buses]
+            bus = Bus(name=make_unique_name("bus", bus_names))
             n.buses.append(bus)
 #            retval = bus.edit_traits(parent=info.ui.control, kind="livemodal")
 #            if not retval.result:
@@ -460,14 +461,15 @@ class SwarmModelView(ModelView):
         if len(n.buses) < 2:
             print "For branch addition two or more buses are a prerequisite"
         else:
-            name = make_unique_name("branch", n.branch_names)
+            branch_names = [e.name for e in n.branches]
+            name = make_unique_name("branch", branch_names)
 
             branch = Branch(
                 name=name, network=n,
                 source_bus=n.buses[0],
                 target_bus=n.buses[1]
             )
-            n.add_branch(branch)
+            n.branches.append(branch)
             retval = branch.edit_traits(
                 parent=info.ui.control, kind="livemodal"
             )

@@ -291,7 +291,8 @@ class MATPOWERImporter:
     def _push_bus(self, tokens):
         """ Adds a bus to the network and a load (if any) """
 
-        bus = Bus(name=make_unique_name("v", self.network.bus_names))
+        bus_names = [v.name for v in self.network.buses]
+        bus = Bus(name=make_unique_name("v", bus_names))
 
         base_kv = tokens["baseKV"]
         bus.v_base = base_kv
@@ -357,10 +358,11 @@ class MATPOWERImporter:
         source_bus = self.network.buses[tokens["fbus"]-1]
         target_bus = self.network.buses[tokens["tbus"]-1]
 
+        branch_names = [e.name for e in self.network.branches]
         e = Branch(
             network=self.network,
             source_bus=source_bus, target_bus=target_bus,
-            name=make_unique_name("e", self.network.branch_names)
+            name=make_unique_name("e", branch_names)
         )
         e.r = tokens["r"]
         e.x = tokens["x"]
@@ -370,7 +372,7 @@ class MATPOWERImporter:
         e.phase_shift = tokens["angle"]
         e.in_service = tokens["status"]
 
-        self.network.add_branch(e)
+        self.network.branches.append(e)
 
 
     def _push_generator_cost(self, string, location, tokens):

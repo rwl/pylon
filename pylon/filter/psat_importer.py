@@ -417,7 +417,7 @@ class PSATImporter:
 #        if "status" in tokens.keys:
 #        e.in_service = tokens["status"]
 
-        self.network.add_branch(e)
+        self.network.branches.append(e)
 
 
     def push_slack(self, tokens):

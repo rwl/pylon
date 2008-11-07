@@ -397,7 +397,8 @@ class NetworkModelView(ModelView):
         """ Handles adding a bus to the network """
 
         if info.initialized:
-            name = make_unique_name("v", self.model.bus_names)
+            bus_names = [v.name for v in self.network.buses]
+            name = make_unique_name("v", bus_names)
             self.model.buses.append(Bus(name=name))
 
 
@@ -412,7 +413,8 @@ class NetworkModelView(ModelView):
         if len(network.buses) < 2:
             print "For branch addition two or more buses are a prerequisite"
         else:
-            name = make_unique_name("e", network.branch_names)
+            branch_names = [e.name for e in network.branches]
+            name = make_unique_name("e", branch_names)
 
             branch = Branch(
                 name=name,
@@ -420,7 +422,7 @@ class NetworkModelView(ModelView):
                 source_bus=network.buses[0],
                 target_bus=network.buses[1]
             )
-            network.add_branch(branch)
+            network.branches.append(branch)
 
 
     def dcopf(self, info):

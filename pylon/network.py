@@ -71,75 +71,60 @@ class Network(HasTraits):
     buses = List(Instance(Bus), desc="graph nodes")
 
     # The total number of buses
-    n_buses = Property(
-        Int, depends_on=["buses"], desc="total number of buses"
-    )
+    n_buses = Property(Int, depends_on=["buses"],
+        desc="total number of buses", label="Buses")
 
     # Buses that are connected by active branches
-    non_islanded_buses = Property(
-        List(Instance(Bus)), depends_on=["in_service_branches"],
-        desc="buses that are not islanded"
-
-    )
+    non_islanded_buses = Property(List(Instance(Bus)),
+        depends_on=["in_service_branches"],
+        desc="buses that are not islanded")
 
     # The total number of non-islanded buses
-    n_non_islanded_buses = Property(
-        Int, depends_on=["non_islanded_buses"],
-        desc="total number of non islanded buses"
-
-    )
+    n_non_islanded_buses = Property(Int, depends_on=["non_islanded_buses"],
+        desc="total number of non islanded buses")
 
     # All bus names
-    bus_names = Property(List(String), depends_on=["buses"])
+#    bus_names = Property(List(String), depends_on=["buses"])
 
     # The slack model type
-    slack_model = Property(
-        Enum("Distributed", "Single"), depends_on=["buses.slack"]
-    )
+    slack_model = Property(Enum("Distributed", "Single"),
+        depends_on=["buses.slack"])
 
     # Generators --------------------------------------------------------------
 
     # Convenience list of all generators
-    generators = Property(
-        List(Generator), depends_on=["buses.generators"],
-        desc="convenience list of all generators"
-    )
+    generators = Property(List(Instance(Generator)),
+        depends_on=["buses.generators"],
+        desc="convenience list of all generators")
 
     # The total number of generators
-    n_generators = Property(
-        Int, depends_on=["generators"], desc="total number of generators"
-    )
+    n_generators = Property(Int, depends_on=["generators"],
+        desc="total number of generators")
 
     # Convenience list of all in service generators attached to
     # non islanded buses
-    in_service_generators = Property(
-        List(Instance(Generator)),
+    in_service_generators = Property(List(Instance(Generator)),
         depends_on=[
             "non_islanded_buses.generators",
             "non_islanded_buses.generators.in_service"
         ],
         desc="""convenience list of all in service generators attached "
-        to non islanded buses"""
-    )
+        to non islanded buses""")
 
     # The total number of generators in service
-    n_in_service_generators = Property(
-        Int, depends_on=["in_service_generators"],
-        desc="total number of active generators"
-    )
+    n_in_service_generators = Property(Int,
+        depends_on=["in_service_generators"])
+
+    committed_generators = Property(Int, depends_on=["generators.p"])
 
     # Loads -------------------------------------------------------------------
 
     # Convenience list of all loads
-    loads = Property(
-        List(Instance(Load)), depends_on=["buses.loads"],
-        desc="convenience list of all loads"
-    )
+    loads = Property(List(Instance(Load)), depends_on=["buses.loads"],
+        desc="convenience list of all loads")
 
     # The total number of all loads
-    n_loads = Property(
-        Int, depends_on=["loads"], desc="total number of loads"
-    )
+    n_loads = Property(Int, depends_on=["loads"])
 
     # Convenience list of all in service loads connected to
     # non islanded buses
@@ -154,30 +139,70 @@ class Network(HasTraits):
     )
 
     # The total number of loads in service
-    n_in_service_loads = Property(
-        Int, depends_on=["in_service_loads"],
-        desc="total number of active loads"
-    )
+    n_in_service_loads = Property(Int, depends_on=["in_service_loads"])
 
-    #--------------------------------------------------------------------------
-    #  Branch objects:
-    #--------------------------------------------------------------------------
+    fixed = Property(List(Instance(Load)), depends_on=["loads"],
+        desc="Fixed loads")
+    n_fixed = Property(Int, depends_on=["fixed"])
+
+    despatchable = Property(List(Instance(Load)),
+        depends_on=["generators"], desc="negative generators")
+    n_despatchable = Property(Int, depends_on=["despatchable"])
+
+    # Shunts ------------------------------------------------------------------
+
+    shunts = List(Instance(HasTraits))
+
+    n_shunts = Property(Int, depends_on=["shunts"])
+
+    # Branches ----------------------------------------------------------------
 
     branches = List(Instance(Branch), desc="edges")
-
     n_branches = Property(Int, depends_on=["branches"])
 
-    in_service_branches = Property(
-        List(Branch), depends_on=["branches.in_service"],
-        desc="a convenient list of all in service branches"
-    )
+    in_service_branches = Property(List(Instance(Branch)),
+        depends_on=["branches.in_service"],
+        desc="a convenient list of all in service branches")
 
-    n_in_service_branches = Property(
-        Int, depends_on=["in_service_branches"],
-        desc="total number of active branches"
-    )
+    n_in_service_branches = Property(Int, depends_on=["in_service_branches"])
 
-    branch_names = Property(List(String), depends_on=["branches"])
+    transformers = Property(List(Instance(Branch)), depends_on=["branches"])
+    n_transformers = Property(Int, depends_on=["transformers"])
+
+    # Inter-ties --------------------------------------------------------------
+
+    inter_ties = List(Instance(HasTraits))
+    n_inter_ties = Property(Int, depends_on=["inter_ties"])
+
+    # Areas -------------------------------------------------------------------
+
+    areas = List(Instance(HasTraits))
+    n_areas = Property(Int, depends_on=["areas"])
+
+    #--------------------------------------------------------------------------
+    #  How much?:
+    #--------------------------------------------------------------------------
+
+    total_gen_capacity = Property(Float, depends_on=["generators.p"])
+    online_capacity = Property(Float, depends_on=["in_service_generators.p"])
+    generation_actual = Property(Float, depends_on=["generators.p_despatch"])
+    load = Property(Float, depends_on=["loads.p"])
+    fixed_load = Property(Float, depends_on=["fixed.p"])
+    despatchable_load = Property(Float, depends_on=["despatchable.p"])
+    shunt_injection = Property(Float, depends_on=["shunts"])
+    losses = Property(Float, depends_on=["branches.p_losses"])
+    branch_charging = Property(Float, depends_on=["branches"])
+    total_inter_tie_flow = Property(Float, depends_on=["inter_ties"])
+
+    min_voltage_amplitude = Property(Float, depends_on=["buses.v_amplitude"])
+    max_voltage_amplitude = Property(Float, depends_on=["buses.v_amplitude"])
+    min_voltage_phase = Property(Float, depends_on=["buses.v_phase"])
+    max_voltage_phase = Property(Float, depends_on=["buses.v_phase"])
+
+    min_p_lambda = Property(Float, depends_on=["buses.p_lambda"])
+    max_p_pambda = Property(Float, depends_on=["buses.p_lambda"])
+    min_q_lambda = Property(Float, depends_on=["buses.q_lambda"])
+    max_q_lambda = Property(Float, depends_on=["buses.q_lambda"])
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -234,13 +259,6 @@ class Network(HasTraits):
 
 
 #    @cached_property
-    def _get_bus_names(self):
-        """ Property getter """
-
-        return [bus.name for bus in self.buses]
-
-
-#    @cached_property
     def _get_slack_model(self):
         """ Indicates the current slack bus model """
 
@@ -253,21 +271,18 @@ class Network(HasTraits):
 
     # Generator property getters ----------------------------------------------
 
-#    @cached_property
     def _get_generators(self):
         """ Property getter """
 
         return [g for v in self.buses for g in v.generators]
 
 
-#    @cached_property
     def _get_n_generators(self):
         """ Property getter """
 
         return len(self.generators)
 
 
-#    @cached_property
     def _get_in_service_generators(self):
         """ Provides a convenient list of all generators that are connected
         to non islanded buses.
@@ -279,29 +294,31 @@ class Network(HasTraits):
         return [g for v in buses for g in v.generators if g.in_service]
 
 
-#    @cached_property
     def _get_n_in_service_generators(self):
         """ Property getter """
 
         return len(self.in_service_generators)
 
+
+    def _get_committed_generators(self):
+        """ Property getter """
+
+        return [g for g in self.generators if g.p > 0.0]
+
     # Load property getters ---------------------------------------------------
 
-#    @cached_property
     def _get_loads(self):
         """ Property getter """
 
         return [l for v in self.buses for l in v.loads]
 
 
-#    @cached_property
     def _get_n_loads(self):
         """ Property getter """
 
         return len(self.loads)
 
 
-#    @cached_property
     def _get_in_service_loads(self):
         """ Property getter """
 
@@ -310,42 +327,244 @@ class Network(HasTraits):
         return [l for v in buses for l in v.loads if l.in_service]
 
 
-#    @cached_property
     def _get_n_in_service_loads(self):
         """ Property getter """
 
         return len(self.in_service_loads)
 
+
+    def _get_fixed(self):
+        """ Property getter """
+
+        return self.loads
+
+
+    def _get_n_fixed(self):
+        """ Property getter """
+
+        return len(self.fixed)
+
+
+    def _get_despatchable(self):
+        """ Property getter """
+
+        return [g for g in self.generators if g.p < 0.0]
+
+
+    def _get_n_despatchable(self):
+        """ Property getter """
+
+        return len(self.despatchable)
+
+    #--------------------------------------------------------------------------
+    #  Shunt property getters:
+    #--------------------------------------------------------------------------
+
+    def _get_n_shunts(self):
+        """ Property getter """
+
+        return len(self.shunts)
+
     #--------------------------------------------------------------------------
     #  Branch property getters:
     #--------------------------------------------------------------------------
 
-#    @cached_property
     def _get_n_branches(self):
         """ Property getter """
 
         return len(self.branches)
 
 
-#    @cached_property
     def _get_in_service_branches(self):
         """ Property getter """
 
         return [e for e in self.branches if e.in_service]
 
 
-#    @cached_property
     def _get_n_in_service_branches(self):
         """ Property getter """
 
         return len(self.in_service_branches)
 
 
-#    @cached_property
-    def _get_branch_names(self):
+    def _get_transformers(self):
         """ Property getter """
 
-        return [branch.name for branch in self.branches]
+        return [e for e in self.branches if e.mode == "Transformer"]
+
+
+    def _get_n_transformers(self):
+        """ Property getter """
+
+        return len(self.transformers)
+
+    #--------------------------------------------------------------------------
+    #  Inter-tie property getters:
+    #--------------------------------------------------------------------------
+
+    def _get_n_inter_ties(self):
+        """ Property getter """
+
+        return len(self.inter_ties)
+
+    #--------------------------------------------------------------------------
+    #  Area property getters:
+    #--------------------------------------------------------------------------
+
+    def _get_n_areas(self):
+        """ Property getter """
+
+        return len(self.areas)
+
+    #--------------------------------------------------------------------------
+    #  "How much?" property getters:
+    #--------------------------------------------------------------------------
+
+    def _get_total_gen_capacity(self):
+        """ Property getter """
+
+        p = sum([g.p for g in self.generators])
+        q = sum([g.q for g in self.generators])
+        return complex(p, q)
+
+
+    def _get_online_capacity(self):
+        """ Property getter """
+
+        p = sum([g.p for g in self.in_service_generators])
+        q = sum([g.q for g in self.in_service_generators])
+        return complex(p, q)
+
+
+    def _get_generation_actual(self):
+        """ Property getter """
+
+        p = sum([g.p_despatch for g in self.generators])
+        q = sum([g.q for g in self.generators])
+        return complex(p, q)
+
+
+    def _get_load(self):
+        """ Property getter """
+
+        p = sum([l.p for l in self.loads])
+        q = sum([l.q for l in self.loads])
+        return complex(p, q)
+
+
+    def _get_fixed_load(self):
+        """ Property getter """
+
+        p = sum([l.p for l in self.fixed])
+        q = sum([l.q for l in self.fixed])
+        return complex(p, q)
+
+
+    def _get_despatchable_load(self):
+        """ Property getter """
+
+        p = sum([l.p for l in self.despatchable])
+        q = sum([l.q for l in self.despatchable])
+        return complex(p, q)
+
+
+    def _get_shunt_injection(self):
+        """ Property getter """
+
+        return 0.0 # FIXME: Implement shunts
+
+
+    def _get_losses(self):
+        """ Property getter """
+
+        p = sum([e.p_losses for e in self.branches])
+        q = sum([e.q_losses for e in self.branches])
+        return complex(p, q)
+
+
+    def _get_branch_charging(self):
+        """ Property getter """
+
+        return 0.0 # FIXME: Calculate branch charging injections
+
+
+    def _get_total_inter_tie_flow(self):
+        """ Property getter """
+
+        return 0.0 # FIXME: Implement inter-ties
+
+
+    def _get_min_voltage_amplitude(self):
+        """ Property getter """
+
+        if self.buses:
+            return min([bus.v_amplitude for bus in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_max_voltage_amplitude(self):
+        """ Property getter """
+
+        if self.buses:
+            return max([bus.v_amplitude for bus in self.buses])
+        else:
+            return 0.0
+
+
+
+    def _get_min_voltage_phase(self):
+        """ Property getter """
+
+        if self.buses:
+            return min([bus.v_phase for bus in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_max_voltage_phase(self):
+        """ Property getter """
+
+        if self.buses:
+            return max([bus.v_phase for bus in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_min_p_lambda(self):
+        """ Property getter """
+
+        if self.buses:
+            return min([v.p_lambda for v in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_max_p_lambda(self):
+        """ Property getter """
+
+        if self.buses:
+            return max([v.p_lambda for v in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_min_q_lambda(self):
+        """ Property getter """
+
+        if self.buses:
+            return min([v.q_lambda for v in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_max_q_lambda(self):
+        """ Property getter """
+
+        if self.buses:
+            return max([v.q_lambda for v in self.buses])
+        else:
+            return 0.0
 
     #--------------------------------------------------------------------------
     #  Event handlers:
@@ -375,17 +594,17 @@ class Network(HasTraits):
     #  Public interface:
     #--------------------------------------------------------------------------
 
-    def add_branch(self, branch):
-        """ Add a Branch instance """
-
-        if len(self.buses) < 2:
-            logger.error("For Branch addition two or more buses are requisite")
-        elif branch.source_bus not in self.buses:
-            raise ValueError, "source bus not present in model"
-        elif branch.target_bus not in self.buses:
-            raise ValueError, "destination bus not found in model"
-        else:
-            self.branches.append(branch)
+#    def add_branch(self, branch):
+#        """ Add a Branch instance """
+#
+#        if len(self.buses) < 2:
+#            logger.error("For Branch addition two or more buses are required")
+#        elif branch.source_bus not in self.buses:
+#            raise ValueError, "source bus not present in model"
+#        elif branch.target_bus not in self.buses:
+#            raise ValueError, "destination bus not found in model"
+#        else:
+#            self.branches.append(branch)
 
 #-------------------------------------------------------------------------------
 #  "AreaRegion" class:

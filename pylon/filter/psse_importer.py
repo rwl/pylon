@@ -504,7 +504,7 @@ class PSSEImporter:
         branch.s_max_summer = tokens["RateC"]
         branch.in_service = tokens["Stat"]
 
-        self.network.add_branch(branch)
+        self.network.branches.append(branch)
 
 
     def _push_transformer_data(self, tokens):
@@ -546,7 +546,7 @@ class PSSEImporter:
 
         branch.in_service = tokens["STAT"]
 
-        self.network.add_branch(branch)
+        self.network.branches.append(branch)
 
 #------------------------------------------------------------------------------
 #  Convenience function for PSS/E import

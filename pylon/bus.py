@@ -64,16 +64,11 @@ class Bus(HasTraits):
 #        desc="branches targeting this bus"
 #    )
 
-    generators = List(
-        Generator,
-        desc="generators of PV type connected to the bus"
-    )
+    generators = List(Instance(Generator),
+        desc="generators of PV type connected to the bus")
 
-    n_generators = Property(
-        Int,
-        desc="total number of generators at this bus",
-        depends_on=["generators"]
-    )
+    n_generators = Property(Int, desc="total number of generators at this bus",
+        depends_on=["generators"])
 
 #    has_generation = Property(
 #        Bool,
@@ -82,25 +77,17 @@ class Bus(HasTraits):
 #        depends_on=["generators"]
 #    )
 
-    loads = List(Load, desc="loads connected to the bus")
+    loads = List(Instance(Load), desc="loads connected to the bus")
 
-    n_loads = Property(
-        Int,
-        desc="total number of loads at this bus",
-        depends_on=["loads"]
-    )
+    n_loads = Property(Int, desc="total number of loads at this bus",
+        depends_on=["loads"])
 
-    mode = Property(
-        Enum("PV", "PQ", "Slack", "Isolated"),
+    mode = Property(Enum("PV", "PQ", "Slack", "Isolated"),
         desc="bus type as determined by the connected plant",
-        depends_on=["slack", "generators", "loads"]
-    )
+        depends_on=["slack", "generators", "loads"])
 
-    q_limited = Bool(
-        False,
-        desc="true if any connected generators are "
-        "at their limits of reactive power"
-    )
+    q_limited = Bool(False, desc="true if any connected generators are "
+        "at their limits of reactive power")
 
 #    slack = Property(
 #        Bool(
@@ -110,11 +97,7 @@ class Bus(HasTraits):
 #        )
 #    )
 
-    slack = Bool(
-        False,
-        desc="true if the bus is a slack bus",
-        label="Slack bus"
-    )
+    slack = Bool(False, desc="is the bus slack", label="Slack bus")
 
 #    v_nominal = Float(
 #        400.0,
@@ -123,11 +106,7 @@ class Bus(HasTraits):
 #    )
 
     # Base voltage (kV)
-    v_base = Float(
-        400.0,
-        desc="base voltage (kV)",
-        label="Vbase"
-    )
+    v_base = Float(400.0, desc="base voltage (kV)", label="Vbase")
 
     v_amplitude_guess = Range(
         low=0.5, high=1.5, value=1.0,
@@ -139,46 +118,31 @@ class Bus(HasTraits):
     # aref = min(abs(a.con(:,4)));
     # alow  = find(a.con(:,4)-aref < -1.5708);
     # ahigh = find(a.con(:,4)-aref >  1.5708);
-    v_phase_guess = Float(
-        1.0,
-        desc="voltage phase initial guess (p.u.)",
-        label="Va0"
-    )
+    v_phase_guess = Float(1.0, desc="voltage phase initial guess (p.u.)",
+        label="Va0")
 
-    v_max = Float(
-        1.0,
-        desc="maximum voltage amplitude (PQ) (p.u.)",
-        label="Vmax"
-    )
+    v_max = Float(1.0, desc="maximum voltage amplitude (PQ) (p.u.)",
+        label="Vmax")
 
-    v_min = Float(
-        1.0,
-        desc="minimum voltage amplitude (PQ) (p.u.)",
-        label="Vmin"
-    )
+    v_min = Float(1.0, desc="minimum voltage amplitude (PQ) (p.u.)",
+        label="Vmin")
 
-    v_amplitude = Float(
-        style="readonly",
-        desc="bus voltage magnitude",
+    v_amplitude = Float(style="readonly", desc="bus voltage magnitude",
         label="Vm")
 
-    v_phase = Float(
-        style="readonly",
-        desc="bus voltage angle",
-        label="Va"
-    )
+    v_phase = Float(style="readonly", desc="bus voltage angle", label="Va")
 
-    g_shunt = Float(
-        desc="shunt conductance (p.u. (MW demanded) at V = 1.0 p.u.)",
-        label="Gsh"
-    )
+    g_shunt = Float(desc="shunt conductance (p.u. (MW demanded) at V=1.0 pu)",
+        label="Gsh")
 
-    b_shunt = Float(
-        desc="shunt susceptance (p.u. (MVAr injected) at V = 1.0 p.u.)",
-        label="Bsh"
-    )
+    b_shunt = Float(desc="shunt susceptance (p.u. (MVAr injected) @ V=1.0 pu)",
+        label="Bsh")
 
     zone = Int(1, desc="loss zone")
+
+    p_lambda = Float(style="readonly")
+
+    q_lambda = Float(style="readonly")
 
 #    q_max = Property(
 #        Float,
@@ -194,56 +158,23 @@ class Bus(HasTraits):
 #        label="Qmin"
 #    )
 
-    p_supply = Property(
-        Float,
-        desc="total real power supply (MW)",
-        depends_on=["generators.p", "loads.p"],
-        label="P (supply)"
-    )
+    p_supply = Property(Float, desc="total real power supply (MW)",
+        depends_on=["generators.p", "loads.p"], label="P (supply)")
 
-    p_demand = Property(
-        Float,
-        desc="total real power demand (MW)",
-        depends_on=["loads", "loads_items"],
-        label="P (demand)"
-    )
+    p_demand = Property(Float, desc="total real power demand (MW)",
+        depends_on=["loads", "loads_items"], label="P (demand)")
 
-    p_surplus = Property(
-        Float,
-        desc="local real power supply and demand difference",
-        depends_on=["p_supply", "p_demand"],
-        label="P (surplus)"
-    )
+    p_surplus = Property(Float, desc="local real power difference",
+        depends_on=["p_supply", "p_demand"], label="P (surplus)")
 
-    q_supply = Property(
-        Float,
-        desc="total reactive power supply (MVAr)",
-        depends_on=["generators.q", "loads.q"],
-        label="Q (supply)"
-    )
+    q_supply = Property(Float, desc="total reactive power supply (MVAr)",
+        depends_on=["generators.q", "loads.q"], label="Q (supply)")
 
-    q_demand = Property(
-        Float,
-        desc="total reactive power demand (MVAr)",
-        depends_on=["loads", "loads_items"],
-        label="Q (demand)"
-    )
+    q_demand = Property(Float, desc="total reactive power demand (MVAr)",
+        depends_on=["loads", "loads_items"], label="Q (demand)")
 
-    q_surplus = Property(
-        Float,
-        desc="local reactive power supply and demand difference",
-        depends_on=["q_supply", "q_demand"],
-        label="Q (surplus)"
-    )
-
-    #--------------------------------------------------------------------------
-    #  Text representation of the Bus:
-    #--------------------------------------------------------------------------
-
-#    def __str__(self):
-#        """ Text representation of the Bus """
-#
-#        return self.name
+    q_surplus = Property(Float, desc="local reactive power difference",
+        depends_on=["q_supply", "q_demand"], label="Q (surplus)")
 
     #--------------------------------------------------------------------------
     #  Generate unique identifier:
