@@ -49,39 +49,12 @@ class Network:
     # Total number of buses
     n_buses = property(_get_n_buses)
 
-    def _get_bus_names(self):
-        """ Property getter """
-
-        return [bus.name for bus in self.buses]
-
-    # The names of all buses
-    bus_names = property(_get_bus_names)
-
     def _get_n_branches(self):
         """ Property getter """
         return len(self.branches)
 
     # Total number of branches
     n_branches = property(_get_n_branches)
-
-    def _get_branch_names(self):
-        """ Property getter """
-
-        return [e.name for e in self.branches]
-
-    branch_names = property(_get_branch_names)
-
-    def add_branch(self, branch):
-        """ Adds a Branch object """
-
-        if len(self.buses) < 2:
-            logger.error("For Branch addition two or more buses are requisite")
-        elif branch.source_bus not in self.buses:
-            raise ValueError, "source bus not present in model"
-        elif branch.target_bus not in self.buses:
-            raise ValueError, "destination bus not found in model"
-        else:
-            self.branches.append(branch)
 
 #------------------------------------------------------------------------------
 #  "Bus" class:

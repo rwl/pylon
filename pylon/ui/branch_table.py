@@ -49,8 +49,9 @@ def branch_factory(**row_factory_kw):
             print "For Branch addition two or more Buses are requisite"
             return None
         else:
+            branch_names = [e.name for e in network.branches]
             branch = Branch(
-                name=make_unique_name("branch", network.branch_names),
+                name=make_unique_name("branch", branch_names),
                 network=network,
                 source_bus=network.buses[0],
                 target_bus=network.buses[1]

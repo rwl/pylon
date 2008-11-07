@@ -94,7 +94,7 @@ class M3Importer:
 
         for arc in ne.findall("{%s}arc" % self.M3_NS):
             branch = self.create_branch(arc)
-            network.add_branch(branch)
+            network.branches.append(branch)
 
         # Market entities:
         me_elements = tree.findall(".//{%s}MarketEntity" % self.M3_NS)

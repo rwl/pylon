@@ -47,7 +47,8 @@ def bus_factory(**row_factory_kw):
     if "__table_editor__" in row_factory_kw:
         network = row_factory_kw["__table_editor__"].object
         del row_factory_kw["__table_editor__"]
-        return Bus(name=make_unique_name("bus", network.bus_names))
+        bus_names = [v.name for v in network.buses]
+        return Bus(name=make_unique_name("bus", bus_names))
 
 #------------------------------------------------------------------------------
 #  Buses "TableEditor" instance:

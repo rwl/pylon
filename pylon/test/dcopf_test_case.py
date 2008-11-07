@@ -162,7 +162,7 @@ class DCOPFTest(TestCase):
 #            x=0.02,
 #            b=0.03
 #        )
-#        self.network.add_branch(branch_1)
+#        self.network.branches.append(branch_1)
 #
 #        branch_2 = Branch(
 #            source_bus=bus1,
@@ -171,7 +171,7 @@ class DCOPFTest(TestCase):
 #            x=0.05,
 #            b=0.06
 #        )
-#        self.network.add_branch(branch_2)
+#        self.network.branches.append(branch_2)
 #
 #        branch_3 = Branch(
 #            source_bus=bus2,
@@ -180,7 +180,7 @@ class DCOPFTest(TestCase):
 #            x=0.08,
 #            b=0.09
 #        )
-#        self.network.add_branch(branch_3)
+#        self.network.branches.append(branch_3)
 #
 #        self._validate_admittance_diagonal_values(self.network.admittance)
 #        self._validate_admittance_off_diagonal_values(self.network.admittance)
@@ -212,7 +212,7 @@ class DCOPFTest(TestCase):
 #            x=0.02,
 #            b=0.03
 #        )
-#        self.network.add_branch(branch_1)
+#        self.network.branches.append(branch_1)
 #
 #        self.assertNotEqual(
 #            inital_length,
