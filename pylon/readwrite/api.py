@@ -27,8 +27,8 @@ For example:
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pylon.filter.matpower_importer import MATPOWERImporter, import_matpower
-from pylon.filter.matpower_exporter import MATPOWERExporter, export_matpower
+from pylon.filter.matpower_importer import MATPOWERReader, read_matpower
+from pylon.filter.matpower_exporter import MATPOWERWriter, write_matpower
 
 from pylon.filter.psse_importer import PSSEImporter, import_psse
 
