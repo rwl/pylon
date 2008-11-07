@@ -207,10 +207,9 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    from pylon.filter.api import MATPOWERImporter
+    from pylon.filter.api import read_matpower
     data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
-    filter = MATPOWERImporter(data_file)
 
-    dc_pf = DCPFRoutine(filter.network)
+    dc_pf = DCPFRoutine(read_matpower(data_file))
 
 # EOF -------------------------------------------------------------------------

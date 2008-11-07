@@ -24,7 +24,7 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.filter.api import MATPOWERImporter
+from pylon.filter.api import MATPOWERReader
 from pylon.routine.y import make_susceptance
 
 #------------------------------------------------------------------------------
@@ -47,16 +47,16 @@ class BTestCase(TestCase):
 
     network = None
 
-    mi = None
+    reader = None
 
     def setUp(self):
         """ The test runner will execute this method prior to each test """
 
-        if self.mi is None:
-            self.mi = mi = MATPOWERImporter(DATA_FILE)
-            self.network = mi.network
+        if self.reader is None:
+            self.reader = reader = MATPOWERReader(DATA_FILE)
+            self.network = reader.network
         else:
-            self.network = Network().copy_traits(self.mi.network)
+            self.network = Network().copy_traits(self.reader.network)
 
 
     def test_susceptance(self):

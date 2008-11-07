@@ -29,7 +29,7 @@ import os.path
 from unittest import TestCase, main
 
 from pylon.network import Network
-from pylon.filter.matpower_importer import MATPOWERImporter
+from pylon.filter.matpower_importer import read_matpower
 from pylon.filter.psse_importer import PSSEImporter
 
 #-------------------------------------------------------------------------------
@@ -143,8 +143,7 @@ class MatpowerFilterTestCase(FilterTestCase):
         """ Validate parsing of the case6ww.m file """
 
         # Parse the file
-        filter = MATPOWERImporter(MATPOWER_DATA_FILE)
-        self.network = filter.network
+        self.network = read_matpower(MATPOWER_DATA_FILE)
 
         self._validate_base(mva_base=100)
 

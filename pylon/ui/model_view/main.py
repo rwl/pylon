@@ -31,7 +31,7 @@ from os.path import join
 from tempfile import gettempdir
 
 from pylon.api import Network
-from pylon.filter.api import MATPOWERImporter, PSSEImporter
+from pylon.filter.api import read_matpower, read_psse
 from pylon.ui.model_view.network_mv import NetworkModelView
 
 #------------------------------------------------------------------------------
@@ -100,17 +100,10 @@ def main(argv=sys.argv):
 
     # Network importation:
     if options.matpower:
-#        filter = MATPOWERImporter(file=options.matpower)
-#        n = NetworkViewModel(network=filter.network)
-        filter = MATPOWERImporter()
-        n = filter.parse_file(options.matpower)
+        n = read_matpower(options.matpower)
     elif options.psse:
-#        filter = PSSEImporter(file=options.psse)
-#        n = NetworkViewModel(network=filter.network)
-        filter = PSSEImporter()
-        n = filter.parse_file(options.psse)
+        n = read_psse(options.psse)
     else:
-        #n = NetworkViewModel()
         n= Network()
 
     # Persistence file:

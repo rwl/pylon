@@ -449,7 +449,7 @@ class MATPOWERReader:
 #  Convenience function for reading MATPOWER files
 #------------------------------------------------------------------------------
 
-def import_matpower(file_or_filename):
+def read_matpower(file_or_filename):
     """ Convenience function for import of a MATPOWER data file given a
     file name or object.
 
