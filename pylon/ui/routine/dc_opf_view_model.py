@@ -158,12 +158,11 @@ class DCOPFViewModel(HasTraits):
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    from pylon.filter.api import MATPOWERImporter
+    from pylon.filter.api import read_matpower
 
-    filter = MATPOWERImporter()
     data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
 #    data_file = "/home/rwl/python/aes/matpower_3.2/case30.m"
-    n = filter.parse_file(data_file)
+    n = read_matpower(data_file)
 
     print n.buses
     for e in n.branches:

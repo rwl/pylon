@@ -38,7 +38,7 @@ from enthought.plugins.workspace.wizard.resource_selection_page import \
 
 from enthought.plugins.workspace.resource_editor import PickledProvider
 
-from pylon.filter.api import MATPOWERExporter
+from pylon.filter.api import write_matpower
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -107,6 +107,6 @@ class MATPOWERExportWizard(SimpleWizard):
         fep = self.pages[1]
 
         n = PickledProvider().create_document(rsp.resource)
-        MATPOWERExporter().export_network(n, fep.data_file)
+        write_matpower(n, fep.data_file)
 
 # EOF -------------------------------------------------------------------------

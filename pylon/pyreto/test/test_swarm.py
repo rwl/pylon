@@ -30,7 +30,7 @@ logger = logging.getLogger()
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
 
-from pylon.filter.api import import_matpower
+from pylon.filter.api import read_matpower
 from pylon.pyreto.market_environment import MarketEnvironment
 from pylon.pyreto.participant_environment import ParticipantEnvironment
 
@@ -47,7 +47,7 @@ data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
 #
 #------------------------------------------------------------------------------
 
-n = import_matpower(data_file)
+n = read_matpower(data_file)
 
 env = MarketEnvironment(network=n, name="Market Environment")
 swarm = Swarm(environment=env, name="Participant Swarm")

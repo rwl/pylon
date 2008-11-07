@@ -24,7 +24,7 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.filter.api import MATPOWERImporter
+from pylon.filter.api import read_matpower
 from pylon.routine.api import DCOPFRoutine
 
 #-------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ class DCOPFTest(TestCase):
 
         TestCase.__init__(self, *args, **kw)
 
-        network = MATPOWERImporter(DATA_FILE).network
+        network = read_matpower(DATA_FILE)
         self.routine = DCOPFRoutine(network)
 
 

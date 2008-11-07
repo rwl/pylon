@@ -808,7 +808,7 @@ class DCOPFRoutine:
 
 if __name__ == "__main__":
     import sys
-    from pylon.filter.api import MATPOWERImporter
+    from pylon.filter.api import read_matpower
 
     import logging
     logger = logging.getLogger()
@@ -817,9 +817,9 @@ if __name__ == "__main__":
 
 #    data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
     data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
-    filter = MATPOWERImporter(data_file)
+    n = read_matpower(data_file)
 
-    dc_opf = DCOPFRoutine(network=filter.network)
+    dc_opf = DCOPFRoutine(network=n)
 #    dc_opf.configure_traits()
 
 

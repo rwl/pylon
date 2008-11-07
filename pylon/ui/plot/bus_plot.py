@@ -159,11 +159,11 @@ class BusPlot(HasTraits):
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    from pylon.filter.api import import_matpower
+    from pylon.filter.api import read_matpower
 
     data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
     #data_file = "/home/rwl/python/aes/model/matpower/case30.m"
-    n = import_matpower(data_file)
+    n = read_matpower(data_file)
 
     plot = BusPlot(network=n)
     plot.configure_traits()

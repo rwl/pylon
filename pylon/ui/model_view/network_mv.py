@@ -48,7 +48,7 @@ from pylon.api import Network, Bus, Branch
 from pylon.routine.api import DCPFRoutine, DCOPFRoutine
 
 from pylon.filter.api import \
-    MATPOWERImporter, PSSEImporter, PSATImporter, MATPOWERExporter
+    MATPOWERReader, PSSEReader, PSATReader, MATPOWERWriter
 
 from pylon.ui.network_tree import network_tree_editor
 from pylon.ui.graph.graph_image import GraphImage
@@ -338,21 +338,21 @@ class NetworkModelView(ModelView):
         """ Handles importing MATPOWER data files """
 
         if info.initialized:
-            self._import_data_file(info.ui.control, MATPOWERImporter())
+            self._import_data_file(info.ui.control, MATPOWERReader())
 
 
     def import_psse(self, info):
         """ Handles importing PSS/E data files """
 
         if info.initialized:
-            self._import_data_file(info.ui.control, PSSEImporter())
+            self._import_data_file(info.ui.control, PSSEReader())
 
 
     def import_psat(self, info):
         """ Handles importing PSAT data files """
 
         if info.initialized:
-            self._import_data_file(info.ui.control, PSATImporter())
+            self._import_data_file(info.ui.control, PSATReader())
 
 
     def _export_network(self, parent, filter):
@@ -369,7 +369,7 @@ class NetworkModelView(ModelView):
     def export_matpower(self, info):
         """ Handles exporting to a MATPOWER data file """
 
-        self._export_network(info.ui.control, MATPOWERExporter())
+        self._export_network(info.ui.control, MATPOWERWriter())
 
 
     def toggle_tree(self, info):

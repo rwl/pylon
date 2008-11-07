@@ -99,7 +99,7 @@ class Network(HasTraits):
 
     # The total number of generators
     n_generators = Property(Int, depends_on=["generators"],
-        desc="total number of generators")
+        desc="total number of generators", label="Generators")
 
     # Convenience list of all in service generators attached to
     # non islanded buses
@@ -115,7 +115,11 @@ class Network(HasTraits):
     n_in_service_generators = Property(Int,
         depends_on=["in_service_generators"])
 
-    committed_generators = Property(Int, depends_on=["generators.p"])
+    committed_generators = Property(List(Instance(Generator)),
+        depends_on=["generators.p"])
+
+    n_committed_generators = Property(Int, depends_on=["committed_generators"],
+        label="Committed Gens")
 
     # Loads -------------------------------------------------------------------
 
@@ -124,7 +128,7 @@ class Network(HasTraits):
         desc="convenience list of all loads")
 
     # The total number of all loads
-    n_loads = Property(Int, depends_on=["loads"])
+    n_loads = Property(Int, depends_on=["loads"], label="Loads")
 
     # Convenience list of all in service loads connected to
     # non islanded buses
@@ -304,6 +308,12 @@ class Network(HasTraits):
         """ Property getter """
 
         return [g for g in self.generators if g.p > 0.0]
+
+
+    def _get_n_committed_generators(self):
+        """ Property getter """
+
+        return len(self.committed_generators)
 
     # Load property getters ---------------------------------------------------
 
@@ -642,11 +652,11 @@ if __name__ == "__main__":
     import cPickle as pickle
     from tempfile import gettempdir
     from os.path import join
-#    from pylon.filter.api import import_matpower
+#    from pylon.filter.api import read_matpower
 #
 #    data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
 ##    data_file = "/home/rwl/python/aes/matpower_3.2/case30.m"
-#    n = import_matpower(data_file)
+#    n = read_matpower(data_file)
 #
 #    n.configure_traits(filename="/tmp/network.pkl")
 #
