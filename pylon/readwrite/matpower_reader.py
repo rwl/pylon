@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a class for importing MATPOWER data files """
+""" Defines a class for reading MATPOWER data files """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -37,11 +37,11 @@ from pylon.load import Load
 #from pylon.pypylon import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
-#  "MATPOWERImporter" class:
+#  "MATPOWERReader" class:
 #------------------------------------------------------------------------------
 
-class MATPOWERImporter:
-    """ Defines a method class for importing MATPOWER data files and
+class MATPOWERReader:
+    """ Defines a method class for reading MATPOWER data files and
     returning a Network object.
 
     """
@@ -65,7 +65,7 @@ class MATPOWERImporter:
     generators = []
 
     def __init__(self, file_or_filename):
-        """ Returns a new MATPOWERImporter instance """
+        """ Returns a new MATPOWERReader instance """
 
         self.network = self.parse_file(file_or_filename)
 
@@ -446,7 +446,7 @@ class MATPOWERImporter:
         self.generators.pop(0)
 
 #------------------------------------------------------------------------------
-#  Convenience function for MATPOWER import
+#  Convenience function for reading MATPOWER files
 #------------------------------------------------------------------------------
 
 def import_matpower(file_or_filename):
@@ -455,7 +455,7 @@ def import_matpower(file_or_filename):
 
     """
 
-    return MATPOWERImporter().parse_file(file_or_filename)
+    return MATPOWERReader(file_or_filename).network
 
 #------------------------------------------------------------------------------
 #  Standalone call:
@@ -470,7 +470,7 @@ if __name__ == "__main__":
 
     data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
     #data_file = "/home/rwl/python/aes/model/matpower/case30.m"
-    filter = MATPOWERImporter(data_file)
+    filter = MATPOWERReader(data_file)
     filter.network.configure_traits()
 
 # EOF -------------------------------------------------------------------------

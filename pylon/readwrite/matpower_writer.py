@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines classes for importing and exporting MATPOWER data files """
+""" Defines classes for writing MATPOWER data files """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -24,13 +24,13 @@
 from os.path import basename, splitext
 
 #------------------------------------------------------------------------------
-#  "MATPOWERExporter" class:
+#  "MATPOWERWriter" class:
 #------------------------------------------------------------------------------
 
-class MATPOWERExporter:
+class MATPOWERWriter:
     """ Write network data to a file in MATPOWER format """
 
-    def export_network(self, network, file_or_filename):
+    def write(self, network, file_or_filename):
         """ Writes network data to file in MATPOWER format """
 
         self.network = network
@@ -275,10 +275,10 @@ class MATPOWERExporter:
 #  Convenience function for MATPOWER export
 #------------------------------------------------------------------------------
 
-def export_matpower(network, file_or_filename):
+def write_matpower(network, file_or_filename):
     """ Convenience function for network export to a MATPOWER data file """
 
-    return MATPOWERExporter().export_file(network, file_or_filename)
+    return MATPOWERWriter().write(network, file_or_filename)
 
 #------------------------------------------------------------------------------
 #  Standalone call:
@@ -294,10 +294,10 @@ if __name__ == "__main__":
     data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
     #data_file = "/home/rwl/python/aes/model/matpower/case30.m"
 
-    from matpower_importer import MATPOWERImporter
+    from matpower_reader import read_matpower
 
-    n = MATPOWERImporter().parse_file(data_file)
+    n = read_matpower(data_file)
 
-    MATPOWERExporter().export_network(n, "/tmp/test.m")
+    MATPOWERWriter().write(n, "/tmp/test.m")
 
 # EOF -------------------------------------------------------------------------
