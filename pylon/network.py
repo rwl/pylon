@@ -433,9 +433,10 @@ class Network(HasTraits):
     def _get_total_gen_capacity(self):
         """ Property getter """
 
+        mva_base = self.mva_base
         p = sum([g.p for g in self.generators])
         q = sum([g.q for g in self.generators])
-        return complex(p, q)
+        return complex(p*mva_base, q*mva_base)
 
 
     def _get_online_capacity(self):
@@ -481,7 +482,7 @@ class Network(HasTraits):
     def _get_shunt_injection(self):
         """ Property getter """
 
-        return 0.0 # FIXME: Implement shunts
+        return 0.0 + 0.0j # FIXME: Implement shunts
 
 
     def _get_losses(self):
@@ -495,13 +496,13 @@ class Network(HasTraits):
     def _get_branch_charging(self):
         """ Property getter """
 
-        return 0.0 # FIXME: Calculate branch charging injections
+        return 0.0 + 0.0j # FIXME: Calculate branch charging injections
 
 
     def _get_total_inter_tie_flow(self):
         """ Property getter """
 
-        return 0.0 # FIXME: Implement inter-ties
+        return 0.0 + 0.0j # FIXME: Implement inter-ties
 
 
     def _get_min_voltage_amplitude(self):

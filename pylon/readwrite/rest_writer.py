@@ -44,15 +44,24 @@ class ReSTWriter:
         else:
             file = file_or_filename
 
+        # Make title
+        file.write("="*len(network.name))
+        file.write("\n")
         file.write(network.name)
         file.write("\n")
         file.write("="*len(network.name))
         file.write("\n")
 
+        # Section I
         file.write("System Summary\n")
-        file.write("--------------\n")
+        file.write("--------------")
+        file.write("\n")
 
+        # Section II
         self._write_how_many(file)
+
+        # Section III
+        self._write_how_much(file)
 
         file.close()
 
@@ -62,6 +71,7 @@ class ReSTWriter:
 
         network = self.network
 
+        # Map component labels to attribute names
         components = [("Bus", "n_buses"), ("Generator", "n_generators"),
             ("Committed Generator", "n_committed_generators"),
             ("Load", "n_loads"), ("Fixed Load", "n_fixed"),
@@ -69,21 +79,108 @@ class ReSTWriter:
             ("Branch", "n_branches"), ("Transformer", "n_transformers"),
             ("Inter-tie", "n_inter_ties"), ("Area", "n_areas")]
 
+        # Column 1 width
         longest = max([len(c[0]) for c in components])
 
-        sep = "="*longest + " " + "="*len("Quantity") + "\n"
+        col1_header = "Object"
+        col1_width = longest
+        col2_header = "Quantity"
+        col2_width = len(col2_header)
+
+        # Row separator
+        sep = "="*col1_width + " " + "="*col2_width + "\n"
+
+        # Row headers
+        file.write(sep)
+
+        file.write(col1_header.center(col1_width))
+        file.write(" ")
+        file.write("%s\n" % col2_header.center(col2_width))
 
         file.write(sep)
-        file.write("Object")
-        file.write(" "*(longest-len("Object")+1))
-        file.write("Quantity\n")
-        file.write(sep)
 
+        # Rows
         for label, attr in components:
-            col1 = label + " "*(longest-len(label))
-            file.write("%s %d\n" % (col1, getattr(network, attr)))
+            col2_value = str(getattr(network, attr))
+            file.write("%s %s\n" %
+                (label.ljust(col1_width), col2_value.rjust(col2_width))
+            )
         else:
             file.write(sep)
+            file.write("\n")
+
+
+    def _write_how_much(self, file):
+        """ Write component quantities to a table """
+
+        network = self.network
+
+        col1_header = "Attribute"
+        col1_width = 24
+        col2_header = "P (MW)"
+        col3_header = "Q (MW)"
+        col_width = 8
+
+        attr_map = [("Total Gen Capacity", "total_gen_capacity"),
+            ("On-line Capacity", "online_capacity")]
+
+        sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
+
+        # Row headers
+        file.write(sep)
+
+        file.write("%s" % col1_header.center(col1_width))
+        file.write(" ")
+        file.write("%s" % col2_header.center(col_width))
+        file.write(" ")
+        file.write("%s" % col3_header.center(col_width))
+        file.write("\n")
+
+        file.write(sep)
+
+        # Rows
+        val = getattr(network, "total_gen_capacity")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Total Gen Capacity".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(network, "online_capacity")
+        file.write("%s %8.1f %8.1f\n" %
+            ("On-line Capacity".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(network, "generation_actual")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Generation (actual)".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(network, "load")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Load".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(network, "fixed_load")
+        file.write("%s %8.1f %8.1f\n" %
+            ("  Fixed".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(network, "despatchable_load")
+        file.write("%s %8.1f %8.1f\n" %
+            ("  Despatchable".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(network, "shunt_injection")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Shunt (inj)".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(network, "losses")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Losses".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(network, "branch_charging")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Branch Charging (inj)".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(network, "total_inter_tie_flow")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Total Inter-tie Flow".ljust(col1_width), val.real, val.imag))
+
+        file.write(sep)
+        file.write("\n")
 
 #------------------------------------------------------------------------------
 #  Standalone call:
