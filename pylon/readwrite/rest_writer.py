@@ -57,11 +57,9 @@ class ReSTWriter:
         file.write("--------------")
         file.write("\n")
 
-        # Section II
         self._write_how_many(file)
-
-        # Section III
         self._write_how_much(file)
+        self._write_min_max(file)
 
         file.close()
 
@@ -121,9 +119,6 @@ class ReSTWriter:
         col3_header = "Q (MW)"
         col_width = 8
 
-        attr_map = [("Total Gen Capacity", "total_gen_capacity"),
-            ("On-line Capacity", "online_capacity")]
-
         sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
 
         # Row headers
@@ -178,6 +173,46 @@ class ReSTWriter:
         val = getattr(network, "total_inter_tie_flow")
         file.write("%s %8.1f %8.1f\n" %
             ("Total Inter-tie Flow".ljust(col1_width), val.real, val.imag))
+
+        file.write(sep)
+        file.write("\n")
+
+
+    def _write_min_max(self, file):
+        """ Writes minimum and maximum values to a table """
+
+        network = self.network
+
+        col1_header = "Attribute"
+        col1_width = 19
+        col2_header = "Minimum"
+        col3_header = "Maximum"
+        col_width = 16
+
+        sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
+
+        # Row headers
+        file.write(sep)
+
+        file.write("%s" % col1_header.center(col1_width))
+        file.write(" ")
+        file.write("%s" % col2_header.center(col_width))
+        file.write(" ")
+        file.write("%s" % col3_header.center(col_width))
+        file.write("\n")
+
+        file.write(sep)
+
+        # Rows
+        min_val = getattr(network, "min_voltage_amplitude")
+        max_val = getattr(network, "max_voltage_amplitude")
+        file.write("%s %16.1f %16.1f\n" %
+            ("Voltage Amplitude".ljust(col1_width), min_val, max_val))
+
+        min_val = getattr(network, "min_voltage_phase")
+        max_val = getattr(network, "max_voltage_phase")
+        file.write("%s %16.1f %16.1f\n" %
+            ("Voltage Phase Angle".ljust(col1_width), min_val, max_val))
 
         file.write(sep)
         file.write("\n")

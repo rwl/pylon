@@ -509,6 +509,7 @@ class Network(HasTraits):
         """ Property getter """
 
         if self.buses:
+#            l.index(min(l))
             return min([bus.v_amplitude for bus in self.buses])
         else:
             return 0.0
