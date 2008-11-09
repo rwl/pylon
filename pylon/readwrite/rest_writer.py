@@ -44,22 +44,44 @@ class ReSTWriter:
         else:
             file = file_or_filename
 
-        # Make title
-        file.write("="*len(network.name))
+        # Document title
+        title = "Power Flow Solution"
+        file.write("="*len(title))
         file.write("\n")
-        file.write(network.name)
+        file.write(title)
         file.write("\n")
-        file.write("="*len(network.name))
+        file.write("="*len(title))
+        file.write("\n")
+
+        # Document subtitle
+        subtitle = network.name
+        file.write("-"*len(subtitle))
+        file.write("\n")
+        file.write(subtitle)
+        file.write("\n")
+        file.write("-"*len(subtitle))
         file.write("\n")
 
         # Section I
         file.write("System Summary\n")
-        file.write("--------------")
+        file.write("-"*14)
         file.write("\n")
 
         self._write_how_many(file)
         self._write_how_much(file)
         self._write_min_max(file)
+
+        # Section II
+        file.write("Bus Data\n")
+        file.write("-"*8 + "\n")
+        self._write_bus_data(file)
+        file.write("\n")
+
+        # Section III
+        file.write("Branch Data\n")
+        file.write("-"*11 + "\n")
+        self._write_branch_data(file)
+        file.write("\n")
 
         file.close()
 
@@ -116,7 +138,7 @@ class ReSTWriter:
         col1_header = "Attribute"
         col1_width = 24
         col2_header = "P (MW)"
-        col3_header = "Q (MW)"
+        col3_header = "Q (MVAr)"
         col_width = 8
 
         sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
@@ -216,6 +238,139 @@ class ReSTWriter:
 
         file.write(sep)
         file.write("\n")
+
+
+    def _write_bus_data(self, file):
+        """ Writes bus data to a ReST table """
+
+        network = self.network
+        buses = self.network.buses
+
+
+        col_width = 8
+        col_width_2 = col_width*2+1
+        col1_width = 6
+
+        sep = "="*6 + " " + ("="*col_width + " ")*6 + "\n"
+
+        file.write(sep)
+
+        # Line one of column headers
+        file.write("Name".center(col1_width) + " ")
+        file.write("Voltage (pu)".center(col_width_2) + " ")
+        file.write("Generation".center(col_width_2) + " ")
+        file.write("Load".center(col_width_2) + " ")
+        file.write("\n")
+
+        file.write("-"*col1_width +" "+ ("-"*col_width_2 +" ")*3 + "\n")
+
+        # Line two of column header
+        file.write("..".ljust(col1_width) + " ")
+        file.write("Amp".center(col_width) + " ")
+        file.write("Phase".center(col_width) + " ")
+        file.write("P (MW)".center(col_width) + " ")
+        file.write("Q (MVAr)".center(col_width) + " ")
+        file.write("P (MW)".center(col_width) + " ")
+        file.write("Q (MVAr)".center(col_width) + " ")
+        file.write("\n")
+
+        file.write(sep)
+
+        # Bus rows
+        for bus in buses:
+            file.write(bus.name[:col1_width].ljust(col1_width) + " ")
+            file.write("%8.3f" % bus.v_amplitude + " ")
+            file.write("%8.3f" % bus.v_phase + " ")
+            file.write("%8.2f" % bus.p_supply + " ")
+            file.write("%8.2f" % bus.q_supply + " ")
+            file.write("%8.2f" % bus.p_demand + " ")
+            file.write("%8.2f" % bus.q_demand + " ")
+            file.write("\n")
+
+        # Totals
+#        file.write("..".ljust(col1_width) + " ")
+#        file.write(("..".ljust(col_width) + " ")*2)
+#        file.write(("_"*col_width + " ")*4 + "\n")
+        file.write("..".ljust(col1_width) + " " + "..".ljust(col_width) + " ")
+        file.write("*Total:*".rjust(col_width) + " ")
+        val = network.total_gen_capacity
+        file.write("%8.2f" % val.real + " ")
+        file.write("%8.2f" % val.imag + " ")
+        val = network.load
+        file.write("%8.2f" % val.real + " ")
+        file.write("%8.2f" % val.imag + " ")
+        file.write("\n")
+
+        file.write(sep)
+
+
+    def _write_branch_data(self, file):
+        """ Writes branch data to a ReST table """
+
+        network = self.network
+        branches = self.network.branches
+
+
+        col_width = 8
+        col_width_2 = col_width*2+1
+        col1_width = 6
+
+        sep = ("="*6 + " ")*3 + ("="*col_width + " ")*6 + "\n"
+
+        file.write(sep)
+
+        # Line one of column headers
+        file.write("Name".center(col1_width) + " ")
+        file.write("Source".center(col1_width) + " ")
+        file.write("Target".center(col1_width) + " ")
+        file.write("Source Bus Inj".center(col_width_2) + " ")
+        file.write("Target Bus Inj".center(col_width_2) + " ")
+        file.write("Loss (I^2 * Z)".center(col_width_2) + " ")
+        file.write("\n")
+
+        file.write(("-"*col1_width +" ")*3)
+        file.write(("-"*col_width_2 +" ")*3 + "\n")
+
+        # Line two of column header
+        file.write("..".ljust(col1_width) + " ")
+        file.write("Bus".center(col1_width) + " ")
+        file.write("Bus".center(col1_width) + " ")
+        file.write("P (MW)".center(col_width) + " ")
+        file.write("Q (MVAr)".center(col_width) + " ")
+        file.write("P (MW)".center(col_width) + " ")
+        file.write("Q (MVAr)".center(col_width) + " ")
+        file.write("P (MW)".center(col_width) + " ")
+        file.write("Q (MVAr)".center(col_width) + " ")
+        file.write("\n")
+
+        file.write(sep)
+
+        # Branch rows
+        for each in branches:
+            file.write(each.name[:col1_width].ljust(col1_width) + " ")
+            file.write(each.source_bus.name[:col1_width].ljust(col1_width)+" ")
+            file.write(each.target_bus.name[:col1_width].ljust(col1_width)+" ")
+            file.write("%8.3f" % each.p_source + " ")
+            file.write("%8.3f" % each.q_source + " ")
+            file.write("%8.2f" % each.p_target + " ")
+            file.write("%8.2f" % each.p_target + " ")
+            file.write("%8.2f" % each.p_losses + " ")
+            file.write("%8.2f" % each.q_losses + " ")
+            file.write("\n")
+
+        # Totals
+#        file.write("..".ljust(col1_width) + " ")
+#        file.write(("..".ljust(col_width) + " ")*2)
+#        file.write(("_"*col_width + " ")*4 + "\n")
+        file.write(("..".ljust(col1_width) + " ")*3)
+        file.write(("..".ljust(col_width) + " ")*3)
+        file.write("*Total:*".rjust(col_width) + " ")
+        val = network.losses
+        file.write("%8.2f" % val.real + " ")
+        file.write("%8.2f" % val.imag + " ")
+        file.write("\n")
+
+        file.write(sep)
 
 #------------------------------------------------------------------------------
 #  Standalone call:
