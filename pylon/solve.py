@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" For solving networks """
+""" Defines Pylon. """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -27,12 +27,162 @@ from optparse import OptionParser
 
 logger = logging.getLogger(__name__)
 
+def detect_network_type(input, file_name=""):
+    """ Detects the format of a network data file according to the file
+    extension and the header. """
+
+    if file_name.endswith(".m"):
+        line = input.readline()
+        if line.startswith("Bus.con" or line.startswith("%")):
+            type = "psat"
+            logger.info("Recognised PSAT data file.")
+        elif line.startswith("function"):
+            type = "matpower"
+            logger.info("Recognised MATPOWER data file.")
+        else:
+            type = "matlab"
+    elif file_name.endswith(".raw") or file_name.endswith(".psse"):
+        type = "psse"
+        logger.info("Recognised PSS/E data file.")
+    else:
+        type = "unrecognised"
+
+    return type
+
+#------------------------------------------------------------------------------
+#  "Pylon" function:
+#------------------------------------------------------------------------------
+
+class Pylon:
+    """ Solves network problems. """
+
+    # Format in which the network is stored.
+    type = "any"
+
+    # Routine type to which the network is passed.
+    routine = "acpf"
+
+    # Algorithm to be used in the routine.
+    algorithm = "newton"
+
+    # File name of input.
+    file_name = ""
+
+    # Output format type.
+    output_type = "rst"
+
+    def __init__(self, type="any", routine="acpf", algorithm="newton",
+                 file_name="", output_type="rst"):
+        self.routine = routine
+        self.algorithm = algorithm
+        self.file_name = file_name
+        self.output_type = output_type
+
+
+    def solve(self, input, output):
+        """ Forms a network from the input text, obtains a solution using the
+        specified routine and writes a report to the output.
+
+        """
+
+        n = self._get_network(input)
+        if n is None:
+            logger.critical("Unrecognised data file.")
+            sys.exit(1)
+
+
+        # Pass through routine.
+        routine = self.routine
+        algorithm = self.algorithm
+
+        if routine == "dcpf":
+            r = DCPFRoutine(network=n)
+        elif routine == "acpf":
+            r = ACPFRoutine(network=n, algorithm=algorithm)
+        elif routine == "dcopf":
+            r = DCOPFRoutine(network=n)
+        elif routine == "acopf":
+            r = ACOPFRoutine(network=n)
+        else:
+            logger.critical("Unrecognised routine type.")
+            sys.exit(1)
+
+        success = r.solve()
+
+        # Solution output.
+        output_type = self.output_type
+
+        writer = None
+        if output_type == "matpower":
+            writer = MATPOWERWriter(network, output)
+        else:
+            writer = ReSTWriter(network, output)
+
+        if writer is not None:
+            writer.write()
+
+
+    def _get_network(self, input):
+        """ Returns the network from the input. """
+
+        type = self.type
+
+        if type == "any":
+            type = detect_network_type(input, self.filename)
+
+        if type == "matpower":
+            n = read_matpower(input)
+        elif type == "psat":
+            n = read_psat(input)
+        elif type == "psse":
+            n = read_psse(input)
+        elif type == "matlab":
+            try:
+                n = read_matpower(input)
+            except:
+                n = read_psat(input)
+            except:
+                n = None
+        elif type == "unrecognised":
+            try:
+                n = read_matpower(input)
+            except:
+                n = read_psat(input)
+            except:
+                n = read_psse(input)
+            except:
+                n = None
+        else:
+            n = None
+
+        return n
+
+
+    def _get_routine(self):
+        """ Returns the routine to which to pass the network. """
+
+        routine = self.routine
+        algorithm = self.algorithm
+
+        if routine == "dcpf":
+            r = DCPFRoutine(network=None)
+        elif routine == "acpf":
+            r = ACPFRoutine(network=None, algorithm=algorithm)
+        elif routine == "dcopf":
+            r = DCOPFRoutine(network=None)
+        elif routine == "acopf":
+            r = ACOPFRoutine(network=None)
+        else:
+            r = None
+
+        return r
+
 #------------------------------------------------------------------------------
 #  "main" function:
 #------------------------------------------------------------------------------
 
 def main():
-    """ Parse command line and call run_pf() with the correct data """
+    """ Parse command line and call Pylon with the correct data """
 
     parser = OptionParser()
     parser.add_option("-o", "--output", dest="output", metavar="FILE",
@@ -50,7 +200,7 @@ def main():
     parser.add_option("-d", "--debug", action="store_true", dest="debug",
         default=False, help="Print debug information.")
 
-    parser.add_option("-t", "--type", dest="type", metavar="TYPE",
+    parser.add_option("-t", "--input-type", dest="type", metavar="TYPE",
         default="any", help="The argument following the -t is used to "
         "indicate the format type of the input data file. The types which are "
         "currently supported include: matpower, psat, psse, m3.  If not "
@@ -72,6 +222,11 @@ def main():
     "type to be used.  The types which are currently supported include: "
     "newton, gauss, decoupled.")
 
+    parser.add_option("-T", "--output-type", dest="otype",
+        metavar="OTYPE", default="rst", help="Indicates the output format "
+        "type.  The type swhich are currently supported include: rst, "
+        "matpower.")
+
     parser.add_option("-p", "--paginate", action="store_true", default=False,
         help="Pipe all output into less (or if set, $PAGER).")
 
@@ -90,9 +245,10 @@ def main():
     else:
         logger.setLevel(logging.INFO)
 
-    filename = False
+    filename = ""
 
     if len(args) == 0 or args[0]=="-":
+        filename = ""
         infile = sys.stdin
     elif len(args) > 1:
         logger.critical("Usage: %s file.txt [ -o file.rst ] "
@@ -115,8 +271,12 @@ def main():
             log.setLevel(logging.CRITICAL) # we must stay quiet
 
 
-    pylon = Pylon(forulation=options.formulation, algorithm=options.alg)
-    pylon.solve(text=infile.read(), output=outfile)
+    pylon = Pylon(type=options.type, forulation=options.formulation,
+        algorithm=options.alg, file_name=filename, output_type=otype)
+    pylon.solve(input=infile, output=outfile)
+
+    if filename:
+        close(filename) # Clean-up
 
 if __name__ == "__main__":
     main()

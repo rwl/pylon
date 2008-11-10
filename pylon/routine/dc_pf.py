@@ -81,7 +81,6 @@ class DCPFRoutine:
         """ Returns a DCPFRoutine instance """
 
         self.network = network
-        self.solve()
 
     #--------------------------------------------------------------------------
     #  Solve power flow:
@@ -93,13 +92,16 @@ class DCPFRoutine:
         # FIXME: Should this be here? Validation
         if self.network is None:
             logger.error("Network unspecified")
+            return False
         elif not self.network.slack_model == "Single":
             logger.error("DC power flow requires a single slack bus")
+            return False
         else:
             self.B, self.B_source = make_susceptance(self.network)
             self._make_v_phase_guess_vector()
             self._make_v_phase_vector()
             self._update_model()
+            return True
 
     #--------------------------------------------------------------------------
     #  Build voltage phase angle guess vector:
