@@ -24,7 +24,7 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.filter.api import read_matpower
+from pylon.readwrite.api import read_matpower
 from pylon.routine.api import DCOPFRoutine
 
 #-------------------------------------------------------------------------------

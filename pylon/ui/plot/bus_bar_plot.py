@@ -187,7 +187,7 @@ class BusBarPlot(HasTraits):
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    from pylon.filter.api import read_matpower
+    from pylon.readwrite.api import read_matpower
 
     data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
 #    data_file = "/home/rwl/python/aes/model/matpower/case30.m"

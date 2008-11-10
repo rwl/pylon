@@ -38,7 +38,7 @@ from enthought.plugins.workspace.wizard.resource_selection_page import \
 
 from enthought.plugins.workspace.resource_editor import PickledProvider
 
-from pylon.filter.api import write_matpower
+from pylon.readwrite.api import write_matpower
 
 #------------------------------------------------------------------------------
 #  Constants:

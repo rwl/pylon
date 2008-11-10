@@ -42,7 +42,7 @@ from enthought.plugins.workspace.wizard.container_selection_page import \
 from enthought.plugins.workspace.workspace_resource_editor import \
     FileIResourceAdapter
 
-from pylon.filter.api import read_matpower
+from pylon.readwrite.api import read_matpower
 
 #------------------------------------------------------------------------------
 #  Constants:

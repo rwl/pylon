@@ -808,7 +808,7 @@ class DCOPFRoutine:
 
 if __name__ == "__main__":
     import sys
-    from pylon.filter.api import read_matpower
+    from pylon.readwrite.api import read_matpower
 
     import logging
     logger = logging.getLogger()

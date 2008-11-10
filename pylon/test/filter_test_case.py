@@ -29,8 +29,8 @@ import os.path
 from unittest import TestCase, main
 
 from pylon.network import Network
-from pylon.filter.matpower_importer import read_matpower
-from pylon.filter.psse_importer import PSSEImporter
+from pylon.readwrite.matpower_importer import read_matpower
+from pylon.readwrite.api import PSSEReader
 
 #-------------------------------------------------------------------------------
 #  Constants:
@@ -162,10 +162,10 @@ class MatpowerFilterTestCase(FilterTestCase):
         )
 
 #------------------------------------------------------------------------------
-#  "PSSEImporterTestCase" class:
+#  "PSSEReaderTestCase" class:
 #------------------------------------------------------------------------------
 
-#class PSSEImporterTestCase(FilterTestCase):
+#class PSSEReaderTestCase(FilterTestCase):
 #
 #    def test_ehv3(self):
 #        """
@@ -173,7 +173,7 @@ class MatpowerFilterTestCase(FilterTestCase):
 #
 #        """
 #
-#        filter = PSSEImporter()
+#        filter = PSSEReader()
 #
 #        # Parse the file
 #        self.network = filter.parse_file(PSSE_DATA_FILE)

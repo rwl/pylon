@@ -654,7 +654,7 @@ if __name__ == "__main__":
     import cPickle as pickle
     from tempfile import gettempdir
     from os.path import join
-#    from pylon.filter.api import read_matpower
+#    from pylon.readwrite.api import read_matpower
 #
 #    data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
 ##    data_file = "/home/rwl/python/aes/matpower_3.2/case30.m"

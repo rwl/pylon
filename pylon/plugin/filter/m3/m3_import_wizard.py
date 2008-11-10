@@ -35,7 +35,7 @@ from enthought.plugins.workspace.action.open_action import OpenAction
 from enthought.plugins.workspace.wizard.container_selection_page import \
     ContainerSelectionPage
 
-from pylon.filter.api import M3Importer
+from pylon.readwrite.api import read_m3
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -102,7 +102,7 @@ class M3ImportWizard(SimpleWizard):
         name, ext = splitext(basename(fip.data_file))
         file = IOFile(join(csp.directory, name+".pyl"))
         if not file.exists:
-            n = M3Importer().parse_file(fip.data_file)
+            n = read_m3(fip.data_file)
             file.create_file(contents=pickle.dumps(n))
 
         self._open_resource(file)

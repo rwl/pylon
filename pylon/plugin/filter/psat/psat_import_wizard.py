@@ -35,7 +35,7 @@ from enthought.plugins.workspace.action.open_action import OpenAction
 from enthought.plugins.workspace.wizard.container_selection_page import \
     ContainerSelectionPage
 
-from pylon.filter.api import PSATImporter
+from pylon.readwrite.api import PSATReader
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -106,7 +106,7 @@ class PSATImportWizard(SimpleWizard):
         name, ext = splitext(basename(fip.data_file))
         file = IOFile(join(csp.directory, name+".pyl"))
         if not file.exists:
-            n = PSATImporter().parse_file(fip.data_file)
+            n = PSATReader().parse_file(fip.data_file)
             file.create_file(contents=pickle.dumps(n))
 
         self._open_resource(file)

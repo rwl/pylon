@@ -48,10 +48,10 @@ from pylon.load import Load
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "M3Importer" class:
+#  "M3Reader" class:
 #------------------------------------------------------------------------------
 
-class M3Importer:
+class M3Reader:
     """ Creates Network objects from M3 data files """
 
     M3_NS = "http://www.openM3.org/m3"
@@ -200,13 +200,13 @@ class M3Importer:
             return name
 
 #------------------------------------------------------------------------------
-#  Convenience function for PSAT import
+#  Convenience function for reading M3 data files
 #------------------------------------------------------------------------------
 
-def import_m3(file):
+def read_m3(file):
     """ Convenience function for import of a PSAT data file """
 
-    return M3Importer().parse_file(file_or_filename)
+    return M3Reader(file_or_filename).network
 
 #------------------------------------------------------------------------------
 #  Standalone call:
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     DATA_FILE = "/home/rwl/python/aes/model/m3/lv_feeder_with_sources/" \
     "LVfeeder-with sources.xml"
 
-    n = M3Importer().parse_file(DATA_FILE)
+    n = read_m3(DATA_FILE)
     print n.n_buses
 
 # EOF -------------------------------------------------------------------------

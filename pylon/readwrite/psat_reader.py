@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a class for importing PSAT data files """
+""" Defines a class for reading PSAT data files """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -46,17 +46,22 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
-#  "PSATImporter" class:
+#  "PSATReader" class:
 #------------------------------------------------------------------------------
 
-class PSATImporter:
-    """ Defines a method class for importing PSAT data files and
+class PSATReader:
+    """ Defines a method class for reading PSAT data files and
     returning a Network object.
 
     """
 
     # The resulting network object
     network = Network
+
+    def __init__(self, file_or_filename):
+        """ Returns a new PSATReader instance """
+
+        self.network = self.parse_file(file_or_filename)
 
     #--------------------------------------------------------------------------
     #  Parse a PSAT data file and return a network object
@@ -539,16 +544,16 @@ class PSATImporter:
 #            g.in_service = tokens["status"]
 
 #------------------------------------------------------------------------------
-#  Convenience function for PSAT import
+#  Convenience function for reading PSAT files
 #------------------------------------------------------------------------------
 
-def import_psat(file_or_filename):
+def read_psat(file_or_filename):
     """ Convenience function for import of a PSAT data file given a
     file name or object.
 
     """
 
-    return PSATImporter().parse_file(file_or_filename)
+    return PSATReader(file_or_filename).network
 
 #------------------------------------------------------------------------------
 #  Standalone call:
@@ -563,7 +568,7 @@ if __name__ == "__main__":
 
     data_file = "/home/rwl/python/aes/model/psat/rwl_003_opf_mdl.m"
     #data_file = "/home/rwl/python/aes/model/matpower/case30.m"
-    filter = PSATImporter()
+    filter = PSATReader()
     print filter.parse_file(data_file)
 
 # EOF -------------------------------------------------------------------------

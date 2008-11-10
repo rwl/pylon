@@ -328,13 +328,13 @@ class ACPFRoutine:
 if __name__ == "__main__":
     import sys
     import logging
-    from pylon.filter.api import PSATImporter
+    from pylon.readwrite.api import PSATReader
 
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    filter = PSATImporter()
+    filter = PSATReader()
     data_file = "/home/rwl/python/aes/psat_20080214/src/rwl_003_opf_mdl.m"
     n = filter.parse_file(data_file)
 
