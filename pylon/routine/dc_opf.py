@@ -134,7 +134,6 @@ class DCOPFRoutine:
         """ Returns a new DCOPFRoutine instance """
 
         self.network = network
-        self.solve()
 
     #--------------------------------------------------------------------------
     #  Solve DC Optimal Power Flow problem:
