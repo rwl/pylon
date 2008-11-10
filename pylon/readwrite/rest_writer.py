@@ -313,9 +313,9 @@ class ReSTWriter:
 
         col_width = 8
         col_width_2 = col_width*2+1
-        col1_width = 6
+        col1_width = 7
 
-        sep = ("="*6 + " ")*3 + ("="*col_width + " ")*6 + "\n"
+        sep = ("="*7 + " ")*3 + ("="*col_width + " ")*6 + "\n"
 
         file.write(sep)
 
@@ -350,8 +350,8 @@ class ReSTWriter:
             file.write(each.name[:col1_width].ljust(col1_width) + " ")
             file.write(each.source_bus.name[:col1_width].ljust(col1_width)+" ")
             file.write(each.target_bus.name[:col1_width].ljust(col1_width)+" ")
-            file.write("%8.3f" % each.p_source + " ")
-            file.write("%8.3f" % each.q_source + " ")
+            file.write("%8.2f" % each.p_source + " ")
+            file.write("%8.2f" % each.q_source + " ")
             file.write("%8.2f" % each.p_target + " ")
             file.write("%8.2f" % each.p_target + " ")
             file.write("%8.2f" % each.p_losses + " ")
