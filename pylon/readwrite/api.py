@@ -19,7 +19,7 @@
 Use this module for importing Pylon names into your namespace.
 
 For example:
-    from pylon.filter.api import MATPOWERImporter
+    from pylon.readwrite.api import MATPOWERReader
 
 """
 
@@ -27,13 +27,13 @@ For example:
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pylon.filter.matpower_importer import MATPOWERReader, read_matpower
-from pylon.filter.matpower_exporter import MATPOWERWriter, write_matpower
+from matpower_reader import MATPOWERReader, read_matpower
+from matpower_writer import MATPOWERWriter, write_matpower
 
-from pylon.filter.psse_importer import PSSEImporter, import_psse
+from psse_reader import PSSEReader, read_psse
 
-from pylon.filter.psat_importer import PSATImporter, import_psat
+from psat_reader import PSATReader, read_psat
 
-from pylon.filter.m3_importer import M3Importer, import_m3
+from m3_reader import M3Reader, read_m3
 
 # EOF -------------------------------------------------------------------------

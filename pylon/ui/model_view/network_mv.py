@@ -47,7 +47,7 @@ from enthought.logger.log_queue_handler import LogQueueHandler
 from pylon.api import Network, Bus, Branch
 from pylon.routine.api import DCPFRoutine, DCOPFRoutine
 
-from pylon.filter.api import \
+from pylon.readwrite.api import \
     MATPOWERReader, PSSEReader, PSATReader, MATPOWERWriter
 
 from pylon.ui.network_tree import network_tree_editor

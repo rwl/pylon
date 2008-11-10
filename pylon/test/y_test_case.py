@@ -24,7 +24,7 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.filter.api import MATPOWERReader
+from pylon.readwrite.api import MATPOWERReader
 from pylon.routine.y import make_susceptance
 
 #------------------------------------------------------------------------------

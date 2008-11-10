@@ -31,7 +31,7 @@ from os.path import join
 from tempfile import gettempdir
 
 from pylon.api import Network
-from pylon.filter.api import read_matpower, read_psse
+from pylon.readwrite.api import read_matpower, read_psse
 from pylon.ui.model_view.network_mv import NetworkModelView
 
 #------------------------------------------------------------------------------

@@ -30,7 +30,7 @@ logger = logging.getLogger()
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
 
-from pylon.filter.api import read_matpower
+from pylon.readwrite.api import read_matpower
 from pylon.pyreto.market_environment import MarketEnvironment
 from pylon.pyreto.participant_environment import ParticipantEnvironment
 

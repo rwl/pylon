@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a class for importing PSS/E data files """
+""" Defines a class for reading PSS/E data files """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -36,10 +36,20 @@ from pylon.load import Load
 #from pylon.pypylon import Network, Bus, Branch, Generator, Load
 
 #-------------------------------------------------------------------------------
-#  "PSSEImporter" class:
+#  "PSSEReader" class:
 #-------------------------------------------------------------------------------
 
-class PSSEImporter:
+class PSSEReader:
+    """ Defines a reader of PSS/E data files that returns networks """
+
+    # The resulting network
+    network = None
+
+    def __init__(self, file_or_filename):
+        """ Returns a new PSSEReader instance """
+
+        self.network = self.parse_file(file_or_filename)
+
 
     def parse_file(self, file_or_filename):
         """ Defines a method class for importing PSS/E data files and
@@ -549,16 +559,16 @@ class PSSEImporter:
         self.network.branches.append(branch)
 
 #------------------------------------------------------------------------------
-#  Convenience function for PSS/E import
+#  Convenience function for reading PSS/E data files
 #------------------------------------------------------------------------------
 
-def import_psse(file_or_filename):
-    """ Convenience function for import of a PSS/E data file given a
+def read_psse(file_or_filename):
+    """ Convenience function for reading a PSS/E data file given a
     file name or object.
 
     """
 
-    return PSSEImporter().parse_file(file_or_filename)
+    return PSSEReader(file_or_filename).network
 
 #------------------------------------------------------------------------------
 #  Standalone call:
@@ -575,6 +585,6 @@ if __name__ == "__main__":
 
     DATA_FILE = "/home/rwl/python/aes/model/psse/ukgds/HV_OHb.raw"
 
-    n = PSSEImporter().parse_file(DATA_FILE)
+    n = PSSEReader().parse_file(DATA_FILE)
 
 # EOF -------------------------------------------------------------------------

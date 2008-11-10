@@ -114,7 +114,7 @@ class PylonPlugin(Plugin):
 
         commands = [
             "from pylon.api import *",
-            "from pylon.filter.api import *",
+            "from pylon.readwrite.api import *",
             "from pylon.routine.api import *"
         ]
 
