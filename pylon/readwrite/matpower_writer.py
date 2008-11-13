@@ -30,10 +30,20 @@ from os.path import basename, splitext
 class MATPOWERWriter:
     """ Write network data to a file in MATPOWER format """
 
-    def write(self, network, file_or_filename):
+    network = None
+
+    file_or_filename = ""
+
+    def __init__(self, network, file_or_filename):
+        self.network = network
+        self.file_or_filename = file_or_filename
+
+
+    def write(self):
         """ Writes network data to file in MATPOWER format """
 
-        self.network = network
+        network = self.network
+        file_or_filename = self.file_or_filename
 
         if isinstance(file_or_filename, basestring):
             file = open(file_or_filename, "wb")
@@ -67,7 +77,8 @@ class MATPOWERWriter:
         file.write("\n")
         self._export_gencost(file)
 
-        file.close()
+        if isinstance(file_or_filename, basestring):
+            file.close()
 
 
     def _export_buses(self, buses, file, base_mva):
@@ -82,11 +93,11 @@ class MATPOWERWriter:
         for i, v in enumerate(buses):
             v_data = {}
             v_data["bus_id"] = i+1
-            if v.type == "PQ":
+            if v.mode == "PQ":
                 type = 1
-            elif v.type == "PV":
+            elif v.mode == "PV":
                 type = 2
-            elif v.type == "Slack":
+            elif v.mode == "Slack":
                 type = 3
             else:
                 raise ValueError

@@ -83,7 +83,9 @@ class ReSTWriter:
         self._write_branch_data(file)
         file.write("\n")
 
-        file.close()
+        # Only close if passed a file name.
+        if isinstance(file_or_filename, basestring):
+            file.close()
 
 
     def _write_how_many(self, file):

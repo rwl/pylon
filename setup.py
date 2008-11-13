@@ -22,18 +22,18 @@ setup(
     author_email="richard.lincoln@eee.strath.ac.uk",
     description="Open source power system and energy market analysis",
     url="https://pylon.eee.strath.ac.uk",
-    version="0.1.8",
+    version="0.1.9",
     entry_points={
         "gui_scripts": [
             "envisage = pylon.plugin.main:main",
-            "pylon = pylon.ui.model_view.main:main",
+            "pylon = pylon.solve:main",
             "pyreto = pylon.ui.model_view.pyreto:main"
         ]
     },
 #    extras_require={},
 #    ext_modules=[],
     install_requires=[
-        "Traits", "TraitsBackendWX", "Chaco", "EnvisagePlugins", "ConfigObj"
+#        "Traits", "TraitsBackendWX", "Chaco", "EnvisagePlugins", "ConfigObj"
     ],
     license="GPLv2",
     name="Pylon",
@@ -42,10 +42,7 @@ setup(
 #    package_data={"": ["*.txt", "*.rst", "*.png", "*.jpg", "*.ini"]},
 #    package_dir={"": "src"},
     packages=find_packages(),#"src"),#exclude=["docs", "docs.*"]),
-    namespace_packages=[
-        "enthought", "enthought.pyface", "enthought.pyface.ui",
-        "enthought.plugins"
-    ],
+    namespace_packages=[],
     platforms = ["Windows", "Linux", "Mac OS-X", "Unix", "Solaris"],
     zip_safe=False
 )
