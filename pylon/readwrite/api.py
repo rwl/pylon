@@ -36,4 +36,6 @@ from psat_reader import PSATReader, read_psat
 
 from m3_reader import M3Reader, read_m3
 
+from rst_writer import ReSTWriter
+
 # EOF -------------------------------------------------------------------------

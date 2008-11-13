@@ -25,7 +25,23 @@ import sys
 import logging
 from optparse import OptionParser
 
+from pylon.readwrite.api import \
+    read_matpower, read_psat, read_psse, MATPOWERWriter, ReSTWriter
+
+from pylon.routine.api import \
+    DCPFRoutine, DCOPFRoutine, ACPFRoutine, ACOPFRoutine
+
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
+
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.setLevel(logging.DEBUG)
+
+#------------------------------------------------------------------------------
+#  Format detection:
+#------------------------------------------------------------------------------
 
 def detect_network_type(input, file_name=""):
     """ Detects the format of a network data file according to the file
@@ -46,6 +62,8 @@ def detect_network_type(input, file_name=""):
         logger.info("Recognised PSS/E data file.")
     else:
         type = "unrecognised"
+
+    input.seek(0)
 
     return type
 
@@ -114,9 +132,9 @@ class Pylon:
 
         writer = None
         if output_type == "matpower":
-            writer = MATPOWERWriter(network, output)
+            writer = MATPOWERWriter(n, output)
         else:
-            writer = ReSTWriter(network, output)
+            writer = ReSTWriter(n, output)
 
         if writer is not None:
             writer.write()
@@ -128,7 +146,7 @@ class Pylon:
         type = self.type
 
         if type == "any":
-            type = detect_network_type(input, self.filename)
+            type = detect_network_type(input, self.file_name)
 
         if type == "matpower":
             n = read_matpower(input)
@@ -140,20 +158,26 @@ class Pylon:
             try:
                 n = read_matpower(input)
             except:
+                pass
+            try:
                 n = read_psat(input)
             except:
-                n = None
+                n = input.read()
         elif type == "unrecognised":
             try:
                 n = read_matpower(input)
             except:
+                pass
+            try:
                 n = read_psat(input)
             except:
+                pass
+            try:
                 n = read_psse(input)
             except:
-                n = None
+                n = input.read()
         else:
-            n = None
+            n = input.read()
 
         return n
 
@@ -184,7 +208,8 @@ class Pylon:
 def main():
     """ Parse command line and call Pylon with the correct data """
 
-    parser = OptionParser()
+    usage = "usage: %prog [options] arg"
+    parser = OptionParser(usage)
     parser.add_option("-o", "--output", dest="output", metavar="FILE",
         help="Write the solution report to FILE.")
 
@@ -223,15 +248,15 @@ def main():
     "newton, gauss, decoupled.")
 
     parser.add_option("-T", "--output-type", dest="otype",
-        metavar="OTYPE", default="rst", help="Indicates the output format "
-        "type.  The type swhich are currently supported include: rst, "
+        metavar="OUTPUT_TYPE", default="rst", help="Indicates the output "
+        "format type.  The type swhich are currently supported include: rst, "
         "matpower.")
 
     parser.add_option("-p", "--paginate", action="store_true", default=False,
-        help="Pipe all output into less (or if set, $PAGER).")
+        dest="paginate", help="Pipe all output into less (or if set, $PAGER).")
 
-    parser.add_option("-h", "--help", dest="help", default=False,
-        help="Prints the synopsis and a list of the commands.")
+#    parser.add_option("-h", "--help", action="store_true", default=False,
+#        help="Prints the synopsis and a list of the commands.")
 
     parser.add_option("-V", "--version", dest="version", default=False,
         help="Output version.")
@@ -268,15 +293,20 @@ def main():
     else:
         outfile = sys.stdout
         if not options.no_report:
-            log.setLevel(logging.CRITICAL) # we must stay quiet
+            logger.setLevel(logging.CRITICAL) # we must stay quiet
+
+    # Pagiante output
+    if options.paginate:
+        raise NotImplementedError("Pagination is not yet implemented.")
 
 
-    pylon = Pylon(type=options.type, forulation=options.formulation,
-        algorithm=options.alg, file_name=filename, output_type=otype)
+    pylon = Pylon(type=options.type, routine=options.routine,
+        algorithm=options.algorithm, file_name=filename,
+        output_type=options.type)
     pylon.solve(input=infile, output=outfile)
 
-    if filename:
-        close(filename) # Clean-up
+#    if filename:
+#        infile.close() # Clean-up
 
 if __name__ == "__main__":
     main()
