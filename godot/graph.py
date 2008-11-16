@@ -967,7 +967,7 @@ class Graph(HasTraits):
                     show_border=True
                 ),
                 label="Output"
-            )
+            ), dock="tab",
         ),
         title="Graph", id="godot.graph", buttons=["OK", "Cancel", "Help"],
         resizable=True
