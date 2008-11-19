@@ -178,9 +178,9 @@ class Generator(object):
     q_limited = False
 
     # Start up cost (GBP)
-    cost_startup = 0.0
+    c_startup = 0.0
     # Shut down cost (GBP)
-    cost_shutdown = 0.0
+    c_shutdown = 0.0
     # Polynomial cost curve coefficients
     cost_coeffs = (1.0, 0.1, 0.01)
     # Piecewise linear cost segment points

@@ -15,19 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Generator components
-
-"""
+""" Generator components. """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
 import logging
-
 import uuid
-
 from numpy import linspace, pi, array, power
 
 from enthought.traits.api import \
@@ -35,7 +30,6 @@ from enthought.traits.api import \
     Property, Enum, Any, Delegate, Tuple, Array, cached_property
 
 from pylon.traits import ConvexPiecewise
-
 from pylon.ui.generator_view import generator_view
 
 #------------------------------------------------------------------------------
@@ -50,10 +44,9 @@ logger.setLevel(logging.INFO)
 #------------------------------------------------------------------------------
 
 class Generator(HasTraits):
-    """
-    Fixes voltage magnitude and active power injected at parent bus or when at
-    its reactive power limit fixes active and reactive power injected at
-    parent bus.
+    """ Fixes voltage magnitude and active power injected at the bus
+    or when at its reactive power limit fixes active and reactive power
+    injected.
 
     """
 
@@ -61,9 +54,10 @@ class Generator(HasTraits):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    # A default view
+    # A default view.
     traits_view = generator_view
 
+    # Unique identifier.
     id = String(desc="Unique identifier")
 
 #    bus = Instance("pylon.bus.Bus", desc="parent Bus instance", allow_none=False)
@@ -73,7 +67,7 @@ class Generator(HasTraits):
     name = String("g", desc="generator name")
 
     base_mva = Float(
-        desc="total MVA base of this machine, defaults to self.bus.base_mva"
+        desc="total MVA base of this machine"#, defaults to self.bus.base_mva"
     )
 
 #    rating_s = Float(desc="power rating MVA (p.u.)")
@@ -120,9 +114,9 @@ class Generator(HasTraits):
 #
 #    p_bid = Float(desc="actual active power bid (p.u.)")
 
-    cost_startup = Float(desc="start up cost (GBP)")
+    c_startup = Float(desc="start up cost (GBP)")
 
-    cost_shutdown = Float(desc="shut down cost (GBP)")
+    c_shutdown = Float(desc="shut down cost (GBP)")
 
     cost_model = Enum("Polynomial", "Piecewise Linear")
 
@@ -141,15 +135,127 @@ class Generator(HasTraits):
 
 #    pwl_points = ConvexPiecewise
 
+    # Real power cost.
     p_cost = Property(
-        Float,
-        depends_on=["p", "cost_coeffs", "pwl_points", "cost_model"],
-        desc="generator real power output cost"
+        Float, desc="generator real power output cost",
+        depends_on=["p", "cost_coeffs", "pwl_points", "cost_model"]
     )
 
     xdata = Property(Array, depends_on=["p_min", "p_max", "pw_linear"])
 
     ydata = Property(Array, depends_on=["cost_coeffs", "pwl_points"])
+
+    #--------------------------------------------------------------------------
+    #  Compute arrays for cost curve plotting:
+    #--------------------------------------------------------------------------
+
+    @cached_property
+    def _get_p_cost(self):
+        """
+        Real power cost given power output and the current cost function
+
+        """
+
+        if self.cost_model == "Polynomial":
+            x = self.p
+            c0, c1, c2 = self.cost_coeffs
+            cost = c0*x**2 + c1*x + c2
+            logger.debug(
+                "Generator [%s] cost (polynomial) set to: %f" % (self, cost)
+            )
+            return cost
+
+        elif self.cost_model == "Piecewise Linear":
+            p = self.p
+            points = self.pwl_points
+            n_points = len(points)
+            if n_points == 0:
+                cost = 0
+                logger.debug("No pw points. Cost: %f" % cost)
+                return cost
+            elif n_points == 1:
+                x, y = points[0]
+                cost = y
+                logger.debug("One pw point (%f, %f). Cost: %f" % (x, y, cost))
+                return cost
+            else:
+                # Handle power being before first point
+                # FIXME: Implement robust pw linear model
+                x0, y0 = points[0]
+                if p <= x0:
+                    cost = y0
+                    logger.debug(
+                        "Generator power less then lowest pw point. "
+                        "Cost set to: %f" % cost
+                    )
+                    return cost
+                # Handle power being above last point
+                xn, yn = points[n_points-1]
+                if p >= xn:
+                    cost = yn
+                    logger.debug(
+                        "Generator power greater then last pw point. "
+                        "Cost set to: %f" % cost
+                    )
+                    return cost
+                # Compute the cost for the piece
+                for i in range(n_points-1):
+                    x1, y1 = points[i]
+                    x2, y2 = points[i+1]
+                    if p > x1 and p < x2:
+                        # y = mx + c
+                        m = (y2-y1)/(x2-x1)
+                        cost = m*p + y1
+                        logger.debug(
+                            "Generator [%s] cost (pw linear) set to: %f" %
+                            (self, cost)
+                        )
+                        return cost
+        else:
+            logger.error("Invalid cost model [%s]" % self.cost_model)
+
+
+    @cached_property
+    def _get_xdata(self):
+        """
+        Like Python range, but with (potentially) real-valued arrays
+        a = numpy.arange(start, stop, increment)
+
+        Create array of equally-spaced points using specified number of points
+        b = numpy.linspace(start, stop, num_elements)
+
+        """
+
+        if self.cost_model is "Polynomial":
+            xdata = linspace(self.p_min, self.p_max, 10)
+#            print "POLYNOMIAL XDATA:", xdata
+            return xdata
+#        elif self.cost_model is "Piecewise Linear":
+        else:
+            xdata = array([x for x, y in self.pwl_points])
+#            print "PIECEWISE XDATA:", xdata
+            return xdata
+#        else:
+#            raise ValueError
+
+    @cached_property
+    def _get_ydata(self):
+        if self.cost_model is "Polynomial":
+            ydata = []
+            for x in self.xdata:
+                y = 0
+                c0, c1, c2 = self.cost_coeffs
+                y = c0*x**2 + c1*x + c2
+                ydata.append(y)
+#            print "POLYNOMIAL YDATA", ydata
+            return array(ydata)
+#        elif self.cost_model is "Piecewise Linear":
+        else:
+            ydata = array([y for x, y in self.pwl_points])
+#            print "PIECEWISE YDATA", ydata
+            return ydata
+#        else:
+#            raise ValueError
 
 #    p_cost_fixed = Float(
 #        desc="fixed cost (active power) (GBP/h)",
@@ -180,6 +286,12 @@ class Generator(HasTraits):
 #        desc="quadratic cost (reactive power) (GBP/MVar^2h)",
 #        label="Qcost (quadratic)"
 #    )
+
+    # Optimisation.
+
+    # Is the unit committed?
+    u = Bool(False, desc="binary unit commitment variable indicating if the"
+             "unit is despatched")
 
 #    cost_tie = Float(desc="tie breaking cost (GBP/MWh)")
 #
@@ -231,9 +343,9 @@ class Generator(HasTraits):
 
     min_down = Int(desc="minimum shut down time (h)")
 
-#    initial_period_up = Int(desc="initial number of periods up")
-#
-#    initial_period_down = Int(desc="initial number of periods down")
+    initial_up = Int(desc="initial number of periods up")
+
+    initial_down = Int(desc="initial number of periods down")
 
 #    # Synchoronous machine ----------------------------------------------------
 #
@@ -371,118 +483,6 @@ class Generator(HasTraits):
 
 #    def __str__(self):
 #        return self.name
-
-    #--------------------------------------------------------------------------
-    #  Compute arrays for cost curve plotting:
-    #--------------------------------------------------------------------------
-
-    @cached_property
-    def _get_p_cost(self):
-        """
-        Real power cost given power output and the current cost function
-
-        """
-
-        if self.cost_model == "Polynomial":
-            x = self.p
-            c0, c1, c2 = self.cost_coeffs
-            cost = c0*x**2 + c1*x + c2
-            logger.debug(
-                "Generator [%s] cost (polynomial) set to: %f" % (self, cost)
-            )
-            return cost
-
-        elif self.cost_model == "Piecewise Linear":
-            p = self.p
-            points = self.pwl_points
-            n_points = len(points)
-            if n_points == 0:
-                cost = 0
-                logger.debug("No pw points. Cost: %f" % cost)
-                return cost
-            elif n_points == 1:
-                x, y = points[0]
-                cost = y
-                logger.debug("One pw point (%f, %f). Cost: %f" % (x, y, cost))
-                return cost
-            else:
-                # Handle power being before first point
-                # FIXME: Implement robust pw linear model
-                x0, y0 = points[0]
-                if p <= x0:
-                    cost = y0
-                    logger.debug(
-                        "Generator power less then lowest pw point. "
-                        "Cost set to: %f" % cost
-                    )
-                    return cost
-                # Handle power being above last point
-                xn, yn = points[n_points-1]
-                if p >= xn:
-                    cost = yn
-                    logger.debug(
-                        "Generator power greater then last pw point. "
-                        "Cost set to: %f" % cost
-                    )
-                    return cost
-                # Compute the cost for the piece
-                for i in range(n_points-1):
-                    x1, y1 = points[i]
-                    x2, y2 = points[i+1]
-                    if p > x1 and p < x2:
-                        # y = mx + c
-                        m = (y2-y1)/(x2-x1)
-                        cost = m*p + y1
-                        logger.debug(
-                            "Generator [%s] cost (pw linear) set to: %f" %
-                            (self, cost)
-                        )
-                        return cost
-        else:
-            logger.error("Invalid cost model [%s]" % self.cost_model)
-
-
-    @cached_property
-    def _get_xdata(self):
-        """
-        Like Python range, but with (potentially) real-valued arrays
-        a = numpy.arange(start, stop, increment)
-
-        Create array of equally-spaced points using specified number of points
-        b = numpy.linspace(start, stop, num_elements)
-
-        """
-
-        if self.cost_model is "Polynomial":
-            xdata = linspace(self.p_min, self.p_max, 10)
-#            print "POLYNOMIAL XDATA:", xdata
-            return xdata
-#        elif self.cost_model is "Piecewise Linear":
-        else:
-            xdata = array([x for x, y in self.pwl_points])
-#            print "PIECEWISE XDATA:", xdata
-            return xdata
-#        else:
-#            raise ValueError
-
-    @cached_property
-    def _get_ydata(self):
-        if self.cost_model is "Polynomial":
-            ydata = []
-            for x in self.xdata:
-                y = 0
-                c0, c1, c2 = self.cost_coeffs
-                y = c0*x**2 + c1*x + c2
-                ydata.append(y)
-#            print "POLYNOMIAL YDATA", ydata
-            return array(ydata)
-#        elif self.cost_model is "Piecewise Linear":
-        else:
-            ydata = array([y for x, y in self.pwl_points])
-#            print "PIECEWISE YDATA", ydata
-            return ydata
-#        else:
-#            raise ValueError
 
     #--------------------------------------------------------------------------
     #  Indicate if the generator is a its reactive power limit:
