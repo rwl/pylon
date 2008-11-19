@@ -223,14 +223,14 @@ class Generator(HasTraits):
 
     # Ramping -----------------------------------------------------------------
 
-#    rate_up = Float(desc="ramp up rate (p.u./h)")
-#
-#    rate_down = Float(desc="ramp down rate (p.u./h)")
-#
-#    min_period_up = Int(desc="minimum # of periods up (h)")
-#
-#    min_period_down = Int(desc="minimum # of periods down (h)")
-#
+    rate_up = Float(desc="ramp up rate (p.u./h)")
+
+    rate_down = Float(desc="ramp down rate (p.u./h)")
+
+    min_up = Int(desc="minimum running time (h)")
+
+    min_down = Int(desc="minimum shut down time (h)")
+
 #    initial_period_up = Int(desc="initial number of periods up")
 #
 #    initial_period_down = Int(desc="initial number of periods down")

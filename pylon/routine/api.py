@@ -32,6 +32,7 @@ from pylon.routine.ac_pf import ACPFRoutine
 from pylon.routine.dc_opf import DCOPFRoutine
 from pylon.routine.ac_opf import ACOPFRoutine
 from pylon.routine.spf import SPFRoutine
+from pylon.routine.uc import UnitCommitmentRoutine
 
 from y import SusceptanceMatrix
 
