@@ -108,7 +108,7 @@ generators_table_editor = TableEditor(
 #        GeneratorColumn(name="min_period_down"),
 #        GeneratorColumn(name="initial_period_up"),
 #        GeneratorColumn(name="initial_period_down"),
-#        GeneratorColumn(name="cost_startup"),
+#        GeneratorColumn(name="c_startup"),
     ],
     show_toolbar=True,
     deletable=True,

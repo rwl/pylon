@@ -336,12 +336,12 @@ class PSATReader:
         min_period_down = real.setResultsName("min_period_down") # h
         initial_period_up = integer.setResultsName("initial_period_up")
         initial_period_down = integer.setResultsName("initial_period_down")
-        cost_startup = real.setResultsName("cost_startup") # $
+        c_startup = real.setResultsName("c_startup") # $
         status = boolean.setResultsName("status")
 
         g_ramp_data = supply_no + s_rating + up_rate + down_rate + \
             min_period_up + min_period_down + initial_period_up + \
-            initial_period_down + cost_startup + status + scolon
+            initial_period_down + c_startup + status + scolon
 
         g_ramp_array = Literal("Rmpg.con") + "=" + "[" + \
             ZeroOrMore(g_ramp_data + Optional("]" + scolon))

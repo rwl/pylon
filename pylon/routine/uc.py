@@ -58,15 +58,23 @@ class UnitCommitmentRoutine:
     # Total reserve for each period
     reserve = matrix
 
-    # Two-dimensional array of volumes bid by each GenCo for each period:
-#    bid_volumes = Array(numerix.Float64)
+    # Maximum generation output limits.
+    p_max = []
 
-    # Two-dimensional array of each GenCo"s bid cost for each period:
-#    bid_costs = Array(numerix.Float64)
+    # Minimum generation output limits.
+    p_min = []
 
-    # Two-dimensional array for keeping record of the volume allocated to each
-    # GenCo for each after each trading period:
-#    alloc_vol = Array(numerix.Float64)
+    # Minimum up time limits.
+    min_up = []
+
+    # Minimum down time limits.
+    min_down = []
+
+    # Ramp up rate limits.
+    ramp_up = []
+
+    # Ramp down limits.
+    ramp_down = []
 
     # Vector of the Market Clearing Prices for each period:
 #    mcps = Array
@@ -78,7 +86,7 @@ class UnitCommitmentRoutine:
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, network, *kw, **args):
+    def __init__(self, network, *args, **kw):
         """ Returns a UnitCommitmentRoutine instance. """
 
         super(UnitCommitmentRoutine, self).__init__(*kw, **args)
@@ -137,7 +145,7 @@ class UnitCommitmentRoutine:
         ramp_down = [g.ramp_down for g in generators]
 
         # Solve LP for the current period.
-        lp, alloc_vols = self._solve_lp()
+        lp, alloc_vols = self.solve_lp()
         logger.info("Solution status: %s", lp.status)
 
         # Process results
@@ -147,7 +155,7 @@ class UnitCommitmentRoutine:
     #  Solve Linear Programming problem:
     #--------------------------------------------------------------------------
 
-    def _solve_lp(self):
+    def solve_lp(self):
         """ Solves the linearised unit commitment problem. """
 
         n = self.network
@@ -171,8 +179,9 @@ class UnitCommitmentRoutine:
         load = (sum(p) == dmd[period])
 
         # Problem solution
-        lp = op(dot(matrix(self.bid_costs[:, period].copy()),p),
-                [lt_max, gt_zero, load])
+        c = matrix(self.bid_costs[:, period].copy())
+
+        lp = op(dot(c, p), [lt_max, gt_zero, load])
         logger.debug("Solving the Unit Commitment problem [%s]." % n.name)
         lp.solve()
 

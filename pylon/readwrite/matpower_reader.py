@@ -386,8 +386,8 @@ class MATPOWERReader:
         # Apply cost data to first generator in list and then remove it
         g = self.generators[0]
 
-        g.cost_startup = float(tokens["startup"])
-        g.cost_shutdown = float(tokens["shutdown"])
+        g.c_startup = float(tokens["startup"])
+        g.c_shutdown = float(tokens["shutdown"])
 
         # Piecewise linear cost data
         if tokens["model"] == 1:

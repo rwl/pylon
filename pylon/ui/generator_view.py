@@ -72,6 +72,90 @@ minimal_view = View(
 )
 
 #------------------------------------------------------------------------------
+#  Unit Commitment view:
+#------------------------------------------------------------------------------
+
+uc_view = View(
+    Group(
+        Item(name="name"),
+        Item(name="in_service"),
+    ),
+    Group(
+        Item(name="p", style="readonly"),
+        Item(name="p_max"),
+        Item(name="p_min")
+    ),
+#    VGroup(
+#        Group(
+#            Item(name="p_max_bid"),
+#            Item(name="p_min_bid"),
+#            Item(name="p_bid"),
+#            label="Bids",
+#            show_border=True
+#        ),
+#        Group(
+#            Item(name="rate_up"),
+#            Item(name="rate_down"),
+#            Item(name="min_period_up"),
+#            Item(name="min_period_down"),
+#            Item(name="initial_period_up"),
+#            Item(name="initial_period_down"),
+#        ),
+#    ),
+    Group(
+        Item(name="p_cost", style="readonly"),
+        Item(name="cost_model"),
+        Item(
+            name="cost_coeffs",
+            height=200,
+            visible_when="cost_model=='Polynomial'",
+            show_label=False
+        ),
+        Item(
+            name="pwl_points",
+            height=200,
+            visible_when="cost_model=='Piecewise Linear'",
+            show_label=False
+        ),
+        Item(name="c_startup"),
+        Item(name="c_shutdown"),
+#        Item(name="p_cost_fixed"),
+#        Item(name="p_cost_proportional"),
+#        Item(name="p_cost_quadratic"),
+#        Item(name="q_cost_fixed"),
+#        Item(name="q_cost_proportional"),
+#        Item(name="q_cost_quadratic"),
+        label="Costs"
+    ),
+#    Group(
+#        ChacoPlotItem(
+#            "xdata", "ydata", type="line",
+#
+#            # Basic axis and label properties
+#            show_label=False, resizable=True, orientation="h",
+#            title="Cost curve",
+#            x_label="Real power (p.u.)", y_label="Cost (GBP)",
+#
+#            # Plot properties
+#            color="green", bgcolor="white",
+#
+#            # Specific to scatter plot
+#            marker="circle", marker_size=2, outline_color="none",
+#
+#            # Border, padding properties
+#            border_visible=True, border_width=1,
+#            padding_bg_color="lightgray"
+#        ),
+#        label="OPF", show_border=True
+#    )
+#    title="Generator properties",
+#    icon=ImageResource("frame.ico", ICON_LOCATION)),
+    id="pylon.ui.generator_uc_view",
+    resizable=True, #scrollable=True,
+    buttons=["OK", "Cancel", "Help"]
+)
+
+#------------------------------------------------------------------------------
 #  Generator view:
 #------------------------------------------------------------------------------
 
@@ -79,8 +163,7 @@ generator_view = View(
     VGroup(
         VGroup(
             Group(
-                Item(name="name"),
-                Item(name="in_service"),
+                Item(name="name"), Item(name="in_service"),
             ),
 #            Group(
 #                Item(name="rating_s"),
@@ -125,32 +208,25 @@ generator_view = View(
 #                    label="Bids",
 #                    show_border=True
 #                ),
-#                Group(
-#                    Item(name="rate_up"),
-#                    Item(name="rate_down"),
-#                    Item(name="min_period_up"),
-#                    Item(name="min_period_down"),
-#                    Item(name="initial_period_up"),
-#                    Item(name="initial_period_down"),
-#                ),
-#            ),
+            Group(
+                Item("rate_up"), Item("rate_down"),
+                Item("min_period_up"), Item("min_period_down"),
+                Item("initial_period_up"), Item("initial_period_down"),
+            ),
             Group(
                 Item(name="p_cost", style="readonly"),
                 Item(name="cost_model"),
                 Item(
                     name="cost_coeffs",
-                    height=200,
                     visible_when="cost_model=='Polynomial'",
-                    show_label=False
+                    show_label=False, height=200
                 ),
                 Item(
                     name="pwl_points",
-                    height=200,
                     visible_when="cost_model=='Piecewise Linear'",
-                    show_label=False
+                    show_label=False, height=200
                 ),
-#                Item(name="cost_startup"),
-#                Item(name="cost_shutdown"),
+                Item(name="c_startup"), Item(name="c_shutdown"),
 #                Item(name="p_cost_fixed"),
 #                Item(name="p_cost_proportional"),
 #                Item(name="p_cost_quadratic"),
@@ -159,112 +235,119 @@ generator_view = View(
 #                Item(name="q_cost_quadratic"),
 #                label="Costs"
             ),
-#            Group(
-#                ChacoPlotItem(
-#                    "xdata", "ydata",
-#                    type="line",
-#
-#                    # Basic axis and label properties
-#                    show_label=False,
-#                    resizable=True,
-#                    orientation="h",
-#                    title="Cost curve",
-#                    x_label="Real power (p.u.)",
-#                    y_label="Cost (GBP)",
-#
-#                    # Plot properties
-#                    color="green",
-#                    bgcolor="white",
-#
-#                    # Specific to scatter plot
-#                    marker="circle",
-#                    marker_size=2,
-#                    outline_color="none",
-#
-#                    # Border, padding properties
-#                    border_visible=True,
-#                    border_width=1,
-#                    padding_bg_color="lightgray"
-#                )
-#            ),
-            label="OPF", show_border=True
+            dock="tab"
         ),
-#        HGroup(
-#            Group(
-#                Item(name="v_objective"),
-#                Item(name="p_generated"),
-#                Item(name="q_generated"),
-#                Item(name="resistance_ps"),
-#                Item(name="reactance_ps"),
-#                Item(name="resistance_zs"),
-#                Item(name="reactance_zs"),
-#                Item(name="resistance_d_axis_transient"),
-#                Item(name="time_constant_d_axis_transient"),
-#                Item(name="resistance_d_axis_subtransient"),
-#                Item(name="time_constant_d_axis_subtransient"),
-#                Item(name="resistance_q_axis_transient"),
-#                Item(name="time_constant_q_axis_transient"),
-#                Item(name="resistance_q_axis_subtransient"),
-#                Item(name="time_constant_q_axis_subtransient"),
-#                Item(name="inertia"),
-#                Item(name="damping_factor"),
-#                Item(name="reactance_potier"),
-#                Item(name="saturation_factor"),
-#                Item(name="p_max_mech"),
-#                Item(name="q_max_mech"),
-#                Item(name="s_max_mech")
-#            ),
-#            label="Synchronous Machine"
-#        ),
-#        HGroup(
-#            Group(
-#                Item(name="slip"),
-#                Item(name="reactance_magnetising"),
-#                Item(name="resistance_stator"),
-#                Item(name="reactance_stator"),
-#                Item(name="motor_model"),
-#                Item(name="resistance_rotor"),
-#                Item(name="reactance_rotor"),
-#                Item(name="resistance_start"),
-#                Item(name="reactance_start"),
-#                Item(name="b"),
-#                Item(name="c"),
-#            ),
-#            Group(
-#                Item(name="inertia"),
-#                Item(name="trip_voltage"),
-#                Item(name="trip_time"),
-#                Item(name="lockout_time"),
-#                Item(name="underspeed"),
-#                Item(name="overspeed"),
-#                Item(name="reconnect_time"),
-#                Item(name="reconnect_volt"),
-#                Item(name="n_reconnect_max"),
-#                Item(name="feed_busbar"),
-#                Item(name="df_power_factor"),
-#                Item(name="is_q_exported"),
-#                Item(name="rotor_reference_frame")
-#            ),
-#            Group(
-#                Item(name="p_stator"),
-#                Item(name="q_stator"),
-#                Item(name="p_rotor"),
-#                Item(name="q_stator"),
-#                Item(name="p_mechanical"),
-#                Item(name="power_factor"),
-#                Item(name="efficiency"),
-#                Item(name="current"),
-#                Item(name="torque"),
-#            ),
-#            label="DFIG"
-#        )
-        dock="tab"
     ),
 #    title="Generator properties",
-#    icon=ImageResource(path.join(ICON_LOCATION, "frame.ico")),
+#    icon=ImageResource("frame.ico", ICON_LOCATION)),
     id="default_generator_view",
     resizable=True,
 #    scrollable=True,
+    buttons=["OK", "Cancel", "Help"]
+)
+
+#------------------------------------------------------------------------------
+#  Synchronous machine view:
+#------------------------------------------------------------------------------
+
+synchronous_view = View(
+    Group(
+        Item(name="name"),
+        Item(name="in_service"),
+    ),
+    HGroup(
+        Group(
+            Item(name="v_objective"),
+            Item(name="p_generated"),
+            Item(name="q_generated"),
+            Item(name="resistance_ps"),
+            Item(name="reactance_ps"),
+            Item(name="resistance_zs"),
+            Item(name="reactance_zs"),
+        ),
+        Group(
+            Item(name="resistance_d_axis_transient"),
+            Item(name="time_constant_d_axis_transient"),
+            Item(name="resistance_d_axis_subtransient"),
+            Item(name="time_constant_d_axis_subtransient"),
+            Item(name="resistance_q_axis_transient"),
+            Item(name="time_constant_q_axis_transient"),
+            Item(name="resistance_q_axis_subtransient"),
+            Item(name="time_constant_q_axis_subtransient"),
+        ),
+        Group(
+            Item(name="inertia"),
+            Item(name="damping_factor"),
+            Item(name="reactance_potier"),
+            Item(name="saturation_factor"),
+            Item(name="p_max_mech"),
+            Item(name="q_max_mech"),
+            Item(name="s_max_mech")
+        ),
+        label="Synchronous Machine"
+    ),
+#    title="Synchronous machine properties",
+#    icon=ImageResource("frame.ico", ICON_LOCATION)),
+    id="pylon.ui.synchronous_view",
+    resizable=True, #scrollable=True,
+    buttons=["OK", "Cancel", "Help"]
+)
+
+#------------------------------------------------------------------------------
+#  Doubly-Fed Induction Generator (DFIG) view:
+#------------------------------------------------------------------------------
+
+dfig_view = View(
+    Group(
+        Item(name="name"),
+        Item(name="in_service"),
+    ),
+    HGroup(
+        Group(
+            Item(name="slip"),
+            Item(name="reactance_magnetising"),
+            Item(name="resistance_stator"),
+            Item(name="reactance_stator"),
+            Item(name="motor_model"),
+            Item(name="resistance_rotor"),
+            Item(name="reactance_rotor"),
+            Item(name="resistance_start"),
+            Item(name="reactance_start"),
+            Item(name="b"),
+            Item(name="c"),
+        ),
+        Group(
+            Item(name="inertia"),
+            Item(name="trip_voltage"),
+            Item(name="trip_time"),
+            Item(name="lockout_time"),
+            Item(name="underspeed"),
+            Item(name="overspeed"),
+            Item(name="reconnect_time"),
+            Item(name="reconnect_volt"),
+            Item(name="n_reconnect_max"),
+            Item(name="feed_busbar"),
+            Item(name="df_power_factor"),
+            Item(name="is_q_exported"),
+            Item(name="rotor_reference_frame")
+        ),
+        Group(
+            Item(name="p_stator"),
+            Item(name="q_stator"),
+            Item(name="p_rotor"),
+            Item(name="q_stator"),
+            Item(name="p_mechanical"),
+            Item(name="power_factor"),
+            Item(name="efficiency"),
+            Item(name="current"),
+            Item(name="torque"),
+        ),
+        label="DFIG"
+    ),
+#    title="DFIG properties",
+#    icon=ImageResource("frame.ico", ICON_LOCATION)),
+    id="pylon.ui.dfig_view",
+    resizable=True, #scrollable=True,
     buttons=["OK", "Cancel", "Help"]
 )
 
