@@ -271,7 +271,7 @@ class Branch(HasTraits):
 #        "angle(Vf) - angle(Vt) (degrees)")
 
     #--------------------------------------------------------------------------
-    #  Initialise the object:
+    #  "object" interface:
     #--------------------------------------------------------------------------
 
     def __init__(self, source_bus, target_bus, **traits):
@@ -284,20 +284,6 @@ class Branch(HasTraits):
             source_bus=source_bus, target_bus=target_bus, **traits
         )
 
-    #--------------------------------------------------------------------------
-    #  "object" interface:
-    #--------------------------------------------------------------------------
-
-#    def __init__(self, source_bus, target_bus, **traits):
-#        """ This is only necessary for compatibility with pypylon """
-#
-#        self.source_bus = source_bus
-#        self.target_bus = target_bus
-#
-#        super(Branch, self).__init__(
-#            source_bus=source_bus, target_bus=target_bus, **traits
-#        )
-
 
     def _id_default(self):
         """ Unique identifier initialiser """
@@ -305,35 +291,25 @@ class Branch(HasTraits):
         return self.name + "-#" + uuid.uuid4().hex[:6]
 
     #--------------------------------------------------------------------------
-    #  Default source bus:
+    #  Voltage ratio between the source bus and  the target bus:
     #--------------------------------------------------------------------------
 
-#    def _source_bus_default(self):
-#        """ Trait initialiser """
-#
-#        if self.network is not None:
-#            return self.network.buses[0]
-#        else:
-#            logger.warning("Branch [%s] source bus not set to default" % self)
-#            return None
+    def _get_v_ratio(self):
+        """ Property getter """
 
-    #--------------------------------------------------------------------------
-    #  Default destination bus:
-    #--------------------------------------------------------------------------
+        sb = self.source_bus
+        tb = self.target_bus
 
-#    def _target_bus_default(self):
-#        """ Trait initialiser """
-#
-#        if self.network is not None:
-#            return self.network.buses[1]
-#        else:
-#            logger.warning("Branch [%s] target bus not set to default" % self)
-#            return None
+        if (sb is not None) and (tb is not None) and (tb.v_amplitude != 0.0):
+            return sb.v_amplitude/tb.v_amplitude
+        else:
+            return 1.0
 
 
     def _get_mode(self):
         """ Property getter """
 
+        # FIXME: Should the nominal voltage be used here?
         if 0.99 <= self.v_ratio <= 1.01:
             return "Line"
         else:
@@ -350,23 +326,6 @@ class Branch(HasTraits):
         """ Property getter """
 
         return self.q_source - self.q_target
-
-    #--------------------------------------------------------------------------
-    #  Maintain a property indicating the ratio between the source bus voltage
-    #  and the target bus voltage:
-    #--------------------------------------------------------------------------
-
-    def _get_v_ratio(self):
-        """ Property getter """
-
-        sb = self.source_bus
-        tb = self.target_bus
-        if (sb is not None) and (tb is not None) and (tb.v_amplitude != 0.0):
-            v_ratio = sb.v_amplitude/tb.v_amplitude
-#            print "VOLTAGE RATIO:", v_ratio
-            return v_ratio
-        else:
-            return 1.0
 
 #-------------------------------------------------------------------------------
 #  "ThreeWindingTransformer" class:
