@@ -90,10 +90,10 @@ class Bus(HasTraits):
     v_phase_guess = Float(1.0, desc="voltage phase initial guess (p.u.)",
         label="Va0")
 
-    v_max = Float(1.0, desc="maximum voltage amplitude (PQ) (p.u.)",
+    v_max = Float(1.5, desc="maximum voltage amplitude (PQ) (p.u.)",
         label="Vmax")
 
-    v_min = Float(1.0, desc="minimum voltage amplitude (PQ) (p.u.)",
+    v_min = Float(0.5, desc="minimum voltage amplitude (PQ) (p.u.)",
         label="Vmin")
 
     v_amplitude = Float(style="readonly", desc="bus voltage magnitude",

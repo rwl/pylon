@@ -15,16 +15,13 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Power system branch classes extended for GUI editing.
-
-"""
+""" Power system branch classes extended for GUI editing. """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os import path
+from os.path import dirname
 
 from enthought.traits.api import \
     HasTraits, String, Instance, Delegate, Any, Property, List
@@ -32,11 +29,13 @@ from enthought.traits.api import \
 from enthought.traits.ui.api import \
     Item, Group, View, InstanceEditor, HGroup, VGroup, Tabbed, RangeEditor
 
+from enthought.pyface.image_resource import ImageResource
+
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-ICON_LOCATION = path.join(path.dirname(__file__), "images")
+IMAGE_LOCATION = dirname(__file__)
 
 #------------------------------------------------------------------------------
 #  Minimal view:
@@ -47,21 +46,68 @@ minimal_view = View(
     Item(name="in_service"),
     "_",
     Item(
-        name="source_bus",
+        "source_bus", enabled_when="network is not None",
         editor=InstanceEditor(name="buses", editable=False)
     ),
     Item(
-        name="target_bus",
+        "target_bus", enabled_when="network is not None",
+        editor=InstanceEditor(name="buses", editable=False)
+    ),
+    "_", ["r", "x", "b"],
+    "_", ["ratio", "phase_shift"]
+)
+
+#------------------------------------------------------------------------------
+#  Line view:
+#------------------------------------------------------------------------------
+
+line_view = View(
+    Item(name="name"),
+    Item(name="in_service"),
+    Item(name="mode", style="readonly"),
+    "_",
+    Item(
+        "source_bus", enabled_when="network is not None",
+        editor=InstanceEditor(name="buses", editable=False)
+    ),
+    Item(
+        "target_bus", enabled_when="network is not None",
         editor=InstanceEditor(name="buses", editable=False)
     ),
     "_",
-    Item(name="r"),
-    Item(name="x"),
-    Item(name="b"),
+    ["r", "x", "b"],
+    id="pylon.ui.line_view", title="Line properties",
+    icon = ImageResource("frame.ico", search_path=[IMAGE_LOCATION]),
+    resizable = True, scrollable=True,
+    buttons=["OK", "Cancel", "Help"]
+)
+
+#------------------------------------------------------------------------------
+#  Transformer view:
+#------------------------------------------------------------------------------
+
+transformer_view = View(
+    Item(name="name"),
+    Item(name="in_service"),
+    Item(name="mode", style="readonly"),
+    "_",
+    Item(
+        "source_bus", enabled_when="network is not None",
+        editor=InstanceEditor(name="buses", editable=False)
+    ),
+    Item(
+        "target_bus", enabled_when="network is not None",
+        editor=InstanceEditor(name="buses", editable=False)
+    ),
     "_",
     Item(name="ratio"),
     Item(name="phase_shift"),
-
+    Item(name="phase_shift_max"),
+    Item(name="phase_shift_min"),
+    id="pylon.ui.transformer_view", title="Transformer properties",
+    icon = ImageResource("frame.ico", search_path=[IMAGE_LOCATION]),
+    resizable = True, scrollable=True,
+    buttons=["OK", "Cancel", "Help"]
 )
 
 #------------------------------------------------------------------------------
@@ -76,11 +122,11 @@ branch_view = View(
             Item(name="mode", style="readonly"),
             "_",
             Item(
-                name="source_bus",
+                "source_bus", enabled_when="network is not None",
                 editor=InstanceEditor(name="buses", editable=False)
             ),
             Item(
-                name="target_bus",
+                "target_bus", enabled_when="network is not None",
                 editor=InstanceEditor(name="buses", editable=False)
             ),
 #            "_",
@@ -144,7 +190,7 @@ branch_view = View(
         )
     ),
     id="pylon.ui.branch_view", title="Branch properties",
-#    icon = ImageResource(path.join(ICON_LOCATION, "frame.ico")),
+#    icon = ImageResource(path.join(IMAGE_LOCATION, "frame.ico")),
     resizable = True,
     scrollable=True,
     buttons=["OK", "Cancel", "Help"]
