@@ -58,8 +58,6 @@ buses_table_editor = TableEditor(
     columns = [
         ObjectColumn(name="name"),
         ObjectColumn(name="mode", editable=False),
-        ObjectColumn(name="n_generators", label="G", editable=False),
-        ObjectColumn(name="n_loads", label="L", editable=False),
         ObjectColumn(name="p_supply", label="Ps", editable=False),
         ObjectColumn(name="q_supply", label="Qs", editable=False),
         ObjectColumn(name="p_demand", label="Pd", editable=False),
