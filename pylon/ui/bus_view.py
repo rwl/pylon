@@ -55,8 +55,6 @@ minimal_view = View(
     Item(name="v_phase_guess"),
     Item(name="g_shunt"),
     "_",
-    Item(name="n_generators", style="readonly", label="Generators"),
-    Item(name="n_loads", style="readonly", label="Loads"),
 #    Item(name="p_supply", style="readonly"),
 #    Item(name="q_supply", style="readonly"),
 #    Item(name="p_demand", style="readonly"),
@@ -80,8 +78,6 @@ bus_view = View(
                         "attached Generator is requisite"
                 ),
                 Item(name="mode", style="readonly"),
-#                Item(name="n_generators", style="readonly"),
-#                Item(name="n_loads", style="readonly"),
 #                Item(name="p_supply", style="readonly"),
 #                Item(name="q_supply", style="readonly"),
 #                Item(name="p_demand", style="readonly"),

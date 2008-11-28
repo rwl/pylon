@@ -28,7 +28,7 @@ from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Delegate, Event, \
     Array, Bool, Range, Default, Property, Enum, Complex
 
-from pylon.ui.branch_view import branch_view
+from pylon.ui.branch_view import branch_view, line_view, transformer_view
 
 from pylon.bus import Bus
 
@@ -46,6 +46,19 @@ class Branch(HasTraits):
     """ Graph edge that links two Bus objects """
 
     #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    # A default view.
+    traits_view = branch_view
+
+    # View of the branch line properties.
+    line_view = line_view
+
+    # View of the branch transformer properties.
+    transformer_view = transformer_view
+
+    #--------------------------------------------------------------------------
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
@@ -59,15 +72,15 @@ class Branch(HasTraits):
         Bus, desc="target/to/end Bus instance", allow_none=False
     )
 
-    # A default view
-    traits_view = branch_view
-
     # Parent network:
     # TODO: Implement Drag-n-Drop and remove this two-way reference
-    network = Instance("pylon.network.Network", allow_none=False)
+    network = Instance("pylon.network.Network")
 
     # List of buses from which to select connections:
-    buses = Delegate("network")
+    buses = Property(
+        List(Instance(Bus)),
+        depends_on=["network", "network.buses"]
+    ) #Delegate("network")
 
 #    from_buses = Property(List(Bus), depends_on=["buses", "buses_items"])
 #
@@ -99,6 +112,14 @@ class Branch(HasTraits):
 #    rating_f = Float(50.0, desc="frequency rating (Hz)", label="f_{rating}")
 
     in_service = Bool(True, desc="connection status")
+
+    def _get_buses(self):
+        """ Property getter. """
+
+        if self.network is not None:
+            return self.network.buses
+        else:
+            return []
 
     # TransmissionLine --------------------------------------------------------
 
@@ -147,35 +168,27 @@ class Branch(HasTraits):
 
     # Derived from power flow routine:
     p_source = Float(
-        style="readonly",
-        desc="active power injected at the source bus"
+        style="readonly", desc="active power injected at the source bus"
     )
 
     p_target = Float(
-        style="readonly",
-        desc="active power injected at the target bus"
+        style="readonly", desc="active power injected at the target bus"
     )
 
     q_source = Float(
-        style="readonly",
-        desc="reactive power injected at the source bus"
+        style="readonly", desc="reactive power injected at the source bus"
     )
 
     q_target = Float(
-        style="readonly",
-        desc="reactive power injected at the target bus"
+        style="readonly", desc="reactive power injected at the target bus"
     )
 
     p_losses = Property(
-        Float,
-        style="readonly",
-        depends_on=["p_source", "p_target"]
+        Float, style="readonly", depends_on=["p_source", "p_target"]
     )
 
     q_losses = Property(
-        Float,
-        style="readonly",
-        depends_on=["q_source", "q_target"]
+        Float, style="readonly", depends_on=["q_source", "q_target"]
     )
 
     # Transformer -------------------------------------------------------------
@@ -261,21 +274,15 @@ class Branch(HasTraits):
     #  Initialise the object:
     #--------------------------------------------------------------------------
 
-#    def __init__(self, network=None, **traits):
-#        """
-#        Handle being instantiated from a table editor
-#
-#        """
-#
-#        if "__table_editor__" in traits:
-#            network = traits["__table_editor__"].object
-#            self.source_bus = network.buses[0]
-#            self.target_bus = network.buses[1]
-#            del traits["__table_editor__"]
-#
-#        self.network = network
-#
-#        super(BranchViewModel, self).__init__(network=network, **traits)
+    def __init__(self, source_bus, target_bus, **traits):
+        """ Returns a new Branch instance. """
+
+        self.source_bus = source_bus
+        self.target_bus = target_bus
+
+        super(Branch, self).__init__(
+            source_bus=source_bus, target_bus=target_bus, **traits
+        )
 
     #--------------------------------------------------------------------------
     #  "object" interface:

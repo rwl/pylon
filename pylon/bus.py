@@ -54,33 +54,10 @@ class Bus(HasTraits):
 
     name = String("v", desc="bus name")
 
-#    source_branches = List(
-#        Instance("pylon.branch.Branch"),
-#        desc="branches sourced from this bus"
-#    )
-#
-#    target_branches = List(
-#        Instance("pylon.branch.Branch"),
-#        desc="branches targeting this bus"
-#    )
-
     generators = List(Instance(Generator),
         desc="generators of PV type connected to the bus")
 
-    n_generators = Property(Int, desc="total number of generators at this bus",
-        depends_on=["generators"])
-
-#    has_generation = Property(
-#        Bool,
-#        desc="true if there is one or more Generator connected to the "
-#            "Bus and in-turn allows the Bus to become the slack bus",
-#        depends_on=["generators"]
-#    )
-
     loads = List(Instance(Load), desc="loads connected to the bus")
-
-    n_loads = Property(Int, desc="total number of loads at this bus",
-        depends_on=["loads"])
 
     mode = Property(Enum("PV", "PQ", "Slack", "Isolated"),
         desc="bus type as determined by the connected plant",
@@ -88,14 +65,6 @@ class Bus(HasTraits):
 
     q_limited = Bool(False, desc="true if any connected generators are "
         "at their limits of reactive power")
-
-#    slack = Property(
-#        Bool(
-#            False,
-#            desc="true if the bus is a slack bus",
-#            label="Slack bus"
-#        )
-#    )
 
     slack = Bool(False, desc="is the bus slack", label="Slack bus")
 
@@ -144,20 +113,6 @@ class Bus(HasTraits):
 
     q_lambda = Float(style="readonly")
 
-#    q_max = Property(
-#        Float,
-#        desc="maximum reactive power limit (PV) (p.u.)",
-#        depends_on=["generators_items", "generators.q"],
-#        label="Qmax"
-#    )
-#
-#    q_min = Property(
-#        Float,
-#        desc="minimum reactive power limit (PV) (p.u.)",
-#        depends_on=["generators_items, generators.q"],
-#        label="Qmin"
-#    )
-
     p_supply = Property(Float, desc="total real power supply (MW)",
         depends_on=["generators.p", "loads.p"], label="P (supply)")
 
@@ -181,59 +136,24 @@ class Bus(HasTraits):
     #--------------------------------------------------------------------------
 
     def _id_default(self):
-        """ Unique identifier initialiser """
+        """ Unique identifier initialiser. """
 
+        # FIXME: This is currently only used in the graph to name nodes.
         return self.name + "-#" + uuid.uuid4().hex[:6]
 
     #--------------------------------------------------------------------------
-    #  Suppress any attempt to make the Bus slack if there is no generation
-    #  attached
-    #--------------------------------------------------------------------------
-
-#    def _set_slack(self, value):
-#        if value is True:
-#            if self.n_generators == 0:
-#                print "Bus can not be made slack - no generation"
-#                return False
-#            else:
-#                return True
-#        else:
-#            return False
-#
-#
-#    @cached_property
-#    def _get_slack(self):
-#        return self.slack
-
-
-#    def _slack_changed(self, new):
-#        if new is True:
-#            if self.n_generators == 0:
-#                print "Bus can not be made slack - no generation"
-#                self.slack = False
-
-
-    def _get_n_generators(self):
-        """ Property getter """
-
-        return len(self.generators)
-
-
-    def _get_n_loads(self):
-        """ Property getter """
-
-        return len(self.loads)
-
-    #--------------------------------------------------------------------------
-    #  Maintain an indication of any connected generators being at the reactive
-    #  power limit:
+    #  Indicate if the bus is at its reactive power limit:
     #--------------------------------------------------------------------------
 
     def _q_limited_changed_for_generators(self, obj, name, old, new):
-        print "Q-limited changed", obj, name, old, new
+        """ Indicates if any generators are at their reactive power limit. """
+
         limited_generators = [g for g in self.generators if g.q_limited]
-        if len(limited_generators) > 0: self.q_limited = True
-        else: self.q_limited = False
+
+        if len(limited_generators) > 0:
+            self.q_limited = True
+        else:
+            self.q_limited = False
 
     #--------------------------------------------------------------------------
     #  Maintain an indicator of the mode in which the bus is:
@@ -244,32 +164,29 @@ class Bus(HasTraits):
 
         if self.slack:
             return "Slack"
-        elif len(self.generators) > 0 and not self.q_limited:
+        elif (len(self.generators) > 0) and (not self.q_limited):
             return "PV"
         else:
             return "PQ"
 
+    #--------------------------------------------------------------------------
+    #  Power property getters:
+    #--------------------------------------------------------------------------
 
     def _get_p_supply(self):
         """ Property getter """
 
-        p_supply = 0
+        p_supply = [g.p for g in self.generators]
 
-        for g in self.generators:
-            p_supply += g.p
-
-        return p_supply
+        return sum(p_supply)
 
 
     def _get_p_demand(self):
         """ Property getter """
 
-        p_demand = 0
+        p_demand = [l.p for l in self.loads]
 
-        for l in self.loads:
-            p_demand += l.p
-
-        return p_demand
+        return sum(p_demand)
 
 
     def _get_p_surplus(self):
@@ -281,39 +198,22 @@ class Bus(HasTraits):
     def _get_q_supply(self):
         """ Property getter """
 
-        q_supply = 0
+        q_supply = [g.q for g in self.generators]
 
-        for g in self.generators:
-            q_supply += g.q
-
-        return q_supply
+        return sum(q_supply)
 
 
     def _get_q_demand(self):
         """ Property getter """
 
-        q_demand = 0
+        q_demand = [l.q for l in self.loads]
 
-        for l in self.loads:
-            q_demand += l.q
-
-        return q_demand
+        return sum(q_demand)
 
 
     def _get_q_surplus(self):
         """ Property getter """
 
         return self.q_supply - self.q_demand
-
-    #--------------------------------------------------------------------------
-    #  Public interface:
-    #--------------------------------------------------------------------------
-
-    def add_generator(self, g):
-        self.generators.append(g)
-
-
-    def add_load(self, l):
-        self.loads.append(l)
 
 # EOF -------------------------------------------------------------------------

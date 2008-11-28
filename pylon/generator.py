@@ -489,7 +489,10 @@ class Generator(HasTraits):
     #--------------------------------------------------------------------------
 
     def _q_changed(self, new):
-        if new >= self.q_max or new <= self.q_min: self.q_limited = True
+        """ Indicates if at reactive power limit. """
+
+        if (new >= self.q_max) or (new <= self.q_min):
+            self.q_limited = True
 
     #--------------------------------------------------------------------------
     #  Property getters:
