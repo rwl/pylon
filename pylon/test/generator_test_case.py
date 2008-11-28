@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Copyright (C) 2007 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
@@ -13,69 +13,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
-"""
-Test case for the Generator class
+""" Test case for the Generator class. """
 
-"""
-
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Imports:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 from unittest import TestCase, main
 
-from pylon.generator import Generator
+from pylon.api import Generator
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  "GeneratorTest" class:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 class GeneratorTest(TestCase):
-    """
-    Test case for the Generator class
-
-    """
-
-    def setUp(self):
-        """
-        The test runner will execute this method prior to each test
-
-        """
-
-        self.g = Generator()
-
-
-    def test_id(self):
-        """
-        Test that the id attribute is unique
-
-        """
-
-        g2 = Generator()
-
-        self.assertNotEqual(
-            self.g.id, g2.id,
-            "IDs [%s, %s] of two generators found equal" %
-            (self.g.id, g2.id)
-        )
-
-        self.assertTrue(
-            len(self.g.id) > 6,
-            "ID [%s] of generator is of insufficient length" %
-            (self.l.id)
-        )
-
+    """ Test case for the Generator class. """
 
     def test_polynomial_cost(self):
-        """
-        Test the computation of cost arrays when using polynomial
-        cost curve coefficients
+        """ Test cost arrays for polynomial cost curve coefficients. """
 
-        """
-
-        self.g.cost_model = "Polynomial"
+        g = Generator(cost_model="Polynomial")
 
         p_max = 10
         p_min = 2
@@ -84,13 +44,32 @@ class GeneratorTest(TestCase):
         c2 = 0.06
         c3 = 0.006
 
-        self.g.p_max = p_max
-        self.g.p_min = p_min
-        self.g.polynomial = [c0, c1, c2, c3]
+        g.p_max = p_max
+        g.p_min = p_min
+        g.polynomial = [c0, c1, c2, c3]
 
-        self.validate_xdata(self.g.xdata)
+        # Validate x data.
+        xdata = g.xdata
 
-        ydata = self.g.ydata
+        self.assertTrue(
+            xdata.size > 1,
+            "xdata array not sufficiently long [%d]" % (xdata.size)
+        )
+
+        self.assertEqual(
+            xdata.max(), g.p_max,
+            "Max value of xdata [%d] should equal the maximum power [%d]" %
+            (xdata.max(), g.p_max)
+        )
+
+        self.assertEqual(
+            xdata.min(), g.p_min,
+            "Min value of xdata [%d] should equal the minimum power [%d]" %
+            (xdata.min(), g.p_min)
+        )
+
+        # Validate y data.
+        ydata = g.ydata
 
         # Final point
         y_final = c0 + c1*p_max + c2*p_max**2 + c3*p_max**3
@@ -110,13 +89,9 @@ class GeneratorTest(TestCase):
 
 
     def test_piecewise_linear_cost(self):
-        """
-        Test the computation of cost arrays when using piecewise
-        linear cost curve coordinates
+        """ Test cost arrays for piecewise linear cost curve coordinates. """
 
-        """
-
-        self.g.cost_model = "Piecewise Linear"
+        g = Generator(cost_model="Piecewise Linear")
 
         p_max = 10
         p_min = 2
@@ -124,28 +99,20 @@ class GeneratorTest(TestCase):
         p1 = (0.4, 0.6)
         p2 = (1.0, 1.2)
 
-        self.g.p_max = p_max
-        self.g.p_min = p_min
-        self.g.pw_linear = [p0, p1, p2]
+        g.p_max = p_max
+        g.p_min = p_min
+        g.pw_linear = [p0, p1, p2]
 
 
-    def validate_xdata(self, xdata):
-        self.assertTrue(
-            xdata.size > 1,
-            "xdata array not suitably long [%d]" % (xdata.size)
-        )
+    def test_id(self):
+        """ Test that the id attribute is unique and of suitable length. """
 
-        self.assertEqual(
-            xdata.max(), self.g.p_max,
-            "Max value of xdata [%d] should equal the maximum power [%d]" %
-            (xdata.max(), self.g.p_max)
-        )
+        g = Generator()
+        g2 = Generator()
 
-        self.assertEqual(
-            xdata.min(), self.g.p_min,
-            "Min value of xdata [%d] should equal the minimum power [%d]" %
-            (xdata.min(), self.g.p_min)
-        )
+        self.assertNotEqual(g.id, g2.id)
+
+        self.assertTrue(len(g.id) > 6)
 
 
 if __name__ == "__main__":

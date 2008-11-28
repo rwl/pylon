@@ -15,6 +15,12 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
+""" Test case for matrix cases. """
+
+#------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
 from unittest import TestCase
 
 from enthought.traits.api import HasTraits, Bool

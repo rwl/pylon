@@ -43,6 +43,7 @@ setup(
 #    package_dir={"": "src"},
     packages=find_packages(),#"src"),#exclude=["docs", "docs.*"]),
     namespace_packages=[],
+    test_suite = "pylon.test",
     platforms = ["Windows", "Linux", "Mac OS-X", "Unix", "Solaris"],
     zip_safe=False
 )
