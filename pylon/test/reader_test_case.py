@@ -15,10 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Parsing data files test cases.
-
-"""
+""" Data file parsing tests. """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -29,7 +26,7 @@ import os.path
 from unittest import TestCase, main
 
 from pylon.network import Network
-from pylon.readwrite.matpower_importer import read_matpower
+from pylon.readwrite.matpower_reader import read_matpower
 from pylon.readwrite.api import PSSEReader
 
 #-------------------------------------------------------------------------------
@@ -41,11 +38,11 @@ MATPOWER_DATA_FILE = "data/case6ww.m"
 PSSE_DATA_FILE = "data/ehv3.raw"
 
 #------------------------------------------------------------------------------
-#  "FilterTestCase" class:
+#  "ReaderTest" class:
 #------------------------------------------------------------------------------
 
-class FilterTestCase(TestCase):
-    """ Base class for many filter test cases """
+class ReaderTest(TestCase):
+    """ Base class for many reader test cases """
 
     filter = None
 
@@ -134,10 +131,10 @@ class FilterTestCase(TestCase):
 
 
 #------------------------------------------------------------------------------
-#  "MatpowerFilterTestCase" class:
+#  "MatpowerReaderTest" class:
 #------------------------------------------------------------------------------
 
-class MatpowerFilterTestCase(FilterTestCase):
+class MatpowerReaderTest(ReaderTest):
 
     def test_case6ww(self):
         """ Validate parsing of the case6ww.m file """
@@ -162,10 +159,10 @@ class MatpowerFilterTestCase(FilterTestCase):
         )
 
 #------------------------------------------------------------------------------
-#  "PSSEReaderTestCase" class:
+#  "PSSEReaderTest" class:
 #------------------------------------------------------------------------------
 
-#class PSSEReaderTestCase(FilterTestCase):
+#class PSSEReaderTest(FilterTestCase):
 #
 #    def test_ehv3(self):
 #        """

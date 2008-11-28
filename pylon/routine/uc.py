@@ -23,7 +23,7 @@
 
 import logging
 
-from cvxopt.base import matrix, print_options
+from cvxopt.base import matrix
 from cvxopt.modeling import variable, op, dot, sum
 
 from pylon.api import Network

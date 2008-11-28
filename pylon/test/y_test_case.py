@@ -34,10 +34,10 @@ from pylon.routine.y import make_susceptance
 DATA_FILE = join(dirname(__file__), "data/case6ww.m")
 
 #------------------------------------------------------------------------------
-#  "BTestCase" class:
+#  "BTest" class:
 #------------------------------------------------------------------------------
 
-class BTestCase(TestCase):
+class BTest(TestCase):
     """ Uses a MATPOWER data file and validates the results against those
     obtained from running the MATPOWER makeBdc.m scripts with the
     same data file. See filter_test_case.py for validation of MATPOWER data

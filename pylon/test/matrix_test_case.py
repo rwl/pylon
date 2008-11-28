@@ -47,10 +47,10 @@ class Foo(HasTraits):
         self.event_fired = True
 
 #------------------------------------------------------------------------------
-#  "MatrixTestCase" class
+#  "MatrixTest" class
 #------------------------------------------------------------------------------
 
-class MatrixTestCase(TestCase):
+class MatrixTest(TestCase):
     """ A test case for Matrix traits """
 
     def test_zero_to_one_element(self):
@@ -71,10 +71,10 @@ class MatrixTestCase(TestCase):
         return
 
 #------------------------------------------------------------------------------
-#  "SparseMatrixTestCase" class
+#  "SparseMatrixTest" class
 #------------------------------------------------------------------------------
 
-class SparseMatrixTestCase(TestCase):
+class SparseMatrixTest(TestCase):
     """ A test case for SparseMatrix traits """
 
     def test_assignment(self):

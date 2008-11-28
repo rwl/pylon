@@ -26,10 +26,10 @@ from unittest import TestCase
 from pylon.api import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
-#  "NetworkTestCase" class:
+#  "NetworkTest" class:
 #------------------------------------------------------------------------------
 
-class NetworkTestCase(TestCase):
+class NetworkTest(TestCase):
     """ Test cases for the Pylon network class. """
 
     network = Network()
