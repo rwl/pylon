@@ -15,10 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Network test case
-
-"""
+""" Network test case. """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -26,19 +23,14 @@ Network test case
 
 from unittest import TestCase
 
-from pylon.network import Network
-
-from pylon.infrastructure import Bus, Branch, Generator, Load
+from pylon.api import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  "NetworkTestCase" class:
 #------------------------------------------------------------------------------
 
 class NetworkTestCase(TestCase):
-    """
-    Test cases for the Pylon network class
-
-    """
+    """ Test cases for the Pylon network class. """
 
     network = Network()
 
