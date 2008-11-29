@@ -70,7 +70,7 @@ gen_pf_data_columns = [
 gen_pf_data_table = TableEditor(columns=gen_pf_data_columns, editable=False)
 
 how_many_group = VGroup(
-    ["n_buses", "n_generators", "committed_generators", "n_loads",
+    ["n_buses", "n_generators", "n_committed_generators", "n_loads",
     "n_fixed", "n_despatchable", "n_shunts", "n_branches", "n_transformers",
     "n_inter_ties", "n_areas"],
     label="How many?", show_border=True
@@ -119,7 +119,8 @@ pf_report_view = View(
         ),
         dock="tab"
     ),
-    style="readonly", title="Power flow report"
+    style="readonly", title="Power flow report",
+    buttons=["OK", "Help"]
 )
 
 #------------------------------------------------------------------------------
@@ -144,7 +145,8 @@ opf_report_view = View(
             Item(name="branches", editor=branch_data_table, show_label=False)
         )
     ),
-    style="readonly", title="Optimal power flow"
+    style="readonly", title="Optimal power flow",
+    buttons=["OK", "Help"]
 )
 
 if __name__ == "__main__":

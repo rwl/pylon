@@ -192,10 +192,28 @@ branch_action = Action(
     tooltip="Branch (Ctrl+R)"
 )
 
-dcopf_action = Action(
-    name="DC &OPF", accelerator="F12", action="dcopf",
+dcpf_action = Action(
+    name="&DC PF", accelerator="Ctrl+1", action="dcpf",
     image=ImageResource("blank.png", search_path=[ICON_LOCATION]),
-    tooltip="Run DC OPF (F12)"
+    tooltip="Run DC PF (Ctrl+1)"
+)
+
+dcopf_action = Action(
+    name="DC &OPF", accelerator="Ctrl+2", action="dcopf",
+    image=ImageResource("blank.png", search_path=[ICON_LOCATION]),
+    tooltip="Run DC OPF (Ctrl+2)"
+)
+
+acpf_action = Action(
+    name="AC &PF", accelerator="Ctrl+3", action="acpf",
+    image=ImageResource("blank.png", search_path=[ICON_LOCATION]),
+    tooltip="Run AC PF (Ctrl+3)"
+)
+
+acopf_action = Action(
+    name="AC OP&F", accelerator="Ctrl+4", action="acopf",
+    image=ImageResource("blank.png", search_path=[ICON_LOCATION]),
+    tooltip="Run DC OPF (Ctrl+4)"
 )
 
 #------------------------------------------------------------------------------
@@ -253,7 +271,10 @@ menubar = MenuBar(
     file_menu,
     Menu("|", UndoAction, RedoAction, name="&Edit"),
     view_menu,
-    Menu("|", dcopf_action, "_", bus_action, branch_action, name="&Network"),
+    Menu(
+        "|", dcpf_action, dcopf_action, acpf_action, acopf_action,
+        "_", bus_action, branch_action, name="&Network"
+    ),
 #    Menu(dot_action, name="&Graph"),
     Menu("|", HelpAction, "_", about_action, name="&Help"),
 )
