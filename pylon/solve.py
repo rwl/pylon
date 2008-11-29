@@ -25,6 +25,10 @@ import sys
 import logging
 from optparse import OptionParser
 
+from pylon.ui.model_view.swarm_mv import SwarmModelView
+from pylon.pyreto.api import MarketEnvironment
+from pyqle.api import Swarm
+
 from pylon.readwrite.api import \
     read_matpower, read_psat, read_psse, MATPOWERWriter, ReSTWriter
 
@@ -86,14 +90,18 @@ class Pylon:
     # File name of input.
     file_name = ""
 
+    # Configure traits with a portable graphical interface?
+    gui = False
+
     # Output format type.
     output_type = "rst"
 
     def __init__(self, type="any", routine="acpf", algorithm="newton",
-                 file_name="", output_type="rst"):
+                 file_name="", gui=False, output_type="rst"):
         self.routine = routine
         self.algorithm = algorithm
         self.file_name = file_name
+        self.gui = gui
         self.output_type = output_type
 
 
@@ -103,10 +111,17 @@ class Pylon:
 
         """
 
+        # Get the network from the input.
         n = self._get_network(input)
         if n is None:
             logger.critical("Unrecognised data file.")
             sys.exit(1)
+
+        if self.gui:
+            env = MarketEnvironment(network=n)
+            model = Swarm(environment=env)
+            mv = SwarmModelView(model=model)
+            mv.configure_traits()
 
 
         # Pass through routine.
@@ -127,17 +142,24 @@ class Pylon:
 
         success = r.solve()
 
-        # Solution output.
-        output_type = self.output_type
-
-        writer = None
-        if output_type == "matpower":
-            writer = MATPOWERWriter(n, output)
+        # Portable graphical interface to Pylon.
+        if self.gui:
+            env = MarketEnvironment(network=n)
+            model = Swarm(environment=env)
+            mv = SwarmModelView(model=model)
+            mv.configure_traits()
         else:
-            writer = ReSTWriter(n, output)
+            # Solution output.
+            output_type = self.output_type
 
-        if writer is not None:
-            writer.write()
+            writer = None
+            if output_type == "matpower":
+                writer = MATPOWERWriter(n, output)
+            else:
+                writer = ReSTWriter(n, output)
+
+            if writer is not None:
+                writer.write()
 
 
     def _get_network(self, input):
@@ -247,6 +269,9 @@ def main():
     "type to be used.  The types which are currently supported include: "
     "newton, gauss, decoupled.")
 
+    parser.add_option("-g", "--gui", action="store_true", default=False,
+        dest="gui", help="A portable graphical interface to Pylon.")
+
     parser.add_option("-T", "--output-type", dest="otype",
         metavar="OUTPUT_TYPE", default="rst", help="Indicates the output "
         "format type.  The type swhich are currently supported include: rst, "
@@ -301,7 +326,7 @@ def main():
 
 
     pylon = Pylon(type=options.type, routine=options.routine,
-        algorithm=options.algorithm, file_name=filename,
+        algorithm=options.algorithm, file_name=filename, gui=options.gui,
         output_type=options.type)
     pylon.solve(input=infile, output=outfile)
 
