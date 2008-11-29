@@ -45,17 +45,29 @@ from enthought.naming.unique_name import make_unique_name
 from enthought.logger.api import add_log_queue_handler
 from enthought.logger.log_queue_handler import LogQueueHandler
 
-from pylon.api import Network, Bus, Branch
-from pylon.routine.api import DCPFRoutine, DCOPFRoutine
+#------------------------------------------------------------------------------
+#  Local imports:
+#------------------------------------------------------------------------------
 
 from pylon.readwrite.api import \
     MATPOWERReader, PSSEReader, PSATReader, MATPOWERWriter
+
+from pylon.api import Network, Bus, Branch
+
+from pylon.routine.api import \
+    DCPFRoutine, DCOPFRoutine, ACPFRoutine, ACOPFRoutine
+
+from pylon.ui.routine.dc_pf_view_model import DCPFViewModel
+from pylon.ui.routine.dc_opf_view_model import DCOPFViewModel
+from pylon.ui.routine.ac_pf_view_model import ACPFViewModel
+from pylon.ui.routine.ac_opf_view_model import ACOPFViewModel
 
 from pylon.ui.network_tree import network_tree_editor
 from pylon.ui.graph.graph_image import GraphImage
 from pylon.ui.graph.graph_editor import GraphEditor
 from pylon.ui.graph.graph import Graph
 from pylon.ui.about_view import about_view
+from pylon.ui.report_view import pf_report_view, opf_report_view
 
 from pyrenees.map import Map
 from pyrenees.layer.osm import OSM
@@ -354,9 +366,8 @@ class SwarmModelView(ModelView):
     def _import_data_file(self, parent, filter):
         """ Imports a data file using a filter """
 
-        retval = self.edit_traits(
-            parent=parent, view="file_view", kind="livemodal"
-        )
+        retval = self.edit_traits(parent=info.ui.control, view="file_view",
+            kind="livemodal")
 
         if retval.result:
             self.model.environment.network = filter.parse_file(self.file)
@@ -366,21 +377,36 @@ class SwarmModelView(ModelView):
         """ Handles importing MATPOWER data files """
 
         if info.initialized:
-            self._import_data_file(info.ui.control, MATPOWERReader())
+            retval = self.edit_traits(parent=info.ui.control, view="file_view",
+                kind="livemodal")
+
+            if retval.result:
+                reader = MATPOWERReader(self.file)
+                self.model.environment.network = reader.network
 
 
     def import_psse(self, info):
         """ Handles importing PSS/E data files """
 
         if info.initialized:
-            self._import_data_file(info.ui.control, PSSEReader())
+            retval = self.edit_traits(parent=info.ui.control, view="file_view",
+                kind="livemodal")
+
+            if retval.result:
+                reader = PSSEReader(self.file)
+                self.model.environment.network = reader.network
 
 
     def import_psat(self, info):
         """ Handles importing PSAT data files """
 
         if info.initialized:
-            self._import_data_file(info.ui.control, PSATReader())
+            retval = self.edit_traits(parent=info.ui.control, view="file_view",
+                kind="livemodal")
+
+            if retval.result:
+                reader = PSATReader(self.file)
+                self.model.environment.network = reader.network
 
 
     def _export_network(self, parent, filter):
@@ -477,13 +503,56 @@ class SwarmModelView(ModelView):
                 n.branches.remove(branch)
 
 
+    def dcpf(self, info):
+        """ Runs the model using a DC Power Flow routine. """
+
+        n = self.model.environment.network
+
+        vm = DCPFViewModel(network=n)
+        retval = vm.edit_traits(parent=info.ui.control, kind="livemodal")
+
+        if retval.result:
+            n.edit_traits(view=pf_report_view, parent=info.ui.control,
+                kind="livemodal")
+
+
     def dcopf(self, info):
-        """ Runs the model using a DC OPF routine """
+        """ Runs the model using a DC OPF routine. """
 
-        routine = DCOPFRoutine(network=self.model.environment.network)
-        routine.edit_traits(parent=info.ui.control, kind="livemodal")
+        n = self.model.environment.network
 
-        del routine
+        vm = DCOPFViewModel(network=n)
+        retval = vm.edit_traits(parent=info.ui.control, kind="livemodal")
+
+        if retval.result:
+            n.edit_traits(view=opf_report_view, parent=info.ui.control,
+                kind="livemodal")
+
+
+    def acpf(self, info):
+        """ Runs the model using a DC Power Flow routine. """
+
+        n = self.model.environment.network
+
+        vm = ACPFViewModel(network=n)
+        retval = vm.edit_traits(parent=info.ui.control, kind="livemodal")
+
+        if retval.result:
+            n.edit_traits(view=pf_report_view, parent=info.ui.control,
+                kind="livemodal")
+
+
+    def acopf(self, info):
+        """ Runs the model using a AC OPF routine. """
+
+        n = self.model.environment.network
+
+        vm = ACOPFViewModel(network=n)
+        retval = vm.edit_traits(parent=info.ui.control, kind="livemodal")
+
+        if retval.result:
+            n.edit_traits(view=opf_report_view, parent=info.ui.control,
+                kind="livemodal")
 
 
     def about(self, info):
