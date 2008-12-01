@@ -60,10 +60,7 @@ class BTest(TestCase):
 
 
     def test_susceptance(self):
-        """ The routine is a method class so we have only one test. In this
-        test we validate each stage of the computation.
-
-        """
+        """ Test the values of the susceptance matrix. """
 
         B, B_source = make_susceptance(self.network)
         self._validate_susceptance_diagonal_values(B)

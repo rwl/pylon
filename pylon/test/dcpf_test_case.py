@@ -54,6 +54,12 @@ class DCPFTest(TestCase):
 
         network = read_matpower(DATA_FILE)
         self.routine = DCPFRoutine(network)
+        self.routine.solve()
+
+
+#    def setUp(self):
+#        network = read_matpower(DATA_FILE)
+#        self.routine = DCPFRoutine(network)
 
 
     def test_v_phase_guess_vector(self):
@@ -93,8 +99,8 @@ class DCPFTest(TestCase):
         self.assertAlmostEqual(vp_5, v_phase[5], places)
 
 
-    def test_model_update(self):
-        """ Test that the model has been updated appropriately
+    def test_model_results(self):
+        """ Test update of the model with results.
 
         v_amplitude =
 
