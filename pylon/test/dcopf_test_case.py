@@ -464,6 +464,47 @@ class DCOPFTest(TestCase):
         self.assertAlmostEqual(c[7], c_7, places)
         self.assertAlmostEqual(c[8], c_8, places)
 
+
+    def test_solver_output(self):
+        """ Test the output from the solver.
+
+        x =
+
+                 0
+           -0.0052
+           -0.0049
+           -0.0521
+           -0.0640
+           -0.0539
+            0.5000
+            0.8807
+            0.7193
+
+        """
+
+        x = self.routine.x
+
+        places = 4
+
+        x_0 = 0.0000 # Va_ref
+        x_2 = -0.0049
+        x_5 = -0.0539
+        x_6 = 0.5000 # Pg[0]
+        x_7 = 0.8807
+
+        self.assertEqual(x.size, (9, 1))
+        self.assertAlmostEqual(x[0], x_0, places)
+        self.assertAlmostEqual(x[2], x_2, places)
+        self.assertAlmostEqual(x[5], x_5, places)
+        self.assertAlmostEqual(x[6], x_6, places)
+        self.assertAlmostEqual(x[7], x_7, places)
+
+
+    def test_model_update(self):
+        """ Test update of the model with the results. """
+
+        pass
+
 if __name__ == "__main__":
     main()
 
