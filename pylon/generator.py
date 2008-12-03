@@ -27,7 +27,7 @@ from numpy import linspace, pi, array, power
 
 from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Bool, Range, \
-    Property, Enum, Any, Delegate, Tuple, Array, cached_property
+    Property, Enum, Any, Delegate, Tuple, Array, ReadOnly, cached_property
 
 from pylon.traits import ConvexPiecewise
 from pylon.ui.generator_view import generator_view
@@ -74,19 +74,21 @@ class Generator(HasTraits):
 #
 #    rating_v = Float(desc="voltage rating kV (p.u.)")
 
+    v_amplitude = Float(desc="voltage amplitude setpoint (PV) (p.u.)")
+
+#    v_max = Float(desc="maximum voltage (p.u.)")
+#
+#    v_min = Float(desc="minimum voltage (p.u.)")
+
     p = Float(1.0, desc="active power (p.u.)")
 
     p_max = Float(5.0, desc="maximum real power output (p.u.)")
 
     p_min = Float(0.0, desc="minimum real power output (p.u.)")
 
-    v_amplitude = Float(desc="voltage amplitude setpoint (PV) (p.u.)")
+    mu_p_max = Float(style="readonly")
 
-#    v_max = Float(desc="maximum voltage (p.u.)")
-#
-#    v_min = Float(desc="minimum voltage (p.u.)")
-#
-#    zeta = Float(desc="loss participation coefficient")
+    mu_p_min = Float(style="readonly")
 
     q = Float(0.0, style='readonly', desc="reactive power output (p.u.)")
 
@@ -96,7 +98,13 @@ class Generator(HasTraits):
 
     q_limited = Bool(False, desc="true if generator at reactive power limit")
 
+    mu_q_max = Float(style="readonly")
+
+    mu_q_min = Float(style="readonly")
+
 #    z = Bool(desc="allow conversion to impedance (PQ) (p.u.)")
+#
+#    zeta = Float(desc="loss participation coefficient")
 
     in_service = Bool(True, desc="connection status")
 

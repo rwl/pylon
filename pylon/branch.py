@@ -191,6 +191,10 @@ class Branch(HasTraits):
         Float, style="readonly", depends_on=["q_source", "q_target"]
     )
 
+    mu_s_source = Float(style="readonly", desc="|S_source| mu")
+
+    mu_s_target = Float(style="readonly", desc="|S_target| mu")
+
     # Transformer -------------------------------------------------------------
 
     ratio = Float(desc="transformer off nominal turns ratio ( = 0 for lines ) "

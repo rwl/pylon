@@ -109,10 +109,6 @@ class Bus(HasTraits):
 
     zone = Int(1, desc="loss zone")
 
-    p_lambda = Float(style="readonly")
-
-    q_lambda = Float(style="readonly")
-
     p_supply = Property(Float, desc="total real power supply (MW)",
         depends_on=["generators.p", "loads.p"], label="P (supply)")
 
@@ -130,6 +126,15 @@ class Bus(HasTraits):
 
     q_surplus = Property(Float, desc="local reactive power difference",
         depends_on=["q_supply", "q_demand"], label="Q (surplus)")
+
+    # Lambda's and mu's
+    p_lambda = Float(style="readonly", desc="Lambda (£/MWh)")
+
+    q_lambda = Float(style="readonly", desc="Lambda (£/MVAr-hr)")
+
+    mu_v_min = Float(style="readonly")
+
+    mu_v_max = Float(style="readonly")
 
     #--------------------------------------------------------------------------
     #  Generate unique identifier:
