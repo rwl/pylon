@@ -525,7 +525,7 @@ class DCOPFRoutine:
         self._aa_generation = a_limit
 
 
-        b_lower = matrix([g.p_min for g in generators])
+        b_lower = matrix([-g.p_min for g in generators])
 
         b_upper = matrix([g.p_max for g in generators])
 
