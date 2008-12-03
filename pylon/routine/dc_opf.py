@@ -769,14 +769,24 @@ class DCOPFRoutine:
 
         logger.debug("Quadratic solver returned:%s" % solution)
 
+        print "S:", solution["s"]
+        print "Y:", solution["y"]
+        print "Z:", solution["z"]
+
         self.x = solution["x"]
 
         return solution
 
 
     def _update_solution_data(self, solution):
+        """ Sets bus voltages angles, generator output powers and branch
+        power flows using the solution.
 
+        """
+
+        base_mva = self.network.mva_base
         buses = self.network.non_islanded_buses
+        branches = self.network.in_service_branches
         generators = self.network.in_service_generators
         n_buses = self.network.n_non_islanded_buses
         n_generators = self.network.n_in_service_generators
@@ -786,20 +796,27 @@ class DCOPFRoutine:
 #        print "Solution y:\n", solution["y"]
 #        print "Solution z:\n", solution["z"]
 
+        # Bus voltage angles.
         v_phase = solution["x"][:n_buses]
-
 #        print "Vphase:", v_phase
-
         for i, bus in enumerate(buses):
             bus.v_amplitude = 1.0
             bus.v_phase = v_phase[i]
 
+        # Generator real power output.
         p = solution["x"][n_buses:n_buses+n_generators]
-
 #        print "Pg:", p
-
         for i, generator in enumerate(generators):
             generator.p = p[i]
+
+        # Branch power flows.
+        p_source = self._B_source * v_phase * base_mva
+        p_target = -p_source
+        for j, branch in enumerate(branches):
+            branch.p_source = p_source[j]
+            branch.p_target = p_target[j]
+            branch.q_source = 0.0
+            branch.q_target = 0.0
 
 #------------------------------------------------------------------------------
 #  Standalone call:
@@ -819,6 +836,7 @@ if __name__ == "__main__":
     n = read_matpower(data_file)
 
     dc_opf = DCOPFRoutine(network=n)
+    dc_opf.solve()
 #    dc_opf.configure_traits()
 
 
