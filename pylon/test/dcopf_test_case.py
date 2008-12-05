@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #-------------------------------------------------------------------------------
 
-""" Test case for the DC Optimal Power Flow routine """
+""" Test case for the DC Optimal Power Flow routine. """
 
 #-------------------------------------------------------------------------------
 #  Imports:
@@ -40,16 +40,14 @@ DATA_FILE = join(dirname(__file__), "data/case6ww.m")
 class DCOPFTest(TestCase):
     """ We use a MATPOWER data file and validate the results against those
     obtained from running the MATPOWER rundcopf.m script with the same data
-    file. See filter_test_case.py for validation of MATPOWER data file parsing.
+    file. See reader_test_case.py for validation of MATPOWER data file parsing.
 
     """
 
     routine = DCOPFRoutine
 
-    def __init__(self, *args, **kw):
-        """ Returns a new DCPFTest instance """
-
-        TestCase.__init__(self, *args, **kw)
+    def setUp(self):
+        """ The test runner will execute this method prior to each test. """
 
         network = read_matpower(DATA_FILE)
         self.routine = DCOPFRoutine(network)
@@ -57,8 +55,8 @@ class DCOPFTest(TestCase):
 
 
     def test_theta_injection_source(self):
-        """ Tests computation of the phase shift 'quiescent' injections, used
-        for calculating branch real power flows at the from end.
+        """ Test phase shift 'quiescent' injections, used for calculating
+        branch real power flows at the from end.
 
         Pfinj =
 
@@ -85,7 +83,7 @@ class DCOPFTest(TestCase):
 
 
     def test_theta_injection_bus(self):
-        """ Tests phase shift injection vector used for bus real power
+        """ Test phase shift injection vector used for bus real power
         injection calcualtion.
 
         Pbusinj =
@@ -108,16 +106,13 @@ class DCOPFTest(TestCase):
 
 
     def test_cost_model(self):
-        """ Tests selection of a quadratic solver if polynomial cost models
-        are used.
-
-        """
+        """ Test selection of quadratic solver for polynomial cost model. """
 
         self.assertEqual(self.routine._solver_type, "quadratic")
 
 
     def test_x_vector(self):
-        """ Tests the the x vector where AA * x <= bb.
+        """ Test the the x vector where AA * x <= bb.
 
         x =
 

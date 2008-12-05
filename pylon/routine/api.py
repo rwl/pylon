@@ -34,6 +34,6 @@ from pylon.routine.ac_opf import ACOPFRoutine
 from pylon.routine.spf import SPFRoutine
 from pylon.routine.uc import UnitCommitmentRoutine
 
-from y import SusceptanceMatrix
+from y import make_susceptance_matrix, make_admittance_matrix
 
 # EOF -------------------------------------------------------------------------

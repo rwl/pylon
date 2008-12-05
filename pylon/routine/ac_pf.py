@@ -37,13 +37,7 @@ from cvxopt.base import matrix, spmatrix, sparse, gemv
 from cvxopt.umfpack import linsolve
 import cvxopt.blas
 
-from pylon.routine.y import SimpleAdmittanceMatrix
-
-#------------------------------------------------------------------------------
-#  Constants:
-#------------------------------------------------------------------------------
-
-ICON_LOCATION = path.join(path.dirname(__file__), "icons")
+from pylon.routine.y import make_admittance_matrix
 
 #------------------------------------------------------------------------------
 #  "ACPFRoutine" class:
@@ -82,6 +76,15 @@ class ACPFRoutine:
 
     # Apparent power demand at each node:
     apparent_demand = matrix
+
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __init__(self, network):
+        """ Returns a new ACPFRoutine instance """
+
+        self.network = network
 
     #--------------------------------------------------------------------------
     #  Solve power flow:
@@ -328,6 +331,7 @@ class ACPFRoutine:
 if __name__ == "__main__":
     import sys
     import logging
+    from os.path import join, dirname
     from pylon.readwrite.api import PSATReader
 
     logger = logging.getLogger()
@@ -335,7 +339,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
     filter = PSATReader()
-    data_file = "/home/rwl/python/aes/psat_20080214/src/rwl_003_opf_mdl.m"
+    data_file = join(dirname(__file__), "../test/data/case6ww.m")
     n = filter.parse_file(data_file)
 
     routine = ACPFRoutine(network=n)

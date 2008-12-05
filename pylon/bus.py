@@ -128,9 +128,9 @@ class Bus(HasTraits):
         depends_on=["q_supply", "q_demand"], label="Q (surplus)")
 
     # Lambda's and mu's
-    p_lambda = Float(style="readonly", desc="Lambda (£/MWh)")
+    p_lambda = Float(style="readonly", desc="Lambda (GBP/MWh)")
 
-    q_lambda = Float(style="readonly", desc="Lambda (£/MVAr-hr)")
+    q_lambda = Float(style="readonly", desc="Lambda (GBP/MVAr-hr)")
 
     mu_v_min = Float(style="readonly")
 

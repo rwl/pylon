@@ -35,7 +35,7 @@ from math import pi
 from cvxopt.base import matrix, spmatrix, sparse
 from cvxopt.umfpack import linsolve
 
-from pylon.routine.y import make_susceptance
+from pylon.routine.y import make_susceptance_matrix
 from pylon.network import Network
 #from pylon.pypylon import Network
 
@@ -97,7 +97,7 @@ class DCPFRoutine:
             logger.error("DC power flow requires a single slack bus")
             return False
         else:
-            self.B, self.B_source = make_susceptance(self.network)
+            self.B, self.B_source = make_susceptance_matrix(self.network)
             self._make_v_phase_guess_vector()
             self._make_v_phase_vector()
             self._update_model()
