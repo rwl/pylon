@@ -37,7 +37,7 @@ from cvxopt.umfpack import linsolve
 from cvxopt.solvers import qp
 
 from pylon.api import Network
-from pylon.routine.y import make_susceptance
+from pylon.routine.y import make_susceptance_matrix
 from pylon.traits import Matrix, SparseMatrix
 
 #------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ class DCOPFRoutine:
 
         solution = None
 
-        self._B, self._B_source = make_susceptance(self.network)
+        self._B, self._B_source = make_susceptance_matrix(self.network)
         self._build_theta_inj_source()
         self._build_theta_inj_bus()
         self._check_cost_model_consistency()
@@ -824,6 +824,7 @@ class DCOPFRoutine:
 
 if __name__ == "__main__":
     import sys
+    from os.path import join, dirname
     from pylon.readwrite.api import read_matpower
 
     import logging
@@ -831,8 +832,7 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-#    data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
-    data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
+    data_file = join(dirname(__file__), "../test/data/case6ww.m")
     n = read_matpower(data_file)
 
     dc_opf = DCOPFRoutine(network=n)

@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines classes for the computation of admittance matrices """
+""" Defines functions returning admittance and susceptance matrices. """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -32,7 +32,11 @@ from cvxopt.base import matrix, spmatrix, sparse
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-def make_susceptance(network):
+#------------------------------------------------------------------------------
+#  "make_susceptance_matrix" function:
+#------------------------------------------------------------------------------
+
+def make_susceptance_matrix(network):
     """ Returns the susceptance and source bus susceptance matrices for the
     given network.
 
@@ -89,6 +93,49 @@ def make_susceptance(network):
     logger.debug("Built source bus susceptance matrix:\n%s" % b_source)
 
     return b, b_source
+
+#------------------------------------------------------------------------------
+#  "make_admittance_matrix" function:
+#------------------------------------------------------------------------------
+
+def make_admittance_matrix(network):
+    """ Returns an admittance matrix for the supplied network. """
+
+    buses = network.non_islanded_buses
+    n_buses = network.n_non_islanded_buses
+    branches = network.in_service_branches
+
+    Y = spmatrix([], [], [], size=(n_buses, n_buses), tc="z")
+
+    for br in branches:
+        src_idx = buses.index(br.source_bus)
+        dst_idx = buses.index(br.target_bus)
+        # y = 1/(R+jX) + (G+jB)/2
+        # The conductance (G) is considered negligble
+        try:
+            y = 1/(complex(br.r, br.x))
+        except ZeroDivisionError:
+#            print 'WW: zero division'
+            # if the branch has zero resistance and reactance then
+            # the admittance is infinite
+            y = 1e10
+#        print 'y', y
+        chrg = complex(0, br.b)/2
+        # off-diagonal matrix elements (i,j) are the negative
+        # admittance of branches between buses[i] and buses[j]
+
+        # TODO: find out why the shunt admittance is not added
+        # to off-diagonal elements.
+        Y[src_idx, dst_idx] += -y
+        Y[dst_idx, src_idx] += -y
+        # diagonal matrix elements (k,k) are the sum of the
+        # admittances of the branches connected to buses[k]
+        Y[src_idx, src_idx] += y + chrg
+        Y[dst_idx, dst_idx] += y + chrg
+
+        # TODO: investigate why the imaginary componenets of the admittance
+        # matrix are slightly different to this from MATPOWER
+    return Y
 
 #------------------------------------------------------------------------------
 #  "SusceptanceMatrix" class:
@@ -242,48 +289,5 @@ class PSATAdmittanceMatrix:
             y[target_idx, target_idx] += z*ts2+charge
 
         return y
-
-#------------------------------------------------------------------------------
-#  "SimpleAdmittanceMatrix" class:
-#------------------------------------------------------------------------------
-
-class SimpleAdmittanceMatrix:
-
-    def build(self, network):
-        buses = network.non_islanded_buses
-        n_buses = network.n_non_islanded_buses
-        branches = network.in_service_branches
-
-        Y = spmatrix([], [], [], size=(n_buses, n_buses), tc="z")
-
-        for br in branches:
-            src_idx = buses.index(br.source_bus)
-            dst_idx = buses.index(br.target_bus)
-            # y = 1/(R+jX) + (G+jB)/2
-            # The conductance (G) is considered negligble
-            try:
-                y = 1/(complex(br.r, br.x))
-            except ZeroDivisionError:
-                print 'WW: zero division'
-                # if the branch has zero resistance and reactance then
-                # the admittance is infinite
-                y = 1e10
-            print 'y', y
-            chrg = complex(0, br.b)/2
-            # off-diagonal matrix elements (i,j) are the negative
-            # admittance of branches between buses[i] and buses[j]
-
-            # TODO: find out why the shunt admittance is not added
-            # to off-diagonal elements.
-            Y[src_idx, dst_idx] += -y
-            Y[dst_idx, src_idx] += -y
-            # diagonal matrix elements (k,k) are the sum of the
-            # admittances of the branches connected to buses[k]
-            Y[src_idx, src_idx] += y + chrg
-            Y[dst_idx, dst_idx] += y + chrg
-
-            # TODO: investigate why the imaginary componenets of the admittance
-            # matrix are slightly different to this from MATPOWER
-        return Y
 
 # EOF -------------------------------------------------------------------------
