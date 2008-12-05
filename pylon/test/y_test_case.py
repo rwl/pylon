@@ -87,9 +87,9 @@ class YTest(TestCase):
         Y_2_2 = 4.1557-16.5673j
         Y_5_5 = 4.4821-17.0047j
 
-        self.assertAlmostEqual(Y[0, 0], Y_0_0, places)
-        self.assertAlmostEqual(Y[2, 2], Y_2_2, places)
-        self.assertAlmostEqual(Y[5, 5], Y_5_5, places)
+        self.assertAlmostEqual(abs(Y[0, 0]), abs(Y_0_0), places)
+        self.assertAlmostEqual(abs(Y[2, 2]), abs(Y_2_2), places)
+        self.assertAlmostEqual(abs(Y[5, 5]), abs(Y_5_5), places)
 
 
     def _validate_off_diagonal_values(self, Y):
@@ -98,7 +98,26 @@ class YTest(TestCase):
 
         """
 
-        pass
+        places = 4
+
+        Y_2_0 = 0.0000
+        Y_4_1 = -1.0000+3.0000j
+        Y_2_5 = -1.9231+9.6154j
+
+        self.assertAlmostEqual(abs(Y[2, 0]), abs(Y_2_0), places)
+        self.assertAlmostEqual(abs(Y[4, 1]), abs(Y_4_1), places)
+        self.assertAlmostEqual(abs(Y[2, 5]), abs(Y_2_5), places)
+
+
+    def _validate_off_diagonal_equality(self, Y):
+        """ Validate that elements [i, j] and [j, i] are equal """
+
+        w, h = Y.size
+
+        for i in range(w):
+            for j in range(h):
+                if (i != j) and (i < j):
+                    self.assertEqual(abs(Y[i, j]), abs(Y[j, i]))
 
 #------------------------------------------------------------------------------
 #  "BTest" class:
