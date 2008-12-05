@@ -28,12 +28,15 @@ References:
 #------------------------------------------------------------------------------
 
 from os import path
+import math
 import cmath
 
 import numpy
 from numpy import dot
 
-from cvxopt.base import matrix, spmatrix, sparse, gemv
+from cvxopt.base import matrix, spmatrix, sparse, gemv, exp, mul, div
+from cvxopt.base import abs as cvxabs
+
 from cvxopt.umfpack import linsolve
 import cvxopt.blas
 
@@ -56,26 +59,26 @@ class ACPFRoutine:
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    # Flag indicating if the solution converged:
-    converged = False
-
     # Convergence tolerance
     tolerance = 1e-08
 
     # Maximum number of iterations:
-    maximum_iterations = 10
+    iter_max = 10
 
     # The initial bus voltages:
-    initial_voltage = matrix
+    v_initial = matrix
 
     # Sparse admittance matrix:
-    admittance = spmatrix
+    Y = spmatrix
 
     # Apparent power supply at each node:
-    apparent_supply = matrix
+    s_supply = matrix
 
     # Apparent power demand at each node:
-    apparent_demand = matrix
+    s_demand = matrix
+
+    # Flag indicating if the solution converged:
+    converged = False
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -91,31 +94,43 @@ class ACPFRoutine:
     #--------------------------------------------------------------------------
 
     def solve(self):
-        sam = SimpleAdmittanceMatrix()
-        self.admittance = sam.build(self.network)
-        self.initial_voltage = self._get_initial_voltage_vector()
-#        self.apparent_supply = self._get_apparent_supply_vector()
-#        self.apparent_demand = self._get_apparent_demand_vector()
-        self.apparent = self._get_apparent_power_vector()
-        print 'Apparent', self.apparent
+        self.admittance = make_admittance_matrix(self.network)
+        self._make_initial_voltage_vector()
+#        self._make_apparent_power_vector()
 
-        self.iterate()
+#        self.iterate()
 
     #--------------------------------------------------------------------------
     #  Form array of initial voltages at each node:
     #--------------------------------------------------------------------------
 
-    def _get_initial_voltage_vector(self):
-        j = cmath.sqrt(-1)
-        Vm0 = numpy.ones(len(self.network.buses))
-        Va0 = numpy.zeros(len(self.network.buses)) #degrees
+    def _make_initial_voltage_vector(self):
+        """ Makes the initial vector of complex bus voltages.  The bus voltage
+        vector contains the set point for generator (including ref bus) buses,
+        and the reference angle of the swing bus, as well as an initial guess
+        for remaining magnitudes and angles.
 
-        Vm0[1] = 1.02
-        Va0[1] = 0.1
+        """
 
-        # convert to radians
-        Va0d = (Va0 * cmath.pi) / 180
-        return matrix((Vm0 * numpy.exp(j * Va0d)), tc='z')
+        j = 0+1j #cmath.sqrt(-1)
+        pi = math.pi
+        buses = self.network.non_islanded_buses
+
+        Vm0 = matrix([bus.v_amplitude_guess for bus in buses], tc='z')
+        Va0 = matrix([bus.v_phase_guess for bus in buses]) #degrees
+
+        Va0r = Va0 * pi / 180 #convert to radians
+
+        v_initial = mul(Vm0, exp(j * Va0r)) #element-wise product
+
+        for i, bus in enumerate(buses):
+            if len(bus.generators) > 0:
+                # FIXME: Handle more than one generator at a bus
+                g = bus.generators[0]
+                v = mul(abs(v_initial[i]), v_initial[i])
+                v_initial[i] = div(g.v_amplitude, v)
+
+        # V0(gbus) = gen(on, VG) ./ abs(V0(gbus)).* V0(gbus);
 
     #--------------------------------------------------------------------------
     #  Evaluate Jacobian:
@@ -125,7 +140,7 @@ class ACPFRoutine:
         Y = self.admittance
         print 'Ybus', Y
 
-        j = cmath.sqrt(-1)
+        j = math.sqrt(-1)
 
         print 'voltage', voltage
 
@@ -169,7 +184,7 @@ class ACPFRoutine:
         buses = self.network.buses
         n_buses = len(buses)
 
-        j = cmath.sqrt(-1)
+        j = math.sqrt(-1)
 
         voltage = self.initial_voltage
         Vm = matrix(numpy.abs(voltage), tc='d')
@@ -332,16 +347,15 @@ if __name__ == "__main__":
     import sys
     import logging
     from os.path import join, dirname
-    from pylon.readwrite.api import PSATReader
+    from pylon.readwrite.api import read_matpower
 
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    filter = PSATReader()
     data_file = join(dirname(__file__), "../test/data/case6ww.m")
-    n = filter.parse_file(data_file)
+    n = read_matpower(data_file)
 
-    routine = ACPFRoutine(network=n)
+    routine = ACPFRoutine(n).solve()
 
 # EOF -------------------------------------------------------------------------

@@ -53,4 +53,33 @@ class ACOPFTest(TestCase):
         self.routine = ACPFRoutine(network)
         self.routine.solve()
 
+
+    def test_voltage_vector(self):
+        """ Test the initial vector of complex bus voltages.
+
+        V0 =
+
+            1.0500
+            1.0500
+            1.0700
+            1.0000
+            1.0000
+            1.0000
+
+        """
+
+        v_initial = self.routine.v_initial
+
+        self.assertEqual(v_initial.size, (6, 1))
+
+        places = 4
+
+        v0_0 = 1.0500
+        v0_2 = 1.0700
+        v0_5 = 1.0000
+
+        self.assertAlmostEqual(abs(v_initial[0]), v0_0, places)
+        self.assertAlmostEqual(abs(v_initial[2]), v0_2, places)
+        self.assertAlmostEqual(abs(v_initial[5]), v0_5, places)
+
 # EOF -------------------------------------------------------------------------
