@@ -24,14 +24,81 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.readwrite.api import MATPOWERReader
-from pylon.routine.y import make_susceptance
+from pylon.readwrite.api import read_matpower
+
+from pylon.routine.y import \
+    make_susceptance_matrix, make_admittance_matrix
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
 DATA_FILE = join(dirname(__file__), "data/case6ww.m")
+
+#------------------------------------------------------------------------------
+#  "YTest" class:
+#------------------------------------------------------------------------------
+
+class YTest(TestCase):
+    """ Uses a MATPOWER data file and validates the results against those
+    obtained from running the MATPOWER makeYbus.m script with the
+    same data file. See reader_test_case.py for validation of MATPOWER data
+    file parsing.
+
+    """
+
+    network = None
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test """
+
+        self.network = read_matpower(DATA_FILE)
+
+
+    def test_admittance(self):
+        """ Test the values of the admittance matrix.
+
+           4.0063 -11.7479i  -2.0000 + 4.0000i        0            -1.1765 + 4.7059i  -0.8299 + 3.1120i        0
+          -2.0000 + 4.0000i   9.3283 -23.1955i  -0.7692 + 3.8462i  -4.0000 + 8.0000i  -1.0000 + 3.0000i  -1.5590 + 4.4543i
+                0            -0.7692 + 3.8462i   4.1557 -16.5673i        0            -1.4634 + 3.1707i  -1.9231 + 9.6154i
+          -1.1765 + 4.7059i  -4.0000 + 8.0000i        0             6.1765 -14.6359i  -1.0000 + 2.0000i        0
+          -0.8299 + 3.1120i  -1.0000 + 3.0000i  -1.4634 + 3.1707i  -1.0000 + 2.0000i   5.2933 -14.1378i  -1.0000 + 3.0000i
+                0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i   4.4821 -17.0047i
+
+        """
+
+        Y = make_admittance_matrix(self.network)
+
+        self.assertEqual(Y.size, (6, 6))
+
+        self._validate_diagonal_values(Y)
+        self._validate_off_diagonal_values(Y)
+
+
+    def _validate_diagonal_values(self, Y):
+        """ Assert that the diagonal values of the admittance matrix are
+        equal to those calculated by MATPOWER.
+
+        """
+
+        places = 4
+
+        Y_0_0 = 4.0063-11.7479j
+        Y_2_2 = 4.1557-16.5673j
+        Y_5_5 = 4.4821-17.0047j
+
+        self.assertAlmostEqual(Y[0, 0], Y_0_0, places)
+        self.assertAlmostEqual(Y[2, 2], Y_2_2, places)
+        self.assertAlmostEqual(Y[5, 5], Y_5_5, places)
+
+
+    def _validate_off_diagonal_values(self, Y):
+        """ Assert that the off-diagonal values of the admittance matrix are
+        equal to those calculated by MATPOWER.
+
+        """
+
+        pass
 
 #------------------------------------------------------------------------------
 #  "BTest" class:
@@ -47,60 +114,34 @@ class BTest(TestCase):
 
     network = None
 
-    reader = None
-
     def setUp(self):
         """ The test runner will execute this method prior to each test """
 
-        if self.reader is None:
-            self.reader = reader = MATPOWERReader(DATA_FILE)
-            self.network = reader.network
-        else:
-            self.network = Network().copy_traits(self.reader.network)
+        self.network = read_matpower(DATA_FILE)
 
 
     def test_susceptance(self):
-        """ Test the values of the susceptance matrix. """
+        """ Test the values of the susceptance matrix.
 
-        B, B_source = make_susceptance(self.network)
+        B =
+
+           13.3333   -5.0000         0   -5.0000   -3.3333         0
+           -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000
+                 0   -4.0000   17.8462         0   -3.8462  -10.0000
+           -5.0000  -10.0000         0   17.5000   -2.5000         0
+           -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333
+                 0   -5.0000  -10.0000         0   -3.3333   18.3333
+
+        """
+
+        B, B_source = make_susceptance_matrix(self.network)
         self._validate_susceptance_diagonal_values(B)
         self._validate_suseptance_off_diagonal_equality(B)
 
 
     def _validate_susceptance_diagonal_values(self, B):
-        """ Assert that the calculated susceptance matrix is the same as that
-        computed by MATPOWER
-
-        B =
-
-           (1,1)      13.3333
-           (2,1)      -5.0000
-           (4,1)      -5.0000
-           (5,1)      -3.3333
-           (1,2)      -5.0000
-           (2,2)      27.3333
-           (3,2)      -4.0000
-           (4,2)     -10.0000
-           (5,2)      -3.3333
-           (6,2)      -5.0000
-           (2,3)      -4.0000
-           (3,3)      17.8462
-           (5,3)      -3.8462
-           (6,3)     -10.0000
-           (1,4)      -5.0000
-           (2,4)     -10.0000
-           (4,4)      17.5000
-           (5,4)      -2.5000
-           (1,5)      -3.3333
-           (2,5)      -3.3333
-           (3,5)      -3.8462
-           (4,5)      -2.5000
-           (5,5)      16.3462
-           (6,5)      -3.3333
-           (2,6)      -5.0000
-           (3,6)     -10.0000
-           (5,6)      -3.3333
-           (6,6)      18.3333
+        """ Assert that the susceptance matrix diagonal values are the same as
+        those computed by MATPOWER.
 
         """
 
@@ -127,8 +168,8 @@ class BTest(TestCase):
 
 
     def _validate_susceptance_off_diagonal_values(self, B):
-        """ Assert that the calculated susceptance matrix is the same as that
-        computed by MATPOWER.
+        """ Assert that the susceptance matrix off-diagonal values are the same
+        as those computed by MATPOWER.
 
         """
 
@@ -156,6 +197,7 @@ class BTest(TestCase):
 
     def _validate_suseptance_off_diagonal_equality(self, B):
         """ Validate that elements [i, j] and [j, i] are equal """
+
         w, h = B.size
         for i in range(w):
             for j in range(h):
@@ -166,6 +208,10 @@ class BTest(TestCase):
                         "should be equal but are %d and %d respectively" %
                         (i, j, j, i, B[i, j], B[j, i])
                     )
+
+#------------------------------------------------------------------------------
+#  Stand-alone call:
+#------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import logging, sys
