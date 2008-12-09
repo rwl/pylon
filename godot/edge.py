@@ -83,9 +83,9 @@ port_pos_trait = Str(desc="port position")
 class Edge(HasTraits):
     """ Defines a graph edge """
 
-    from_node = Str#Instance(Node)
+    from_node = Instance(Node)
 
-    to_node = Str#Instance(Node)
+    to_node = Instance(Node)
 
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
@@ -543,6 +543,15 @@ class Edge(HasTraits):
     )
 
 
+    def __init__(self, from_node, to_node, **traits):
+        """ Return a new Edge instance. """
+
+        self.from_node = from_node
+        self.to_node = to_node
+
+        super(HasTraits, self).__init__(**traits)
+
+
     def __str__(self):
         """ Return a string representing the edge when requested by str()
         (or print).
@@ -570,8 +579,10 @@ class Edge(HasTraits):
 
         """
 
-        return [(edge_attr, self.get_attr(edge_attr)) \
-             for edge_attr in EDGE_ATTRIBUTES]
+        return [
+#            (edge_attr, self.get_attr(edge_attr)) \
+#            for edge_attr in EDGE_ATTRIBUTES
+        ]
 
 #------------------------------------------------------------------------------
 #  Edge table editor:

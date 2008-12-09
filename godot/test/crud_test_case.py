@@ -29,8 +29,11 @@ subgraphs etc from a graph. """
 
 from unittest import TestCase
 
+from godot.dot_parsing import GodotDataParser
+
 from godot.graph import Graph
 from godot.node import Node
+from godot.edge import Edge
 
 #------------------------------------------------------------------------------
 #  "CRUDTestCase" class:
@@ -71,7 +74,11 @@ class CRUDTestCase(TestCase):
         g = Graph()
         v1, v2 = Node(name="v1"), Node(name="v2")
         g.nodes.extend([v1, v2])
-        g.edges.append(Edge(v1, v2))
+        e = Edge(v1, v2)
+        g.edges.append(e)
+
+        self.assertTrue(len(g.edges) == 1)
+        self.assertTrue(g.edges[0] == e)
 
 
     def test_remove_node(self):
