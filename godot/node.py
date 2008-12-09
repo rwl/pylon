@@ -453,8 +453,8 @@ class Node(HasTraits):
         """
 
         return [
-            (node_attr, self.get_attr(node_attr)) \
-                for node_attr in NODE_ATTRIBUTES
+#            (node_attr, self.get_attr(node_attr)) \
+#                for node_attr in NODE_ATTRIBUTES
         ]
 
 #------------------------------------------------------------------------------
