@@ -25,7 +25,7 @@ from os.path import join, dirname
 from unittest import TestCase, main
 
 from pylon.readwrite.api import read_matpower
-from pylon.routine.api import ACPFRoutine
+from pylon.routine.api import NewtonPFRoutine
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -44,13 +44,13 @@ class ACOPFTest(TestCase):
 
     """
 
-    routine = ACPFRoutine
+    routine = NewtonPFRoutine
 
     def setUp(self):
         """ The test runner will execute this method prior to each test. """
 
         network = read_matpower(DATA_FILE)
-        self.routine = ACPFRoutine(network)
+        self.routine = NewtonPFRoutine(network)
         self.routine.solve()
 
 

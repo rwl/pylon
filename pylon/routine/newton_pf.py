@@ -42,6 +42,8 @@ import cvxopt.blas
 
 from pylon.routine.y import make_admittance_matrix
 
+from ac_pf import ACPFRoutine
+
 #------------------------------------------------------------------------------
 #  "NewtonPFRoutine" class:
 #------------------------------------------------------------------------------
