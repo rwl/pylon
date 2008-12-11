@@ -28,7 +28,7 @@ from enthought.traits.ui.api import \
     Item, Group, View, InstanceEditor, HGroup, DropEditor
 
 from pylon.api import Network
-from pylon.routine.api import ACPFRoutine
+from pylon.routine.api import NewtonPFRoutine
 from pylon.traits import Matrix, SparseMatrix
 
 #------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ class ACPFViewModel(HasTraits):
     #--------------------------------------------------------------------------
 
     # The routine providing the matrices
-    routine = Instance(ACPFRoutine, ())
+    routine = Instance(NewtonPFRoutine)
 
     # The network on which the routine is performed
     network = Instance(Network)
@@ -99,6 +99,12 @@ class ACPFViewModel(HasTraits):
         resizable=True, buttons=["OK"],
         width=.4, height=.4
     )
+
+    def _routine_default(self):
+        """ Trait initialiser. """
+
+        return NewtonPFRoutine(self.network)
+
 
     def _tolerance_changed(self, new):
         """ Delegates the tolerance to the routine """

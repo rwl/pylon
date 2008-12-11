@@ -33,7 +33,7 @@ from pylon.readwrite.api import \
     read_matpower, read_psat, read_psse, MATPOWERWriter, ReSTWriter
 
 from pylon.routine.api import \
-    DCPFRoutine, DCOPFRoutine, ACPFRoutine, ACOPFRoutine
+    DCPFRoutine, DCOPFRoutine, NewtonPFRoutine, ACOPFRoutine
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -131,7 +131,7 @@ class Pylon:
         if routine == "dcpf":
             r = DCPFRoutine(network=n)
         elif routine == "acpf":
-            r = ACPFRoutine(network=n, algorithm=algorithm)
+            r = NewtonPFRoutine(network=n, algorithm=algorithm)
         elif routine == "dcopf":
             r = DCOPFRoutine(network=n)
         elif routine == "acopf":
@@ -213,7 +213,7 @@ class Pylon:
         if routine == "dcpf":
             r = DCPFRoutine(network=None)
         elif routine == "acpf":
-            r = ACPFRoutine(network=None, algorithm=algorithm)
+            r = NewtonPFRoutine(network=None, algorithm=algorithm)
         elif routine == "dcopf":
             r = DCOPFRoutine(network=None)
         elif routine == "acopf":
