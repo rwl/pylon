@@ -28,7 +28,8 @@ For example:
 #------------------------------------------------------------------------------
 
 from pylon.routine.dc_pf import DCPFRoutine
-from pylon.routine.ac_pf import ACPFRoutine
+#from pylon.routine.ac_pf import ACPFRoutine
+from pylon.routine.newton_pf import NewtonPFRoutine
 from pylon.routine.dc_opf import DCOPFRoutine
 from pylon.routine.ac_opf import ACOPFRoutine
 from pylon.routine.spf import SPFRoutine
