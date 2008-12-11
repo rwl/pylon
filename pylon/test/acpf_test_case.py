@@ -74,6 +74,8 @@ class ACOPFTest(TestCase):
 
         places = 4
 
+        # TODO: Repeat test for a network with generator voltage set points
+        # different to the initial bus voltage magnitudes.
         v0_0 = 1.0500
         v0_2 = 1.0700
         v0_5 = 1.0000
