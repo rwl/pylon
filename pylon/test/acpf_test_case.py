@@ -51,7 +51,6 @@ class ACPFTest(TestCase):
 
         network = read_matpower(DATA_FILE)
         self.routine = NewtonPFRoutine(network)
-        self.routine.solve()
 
 
     def test_voltage_vector(self):
@@ -68,7 +67,8 @@ class ACPFTest(TestCase):
 
         """
 
-        v_initial = self.routine.v_initial
+        self.routine._initialise_voltage_vector()
+        v_initial = self.routine.v
 
         self.assertEqual(v_initial.typecode, "z")
         self.assertEqual(v_initial.size, (6, 1))
@@ -100,6 +100,7 @@ class ACPFTest(TestCase):
 
         """
 
+        self.routine.solve()
         s_surplus = self.routine.s_surplus
 
         self.assertEqual(s_surplus.typecode, "z")
@@ -117,5 +118,42 @@ class ACPFTest(TestCase):
         self.assertAlmostEqual(s_surplus[3].imag, s_35, places)
         self.assertAlmostEqual(s_surplus[5].real, s_35, places)
         self.assertAlmostEqual(s_surplus[5].imag, s_35, places)
+
+
+    def test_function_evaluation(self):
+        """ Test function evaluation without iteration.
+
+        F =
+
+           -0.1718
+           -0.3299
+            0.4412
+            0.5061
+            0.4874
+           -0.0053
+            0.0274
+           -0.2608
+
+        """
+
+        # Perform preliminary steps
+        self.routine._make_admittance_matrix()
+        self.routine._initialise_voltage_vector()
+        self.routine._make_apparent_power_injection_vector()
+        self.routine._index_buses()
+
+        self.routine._evaluate_function()
+        f = self.routine.f
+
+        self.assertEqual(f.size, (8, 1))
+
+        places = 4
+
+        f_0 = -0.1718
+        f_6 = 0.0274
+
+        self.assertAlmostEqual(f[0], f_0, places)
+        self.assertAlmostEqual(f[6], f_6, places)
+
 
 # EOF -------------------------------------------------------------------------

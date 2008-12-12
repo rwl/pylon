@@ -30,6 +30,7 @@ References:
 from os import path
 import math
 import cmath
+import logging
 
 import numpy
 from numpy import dot
@@ -40,6 +41,12 @@ from cvxopt.umfpack import linsolve
 import cvxopt.blas
 
 from pylon.routine.y import make_admittance_matrix
+
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  "ACPFRoutine" class:
@@ -69,20 +76,14 @@ class ACPFRoutine:
     # Maximum number of iterations:
     iter_max = 10
 
-    # The initial bus voltages:
-    v_initial = matrix
+    # Vector of bus voltages:
+    v = matrix
 
     # Sparse admittance matrix:
     Y = spmatrix
 
     # Complex bus power injections.
     s_surplus = matrix
-
-    # Apparent power supply at each node:
-    s_supply = matrix
-
-    # Apparent power demand at each node:
-    s_demand = matrix
 
     # Flag indicating if the solution converged:
     converged = False
@@ -103,17 +104,23 @@ class ACPFRoutine:
     def solve(self):
         """ Solves the AC power flow for the referenced network. """
 
-        self.admittance = make_admittance_matrix(self.network)
-        self._make_initial_voltage_vector()
+        self._make_admittance_matrix()
+        self._initialise_voltage_vector()
         self._make_apparent_power_injection_vector()
 
 #        self.iterate()
+
+
+    def _make_admittance_matrix(self):
+        """ Forms the admittance matrix for the referenced network. """
+
+        self.Y = make_admittance_matrix(self.network)
 
     #--------------------------------------------------------------------------
     #  Form array of initial voltages at each node:
     #--------------------------------------------------------------------------
 
-    def _make_initial_voltage_vector(self):
+    def _initialise_voltage_vector(self):
         """ Makes the initial vector of complex bus voltages.  The bus voltage
         vector contains the set point for generator (including ref bus) buses,
         and the reference angle of the swing bus, as well as an initial guess
@@ -150,7 +157,7 @@ class ACPFRoutine:
 #                v_initial[i] = g.v_amplitude / v
                 v_initial[i] = g.v_amplitude
 
-        self.v_initial = v_initial
+        self.v = v_initial
 
 
     def _make_apparent_power_injection_vector(self):
