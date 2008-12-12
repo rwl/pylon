@@ -75,6 +75,9 @@ class ACPFRoutine:
     # Sparse admittance matrix:
     Y = spmatrix
 
+    # Complex bus power injections.
+    s_surplus = matrix
+
     # Apparent power supply at each node:
     s_supply = matrix
 
@@ -102,7 +105,7 @@ class ACPFRoutine:
 
         self.admittance = make_admittance_matrix(self.network)
         self._make_initial_voltage_vector()
-#        self._make_apparent_power_vector()
+        self._make_apparent_power_injection_vector()
 
 #        self.iterate()
 
@@ -148,6 +151,16 @@ class ACPFRoutine:
                 v_initial[i] = g.v_amplitude
 
         self.v_initial = v_initial
+
+
+    def _make_apparent_power_injection_vector(self):
+        """ Makes the vector of complex bus power injections (gen - load). """
+
+        buses = self.network.non_islanded_buses
+
+        self.s_surplus = matrix(
+            [complex(v.p_surplus, v.q_surplus) for v in buses], tc="z"
+        )
 
 
     def iterate(self):

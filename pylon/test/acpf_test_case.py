@@ -34,10 +34,10 @@ from pylon.routine.api import NewtonPFRoutine
 DATA_FILE = join(dirname(__file__), "data/case6ww.m")
 
 #------------------------------------------------------------------------------
-#  "ACOPFTest" class:
+#  "ACPFTest" class:
 #------------------------------------------------------------------------------
 
-class ACOPFTest(TestCase):
+class ACPFTest(TestCase):
     """ We use a MATPOWER data file and validate the results against those
     obtained from running the MATPOWER runacpf.m script with the same data
     file. See reader_test_case.py for validation of MATPOWER data file parsing.
@@ -70,6 +70,7 @@ class ACOPFTest(TestCase):
 
         v_initial = self.routine.v_initial
 
+        self.assertEqual(v_initial.typecode, "z")
         self.assertEqual(v_initial.size, (6, 1))
 
         places = 4
@@ -83,5 +84,38 @@ class ACOPFTest(TestCase):
         self.assertAlmostEqual(abs(v_initial[0]), v0_0, places)
         self.assertAlmostEqual(abs(v_initial[2]), v0_2, places)
         self.assertAlmostEqual(abs(v_initial[5]), v0_5, places)
+
+
+    def test_apparent_power_vector(self):
+        """ Test the vector of complex bus power injections.
+
+        Sbus =
+
+                0
+           0.5000
+           0.6000
+          -0.7000 - 0.7000i
+          -0.7000 - 0.7000i
+          -0.7000 - 0.7000i
+
+        """
+
+        s_surplus = self.routine.s_surplus
+
+        self.assertEqual(s_surplus.typecode, "z")
+        self.assertEqual(s_surplus.size, (6, 1))
+
+        places = 4
+
+        s_0 = 0.0000
+        s_2 = 0.6000
+        s_35 = -0.7000
+
+        self.assertAlmostEqual(abs(s_surplus[0]), s_0, places)
+        self.assertAlmostEqual(abs(s_surplus[2]), s_2, places)
+        self.assertAlmostEqual(s_surplus[3].real, s_35, places)
+        self.assertAlmostEqual(s_surplus[3].imag, s_35, places)
+        self.assertAlmostEqual(s_surplus[5].real, s_35, places)
+        self.assertAlmostEqual(s_surplus[5].imag, s_35, places)
 
 # EOF -------------------------------------------------------------------------
