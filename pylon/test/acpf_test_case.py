@@ -156,4 +156,143 @@ class ACPFTest(TestCase):
         self.assertAlmostEqual(f[6], f_6, places)
 
 
+    def test_convergence_check(self):
+        """ Test convergence satisfaction check.
+
+        normF =
+
+            0.5061
+
+        """
+
+        routine = self.routine
+
+        # Perform preliminary steps
+        routine._make_admittance_matrix()
+        routine._initialise_voltage_vector()
+        routine._make_apparent_power_injection_vector()
+        routine._index_buses()
+        routine._evaluate_function()
+
+        # True negative
+        routine.converged = False
+        routine.tolerance = 0.500
+        self.assertFalse(routine._check_convergence())
+
+        # True positive
+        routine.converged = False
+        routine.tolerance = 0.510
+        self.assertTrue(routine._check_convergence())
+
+
+    def test_bus_indexing(self):
+        """ Test the indexing of buses according their mode.
+
+        ref =
+
+            1
+
+        pv_bus =
+
+            2
+            3
+
+        pq_bus =
+
+            4
+            5
+            6
+
+        pvpq_bus =
+
+            2
+            3
+            4
+            5
+            6
+
+        """
+
+        routine = self.routine
+
+        routine._index_buses()
+
+        self.assertEqual(routine.pv_idxs.size, (2, 1))
+        self.assertEqual(routine.pq_idxs.size, (3, 1))
+        self.assertEqual(routine.pvpq_idxs.size, (5, 1))
+
+        pv_0 = 1
+        pq_2 = 5
+        pvpq_3 = 4
+
+        self.assertEqual(routine.pv_idxs[0], pv_0)
+        self.assertEqual(routine.pq_idxs[2], pq_2)
+        self.assertEqual(routine.pvpq_idxs[3], pvpq_3)
+
+
+    def test_jacobian(self):
+        """ Test creation of the Jacobian matrix.
+
+        J[0] =
+
+           24.9582   -4.3212   -8.4000   -3.1500   -4.6771   -4.2000   -1.0500   -1.6370
+           -4.3212   18.0023         0   -3.3927  -10.2885         0   -1.5659   -2.0577
+           -8.4000         0   15.3412   -2.0000         0    5.9176   -1.0000         0
+           -3.1500   -3.3927   -2.0000   14.8103   -3.0000   -1.0000    5.0994   -1.0000
+           -4.6771  -10.2885         0   -3.0000   17.9655         0   -1.0000    4.2695
+            4.2000         0   -6.4353    1.0000         0   13.9306   -2.0000         0
+            1.0500    1.5659    1.0000   -5.4872    1.0000   -2.0000   13.4652   -3.0000
+            1.6370    2.0577         0    1.0000   -4.6947         0   -3.0000   16.0439
+
+        """
+
+        routine = self.routine
+
+        routine._make_admittance_matrix()
+        routine._initialise_voltage_vector()
+        routine._make_apparent_power_injection_vector()
+        routine._index_buses()
+
+        routine.iterate()
+
+        J = routine.J
+
+        self.assertEqual(J.size, (8, 8))
+
+        places = 4
+
+        J0_0 = 24.9582
+        J6_3 = -5.4872
+        J3_6 = 5.0994
+        J7_1 = 2.0577
+        J0_7 = -1.6370
+
+        self.assertAlmostEqual(J[0, 0], J0_0, places)
+        self.assertAlmostEqual(J[6, 3], J6_3, places)
+        self.assertAlmostEqual(J[3, 6], J3_6, places)
+        self.assertAlmostEqual(J[7, 1], J7_1, places)
+        self.assertAlmostEqual(J[0, 7], J0_7, places)
+
+
+    def test_iteration(self):
+        """ Test iteration of full Newton's method. """
+
+        routine = self.routine
+
+        routine._make_admittance_matrix()
+        routine._initialise_voltage_vector()
+        routine._make_apparent_power_injection_vector()
+        routine._index_buses()
+
+        # Initial evaluation of f(x0) and convergency check
+#        self.converged = False
+#        self._evaluate_function()
+#        self._check_convergence()
+
+        routine.iterate()
+
+
+if __name__ == "__main__":
+    main()
+
 # EOF -------------------------------------------------------------------------

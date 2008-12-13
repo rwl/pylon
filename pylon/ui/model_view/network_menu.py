@@ -164,6 +164,16 @@ map_view_action = Action(
     tooltip="Map View (F4)"
 )
 
+pf_report_action = Action(
+    name="PF Report", accelerator="F5", action="show_pf_report_view",
+    tooltip="Power Flow Report View (F5)"
+)
+
+opf_report_action = Action(
+    name="OPF Report", accelerator="F6", action="show_opf_report_view",
+    tooltip="Optimal Power Flow Report View (F6)"
+)
+
 #bus_plot_action = Action(
 #    name="Bu&s Plot", accelerator="F5", action="bus_plot",
 #    image=ImageResource("bus_plot.png", search_path=[ICON_LOCATION]),
@@ -260,6 +270,8 @@ view_menu = Menu(
     tree_view_action,
     swarm_table_action, network_table_action,
     map_view_action,
+    pf_report_action,
+    opf_report_action,
     "_",
     interactive_graph_action,
 #    "_",

@@ -21,6 +21,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import sys
+from os.path import join, dirname, expanduser
 from logging import Logger, getLogger, DEBUG
 
 try:
@@ -28,10 +30,11 @@ try:
 except ImportError:
     import pickle
 
-from os.path import join, dirname, expanduser
+import enthought.traits
 
 from enthought.traits.api import \
-    HasTraits, Instance, File, Bool, Str, List, on_trait_change, DelegatesTo
+    HasTraits, Instance, File, Bool, Str, List, on_trait_change, DelegatesTo, \
+    Float, Tuple
 
 from enthought.traits.ui.api import \
     View, Handler, UIInfo, Group, Item, TableEditor, InstanceEditor, \
@@ -130,6 +133,9 @@ class SwarmModelView(ModelView):
     # The current status of the model
     status = Str
 
+    # Tuple of library versions.
+    versions = Str
+
     # Buffers up the log messages so that they can be displayed later
     handler = Instance(LogQueueHandler)
 
@@ -168,10 +174,10 @@ class SwarmModelView(ModelView):
         width=.81, height=.81, kind="live",
         buttons=NoButtons,
         menubar=menubar, toolbar=toolbar,
-#        statusbar=[
-#            StatusItem(name="status", width=0.5),
-#            StatusItem(name="status", width=200)
-#        ],
+        statusbar=[
+            StatusItem(name="status", width=0.5),
+            StatusItem(name="versions", width=200)
+        ],
         dock="vertical"
     )
 
@@ -208,6 +214,14 @@ class SwarmModelView(ModelView):
 #        handler._view = self
 
         return handler
+
+    def _versions_default(self):
+        py_version = sys.version[0:sys.version.find("(")]
+        import wx # FIXME: Remove wx dependency.
+        wx_version = wx.VERSION_STRING
+        traits_version = enthought.traits.version.__version__
+
+        return "%s, %s, %s" % (py_version, wx_version, traits_version)
 
     #--------------------------------------------------------------------------
     #  Event handlers:
@@ -461,6 +475,26 @@ class SwarmModelView(ModelView):
         if info.initialized:
             m = self.network_map
             m.edit_traits(parent=info.ui.control, kind="livemodal")
+
+
+    def show_pf_report_view(self, info):
+        """ Handles display of the power flow report view. """
+
+        if info.initialized:
+            n = self.model.environment.network
+            n.edit_traits(
+                view=pf_report_view, parent=info.ui.control, kind="livemodal"
+            )
+
+
+    def show_opf_report_view(self, info):
+        """ Handles display of the OPF report view. """
+
+        if info.initialized:
+            n = self.model.environment.network
+            n.edit_traits(
+                view=opf_report_view, parent=info.ui.control, kind="livemodal"
+            )
 
 
     def add_bus(self, info):

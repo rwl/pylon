@@ -34,8 +34,7 @@ from enthought.traits.ui.tabular_adapter import TabularAdapter
 #------------------------------------------------------------------------------
 
 class MatrixTabularAdapter(TabularAdapter):
-    """
-    For adapting CVXOPT matrices to values that can be edited
+    """ For adapting CVXOPT matrices to values that can be edited
     by a TabularEditor.
 
     """
@@ -74,8 +73,10 @@ class MatrixTabularAdapter(TabularAdapter):
     def get_item ( self, object, trait, row ):
         """ Returns the value of the *object.trait[row]* item.
         """
+
         try:
-            return getattr(object, trait)[row, :]
+            val = getattr(object, trait)[row, :]
+            return val
         except:
             return None
 

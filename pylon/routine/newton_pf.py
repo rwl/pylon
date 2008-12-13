@@ -100,11 +100,11 @@ class NewtonPFRoutine(ACPFRoutine):
         self._check_convergence()
 
         iter = 0
-        while (not self.converged) and (iter < self.iter_max):
-            self.iterate()
-            self._evaluate_function()
-            self._check_convergence()
-            iter += 1
+#        while (not self.converged) and (iter < self.iter_max):
+#            self.iterate()
+#            self._evaluate_function()
+#            self._check_convergence()
+#            iter += 1
 
         if self.converged:
             logger.info("Routine converged in %d iterations." % iter)
@@ -118,7 +118,8 @@ class NewtonPFRoutine(ACPFRoutine):
     def iterate(self):
         """ Performs Newton iterations. """
 
-        self._make_jacobian()
+        J = self._make_jacobian()
+        F = self.f
 
         # Compute update step
         # Solves the sparse set of linear equations AX=B where A is a sparse
@@ -176,16 +177,16 @@ class NewtonPFRoutine(ACPFRoutine):
         print "diagIbus", diagIbus
 
         diagVnorm = spmatrix(
-            div(v, abs(voltage)), range(n_buses), range(n_buses), tc="z"
+            div(v, abs(v)), range(n_buses), range(n_buses), tc="z"
         )
         print "diagVnorm", diagVnorm
 
-        dS_dVm = dot(
-            dot(diagV, conj(dot(Y, diagVnorm))) + conj(diagIbus), diagVnorm
-        )
+#        dS_dVm = dot(
+#            dot(diagV, conj(dot(Y, diagVnorm))) + conj(diagIbus), diagVnorm
+#        )
         #dS_dVm = dot(diagV, conj(dot(Y, diagVnorm))) + dot(conj(diagIbus), diagVnorm)
 
-        dS_dVa = dot(dot(j, diagV), conj(dot(diagIbus - Y, diagV)))
+#        dS_dVa = dot(dot(j, diagV), conj(dot(diagIbus - Y, diagV)))
         #dS_dVa = dot(dot(j, diagV), conj(diagIbus - dot(Y, diagV)))
 
         # from MATPOWER v3.2
@@ -210,32 +211,34 @@ class NewtonPFRoutine(ACPFRoutine):
 #            J21 = dQ_dVa[pq_idxs, pvpq_idxs]
 #            J22 = dQ_dVm[pq_idxs, pq_idxs]
 
-        J11 = dS_dVa[pvpq_idxs, pvpq_idxs].real()
-        J12 = dS_dVm[pvpq_idxs, pq_idxs].real()
-        J21 = dS_dVa[pq_idxs, pvpq_idxs].imag()
-        J22 = dS_dVm[pq_idxs, pq_idxs].imag()
+#        J11 = dS_dVa[pvpq_idxs, pvpq_idxs].real()
+#        J12 = dS_dVm[pvpq_idxs, pq_idxs].real()
+#        J21 = dS_dVa[pq_idxs, pvpq_idxs].imag()
+#        J22 = dS_dVm[pq_idxs, pq_idxs].imag()
 
         # The width and height of one quadrant of the Jacobian.
-        w, h = J11.size
-        print "w, h", J11.size, J12.size, J21.size, J22.size
+#        w, h = J11.size
+#        print "w, h", J11.size, J12.size, J21.size, J22.size
 
         # A single-column dense matrix containing the numerical values of
         # the nonzero entries of the four quadrants of the Jacobian in
         # column-major order.
-        values = numpy.vstack((J11.V, J12.V, J21.V, J22.V))
+#        values = numpy.vstack((J11.V, J12.V, J21.V, J22.V))
 
         # A single-column integer matrix with the row indices of the entries
         # in "values" shifted appropriately by the width of one quadrant.
-        row_idxs = numpy.vstack((J11.I, J12.I, J21.I+h, J22.I+h))
+#        row_idxs = numpy.vstack((J11.I, J12.I, J21.I+h, J22.I+h))
 
         # A single-column integer matrix with the column indices of the
         # entries in "values" shifted appropriately by the width of one
         # quadrant.
-        col_idxs = numpy.vstack((J11.J, J12.J+w, J21.J, J22.J+w))
+#        col_idxs = numpy.vstack((J11.J, J12.J+w, J21.J, J22.J+w))
 
         # A deep copy of "values" is required for contiguity.
-        J = spmatrix(values.copy(), row_idxs, col_idxs)
-        print "J", J
+#        J = spmatrix(values.copy(), row_idxs, col_idxs)
+#        print "J", J
+
+#        return J
 
     #--------------------------------------------------------------------------
     #  Evaluate F(x):
@@ -253,7 +256,9 @@ class NewtonPFRoutine(ACPFRoutine):
         real = mismatch[self.pvpq_idxs].real()
         imag = mismatch[self.pq_idxs].imag()
 
-        self.f = matrix([real, imag])
+        self.f = f = matrix([real, imag])
+
+        return f
 
     #--------------------------------------------------------------------------
     #  Check convergence:
@@ -268,11 +273,14 @@ class NewtonPFRoutine(ACPFRoutine):
         F = self.f
 
         normF = max(abs(F))
-        print "normF", normF
 
         if normF < self.tolerance:
-            self.converged = True
-            print "Converged in %d iterations" % iteration
+            self.converged = converged = True
+        else:
+            self.converged = converged = False
+#            logger.info("Difference: %.3f" % normF-self.tolerance)
+
+        return converged
 
     #--------------------------------------------------------------------------
     #  Index buses for updating v:
@@ -284,16 +292,21 @@ class NewtonPFRoutine(ACPFRoutine):
         buses = self.network.non_islanded_buses
 
         # Indexing for updating v
-        self.pv_idxs = [i for i, v in enumerate(buses) if v.mode is "PV"]
-        self.pq_idxs = [i for i, v in enumerate(buses) if v.mode is "PQ"]
-        self.pvpq_idxs = self.pv_idxs + self.pq_idxs
+        pv_idxs = [i for i, v in enumerate(buses) if v.mode is "PV"]
+        pq_idxs = [i for i, v in enumerate(buses) if v.mode is "PQ"]
+        pvpq_idxs = pv_idxs + pq_idxs
 
         slack_idxs = [i for i, v in enumerate(buses) if v.mode is "Slack"]
         if len(slack_idxs) > 0:
-            self.slack_idx = slack_idxs[0]
+            slack_idx = slack_idxs[0]
         else:
-            logger.error("No reference/swing/slack bus specified.")
-            return False
+            logger.error    ("No reference/swing/slack bus specified.")
+            slack_idx = 0
+
+        self.slack_idx = matrix(slack_idx)
+        self.pv_idxs = matrix(pv_idxs)
+        self.pq_idxs = matrix(pq_idxs)
+        self.pvpq_idxs = matrix(pvpq_idxs)
 
 #------------------------------------------------------------------------------
 #  Standalone call:
