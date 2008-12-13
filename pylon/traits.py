@@ -51,10 +51,12 @@ class MatrixTabularAdapter(TabularAdapter):
 
     def _n_column_trait_default(self):
         """ Trait initialiser """
+
         return self.name
 
     def _columns_default(self):
         """ Trait initialiser """
+
         self.object.on_trait_change(self._label_columns, self.n_column_trait)
 
         r, c = getattr(self.object, self.name).size
@@ -72,7 +74,8 @@ class MatrixTabularAdapter(TabularAdapter):
         """ Returns the value of the *object.trait[row]* item.
         """
         try:
-            return getattr(object, trait)[row, :]
+            val = getattr(object, trait)[row, :]
+            return val
         except:
             return None
 
