@@ -30,9 +30,8 @@ References:
 
 import math
 import cmath
-import logging
-
-from cvxopt.base import matrix, spmatrix, sparse, gemv, exp, mul, div
+import logging, sys
+from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
 from cvxopt.umfpack import linsolve
 import cvxopt.blas
 
@@ -43,6 +42,8 @@ from pylon.routine.ac_pf import ACPFRoutine
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.setLevel(logging.DEBUG)
 
 #------------------------------------------------------------------------------
 #  Convenient conjugate function:
@@ -157,64 +158,111 @@ class NewtonPFRoutine(ACPFRoutine):
     #--------------------------------------------------------------------------
 
     def _make_jacobian(self):
-        """ Evaluates the Jacobian matrix. """
+        """ Computes partial derivatives of power injection w.r.t. voltage.
+        The following explains the expressions used to form the matrices:
+
+        S = diag(V) * conj(Ibus) = diag(conj(Ibus)) * V
+
+        Partials of V & Ibus w.r.t. voltage magnitudes
+           dV/dVm = diag(V./abs(V))
+           dI/dVm = Ybus * dV/dVm = Ybus * diag(V./abs(V))
+
+        Partials of V & Ibus w.r.t. voltage angles
+           dV/dVa = j * diag(V)
+           dI/dVa = Ybus * dV/dVa = Ybus * j * diag(V)
+
+        Partials of S w.r.t. voltage magnitudes
+           dS/dVm = diag(V) * conj(dI/dVm) + diag(conj(Ibus)) * dV/dVm
+                  = diag(V) * conj(Ybus * diag(V./abs(V)))
+                                           + conj(diag(Ibus)) * diag(V./abs(V))
+
+        Partials of S w.r.t. voltage angles
+           dS/dVa = diag(V) * conj(dI/dVa) + diag(conj(Ibus)) * dV/dVa
+                  = diag(V) * conj(Ybus * j * diag(V))
+                                           + conj(diag(Ibus)) * j * diag(V)
+                  = -j * diag(V) * conj(Ybus * diag(V))
+                                           + conj(diag(Ibus)) * j * diag(V)
+                  = j * diag(V) * conj(diag(Ibus) - Ybus * diag(V))
+
+        References:
+            D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, MATPOWER,
+            dSbus_dV.m, version 3.2, http://www.pserc.cornell.edu/matpower/
+
+        """
 
         j = cmath.sqrt(-1)
         Y = self.Y
         v = self.v
+        n = len(self.network.buses)
 
-#        Ibus = cvxopt.blas.dot(matrix(self.admittance), voltage)
+        pv_idxs = self.pv_idxs
+        pq_idxs = self.pq_idxs
+        pvpq_idxs = self.pvpq_idxs
+
+#        Ibus = cvxopt.blas.dot(matrix(self.Y), v)
         Ibus = Y * v
-#        Ibus = self.admittance.trans() * voltage
-        print "Ibus", Ibus
+#        Ibus = self.Y.trans() * v
+        logger.debug("Ibus =\n%s" % Ibus)
 
-        n_buses = len(self.network.buses)
+        diagV = spmatrix(v, range(n), range(n), tc="z")
+        logger.debug("diagV =\n%s" % diagV)
 
-        diagV = spmatrix(v, range(n_buses), range(n_buses), tc="z")
-        print "diagV", diagV
+        diagIbus = spmatrix(Ibus, range(n), range(n), tc="z")
+        logger.debug("diagIbus =\n%s" % diagIbus)
 
-        diagIbus = spmatrix(Ibus, range(n_buses), range(n_buses), tc="z")
-        print "diagIbus", diagIbus
+        # diagVnorm = spdiags(V./abs(V), 0, n, n);
+        diagVnorm = spmatrix(div(v, abs(v)), range(n), range(n), tc="z")
+        logger.debug("diagVnorm =\n%s" % diagVnorm)
 
-        diagVnorm = spmatrix(
-            div(v, abs(v)), range(n_buses), range(n_buses), tc="z"
-        )
-        print "diagVnorm", diagVnorm
+        # From MATPOWER v3.2:
+        # dSbus_dVm = diagV * conj(Y * diagVnorm) + conj(diagIbus) * diagVnorm;
+        # dSbus_dVa = j * diagV * conj(diagIbus - Y * diagV);
 
+        dS_dVm = diagV * conj(Y * diagVnorm) + conj(diagIbus) * diagVnorm
 #        dS_dVm = dot(
 #            dot(diagV, conj(dot(Y, diagVnorm))) + conj(diagIbus), diagVnorm
 #        )
         #dS_dVm = dot(diagV, conj(dot(Y, diagVnorm))) + dot(conj(diagIbus), diagVnorm)
+        logger.debug("dS_dVm =\n%s" % dS_dVm)
 
+        dS_dVa = j * diagV * conj(diagIbus - Y * diagV)
 #        dS_dVa = dot(dot(j, diagV), conj(dot(diagIbus - Y, diagV)))
         #dS_dVa = dot(dot(j, diagV), conj(diagIbus - dot(Y, diagV)))
-
-        # from MATPOWER v3.2
-        # dSbus_dVm = diagV * conj(Ybus * diagVnorm) + conj(diagIbus) * diagVnorm;
-        # dSbus_dVa = j * diagV * conj(diagIbus - Ybus * diagV);
+        logger.debug("dS_dVa =\n%s" % dS_dVa)
 
 
-#            dP_dVm = spmatrix(map(lambda x: x.real, dS_dVm), dS_dVm.I, dS_dVa.J, tc="d")
-#            print "dP_dVm", dP_dVm
+#        dP_dVm = spmatrix(map(lambda x: x.real, dS_dVm), dS_dVm.I, dS_dVa.J, tc="d")
+
+#        dP_dVm = spmatrix(dS_dVm.real(), dS_dVm.I, dS_dVa.J, tc="d")
+#        logger.debug("dP_dVm =\n%s" % dP_dVm)
 #
-#            dP_dVa = spmatrix(map(lambda x: x.real, dS_dVa), dS_dVa.I, dS_dVa.J, tc="d")
-#            print "dP_dVa", dP_dVa
+#        dP_dVa = spmatrix(dS_dVa.real(), dS_dVa.I, dS_dVa.J, tc="d")
+#        logger.debug("dP_dVa =\n%s" % dP_dVa)
 #
-#            dQ_dVm = spmatrix(map(lambda x: x.imag, dS_dVm), dS_dVm.I, dS_dVm.J, tc="d")
-#            print "dQ_dVm", dQ_dVm
+#        dQ_dVm = spmatrix(dS_dVm.imag(), dS_dVm.I, dS_dVm.J, tc="d")
+#        logger.debug("dQ_dVm =\n%s" % dQ_dVm)
 #
-#            dQ_dVa = spmatrix(map(lambda x: x.imag, dS_dVa), dS_dVa.I, dS_dVa.J, tc="d")
-#            print "dQ_dVa", dQ_dVa
+#        dQ_dVa = spmatrix(dS_dVa.imag(), dS_dVa.I, dS_dVa.J, tc="d")
+#        logger.debug("dQ_dVa" % dQ_dVa)
+
+        # From MATPOWER v3.2:
+        #    j11 = real(dSbus_dVa([pv; pq], [pv; pq]));
+        #    j12 = real(dSbus_dVm([pv; pq], pq));
+        #    j21 = imag(dSbus_dVa(pq, [pv; pq]));
+        #    j22 = imag(dSbus_dVm(pq, pq));
 
 #            J11 = dP_dVa[pvpq_idxs, pvpq_idxs]
 #            J12 = dP_dVm[pvpq_idxs, pq_idxs]
 #            J21 = dQ_dVa[pq_idxs, pvpq_idxs]
 #            J22 = dQ_dVm[pq_idxs, pq_idxs]
 
-#        J11 = dS_dVa[pvpq_idxs, pvpq_idxs].real()
-#        J12 = dS_dVm[pvpq_idxs, pq_idxs].real()
-#        J21 = dS_dVa[pq_idxs, pvpq_idxs].imag()
-#        J22 = dS_dVm[pq_idxs, pq_idxs].imag()
+        J11 = dS_dVa[pvpq_idxs, pvpq_idxs].real()
+        J12 = dS_dVm[pvpq_idxs, pq_idxs].real()
+        J21 = dS_dVa[pq_idxs, pvpq_idxs].imag()
+        J22 = dS_dVm[pq_idxs, pq_idxs].imag()
+
+        logger.debug("J12 =\n%s" % J12)
+        logger.debug("J22 =\n%s" % J22)
 
         # The width and height of one quadrant of the Jacobian.
 #        w, h = J11.size
@@ -236,9 +284,13 @@ class NewtonPFRoutine(ACPFRoutine):
 
         # A deep copy of "values" is required for contiguity.
 #        J = spmatrix(values.copy(), row_idxs, col_idxs)
-#        print "J", J
 
-#        return J
+        JX1 = sparse([J11, J21])
+        JX2 = sparse([J12, J22])
+        J = sparse([JX1.T, JX2.T]).T
+        logger.debug("J =\n%s" % J)
+
+        return J
 
     #--------------------------------------------------------------------------
     #  Evaluate F(x):
