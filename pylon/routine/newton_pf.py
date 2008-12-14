@@ -35,6 +35,8 @@ from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
 from cvxopt.umfpack import linsolve
 import cvxopt.blas
 
+from numpy import angle as numpy_angle
+
 from pylon.routine.ac_pf import ACPFRoutine
 
 #------------------------------------------------------------------------------
@@ -100,7 +102,7 @@ def angle(z, deg=0):
     else:
         zimag = 0
         zreal = z
-    [math.arctan2(x.imag(), x.real()) for x in z]
+    matrix([math.arctan2(z[i].imag(), z[i].real()) for x in z])
     return atan2(zimag, zreal) * fact
 
 #------------------------------------------------------------------------------
@@ -150,11 +152,11 @@ class NewtonPFRoutine(ACPFRoutine):
         self._check_convergence()
 
         iter = 0
-#        while (not self.converged) and (iter < self.iter_max):
-#            self.iterate()
-#            self._evaluate_function()
-#            self._check_convergence()
-#            iter += 1
+        while (not self.converged) and (iter < self.iter_max):
+            self.iterate()
+            self._evaluate_function()
+            self._check_convergence()
+            iter += 1
 
         if self.converged:
             logger.info("Routine converged in %d iterations." % iter)
@@ -168,17 +170,18 @@ class NewtonPFRoutine(ACPFRoutine):
     def iterate(self):
         """ Performs Newton iterations. """
 
+        j = cmath.sqrt(-1)
+
         J = self._make_jacobian()
         F = self.f
 
-        Va = angle(self.v)
+        Va = matrix(numpy_angle(self.v))
         Vm = abs(self.v)
 
         pv_idxs = self.pv_idxs
         pq_idxs = self.pq_idxs
-
-        print "TYPECODE:", J.typecode
-        print "TYPECODE:", F.typecode
+        npv = len(pv_idxs)
+        npq = len(pq_idxs)
 
         # Compute update step.
         #
@@ -192,25 +195,23 @@ class NewtonPFRoutine(ACPFRoutine):
 
         # Update voltage vector
         if pv_idxs:
-            Va[pv_idxs] = Va[pv_idxs] + dx[range(len(pv_idxs))]
+            # Va(pv) = Va(pv) + dx(j1:j2);
+            Va[pv_idxs] = Va[pv_idxs] + dx[range(npv)]
 
         if pq_idxs:
-            Va[pq_idxs] = Va[pq_idxs] + dx[
-                range(len(pv_idxs), len(pv_idxs)+len(pq_idxs))
-            ]
+            Va[pq_idxs] = Va[pq_idxs] + dx[range(npv, npv+npq)]
+            Vm[pq_idxs] = Vm[pq_idxs] + dx[range(npv+npq, npv+npq+npq)]
 
-            Vm[pq_idxs] = Vm[pq_idxs] + dx[
-                range(
-                    len(pv_idxs)+len(pq_idxs),
-                    len(pv_idxs)+len(pq_idxs)+len(pq_idxs)
-                )
-            ]
+        # V = Vm .* exp(j * Va);
+#        v = j * Va
+        self.v = v = mul(Vm, exp(j * Va))
 
-        self.v = v = Vm * exp(j * Va)
         # Avoid wrapped round negative Vm
         # TODO: check necessity
 #        Vm = abs(voltage)
 #        Va = angle(voltage)
+
+        logger.debug("V: =\n%s" % v)
 
         return v
 
@@ -416,10 +417,10 @@ class NewtonPFRoutine(ACPFRoutine):
             logger.error    ("No reference/swing/slack bus specified.")
             slack_idx = 0
 
-        self.slack_idx = matrix(slack_idx)
-        self.pv_idxs = matrix(pv_idxs)
-        self.pq_idxs = matrix(pq_idxs)
-        self.pvpq_idxs = matrix(pvpq_idxs)
+        self.slack_idx = slack_idx
+        self.pv_idxs = pv_idxs
+        self.pq_idxs = pq_idxs
+        self.pvpq_idxs = pvpq_idxs
 
 #------------------------------------------------------------------------------
 #  Standalone call:

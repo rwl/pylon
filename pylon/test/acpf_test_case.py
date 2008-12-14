@@ -217,9 +217,9 @@ class ACPFTest(TestCase):
 
         routine._index_buses()
 
-        self.assertEqual(routine.pv_idxs.size, (2, 1))
-        self.assertEqual(routine.pq_idxs.size, (3, 1))
-        self.assertEqual(routine.pvpq_idxs.size, (5, 1))
+        self.assertEqual(len(routine.pv_idxs), 2)
+        self.assertEqual(len(routine.pq_idxs), 3)
+        self.assertEqual(len(routine.pvpq_idxs), 5)
 
         pv_0 = 1
         pq_2 = 5
@@ -377,6 +377,24 @@ class ACPFTest(TestCase):
            -0.0128
             0.0053
 
+        V[0] =
+
+           1.0500
+           1.0480 - 0.0647i
+           1.0672 - 0.0767i
+           0.9880 - 0.0707i
+           0.9832 - 0.0884i
+           1.0002 - 0.1016i
+
+        V[1] =
+
+           1.0500
+           1.0478 - 0.0672i
+           1.0670 - 0.0797i
+           0.9867 - 0.0724i
+           0.9813 - 0.0906i
+           0.9990 - 0.1041i
+
         """
 
         routine = self.routine
@@ -391,7 +409,31 @@ class ACPFTest(TestCase):
         routine._evaluate_function()
 #        routine._check_convergence()
 
+        # First iteration.
         routine.iterate()
+        v = routine.v
+
+        self.assertEqual(v.size, (6, 1))
+
+        places = 4
+
+        v0_2 = abs(1.0672-0.0767j)
+        v0_4 = abs(0.9832-0.0884j)
+
+        self.assertAlmostEqual(abs(v[2]), v0_2, places)
+        self.assertAlmostEqual(abs(v[4]), v0_4, places)
+
+        # Second iteration.
+        routine.iterate()
+        v = routine.v
+
+        self.assertEqual(v.size, (6, 1))
+
+        v1_1 = abs(1.0478-0.0672j)
+        v1_5 = abs(0.9990-0.1041j)
+
+#        self.assertAlmostEqual(abs(v[1]), v1_1, places)
+#        self.assertAlmostEqual(abs(v[5]), v1_5, places)
 
 
 if __name__ == "__main__":
