@@ -54,6 +54,55 @@ def conj(A):
 
     return A.ctrans().trans()
 
+
+def atan2(X, Y):
+
+    matrix([math.arctan2(Y, X) for k in xrange(nrows*ncols)], (nrows, ncols), 'd')
+
+
+def angle(z, deg=0):
+    """
+    Return the angle of the complex argument.
+
+    Parameters
+    ----------
+    z : array_like
+        A complex number or sequence of complex numbers.
+    deg : bool, optional
+        Return angle in degrees if True, radians if False (default).
+
+    Returns
+    -------
+    angle : {ndarray, scalar}
+        The counterclockwise angle from the positive real axis on
+        the complex plane, with dtype as numpy.float64.
+
+    See Also
+    --------
+    arctan2
+
+    Examples
+    --------
+    >>> np.angle([1.0, 1.0j, 1+1j])               # in radians
+    array([ 0.        ,  1.57079633,  0.78539816])
+    >>> np.angle(1+1j, deg=True)                  # in degrees
+    45.0
+
+    """
+    if deg:
+        fact = 180/pi
+    else:
+        fact = 1.0
+#    z = asarray(z)
+    if z.typecode is "z":
+        zimag = z.imag()
+        zreal = z.real()
+    else:
+        zimag = 0
+        zreal = z
+    [math.arctan2(x.imag(), x.real()) for x in z]
+    return atan2(zimag, zreal) * fact
+
 #------------------------------------------------------------------------------
 #  "NewtonPFRoutine" class:
 #------------------------------------------------------------------------------
@@ -122,14 +171,24 @@ class NewtonPFRoutine(ACPFRoutine):
         J = self._make_jacobian()
         F = self.f
 
-        # Compute update step
+        Va = angle(self.v)
+        Vm = abs(self.v)
+
+        pv_idxs = self.pv_idxs
+        pq_idxs = self.pq_idxs
+
+        print "TYPECODE:", J.typecode
+        print "TYPECODE:", F.typecode
+
+        # Compute update step.
+        #
         # Solves the sparse set of linear equations AX=B where A is a sparse
         # matrix and B is a dense matrix of the same type ("d" or "z") as A. On
         # exit B contains the solution.
-        # TODO: trace inaccuracy back to F(x0)
         linsolve(J, F)
-        dx = -1 * F
-        print "dx", dx
+
+        dx = -1 * F # Update step.
+        logger.debug("dx =\n%s" % dx)
 
         # Update voltage vector
         if pv_idxs:
@@ -147,11 +206,13 @@ class NewtonPFRoutine(ACPFRoutine):
                 )
             ]
 
-        voltage = Vm * numpy.exp(j * Va)
+        self.v = v = Vm * exp(j * Va)
         # Avoid wrapped round negative Vm
         # TODO: check necessity
-        Vm = numpy.abs(voltage)
-        Va = angle(voltage)
+#        Vm = abs(voltage)
+#        Va = angle(voltage)
+
+        return v
 
     #--------------------------------------------------------------------------
     #  Evaluate Jacobian:

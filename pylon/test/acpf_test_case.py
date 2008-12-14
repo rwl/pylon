@@ -364,7 +364,20 @@ class ACPFTest(TestCase):
 
 
     def test_iteration(self):
-        """ Test iteration of full Newton's method. """
+        """ Test iteration of full Newton's method.
+
+        dx[0] =
+
+           -0.0616
+           -0.0717
+           -0.0714
+           -0.0897
+           -0.1012
+           -0.0094
+           -0.0128
+            0.0053
+
+        """
 
         routine = self.routine
 
@@ -374,11 +387,11 @@ class ACPFTest(TestCase):
         routine._index_buses()
 
         # Initial evaluation of f(x0) and convergency check
-#        self.converged = False
-#        self._evaluate_function()
-#        self._check_convergence()
+#        routine.converged = False
+        routine._evaluate_function()
+#        routine._check_convergence()
 
-#        routine.iterate()
+        routine.iterate()
 
 
 if __name__ == "__main__":
