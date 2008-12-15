@@ -59,16 +59,16 @@ class NewtonPFRoutine(ACPFRoutine):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    # Sparse Jacobian matrix (updated each iteration)
+    # Sparse Jacobian matrix (updated each iteration).
     J = spmatrix
 
-    # Vector of bus voltages
+    # Vector of bus voltages.
     v = matrix
 
-    # Function of non-linear differential agebraic equations
+    # Function of non-linear differential algebraic equations.
     f = matrix
 
-    # Bus indexing for updating v
+    # Bus indexing for updating v.
     pv_idxs = []
     pq_idxs = []
     pvpq_idxs = []
