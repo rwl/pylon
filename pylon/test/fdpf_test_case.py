@@ -66,7 +66,7 @@ class FDPFTest(TestCase):
            -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333
                  0   -5.0000  -10.0000         0   -3.3333   18.3333
 
-         """
+        """
 
         Bp = self.routine._make_B_prime()
 
@@ -83,6 +83,37 @@ class FDPFTest(TestCase):
         self.assertAlmostEqual(Bp[5, 5], Bp5_5, places)
         self.assertAlmostEqual(Bp[3, 1], Bp3_1, places)
         self.assertAlmostEqual(Bp[2, 4], Bp2_4, places)
+
+
+    def test_B_double_prime(self):
+        """ Test build of FDPF matrix B double prime.
+
+        Bpp =
+
+           11.7479   -4.0000         0   -4.7059   -3.1120         0
+           -4.0000   23.1955   -3.8462   -8.0000   -3.0000   -4.4543
+                 0   -3.8462   16.5673         0   -3.1707   -9.6154
+           -4.7059   -8.0000         0   14.6359   -2.0000         0
+           -3.1120   -3.0000   -3.1707   -2.0000   14.1378   -3.0000
+                 0   -4.4543   -9.6154         0   -3.0000   17.0047
+
+        """
+
+        Bpp = self.routine._make_B_double_prime()
+
+        self.assertEqual(Bpp.size, (6, 6))
+
+        places = 4
+
+        Bpp0_0 = 11.7479
+        Bpp5_5 = 17.0047
+        Bpp3_1 = -8.0000
+        Bpp2_4 = -3.1707
+
+        self.assertAlmostEqual(Bpp[0, 0], Bpp0_0, places)
+        self.assertAlmostEqual(Bpp[5, 5], Bpp5_5, places)
+        self.assertAlmostEqual(Bpp[3, 1], Bpp3_1, places)
+        self.assertAlmostEqual(Bpp[2, 4], Bpp2_4, places)
 
 
 if __name__ == "__main__":

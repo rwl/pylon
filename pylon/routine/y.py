@@ -145,7 +145,13 @@ def make_admittance_matrix(network):
 #------------------------------------------------------------------------------
 
 class AdmittanceMatrix:
-    """ Build sparse Y matrix. """
+    """ Build sparse Y matrix.
+
+    References:
+        D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, "makeYbus.m", MATPOWER,
+        version 1.8, http://www.pserc.cornell.edu/matpower/, June 26, 2007
+
+    """
 
     # Network represented by the matrix
     network = None
@@ -153,10 +159,34 @@ class AdmittanceMatrix:
     # Sparse admittance matrix.
     Y = spmatrix
 
-    def __init__(self, network):
+    # Should shunts at buses be considered?
+    bus_shunts = True
+
+    # Should line charging shunts be considered?
+    line_shunts = True
+
+    # Should tap positions be considered?
+    taps = True
+
+    # Should line resistance be considered?
+    line_resistance = True
+
+    # Should phase shifters be considered?
+    phase_shift = True
+
+
+    def __init__(self, network, bus_shunts=True, line_shunts=True,
+            taps=True, line_resistance=True, phase_shift=True):
         """ Returns a new AdmittanceMatrix instance. """
 
         self.network = network
+        self.bus_shunts = bus_shunts
+        self.line_shunts = line_shunts
+        self.taps = taps
+        self.line_resistance = line_resistance
+        self.phase_shift = phase_shift
+
+        self.Y = self.build()
 
 
     def build(self):
@@ -174,29 +204,42 @@ class AdmittanceMatrix:
 
         # Series admittance.
         # Ys = stat ./ (branch(:, BR_R) + j * branch(:, BR_X))
-        r = matrix([e.r for e in branches])
+        if self.line_resistance:
+            r = matrix([e.r for e in branches])
+        else:
+            r = matrix(0.0, (n_branches, 1)) # Zero out line resistance.
+
         x = matrix([e.x for e in branches])
+
         Ys = div(in_service, (r + j*x))
 
         # Line charging susceptance
         # Bc = stat .* branch(:, BR_B);
-        b = matrix([e.b for e in branches])
+        if self.line_shunts:
+            b = matrix([e.b for e in branches])
+        else:
+            b = matrix(0.0, (n_branches, 1)) # Zero out line charging shunts.
         Bc = mul(in_service, b)
 
         # Default tap ratio = 1
         tap = matrix(1.0, (n_branches, 1), tc="d")
-        # Indices of branches with non-zero tap ratio
-        idxs = [branches.index(e) for e in branches if e.ratio != 0.0]
-        # Transformer off nominal turns ratio ( = 0 for lines ) (taps at "from"
-        # bus, impedance at 'to' bus, i.e. ratio = Vf / Vt)"
-        ratio = matrix([e.ratio for e in branches])
-        # Assign non-zero tap ratios
-        tap[idxs] = ratio[idxs]
+        if self.taps:
+            # Indices of branches with non-zero tap ratio
+            idxs = [branches.index(e) for e in branches if e.ratio != 0.0]
+            # Transformer off nominal turns ratio ( = 0 for lines ) (taps at
+            # "from" bus, impedance at 'to' bus, i.e. ratio = Vf / Vt)"
+            ratio = matrix([e.ratio for e in branches])
+            # Assign non-zero tap ratios
+            tap[idxs] = ratio[idxs]
 
         # Phase shifters
         # tap = tap .* exp(j*pi/180 * branch(:, SHIFT));
         # Convert branch attribute in degrees to radians
-        phase_shift = matrix([e.phase_shift * pi / 180 for e in branches])
+        if self.phase_shift:
+            phase_shift = matrix([e.phase_shift * pi / 180 for e in branches])
+        else:
+            phase_shift = matrix(0.0, (n_branches, 1))
+
         tap = mul(tap, exp(j * phase_shift))
 
         # Ytt = Ys + j*Bc/2;
@@ -211,7 +254,10 @@ class AdmittanceMatrix:
         # Shunt admittance
         # Ysh = (bus(:, GS) + j * bus(:, BS)) / baseMVA;
         g_shunt = matrix([v.g_shunt for v in buses])
-        b_shunt = matrix([v.b_shunt for v in buses])
+        if self.bus_shunts:
+            b_shunt = matrix([v.b_shunt for v in buses])
+        else:
+            b_shunt = matrix(0.0, (n_buses, 1)) # Zero out shunts at buses.
         Ysh = (g_shunt + j * b_shunt) / base_mva
 
         # Connection matrices.

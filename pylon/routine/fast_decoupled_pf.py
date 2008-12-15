@@ -33,6 +33,9 @@ import logging, sys
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
 
 from pylon.routine.ac_pf import ACPFRoutine
+from pylon.routine.y import AdmittanceMatrix
+
+from pylon.api import Network
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -84,13 +87,50 @@ class FastDecoupledPFRoutine(ACPFRoutine):
 
 
     def _make_B_prime(self):
-        """ Builds the Fast Decoupled Power Flow matrix B prime. """
+        """ Builds the Fast Decoupled Power Flow matrix B prime.
 
-        n_buses = self.network.n_non_islanded_buses
+        References:
+        D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, "makeB.m", MATPOWER,
+        version 1.5, http://www.pserc.cornell.edu/matpower/, July 8, 2005
 
-        Bp = spmatrix([], [], [], (n_buses, n_buses), tc="d")
+        """
+
+        if self.method is "XB":
+            r_line = False
+        else:
+            r_line = True
+
+        am = AdmittanceMatrix(
+            self.network, bus_shunts=False, line_shunts=False, taps=False,
+            line_resistance=r_line
+        )
+
+        self.Bp = Bp = -am.Y.imag()
 
         return Bp
+
+
+    def _make_B_double_prime(self):
+        """ Builds the Fast Decoupled Power Flow matrix B double prime.
+
+        References:
+        D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, "makeB.m", MATPOWER,
+        version 1.5, http://www.pserc.cornell.edu/matpower/, July 8, 2005
+
+        """
+
+        if self.method is "BX":
+            r_line = False
+        else:
+            r_line = True
+
+        am = AdmittanceMatrix(
+            self.network, line_resistance=r_line, phase_shift=False
+        )
+
+        self.Bpp = Bpp = -am.Y.imag()
+
+        return Bpp
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
