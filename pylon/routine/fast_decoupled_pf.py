@@ -53,6 +53,11 @@ class FastDecoupledPFRoutine(ACPFRoutine):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
+    Bp = spmatrix
+
+    # Use XB or BX method?
+    method = "XB"
+
     #--------------------------------------------------------------------------
     #  Solve power flow using Fast Decoupled method:
     #--------------------------------------------------------------------------
@@ -60,9 +65,13 @@ class FastDecoupledPFRoutine(ACPFRoutine):
     def solve(self):
         """
         Solves the AC power flow for the referenced network using fast
-        decoupled method.
+        decoupled method.  Returns the final complex voltages, a flag which
+        indicates whether it converged or not, and the number of iterations
+        performed.
 
         """
+
+        self._make_B_prime()
 
     #--------------------------------------------------------------------------
     #  P and Q iterations:
@@ -70,6 +79,18 @@ class FastDecoupledPFRoutine(ACPFRoutine):
 
     def iterate(self):
         """ Performs P and Q iterations. """
+
+        pass
+
+
+    def _make_B_prime(self):
+        """ Builds the Fast Decoupled Power Flow matrix B prime. """
+
+        n_buses = self.network.n_non_islanded_buses
+
+        Bp = spmatrix([], [], [], (n_buses, n_buses), tc="d")
+
+        return Bp
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

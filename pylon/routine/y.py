@@ -23,7 +23,7 @@
 
 import logging
 
-from cvxopt.base import matrix, spmatrix, sparse
+from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -136,6 +136,99 @@ def make_admittance_matrix(network):
         # TODO: investigate why the imaginary componenets of the admittance
         # matrix are slightly different to this from MATPOWER
     return Y
+
+#------------------------------------------------------------------------------
+#  "AdmittanceMatrix" class:
+#------------------------------------------------------------------------------
+
+class AdmittanceMatrix:
+    """ Build sparse Y matrix. """
+
+    # Network represented by the matrix
+    network = None
+
+    # Sparse admittance matrix.
+    Y = spmatrix
+
+    def __init__(self, network):
+        """ Returns a new AdmittanceMatrix instance. """
+
+        self.network = network
+
+
+    def build(self):
+        """ Builds the admittance matrix.
+
+        Cf =
+
+             1     1     1     0     0     0     0     0     0     0     0
+             0     0     0     1     1     1     1     0     0     0     0
+             0     0     0     0     0     0     0     1     1     0     0
+             0     0     0     0     0     0     0     0     0     1     0
+             0     0     0     0     0     0     0     0     0     0     1
+             0     0     0     0     0     0     0     0     0     0     0
+
+
+        Ct =
+
+             0     0     0     0     0     0     0     0     0     0     0
+             1     0     0     0     0     0     0     0     0     0     0
+             0     0     0     1     0     0     0     0     0     0     0
+             0     1     0     0     1     0     0     0     0     0     0
+             0     0     1     0     0     1     0     1     0     1     0
+             0     0     0     0     0     0     1     0     1     0     1
+
+        """
+
+        j = 0+1j
+        network = self.network
+        base_mva = network.mva_base
+        buses = network.non_islanded_buses
+        n_buses = network.n_non_islanded_buses
+        branches = network.in_service_branches
+
+        in_service = matrix([e.in_service for e in branches])
+
+        # Series admittance.
+        # Ys = stat ./ (branch(:, BR_R) + j * branch(:, BR_X))
+        r = matrix([e.r for e in branches])
+        x = matrix([e.x for e in branches])
+        Ys = div(in_service, (r + j*x))
+
+        # Line charging susceptance
+        # Bc = stat .* branch(:, BR_B);
+        b = matrix([e.b for e in branches])
+        Bc = mul(in_service, b)
+
+        # Default tap ratio = 1
+        # Transformer off nominal turns ratio ( = 0 for lines ) (taps at "from"
+        # bus, impedance at 'to' bus, i.e. ratio = Vf / Vt)"
+        ratio = matrix([e.ratio for e in branches])
+        # Phase shifters
+        # tap = tap .* exp(j*pi/180 * branch(:, SHIFT));
+        phase_shift = matrix([e.phase_shift for e in branches])
+
+        # Ytt = Ys + j*Bc/2;
+        # Yff = Ytt ./ (tap .* conj(tap));
+        # Yft = - Ys ./ conj(tap);
+        # Ytf = - Ys ./ tap;
+        Ytt = Ys + j*Bc/2
+        Yff = div(Ytt, (mul(ratio, conj(ratio))))
+        Yft = div(-Ys, conj(ratio))
+        Ytf = div(-Ys, ratio)
+
+        # Connection matrices.
+        source_bus = matrix([buses.index(v) for v in buses])
+        target_bus = matrix([buses.index(v) for v in buses])
+        Cf = spmatrix(1, I=source_bus, J=range(n_branches), size=(n_buses, n_branches), tc="i")
+
+        # Shunt admittance
+        # Ysh = (bus(:, GS) + j * bus(:, BS)) / baseMVA;
+        g_shunt = matrix([v.g_shunt for v in buses])
+        b_shunt = matrix([v.b_shunt for v in buses])
+        Ysh = (g_shunt + j * b_shunt) / base_mva
+
+        Y = spmatrix([], [], [], size=(n_buses, n_buses), tc="z")
 
 #------------------------------------------------------------------------------
 #  "SusceptanceMatrix" class:
