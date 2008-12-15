@@ -21,9 +21,12 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from math import pi
 import logging
 
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
+
+from pylon.routine.util import conj
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -159,25 +162,6 @@ class AdmittanceMatrix:
     def build(self):
         """ Builds the admittance matrix.
 
-        Cf =
-
-             1     1     1     0     0     0     0     0     0     0     0
-             0     0     0     1     1     1     1     0     0     0     0
-             0     0     0     0     0     0     0     1     1     0     0
-             0     0     0     0     0     0     0     0     0     1     0
-             0     0     0     0     0     0     0     0     0     0     1
-             0     0     0     0     0     0     0     0     0     0     0
-
-
-        Ct =
-
-             0     0     0     0     0     0     0     0     0     0     0
-             1     0     0     0     0     0     0     0     0     0     0
-             0     0     0     1     0     0     0     0     0     0     0
-             0     1     0     0     1     0     0     0     0     0     0
-             0     0     1     0     0     1     0     1     0     1     0
-             0     0     0     0     0     0     1     0     1     0     1
-
         """
 
         j = 0+1j
@@ -186,6 +170,7 @@ class AdmittanceMatrix:
         buses = network.non_islanded_buses
         n_buses = network.n_non_islanded_buses
         branches = network.in_service_branches
+        n_branches = network.n_in_service_branches
 
         in_service = matrix([e.in_service for e in branches])
 
@@ -201,26 +186,29 @@ class AdmittanceMatrix:
         Bc = mul(in_service, b)
 
         # Default tap ratio = 1
+        tap = matrix(1.0, (n_branches, 1), tc="d")
+        # Indices of branches with non-zero tap ratio
+        idxs = [branches.index(e) for e in branches if e.ratio != 0.0]
         # Transformer off nominal turns ratio ( = 0 for lines ) (taps at "from"
         # bus, impedance at 'to' bus, i.e. ratio = Vf / Vt)"
         ratio = matrix([e.ratio for e in branches])
+        # Assign non-zero tap ratios
+        tap[idxs] = ratio[idxs]
+
         # Phase shifters
         # tap = tap .* exp(j*pi/180 * branch(:, SHIFT));
-        phase_shift = matrix([e.phase_shift for e in branches])
+        # Convert branch attribute in degrees to radians
+        phase_shift = matrix([e.phase_shift * pi / 180 for e in branches])
+        tap = mul(tap, exp(j * phase_shift))
 
         # Ytt = Ys + j*Bc/2;
         # Yff = Ytt ./ (tap .* conj(tap));
         # Yft = - Ys ./ conj(tap);
         # Ytf = - Ys ./ tap;
         Ytt = Ys + j*Bc/2
-        Yff = div(Ytt, (mul(ratio, conj(ratio))))
-        Yft = div(-Ys, conj(ratio))
-        Ytf = div(-Ys, ratio)
-
-        # Connection matrices.
-        source_bus = matrix([buses.index(v) for v in buses])
-        target_bus = matrix([buses.index(v) for v in buses])
-        Cf = spmatrix(1, I=source_bus, J=range(n_branches), size=(n_buses, n_branches), tc="i")
+        Yff = div(Ytt, (mul(tap, conj(tap))))
+        Yft = div(-Ys, conj(tap))
+        Ytf = div(-Ys, tap)
 
         # Shunt admittance
         # Ysh = (bus(:, GS) + j * bus(:, BS)) / baseMVA;
@@ -228,7 +216,32 @@ class AdmittanceMatrix:
         b_shunt = matrix([v.b_shunt for v in buses])
         Ysh = (g_shunt + j * b_shunt) / base_mva
 
-        Y = spmatrix([], [], [], size=(n_buses, n_buses), tc="z")
+        # Connection matrices.
+        source_bus = matrix([buses.index(e.source_bus) for e in branches])
+        target_bus = matrix([buses.index(e.target_bus) for e in branches])
+        Cf = spmatrix(1.0, source_bus, range(n_branches))
+        Ct = spmatrix(1.0, target_bus, range(n_branches))
+
+        # Build bus admittance matrix
+        # Ybus = spdiags(Ysh, 0, nb, nb) + ...            %% shunt admittance
+        # Cf * spdiags(Yff, 0, nl, nl) * Cf' + ...    %% Yff term of branch admittance
+        # Cf * spdiags(Yft, 0, nl, nl) * Ct' + ...    %% Yft term of branch admittance
+        # Ct * spdiags(Ytf, 0, nl, nl) * Cf' + ...    %% Ytf term of branch admittance
+        # Ct * spdiags(Ytt, 0, nl, nl) * Ct';         %% Ytt term of branch admittance
+
+        ff = Cf * spdiag(Yff) * Cf.T
+        ft = Cf * spdiag(Yft) * Ct.T
+        tf = Ct * spdiag(Ytf) * Cf.T
+        tt = Ct * spdiag(Ytt) * Ct.T
+
+        # Resize otherwise all-zero rows/columns are lost.
+        self.Y = Y = spdiag(Ysh) + \
+            spmatrix(ff.V, ff.I, ff.J, (n_buses, n_buses), tc="z") + \
+            spmatrix(ft.V, ft.I, ft.J, (n_buses, n_buses), tc="z") + \
+            spmatrix(tf.V, tf.I, tf.J, (n_buses, n_buses), tc="z") + \
+            spmatrix(tt.V, tt.I, tt.J, (n_buses, n_buses), tc="z")
+
+        return Y
 
 #------------------------------------------------------------------------------
 #  "SusceptanceMatrix" class:
@@ -382,5 +395,18 @@ class PSATAdmittanceMatrix:
             y[target_idx, target_idx] += z*ts2+charge
 
         return y
+
+#------------------------------------------------------------------------------
+#  Stand-alone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    from os.path import join, dirname
+    from pylon.readwrite.api import read_matpower
+
+    data_file = join(dirname(__file__), "../test/data/case6ww.m")
+    n = read_matpower(data_file)
+
+    Y = AdmittanceMatrix(n).build()
 
 # EOF -------------------------------------------------------------------------

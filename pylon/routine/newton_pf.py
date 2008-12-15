@@ -38,6 +38,7 @@ import cvxopt.blas
 from numpy import angle as numpy_angle
 
 from pylon.routine.ac_pf import ACPFRoutine
+from pylon.routine.util import conj
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -46,64 +47,6 @@ from pylon.routine.ac_pf import ACPFRoutine
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
-
-#------------------------------------------------------------------------------
-#  Convenient conjugate function:
-#------------------------------------------------------------------------------
-
-def conj(A):
-    """ Returns the complex conjugate of A as a new matrix. """
-
-    return A.ctrans().trans()
-
-
-def atan2(X, Y):
-
-    matrix([math.arctan2(Y, X) for k in xrange(nrows*ncols)], (nrows, ncols), 'd')
-
-
-def angle(z, deg=0):
-    """
-    Return the angle of the complex argument.
-
-    Parameters
-    ----------
-    z : array_like
-        A complex number or sequence of complex numbers.
-    deg : bool, optional
-        Return angle in degrees if True, radians if False (default).
-
-    Returns
-    -------
-    angle : {ndarray, scalar}
-        The counterclockwise angle from the positive real axis on
-        the complex plane, with dtype as numpy.float64.
-
-    See Also
-    --------
-    arctan2
-
-    Examples
-    --------
-    >>> np.angle([1.0, 1.0j, 1+1j])               # in radians
-    array([ 0.        ,  1.57079633,  0.78539816])
-    >>> np.angle(1+1j, deg=True)                  # in degrees
-    45.0
-
-    """
-    if deg:
-        fact = 180/pi
-    else:
-        fact = 1.0
-#    z = asarray(z)
-    if z.typecode is "z":
-        zimag = z.imag()
-        zreal = z.real()
-    else:
-        zimag = 0
-        zreal = z
-    matrix([math.arctan2(z[i].imag(), z[i].real()) for x in z])
-    return atan2(zimag, zreal) * fact
 
 #------------------------------------------------------------------------------
 #  "NewtonPFRoutine" class:
