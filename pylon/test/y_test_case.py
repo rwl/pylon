@@ -27,7 +27,7 @@ from unittest import TestCase, main
 from pylon.readwrite.api import read_matpower
 
 from pylon.routine.y import \
-    make_susceptance_matrix, make_admittance_matrix
+    make_susceptance_matrix, make_admittance_matrix, AdmittanceMatrix
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -67,7 +67,9 @@ class YTest(TestCase):
 
         """
 
-        Y = make_admittance_matrix(self.network)
+#        Y = make_admittance_matrix(self.network)
+        m = AdmittanceMatrix(self.network)
+        Y = m.build()
 
         self.assertEqual(Y.size, (6, 6))
 
