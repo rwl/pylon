@@ -22,11 +22,12 @@
 #------------------------------------------------------------------------------
 
 from parsing_util import \
-    integer, boolean, real, scolon, matlab_comment, make_unique_name, ToInteger
+    integer, boolean, real, scolon, matlab_comment, make_unique_name, \
+    ToInteger, lbrack, rbrack
 
 from pyparsing import \
     Literal, Word, ZeroOrMore, Optional, OneOrMore, alphanums, delimitedList, \
-    alphas
+    alphas, Combine, Or, Group
 
 from pylon.network import Network
 from pylon.bus import Bus
@@ -101,15 +102,15 @@ class MATPOWERReader:
             ZeroOrMore(matlab_comment) + bus_array + \
             ZeroOrMore(matlab_comment) + gen_array + \
             ZeroOrMore(matlab_comment) + branch_array + \
-            ZeroOrMore(matlab_comment) + area_array + \
-            ZeroOrMore(matlab_comment) + generator_cost_array
+            ZeroOrMore(matlab_comment) + Optional(area_array) + \
+            ZeroOrMore(matlab_comment) + Optional(generator_cost_array)
 
         # Parse the data file
         data = case.parseFile(file_or_filename)
 
         # Set the slack bus.
         # FIXME: This is a bit smelly
-        self.network.buses[self.slack_idx].slack = True
+#        self.network.buses[self.slack_idx].slack = True
 
         # Reset the list of instantiated generators if necessary
         if len(self.generators):
@@ -128,8 +129,9 @@ class MATPOWERReader:
         # Use the function name for the Network title
         title = Word(alphanums).setResultsName("title")
         title.setParseAction(self._push_title)
-        header = Literal("function") + "[" + delimitedList(Word(alphas)) + \
-            "]" + "=" + title
+        header = Literal("function") + \
+            lbrack + delimitedList(Word(alphas)) + rbrack + \
+            "=" + title
 
         return header
 
@@ -164,8 +166,8 @@ class MATPOWERReader:
 
         bus_data.setParseAction(self._push_bus)
 
-        bus_array = Literal('bus') + '=' + '[' + \
-            ZeroOrMore(bus_data + Optional(']' + scolon))
+        bus_array = Combine(Optional("mpc.") + Literal('bus')) + '=' + '[' + \
+            ZeroOrMore(bus_data) + Optional(']' + scolon)
 
         return bus_array
 
@@ -191,7 +193,7 @@ class MATPOWERReader:
         gen_data.setParseAction(self._push_generator)
 
         gen_array = Literal('gen') + '=' + '[' + \
-            ZeroOrMore(gen_data + Optional(']' + scolon))
+            ZeroOrMore(gen_data) + Optional(']' + scolon)
 
         return gen_array
 
@@ -218,7 +220,7 @@ class MATPOWERReader:
         branch_data.setParseAction(self._push_branch)
 
         branch_array = Literal('branch') + '=' + '[' + \
-            ZeroOrMore(branch_data + Optional(']' + scolon))
+            ZeroOrMore(branch_data) + Optional(']' + scolon)
 
         return branch_array
 
@@ -232,7 +234,7 @@ class MATPOWERReader:
         area_data = area + price_ref_bus + scolon
 
         area_array = Literal('areas') + '=' + '[' + \
-            ZeroOrMore(area_data + Optional(']' + scolon))
+            ZeroOrMore(area_data) + Optional(']' + scolon)
 
         return area_array
 
@@ -267,7 +269,7 @@ class MATPOWERReader:
 #        polynomial_cost_data.setParseAction(self.push_polynomial_cost)
 
         generator_cost_array = Literal('gencost') + '=' + '[' + \
-            ZeroOrMore(linear_cost_data + Optional(']' + scolon))
+            ZeroOrMore(linear_cost_data) + Optional(']' + scolon)
 
         return generator_cost_array
 
@@ -291,8 +293,10 @@ class MATPOWERReader:
     def _push_bus(self, tokens):
         """ Adds a bus to the network and a load (if any) """
 
-        bus_names = [v.name for v in self.network.buses]
-        bus = Bus(name=make_unique_name("v", bus_names))
+#        bus_names = [v.name for v in self.network.buses]
+#        bus = Bus(name=make_unique_name("v", bus_names))
+        name = str(tokens["bus_id"])
+        bus = Bus(name=name)
 
         base_kv = tokens["baseKV"]
         bus.v_base = base_kv
@@ -311,7 +315,7 @@ class MATPOWERReader:
         self.network.buses.append(bus)
 
         # Loads are included in bus data with MATPOWER
-        if tokens["Pd"] > 0 or tokens["Qd"] > 0:
+        if (tokens["Pd"] > 0) or (tokens["Qd"] > 0):
             l = Load()
             l.p = tokens["Pd"]/self.base_mva
             l.q = tokens["Qd"]/self.base_mva
@@ -326,13 +330,18 @@ class MATPOWERReader:
     def _push_generator(self, tokens):
         """ Adds a generator to the respective bus """
 
+        buses = self.network.buses
+
         base_mva = tokens["mBase"]
         # Default to system base
         if base_mva == 0.0:
             base_mva = self.base_mva
 
         # Locate the associated bus in the network
-        bus = self.network.buses[tokens["bus_id"]-1]
+        bus_names = [v.name for v in buses]
+        bus_idx = bus_names.index(str(tokens["bus_id"]))
+        bus = buses[bus_idx]
+#        bus = self.network.buses[tokens["bus_id"]-1]
 
         g = Generator()
 
@@ -355,8 +364,16 @@ class MATPOWERReader:
     def _push_branch(self, tokens):
         """ Adds a branch to the network """
 
-        source_bus = self.network.buses[tokens["fbus"]-1]
-        target_bus = self.network.buses[tokens["tbus"]-1]
+        buses = self.network.buses
+
+        bus_names = [v.name for v in buses]
+        source_bus_idx = bus_names.index(str(tokens["fbus"]))
+        target_bus_idx = bus_names.index(str(tokens["tbus"]))
+        source_bus = buses[source_bus_idx]
+        target_bus = buses[target_bus_idx]
+
+#        source_bus = self.network.buses[tokens["fbus"]-1]
+#        target_bus = self.network.buses[tokens["tbus"]-1]
 
         branch_names = [e.name for e in self.network.branches]
         e = Branch(
@@ -468,9 +485,11 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
-    #data_file = "/home/rwl/python/aes/model/matpower/case30.m"
+#    data_file = "/home/rwl/python/aes/matpower_3.2/case2736sp.m"
+    data_file = "/home/rwl/python/aes/matpower_3.2/case30.m"
     filter = MATPOWERReader(data_file)
-    filter.network.configure_traits()
+
+    print "n branches:", len(filter.network.branches)
+#    filter.network.configure_traits()
 
 # EOF -------------------------------------------------------------------------
