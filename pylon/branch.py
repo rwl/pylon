@@ -295,6 +295,20 @@ class Branch(HasTraits):
         return self.name + "-#" + uuid.uuid4().hex[:6]
 
     #--------------------------------------------------------------------------
+    #  Event handlers:
+    #--------------------------------------------------------------------------
+
+    def _mode_changed(self, new):
+        """ Handles the branch mode changing. """
+
+        if new is "Line":
+            self.ratio = 0.0
+        elif new is "Transformer":
+            self.ratio = 1.0
+        else:
+            raise ValueError
+
+    #--------------------------------------------------------------------------
     #  Voltage ratio between the source bus and  the target bus:
     #--------------------------------------------------------------------------
 
