@@ -56,10 +56,18 @@ class FastDecoupledPFRoutine(ACPFRoutine):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
+    # FDPF matrix B prime.
     Bp = spmatrix
+
+    # FDPF matrix B double prime.
+    Bpp = spmatrix
 
     # Use XB or BX method?
     method = "XB"
+
+    p = matrix
+
+    q = matrix
 
     #--------------------------------------------------------------------------
     #  Solve power flow using Fast Decoupled method:
@@ -75,6 +83,16 @@ class FastDecoupledPFRoutine(ACPFRoutine):
         """
 
         self._make_B_prime()
+        self._make_B_double_prime()
+        self._make_admittance_matrix()
+        self._initialise_voltage_vector()
+        self._make_apparent_power_injection_vector()
+        self._index_buses()
+
+        # Initial evaluation of f(x0) and convergency check
+        self.converged = False
+        self._evaluate_mismatch()
+        self._check_convergence()
 
     #--------------------------------------------------------------------------
     #  P and Q iterations:
@@ -85,6 +103,51 @@ class FastDecoupledPFRoutine(ACPFRoutine):
 
         pass
 
+    #--------------------------------------------------------------------------
+    #  Evaluate mismatch:
+    #--------------------------------------------------------------------------
+
+    def _evaluate_mismatch(self):
+        """ Evaluates the mismatch between . """
+
+        # MATPOWER:
+        #   mis = (V .* conj(Ybus * V) - Sbus) ./ Vm;
+        v = self.v
+        mismatch = div(mul(v, conj(self.Y * v)) - self.s_surplus, abs(v))
+
+        self.p = p = mismatch[self.pvpq_idxs].real()
+        self.q = q = mismatch[self.pq_idxs].imag()
+
+        return p + j*q
+
+    #--------------------------------------------------------------------------
+    #  Check convergence:
+    #--------------------------------------------------------------------------
+
+    def _check_convergence(self):
+        """ Checks if the solution has converged to within the specified
+        tolerance.
+
+        """
+
+        P = self.p
+        Q = self.q
+        tol = self.tolerance
+
+        normP = max(abs(P))
+        normQ = max(abs(Q))
+
+        if (normP < tolerance) and (normQ < tolerance):
+            self.converged = converged = True
+        else:
+            self.converged = converged = False
+#            logger.info("Difference: %.3f" % normF-self.tolerance)
+
+        return converged
+
+    #--------------------------------------------------------------------------
+    #  Make FDPF matrix B prime:
+    #--------------------------------------------------------------------------
 
     def _make_B_prime(self):
         """ Builds the Fast Decoupled Power Flow matrix B prime.
@@ -109,6 +172,9 @@ class FastDecoupledPFRoutine(ACPFRoutine):
 
         return Bp
 
+    #--------------------------------------------------------------------------
+    #  Make FDPF matrix B double prime:
+    #--------------------------------------------------------------------------
 
     def _make_B_double_prime(self):
         """ Builds the Fast Decoupled Power Flow matrix B double prime.
