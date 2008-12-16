@@ -30,7 +30,10 @@ References:
 
 import cmath
 import logging, sys
+
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
+from cvxopt.lapack import getrf
+from cvxopt.umfpack import symbolic, numeric
 
 from pylon.routine.ac_pf import ACPFRoutine
 from pylon.routine.y import AdmittanceMatrix
@@ -117,6 +120,17 @@ class FastDecoupledPFRoutine(ACPFRoutine):
 
         pass
 
+    def _factor_B_matrices(self):
+        """ Perform symbolic and numeric LU factorisation of Bp and Bpp. """
+
+        Bp = self.Bp
+        Bpp = self.Bpp
+
+        # The numeric factorisation is returned as an opaque C object that
+        # can be passed on to umfpack.solve().
+        opaqueBp = numeric(Bp, symbolic(Bp))
+        opaqueBpp = numeric(Bpp, symbolic(Bp))
+
     #--------------------------------------------------------------------------
     #  Evaluate mismatch:
     #--------------------------------------------------------------------------
@@ -184,9 +198,6 @@ class FastDecoupledPFRoutine(ACPFRoutine):
         normP = max(abs(P))
         normQ = max(abs(Q))
 
-        print "normP:", normP
-        print "normQ:", normQ
-
         if (normP < tolerance) and (normQ < tolerance):
             self.converged = converged = True
         else:
@@ -244,9 +255,21 @@ class FastDecoupledPFRoutine(ACPFRoutine):
             self.network, line_resistance=r_line, phase_shift=False
         )
 
-        self.Bpp = Bpp = -am.Y.imag()
+        self.Bp = Bpp = -am.Y.imag()
 
         return Bpp
+
+
+    def _reduce_B_matrices(self):
+        """ Reduces the FDPF matrices Bp and Bpp. """
+
+        # Reduce Bp matrix
+        # Bp = Bp([pv; pq], [pv; pq]);
+        self.Bp = self.Bp[self.pvpq_idxs]
+
+        # Reduce Bpp matrix
+        # Bpp = Bpp(pq, pq);
+        self.Bpp = self.Bpp[self.pq_idxs]
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
