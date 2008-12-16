@@ -110,7 +110,7 @@ class MATPOWERReader:
 
         # Set the slack bus.
         # FIXME: This is a bit smelly
-#        self.network.buses[self.slack_idx].slack = True
+        self.network.buses[self.slack_idx].slack = True
 
         # Reset the list of instantiated generators if necessary
         if len(self.generators):
