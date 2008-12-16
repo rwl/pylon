@@ -59,16 +59,16 @@ class FDPFTest(TestCase):
 
         P =
 
-            0.5976
+           -0.1636
            -0.3083
-            5.3380
+            0.4412
             0.5061
             0.4874
 
 
         Q =
 
-            1.3955
+           -0.0053
             0.0274
            -0.2608
 
@@ -86,20 +86,20 @@ class FDPFTest(TestCase):
         P = routine.p
         Q = routine.q
 
-#        self.assertEqual(P.size, (5, 1))
-#        self.assertEqual(Q.size, (3, 1))
+        self.assertEqual(P.size, (5, 1))
+        self.assertEqual(Q.size, (3, 1))
 
         places = 4
 
-        P_0 = 0.5976
+        P_0 = -0.1636
         P_3 = 0.5061
-        Q_0 = 1.3955
+        Q_0 = -0.0053
         Q_2 = -0.2608
 
-#        self.assertAlmostEqual(P[0], P_0, places)
-#        self.assertAlmostEqual(P[3], P_3, places)
-#        self.assertAlmostEqual(Q[0], Q_0, places)
-#        self.assertAlmostEqual(Q[2], Q_2, places)
+        self.assertAlmostEqual(P[0], P_0, places)
+        self.assertAlmostEqual(P[3], P_3, places)
+        self.assertAlmostEqual(Q[0], Q_0, places)
+        self.assertAlmostEqual(Q[2], Q_2, places)
 
 
     def test_convergence(self):
@@ -107,14 +107,33 @@ class FDPFTest(TestCase):
 
         normP =
 
-            5.3380
+            0.5061
 
 
         normQ =
 
-            1.3955
+            0.2608
 
         """
+
+        routine = self.routine
+
+        routine._make_admittance_matrix()
+        routine._initialise_voltage_vector()
+        routine._make_power_injection_vector()
+        routine._index_buses()
+
+        routine._evaluate_mismatch()
+
+        # True negative
+        routine.converged = False
+        routine.tolerance = 0.5000
+        self.assertFalse(routine._check_convergence())
+
+        # True positive
+        routine.converged = False
+        routine.tolerance = 0.6000
+        self.assertTrue(routine._check_convergence())
 
 
     def test_B_prime(self):

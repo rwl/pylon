@@ -148,17 +148,22 @@ class FastDecoupledPFRoutine(ACPFRoutine):
         #   mis = (V .* conj(Ybus * V) - Sbus) ./ Vm;
         v = self.v
         Y = self.Y
+        s = self.s_surplus
 
 #        print "V:", v
 #        print "Y:", Y
+        print "S:", s
 
-        mismatch = div(mul(v, conj(self.Y * v) - self.s_surplus), abs(v))
-#        mismatch = Y * v
+#        mismatch = div(mul(v, conj(self.Y * v) - self.s_surplus), abs(v))
+        mismatch = div(mul(v, conj(Y * v)) - s, abs(v))
 
-#        print "MIS:", mismatch
+        print "MIS:", mismatch
 
         self.p = p = mismatch[self.pvpq_idxs].real()
         self.q = q = mismatch[self.pq_idxs].imag()
+
+        print "P:", p
+        print "Q:", q
 
         return p, q# + j*q
 
@@ -174,10 +179,13 @@ class FastDecoupledPFRoutine(ACPFRoutine):
 
         P = self.p
         Q = self.q
-        tol = self.tolerance
+        tolerance = self.tolerance
 
         normP = max(abs(P))
         normQ = max(abs(Q))
+
+        print "normP:", normP
+        print "normQ:", normQ
 
         if (normP < tolerance) and (normQ < tolerance):
             self.converged = converged = True
