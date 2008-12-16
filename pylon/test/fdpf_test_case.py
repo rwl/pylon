@@ -54,6 +54,69 @@ class FDPFTest(TestCase):
         self.routine = FastDecoupledPFRoutine(network)
 
 
+    def test_mismatch(self):
+        """ Test FDPF mismatch evaluation.
+
+        P =
+
+            0.5976
+           -0.3083
+            5.3380
+            0.5061
+            0.4874
+
+
+        Q =
+
+            1.3955
+            0.0274
+           -0.2608
+
+        """
+
+        routine = self.routine
+
+        routine._make_admittance_matrix()
+        routine._initialise_voltage_vector()
+        routine._make_power_injection_vector()
+        routine._index_buses()
+
+        routine._evaluate_mismatch()
+
+        P = routine.p
+        Q = routine.q
+
+#        self.assertEqual(P.size, (5, 1))
+#        self.assertEqual(Q.size, (3, 1))
+
+        places = 4
+
+        P_0 = 0.5976
+        P_3 = 0.5061
+        Q_0 = 1.3955
+        Q_2 = -0.2608
+
+#        self.assertAlmostEqual(P[0], P_0, places)
+#        self.assertAlmostEqual(P[3], P_3, places)
+#        self.assertAlmostEqual(Q[0], Q_0, places)
+#        self.assertAlmostEqual(Q[2], Q_2, places)
+
+
+    def test_convergence(self):
+        """ Test convergence satisfaction check.
+
+        normP =
+
+            5.3380
+
+
+        normQ =
+
+            1.3955
+
+        """
+
+
     def test_B_prime(self):
         """ Test build of FDPF matrix B prime.
 

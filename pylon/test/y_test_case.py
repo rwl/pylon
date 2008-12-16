@@ -102,10 +102,12 @@ class YTest(TestCase):
 
         places = 4
 
+        Y_0_1 = -2.0000+4.0000j
         Y_2_0 = 0.0000
         Y_4_1 = -1.0000+3.0000j
         Y_2_5 = -1.9231+9.6154j
 
+        self.assertAlmostEqual(abs(Y[0, 1]), abs(Y_0_1), places)
         self.assertAlmostEqual(abs(Y[2, 0]), abs(Y_2_0), places)
         self.assertAlmostEqual(abs(Y[4, 1]), abs(Y_4_1), places)
         self.assertAlmostEqual(abs(Y[2, 5]), abs(Y_2_5), places)

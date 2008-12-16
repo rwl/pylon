@@ -40,7 +40,7 @@ from cvxopt.base import matrix, spmatrix, sparse, gemv, exp, mul, div
 from cvxopt.umfpack import linsolve
 import cvxopt.blas
 
-from pylon.routine.y import make_admittance_matrix
+from pylon.routine.y import make_admittance_matrix, AdmittanceMatrix
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -87,6 +87,12 @@ class ACPFRoutine:
 
     # Flag indicating if the solution converged:
     converged = False
+
+    # Bus indexes for updating v.
+    pv_idxs = []
+    pq_idxs = []
+    pvpq_idxs = []
+    slack_idx = 0
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -159,8 +165,11 @@ class ACPFRoutine:
 
         self.v = v_initial
 
+    #--------------------------------------------------------------------------
+    #  Vector of apparent power injected at each bus:
+    #--------------------------------------------------------------------------
 
-    def _make_apparent_power_injection_vector(self):
+    def _make_power_injection_vector(self):
         """ Makes the vector of complex bus power injections (gen - load). """
 
         buses = self.network.non_islanded_buses
@@ -169,10 +178,30 @@ class ACPFRoutine:
             [complex(v.p_surplus, v.q_surplus) for v in buses], tc="z"
         )
 
+    #--------------------------------------------------------------------------
+    #  Index buses for updating v:
+    #--------------------------------------------------------------------------
 
-    def iterate(self):
-        """ Performs the iterations. """
+    def _index_buses(self):
+        """ Set up indexing for updating v. """
 
-        raise NotImplementedError("Override this method.")
+        buses = self.network.non_islanded_buses
+
+        # Indexing for updating v
+        pv_idxs = [i for i, v in enumerate(buses) if v.mode is "PV"]
+        pq_idxs = [i for i, v in enumerate(buses) if v.mode is "PQ"]
+        pvpq_idxs = pv_idxs + pq_idxs
+
+        slack_idxs = [i for i, v in enumerate(buses) if v.mode is "Slack"]
+        if len(slack_idxs) > 0:
+            slack_idx = slack_idxs[0]
+        else:
+            logger.error    ("No reference/swing/slack bus specified.")
+            slack_idx = 0
+
+        self.slack_idx = slack_idx
+        self.pv_idxs = pv_idxs
+        self.pq_idxs = pq_idxs
+        self.pvpq_idxs = pvpq_idxs
 
 # EOF -------------------------------------------------------------------------

@@ -68,12 +68,6 @@ class NewtonPFRoutine(ACPFRoutine):
     # Function of non-linear differential algebraic equations.
     f = matrix
 
-    # Bus indexing for updating v.
-    pv_idxs = []
-    pq_idxs = []
-    pvpq_idxs = []
-    slack_idx = 0
-
     #--------------------------------------------------------------------------
     #  Solve power flow using full Newton's method:
     #--------------------------------------------------------------------------
@@ -86,7 +80,7 @@ class NewtonPFRoutine(ACPFRoutine):
 
         self._make_admittance_matrix()
         self._initialise_voltage_vector()
-        self._make_apparent_power_injection_vector()
+        self._make_power_injection_vector()
         self._index_buses()
 
         # Initial evaluation of f(x0) and convergency check
@@ -338,32 +332,6 @@ class NewtonPFRoutine(ACPFRoutine):
 #            logger.info("Difference: %.3f" % normF-self.tolerance)
 
         return converged
-
-    #--------------------------------------------------------------------------
-    #  Index buses for updating v:
-    #--------------------------------------------------------------------------
-
-    def _index_buses(self):
-        """ Set up indexing for updating v. """
-
-        buses = self.network.non_islanded_buses
-
-        # Indexing for updating v
-        pv_idxs = [i for i, v in enumerate(buses) if v.mode is "PV"]
-        pq_idxs = [i for i, v in enumerate(buses) if v.mode is "PQ"]
-        pvpq_idxs = pv_idxs + pq_idxs
-
-        slack_idxs = [i for i, v in enumerate(buses) if v.mode is "Slack"]
-        if len(slack_idxs) > 0:
-            slack_idx = slack_idxs[0]
-        else:
-            logger.error    ("No reference/swing/slack bus specified.")
-            slack_idx = 0
-
-        self.slack_idx = slack_idx
-        self.pv_idxs = pv_idxs
-        self.pq_idxs = pq_idxs
-        self.pvpq_idxs = pvpq_idxs
 
 #------------------------------------------------------------------------------
 #  Standalone call:

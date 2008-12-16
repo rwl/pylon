@@ -34,6 +34,7 @@ from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
 
 from pylon.routine.ac_pf import ACPFRoutine
 from pylon.routine.y import AdmittanceMatrix
+from pylon.routine.util import conj
 
 from pylon.api import Network
 
@@ -84,15 +85,28 @@ class FastDecoupledPFRoutine(ACPFRoutine):
 
         self._make_B_prime()
         self._make_B_double_prime()
+
         self._make_admittance_matrix()
         self._initialise_voltage_vector()
-        self._make_apparent_power_injection_vector()
+        self._make_power_injection_vector()
         self._index_buses()
 
-        # Initial evaluation of f(x0) and convergency check
+        # Initial mismatch evaluation and convergency check.
         self.converged = False
         self._evaluate_mismatch()
         self._check_convergence()
+
+#        iter = 0
+#        while (not self.converged) and (iter < self.iter_max):
+#            self.iterate()
+#            self._evaluate_mismatch()
+#            self._check_convergence()
+#            iter += 1
+
+        if self.converged:
+            logger.info("Routine converged in %d iterations." % iter)
+        else:
+            logger.info("Routine failed to converge in %d iterations." % iter)
 
     #--------------------------------------------------------------------------
     #  P and Q iterations:
@@ -108,17 +122,45 @@ class FastDecoupledPFRoutine(ACPFRoutine):
     #--------------------------------------------------------------------------
 
     def _evaluate_mismatch(self):
-        """ Evaluates the mismatch between . """
+        """ Evaluates the mismatch between .
+
+  -4.0843 - 4.1177i
+   1.0738 - 0.2847i
+   0.2524 - 0.9024i
+   4.6380 - 0.6955i
+  -0.1939 + 0.6726i
+  -0.2126 + 0.9608i
+
+   4.0063 -11.7479i  -2.6642 + 3.5919i        0            -4.6636 + 1.3341i  -0.8299 + 3.1120i
+  -1.2750 + 4.2865i   9.3283 -23.1955i  -0.7692 + 3.8462i  -4.0000 + 8.0000i  -1.0000 + 3.0000i
+        0            -0.7692 + 3.8462i   4.1557 -16.5673i        0            -1.4634 + 3.1707i
+   3.4872 + 3.3718i  -4.0000 + 8.0000i        0             6.1765 -14.6359i  -1.0000 + 2.0000i
+  -0.8299 + 3.1120i  -1.0000 + 3.0000i  -1.4634 + 3.1707i  -1.0000 + 2.0000i   5.2933 -14.1378i
+        0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i
+
+
+
+        """
+
+        j = 0+1j
 
         # MATPOWER:
         #   mis = (V .* conj(Ybus * V) - Sbus) ./ Vm;
         v = self.v
-        mismatch = div(mul(v, conj(self.Y * v)) - self.s_surplus, abs(v))
+        Y = self.Y
+
+#        print "V:", v
+#        print "Y:", Y
+
+        mismatch = div(mul(v, conj(self.Y * v) - self.s_surplus), abs(v))
+#        mismatch = Y * v
+
+#        print "MIS:", mismatch
 
         self.p = p = mismatch[self.pvpq_idxs].real()
         self.q = q = mismatch[self.pq_idxs].imag()
 
-        return p + j*q
+        return p, q# + j*q
 
     #--------------------------------------------------------------------------
     #  Check convergence:
