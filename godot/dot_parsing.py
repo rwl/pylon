@@ -148,8 +148,8 @@ class GodotDataParser(DotDataParser):
 
 
     def coerce_token(self, obj, trait_name, token):
-        """ Coerces the token according to the trait type to which it is to be
-        assigned.
+        """ Coerces the token according to the trait type to which it is
+        to be assigned.
 
         """
 

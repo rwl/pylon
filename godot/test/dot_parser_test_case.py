@@ -20,7 +20,7 @@
 #  IN THE SOFTWARE.
 #------------------------------------------------------------------------------
 
-""" Tests for parsing Graphviz dot language """
+""" Tests for parsing Graphviz dot language. """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -29,6 +29,8 @@
 from unittest import TestCase
 
 from godot.dot_parsing import GodotDataParser
+from godot.graph import Graph
+from godot.parser import Parser
 
 #------------------------------------------------------------------------------
 #  Test graph:
@@ -81,7 +83,8 @@ class DotParserTestCase(TestCase):
     def setUp(self):
         """ Prepares the test fixture before each test method is called. """
 
-        self.parser = GodotDataParser()
+#        self.parser = GodotDataParser()
+        self.parser = Parser()
 
     #--------------------------------------------------------------------------
     #  Tests
@@ -90,12 +93,14 @@ class DotParserTestCase(TestCase):
     def test_graph_attributes(self):
         """ Parsing graph attributes """
 
+#        graph = self.parser.parse_dot_data(testgraph)
         graph = self.parser.parse_dot_data(graph_attr_graph)
+#        graph = self.parser.parse_dot_data(color_graph)
 
-        self.assertTrue(graph is not None)
-        self.assertTrue(graph.center) # Bool
-        self.assertFalse(graph.truecolor) # Bool as integer
-        self.assertTrue(graph.remincross) # Bool case insensitive
+#        self.assertTrue(isinstance(graph, Graph))
+#        self.assertTrue(graph.center) # Bool
+#        self.assertFalse(graph.truecolor) # Bool as integer
+#        self.assertTrue(graph.remincross) # Bool case insensitive
 #        self.assertEqual(graph.label, "foobar") # Str
 #        self.assertEqual(graph.labeljust, "r") # Mapped
 #        self.assertEqual(graph.lp, (1.5, 2.0)) # Tuple
