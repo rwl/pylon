@@ -84,7 +84,7 @@ class Graph(HasTraits):
 
     edges = List(Instance(Edge))
 
-    strict = Bool
+    strict = Bool(False)
 
     directed = Bool
 

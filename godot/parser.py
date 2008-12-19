@@ -23,7 +23,7 @@
 """ Defines a Graphviz dot language parser.
 
 The parser parses graphviz files dot code and files and transforms them
-into a class representation defined by godot.
+into a class representation defined by Godot.
 
 References:
     Michael Krause, Ero Carrera, "pydot"
@@ -34,6 +34,8 @@ References:
 #  Imports:
 #------------------------------------------------------------------------------
 
+from pyparsing import __version__ as pyparsing_version
+
 from pyparsing import \
     Literal, CaselessLiteral, Word, Upcase, OneOrMore, ZeroOrMore, Forward, \
     NotAny, delimitedList, oneOf, Group, Optional, Combine, alphas, nums, \
@@ -42,64 +44,12 @@ from pyparsing import \
     dblQuotedString, QuotedString, ParserElement, Suppress, Regex, \
     removeQuotes, nestedExpr
 
-#------------------------------------------------------------------------------
-#  Constants:
-#------------------------------------------------------------------------------
+from parsing_util import \
+    colon, lbrace, rbrace, lbrack, rbrack, lparen, rparen, equals, comma, \
+    dot, slash, bslash, star, semi, at, minus, pluss, double_quoted_string, \
+    quoted_string, nsplit, windows
 
-ADD_NODE = "add_node"
-ADD_EDGE = "add_edge"
-ADD_GRAPH_TO_NODE_EDGE = "add_graph_to_node_edge"
-ADD_NODE_TO_GRAPH_EDGE = "add_node_to_graph_edge"
-ADD_GRAPH_TO_GRAPH_EDGE = "add_graph_to_graph_edge"
-ADD_SUBGRAPH = "add_subgraph"
-SET_DEF_NODE_ATTR = "set_def_node_attr"
-SET_DEF_EDGE_ATTR = "set_def_edge_attr"
-SET_DEF_GRAPH_ATTR = "set_def_graph_attr"
-SET_GRAPH_ATTR = "set_graph_attr"
-
-#------------------------------------------------------------------------------
-#  "nsplit" function:
-#------------------------------------------------------------------------------
-
-def nsplit(seq, n=2):
-    """ Split a sequence into pieces of length n
-
-    If the length of the sequence isn't a multiple of n, the rest is discarded.
-    Note that nsplit will split strings into individual characters.
-
-    Examples:
-    >>> nsplit("aabbcc")
-    [("a", "a"), ("b", "b"), ("c", "c")]
-    >>> nsplit("aabbcc",n=3)
-    [("a", "a", "b"), ("b", "c", "c")]
-
-    # Note that cc is discarded
-    >>> nsplit("aabbcc",n=4)
-    [("a", "a", "b", "b")]
-
-    """
-
-    return [xy for xy in izip(*[iter(seq)]*n)]
-
-#------------------------------------------------------------------------------
-#  "windows" function:
-#------------------------------------------------------------------------------
-
-def windows(iterable, length=2, overlap=0, padding=True):
-    """ Code snippet from Python Cookbook, 2nd Edition by David Ascher,
-    Alex Martelli and Anna Ravenscroft; O'Reilly 2005
-
-    """
-
-    it = iter(iterable)
-    results = list(itertools.islice(it, length))
-    while len(results) == length:
-        yield results
-        results = results[length-overlap:]
-        results.extend(itertools.islice(it, length-overlap))
-    if padding and results:
-        results.extend(itertools.repeat(None, length-len(results)))
-        yield results
+from godot.graph import Graph
 
 #------------------------------------------------------------------------------
 #  "Parser" class:
@@ -108,8 +58,31 @@ def windows(iterable, length=2, overlap=0, padding=True):
 class Parser:
     """ Defines a Graphviz dot language parser. """
 
+    parser = None
+
+    graph = None
+
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
     def __init__(self):
         self.parser = self.define_parser()
+
+
+    def parse_dot_data(self, data):
+        """ Parses dot data and returns a godot.Graph instance. """
+
+        parser = self.parser
+
+        if pyparsing_version >= "1.2":
+            parser.parseWithTabs()
+
+        self.graph = Graph()
+
+        tokens = parser.parseString(data)
+
+        print "TOKENS:", tokens
 
     #--------------------------------------------------------------------------
     #  Define the dot parser
@@ -117,25 +90,6 @@ class Parser:
 
     def define_parser(self):
         """ Defines dot grammar """
-
-        # punctuation
-        colon  = Literal(":")
-        lbrace = Suppress("{")
-        rbrace = Suppress("}")
-        lbrack = Suppress("[")
-        rbrack = Suppress("]")
-        lparen = Literal("(")
-        rparen = Literal(")")
-        equals = Suppress("=")
-        comma  = Literal(",")
-        dot    = Literal(".")
-        slash  = Literal("/")
-        bslash = Literal("\\")
-        star   = Literal("*")
-        semi   = Suppress(";")
-        at     = Literal("@")
-        minus  = Literal("-")
-        plus  = Suppress("+")
 
         # keywords
         strict_    = CaselessLiteral("strict")
@@ -147,15 +101,6 @@ class Parser:
 
         # token definitions
         identifier = Word(alphanums + "_" ).setName("identifier")
-
-        #double_quoted_string = QuotedString('"', multiline=True,escChar="\\",
-        #    unquoteResults=True) # dblQuotedString
-        double_quoted_string = Regex(r'\"(?:\\\"|\\\\|[^"])*\"', re.MULTILINE)
-        double_quoted_string.setParseAction(removeQuotes)
-        quoted_string = Combine(
-            double_quoted_string+
-            Optional(OneOrMore(plus+double_quoted_string)), adjacent=False
-        )
 
         alphastring_ = OneOrMore(CharsNotIn(_noncomma))
 
@@ -226,7 +171,7 @@ class Parser:
         edge_stmt = edge_point + edgeRHS + Optional(attr_list)
 
         subgraph = (
-            Optional(subgraph_,"") + Optional(ID,"") + Group(graph_stmt)
+            Optional(subgraph_, "") + Optional(ID, "") + Group(graph_stmt)
         ).setName("subgraph").setResultsName("ssubgraph")
 
         edge_point << (subgraph | graph_stmt | node_id )
@@ -236,22 +181,27 @@ class Parser:
         ).setName("node_stmt")
 
         assignment = (ID + equals + righthand_id).setName("assignment")
-        stmt =  (
+        stmt = (
             assignment | edge_stmt | attr_stmt | subgraph | graph_stmt |
             node_stmt
         ).setName("stmt")
         stmt_list << OneOrMore(stmt + Optional(semi))
 
+        # A strict graph is an unweighted, undirected graph containing no
+        # graph loops or multiple edges
+        strict = Optional(strict_, "notstrict").setResultsName("strict")
+
         graphparser = (
-            Optional(strict_,"notstrict") + ((graph_ | digraph_)) +
-            Optional(ID,"") + lbrace + Group(Optional(stmt_list)) +rbrace
+            strict + ((graph_ | digraph_)) +
+            Optional(ID, "") + lbrace + Group(Optional(stmt_list)) + rbrace
         ).setResultsName("graph")
 
+        # Ignore comments.
         singleLineComment = Group("//" + restOfLine) | Group("#" + restOfLine)
-
-        # actions
         graphparser.ignore(singleLineComment)
         graphparser.ignore(cStyleComment)
+
+        # Actions
         node_id.setParseAction(self.push_node_id)
         assignment.setParseAction(self.push_attr_assignment)
         a_list.setParseAction(self.push_attr_list)
@@ -261,13 +211,37 @@ class Parser:
         attr_list.setParseAction(self.push_attr_list_combine)
         subgraph.setParseAction(self.push_subgraph_stmt)
         #graph_stmt.setParseAction(self.push_graph_stmt)
-        graphparser.setParseAction(self._main_graph_stmt)
+
+        strict.setParseAction(self._push_strict)
+#        graphparser.setParseAction(self._push_main_graph)
 
         return graphparser
 
     #--------------------------------------------------------------------------
     #  Parser actions
     #--------------------------------------------------------------------------
+
+    def _push_strict(self, tokens):
+        """ Sets the 'strict' attribute of the graph. """
+
+        graph = self.graph
+        strict = tokens["strict"]
+
+        if strict == "strict":
+            graph.strict = True
+        elif strict == "notstrict":
+            graph.strict = False
+        else:
+            raise ValueError
+
+
+    def _push_main_graph(self, tokens):
+        """ Starts a new Graph. """
+
+        print "Graph:", tokens
+
+        self.graph = Graph()
+
 
     def push_node_id(self, toks):
         """ Returns a tuple if more than one id exists """
@@ -300,16 +274,16 @@ class Parser:
 
 
     def push_attr_assignment(self, toks):
-        return (SET_GRAPH_ATTR, dict(nsplit(toks, 2)))
+        return ("set_graph_attr", dict(nsplit(toks, 2)))
 
 
     def push_node_stmt(self, toks):
         """ Returns tuple of the form (ADD_NODE, node_name, options) """
 
         if len(toks) == 2:
-            return tuple([ADD_NODE] + list(toks))
+            return tuple(["add_node"] + list(toks))
         else:
-            return tuple([ADD_NODE] + list(toks) + [{}])
+            return tuple(["add_node"] + list(toks) + [{}])
 
 
     def push_edge_stmt(self, toks):
@@ -322,24 +296,24 @@ class Parser:
         for src, op, dest in windows(toks, length=3, overlap=1, padding=False):
             # is src or dest a subgraph?
             srcgraph = destgraph = False
-            if len(src) > 1 and src[0] == ADD_SUBGRAPH:
+            if len(src) > 1 and src[0] == "add_subgraph":
                 edgelist.append(src)
                 srcgraph = True
-            if len(dest) > 1 and dest[0] == ADD_SUBGRAPH:
+            if len(dest) > 1 and dest[0] == "add_subgraph":
                 edgelist.append(dest)
                 destgraph = True
             if srcgraph or destgraph:
                 if srcgraph and destgraph:
                     edgelist.append(
-                        (ADD_GRAPH_TO_GRAPH_EDGE,src[1],dest[1],opts)
+                        ("add_graph_to_graph_edge",src[1],dest[1],opts)
                     )
                 elif srcgraph:
-                    edgelist.append((ADD_GRAPH_TO_NODE_EDGE,src[1],dest,opts))
+                    edgelist.append(("add_graph_to_node_edge",src[1],dest,opts))
                 else:
-                    edgelist.append((ADD_NODE_TO_GRAPH_EDGE,src,dest[1],opts))
+                    edgelist.append(("add_node_to_graph_edge",src,dest[1],opts))
             else:
                 # ordinary edge
-                edgelist.append((ADD_EDGE,src,dest,opts))
+                edgelist.append(("add_edge",src,dest,opts))
 
         return edgelist
 
@@ -353,11 +327,11 @@ class Parser:
         else:
             gtype, attr = toks
         if gtype == "node":
-            return (SET_DEF_NODE_ATTR, attr)
+            return ("set_def_node_attr", attr)
         elif gtype == "edge":
-            return (SET_DEF_EDGE_ATTR, attr)
+            return ("set_def_edge_attr", attr)
         elif gtype == "graph":
-            return (SET_DEF_GRAPH_ATTR, attr)
+            return ("set_def_graph_attr", attr)
         else:
             return ("unknown", toks)
 
@@ -370,6 +344,6 @@ class Parser:
 
     def _main_graph_stmt(self,toks):
 
-        return (toks[0], toks[1], toks[2],toks[3].asList())
+        return (toks[0], toks[1], toks[2], toks[3])#.asList())
 
 # EOF -------------------------------------------------------------------------

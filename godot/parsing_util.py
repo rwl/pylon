@@ -31,9 +31,14 @@ References:
 #  Imports:
 #------------------------------------------------------------------------------
 
+import re
+
+from itertools import izip
+
 from pyparsing import \
     TokenConverter, oneOf, string, Literal, Group, Word, Optional, Combine, \
-    sglQuotedString, dblQuotedString, restOfLine, nums
+    sglQuotedString, dblQuotedString, restOfLine, nums, removeQuotes, Regex, \
+    OneOrMore
 
 #------------------------------------------------------------------------------
 #  "ToBoolean" class:
@@ -70,6 +75,25 @@ class ToFloat(TokenConverter):
         """ Converts the first token into a float """
 
         return float(tokenlist[0])
+
+# punctuation
+colon  = Literal(":")
+lbrace = Literal("{")
+rbrace = Literal("}")
+lbrack = Literal("[")
+rbrack = Literal("]")
+lparen = Literal("(")
+rparen = Literal(")")
+equals = Literal("=")
+comma  = Literal(",")
+dot    = Literal(".")
+slash  = Literal("/")
+bslash = Literal("\\")
+star   = Literal("*")
+semi   = Literal(";")
+at     = Literal("@")
+minus  = Literal("-")
+pluss  = Literal("+")
 
 #------------------------------------------------------------------------------
 #  Convenience pyparsing constructs
@@ -126,6 +150,15 @@ negative_real = ToFloat(
 
 q_string = (sglQuotedString | dblQuotedString).setName("q_string")
 
+#double_quoted_string = QuotedString('"', multiline=True,escChar="\\",
+#    unquoteResults=True) # dblQuotedString
+double_quoted_string = Regex(r'\"(?:\\\"|\\\\|[^"])*\"', re.MULTILINE)
+double_quoted_string.setParseAction(removeQuotes)
+quoted_string = Combine(
+    double_quoted_string+
+    Optional(OneOrMore(pluss+double_quoted_string)), adjacent=False
+)
+
 # add other characters we should skip over between interesting fields
 #integer_junk = Optional(
 #    Suppress(Word(alphas + special_chars + decimal_sep))
@@ -136,25 +169,6 @@ q_string = (sglQuotedString | dblQuotedString).setName("q_string")
 #).setName("real_junk")
 #
 #q_string_junk = SkipTo(q_string).setName("q_string_junk")
-
-# punctuation
-colon  = Literal(":")
-lbrace = Literal("{")
-rbrace = Literal("}")
-lbrack = Literal("[")
-rbrack = Literal("]")
-lparen = Literal("(")
-rparen = Literal(")")
-equals = Literal("=")
-comma  = Literal(",")
-dot    = Literal(".")
-slash  = Literal("/")
-bslash = Literal("\\")
-star   = Literal("*")
-semi   = Literal(";")
-at     = Literal("@")
-minus  = Literal("-")
-pluss  = Literal("+")
 
 #------------------------------------------------------------------------------
 #  A convenient function for calculating a unique name given a list of
@@ -178,5 +192,49 @@ def make_unique_name(base, existing=[], format="%s_%s"):
         count += 1
 
     return name
+
+#------------------------------------------------------------------------------
+#  "nsplit" function:
+#------------------------------------------------------------------------------
+
+def nsplit(seq, n=2):
+    """ Split a sequence into pieces of length n
+
+    If the length of the sequence isn't a multiple of n, the rest is discarded.
+    Note that nsplit will split strings into individual characters.
+
+    Examples:
+    >>> nsplit("aabbcc")
+    [("a", "a"), ("b", "b"), ("c", "c")]
+    >>> nsplit("aabbcc",n=3)
+    [("a", "a", "b"), ("b", "c", "c")]
+
+    # Note that cc is discarded
+    >>> nsplit("aabbcc",n=4)
+    [("a", "a", "b", "b")]
+
+    """
+
+    return [xy for xy in izip(*[iter(seq)]*n)]
+
+#------------------------------------------------------------------------------
+#  "windows" function:
+#------------------------------------------------------------------------------
+
+def windows(iterable, length=2, overlap=0, padding=True):
+    """ Code snippet from Python Cookbook, 2nd Edition by David Ascher,
+    Alex Martelli and Anna Ravenscroft; O'Reilly 2005
+
+    """
+
+    it = iter(iterable)
+    results = list(itertools.islice(it, length))
+    while len(results) == length:
+        yield results
+        results = results[length-overlap:]
+        results.extend(itertools.islice(it, length-overlap))
+    if padding and results:
+        results.extend(itertools.repeat(None, length-len(results)))
+        yield results
 
 # EOF -------------------------------------------------------------------------
