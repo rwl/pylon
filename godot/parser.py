@@ -84,6 +84,8 @@ class Parser:
 
         print "TOKENS:", tokens
 
+        return self.graph
+
     #--------------------------------------------------------------------------
     #  Define the dot parser
     #--------------------------------------------------------------------------
@@ -92,15 +94,17 @@ class Parser:
         """ Defines dot grammar """
 
         # keywords
-        strict_    = CaselessLiteral("strict")
-        graph_     = CaselessLiteral("graph")
-        digraph_   = CaselessLiteral("digraph")
-        subgraph_  = CaselessLiteral("subgraph")
-        node_      = CaselessLiteral("node")
-        edge_      = CaselessLiteral("edge")
+        strict_ = CaselessLiteral("strict").setResultsName("strict")
+        graph_ = CaselessLiteral("graph").setResultsName("directed")
+        digraph_ = CaselessLiteral("digraph").setResultsName("directed")
+        subgraph_ = CaselessLiteral("subgraph").setResultsName("subgraph")
+        node_ = CaselessLiteral("node").setResultsName("node")
+        edge_ = CaselessLiteral("edge").setResultsName("edge")
+
+#        graph_.setParseAction(self._push_digraph)
 
         # token definitions
-        identifier = Word(alphanums + "_" ).setName("identifier")
+        identifier = Word(alphanums + "_").setName("identifier")
 
         alphastring_ = OneOrMore(CharsNotIn(_noncomma))
 
@@ -123,6 +127,13 @@ class Parser:
             )
             html_text = Combine(Literal("<<") + OneOrMore(CharsNotIn(",]")))
 
+        # An ID is one of the following:
+        #  * Any string of alphabetic ([a-zA-Z\200-\377]) characters,
+        #    underscores ('_') or digits ([0-9]), not beginning with a digit;
+        #  * a number [-]?(.[0-9]+ | [0-9]+(.[0-9]*)? );
+        #  * any double-quoted string ("...") possibly containing escaped
+        #    quotes (\")1;
+        #  * an HTML string (<...>).
         ID = (
             identifier | html_text |
             quoted_string | #.setParseAction(strip_quotes) |
@@ -185,15 +196,21 @@ class Parser:
             assignment | edge_stmt | attr_stmt | subgraph | graph_stmt |
             node_stmt
         ).setName("stmt")
+
         stmt_list << OneOrMore(stmt + Optional(semi))
 
         # A strict graph is an unweighted, undirected graph containing no
-        # graph loops or multiple edges
+        # graph loops or multiple edges.
         strict = Optional(strict_, "notstrict").setResultsName("strict")
+        # Do edges have direction?
+        directed = ((graph_ | digraph_))
+        # Optional graph identifier.
+        graph_id = Optional(ID, "").setResultsName("graph_id")
 
+        # Parser for graphs defined in the DOT language.
         graphparser = (
-            strict + ((graph_ | digraph_)) +
-            Optional(ID, "") + lbrace + Group(Optional(stmt_list)) + rbrace
+            strict + directed + graph_id +
+            lbrace + Group(Optional(stmt_list)) + rbrace
         ).setResultsName("graph")
 
         # Ignore comments.
@@ -213,6 +230,8 @@ class Parser:
         #graph_stmt.setParseAction(self.push_graph_stmt)
 
         strict.setParseAction(self._push_strict)
+        directed.setParseAction(self._push_directed)
+        graph_id.setParseAction(self._push_graph_id)
 #        graphparser.setParseAction(self._push_main_graph)
 
         return graphparser
@@ -233,6 +252,29 @@ class Parser:
             graph.strict = False
         else:
             raise ValueError
+
+
+    def _push_directed(self, tokens):
+        """ Do edges have direction? """
+
+        graph = self.graph
+        directed = tokens["directed"]
+
+        if directed == "graph":
+            graph.directed = False
+        elif directed == "digraph":
+            graph.directed = True
+        else:
+            raise ValueError
+
+
+    def _push_graph_id(self, tokens):
+        """ Optional graph identifier. """
+
+        graph = self.graph
+        graph_id = tokens["graph_id"]
+
+        graph.ID = graph_id
 
 
     def _push_main_graph(self, tokens):
@@ -274,6 +316,10 @@ class Parser:
 
 
     def push_attr_assignment(self, toks):
+
+        print "ATTR:", toks#dict(nsplit(toks, 2))
+
+
         return ("set_graph_attr", dict(nsplit(toks, 2)))
 
 

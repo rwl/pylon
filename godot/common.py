@@ -9,12 +9,14 @@ point_trait = Float #Either(
 #    pointf_trait, Tuple(Float, Float, Float, desc="the point (x,y,z)")
 #)
 
-color_scheme_trait = Enum(
-    "X11", "Accent", "Blues", "BRBG", "BUGN", "BUPU", "Dark", "GUBU",
-    "Greens", "Greys", "Oranges", "OORD", "Paired", "Pastel", "PIYG",
+color_schemes = ["X11", "Accent", "Blues", "BRBG", "BUGN", "BUPU", "Dark",
+    "GUBU", "Greens", "Greys", "Oranges", "OORD", "Paired", "Pastel", "PIYG",
     "PRGN", "PUBU", "PUBUGN", "PUOR", "PURD", "Purples", "RDBU", "RDGY",
     "RDPU", "RDYLBU", "RDYLGN", "Reds", "Set", "Spectral", "YLGN",
-    "YLGNBU", "YLORBR", "YLORRD", desc="a color scheme namespace",
+    "YLGNBU", "YLORBR", "YLORRD"]
+
+color_scheme_trait = Enum(
+    color_schemes, desc="a color scheme namespace",
     label="Color scheme"
 )
 

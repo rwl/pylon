@@ -45,7 +45,7 @@ digraph G {
 """
 
 graph_attr_graph = r"""
-digraph G {
+strict digraph G {
     center=true // Bool
     truecolor=0 // Bool as integer
     remincross=TRUE // Bool case insensitive
@@ -95,9 +95,12 @@ class DotParserTestCase(TestCase):
 
 #        graph = self.parser.parse_dot_data(testgraph)
         graph = self.parser.parse_dot_data(graph_attr_graph)
-#        graph = self.parser.parse_dot_data(color_graph)
 
-#        self.assertTrue(isinstance(graph, Graph))
+        self.assertTrue(isinstance(graph, Graph))
+        self.assertTrue(graph.strict)
+        self.assertTrue(graph.directed)
+        self.assertEqual(graph.ID, "G")
+
 #        self.assertTrue(graph.center) # Bool
 #        self.assertFalse(graph.truecolor) # Bool as integer
 #        self.assertTrue(graph.remincross) # Bool case insensitive
