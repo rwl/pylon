@@ -47,13 +47,13 @@ digraph G {
 graph_attr_graph = r"""
 strict digraph G {
     center=true // Bool
-    truecolor=0 // Bool as integer
-    remincross=TRUE // Bool case insensitive
+    truecolor=0; // Bool as integer
+    remincross=TRUE; // Bool case insensitive
     label="foobar"; // String
-//    labeljust=r; // Mapped
-//    lp=(1.5, 2.0); // Point/Tuple
+    labeljust=r; // Mapped
+    lp="1.5, 2.0"; // Point/Tuple
     maxiter=250; // Int
-    nodesep=.05; // Float
+    nodesep=0.05; // Float
     mode=KK; // Enum
 }
 """

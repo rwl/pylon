@@ -42,12 +42,12 @@ from pyparsing import \
     restOfLine, cStyleComment, nums, alphanums, printables, empty, \
     quotedString, ParseException, ParseResults, CharsNotIn, _noncomma, \
     dblQuotedString, QuotedString, ParserElement, Suppress, Regex, \
-    removeQuotes, nestedExpr
+    removeQuotes, nestedExpr, Suppress, Or
 
 from parsing_util import \
     colon, lbrace, rbrace, lbrack, rbrack, lparen, rparen, equals, comma, \
     dot, slash, bslash, star, semi, at, minus, pluss, double_quoted_string, \
-    quoted_string, nsplit, windows
+    quoted_string, nsplit, windows, graph_attr
 
 from godot.graph import Graph
 
@@ -91,7 +91,9 @@ class Parser:
     #--------------------------------------------------------------------------
 
     def define_parser(self):
-        """ Defines dot grammar """
+        """ Defines dot grammar.
+
+        @see: http://www.graphviz.org/doc/info/lang.html """
 
         # keywords
         strict_ = CaselessLiteral("strict").setResultsName("strict")
@@ -191,7 +193,12 @@ class Parser:
             node_id + Optional(attr_list) + Optional(semi)
         ).setName("node_stmt")
 
-        assignment = (ID + equals + righthand_id).setName("assignment")
+#        assignment = (ID + equals + righthand_id).setName("assignment")
+        assignment = (
+            Or([(CaselessLiteral(attr.resultsName) + Suppress(equals) + attr) \
+                for attr in graph_attr])
+        )
+
         stmt = (
             assignment | edge_stmt | attr_stmt | subgraph | graph_stmt |
             node_stmt
@@ -315,12 +322,12 @@ class Parser:
         return toks
 
 
-    def push_attr_assignment(self, toks):
+    def push_attr_assignment(self, tokens):
 
-        print "ATTR:", toks#dict(nsplit(toks, 2))
+        print "ATTR:", tokens#dict(nsplit(toks, 2))
 
 
-        return ("set_graph_attr", dict(nsplit(toks, 2)))
+        return ("set_graph_attr", dict(nsplit(tokens, 2)))
 
 
     def push_node_stmt(self, toks):

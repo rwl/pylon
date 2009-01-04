@@ -20,7 +20,7 @@
 #  IN THE SOFTWARE.
 #------------------------------------------------------------------------------
 
-""" Defines convenience pyparsing constructs and token converters.
+""" Defines convenient pyparsing constructs and token converters.
 
 References:
     sparser.py by Tim Cera timcera@earthlink.net
@@ -38,7 +38,8 @@ from itertools import izip
 from pyparsing import \
     TokenConverter, oneOf, string, Literal, Group, Word, Optional, Combine, \
     sglQuotedString, dblQuotedString, restOfLine, nums, removeQuotes, Regex, \
-    OneOrMore, hexnums, alphas, alphanums, CaselessLiteral
+    OneOrMore, hexnums, alphas, alphanums, CaselessLiteral, And, NotAny, Or, \
+    White, QuotedString
 
 #from enthought.enable.colors import color_table
 
@@ -98,9 +99,10 @@ semi   = Literal(";")
 at     = Literal("@")
 minus  = Literal("-")
 pluss  = Literal("+")
+dquote = Literal('"')
 
 #------------------------------------------------------------------------------
-#  Convenience pyparsing constructs
+#  Convenient pyparsing constructs.
 #------------------------------------------------------------------------------
 
 decimal_sep = "."
@@ -108,8 +110,6 @@ decimal_sep = "."
 sign = oneOf("+ -")
 
 scolon = Literal(";").suppress()
-
-string = Word(alphanums)
 
 matlab_comment = Group(Literal('%') + restOfLine).suppress()
 psse_comment = Literal('@!') + Optional(restOfLine)
@@ -119,10 +119,7 @@ special_chars = string.replace(
     '!"#$%&\'()*,./:;<=>?@[\\]^_`{|}~', decimal_sep, ""
 )
 
-#boolean = ToBoolean(ToInteger(Word("01", exact=1))).setName("bool")
-true = CaselessLiteral("True") | And(integer, NotAny(Literal("0")))
-false = CaselessLiteral("False") | Literal("0")
-boolean = ToBoolean(true | false).setResultsName("boolean")
+# Integer ---------------------------------------------------------------------
 
 integer = ToInteger(
     Combine(Optional(sign) + Word(nums))
@@ -136,29 +133,27 @@ negative_integer = ToInteger(
     Combine("-" + Word(nums))
 ).setName("integer")
 
+# Boolean ---------------------------------------------------------------------
+
+#boolean = ToBoolean(ToInteger(Word("01", exact=1))).setName("bool")
+true = CaselessLiteral("True")# | And(integer, NotAny(Literal("0")))
+false = CaselessLiteral("False") | Literal("0")
+boolean = ToBoolean(true | false).setResultsName("boolean")
+
+# Real ------------------------------------------------------------------------
+
 real = ToFloat(
     Combine(
-        Optional(sign) + Word(nums) + Optional(decimal_sep + Word(nums)) +
-        Optional(oneOf("E e") + Word(nums))
+        Optional(dquote).suppress() + Optional(sign) + Word(nums) +
+        Optional(decimal_sep + Word(nums)) +
+        Optional(oneOf("E e") + Word(nums)) + Optional(dquote).suppress()
     )
 ).setName("real")
 
 # TODO: Positive real number between zero and one.
 decimal = real
 
-positive_real = ToFloat(
-    Combine(
-        Optional("+") + Word(nums) + decimal_sep + Optional(Word(nums)) +
-        Optional(oneOf("E e") + Word(nums))
-    )
-).setName("real")
-
-negative_real = ToFloat(
-    Combine(
-        "-" + Word(nums) + decimal_sep + Optional(Word(nums)) +
-        Optional(oneOf("E e") + Word(nums))
-    )
-).setName("real")
+# String ----------------------------------------------------------------------
 
 q_string = (sglQuotedString | dblQuotedString).setName("q_string")
 
@@ -170,6 +165,7 @@ quoted_string = Combine(
     double_quoted_string+
     Optional(OneOrMore(pluss+double_quoted_string)), adjacent=False
 )
+word = quoted_string#Word(alphanums)
 
 # add other characters we should skip over between interesting fields
 #integer_junk = Optional(
@@ -191,20 +187,32 @@ rgb = Literal("#") + hex_color.setResultsName("red") + \
 rgba = rgb + hex_color.setResultsName("alpha")
 hsv = decimal.setResultsName("hue") + decimal.setResultsName("saturation") + \
     decimal.setResultsName("value")
-color_name = Word(alphas)
+color_name = double_quoted_string | Word(alphas)
 color = rgb | rgba | hsv | color_name
 
-cluster_mode = Literal("local") | Literal("global") | Literal("none")
+cluster_mode = CaselessLiteral("local") | CaselessLiteral("global") | \
+    CaselessLiteral("none")
 
-color_scheme = Or([Literal(scheme) for scheme in color_schemes])
+color_scheme = Or([CaselessLiteral(scheme) for scheme in color_schemes])
+
+esc_string = html_label = quoted_string
+lbl_string = esc_string | html_label
+
+point = Optional(dquote).suppress() + real.setResultsName("x") + \
+    comma.suppress() + real.setResultsName("y") + \
+    Optional((comma + real.setResultsName("z"))) + \
+    Optional(dquote).suppress() + Optional(Literal("!").setResultsName("!"))
+
+pointf = Optional(dquote).suppress() + real.setResultsName("x") + \
+    comma.suppress() + real.setResultsName("y") + Optional(dquote).suppress()
 
 bb = rect.setResultsName("bb")
 bgcolor = color.setResultsName("bgcolor")
 center = boolean.setResultsName("center")
-charset = string.setResultsName("charset")
+charset = word.setResultsName("charset")
 clusterrank = cluster_mode.setResultsName("clusterrank")
 colorscheme = color_scheme.setResultsName("colorscheme")
-comment = string.setResultsName("comment")
+comment = word.setResultsName("comment")
 compound = boolean.setResultsName("compound")
 concentrate = boolean.setResultsName("concentrate")
 Damping = real.setResultsName("Damping")
@@ -215,173 +223,96 @@ diredgeconstraints = (boolean |
 dpi = real.setResultsName("dpi")
 epsilon = real.setResultsName("epsilon")
 esep = integer.setResultsName("esep")
-fontcolor = fontcolor_trait
-fontname = fontname_trait
-fontnames = Enum(
-    "svg", "ps", "gd", label="Font names",
-    desc="how basic fontnames are represented in SVG output"
-)
-fontpath = List(Directory, label="Font path")
-fontsize = fontsize_trait
-K = Float(0.3, desc="spring constant used in virtual physical model")
-label = label_trait
-labeljust = Trait(
-    "c", {"Centre": "c", "Right": "r", "Left": "l"},
-    desc="justification for cluster labels", label="Label justification"
-)
-labelloc = Trait(
-    "b", {"Bottom": "b", "Top":"t"},
-    desc="placement of graph and cluster labels",
-    label="Label location"
-)
-landscape = Bool(False, desc="rendering in landscape mode")
-layers = Str(desc="a linearly ordered list of layer names")
-layersep = Enum(
-    ":\t", "\t", " ", label="Layer separation",
-    desc="separator characters used to split layer names"
-)
-levelsgap = Float(
-    0.0, desc="strictness of level constraints in neato",
-    label="Levels gap"
-)
-lp = point_trait
-margin = Either(Float, pointf_trait, desc="x and y margins of canvas")
-maxiter = Int(desc="number of iterations used", label="Maximum iterations")
-mclimit = Float(
-    1.0, desc="Multiplicative scale factor used to alter the MinQuit "
-    "(default = 8) and MaxIter (default = 24) parameters used during "
-    "crossing minimization", label="Multiplicative scale factor"
-)
-mindist = Float(
-    1.0, desc="minimum separation between all nodes",
-    label="Minimum separation"
-)
-mode = Enum(
-    "major", "KK", "heir", "ipsep",
-    desc="Technique for optimizing the layout"
-)
-model = Enum(
-    "shortpath", "circuit", "subset",
-    desc="how the distance matrix is computed for the input graph"
-)
-mosek = Bool(False, desc="solve the ipsep constraints with MOSEK")
-nodesep = Float(
-    0.25, desc="minimum space between two adjacent nodes in the same rank",
-    label="Node separation"
-)
-nojustify = nojustify_trait
-normalize = Bool(
-    False, desc="If set, normalize coordinates of final layout so that "
-    "the first point is at the origin, and then rotate the layout so that "
-    "the first edge is horizontal"
-)
-nslimit = Float(
-    desc="iterations in network simplex applications",
-    label="x-coordinate limit"
-)
-nslimit1 = Float(
-    desc="iterations in network simplex applications",
-    label="Ranking limit"
-)
-ordering = Enum(
-    "out", "in", desc="If 'out' for a graph G, and n is a node in G, then "
-    "edges n->* appear left-to-right in the same order in which they are "
-    "defined. If 'in', the edges *->n appear left-to-right in the same "
-    "order in which they are defined for all nodes n."
-)
-outputorder = Enum(
-    "breadthfirst", "nodesfirst", "edgesfirst",
-    desc="order in which nodes and edges are drawn",
-    label="Output order"
-)
-overlap = Enum(
-    "True", "False", "scale", "scalexy", "prism", "compress", "vpsc", "ipsep",
-    desc="determines if and how node overlaps should be removed"
-)
-pack = Bool #Either(
-#        Bool, Int, desc="If true, each connected component of the graph is "
-#        "laid out separately, and then the graphs are packed tightly"
-#    )
-packmode = Enum(
-    "node", "cluster", "graph", label="Pack mode",
-    desc="granularity and method used for packing"
-)
-# the boundary of the drawn region.
-pad = Float(
-    0.0555, desc="how much to extend the drawing area around the minimal "
-    "area needed to draw the graph"
-)
-page = pointf_trait
-pagedir = Enum(
-    "BL", "BR", "TL", "TR", "RB", "RT", "LB", "LT",
-    desc="If the page attribute is set and applicable, this attribute "
-    "specifies the order in which the pages are emitted",
-    label="Page direction"
-)
-quantum = Float(
-    0.0, desc="If quantum > 0.0, node label dimensions will be rounded to "
-    "integral multiples of the quantum."
-)
-rank = Enum(
-    "same", "min", "source", "max", "sink",
-    desc="rank constraints on the nodes in a subgraph"
-)
-rankdir = Enum(
-    "TB", "LR", "BT", "RL", desc="direction of graph layout",
-    label="Rank direction"
-)
-ranksep = Float(
-    0.5, desc="In dot, this gives the desired rank separation.  In twopi, "
-    "specifies radial separation of concentric circles",
-    label="Rank separation"
-)
-ratio = Either(
-    Float, Enum("fill", "compress", "expand", "auto"),
-    desc="aspect ratio (drawing height/drawing width) for the drawing"
-)
-remincross = Bool(
-    False, desc="If true and there are multiple clusters, run cross "
-    "minimization a second", label="Re-cross minimization"
-)
-resolution = Alias("dpi", desc="a synonym for the dpi attribute")
-root = root_trait
-rotate = Range(0, 360, desc="drawing orientation")
-searchsize = Int(
-    30, desc="maximum number of edges with negative cut values to search "
-    "when looking for one with minimum cut value", label="Search size"
-)
-sep = Int(
-    4, desc="Fraction to increase polygons (multiply coordinates by "
-    "1 + sep) for purposes of determining overlap", label="Separation"
-)
-showboxes = showboxes_trait
-size = pointf_trait
-splines = Enum(
-    "True", "False", "", desc="how, and if, edges are represented"
-)
-start = start_trait
-stylesheet = Str(
-    desc="URL or pathname specifying an XML style sheet",
-    label="Style sheet"
-)
-target = target_trait
-truecolor = Bool(True)
-URL = Str(
-    desc="hyperlinks incorporated into device-dependent output",
-    label="URL"
-)
-viewport = Tuple(Float, Float, Float, Float, Float)
-#    Either(
-#        Tuple(Float, Float, Float, Float, Float),
-#        Tuple(Float, Float, Float, Str),
-#        desc="clipping window on final drawing"
-#    )
+fontcolor = color.setResultsName("fontcolor")
+fontname = word.setResultsName("fontname")
+fontnames = (CaselessLiteral("svg") | CaselessLiteral("ps") |
+    CaselessLiteral("gd")).setResultsName("fontnames")
+fontpath = word.setResultsName("fontpath")
+fontsize = real.setResultsName("fontsize")
+K = real.setResultsName("K")
+label = lbl_string.setResultsName("label")
+labeljust = (CaselessLiteral("c") | CaselessLiteral("r") |
+    CaselessLiteral("l")).setResultsName("labeljust")
+labelloc = (CaselessLiteral("b") |
+    CaselessLiteral("t")).setResultsName("labelloc")
+landscape = boolean.setResultsName("landscape")
+layers = word.setResultsName("layers")
+layersep = (Literal(":\t") | Literal("\t")# | White
+).setResultsName("layersep")
+levelsgap = real.setResultsName("levelsgap")
+lp = point.setResultsName("lp")
+margin = (real | pointf).setResultsName("margin")
+maxiter = integer.setResultsName("maxiter")
+mclimit = real.setResultsName("mclimit")
+mindist = real.setResultsName("mindist")
+mode = (CaselessLiteral("major") | CaselessLiteral("KK") |
+    CaselessLiteral("heir") | CaselessLiteral("ipsep")).setResultsName("mode")
+model = (CaselessLiteral("shortpath") | CaselessLiteral("circuit") |
+    CaselessLiteral("subset")).setResultsName("model")
+mosek = boolean.setResultsName("mosek")
+nodesep = real.setResultsName("nodesep")
+nojustify = boolean.setResultsName("nojustify")
+normalize = boolean.setResultsName("normalize")
+nslimit = real.setResultsName("nslimit")
+nslimit1 = real.setResultsName("nslimit1")
+ordering = (CaselessLiteral("out") |
+    CaselessLiteral("in")).setResultsName("ordering")
+outputorder = (CaselessLiteral("breadthfirst") | CaselessLiteral("nodesfirst")|
+    CaselessLiteral("edgesfirst")).setResultsName("outputorder")
+overlap = (true | false | CaselessLiteral("scale") |
+    CaselessLiteral("scalexy") | CaselessLiteral("prism") |
+    CaselessLiteral("compress") | CaselessLiteral("vpsc") |
+    CaselessLiteral("ipsep")).setResultsName("overlap")
+pack = boolean.setResultsName("pack")
+packmode = (CaselessLiteral("node") | CaselessLiteral("cluster") |
+    CaselessLiteral("graph")).setResultsName("packmode")
+pad = real.setResultsName("pad")
+page = pointf.setResultsName("page")
+pagedir = (
+    CaselessLiteral("BL") | CaselessLiteral("BR") | CaselessLiteral("TL") |
+    CaselessLiteral("TR") | CaselessLiteral("RB") | CaselessLiteral("RT") |
+    CaselessLiteral("LB") | CaselessLiteral("LT")
+).setResultsName("pagedir")
+quantum = real.setResultsName("quantum")
+rank = (CaselessLiteral("same") | CaselessLiteral("min") |
+    CaselessLiteral("source") | CaselessLiteral("max") |
+    CaselessLiteral("sink")).setResultsName("rank")
+rankdir = (CaselessLiteral("TB") | CaselessLiteral("LR") |
+    CaselessLiteral("BT") | CaselessLiteral("RL")).setResultsName("rankdir")
+ranksep = real.setResultsName("ranksep")
+ratio = (real | CaselessLiteral("fill") |
+    CaselessLiteral("compress") | CaselessLiteral("expand") |
+    CaselessLiteral("auto")).setResultsName("ratio")
+remincross = boolean.setResultsName("remincross")
+resolution = real.setResultsName("resolution")
+root = word.setResultsName("root")
+rotate = integer.setResultsName("rotate")
+searchsize = integer.setResultsName("searchsize")
+sep = integer.setResultsName("sep")
+showboxes = (Literal("1") | Literal("2")).setResultsName("showboxes")
+size = pointf.setResultsName("size")
+splines = boolean.setResultsName("splines")
+start = (CaselessLiteral("regular") | CaselessLiteral("self") |
+    CaselessLiteral("random")).setResultsName("start")
+stylesheet = word.setResultsName("stylesheet")
+target = word.setResultsName("target")
+truecolor = boolean("truecolor")
+URL = word.setResultsName("URL")
+viewport = (real.setResultsName("W") + real.setResultsName("H") +
+    Optional("Z") +
+    (Optional((real.setResultsName("x") + real.setResultsName("y"))) |
+    word.setResultsName("N"))).setResultsName("viewport")
+voro_margin = real.setResultsName("voro_margin")
 
-voro_margin = Float(
-    0.05, desc="Factor to scale up drawing to allow margin for expansion "
-    "in Voronoi technique. dim' = (1+2*margin)*dim.",
-    label="Voronoi margin"
-)
+graph_attr = [bb, bgcolor, center, charset, clusterrank, colorscheme, comment,
+    compound, concentrate, Damping, defaultdist, dim, diredgeconstraints, dpi,
+    epsilon, esep, fontcolor, fontname, fontnames, fontpath, fontsize, K,
+    label, labeljust, labelloc, landscape, layers, layersep, levelsgap, lp,
+    margin, maxiter, mclimit, mindist, mode, model, mosek, nodesep, nojustify,
+    normalize, nslimit, nslimit1, ordering, outputorder, overlap, pack,
+    packmode, pad, page, pagedir, quantum, rank, rankdir, ranksep, ratio,
+    remincross, resolution, root, rotate, searchsize, sep, showboxes, size,
+    splines, start, stylesheet, target, truecolor, URL, viewport, voro_margin]
 
 #------------------------------------------------------------------------------
 #  A convenient function for calculating a unique name given a list of
