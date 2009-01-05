@@ -30,9 +30,9 @@ from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
     List, Tuple, ListStr, Range
 
-from enthought.traits.ui.api import \
-    View, Item, Group, TableEditor, InstanceEditor
+from enthought.traits.ui.api import View, Item, Group, Tabbed
 
+from enthought.traits.ui.api import TableEditor, InstanceEditor
 from enthought.traits.ui.table_column import ObjectColumn
 from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
 
@@ -67,7 +67,7 @@ shape_trait = Enum(node_shapes, desc="node shape", label="Node shape")
 class Node(HasTraits):
     """ A graph node """
 
-    name = Str
+    ID = Str
 
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
@@ -393,6 +393,7 @@ class Node(HasTraits):
     vertices = List(
         pointf_trait, desc="coordinates of the vertices of the node's polygon"
     )
+#    vertices = pointf_trait
 
     # Width of node, in inches. This is taken as the initial, minimum width
     # of the node. If <html:a rel="attr">fixedsize</html:a> is true, this
@@ -420,6 +421,35 @@ class Node(HasTraits):
         0.0, desc="z coordinate value for 3D layouts and displays",
         label="z-coordinate"
     )
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(
+        Tabbed(
+            Group(["shape", "shapefile", "color", "fillcolor", "colorscheme",
+                "style", "arrowsize", "constraint", "decorate", "showboxes",
+                "tooltip", "distortion", "sides", "target", "comment"],
+                label="Node"
+            ),
+            Group(["label", "fontname", "fontsize", "fontcolor", "nojustify",
+                "image", "imagescale", "layer", "margin", "nojustify",
+                "orientation", "peripheries", "pin", "rects", "regular"],
+                label="Label"
+            ),
+            Group(["fixedsize", "width", "height", "z", "pos", "vertices"],
+                label="Dimension"),
+            Group(["URL", "samplepoints", "skew", "root", "group"],
+                label="Miscellaneous")
+        ),
+        title="Node", id="godot.node", buttons=["OK", "Cancel", "Help"],
+        resizable=True
+    )
+
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
 
     def __str__(self):
         """ Return a string representing the node when requested by str()

@@ -38,7 +38,7 @@ from enthought.traits.ui.api import View, Group, Item, Tabbed
 from common import \
     Alias, color_scheme_trait, rectangle_trait, fontcolor_trait, \
     fontname_trait, fontsize_trait, label_trait, point_trait, pointf_trait, \
-    nojustify_trait, root_trait, showboxes_trait, target_trait
+    nojustify_trait, root_trait, showboxes_trait, target_trait, margin_trait
 
 from dot2tex.dotparsing import flatten, quote_if_necessary
 
@@ -356,7 +356,7 @@ class Graph(HasTraits):
     #
     # For nodes, this attribute specifies space left around the node's label.
     # By default, the value is <html:code>0.11,0.055</html:code>.
-    margin = Either(Float, pointf_trait, desc="x and y margins of canvas")
+    margin = margin_trait#Either(Float, pointf_trait, desc="x and y margins of canvas")
 
     # Sets the number of iterations used.
     maxiter = Int(desc="number of iterations used", label="Maximum iterations")
@@ -1083,6 +1083,21 @@ class Graph(HasTraits):
         for each_edge in self.edges:
             if (each_edge.from_node == node) or (each_edge.to_node == node):
                 yield each_edge
+
+    #--------------------------------------------------------------------------
+    #  Public interface:
+    #--------------------------------------------------------------------------
+
+    def get_node(self, ID):
+        """ Returns a node given an ID or None if no such node exists. """
+
+        print "NODES:", self.nodes
+
+        for each_node in self.nodes:
+            if each_node.ID == ID:
+                return each_node
+        else:
+            return None
 
     #--------------------------------------------------------------------------
     #  Trait initialisers:

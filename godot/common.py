@@ -62,9 +62,10 @@ label_trait = Str(desc="text label attached to objects")
 #     characters specified by the layersep attribute.
 layer_trait = Str(desc="layers in which the node or edge is present")
 
-margin_trait = Either(
-    Float, pointf_trait, desc="x and y margins of canvas or node label"
-)
+#margin_trait = Either(
+#    Float, pointf_trait, desc="x and y margins of canvas or node label"
+#)
+margin_trait = Float(desc="x and y margins of canvas or node label")
 
 nojustify_trait = Bool(
     False, label="No justify",
