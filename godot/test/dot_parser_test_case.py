@@ -30,7 +30,7 @@ from unittest import TestCase
 
 from godot.dot_parsing import GodotDataParser
 from godot.graph import Graph
-from godot.parser import Parser
+from godot.dot_parser import Parser
 
 #------------------------------------------------------------------------------
 #  Test graph:
@@ -57,6 +57,33 @@ strict digraph G {
     pad = .05 // 0 < Float <= 1
     ranksep="0.6" // Float with quotes
     mode=KK; // Enum
+}
+"""
+
+node_stmt_graph = r"""
+digraph G {
+    node1 // Node ID only
+    node2 [fixedsize] // Equivalent to fixedsize=true
+    node3 [shape=box];
+    node4 [fixedsize=true, height="0.6", width=.8]
+}
+"""
+
+fancy_graph = r"""
+digraph G {
+    size ="4,4";
+    main [shape=box];    /* this is a comment */
+    main -> parse [weight=8];
+    parse -> execute;
+    main -> init [style=dotted];
+    main -> cleanup;
+    execute -> { make_string; printf}
+    init -> make_string;
+    edge [color=red];    // so is this
+    main -> printf [style=bold,label="100 times"];
+    make_string [label="make a\nstring"];
+    node [shape=box,style=filled,color=".7 .3 1.0"];
+    execute -> compare;
 }
 """
 
@@ -93,7 +120,7 @@ class DotParserTestCase(TestCase):
     #--------------------------------------------------------------------------
 
     def test_graph_attributes(self):
-        """ Parsing graph attributes """
+        """ Test graph attribute value assignment. """
 
 #        graph = self.parser.parse_dot_data(testgraph)
         graph = self.parser.parse_dot_data(graph_attr_graph)
@@ -114,6 +141,16 @@ class DotParserTestCase(TestCase):
         self.assertEqual(graph.pad, 0.05) # 0 < Float <= 1
         self.assertEqual(graph.ranksep, 0.6) # Float with quotes
         self.assertEqual(graph.mode, "KK") # Enum
+
+
+    def test_node_stmt(self):
+        """ Test parsing of node statements. """
+
+        graph = self.parser.parse_dot_data(node_stmt_graph)
+
+        self.assertEqual(len(graph.nodes), 4)
+
+        graph.configure_traits()
 
 
 #    def test_color(self):

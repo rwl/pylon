@@ -30,9 +30,9 @@ from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
     List, Tuple, ListStr, Range
 
-from enthought.traits.ui.api import View, Item, Group
+from enthought.traits.ui.api import \
+    View, Item, Group, TableEditor, InstanceEditor
 
-from enthought.traits.ui.api import TableEditor, InstanceEditor
 from enthought.traits.ui.table_column import ObjectColumn
 from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
 
@@ -52,13 +52,13 @@ from common import \
 #  Trait definitions:
 #------------------------------------------------------------------------------
 
-shape_trait = Enum(
-   "rectangle", "ellipse", "circle", "invtriangle", "invtrapezium", "point",
-   "egg", "triangle", "plaintext", "diamond" "trapezium", "parallelogram",
-   "house", "pentagon", "hexagon", "septagon", "octagon", "doublecircle",
-   "doubleoctagon", "tripleoctagon", "invhouse", "none", "note", "tab",
-   "box3d", "component", desc="node shape", label="Node shape"
-)
+node_shapes = ["rect", "rectangle", "box", "ellipse", "circle", "invtriangle",
+    "invtrapezium", "point", "egg", "triangle", "plaintext", "diamond",
+    "trapezium", "parallelogram", "house", "pentagon", "hexagon", "septagon",
+    "octagon", "doublecircle", "doubleoctagon", "tripleoctagon", "invhouse",
+    "none", "note", "tab", "box3d", "component"]
+
+shape_trait = Enum(node_shapes, desc="node shape", label="Node shape")
 
 #------------------------------------------------------------------------------
 #  "Node" class:
