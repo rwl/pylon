@@ -44,6 +44,7 @@ from pyparsing import \
 #from enthought.enable.colors import color_table
 
 from godot.common import color_schemes
+from godot.node import node_shapes
 
 #------------------------------------------------------------------------------
 #  "ToBoolean" class:
@@ -79,8 +80,6 @@ class ToFloat(TokenConverter):
     def postParse(self, instring, loc, tokenlist):
         """ Converts the first token into a float """
 
-        print "FLOAT", tokenlist[0]
-
         return float(tokenlist[0])
 
 #------------------------------------------------------------------------------
@@ -95,7 +94,22 @@ class ToTuple(TokenConverter):
 
         return tuple(tokenlist)
 
-# punctuation
+#------------------------------------------------------------------------------
+#  "ToList" class:
+#------------------------------------------------------------------------------
+
+class ToList(TokenConverter):
+    """ Converter to make token sequence into a list. """
+
+    def postParse(self, instring, loc, tokenlist):
+        """ Returns a list initialised from the token sequence. """
+
+        return list(tokenlist)
+
+#------------------------------------------------------------------------------
+#  Punctuation:
+#------------------------------------------------------------------------------
+
 colon  = Literal(":")
 lbrace = Literal("{")
 rbrace = Literal("}")
@@ -205,7 +219,7 @@ rgba = rgb + hex_color.setResultsName("alpha")
 hsv = decimal.setResultsName("hue") + decimal.setResultsName("saturation") + \
     decimal.setResultsName("value")
 color_name = double_quoted_string | Word(alphas)
-color = rgb | rgba | hsv | color_name
+colour = rgb | rgba | hsv | color_name
 
 cluster_mode = CaselessLiteral("local") | CaselessLiteral("global") | \
     CaselessLiteral("none")
@@ -246,7 +260,7 @@ class ToLabelLoc(TokenConverter):
             return token
 
 bb = rect.setResultsName("bb")
-bgcolor = color.setResultsName("bgcolor")
+bgcolor = colour.setResultsName("bgcolor")
 center = boolean.setResultsName("center")
 charset = word.setResultsName("charset")
 clusterrank = cluster_mode.setResultsName("clusterrank")
@@ -262,7 +276,7 @@ diredgeconstraints = (boolean |
 dpi = real.setResultsName("dpi")
 epsilon = real.setResultsName("epsilon")
 esep = integer.setResultsName("esep")
-fontcolor = color.setResultsName("fontcolor")
+fontcolor = colour.setResultsName("fontcolor")
 fontname = word.setResultsName("fontname")
 fontnames = (CaselessLiteral("svg") | CaselessLiteral("ps") |
     CaselessLiteral("gd")).setResultsName("fontnames")
@@ -352,6 +366,40 @@ graph_attr = [bb, bgcolor, center, charset, clusterrank, colorscheme, comment,
     packmode, pad, page, pagedir, quantum, rank, rankdir, ranksep, ratio,
     remincross, resolution, root, rotate, searchsize, sep, showboxes, size,
     splines, start, stylesheet, target, truecolor, URL, viewport, voro_margin]
+
+node_shape = Or([CaselessLiteral(shape) for shape in node_shapes])
+
+color = colour.setResultsName("color")
+distortion = real.setResultsName("distortion")
+fillcolor = colour.setResultsName("fillcolor")
+fixedsize = boolean.setResultsName("fixedsize")
+group = word.setResultsName("group")
+height = real.setResultsName("height")
+image = word.setResultsName("image")
+imagescale = word.setResultsName("imagescale")
+layer = word.setResultsName("layer")
+orientation = real.setResultsName("orientation") # TODO: 0.0 < orien < 360.0
+peripheries = integer.setResultsName("peripheries")
+pin = boolean.setResultsName("pin")
+pos = real.setResultsName("pos")
+rects = rect.setResultsName("rects")
+regular = boolean.setResultsName("regular")
+samplepoints = integer.setResultsName("samplepoints")
+shape = node_shape.setResultsName("shape")
+shapefile = word.setResultsName("shapefile")
+sides = integer.setResultsName("sides")
+skew = real.setResultsName("skew")
+style = ToList(word).setResultsName("style")
+tooltip = word.setResultsName("tooltip")
+vertices = ToList(pointf).setResultsName("vertices")
+width = real.setResultsName("width")
+z = real.setResultsName("z")
+
+node_attr = [color, colorscheme, comment, distortion, fillcolor, fixedsize,
+    fontcolor, fontname, fontsize, group, height, image, imagescale, label,
+    layer, margin, nojustify, orientation, peripheries, pin, pos, rects,
+    regular, root, samplepoints, shape, shapefile, showboxes, sides, skew,
+    style, target, tooltip, URL, vertices, width, z]
 
 #------------------------------------------------------------------------------
 #  A convenient function for calculating a unique name given a list of

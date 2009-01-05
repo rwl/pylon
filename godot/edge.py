@@ -23,7 +23,7 @@ from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
     List, Tuple, ListStr, Instance
 
-from enthought.traits.ui.api import View, Group, Item, Tabbed
+from enthought.traits.ui.api import TableEditor, View, Group, Item, Tabbed
 
 from enthought.traits.ui.api import TableEditor, InstanceEditor
 from enthought.traits.ui.table_column import ObjectColumn
