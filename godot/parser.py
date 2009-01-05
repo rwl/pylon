@@ -292,8 +292,10 @@ class Parser:
         self.graph = Graph()
 
 
-    def push_node_id(self, toks):
+    def push_node_id(self, tokens):
         """ Returns a tuple if more than one id exists """
+
+        print "NODE ID:", tokens
 
         if len(toks) > 1:
             return (toks[0], toks[1])
@@ -301,16 +303,18 @@ class Parser:
             return toks
 
 
-    def push_attr_list(self, toks):
+    def push_attr_list(self, tokens):
         """ Splits the attributes into tuples and returns a dictionary using
         the first tuple value as the key and the second as the value.
 
         """
 
+        print "ATTR LIST:", tokens
+
         return dict(nsplit(toks, 2))
 
 
-    def push_attr_list_combine(self, toks):
+    def push_attr_list_combine(self, tokens):
         """ Combines a list of dictionaries, overwriting existing keys """
 
         if toks:
@@ -323,9 +327,10 @@ class Parser:
 
 
     def push_attr_assignment(self, tokens):
+        """ Sets the graph attribute to the parsed value. """
 
-        print "ATTR:", tokens#dict(nsplit(toks, 2))
-
+        graph = self.graph
+        setattr(graph, tokens[0], tokens[1])
 
         return ("set_graph_attr", dict(nsplit(tokens, 2)))
 

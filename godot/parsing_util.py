@@ -79,7 +79,21 @@ class ToFloat(TokenConverter):
     def postParse(self, instring, loc, tokenlist):
         """ Converts the first token into a float """
 
+        print "FLOAT", tokenlist[0]
+
         return float(tokenlist[0])
+
+#------------------------------------------------------------------------------
+#  "ToTuple" class:
+#------------------------------------------------------------------------------
+
+class ToTuple(TokenConverter):
+    """ Converter to make token sequence into a tuple. """
+
+    def postParse(self, instring, loc, tokenlist):
+        """ Returns a tuple initialised from the token sequence. """
+
+        return tuple(tokenlist)
 
 # punctuation
 colon  = Literal(":")
@@ -136,18 +150,21 @@ negative_integer = ToInteger(
 # Boolean ---------------------------------------------------------------------
 
 #boolean = ToBoolean(ToInteger(Word("01", exact=1))).setName("bool")
-true = CaselessLiteral("True")# | And(integer, NotAny(Literal("0")))
+true = CaselessLiteral("True") | Literal("1") #And(integer, NotAny(Literal("0")))
 false = CaselessLiteral("False") | Literal("0")
 boolean = ToBoolean(true | false).setResultsName("boolean")
 
 # Real ------------------------------------------------------------------------
 
 real = ToFloat(
+    Optional(dquote).suppress() +
     Combine(
-        Optional(dquote).suppress() + Optional(sign) + Word(nums) +
-        Optional(decimal_sep + Word(nums)) +
-        Optional(oneOf("E e") + Word(nums)) + Optional(dquote).suppress()
-    )
+        Optional(sign) +
+        (Word(nums) + Optional(decimal_sep + Word(nums))) |
+        (decimal_sep + Word(nums)) +
+        Optional(oneOf("E e") + Word(nums))
+    ) +
+    Optional(dquote).suppress()
 ).setName("real")
 
 # TODO: Positive real number between zero and one.
@@ -198,13 +215,35 @@ color_scheme = Or([CaselessLiteral(scheme) for scheme in color_schemes])
 esc_string = html_label = quoted_string
 lbl_string = esc_string | html_label
 
-point = Optional(dquote).suppress() + real.setResultsName("x") + \
+point = ToTuple(Optional(dquote).suppress() + real.setResultsName("x") + \
     comma.suppress() + real.setResultsName("y") + \
     Optional((comma + real.setResultsName("z"))) + \
-    Optional(dquote).suppress() + Optional(Literal("!").setResultsName("!"))
+    Optional(dquote).suppress() + Optional(Literal("!").setResultsName("!")))
 
 pointf = Optional(dquote).suppress() + real.setResultsName("x") + \
     comma.suppress() + real.setResultsName("y") + Optional(dquote).suppress()
+
+class ToLabelJust(TokenConverter):
+    def postParse(self, instring, loc, tokenlist):
+        token = tokenlist[0]
+        if token == "c":
+            return "Cerntre"
+        elif token == "r":
+            return "Right"
+        elif token == "l":
+            return "Left"
+        else:
+            return token
+
+class ToLabelLoc(TokenConverter):
+    def postParse(self, instring, loc, tokenlist):
+        token = tokenlist[0]
+        if token == "b":
+            return "Bottom"
+        elif token == "t":
+            return "Top"
+        else:
+            return token
 
 bb = rect.setResultsName("bb")
 bgcolor = color.setResultsName("bgcolor")
@@ -231,9 +270,9 @@ fontpath = word.setResultsName("fontpath")
 fontsize = real.setResultsName("fontsize")
 K = real.setResultsName("K")
 label = lbl_string.setResultsName("label")
-labeljust = (CaselessLiteral("c") | CaselessLiteral("r") |
+labeljust = ToLabelJust(CaselessLiteral("c") | CaselessLiteral("r") |
     CaselessLiteral("l")).setResultsName("labeljust")
-labelloc = (CaselessLiteral("b") |
+labelloc = ToLabelLoc(CaselessLiteral("b") |
     CaselessLiteral("t")).setResultsName("labelloc")
 landscape = boolean.setResultsName("landscape")
 layers = word.setResultsName("layers")

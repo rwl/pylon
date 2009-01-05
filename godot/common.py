@@ -3,9 +3,9 @@ from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
     List, Tuple, ListStr, Property, Either
 
-pointf_trait = Float#Tuple(Float, Float, desc="the point (x,y)")
+pointf_trait = Tuple(Float, Float, desc="the point (x,y)")
 
-point_trait = Float #Either(
+point_trait = pointf_trait #Either(
 #    pointf_trait, Tuple(Float, Float, Float, desc="the point (x,y,z)")
 #)
 
