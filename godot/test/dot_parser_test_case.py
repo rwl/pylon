@@ -47,13 +47,15 @@ digraph G {
 graph_attr_graph = r"""
 strict digraph G {
     center=true // Bool
-    truecolor=0; // Bool as integer
+    truecolor = 1; // Bool as integer
     remincross=TRUE; // Bool case insensitive
     label="foobar"; // String
-    labeljust=r; // Mapped
-    lp="1.5, 2.0"; // Point/Tuple
+    labeljust = r; // Mapped
+    lp = "1.5,2.0"; // Point/Tuple
     maxiter=250; // Int
-    nodesep=0.05; // Float
+    nodesep=0.1; // Float
+    pad = .05 // 0 < Float <= 1
+    ranksep="0.6" // Float with quotes
     mode=KK; // Enum
 }
 """
@@ -101,15 +103,17 @@ class DotParserTestCase(TestCase):
         self.assertTrue(graph.directed)
         self.assertEqual(graph.ID, "G")
 
-#        self.assertTrue(graph.center) # Bool
-#        self.assertFalse(graph.truecolor) # Bool as integer
-#        self.assertTrue(graph.remincross) # Bool case insensitive
-#        self.assertEqual(graph.label, "foobar") # Str
-#        self.assertEqual(graph.labeljust, "r") # Mapped
-#        self.assertEqual(graph.lp, (1.5, 2.0)) # Tuple
-#        self.assertEqual(graph.maxiter, 250) # Int
-#        self.assertEqual(graph.nodesep, 0.05) # Float
-#        self.assertEqual(graph.mode, "KK") # Enum
+        self.assertTrue(graph.center) # Bool
+        self.assertTrue(graph.truecolor) # Bool as integer
+        self.assertTrue(graph.remincross) # Bool case insensitive
+        self.assertEqual(graph.label, "foobar") # Str
+        self.assertEqual(graph.labeljust, "Right") # Mapped
+        self.assertEqual(graph.lp, (1.5, 2.0)) # Tuple
+        self.assertEqual(graph.maxiter, 250) # Int
+        self.assertEqual(graph.nodesep, 0.1) # Float
+        self.assertEqual(graph.pad, 0.05) # 0 < Float <= 1
+        self.assertEqual(graph.ranksep, 0.6) # Float with quotes
+        self.assertEqual(graph.mode, "KK") # Enum
 
 
 #    def test_color(self):
