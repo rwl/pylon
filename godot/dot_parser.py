@@ -54,10 +54,10 @@ from godot.node import Node
 from godot.edge import Edge
 
 #------------------------------------------------------------------------------
-#  "Parser" class:
+#  "DotParser" class:
 #------------------------------------------------------------------------------
 
-class Parser:
+class DotParser:
     """ Defines a Graphviz dot language parser. """
 
     parser = None
@@ -71,6 +71,9 @@ class Parser:
     def __init__(self):
         self.parser = self.define_parser()
 
+    #--------------------------------------------------------------------------
+    #  Public interface:
+    #--------------------------------------------------------------------------
 
     def parse_dot_data(self, data):
         """ Parses dot data and returns a godot.Graph instance. """
@@ -139,17 +142,16 @@ class Parser:
         #    quotes (\")1;
         #  * an HTML string (<...>).
         ID = (
-            identifier | html_text |
-            quoted_string | #.setParseAction(strip_quotes) |
-            alphastring_
+            identifier | html_text | quoted_string | alphastring_
         ).setName("ID")
 
-        float_number = Combine(
-            Optional(minus) + OneOrMore(Word(nums + "."))
-        ).setName("float_number")
+#        float_number = Combine(
+#            Optional(minus) + OneOrMore(Word(nums + "."))
+#        ).setName("float_number")
 
-        righthand_id = (float_number | ID ).setName("righthand_id")
+#        righthand_id = (float_number | ID ).setName("righthand_id")
 
+        # Portnames (node1:port1 -> node2:port5:nw;)
         port_angle = (at + ID).setName("port_angle")
 
         port_location = (
@@ -163,6 +165,8 @@ class Parser:
         ).setName("port")
 
         node_id = ID + Optional(port)
+
+        # Attributes.
         a_list = OneOrMore(
 #            ID + Optional(equals.suppress() + righthand_id) + \
 #            Optional(comma.suppress())
@@ -177,15 +181,15 @@ class Parser:
 
         attr_stmt = ((graph_ | node_ | edge_) + attr_list).setName("attr_stmt")
 
-        edgeop = (Literal("--") | Literal("->")).setName("edgeop")
-
+        # Graph statement.
         stmt_list = Forward()
         graph_stmt = (
             lbrace + Optional(stmt_list) + rbrace + Optional(semi.suppress())
         ).setName("graph_stmt")
 
-        edge_point = Forward()
-
+        # Edge statement.
+        edgeop = Suppress((Literal("--") | Literal("->"))).setName("edgeop")
+        edge_point = Forward() # (node_id | subgraph)
         edgeRHS = OneOrMore(edgeop + edge_point)
         edge_stmt = edge_point + edgeRHS + Optional(attr_list)
 
@@ -195,15 +199,16 @@ class Parser:
 
         edge_point << (subgraph | graph_stmt | node_id )
 
+        # Node statement.
         node_stmt = (
             node_id + Optional(attr_list) + Optional(semi.suppress())
         ).setName("node_stmt")
 
-#        assignment = (ID + equals + righthand_id).setName("assignment")
+        # Graph attribute assignment.
         assignment = (
             Or([(CaselessLiteral(attr.resultsName) + Suppress(equals) + attr) \
                 for attr in graph_attr])
-        )
+        ).setName("assignment")
 
         stmt = (
             assignment | edge_stmt | attr_stmt | subgraph | graph_stmt |
@@ -284,6 +289,8 @@ class Parser:
     def _push_graph_id(self, tokens):
         """ Optional graph identifier. """
 
+        print "GRAPH ID:", tokens
+
         graph = self.graph
         graph_id = tokens["graph_id"]
 
@@ -293,9 +300,20 @@ class Parser:
     def _push_main_graph(self, tokens):
         """ Starts a new Graph. """
 
-        print "Graph:", tokens
+        print "GRAPH:", tokens
 
         self.graph = Graph()
+
+
+    def push_attr_assignment(self, tokens):
+        """ Sets the graph attribute to the parsed value. """
+
+        print "ASSIGNMENT:", tokens
+
+        graph = self.graph
+        setattr(graph, tokens[0], tokens[1])
+
+        return ("set_graph_attr", dict(nsplit(tokens, 2)))
 
 
     def push_node_id(self, tokens):
@@ -329,18 +347,9 @@ class Parser:
             first_dict = tokens[0]
             for d in tokens:
                 first_dict.update(d)
-
             return first_dict
+
         return tokens
-
-
-    def push_attr_assignment(self, tokens):
-        """ Sets the graph attribute to the parsed value. """
-
-        graph = self.graph
-        setattr(graph, tokens[0], tokens[1])
-
-        return ("set_graph_attr", dict(nsplit(tokens, 2)))
 
 
     def push_node_stmt(self, tokens):
@@ -349,12 +358,13 @@ class Parser:
         print "NODE STMT:", tokens
 
         graph = self.graph
+        name = tokens[0]
 
         if len(tokens) == 2:
-            node = Node(name=tokens[0])
+            node = Node(ID=name)
             options = tokens[1]
         else:
-            node = Node(name=tokens[0])
+            node = Node(ID=name)
             options = {}
         # Set the attributes of the node.
         for option in options:
@@ -368,40 +378,62 @@ class Parser:
             return tuple(["add_node"] + list(tokens) + [{}])
 
 
-    def push_edge_stmt(self, toks):
+    def push_edge_stmt(self, tokens):
         """ Returns tuple of the form (ADD_EDGE, src, dest, options) """
 
+        print "EDGE STMT:", tokens
+
+        graph = self.graph
         edgelist = []
-        opts = toks[-1]
+        opts = tokens[-1]
         if not isinstance(opts, dict):
             opts = {}
-        for src, op, dest in windows(toks, length=3, overlap=1, padding=False):
-            # is src or dest a subgraph?
-            srcgraph = destgraph = False
-            if len(src) > 1 and src[0] == "add_subgraph":
-                edgelist.append(src)
-                srcgraph = True
-            if len(dest) > 1 and dest[0] == "add_subgraph":
-                edgelist.append(dest)
-                destgraph = True
-            if srcgraph or destgraph:
-                if srcgraph and destgraph:
-                    edgelist.append(
-                        ("add_graph_to_graph_edge",src[1],dest[1],opts)
-                    )
-                elif srcgraph:
-                    edgelist.append(("add_graph_to_node_edge",src[1],dest,opts))
-                else:
-                    edgelist.append(("add_node_to_graph_edge",src,dest[1],opts))
-            else:
-                # ordinary edge
-                edgelist.append(("add_edge",src,dest,opts))
+        for src, dest in windows(tokens, length=2, overlap=1, padding=False):
+            print "WINDOWS:", src, dest
+            # Is src or dest a subgraph?
+#            srcgraph = destgraph = False
+#            if len(src) > 1 and src[0] == "add_subgraph":
+#                edgelist.append(src)
+#                srcgraph = True
+#            if len(dest) > 1 and dest[0] == "add_subgraph":
+#                edgelist.append(dest)
+#                destgraph = True
+#            if srcgraph or destgraph:
+#                if srcgraph and destgraph:
+#                    edgelist.append(
+#                        ("add_graph_to_graph_edge", src[1], dest[1], opts)
+#                    )
+#                elif srcgraph:
+#                    edgelist.append(("add_graph_to_node_edge",src[1],dest,opts))
+#                else:
+#                    edgelist.append(("add_node_to_graph_edge",src,dest[1],opts))
+#            else:
+#                # Ordinary edge
+#                edgelist.append(("add_edge",src,dest,opts))
+
+            from_node = graph.get_node(src)
+            if from_node is None:
+                from_node = Node(ID=src)
+                graph.nodes.append(from_node)
+            to_node = graph.get_node(dest)
+            if to_node is None:
+                to_node = Node(ID=dest)
+                graph.nodes.append(to_node)
+
+            edge = Edge(from_node, to_node)
+            edgelist.append(edge)
+
+        print "EDGE LIST:", edgelist
+
+        graph.edges.extend(edgelist)
 
         return edgelist
 
 
     def push_default_attr_stmt(self, toks):
         """ Returns a tuple of the form (ADD_DEFAULT_NODE_ATTR, options) """
+
+        print "DEFAULT NODE ATTR STMT:", toks
 
         if len(toks)== 1:
             gtype = toks;
@@ -418,13 +450,15 @@ class Parser:
             return ("unknown", toks)
 
 
-    def push_subgraph_stmt(self,toks):
+    def push_subgraph_stmt(self, toks):
         """ Returns a tuple of the form (ADD_SUBGRAPH, name, elements) """
+        print "SUBGRAPH:", toks
 
         return ("add_subgraph", toks[1], toks[2].asList())
 
 
-    def _main_graph_stmt(self,toks):
+    def _main_graph_stmt(self, toks):
+        print "MAIN GRAPH:", toks
 
         return (toks[0], toks[1], toks[2], toks[3])#.asList())
 

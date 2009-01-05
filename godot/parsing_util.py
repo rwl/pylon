@@ -33,7 +33,7 @@ References:
 
 import re
 
-from itertools import izip
+from itertools import izip, islice, repeat
 
 from pyparsing import \
     TokenConverter, oneOf, string, Literal, Group, Word, Optional, Combine, \
@@ -127,7 +127,7 @@ semi   = Literal(";")
 at     = Literal("@")
 minus  = Literal("-")
 pluss  = Literal("+")
-dquote = Literal('"')
+quote = Literal('"')# | Literal("'")
 
 #------------------------------------------------------------------------------
 #  Convenient pyparsing constructs.
@@ -150,7 +150,9 @@ special_chars = string.replace(
 # Integer ---------------------------------------------------------------------
 
 integer = ToInteger(
-    Combine(Optional(sign) + Word(nums))
+    Optional(quote).suppress() +
+    Combine(Optional(sign) + Word(nums)) +
+    Optional(quote).suppress()
 ).setName("integer")
 
 positive_integer = ToInteger(
@@ -171,14 +173,14 @@ boolean = ToBoolean(true | false).setResultsName("boolean")
 # Real ------------------------------------------------------------------------
 
 real = ToFloat(
-    Optional(dquote).suppress() +
+    Optional(quote).suppress() +
     Combine(
         Optional(sign) +
         (Word(nums) + Optional(decimal_sep + Word(nums))) |
         (decimal_sep + Word(nums)) +
         Optional(oneOf("E e") + Word(nums))
     ) +
-    Optional(dquote).suppress()
+    Optional(quote).suppress()
 ).setName("real")
 
 # TODO: Positive real number between zero and one.
@@ -229,13 +231,13 @@ color_scheme = Or([CaselessLiteral(scheme) for scheme in color_schemes])
 esc_string = html_label = quoted_string
 lbl_string = esc_string | html_label
 
-point = ToTuple(Optional(dquote).suppress() + real.setResultsName("x") + \
+point = ToTuple(Optional(quote).suppress() + real.setResultsName("x") + \
     comma.suppress() + real.setResultsName("y") + \
     Optional((comma + real.setResultsName("z"))) + \
-    Optional(dquote).suppress() + Optional(Literal("!").setResultsName("!")))
+    Optional(quote).suppress() + Optional(Literal("!").setResultsName("!")))
 
-pointf = Optional(dquote).suppress() + real.setResultsName("x") + \
-    comma.suppress() + real.setResultsName("y") + Optional(dquote).suppress()
+pointf = Optional(quote).suppress() + real.setResultsName("x") + \
+    comma.suppress() + real.setResultsName("y") + Optional(quote).suppress()
 
 class ToLabelJust(TokenConverter):
     def postParse(self, instring, loc, tokenlist):
@@ -456,16 +458,22 @@ def windows(iterable, length=2, overlap=0, padding=True):
     """ Code snippet from Python Cookbook, 2nd Edition by David Ascher,
     Alex Martelli and Anna Ravenscroft; O'Reilly 2005
 
+    Problem: You have an iterable s and need to make another iterable whose
+    items are sublists (i.e., sliding windows), each of the same given length,
+    over s' items, with successive windows overlapping by a specified amount.
+
+    http://my.safaribooksonline.com/0596007973/pythoncook2-CHP-19-SECT-7
+
     """
 
     it = iter(iterable)
-    results = list(itertools.islice(it, length))
+    results = list(islice(it, length))
     while len(results) == length:
         yield results
         results = results[length-overlap:]
-        results.extend(itertools.islice(it, length-overlap))
+        results.extend(islice(it, length-overlap))
     if padding and results:
-        results.extend(itertools.repeat(None, length-len(results)))
+        results.extend(repeat(None, length-len(results)))
         yield results
 
 

@@ -542,6 +542,9 @@ class Edge(HasTraits):
         resizable=True
     )
 
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
 
     def __init__(self, from_node, to_node, **traits):
         """ Return a new Edge instance. """
@@ -625,6 +628,6 @@ edge_table_editor = TableEditor(
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    Edge().configure_traits()
+    Edge(Node(), Node()).configure_traits()
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

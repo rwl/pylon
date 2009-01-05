@@ -30,7 +30,7 @@ from unittest import TestCase
 
 from godot.dot_parsing import GodotDataParser
 from godot.graph import Graph
-from godot.dot_parser import Parser
+from godot.dot_parser import DotParser
 
 #------------------------------------------------------------------------------
 #  Test graph:
@@ -64,8 +64,16 @@ node_stmt_graph = r"""
 digraph G {
     node1 // Node ID only
     node2 [fixedsize] // Equivalent to fixedsize=true
-    node3 [shape=box];
-    node4 [fixedsize=true, height="0.6", width=.8]
+    node3 [shape=box]; // Assign attribute
+    node4 [fixedsize=true, height="0.6", width=.8] // Multiple
+    node5 [sides="5" samplepoints=10] // No comma separator
+}
+"""
+
+edge_stmt_graph = r"""
+digraph G {
+    node1 -> node2 -> node3;
+    node1 -> node3 [label="foo"];
 }
 """
 
@@ -113,7 +121,7 @@ class DotParserTestCase(TestCase):
         """ Prepares the test fixture before each test method is called. """
 
 #        self.parser = GodotDataParser()
-        self.parser = Parser()
+        self.parser = DotParser()
 
     #--------------------------------------------------------------------------
     #  Tests
@@ -148,7 +156,20 @@ class DotParserTestCase(TestCase):
 
         graph = self.parser.parse_dot_data(node_stmt_graph)
 
-        self.assertEqual(len(graph.nodes), 4)
+        self.assertEqual(len(graph.nodes), 5)
+        self.assertTrue(graph.nodes[1].fixedsize)
+        self.assertEqual(graph.nodes[2].shape, "box")
+        self.assertTrue(graph.nodes[3].fixedsize)
+        self.assertEqual(graph.nodes[3].height, 0.6)
+        self.assertEqual(graph.nodes[3].width, 0.8)
+        self.assertEqual(graph.nodes[4].sides, 5)
+        self.assertEqual(graph.nodes[4].samplepoints, 10)
+
+
+    def test_edge_stmt(self):
+        """ Test parsing of edge statements. """
+
+        graph = self.parser.parse_dot_data(edge_stmt_graph)
 
         graph.configure_traits()
 
