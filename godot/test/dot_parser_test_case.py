@@ -49,8 +49,8 @@ graph_attr_graph = r"""
    multiple line
    comment. */
 strict digraph G {
-    /* C style comment */
-    # Lines like this are also ignored.
+    /* C++-style comment */
+    # C preprocessor output
     center=true // Bool
     truecolor = 1; // Bool as integer
     remincross=TRUE; // Bool case insensitive
@@ -84,6 +84,22 @@ digraph G {
 }
 """
 
+cluster_graph = r"""
+digraph G {
+    subgraph cluster_small {
+//        a -> b;
+        label=small;
+    }
+/*    subgraph cluster_big {
+        p -> q -> r -> s -> t;
+        label=big;
+        t -> p;
+    }
+    t -> a;
+    b -> q; */
+}
+"""
+
 attr_stmt_graph = r"""
 /* If a default attribute is defined using a node, edge, or graph statement,
    or by an attribute assignment not attached to a node or edge, any object of
@@ -91,7 +107,6 @@ attr_stmt_graph = r"""
    This holds until the default attribute is set to a new value, from which
    point the new value is used. */
 graph G {
-    graph [rankdir=LR nodesep=0]
     node [shape=box label="foo"]
     n1
     n2
@@ -104,22 +119,11 @@ graph G {
     edge [color="green"]
     n3 -- n4
     n4 -- n1 [color="blue"]
-}
-"""
-
-cluster_graph = r"""
-digraph G {
-    subgraph cluster_small {
-        a -> b;
-        label=small;
-    }
-    subgraph cluster_big {
-        p -> q -> r -> s -> t;
-        label=big;
-        t -> p;
-    }
-    t -> a;
-    b -> q;
+    graph [rankdir=LR nodesep=0]
+    subgraph cluster1 {a -- b}
+    n2 -- b
+    subgraph cluster_big {p -- q -- r}
+    n4 -- q
 }
 """
 
@@ -246,6 +250,12 @@ class DotParserTestCase(TestCase):
 
         self.assertEqual(graph.edges[5].color, "blue")
         self.assertEqual(graph.edges[6].color, "blue")
+
+
+#    def test_subgraph(self):
+#        """ Test parsing of subgraph statements. """
+#
+#        graph = self.parser.parse_dot_data(cluster_graph)
 
 
 #    def test_attr_stmt(self):

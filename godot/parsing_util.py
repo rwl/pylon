@@ -131,6 +131,24 @@ pluss  = Literal("+")
 quote = Literal('"')# | Literal("'")
 
 #------------------------------------------------------------------------------
+#  Compass point:
+#------------------------------------------------------------------------------
+
+north = CaselessLiteral("n")
+northeast = CaselessLiteral("ne")
+east = CaselessLiteral("e")
+southeast = CaselessLiteral("se")
+south = CaselessLiteral("s")
+southwest = CaselessLiteral("sw")
+west = CaselessLiteral("w")
+northwest = CaselessLiteral("nw")
+middle = CaselessLiteral("c")
+underscore = CaselessLiteral("_")
+
+compass_pt = (north | northeast | east | southeast | south | southwest |
+    west | northwest | middle | underscore)
+
+#------------------------------------------------------------------------------
 #  Convenient pyparsing constructs.
 #------------------------------------------------------------------------------
 
@@ -468,11 +486,11 @@ edge_attr = [arrowhead, arrowsize, arrowtail, color, colorscheme, comment,
 
 # All dot attributes ----------------------------------------------------------
 
-#d = {}
-#for x in (graph_attr + node_attr + edge_attr): d[x]=x
-#all_attr = d.values()
+d = {} # Remove duplicated constructs.
+for x in (graph_attr + node_attr + edge_attr): d[x]=x
+all_attr = d.values()
 
-all_attr = graph_attr# + node_attr + edge_attr
+#all_attr = graph_attr + node_attr + edge_attr
 #reduce(lambda l, x: x not in l and l.append(x) or l, all_attr, [])
 
 #------------------------------------------------------------------------------
