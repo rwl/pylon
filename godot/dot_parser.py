@@ -47,7 +47,7 @@ from pyparsing import \
 from parsing_util import \
     colon, lbrace, rbrace, lbrack, rbrack, lparen, rparen, equals, comma, \
     dot, slash, bslash, star, semi, at, minus, pluss, double_quoted_string, \
-    quoted_string, nsplit, windows, graph_attr, node_attr, edge_attr, all_attr
+    quoted_string, nsplit, windows, graph_attr, node_attr#, edge_attr, all_attr
 
 from godot.graph import Graph
 from godot.node import Node
@@ -157,7 +157,7 @@ class DotParser:
         a_list = OneOrMore(
             Or([(CaselessLiteral(attr.resultsName) +
                 Optional(equals.suppress() + attr, True) +
-                Optional(comma.suppress())) for attr in all_attr])
+                Optional(comma.suppress())) for attr in node_attr])
         ).setName("a_list")
 
         attr_list = OneOrMore(
@@ -227,7 +227,7 @@ class DotParser:
         a_list.setParseAction(self.push_attr_list)
         edge_stmt.setParseAction(self.push_edge_stmt)
         node_stmt.setParseAction(self.push_node_stmt)
-        attr_stmt.setParseAction(self.push_attr_stmt)
+        attr_stmt.setParseAction(self.push_default_attr_stmt)
         attr_list.setParseAction(self.push_attr_list_combine)
         subgraph.setParseAction(self.push_subgraph_stmt)
         #graph_stmt.setParseAction(self.push_graph_stmt)
@@ -376,6 +376,9 @@ class DotParser:
         else:
             # Remove any attribute dictionary from the token list.
             tokens = tokens[:-1]
+
+        print "EDGE STMT:", tokens
+
         for src, dst in windows(tokens, length=2, overlap=1, padding=False):
             print "WINDOW:", src, dst
             # Is src or dst a subgraph?
@@ -426,7 +429,7 @@ class DotParser:
         return tokens
 
 
-    def push_attr_stmt(self, toks):
+    def push_default_attr_stmt(self, toks):
         """ If a default attribute is defined using a node, edge, or graph
         statement, or by an attribute assignment not attached to a node or
         edge, any object of the appropriate type defined afterwards will
