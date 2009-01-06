@@ -83,9 +83,12 @@ port_pos_trait = Str(desc="port position")
 class Edge(HasTraits):
     """ Defines a graph edge """
 
-    from_node = Instance(Node)
+    from_node = Instance(Node, allow_none=False)
 
-    to_node = Instance(Node)
+    to_node = Instance(Node, allow_none=False)
+
+    # Nodes from which the 'to' and 'from' nodes may be selected.
+    _nodes = List(Instance(Node))
 
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
@@ -593,28 +596,34 @@ class Edge(HasTraits):
 
 edge_table_editor = TableEditor(
     columns=[
+        ObjectColumn(name="from_node", label="From",
+            editor=InstanceEditor(name="_nodes", editable=False),
+            format_func=lambda obj: obj.ID),
+        ObjectColumn(name="to_node", label="To",
+            editor=InstanceEditor(name="_nodes", editable=False),
+            format_func=lambda obj: obj.ID),
         ObjectColumn(name="label"),
-        ObjectColumn(name="lp"),
         ObjectColumn(name="style"),
         ObjectColumn(name="arrowsize"),
-        ObjectColumn(name="minlen"),
         ObjectColumn(name="weight"),
         ObjectColumn(name="len"),
-        ObjectColumn(name="pos"),
-        ObjectColumn(name="lhead"),
         ObjectColumn(name="headlabel"),
         ObjectColumn(name="arrowhead"),
-        ObjectColumn(name="ltail"),
         ObjectColumn(name="taillabel"),
         ObjectColumn(name="arrowtail")
     ],
     other_columns = [  # not initially displayed
-        ObjectColumn(name="dir"),
         ObjectColumn(name="color"),
+        ObjectColumn(name="lp"),
+        ObjectColumn(name="pos"),
+        ObjectColumn(name="dir"),
+        ObjectColumn(name="minlen"),
         ObjectColumn(name="colorscheme"),
         ObjectColumn(name="constraint"),
         ObjectColumn(name="decorate"),
         ObjectColumn(name="showboxes"),
+        ObjectColumn(name="ltail"),
+        ObjectColumn(name="lhead"),
     ],
     show_toolbar=True, deletable=True,
     filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
