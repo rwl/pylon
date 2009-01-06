@@ -43,11 +43,11 @@ from common import \
     root_trait, showboxes_trait, target_trait, tooltip_trait, url_trait, \
     pointf_trait, point_trait, color_trait
 
-arrow_trait = Enum(
-    "normal", "inv", "dot", "invdot", "odot", "invodot", "none", "tee",
-    "empty", "invempty", "diamond", "odiamond", "ediamond", "crow", "box",
-    "obox", "open", "halfopen", "vee", desc="Arrow style"
-)
+arrow_styles = ["normal", "inv", "dot", "invdot", "odot", "invodot", "none",
+    "tee", "empty", "invempty", "diamond", "odiamond", "ediamond", "crow",
+    "box", "obox", "open", "halfopen", "vee"]
+
+arrow_trait = Enum(arrow_styles, desc="Arrow style")
 
 # portPos
 #    modifier indicating where on a node an edge should be aimed. It has the

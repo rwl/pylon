@@ -45,7 +45,12 @@ digraph G {
 """
 
 graph_attr_graph = r"""
+/* This is a
+   multiple line
+   comment. */
 strict digraph G {
+    /* C style comment */
+    # Lines like this are also ignored.
     center=true // Bool
     truecolor = 1; // Bool as integer
     remincross=TRUE; // Bool case insensitive
@@ -72,26 +77,49 @@ digraph G {
 
 edge_stmt_graph = r"""
 digraph G {
-    node1 -> node2 -> node3;
-    node1 -> node3 [label="foo"];
+    node1 -> node2
+    node1 -> node3 [label="foo"]; // Line properties
+    node2 -> node3 -> node4 -> node1; // Multiple edges
+    node2 -> node4 -> node5 [color="blue"] // Multiple blue edges
 }
 """
 
-fancy_graph = r"""
+attr_stmt_graph = r"""
+/* If a default attribute is defined using a node, edge, or graph statement,
+   or by an attribute assignment not attached to a node or edge, any object of
+   the appropriate type defined afterwards will inherit this attribute value.
+   This holds until the default attribute is set to a new value, from which
+   point the new value is used. */
+graph G {
+    graph [rankdir=LR nodesep=0]
+    node [shape=box label="foo"]
+    n1
+    n2
+    node [shape=circle label="bar"]
+    n3
+    n4
+    edge [color="red"]
+    n1 -- n2
+    n2 -- n3
+    edge [color="green"]
+    n3 -- n4
+    n4 -- n1 [color="blue"]
+}
+"""
+
+cluster_graph = r"""
 digraph G {
-    size ="4,4";
-    main [shape=box];    /* this is a comment */
-    main -> parse [weight=8];
-    parse -> execute;
-    main -> init [style=dotted];
-    main -> cleanup;
-    execute -> { make_string; printf}
-    init -> make_string;
-    edge [color=red];    // so is this
-    main -> printf [style=bold,label="100 times"];
-    make_string [label="make a\nstring"];
-    node [shape=box,style=filled,color=".7 .3 1.0"];
-    execute -> compare;
+    subgraph cluster_small {
+        a -> b;
+        label=small;
+    }
+    subgraph cluster_big {
+        p -> q -> r -> s -> t;
+        label=big;
+        t -> p;
+    }
+    t -> a;
+    b -> q;
 }
 """
 
@@ -101,6 +129,45 @@ digraph G {
     n1 [color="0.650 0.700 0.700"]; // HSV
     n2 [color="#40e0d0"]; // RGB
     n1 -> n2 [color="#a0522d92"]; // RGBA
+}
+"""
+
+records_graph = r"""
+/* These nodes represent recursive lists of fields, which are drawn as
+   alternating horizontal and vertical rows of boxes. The recursive structure
+   is determined by the node's label, which has the following schema:
+
+  rlabel : field ( '|' field )*
+  field : boxLabel | ''rlabel''
+  boxLabel : ['<'string'>'] [string]
+
+   Literal braces, vertical bars and angle brackets must be escaped. Spaces are
+   interpreted as separators between tokens, so they must be escaped if they
+   are to appear literally in the text. The first string in a boxLabel gives a
+   name to the field, and serves as a port name for the box. The second string
+   is used as a label for the field; it may contain the same escape sequences
+   as multi-line labels.
+
+   References:
+       E. Gansner, E. Koutsofios and S. North, "Drawing graphs with dot", dot
+       User's Manual, graphviz-X.XX.tar.gz, January 26, 2006
+*/
+digraph structs {
+node [shape=record];
+    struct1 [shape=record,label="<f0> left|<f1> mid\ dle|<f2> right"];
+    struct2 [shape=record,label="<f0> one|<f1> two"];
+    struct3 [shape=record,label="hello\nworld |{ b |{c|<here> d|e}| f}| g | h"];
+    struct1 -> struct2;
+    struct1 -> struct3;
+}
+"""
+
+port_graph = r"""
+digraph G {
+    node [shape=record];
+    a [label = "<f0> foo | x | <f1> bar"];
+    b [label = "a | { <f0> foo | x | <f1> bar } | b"];
+    a:f0 -> b:f1
 }
 """
 
@@ -165,10 +232,26 @@ class DotParserTestCase(TestCase):
         self.assertEqual(graph.nodes[4].samplepoints, 10)
 
 
-    def test_edge_stmt(self):
-        """ Test parsing of edge statements. """
+#    def test_edge_stmt(self):
+#        """ Test parsing of edge statements. """
+#
+#        graph = self.parser.parse_dot_data(edge_stmt_graph)
+#
+#        self.assertEqual(len(graph.edges), 7)
+#
+#        self.assertEqual(graph.edges[0].from_node.ID, "node1")
+#        self.assertEqual(graph.edges[0].to_node.ID, "node2")
+#
+#        self.assertEqual(graph.edges[1].label, "foo")
+#
+#        self.assertEqual(graph.edges[5].color, "blue")
+#        self.assertEqual(graph.edges[6].color, "blue")
 
-        graph = self.parser.parse_dot_data(edge_stmt_graph)
+
+    def test_attr_stmt(self):
+        """ Test parsing of default attribute statements. """
+
+        graph = self.parser.parse_dot_data(attr_stmt_graph)
 
 
 #    def test_color(self):

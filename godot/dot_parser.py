@@ -47,7 +47,7 @@ from pyparsing import \
 from parsing_util import \
     colon, lbrace, rbrace, lbrack, rbrack, lparen, rparen, equals, comma, \
     dot, slash, bslash, star, semi, at, minus, pluss, double_quoted_string, \
-    quoted_string, nsplit, windows, graph_attr, node_attr
+    quoted_string, nsplit, windows, graph_attr, node_attr, edge_attr, all_attr
 
 from godot.graph import Graph
 from godot.node import Node
@@ -134,22 +134,9 @@ class DotParser:
             )
             html_text = Combine(Literal("<<") + OneOrMore(CharsNotIn(",]")))
 
-        # An ID is one of the following:
-        #  * Any string of alphabetic ([a-zA-Z\200-\377]) characters,
-        #    underscores ('_') or digits ([0-9]), not beginning with a digit;
-        #  * a number [-]?(.[0-9]+ | [0-9]+(.[0-9]*)? );
-        #  * any double-quoted string ("...") possibly containing escaped
-        #    quotes (\")1;
-        #  * an HTML string (<...>).
         ID = (
             identifier | html_text | quoted_string | alphastring_
         ).setName("ID")
-
-#        float_number = Combine(
-#            Optional(minus) + OneOrMore(Word(nums + "."))
-#        ).setName("float_number")
-
-#        righthand_id = (float_number | ID ).setName("righthand_id")
 
         # Portnames (node1:port1 -> node2:port5:nw;)
         port_angle = (at + ID).setName("port_angle")
@@ -166,13 +153,11 @@ class DotParser:
 
         node_id = ID + Optional(port)
 
-        # Attributes.
+        # Attribute lists.
         a_list = OneOrMore(
-#            ID + Optional(equals.suppress() + righthand_id) + \
-#            Optional(comma.suppress())
             Or([(CaselessLiteral(attr.resultsName) +
                 Optional(equals.suppress() + attr, True) +
-                Optional(comma.suppress())) for attr in node_attr])
+                Optional(comma.suppress())) for attr in all_attr])
         ).setName("a_list")
 
         attr_list = OneOrMore(
@@ -242,7 +227,7 @@ class DotParser:
         a_list.setParseAction(self.push_attr_list)
         edge_stmt.setParseAction(self.push_edge_stmt)
         node_stmt.setParseAction(self.push_node_stmt)
-        attr_stmt.setParseAction(self.push_default_attr_stmt)
+        attr_stmt.setParseAction(self.push_attr_stmt)
         attr_list.setParseAction(self.push_attr_list_combine)
         subgraph.setParseAction(self.push_subgraph_stmt)
         #graph_stmt.setParseAction(self.push_graph_stmt)
@@ -361,14 +346,14 @@ class DotParser:
         name = tokens[0]
 
         if len(tokens) == 2:
-            node = Node(ID=name)
-            options = tokens[1]
+            opts = tokens[1]
+            node = Node(ID=name, **opts)
         else:
             node = Node(ID=name)
             options = {}
         # Set the attributes of the node.
-        for option in options:
-            setattr(node, option, options[option])
+#        for option in options:
+#            setattr(node, option, options[option])
         # Add the node to the graph.
         graph.nodes.append(node)
 
@@ -381,7 +366,7 @@ class DotParser:
     def push_edge_stmt(self, tokens):
         """ Returns tuple of the form (ADD_EDGE, src, dst, options) """
 
-        print "EDGE STMT:", tokens.keys()
+        print "EDGE STMT:", tokens
 
         graph = self.graph
         edgelist = []
@@ -389,9 +374,10 @@ class DotParser:
         if not isinstance(opts, dict):
             opts = {}
         else:
+            # Remove any attribute dictionary from the token list.
             tokens = tokens[:-1]
         for src, dst in windows(tokens, length=2, overlap=1, padding=False):
-            print "WINDOWS:", src, dst
+            print "WINDOW:", src, dst
             # Is src or dst a subgraph?
 #            srcgraph = destgraph = False
 #            if len(src) > 1 and src[0] == "add_subgraph":
@@ -414,12 +400,12 @@ class DotParser:
 #                edgelist.append(("add_edge",src,dest,opts))
 
             # Ordinary edge.
-            srcport = dstport = ""
+            # Ports specified in the node ID take precendence over assignments.
             if isinstance(src, tuple):
-                srcport = src[1]
+                opts["tailport"] = src[1]
                 src = src[0]
             if isinstance(dst, tuple):
-                dstport = dst[1]
+                opts["headport"] = dst[1]
                 dst = dst[0]
 
             # If a node didn't exist we would have to create one.
@@ -432,20 +418,22 @@ class DotParser:
                 to_node = Node(ID=dst)
                 graph.nodes.append(to_node)
 
-            edge = Edge(from_node, to_node, tailport=srcport, headport=dstport)
+            edge = Edge(from_node, to_node, **opts)
             edgelist.append(edge)
-
-        print "EDGE LIST:", edgelist
 
         graph.edges.extend(edgelist)
 
-        return edgelist
+        return tokens
 
 
-    def push_default_attr_stmt(self, toks):
-        """ Returns a tuple of the form (ADD_DEFAULT_NODE_ATTR, options) """
+    def push_attr_stmt(self, toks):
+        """ If a default attribute is defined using a node, edge, or graph
+        statement, or by an attribute assignment not attached to a node or
+        edge, any object of the appropriate type defined afterwards will
+        inherit this attribute value. This holds until the default attribute
+        is set to a new value, from which point the new value is used. """
 
-        print "DEFAULT NODE ATTR STMT:", toks
+        print "DEFAULT ATTR STMT:", toks
 
         if len(toks)== 1:
             gtype = toks;

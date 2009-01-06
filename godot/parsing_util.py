@@ -45,6 +45,7 @@ from pyparsing import \
 
 from godot.common import color_schemes
 from godot.node import node_shapes
+from godot.edge import arrow_styles
 
 #------------------------------------------------------------------------------
 #  "ToBoolean" class:
@@ -211,6 +212,8 @@ word = quoted_string#Word(alphanums)
 #
 #q_string_junk = SkipTo(q_string).setName("q_string_junk")
 
+# Graph attributes ------------------------------------------------------------
+
 rect = real.setResultsName("llx") + real.setResultsName("lly") + \
     real.setResultsName("urx") + real.setResultsName("ury")
 
@@ -369,6 +372,8 @@ graph_attr = [bb, bgcolor, center, charset, clusterrank, colorscheme, comment,
     remincross, resolution, root, rotate, searchsize, sep, showboxes, size,
     splines, start, stylesheet, target, truecolor, URL, viewport, voro_margin]
 
+# Node attributes -------------------------------------------------------------
+
 node_shape = Or([CaselessLiteral(shape) for shape in node_shapes])
 
 color = colour.setResultsName("color")
@@ -402,6 +407,75 @@ node_attr = [color, colorscheme, comment, distortion, fillcolor, fixedsize,
     layer, margin, nojustify, orientation, peripheries, pin, pos, rects,
     regular, root, samplepoints, shape, shapefile, showboxes, sides, skew,
     style, target, tooltip, URL, vertices, width, z]
+
+# Edge specific attributes ----------------------------------------------------
+
+arrow = Or([CaselessLiteral(arrow_style) for arrow_style in arrow_styles])
+
+arrowhead = arrow.setResultsName("arrowhead")
+arrowsize = real.setResultsName("arrowsize")
+arrowtail = arrow.setResultsName("arrowtail")
+constraint = boolean.setResultsName("constraint")
+decorate = boolean.setResultsName("decorate")
+dir = (CaselessLiteral("forward") | CaselessLiteral("back") |
+    CaselessLiteral("both") | CaselessLiteral("none")).setResultsName("dir")
+edgehref = word.setResultsName("edgehref")
+edgetarget = word.setResultsName("edgetarget")
+edgetooltip = word.setResultsName("edgetooltip")
+edgeURL = word.setResultsName("edgeURL")
+headclip = boolean.setResultsName("headclip")
+headhref = word.setResultsName("headhref")
+headlabel = word.setResultsName("headlabel")
+headport = word.setResultsName("headport")
+headtarget = word.setResultsName("headtarget")
+headtooltip = word.setResultsName("headtooltip")
+headURL = word.setResultsName("headURL")
+href = word.setResultsName("href")
+labelangle = real.setResultsName("labelangle")
+labeldistance = real.setResultsName("labeldistance")
+labelfloat = boolean.setResultsName("labelfloat")
+labelfontcolor = colour.setResultsName("labelfontcolor")
+labelfontname = word.setResultsName("labelfontname")
+labelfontsize = real.setResultsName("labelfontsize")
+labelhref = word.setResultsName("labelhref")
+labeltarget = word.setResultsName("labeltarget")
+labeltooltip = word.setResultsName("labeltooltip")
+labelURL = word.setResultsName("labelURL")
+len = real.setResultsName("len")
+lhead = word.setResultsName("lhead")
+ltail = word.setResultsName("ltail")
+minlen = integer.setResultsName("minlen")
+samehead = word.setResultsName("samehead")
+sametail = word.setResultsName("sametail")
+tailclip = boolean.setResultsName("tailclip")
+tailhref = word.setResultsName("tailhref")
+taillabel = word.setResultsName("taillabel")
+tailport = word.setResultsName("tailport")
+tailtarget = word.setResultsName("tailtarget")
+tailtooltip = word.setResultsName("tailtooltip")
+tailURL = word.setResultsName("tailURL")
+weight = real.setResultsName("weight")
+
+edge_attr = [arrowhead, arrowsize, arrowtail, color, colorscheme, comment,
+    constraint, decorate, dir, edgehref, edgetarget, edgetooltip, edgeURL,
+    fontcolor, fontname, fontsize, headclip, headhref, headlabel, headport,
+    headtarget, headtooltip, headURL, href, label, labelangle, labeldistance,
+    labelfloat, labelfontcolor, labelfontname, labelfontsize, labelhref,
+    labeltarget, labeltooltip, labelURL, layer, len, lhead, lp, ltail, minlen,
+    nojustify, pos, samehead, sametail, showboxes, style, tailclip, tailhref,
+    taillabel, tailport, tailtarget, tailtooltip, tailURL, target, tooltip,
+    URL, weight]
+
+# All dot attributes ----------------------------------------------------------
+
+#d = {}
+#for x in (graph_attr + node_attr + edge_attr): d[x]=x
+#all_attr = d.values()
+
+all_attr = graph_attr + node_attr + edge_attr
+#reduce(lambda l, x: x not in l and l.append(x) or l, all_attr, [])
+
+print "ALL ATTR:", all_attr
 
 #------------------------------------------------------------------------------
 #  A convenient function for calculating a unique name given a list of
