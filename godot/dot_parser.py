@@ -47,7 +47,7 @@ from pyparsing import \
 from parsing_util import \
     colon, lbrace, rbrace, lbrack, rbrack, lparen, rparen, equals, comma, \
     dot, slash, bslash, star, semi, at, minus, pluss, double_quoted_string, \
-    quoted_string, nsplit, windows, graph_attr, node_attr#, edge_attr, all_attr
+    quoted_string, nsplit, windows, graph_attr, node_attr, edge_attr, all_attr
 
 from godot.graph import Graph
 from godot.node import Node
@@ -108,6 +108,8 @@ class DotParser:
         node_ = CaselessLiteral("node").setResultsName("node")
         edge_ = CaselessLiteral("edge").setResultsName("edge")
 
+        subgraph_.setParseAction(self.push_subgraph_stmt)
+
 #        graph_.setParseAction(self._push_digraph)
 
         # token definitions
@@ -157,7 +159,7 @@ class DotParser:
         a_list = OneOrMore(
             Or([(CaselessLiteral(attr.resultsName) +
                 Optional(equals.suppress() + attr, True) +
-                Optional(comma.suppress())) for attr in node_attr])
+                Optional(comma.suppress())) for attr in all_attr])
         ).setName("a_list")
 
         attr_list = OneOrMore(
@@ -179,7 +181,7 @@ class DotParser:
         edge_stmt = edge_point + edgeRHS + Optional(attr_list)
 
         subgraph = (
-            Optional(subgraph_, "") + Optional(ID, "") + Group(graph_stmt)
+            Optional(subgraph_, "") + Optional(ID, "") + graph_stmt#Group(graph_stmt)
         ).setName("subgraph").setResultsName("ssubgraph")
 
         edge_point << (subgraph | graph_stmt | node_id )
@@ -196,7 +198,8 @@ class DotParser:
         ).setName("assignment")
 
         stmt = (
-            assignment | edge_stmt | attr_stmt | subgraph | graph_stmt |
+            assignment | edge_stmt | attr_stmt |
+            subgraph | graph_stmt |
             node_stmt
         ).setName("stmt")
 
@@ -455,9 +458,10 @@ class DotParser:
 
     def push_subgraph_stmt(self, toks):
         """ Returns a tuple of the form (ADD_SUBGRAPH, name, elements) """
+
         print "SUBGRAPH:", toks
 
-        return ("add_subgraph", toks[1], toks[2].asList())
+        return ("add_subgraph", toks[1], toks[2])#.asList())
 
 
     def _main_graph_stmt(self, toks):
