@@ -232,26 +232,26 @@ class DotParserTestCase(TestCase):
         self.assertEqual(graph.nodes[4].samplepoints, 10)
 
 
-#    def test_edge_stmt(self):
-#        """ Test parsing of edge statements. """
-#
-#        graph = self.parser.parse_dot_data(edge_stmt_graph)
-#
-#        self.assertEqual(len(graph.edges), 7)
-#
-#        self.assertEqual(graph.edges[0].from_node.ID, "node1")
-#        self.assertEqual(graph.edges[0].to_node.ID, "node2")
-#
-#        self.assertEqual(graph.edges[1].label, "foo")
-#
-#        self.assertEqual(graph.edges[5].color, "blue")
-#        self.assertEqual(graph.edges[6].color, "blue")
+    def test_edge_stmt(self):
+        """ Test parsing of edge statements. """
+
+        graph = self.parser.parse_dot_data(edge_stmt_graph)
+
+        self.assertEqual(len(graph.edges), 7)
+
+        self.assertEqual(graph.edges[0].from_node.ID, "node1")
+        self.assertEqual(graph.edges[0].to_node.ID, "node2")
+
+        self.assertEqual(graph.edges[1].label, "foo")
+
+        self.assertEqual(graph.edges[5].color, "blue")
+        self.assertEqual(graph.edges[6].color, "blue")
 
 
-    def test_attr_stmt(self):
-        """ Test parsing of default attribute statements. """
-
-        graph = self.parser.parse_dot_data(attr_stmt_graph)
+#    def test_attr_stmt(self):
+#        """ Test parsing of default attribute statements. """
+#
+#        graph = self.parser.parse_dot_data(attr_stmt_graph)
 
 
 #    def test_color(self):

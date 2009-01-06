@@ -33,7 +33,7 @@ References:
 
 import re
 
-from itertools import izip, islice, repeat
+import itertools
 
 from pyparsing import \
     TokenConverter, oneOf, string, Literal, Group, Word, Optional, Combine, \
@@ -199,7 +199,7 @@ quoted_string = Combine(
     double_quoted_string+
     Optional(OneOrMore(pluss+double_quoted_string)), adjacent=False
 )
-word = quoted_string#Word(alphanums)
+word = quoted_string.setName("word") # Word(alphanums)
 
 # add other characters we should skip over between interesting fields
 #integer_junk = Optional(
@@ -441,7 +441,7 @@ labelhref = word.setResultsName("labelhref")
 labeltarget = word.setResultsName("labeltarget")
 labeltooltip = word.setResultsName("labeltooltip")
 labelURL = word.setResultsName("labelURL")
-len = real.setResultsName("len")
+lenn = real.setResultsName("len")
 lhead = word.setResultsName("lhead")
 ltail = word.setResultsName("ltail")
 minlen = integer.setResultsName("minlen")
@@ -461,7 +461,7 @@ edge_attr = [arrowhead, arrowsize, arrowtail, color, colorscheme, comment,
     fontcolor, fontname, fontsize, headclip, headhref, headlabel, headport,
     headtarget, headtooltip, headURL, href, label, labelangle, labeldistance,
     labelfloat, labelfontcolor, labelfontname, labelfontsize, labelhref,
-    labeltarget, labeltooltip, labelURL, layer, len, lhead, lp, ltail, minlen,
+    labeltarget, labeltooltip, labelURL, layer, lenn, lhead, lp, ltail, minlen,
     nojustify, pos, samehead, sametail, showboxes, style, tailclip, tailhref,
     taillabel, tailport, tailtarget, tailtooltip, tailURL, target, tooltip,
     URL, weight]
@@ -472,10 +472,8 @@ edge_attr = [arrowhead, arrowsize, arrowtail, color, colorscheme, comment,
 #for x in (graph_attr + node_attr + edge_attr): d[x]=x
 #all_attr = d.values()
 
-all_attr = graph_attr + node_attr + edge_attr
+all_attr = graph_attr# + node_attr + edge_attr
 #reduce(lambda l, x: x not in l and l.append(x) or l, all_attr, [])
-
-print "ALL ATTR:", all_attr
 
 #------------------------------------------------------------------------------
 #  A convenient function for calculating a unique name given a list of
@@ -522,7 +520,7 @@ def nsplit(seq, n=2):
 
     """
 
-    return [xy for xy in izip(*[iter(seq)]*n)]
+    return [xy for xy in itertools.izip(*[iter(seq)]*n)]
 
 #------------------------------------------------------------------------------
 #  "windows" function:
@@ -536,22 +534,22 @@ def windows(iterable, length=2, overlap=0, padding=True):
     items are sublists (i.e., sliding windows), each of the same given length,
     over s' items, with successive windows overlapping by a specified amount.
 
-    http://my.safaribooksonline.com/0596007973/pythoncook2-CHP-19-SECT-7
-
     """
 
     it = iter(iterable)
-    results = list(islice(it, length))
+    results = list(itertools.islice(it, length))
     while len(results) == length:
         yield results
         results = results[length-overlap:]
-        results.extend(islice(it, length-overlap))
+        results.extend(itertools.islice(it, length-overlap))
     if padding and results:
-        results.extend(repeat(None, length-len(results)))
+        results.extend(itertools.repeat(None, length-len(results)))
         yield results
 
 
 if __name__ == "__main__":
-    print hexnums
+    l = [1,2,3]
+    for j, k in windows(l, length=2, overlap=1, padding=False):
+        print j, k
 
 # EOF -------------------------------------------------------------------------
