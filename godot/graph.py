@@ -1091,8 +1091,6 @@ class Graph(HasTraits):
     def get_node(self, ID):
         """ Returns a node given an ID or None if no such node exists. """
 
-        print "NODES:", self.nodes
-
         for each_node in self.nodes:
             if each_node.ID == ID:
                 return each_node
