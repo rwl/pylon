@@ -46,7 +46,7 @@ from common import \
     fontsize_trait, label_trait, layer_trait, margin_trait, nojustify_trait, \
     peripheries_trait, pos_trait, rectangle_trait, root_trait, \
     showboxes_trait, target_trait, tooltip_trait, url_trait, pointf_trait, \
-    color_trait
+    color_trait, Alias
 
 #------------------------------------------------------------------------------
 #  Trait definitions:
@@ -68,6 +68,7 @@ class Node(HasTraits):
     """ A graph node """
 
     ID = Str
+    name = Alias("ID", desc="synonym for ID")
 
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
@@ -451,27 +452,27 @@ class Node(HasTraits):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __str__(self):
-        """ Return a string representing the node when requested by str()
-        (or print).
+#    def __str__(self):
+#        """ Return a string representing the node when requested by str()
+#        (or print).
+#
+#        @rtype:  string
+#        @return: String representing the node.
+#
+#        """
+#
+##        return "<node object " + self.name + " " + self.label + ">"
+#
+#        attrstr = ",".join(["%s=%s" % \
+#            (quote_if_necessary(key), quote_if_necessary(val)) \
+#                for key, val in self.get_node_attributes()])
+#        if attrstr:
+#            attrstr = "[%s]" % attrstr
+#        return "%s%s;\n" % (quote_if_necessary(self.name), attrstr)
 
-        @rtype:  string
-        @return: String representing the node.
 
-        """
-
-#        return "<node object " + self.name + " " + self.label + ">"
-
-        attrstr = ",".join(["%s=%s" % \
-            (quote_if_necessary(key), quote_if_necessary(val)) \
-                for key, val in self.get_node_attributes()])
-        if attrstr:
-            attrstr = "[%s]" % attrstr
-        return "%s%s;\n" % (quote_if_necessary(self.name), attrstr)
-
-
-    def __hash__(self):
-        return hash(self.name)
+#    def __hash__(self):
+#        return hash(self.ID)
 
 
     def get_node_attributes(self):
@@ -493,7 +494,7 @@ class Node(HasTraits):
 
 node_table_editor = TableEditor(
     columns=[
-        ObjectColumn(name="name"),
+        ObjectColumn(name="ID"),
         ObjectColumn(name="label"),
         ObjectColumn(name="shape"),
         ObjectColumn(name="fixedsize"),

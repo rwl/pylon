@@ -130,7 +130,6 @@ class DotParserTestCase(TestCase):
     def test_graph_attributes(self):
         """ Test graph attribute value assignment. """
 
-#        graph = self.parser.parse_dot_data(testgraph)
         graph = self.parser.parse_dot_data(graph_attr_graph)
 
         self.assertTrue(isinstance(graph, Graph))
@@ -170,8 +169,6 @@ class DotParserTestCase(TestCase):
         """ Test parsing of edge statements. """
 
         graph = self.parser.parse_dot_data(edge_stmt_graph)
-
-        graph.configure_traits()
 
 
 #    def test_color(self):

@@ -1138,23 +1138,45 @@ class Graph(HasTraits):
     #--------------------------------------------------------------------------
 
     def _edges_changed(self, new):
-        """ Handles the list of edges changing """
+        """ Handles the list of edges changing. """
 
         for each_edge in new:
+            # Ensure the edge's nodes exist in the graph.
             if each_edge.from_node not in self.nodes:
                 self.nodes.append(each_edge.from_node)
             if each_edge.to_node not in self.nodes:
                 self.nodes.append(each_edge.to_node)
+            # Initialise the edge's list of available nodes.
+            each_edge._nodes = new
 
 
     def _edges_items_changed(self, event):
-        """ Handles edges being added and removed """
+        """ Handles edges being added and removed. """
 
         for each_edge in event.added:
+            # Ensure the edge's nodes exist in the graph.
             if each_edge.from_node not in self.nodes:
                 self.nodes.append(each_edge.from_node)
             if each_edge.to_node not in self.nodes:
                 self.nodes.append(each_edge.to_node)
+            # Initialise the edge's list of available nodes.
+            each_edge._nodes = self.nodes
+
+
+    def _nodes_changed(self, new):
+        """ Handles the list of nodes changing.  Maintains each edge's list of
+        available nodes. """
+
+        for each_edge in self.edges:
+            each_edge._nodes = new
+
+
+    def _nodes_items_changed(self, event):
+        """ Handles nodes being added and removed.  Maintains each edge's list
+        of available nodes. """
+
+        for each_edge in self.edges:
+            each_edge._nodes = self.nodes
 
 
 #    def _anytrait_changed(self, name, new):

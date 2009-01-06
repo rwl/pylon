@@ -322,7 +322,7 @@ class DotParser:
         print "NODE ID:", tokens
 
         if len(tokens) > 1:
-            return (tokens[0], tokens[1])
+            return (tokens[0], tokens[1]) # ID, port
         else:
             return tokens
 
@@ -379,18 +379,20 @@ class DotParser:
 
 
     def push_edge_stmt(self, tokens):
-        """ Returns tuple of the form (ADD_EDGE, src, dest, options) """
+        """ Returns tuple of the form (ADD_EDGE, src, dst, options) """
 
-        print "EDGE STMT:", tokens
+        print "EDGE STMT:", tokens.keys()
 
         graph = self.graph
         edgelist = []
         opts = tokens[-1]
         if not isinstance(opts, dict):
             opts = {}
-        for src, dest in windows(tokens, length=2, overlap=1, padding=False):
-            print "WINDOWS:", src, dest
-            # Is src or dest a subgraph?
+        else:
+            tokens = tokens[:-1]
+        for src, dst in windows(tokens, length=2, overlap=1, padding=False):
+            print "WINDOWS:", src, dst
+            # Is src or dst a subgraph?
 #            srcgraph = destgraph = False
 #            if len(src) > 1 and src[0] == "add_subgraph":
 #                edgelist.append(src)
@@ -411,16 +413,26 @@ class DotParser:
 #                # Ordinary edge
 #                edgelist.append(("add_edge",src,dest,opts))
 
+            # Ordinary edge.
+            srcport = dstport = ""
+            if isinstance(src, tuple):
+                srcport = src[1]
+                src = src[0]
+            if isinstance(dst, tuple):
+                dstport = dst[1]
+                dst = dst[0]
+
+            # If a node didn't exist we would have to create one.
             from_node = graph.get_node(src)
             if from_node is None:
                 from_node = Node(ID=src)
                 graph.nodes.append(from_node)
-            to_node = graph.get_node(dest)
+            to_node = graph.get_node(dst)
             if to_node is None:
-                to_node = Node(ID=dest)
+                to_node = Node(ID=dst)
                 graph.nodes.append(to_node)
 
-            edge = Edge(from_node, to_node)
+            edge = Edge(from_node, to_node, tailport=srcport, headport=dstport)
             edgelist.append(edge)
 
         print "EDGE LIST:", edgelist
