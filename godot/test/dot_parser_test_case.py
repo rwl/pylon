@@ -178,6 +178,18 @@ digraph G {
 }
 """
 
+xdot_graph = """
+graph {
+    node [label="\N"];
+    graph [bb="0,0,54,36",
+        _draw_="c 5 -white C 5 -white P 4 0 0 0 36 54 36 54 0 ",
+        xdotversion="1.2"];
+    foo [pos="27,18", width="0.75", height="0.50",
+        _draw_="c 5 -black e 27 18 27 18 ",
+        _ldraw_="F 14.000000 11 -Times-Roman c 5 -black T 27 13 0 20 3 -foo "];
+}
+"""
+
 #------------------------------------------------------------------------------
 #  "DotParserTestCase" class:
 #------------------------------------------------------------------------------

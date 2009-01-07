@@ -20,7 +20,7 @@
 #  IN THE SOFTWARE.
 #------------------------------------------------------------------------------
 
-""" A graph node """
+""" Defines a graph node. """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -38,6 +38,8 @@ from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
 
 from enthought.traits.ui.table_filter import \
     EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
+
+from enthought.enable.api import Container
 
 from dot2tex.dotparsing import quote_if_necessary
 
@@ -64,7 +66,7 @@ shape_trait = Enum(node_shapes, desc="node shape", label="Node shape")
 #  "Node" class:
 #------------------------------------------------------------------------------
 
-class Node(HasTraits):
+class Node(Container):
     """ A graph node """
 
     ID = Str
@@ -73,8 +75,8 @@ class Node(HasTraits):
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
     # commands in _draw_ followed by the commands in _ldraw_.
-    _draw_ = Str
-    _ldraw_ = Str
+    _draw_ = Str(desc="draw directive")
+    _ldraw_ = Str(desc="label draw directive")
 
     # Basic drawing color for graphics, not text. For the latter, use the
     # <html:a rel="attr">fontcolor</html:a> attribute.
