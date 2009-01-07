@@ -39,7 +39,7 @@ from pyparsing import __version__ as pyparsing_version
 from pyparsing import \
     Literal, CaselessLiteral, Word, Upcase, OneOrMore, ZeroOrMore, Forward, \
     NotAny, delimitedList, oneOf, Group, Optional, Combine, alphas, nums, \
-    restOfLine, cStyleComment, nums, alphanums, printables, empty, \
+    restOfLine, cppStyleComment, nums, alphanums, printables, empty, \
     quotedString, ParseException, ParseResults, CharsNotIn, _noncomma, \
     dblQuotedString, QuotedString, ParserElement, Suppress, Regex, \
     removeQuotes, nestedExpr, Suppress, Or
@@ -87,7 +87,7 @@ class DotParser:
 
         tokens = parser.parseString(data)
 
-        print "TOKENS:", tokens
+#        print "TOKENS:", tokens
 
         return graph
 
@@ -128,7 +128,7 @@ class DotParser:
 
         ID = (
             identifier | html_text | quoted_string | alphastring_
-        ).setName("ID").setResultsName("IDD")
+        ).setName("ID").setResultsName("ID")
 
         # Portnames (node1:port1 -> node2:port5:nw;)
         port_angle = (at + ID).setName("port_angle")
@@ -183,7 +183,7 @@ class DotParser:
         assignment = (
             Or([(CaselessLiteral(attr.resultsName) + Suppress(equals) + attr) \
                 for attr in graph_attr])
-        ).setName("assignment")
+        ).setResultsName("assignment")
 
         stmt = (
             assignment | edge_stmt | attr_stmt |
@@ -198,35 +198,35 @@ class DotParser:
         # graph loops or multiple edges.
         strict = Optional(strict_, "notstrict").setResultsName("strict")
         # Do edges have direction?
-        directed = ((graph_ | digraph_))
+        directed = (graph_ | digraph_).setResultsName("directed")
         # Optional graph identifier.
-        graph_id = Optional(ID, "").setResultsName("graph_id")
+        graph_id = Optional(ID, "G").setResultsName("graph_id")
 
         # Parser for graphs defined in the DOT language.
-        graphparser = (strict + directed + graph_id +
-            Suppress(lbrace) + Group(Optional(stmt_list)) +
-            Suppress(rbrace)).setResultsName("graph")
+        graphparser = (strict + directed + graph_id + Suppress(lbrace) +
+            Group(Optional(stmt_list)).setResultsName("stmt_list") +
+            Suppress(rbrace))
 
-        # Ignore comments.
-        singleLineComment = Group("//" + restOfLine) | Group("#" + restOfLine)
-        graphparser.ignore(singleLineComment)
-        graphparser.ignore(cStyleComment)
+        # Ignore C++-style comments and C preprocessor output.
+        preprocessorOutput = Group("#" + restOfLine)
+        graphparser.ignore(preprocessorOutput)
+        graphparser.ignore(cppStyleComment)
 
         # Actions
         node_id.setParseAction(self.push_node_id)
         assignment.setParseAction(self.push_attr_assignment)
         a_list.setParseAction(self.push_attr_list)
-        edge_stmt.setParseAction(self.push_edge_stmt)
-        node_stmt.setParseAction(self.push_node_stmt)
+        edge_stmt.setParseAction(self.proc_edge_stmt)
+        node_stmt.setParseAction(self.proc_node_stmt)
         attr_stmt.setParseAction(self.push_default_attr_stmt)
         attr_list.setParseAction(self.push_attr_list_combine)
         subgraph.setParseAction(self.push_subgraph_stmt)
         #graph_stmt.setParseAction(self.push_graph_stmt)
 
-        strict.setParseAction(self._push_strict)
-        directed.setParseAction(self._push_directed)
-        graph_id.setParseAction(self._push_graph_id)
-#        graphparser.setParseAction(self._push_main_graph)
+        strict.setParseAction(self._proc_strict)
+        directed.setParseAction(self._proc_directed)
+#        graph_id.setParseAction(self._proc_graph_id)
+        graphparser.setParseAction(self._proc_main_graph)
 
         return graphparser
 
@@ -234,58 +234,66 @@ class DotParser:
     #  Parser actions
     #--------------------------------------------------------------------------
 
-    def _push_strict(self, tokens):
-        """ Sets the 'strict' attribute of the graph. """
+    def _proc_strict(self, tokens):
+        """ Coerces the 'strict' token to a boolean value. """
 
-        graph = self.graph
+        print "STRICT:", tokens, tokens.asList(), tokens.keys(), tokens["strict"]
+
+#        graph = self.graph
         strict = tokens["strict"]
 
         if strict == "strict":
-            graph.strict = True
-        elif strict == "notstrict":
-            graph.strict = False
-        else:
-            raise ValueError
+#            graph.strict = True
+#            tokens["strict"] = True
+            return True
+        else:#if strict == "notstrict":
+#            graph.strict = False
+#            tokens["strict"] = False
+            return False
+#        else:
+#            raise ValueError
 
 
-    def _push_directed(self, tokens):
-        """ Do edges have direction? """
+    def _proc_directed(self, tokens):
+        """ Coerces the 'digraph' token to a boolean value. """
 
-        graph = self.graph
+        print "DIRECTED:", tokens, tokens.asList(), tokens.keys(), tokens["directed"]
+
+#        graph = self.graph
         directed = tokens["directed"]
 
         if directed == "graph":
-            graph.directed = False
+#            graph.directed = False
+#            tokens["directed"] = False
+            return False
         elif directed == "digraph":
-            graph.directed = True
+#            graph.directed = True
+#            tokens["directed"] = True
+            return True
         else:
             raise ValueError
 
-
-    def _push_graph_id(self, tokens):
-        """ Optional graph identifier. """
-
-        print "GRAPH ID:", tokens
-        self.graph.ID = tokens["graph_id"]
+#        print "DIRECTED:", tokens, tokens.asList(), tokens.keys(), tokens["directed"]
+#
+#        return tokens
 
 
-    def _push_main_graph(self, tokens):
-        """ Starts a new Graph. """
-
-        print "GRAPH:", tokens
-
-        self.graph = Graph()
+#    def _proc_graph_id(self, tokens):
+#        """ Optional graph identifier. """
+#
+#        print "GRAPH ID:", tokens
+#        self.graph.ID = tokens["graph_id"]
 
 
     def push_attr_assignment(self, tokens):
         """ Sets the graph attribute to the parsed value. """
 
-        print "ASSIGNMENT:", tokens
+        print "ASSIGNMENT:", tokens, tokens.asList(), tokens.keys()
 
-        graph = self.graph
-        setattr(graph, tokens[0], tokens[1])
+#        graph = self.graph
+#        setattr(graph, tokens[0], tokens[1])
 
-        return ("set_graph_attr", dict(nsplit(tokens, 2)))
+        return nsplit(tokens, 2)
 
 
     def push_node_id(self, tokens):
@@ -324,36 +332,38 @@ class DotParser:
         return tokens
 
 
-    def push_node_stmt(self, tokens):
+    def proc_node_stmt(self, tokens):
         """ Returns tuple of the form (ADD_NODE, node_name, options) """
 
-        print "NODE STMT:", tokens
+        print "NODE STMT:", tokens, tokens.asList(), tokens.keys()
 
         graph = self.graph
-        name = tokens[0]
+        node_id = tokens["ID"]
 
         if len(tokens) == 2:
             opts = tokens[1]
-            node = Node(ID=name, **opts)
+            node = Node(ID=node_id, **opts)
         else:
-            node = Node(ID=name)
-            options = {}
+            node = Node(ID=node_id)
+#            options = {}
         # Set the attributes of the node.
 #        for option in options:
 #            setattr(node, option, options[option])
         # Add the node to the graph.
-        graph.nodes.append(node)
+#        graph.nodes.append(node)
 
-        if len(tokens) == 2:
-            return tuple(["add_node"] + list(tokens))
-        else:
-            return tuple(["add_node"] + list(tokens) + [{}])
+        return node
+
+#        if len(tokens) == 2:
+#            return tuple(["add_node"] + list(tokens))
+#        else:
+#            return tuple(["add_node"] + list(tokens) + [{}])
 
 
-    def push_edge_stmt(self, tokens):
+    def proc_edge_stmt(self, tokens):
         """ Returns tuple of the form (ADD_EDGE, src, dst, options) """
 
-        print "EDGE STMT:", tokens
+        print "EDGE STMT:", tokens, tokens.asList(), tokens.keys()
 
         graph = self.graph
         edgelist = []
@@ -363,8 +373,6 @@ class DotParser:
         else:
             # Remove any attribute dictionary from the token list.
             tokens = tokens[:-1]
-
-        print "EDGE STMT:", tokens
 
         for src, dst in windows(tokens, length=2, overlap=1, padding=False):
             print "WINDOW:", src, dst
@@ -411,9 +419,11 @@ class DotParser:
             edge = Edge(from_node, to_node, **opts)
             edgelist.append(edge)
 
-        graph.edges.extend(edgelist)
+        return edgelist
 
-        return tokens
+#        graph.edges.extend(edgelist)
+
+#        return tokens
 
 
     def push_default_attr_stmt(self, toks):
@@ -448,9 +458,44 @@ class DotParser:
         return ("add_subgraph", toks)#[1], toks[2])#.asList())
 
 
-    def _main_graph_stmt(self, toks):
-        print "MAIN GRAPH:", toks
+    def _proc_main_graph(self, tokens):
+        """ Starts a new Graph. """
 
-        return (toks[0], toks[1], toks[2], toks[3])#.asList())
+        print "GRAPH:", tokens, tokens.keys()
+
+#        stmt_list = tokens["stmt_list"]
+#        if "assignment" in stmt_list.keys():
+#            opts = stmt_list["assignment"]
+#        else:
+#            opts = {}
+
+        graph = Graph(ID=tokens["graph_id"], strict=tokens["strict"],
+            directed=tokens["directed"])#, **opts)
+
+#        print "STMT LIST:", stmt_list, stmt_list.keys()
+#        print "GRAPH ASSIGNMENT:", stmt_list["assignment"], stmt_list["assignment"].keys()
+
+        for element in tokens["stmt_list"]:
+            if isinstance(element, Node):
+                graph.nodes.append(element)
+            elif isinstance(element, Edge):
+                graph.edges.append(element)
+            elif isinstance(element, tuple):
+                setattr(graph, element[0], element[1])
+
+
+#        nodes = [e for e in stmt_list if isinstance(e, Node)]
+#        edges = [e for e in stmt_list if isinstance(e, Edge)]
+#        assign = [e for e in stmt_list if isinstance(e, tuple)]
+
+#        graph.configure_traits()
+
+        return graph
+
+
+#    def _main_graph_stmt(self, toks):
+#        print "MAIN GRAPH:", toks
+#
+#        return (toks[0], toks[1], toks[2], toks[3])#.asList())
 
 # EOF -------------------------------------------------------------------------

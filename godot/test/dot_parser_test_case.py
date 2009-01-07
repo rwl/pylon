@@ -255,10 +255,10 @@ class DotParserTestCase(TestCase):
         self.assertEqual(graph.edges[6].color, "blue")
 
 
-    def test_subgraph(self):
-        """ Test parsing of subgraph statements. """
-
-        graph = self.parser.parse_dot_data(cluster_graph)
+#    def test_subgraph(self):
+#        """ Test parsing of subgraph statements. """
+#
+#        graph = self.parser.parse_dot_data(cluster_graph)
 
 
 #    def test_attr_stmt(self):
