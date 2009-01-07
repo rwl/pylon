@@ -83,13 +83,13 @@ class DotParser:
         if pyparsing_version >= "1.2":
             parser.parseWithTabs()
 
-        self.graph = Graph()
+        self.graph = graph = Graph()
 
         tokens = parser.parseString(data)
 
         print "TOKENS:", tokens
 
-        return self.graph
+        return graph
 
     #--------------------------------------------------------------------------
     #  Define the dot parser
@@ -104,41 +104,31 @@ class DotParser:
         strict_ = CaselessLiteral("strict").setResultsName("strict")
         graph_ = CaselessLiteral("graph").setResultsName("directed")
         digraph_ = CaselessLiteral("digraph").setResultsName("directed")
-        subgraph_ = CaselessLiteral("subgraph").setResultsName("subgraph")
+        subgraph_ = CaselessLiteral("subgraph").setResultsName("subgraph_")
         node_ = CaselessLiteral("node").setResultsName("node")
         edge_ = CaselessLiteral("edge").setResultsName("edge")
 
-        subgraph_.setParseAction(self.push_subgraph_stmt)
-
-#        graph_.setParseAction(self._push_digraph)
+#        subgraph_.setParseAction(self.push_subgraph_stmt)
 
         # token definitions
         identifier = Word(alphanums + "_").setName("identifier")
 
         alphastring_ = OneOrMore(CharsNotIn(_noncomma))
 
-        def parse_html(s, loc, toks):
-            return "<<%s>>" % "".join(toks[0])
-
-        opener = "<"
-        closer = ">"
+        # HTML labels.
         try:
             html_text = nestedExpr(
-                opener, closer,
-                CharsNotIn(opener + closer).setParseAction(lambda t:t[0])
-            ).setParseAction(parse_html)
+                "<", ">", CharsNotIn("<" + ">").setParseAction(lambda t: t[0])
+            ).setParseAction(lambda t: "<<%s>>" % "".join(t[0]))
         except:
             log.debug("nestedExpr not available.")
-            log.warning(
-                "Old version of pyparsing detected. Version 1.4.8 or "
-                "later is recommended. Parsing of html labels may not "
-                "work properly."
-            )
+            log.warning("Old version of pyparsing detected. Version 1.4.8 or "
+                "later is recommended for html label parsing.")
             html_text = Combine(Literal("<<") + OneOrMore(CharsNotIn(",]")))
 
         ID = (
             identifier | html_text | quoted_string | alphastring_
-        ).setName("ID")
+        ).setName("ID").setResultsName("IDD")
 
         # Portnames (node1:port1 -> node2:port5:nw;)
         port_angle = (at + ID).setName("port_angle")
@@ -153,7 +143,7 @@ class DotParser:
             Group(port_angle + Optional(port_location)))
         ).setName("port")
 
-        node_id = ID + Optional(port)
+        node_id = (ID + Optional(port)).setResultsName("node_id")
 
         # Attribute lists.
         a_list = OneOrMore(
@@ -169,10 +159,9 @@ class DotParser:
         attr_stmt = ((graph_ | node_ | edge_) + attr_list).setName("attr_stmt")
 
         # Graph statement.
-        stmt_list = Forward()
-        graph_stmt = (
-            lbrace + Optional(stmt_list) + rbrace + Optional(semi.suppress())
-        ).setName("graph_stmt")
+        stmt_list = Forward() # Circularity, declared later.
+        graph_stmt = (Suppress(lbrace) + Optional(stmt_list) +
+            Suppress(rbrace) + Optional(semi.suppress())).setName("graph_stmt")
 
         # Edge statement.
         edgeop = Suppress((Literal("--") | Literal("->"))).setName("edgeop")
@@ -180,11 +169,10 @@ class DotParser:
         edgeRHS = OneOrMore(edgeop + edge_point)
         edge_stmt = edge_point + edgeRHS + Optional(attr_list)
 
-        subgraph = (
-            Optional(subgraph_, "") + Optional(ID, "") + graph_stmt#Group(graph_stmt)
-        ).setName("subgraph").setResultsName("ssubgraph")
+        subgraph = (Optional(subgraph_) + Optional(ID) + #Group(graph_stmt)
+            graph_stmt).setName("subgraph").setResultsName("ssubgraph")
 
-        edge_point << (subgraph | graph_stmt | node_id )
+        edge_point << node_id#(subgraph | node_id) # Connect forward declaration.
 
         # Node statement.
         node_stmt = (
@@ -199,10 +187,11 @@ class DotParser:
 
         stmt = (
             assignment | edge_stmt | attr_stmt |
-            subgraph | graph_stmt |
+            subgraph | #graph_stmt |
             node_stmt
         ).setName("stmt")
 
+        # Reconnect forward declaration to real definition.
         stmt_list << OneOrMore(stmt + Optional(semi.suppress()))
 
         # A strict graph is an unweighted, undirected graph containing no
@@ -214,10 +203,9 @@ class DotParser:
         graph_id = Optional(ID, "").setResultsName("graph_id")
 
         # Parser for graphs defined in the DOT language.
-        graphparser = (
-            strict + directed + graph_id +
-            lbrace + Group(Optional(stmt_list)) + rbrace
-        ).setResultsName("graph")
+        graphparser = (strict + directed + graph_id +
+            Suppress(lbrace) + Group(Optional(stmt_list)) +
+            Suppress(rbrace)).setResultsName("graph")
 
         # Ignore comments.
         singleLineComment = Group("//" + restOfLine) | Group("#" + restOfLine)
@@ -278,11 +266,7 @@ class DotParser:
         """ Optional graph identifier. """
 
         print "GRAPH ID:", tokens
-
-        graph = self.graph
-        graph_id = tokens["graph_id"]
-
-        graph.ID = graph_id
+        self.graph.ID = tokens["graph_id"]
 
 
     def _push_main_graph(self, tokens):
@@ -307,7 +291,7 @@ class DotParser:
     def push_node_id(self, tokens):
         """ Returns a tuple if more than one id exists. """
 
-        print "NODE ID:", tokens
+        print "NODE ID:", tokens, tokens.keys()
 
         if len(tokens) > 1:
             return (tokens[0], tokens[1]) # ID, port
@@ -459,9 +443,9 @@ class DotParser:
     def push_subgraph_stmt(self, toks):
         """ Returns a tuple of the form (ADD_SUBGRAPH, name, elements) """
 
-        print "SUBGRAPH:", toks
+        print "SUBGRAPH:", toks, toks.asList(), toks.keys()
 
-        return ("add_subgraph", toks[1], toks[2])#.asList())
+        return ("add_subgraph", toks)#[1], toks[2])#.asList())
 
 
     def _main_graph_stmt(self, toks):
