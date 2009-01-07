@@ -83,9 +83,10 @@ class DotParser:
         if pyparsing_version >= "1.2":
             parser.parseWithTabs()
 
-        self.graph = graph = Graph()
+#        self.graph = graph = Graph()
 
         tokens = parser.parseString(data)
+        graph = tokens[0]
 
 #        print "TOKENS:", tokens
 
@@ -365,7 +366,8 @@ class DotParser:
 
         print "EDGE STMT:", tokens, tokens.asList(), tokens.keys()
 
-        graph = self.graph
+#        graph = self.graph
+
         edgelist = []
         opts = tokens[-1]
         if not isinstance(opts, dict):
@@ -407,14 +409,14 @@ class DotParser:
                 dst = dst[0]
 
             # If a node didn't exist we would have to create one.
-            from_node = graph.get_node(src)
+            from_node = None#graph.get_node(src)
             if from_node is None:
                 from_node = Node(ID=src)
-                graph.nodes.append(from_node)
-            to_node = graph.get_node(dst)
+#                graph.nodes.append(from_node)
+            to_node = None#graph.get_node(dst)
             if to_node is None:
                 to_node = Node(ID=dst)
-                graph.nodes.append(to_node)
+#                graph.nodes.append(to_node)
 
             edge = Edge(from_node, to_node, **opts)
             edgelist.append(edge)

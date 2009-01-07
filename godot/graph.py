@@ -27,13 +27,17 @@
 #------------------------------------------------------------------------------
 
 import math
-#import graph
+import logging
 
 from enthought.traits.api import \
     HasTraits, Any, Instance, Trait, Tuple, Color, Bool, Str, Enum, Float, \
     Either, Range, Int, Font, List, Directory, ListInstance, This
 
 from enthought.traits.ui.api import View, Group, Item, Tabbed
+
+from enthought.enable.api import Canvas, Viewport
+from enthought.enable.tools.api import ViewportPanTool
+from enthought.enable.component_editor import ComponentEditor
 
 from common import \
     Alias, color_scheme_trait, rectangle_trait, fontcolor_trait, \
@@ -78,6 +82,10 @@ start_trait = Enum("regular", "self", "random")
 class Graph(HasTraits):
     """ Defines a representation of a graph in Graphviz's dot language """
 
+    #--------------------------------------------------------------------------
+    #  Trait definitions.
+    #--------------------------------------------------------------------------
+
  #   _graph = Trait(graph.digraph)
 
     # An ID is one of the following:
@@ -107,6 +115,20 @@ class Graph(HasTraits):
 
     root = Instance(This)
 
+    #--------------------------------------------------------------------------
+    #  Enable trait definitions.
+    #--------------------------------------------------------------------------
+
+    # Canvas on which to draw the graph.
+    canvas = Instance(Canvas, desc="the canvas on which to draw the graph")
+
+    # A view into a sub-region of the canvas.
+    vp = Instance(Viewport, desc="a view of a sub-region of the canvas")
+
+    #--------------------------------------------------------------------------
+    #  Dot trait definitions.
+    #--------------------------------------------------------------------------
+
     # Bounding box of drawing in integer points.
     bb = rectangle_trait
 
@@ -126,7 +148,7 @@ class Graph(HasTraits):
     # If this effect is not desired, and you only want to set bits explicitly
     # assigned in drawing the graph, set <html:a rel="attr">bgcolor</html:a>="transparent".
     bgcolor = Color(
-        "white", desc="color used as the background for entire canvas",
+        "white", desc="color used as the background for the entire canvas",
         label="Background Color"
     )
 
@@ -921,6 +943,11 @@ class Graph(HasTraits):
     traits_view = View(
         Tabbed(
             Group(
+                Item(name="vp", editor=ComponentEditor(),
+                    show_label=False, id=".viewport"),
+                label="Graph"
+            ),
+            Group(
                 Item(name="nodes", editor=node_table_editor, show_label=False),
                 label="Nodes"
             ),
@@ -981,6 +1008,7 @@ class Graph(HasTraits):
         title="Graph", id="godot.graph", buttons=["OK", "Cancel", "Help"],
         resizable=True
     )
+
 
     def __str__(self):
         """ Return a string representing the graph when requested by str()
@@ -1101,6 +1129,21 @@ class Graph(HasTraits):
     #  Trait initialisers:
     #--------------------------------------------------------------------------
 
+    def _canvas_default(self):
+        """ Trait initialiser. """
+
+        return Canvas(bgcolor="lightsteelblue", draw_axes=True)
+
+
+    def _vp_default(self):
+        """ Trait initialiser. """
+
+        vp = Viewport(component=self.canvas, enable_zoom=True)
+        vp.view_position = [0,0]
+        vp.tools.append(ViewportPanTool(vp))
+        return vp
+
+
 #    def __graph_default(self):
 #        """ Trait initialiser """
 #
@@ -1112,7 +1155,7 @@ class Graph(HasTraits):
 
 
     def _epsilon_default(self):
-        """ Trait initialiser """
+        """ Trait initialiser. """
 
         if self.mode == "KK":
             return 0.0001 * len(self.nodes)
@@ -1121,7 +1164,7 @@ class Graph(HasTraits):
 
 
     def _maxiter_default(self):
-        """ Trait initialiser """
+        """ Trait initialiser. """
 
         mode = self.mode
         if mode == "KK":
@@ -1162,19 +1205,39 @@ class Graph(HasTraits):
 
 
     def _nodes_changed(self, new):
-        """ Handles the list of nodes changing.  Maintains each edge's list of
-        available nodes. """
+        """ Handles the list of nodes changing.  Maintains each edge's list
+        of available nodes. """
 
         for each_edge in self.edges:
             each_edge._nodes = new
 
 
     def _nodes_items_changed(self, event):
-        """ Handles nodes being added and removed.  Maintains each edge's list
-        of available nodes. """
+        """ Handles nodes being added and removed.  Maintains each edge's
+        list of available nodes. """
 
         for each_edge in self.edges:
             each_edge._nodes = self.nodes
+
+        # Add new nodes to the canvas.
+        from enthought.enable.primitives.api import Box
+        from enthought.enable.tools.api import MoveTool
+
+        for node in event.added:
+            box = Box(color="steelblue", border_color="darkorchid",
+                border_size=1, bounds=[50, 50], position=[10, 10])
+            box.tools.append(MoveTool(box))
+#           node.add(box)
+            self.canvas.add(box)
+            self.canvas.add(node)
+
+        self.canvas.request_redraw()
+
+
+    def _bgcolor_changed(self, new):
+        """ Handles the canvas background colour. """
+
+        self.canvas.bgcolor = new
 
 
 #    def _anytrait_changed(self, name, new):
@@ -1236,6 +1299,11 @@ class Cluster(Graph):
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    import sys
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
     Graph().configure_traits()
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
