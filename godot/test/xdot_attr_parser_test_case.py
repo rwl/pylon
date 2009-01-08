@@ -30,7 +30,10 @@ import unittest
 
 from godot.xdot_attr_parser import XdotAttrParser
 
-stroke_color = "c 5 -black"
+stroke_color = "c 3 -red"
+stroke_hex = "c 7 -#2B52CB"
+stroke_hsv = "c 17 -0.482 0.714 0.878"
+
 ellipse_draw = "c 5 -black e 27 18 27 18 "
 foo_ldraw = "F 14.000000 11 -Times-Roman c 5 -black T 27 13 0 20 3 -foo "
 
@@ -59,7 +62,12 @@ class XdotAttrParserTestCase(unittest.TestCase):
     def test_stroke_color(self):
         """ Test parsing of a stroke color attribute. """
 
-        components = self.parser.parse_xdot_data(stroke_color)
+        self.parser.parse_xdot_data(stroke_color)
+        self.assertEqual(str(self.parser.pen.color), "(255, 0, 0, 255)")
+#        self.parser.parse_xdot_data(stroke_hex)
+#        self.assertEqual(self.parser.pen.color, "(255, 0, 0, 255)")
+#        self.parser.parse_xdot_data(stroke_hsv)
+#        self.assertEqual(self.parser.pen.color, "(255, 0, 0, 255)")
 
 
 #    def test_ellipse(self):
