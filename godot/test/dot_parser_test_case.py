@@ -26,7 +26,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from unittest import TestCase
+import unittest
 
 from godot.dot_parsing import GodotDataParser
 from godot.graph import Graph
@@ -194,13 +194,13 @@ graph {
 #  "DotParserTestCase" class:
 #------------------------------------------------------------------------------
 
-class DotParserTestCase(TestCase):
-    """ Tests for object mappings """
+class DotParserTestCase(unittest.TestCase):
+    """ Tests for the Dot language parser. """
 
     parser = None
 
     #--------------------------------------------------------------------------
-    #  "TestCase" interface
+    #  "TestCase" interface:
     #--------------------------------------------------------------------------
 
     def setUp(self):
@@ -210,7 +210,7 @@ class DotParserTestCase(TestCase):
         self.parser = DotParser()
 
     #--------------------------------------------------------------------------
-    #  Tests
+    #  Tests:
     #--------------------------------------------------------------------------
 
     def test_graph_attributes(self):
@@ -287,5 +287,8 @@ class DotParserTestCase(TestCase):
 #        self.assertTrue(graph is not None)
 #        self.assertTrue(graph.bgcolor, (0.0, 0.0, 1.0))
 
+
+if __name__ == "__main__":
+    unittest.main()
 
 # EOF -------------------------------------------------------------------------

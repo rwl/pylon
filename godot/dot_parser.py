@@ -46,7 +46,7 @@ from pyparsing import \
 
 from parsing_util import \
     colon, lbrace, rbrace, lbrack, rbrack, lparen, rparen, equals, comma, \
-    dot, slash, bslash, star, semi, at, minus, pluss, double_quoted_string, \
+    dot, slash, bslash, star, semi, at, pluss, double_quoted_string, \
     quoted_string, nsplit, windows, graph_attr, node_attr, edge_attr, all_attr
 
 from godot.graph import Graph
