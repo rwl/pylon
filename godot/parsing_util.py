@@ -242,7 +242,7 @@ rgba = rgb + hex_color.setResultsName("alpha")
 hsv = decimal.setResultsName("hue") + decimal.setResultsName("saturation") + \
     decimal.setResultsName("value")
 color_name = double_quoted_string | Word(alphas)
-colour = rgb | rgba | hsv | color_name
+colour = rgba | rgb | hsv | color_name
 
 cluster_mode = CaselessLiteral("local") | CaselessLiteral("global") | \
     CaselessLiteral("none")
