@@ -24,6 +24,8 @@ from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
     List, Tuple, ListStr, Property, Either
 
+from enthought.enable.colors import ColorTrait
+
 pointf_trait = Tuple(Float, Float, desc="the point (x,y)")
 
 point_trait = pointf_trait #Either(

@@ -236,7 +236,7 @@ rect = real.setResultsName("llx") + real.setResultsName("lly") + \
     real.setResultsName("urx") + real.setResultsName("ury")
 
 hex_color = Word(hexnums, exact=2) #TODO: Optional whitespace
-rgb = Literal("#") + hex_color.setResultsName("red") + \
+rgb = Literal("#").suppress() + hex_color.setResultsName("red") + \
     hex_color.setResultsName("green") + hex_color.setResultsName("blue")
 rgba = rgb + hex_color.setResultsName("alpha")
 hsv = decimal.setResultsName("hue") + decimal.setResultsName("saturation") + \

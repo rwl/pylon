@@ -41,23 +41,30 @@ from pyparsing import \
     dblQuotedString, QuotedString, ParserElement, Suppress, Regex, \
     removeQuotes, nestedExpr, Suppress, Or
 
-from godot.parsing_util import real, integer, minus, quote, equals
+from godot.parsing_util import real, integer, minus, quote, equals, colour
+
+from godot.component.api import Pen
 
 #------------------------------------------------------------------------------
 #  "XdotAttrParser" class:
 #------------------------------------------------------------------------------
 
 class XdotAttrParser:
-    """ Defines a Graphviz xdot language parser. """
+    """ Defines a Graphviz Xdot language parser. """
 
     parser = None
+
+    pen = None
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
     def __init__(self):
+        """ Initialises the Xdot output parser. """
+
         self.parser = self.define_parser()
+        self.pen = Pen()
 
     #--------------------------------------------------------------------------
     #  Public interface:
@@ -85,7 +92,7 @@ class XdotAttrParser:
 
         @see: http://graphviz.org/doc/info/output.html#d:xdot """
 
-        # Useful constructs.
+        # Common constructs.
         point = (integer.setName("x") + integer.setName("y"))
         n_points = (integer.setResultsName("n") +
             OneOrMore(point).setResultsName("points"))
@@ -97,10 +104,13 @@ class XdotAttrParser:
 
         # Set fill color. The color value consists of the n bytes following
         # the '-'.
-        fill = (Literal("C").suppress() + n_bytes).setResultsName("fill")
+        fill = (Literal("C").suppress() + Suppress(integer) + Suppress(minus) +
+            colour.setResultsName("color")).setResultsName("fill")
 
         # Set pen color. The color value consists of the n bytes following '-'.
-        stroke = (Literal("c").suppress() + n_bytes).setResultsName("stroke")
+        stroke = (Literal("c").suppress() + Suppress(integer) +
+            Suppress(minus) + colour.setResultsName("color")
+        ).setResultsName("stroke")
 
         # Set font. The font size is s points. The font name consists of the
         # n bytes following '-'.
@@ -218,6 +228,11 @@ class XdotAttrParser:
         """ Sets the pen stroke color. """
 
         print "STROKE COLOR:", tokens, tokens.asList(), tokens.keys()
+
+        if "red" in tokens.keys():
+            pass
+
+        self.pen.color = tokens["color"]
 
         return tokens
 
