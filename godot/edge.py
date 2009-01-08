@@ -93,13 +93,13 @@ class Edge(HasTraits):
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
     # commands in _draw_ followed by the commands in _ldraw_.
-    _draw_ = Str
-    _ldraw_ = Str
+    _draw_ = Str(desc="xdot drawing directive", label="draw")
+    _ldraw_ = Str(desc="xdot label drawing directive", label="ldraw")
 
-    _hdraw_ = Str # Head arrowhead
-    _tdraw_ = Str # Tail arrowhead
-    _hldraw_ = Str # Head label
-    _tldraw_ = Str # Tail label
+    _hdraw_ = Str(desc="edge head arrowhead drawing directive.", label="hdraw")
+    _tdraw_ = Str(desc="edge tail arrowhead drawing directive.", label="tdraw")
+    _hldraw_ = Str(desc="edge head label drawing directive.", label="hldraw")
+    _tldraw_ = Str(desc="edge tail label drawing directive.", label="tldraw")
 
     # Style of arrowhead on the head node of an edge.
     # See also the <html:a rel="attr">dir</html:a> attribute,
@@ -522,24 +522,22 @@ class Edge(HasTraits):
             Group(["style", "layer", "color", "colorscheme", "dir",
                 "arrowsize", "constraint", "decorate", "showboxes", "tooltip",
                 "edgetooltip", "edgetarget", "target", "comment"],
-                label="Edge"
-            ),
+                label="Edge"),
             Group(["label", "fontname", "fontsize", "fontcolor", "nojustify",
                 "labeltarget", "labelfloat", "labelfontsize",
                 "labeltooltip", "labelangle", "lp", "labelURL",
                 "labelfontname", "labeldistance", "labelfontcolor", "labelhref"],
-                label="Label"
-            ),
+                label="Label"),
             Group(["minlen", "weight", "len", "pos"], label="Dimension"),
             Group(["arrowhead", "samehead", "headURL", "headtooltip", "headclip",
                 "headport", "headlabel", "headtarget", "lhead", "headhref"],
-                label="Head"
-            ),
+                label="Head"),
             Group(["arrowtail", "tailtarget", "tailhref", "ltail", "sametail",
                 "tailport", "taillabel", "tailtooltip", "tailURL", "tailclip"],
-                label="Tail"
-            ),
-            Group(["URL", "href", "edgeURL", "edgehref"], label="URL")
+                label="Tail"),
+            Group(["URL", "href", "edgeURL", "edgehref"], label="URL"),
+            Group(["_draw_", "_ldraw_", "_hdraw_", "_tdraw_", "_hldraw_",
+                "_tldraw_"], label="Xdot")
         ),
         title="Edge", id="godot.edge", buttons=["OK", "Cancel", "Help"],
         resizable=True

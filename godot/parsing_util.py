@@ -420,11 +420,14 @@ vertices = ToList(pointf).setResultsName("vertices")
 width = real.setResultsName("width")
 z = real.setResultsName("z")
 
+draw = word.setResultsName("_draw_") # Xdot drawing directive.
+ldraw = word.setResultsName("_ldraw_") # Xdot label drawing directive.
+
 node_attr = [color, colorscheme, comment, distortion, fillcolor, fixedsize,
     fontcolor, fontname, fontsize, group, height, image, imagescale, label,
     layer, margin, nojustify, orientation, peripheries, pin, pos, rects,
     regular, root, samplepoints, shape, shapefile, showboxes, sides, skew,
-    style, target, tooltip, URL, vertices, width, z]
+    style, target, tooltip, URL, vertices, width, z] + [draw, ldraw]
 
 # Edge specific attributes ----------------------------------------------------
 
@@ -474,6 +477,12 @@ tailtooltip = word.setResultsName("tailtooltip")
 tailURL = word.setResultsName("tailURL")
 weight = real.setResultsName("weight")
 
+# Xdot drawing directives.
+hdraw = word.setResultsName("_hdraw_") # Edge head arrowhead drawing.
+tdraw = word.setResultsName("_tdraw_") # Edge tail arrowhead drawing.
+hldraw = word.setResultsName("_hldraw_") # Edge head label drawing.
+tldraw = word.setResultsName("_tldraw_") # Edge tail label drawing.
+
 edge_attr = [arrowhead, arrowsize, arrowtail, color, colorscheme, comment,
     constraint, decorate, dir, edgehref, edgetarget, edgetooltip, edgeURL,
     fontcolor, fontname, fontsize, headclip, headhref, headlabel, headport,
@@ -482,7 +491,7 @@ edge_attr = [arrowhead, arrowsize, arrowtail, color, colorscheme, comment,
     labeltarget, labeltooltip, labelURL, layer, lenn, lhead, lp, ltail, minlen,
     nojustify, pos, samehead, sametail, showboxes, style, tailclip, tailhref,
     taillabel, tailport, tailtarget, tailtooltip, tailURL, target, tooltip,
-    URL, weight]
+    URL, weight] + [draw, ldraw, hdraw, tdraw, hldraw, tldraw]
 
 # All dot attributes ----------------------------------------------------------
 
