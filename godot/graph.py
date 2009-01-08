@@ -34,7 +34,7 @@ from enthought.traits.api import \
     Either, Range, Int, Font, List, Directory, ListInstance, This
 
 from enthought.traits.ui.api import View, Group, Item, Tabbed
-
+from enthought.pyface.image_resource import ImageResource
 from enthought.enable.api import Canvas, Viewport
 from enthought.enable.tools.api import ViewportPanTool
 from enthought.enable.component_editor import ComponentEditor
@@ -1006,7 +1006,7 @@ class Graph(HasTraits):
             ), dock="tab",
         ),
         title="Graph", id="godot.graph", buttons=["OK", "Cancel", "Help"],
-        resizable=True
+        resizable=True, icon=ImageResource("dot")
     )
 
 

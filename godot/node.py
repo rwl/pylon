@@ -28,7 +28,7 @@
 
 from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
-    List, Tuple, ListStr, Range
+    List, Tuple, ListStr, Range, Instance, on_trait_change
 
 from enthought.traits.ui.api import View, Item, Group, Tabbed
 
@@ -72,11 +72,29 @@ class Node(Container):
     ID = Str
     name = Alias("ID", desc="synonym for ID")
 
+    #--------------------------------------------------------------------------
+    #  Xdot trait definitions:
+    #--------------------------------------------------------------------------
+
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
     # commands in _draw_ followed by the commands in _ldraw_.
-    _draw_ = Str(desc="draw directive")
-    _ldraw_ = Str(desc="label draw directive")
+    _draw_ = Str(desc="xdot drawing directive")
+    _ldraw_ = Str(desc="xdot label drawing directive")
+
+    #--------------------------------------------------------------------------
+    #  Enable trait definitions:
+    #--------------------------------------------------------------------------
+
+    # Container of drawing components, typically the node shape.
+    drawing = Instance(Container)
+
+    # Container of label components.
+    label_drawing = Instance(Container)
+
+    #--------------------------------------------------------------------------
+    #  Graphviz dot language trait definitions:
+    #--------------------------------------------------------------------------
 
     # Basic drawing color for graphics, not text. For the latter, use the
     # <html:a rel="attr">fontcolor</html:a> attribute.
@@ -432,8 +450,9 @@ class Node(Container):
     traits_view = View(
         Tabbed(
             Group(["shape", "shapefile", "color", "fillcolor", "colorscheme",
-                "style", "arrowsize", "constraint", "decorate", "showboxes",
-                "tooltip", "distortion", "sides", "target", "comment"],
+                "style", "showboxes", "tooltip", "distortion", "sides",
+                "target", "comment"],
+                Group(["_draw_", "_ldraw_"], label="Xdot", show_border=True),
                 label="Node"
             ),
             Group(["label", "fontname", "fontsize", "fontcolor", "nojustify",
@@ -476,19 +495,37 @@ class Node(Container):
 #    def __hash__(self):
 #        return hash(self.ID)
 
+    @on_trait_change("_draw_")
+    def parse_xdot_drawing_directive(self, new):
+        """ Parses the drawing directive, updating the node components. """
 
-    def get_node_attributes(self):
-        """ Return the node attributes.
+        print "_draw_", new
 
-        @rtype:  list
-        @return: List of attributes specified tuples in the form (attr, value).
 
-        """
+    @on_trait_change("_ldraw_")
+    def parse_xdot_label_directive(self, new):
+        """ Parses the label drawing directive, updating the label
+        components. """
 
-        return [
-#            (node_attr, self.get_attr(node_attr)) \
-#                for node_attr in NODE_ATTRIBUTES
-        ]
+        print "_ldraw_", new
+
+
+    def _drawing_changed(self, old, new):
+        """ Handles the container of drawing components changing. """
+
+        if old is not None:
+            self.remove(old)
+        if new is not None:
+            self.add(new)
+
+
+    def _label_drawing_changed(self, old, new):
+        """ Handles the container of label components changing. """
+
+        if old is not None:
+            self.remove(old)
+        if new is not None:
+            self.add(new)
 
 #------------------------------------------------------------------------------
 #  Node table editor:
