@@ -33,6 +33,8 @@ References:
 
 from pyparsing import __version__ as pyparsing_version
 
+from colorsys import hsv_to_rgb
+
 from pyparsing import \
     Literal, CaselessLiteral, Word, Upcase, OneOrMore, ZeroOrMore, Forward, \
     NotAny, delimitedList, oneOf, Group, Optional, Combine, alphas, nums, \
@@ -225,16 +227,33 @@ class XdotAttrParser:
 
 
     def proc_stroke_color(self, tokens):
-        """ Sets the pen stroke color. """
+        """ Sets the pen stroke color.  The 'color' trait of a Pen instance
+        must be a string of the form (r,g,b) or (r,g,b,a) where r, g, b, and a
+        are integers from 0 to 255, a wx.Colour instance, an integer which in
+        hex is of the form 0xRRGGBB, where RR is red, GG is green, and BB is
+        blue or a valid color name. """
 
-        print "STROKE COLOR:", tokens, tokens.asList(), tokens.keys()
+        keys = tokens.keys()
+        if "red" in keys: # RGB(A)
+            rr, gg, bb = tokens["red"], tokens["green"], tokens["blue"]
+            hex2int = lambda h: int(h, 16)
+            if "alpha" in keys:
+                a = tokens["alpha"]
+                c = str((hex2int(rr), hex2int(gg), hex2int(bb), hex2int(a)))
+            else:
+                c = str((hex2int(rr), hex2int(gg), hex2int(bb)))
+        elif "hue" in keys: # HSV
+            r, g, b = hsv_to_rgb(tokens["hue"],
+                                 tokens["saturation"],
+                                 tokens["value"])
+#            flt2hex = lambda f: hex(int(f*255))[2:]
+#            rr, gg, bb = flt2hex(r), flt2hex(g), flt2hex(b)
+#            c = int(rr + gg + bb, 16)
+            c = str((int(r*255), int(g*255), int(b*255)))
+        else:
+            c = tokens["color"]
 
-        if "red" in tokens.keys():
-            pass
-
-        self.pen.color = tokens["color"]
-
-        return tokens
+        self.pen.color = c
 
 
     def proc_font(self, tokens):
