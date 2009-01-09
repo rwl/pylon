@@ -44,9 +44,9 @@ from pyparsing import \
     removeQuotes, nestedExpr, Suppress, Or
 
 from godot.parsing_util import \
-    real, integer, minus, quote, equals, colour, nsplit
+    real, integer, minus, quote, equals, colour, nsplit, ToInteger
 
-from godot.component.api import Pen, Ellipse, Polygon
+from godot.component.api import Pen, Ellipse, Polygon, Polyline, BSpline, Text
 
 #------------------------------------------------------------------------------
 #  "XdotAttrParser" class:
@@ -102,7 +102,9 @@ class XdotAttrParser:
             OneOrMore(point).setResultsName("points"))
         n_bytes = Suppress(integer) + Suppress(minus) + \
             Word(printables).setResultsName("b")
-        j = (Literal("-1") | Literal("0") | Literal("1")).setResultsName("j")
+        justify = ToInteger(
+            Literal("-1") | Literal("0") | Literal("1")
+        ).setResultsName("j")
 
         # Attributes ----------------------------------------------------------
 
@@ -165,8 +167,8 @@ class XdotAttrParser:
         # right-aligned) on the point if j is -1 (0, 1), respectively. The
         # value w gives the width of the text as computed by the library.
         text = (Literal("T").suppress() + integer.setResultsName("x") +
-            integer.setResultsName("y") + j + integer.setResultsName("w") +
-            integer.setResultsName("n") + n_bytes).setResultsName("text")
+            integer.setResultsName("y") + justify +
+            integer.setResultsName("w") + n_bytes).setResultsName("text")
 
         # Externally-specified image drawn in the box with lower left corner
         # (x,y) and upper right corner (x+w,y+h). The name of the image
@@ -214,8 +216,8 @@ class XdotAttrParser:
         filled_polygon.setParseAction(self.proc_filled_polygon)
         polygon.setParseAction(self.proc_unfilled_polygon)
         polyline.setParseAction(self.proc_polyline)
-        bspline.setParseAction(self.proc_bspline)
-        filled_bspline.setParseAction(self.proc_bspline)
+        bspline.setParseAction(self.proc_unfilled_bspline)
+        filled_bspline.setParseAction(self.proc_filled_bspline)
         text.setParseAction(self.proc_text)
         image.setParseAction(self.proc_image)
 
@@ -349,20 +351,34 @@ class XdotAttrParser:
     def proc_polyline(self, tokens):
         """ Returns the components of a polyline. """
 
-        print "POLYLINE:", tokens, tokens.asList(), tokens.keys()
+        pts = [(p["x"], p["y"]) for p in tokens["points"]]
+        component = Polyline(pen=self.pen, points=pts)
 
-        return tokens
+        return component
 
     #--------------------------------------------------------------------------
     #  B-spline (Bezier curve):
     #--------------------------------------------------------------------------
 
-    def proc_bspline(self, tokens):
+    def proc_filled_bspline(self, tokens):
+        """ Returns the components of a filled B-spline. """
+
+        return self._proc_bspline(tokens, filled=True)
+
+
+    def proc_unfilled_bspline(self, tokens):
+        """ Returns the components of an unfilled B-spline. """
+
+        return self._proc_bspline(tokens, filled=False)
+
+
+    def _proc_bspline(self, tokens, filled):
         """ Returns the components of a B-spline (Bezier curve). """
 
-        print "B-SPLINE:", tokens, tokens.asList(), tokens.keys()
+        pts = [(p["x"], p["y"]) for p in tokens["points"]]
+        component = BSpline(pen=self.pen, points=pts, filled=filled)
 
-        return tokens
+        return component
 
     #--------------------------------------------------------------------------
     #  Text:
@@ -371,9 +387,14 @@ class XdotAttrParser:
     def proc_text(self, tokens):
         """ Returns text components. """
 
-        print "TEXT:", tokens, tokens.asList(), tokens.keys()
+        component = Text(pen=self.pen,
+                         text_x=tokens["x"],
+                         text_y=tokens["y"],
+                         justify=tokens["j"],
+                         text_w=tokens["w"],
+                         text=tokens["b"])
 
-        return tokens
+        return component
 
     #--------------------------------------------------------------------------
     #  Image:
@@ -384,6 +405,6 @@ class XdotAttrParser:
 
         print "IMAGE:", tokens, tokens.asList(), tokens.keys()
 
-        return tokens
+        raise NotImplementedError
 
 # EOF -------------------------------------------------------------------------
