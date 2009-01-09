@@ -112,10 +112,10 @@ class Ellipse(Component):
 #                raise RuntimeError("Unable to get scale from GC.")
 
             gc.set_line_width(self.pen.line_width)
-            gc.set_stroke_color(self.pen.colour_)
+            gc.set_stroke_color(self.pen.color_)
 
             if self.filled:
-                gc.set_fill_color(self.pen.fill_colour_)
+                gc.set_fill_color(self.pen.fill_color_)
                 gc.draw_path(FILL_STROKE)
             else:
                 gc.stroke_path()
