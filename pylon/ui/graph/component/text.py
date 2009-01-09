@@ -64,7 +64,7 @@ class Text(Component):
     text_y = Float(desc="y-axis coordinate")
 
     # Text justification
-    justification = Int(-1, desc="(LEFT, CENTER, RIGHT = -1, 0, 1)")
+    justify = Int(-1, desc="(LEFT, CENTER, RIGHT = -1, 0, 1)")
 #    justification = Trait("Left", {"Left": -1, "Centre": 0, "Right": 1})
 
     # Width of the text
@@ -83,7 +83,7 @@ class Text(Component):
             label="Pen", show_border=True
         ),
         Item("text_x"), Item("text_y"), Item("text_w"),
-        Item("justification"), Item("text")
+        Item("justify"), Item("text")
     )
 
     #--------------------------------------------------------------------------
@@ -120,7 +120,7 @@ class Text(Component):
             gc.restore_state()
 
 
-    @on_trait_change("pen.+,text_x,text_y,text_w,justification,text")
+    @on_trait_change("pen.+,text_x,text_y,text_w,justify,text")
     def _update(self):
         if self.pen is None: return
         x = self.text_x - (self.text_w/2)
@@ -143,7 +143,7 @@ class Text(Component):
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    from pylon.ui.graph.component_viewer import ComponentViewer
+    from graph.component_viewer import ComponentViewer
 
     text = Text(
         pen=Pen(), text="Foo",

@@ -29,7 +29,7 @@
 import unittest
 
 from godot.xdot_attr_parser import XdotAttrParser
-from godot.component.api import Ellipse, Polygon
+from godot.component.api import Ellipse, Polygon, Polyline, BSpline, Text
 
 fill_color = "C 4 -blue"
 fill_rgb = "C 7 -#000080"
@@ -53,6 +53,11 @@ filled_polygon = "P 8 54 11 54 25 38 36 16 36 0 25 0 11 16 0 38 0"
 unfilled_polygon = "p 5 54 24 27 36 0 24 10 3 44 3"
 
 polyline_three = "L 3 47 55 27 55 27 63"
+
+filled_bspline = "b 4 27 90 33 74 22 52 27 36"
+unfilled_bspline = "B 4 27 90 38 74 30 52 27 36" # Upper-case for unfilled.
+
+text_blapp = "T 32 13 0 30 5 -blapp"
 
 foo_ldraw = "F 14.000000 11 -Times-Roman c 5 -black T 27 13 0 20 3 -foo "
 
@@ -126,7 +131,7 @@ class XdotAttrParserTestCase(unittest.TestCase):
 
 
     def test_ellipse(self):
-        """ Test ellipse directive parsing. """
+        """ Test ellipse operation parsing. """
 
         parser = self.parser
 
@@ -146,7 +151,7 @@ class XdotAttrParserTestCase(unittest.TestCase):
 
 
     def test_polygon(self):
-        """ Test polygon directive parsing. """
+        """ Test polygon operation parsing. """
 
         parser = self.parser
 
@@ -160,6 +165,51 @@ class XdotAttrParserTestCase(unittest.TestCase):
         components = parser.parse_xdot_data(unfilled_polygon)
         polygon = components[0]
         self.assertFalse(polygon.filled)
+
+
+    def test_polyline(self):
+        """ Test polygon operation parsing. """
+
+        parser = self.parser
+
+        components = parser.parse_xdot_data(polyline_three)
+        polyline = components[0]
+
+        self.assertTrue(isinstance(polyline, Polyline))
+        self.assertEqual(len(polyline.points), 3)
+
+
+    def test_bspline(self):
+        """ Test B-spline operation parsing. """
+
+        parser = self.parser
+
+        components = parser.parse_xdot_data(filled_bspline)
+        bspline = components[0]
+
+        self.assertTrue(isinstance(bspline, BSpline))
+        self.assertEqual(len(bspline.points), 4)
+        self.assertTrue(bspline.filled)
+
+        components = parser.parse_xdot_data(unfilled_bspline)
+        bspline = components[0]
+        self.assertFalse(bspline.filled)
+
+
+    def test_text(self):
+        """ Test text operation parsing. """
+
+        parser = self.parser
+
+        components = parser.parse_xdot_data(text_blapp)
+        text = components[0]
+
+        self.assertTrue(isinstance(text, Text))
+        self.assertEqual(text.text_x, 32)
+        self.assertEqual(text.text_y, 13)
+        self.assertEqual(text.justify, 0)
+        self.assertEqual(text.text_w, 30)
+        self.assertEqual(text.text, "blapp")
 
 
 if __name__ == "__main__":
