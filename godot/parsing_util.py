@@ -44,8 +44,17 @@ from pyparsing import \
 #from enthought.enable.colors import color_table
 
 from godot.common import color_schemes
-from godot.node import node_shapes
-from godot.edge import arrow_styles
+#from godot.node import node_shapes
+node_shapes = ["rect", "rectangle", "box", "ellipse", "circle", "invtriangle",
+    "invtrapezium", "point", "egg", "triangle", "plaintext", "diamond",
+    "trapezium", "parallelogram", "house", "pentagon", "hexagon", "septagon",
+    "octagon", "doublecircle", "doubleoctagon", "tripleoctagon", "invhouse",
+    "none", "note", "tab", "box3d", "component"]
+
+#from godot.edge import arrow_styles
+arrow_styles = ["normal", "inv", "dot", "invdot", "odot", "invodot", "none",
+    "tee", "empty", "invempty", "diamond", "odiamond", "ediamond", "crow",
+    "box", "obox", "open", "halfopen", "vee"]
 
 #------------------------------------------------------------------------------
 #  "ToBoolean" class:

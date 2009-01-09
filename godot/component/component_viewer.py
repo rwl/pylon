@@ -68,4 +68,9 @@ class ComponentViewer(HasTraits):
         viewport.tools.append(ViewportPanTool(viewport))
         return viewport
 
+    def _anytrait_changed_for_component(self, new):
+        """ Handles redrawing of the canvas. """
+
+        self.canvas.request_redraw()
+
 # EOF -------------------------------------------------------------------------
