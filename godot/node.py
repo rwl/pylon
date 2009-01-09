@@ -50,6 +50,8 @@ from common import \
     showboxes_trait, target_trait, tooltip_trait, url_trait, pointf_trait, \
     color_trait, Alias
 
+from xdot_attr_parser import XdotAttrParser
+
 #------------------------------------------------------------------------------
 #  Trait definitions:
 #------------------------------------------------------------------------------
@@ -501,6 +503,14 @@ class Node(Container):
 
         print "_draw_", new
 
+        components = XdotAttrParser().parse_xdot_data(new)
+        print "COMPONENTS:", components
+
+        container = Container(bounds=[200, 200])
+        self.bounds = bounds=[200, 200]
+        container.add(*components)
+        self.drawing = container
+
 
     @on_trait_change("_ldraw_")
     def parse_xdot_label_directive(self, new):
@@ -508,6 +518,13 @@ class Node(Container):
         components. """
 
         print "_ldraw_", new
+
+        components = XdotAttrParser().parse_xdot_data(new)
+        print "COMPONENTS:", components
+
+        container = Container(bounds=[200, 200])
+        container.add(*components)
+        self.label_drawing = container
 
 
     def _drawing_changed(self, old, new):
@@ -558,6 +575,10 @@ node_table_editor = TableEditor(
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    Node().configure_traits()
+    from godot.component.component_viewer import ComponentViewer
+
+    node = Node(_draw_="c 5 -black e 32 18 32 18")
+    viewer = ComponentViewer(component=node)
+    viewer.configure_traits()
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

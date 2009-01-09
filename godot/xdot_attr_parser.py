@@ -31,6 +31,8 @@ References:
 #  Imports:
 #------------------------------------------------------------------------------
 
+from enthought.enable.api import Component
+
 from pyparsing import __version__ as pyparsing_version
 
 from colorsys import hsv_to_rgb
@@ -39,9 +41,7 @@ from pyparsing import \
     Literal, CaselessLiteral, Word, Upcase, OneOrMore, ZeroOrMore, Forward, \
     NotAny, delimitedList, oneOf, Group, Optional, Combine, alphas, nums, \
     restOfLine, cppStyleComment, nums, alphanums, printables, empty, \
-    quotedString, ParseException, ParseResults, CharsNotIn, _noncomma, \
-    dblQuotedString, QuotedString, ParserElement, Suppress, Regex, \
-    removeQuotes, nestedExpr, Suppress, Or
+    quotedString, CharsNotIn, _noncomma, Suppress, nestedExpr, Suppress, Or
 
 from godot.parsing_util import \
     real, integer, minus, quote, equals, colour, nsplit, ToInteger
@@ -81,10 +81,11 @@ class XdotAttrParser:
 #        if pyparsing_version >= "1.2":
 #            parser.parseWithTabs()
 
-        components = parser.parseString(data)
+        tokens = parser.parseString(data)
+
 #        print "COMPONENTS:", tokens
 
-        return components
+        return [tok for tok in tokens if isinstance(tok, Component)]
 
     #--------------------------------------------------------------------------
     #  Define the dot parser
@@ -243,6 +244,8 @@ class XdotAttrParser:
 
         self.pen.fill_color = self._proc_color(tokens)
 
+        return None
+
 
     def proc_stroke_color(self, tokens):
         """ Sets the pen stroke color. """
@@ -255,6 +258,8 @@ class XdotAttrParser:
         (r,g,b) or (r,g,b,a) where r, g, b, and a are integers from 0 to 255,
         a wx.Colour instance, an integer which in hex is of the form 0xRRGGBB,
         where RR is red, GG is green, and BB is blue or a valid color name. """
+
+        print "COLOR:", tokens, tokens.keys()
 
         keys = tokens.keys()
         if "red" in keys: # RGB(A)
