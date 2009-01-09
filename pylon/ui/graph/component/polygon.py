@@ -67,6 +67,10 @@ class Polygon(Component):
         desc="the rule to use to determine the inside of the polygon"
     )
 
+    #--------------------------------------------------------------------------
+    #  "Component" interface:
+    #--------------------------------------------------------------------------
+
     # Background colour of the component
     bgcolor = "transparent"#(1.0, 0.5, 0.5, 0.33)
 

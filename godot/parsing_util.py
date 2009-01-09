@@ -575,8 +575,9 @@ def windows(iterable, length=2, overlap=0, padding=True):
 
 
 if __name__ == "__main__":
-    l = [1,2,3]
+    l = [1,2,3,4]
     for j, k in windows(l, length=2, overlap=1, padding=False):
         print j, k
+    print nsplit(l)
 
 # EOF -------------------------------------------------------------------------
