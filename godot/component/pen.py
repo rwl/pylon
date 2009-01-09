@@ -53,7 +53,7 @@ if __name__ == "__main__":
     pen = Pen(color=0x2B52CB,
               fill_color="255, 128, 64",
               line_width=6,
-              font="Ariel 14")
+              font="Arial 14")
     pen.configure_traits()
 
 # EOF -------------------------------------------------------------------------

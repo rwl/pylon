@@ -64,6 +64,10 @@ class Ellipse(Component):
     # Is the ellipse filled?
     filled = Bool(False, desc="Fill the ellipse")
 
+    #--------------------------------------------------------------------------
+    #  "Component" interface:
+    #--------------------------------------------------------------------------
+
     # The background color of this component.
     bgcolor = "transparent" #"fuchsia"
 

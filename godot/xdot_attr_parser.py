@@ -43,9 +43,10 @@ from pyparsing import \
     dblQuotedString, QuotedString, ParserElement, Suppress, Regex, \
     removeQuotes, nestedExpr, Suppress, Or
 
-from godot.parsing_util import real, integer, minus, quote, equals, colour
+from godot.parsing_util import \
+    real, integer, minus, quote, equals, colour, nsplit
 
-from godot.component.api import Pen
+from godot.component.api import Pen, Ellipse, Polygon
 
 #------------------------------------------------------------------------------
 #  "XdotAttrParser" class:
@@ -95,11 +96,12 @@ class XdotAttrParser:
         @see: http://graphviz.org/doc/info/output.html#d:xdot """
 
         # Common constructs.
-        point = (integer.setName("x") + integer.setName("y"))
+        point = Group(integer.setResultsName("x") +
+                      integer.setResultsName("y"))
         n_points = (integer.setResultsName("n") +
             OneOrMore(point).setResultsName("points"))
         n_bytes = Suppress(integer) + Suppress(minus) + \
-            Word(alphanums).setResultsName("b")
+            Word(printables).setResultsName("b")
         j = (Literal("-1") | Literal("0") | Literal("1")).setResultsName("j")
 
         # Attributes ----------------------------------------------------------
@@ -127,14 +129,16 @@ class XdotAttrParser:
         # Shapes --------------------------------------------------------------
 
         # Filled ellipse ((x-x0)/w)^2 + ((y-y0)/h)^2 = 1
-        filled_ellipse = (Literal("E") + integer.setResultsName("x0") +
-            integer.setResultsName("y0") + integer.setResultsName("w") +
-            integer.setResultsName("h")).setResultsName("filled_ellipse")
+        filled_ellipse = (Literal("E").suppress() +
+            integer.setResultsName("x0") + integer.setResultsName("y0") +
+            integer.setResultsName("w") + integer.setResultsName("h")
+        ).setResultsName("filled_ellipse")
 
         # Unfilled ellipse ((x-x0)/w)^2 + ((y-y0)/h)^2 = 1
-        ellipse = (Literal("e") + integer.setResultsName("x0") +
-            integer.setResultsName("y0") + integer.setResultsName("w") +
-            integer.setResultsName("h")).setResultsName("ellipse")
+        ellipse = (Literal("e").suppress() +
+            integer.setResultsName("x0") + integer.setResultsName("y0") +
+            integer.setResultsName("w") + integer.setResultsName("h")
+        ).setResultsName("ellipse")
 
         # Filled polygon using the given n points.
         filled_polygon = (Literal("P").suppress() +
@@ -195,17 +199,20 @@ class XdotAttrParser:
 #        # Edge tail label drawing.
 #        tldraw_ = Literal("_tldraw_") + Suppress(equals) + value
 
+        # Parse actions.
+#        n_points.setParseAction(self.proc_points)
+
         # Attribute parse actions.
         fill.setParseAction(self.proc_fill_color)
         stroke.setParseAction(self.proc_stroke_color)
         font.setParseAction(self.proc_font)
-        style.setParseAction(self.proc_style)
+#        style.setParseAction(self.proc_style)
 
         # Shape parse actions.
-        filled_ellipse.setParseAction(self.proc_ellipse)
-        ellipse.setParseAction(self.proc_ellipse)
-        filled_polygon.setParseAction(self.proc_polygon)
-        polygon.setParseAction(self.proc_polygon)
+        filled_ellipse.setParseAction(self.proc_filled_ellipse)
+        ellipse.setParseAction(self.proc_unfilled_ellipse)
+        filled_polygon.setParseAction(self.proc_filled_polygon)
+        polygon.setParseAction(self.proc_unfilled_polygon)
         polyline.setParseAction(self.proc_polyline)
         bspline.setParseAction(self.proc_bspline)
         filled_bspline.setParseAction(self.proc_bspline)
@@ -215,23 +222,37 @@ class XdotAttrParser:
         return value
 
     #--------------------------------------------------------------------------
+    #  Parse actions:
+    #--------------------------------------------------------------------------
+
+#    def proc_points(self, tokens):
+#        """ Returns a list of tuples of the form (x, y). """
+#
+#        print "N POINTS:", tokens, tokens.keys()
+#
+#        return tokens["points"]#[(p["x"], p["y"]) for p in tokens["points"]]
+
+    #--------------------------------------------------------------------------
     #  Attribute parse actions:
     #--------------------------------------------------------------------------
 
     def proc_fill_color(self, tokens):
         """ Sets the pen fill color. """
 
-        print "FILL COLOR:", tokens, tokens.asList(), tokens.keys()
-
-        return tokens
+        self.pen.fill_color = self._proc_color(tokens)
 
 
     def proc_stroke_color(self, tokens):
-        """ Sets the pen stroke color.  The 'color' trait of a Pen instance
-        must be a string of the form (r,g,b) or (r,g,b,a) where r, g, b, and a
-        are integers from 0 to 255, a wx.Colour instance, an integer which in
-        hex is of the form 0xRRGGBB, where RR is red, GG is green, and BB is
-        blue or a valid color name. """
+        """ Sets the pen stroke color. """
+
+        self.pen.color = self._proc_color(tokens)
+
+
+    def _proc_color(self, tokens):
+        """ The color traits of a Pen instance must be a string of the form
+        (r,g,b) or (r,g,b,a) where r, g, b, and a are integers from 0 to 255,
+        a wx.Colour instance, an integer which in hex is of the form 0xRRGGBB,
+        where RR is red, GG is green, and BB is blue or a valid color name. """
 
         keys = tokens.keys()
         if "red" in keys: # RGB(A)
@@ -246,22 +267,18 @@ class XdotAttrParser:
             r, g, b = hsv_to_rgb(tokens["hue"],
                                  tokens["saturation"],
                                  tokens["value"])
-#            flt2hex = lambda f: hex(int(f*255))[2:]
-#            rr, gg, bb = flt2hex(r), flt2hex(g), flt2hex(b)
-#            c = int(rr + gg + bb, 16)
             c = str((int(r*255), int(g*255), int(b*255)))
         else:
             c = tokens["color"]
 
-        self.pen.color = c
+        return c
 
 
     def proc_font(self, tokens):
         """ Sets the font. """
 
-        print "FONT:", tokens, tokens.asList(), tokens.keys()
-
-        return tokens
+        size = int(tokens["s"])
+        self.pen.font = "%s %d" % (tokens["b"], size)
 
 
     def proc_style(self, tokens):
@@ -274,24 +291,60 @@ class XdotAttrParser:
         raise NotImplementedError
 
     #--------------------------------------------------------------------------
-    #  Shape parse actions:
+    #  Ellipse:
     #--------------------------------------------------------------------------
 
-    def proc_ellipse(self, tokens):
-        """ Returns the components of a filled or unfilled ellipse. """
+    def proc_filled_ellipse(self, tokens):
+        """ Returns the components of a filled ellipse. """
 
-        print "ELLIPSE:", tokens, tokens.asList(), tokens.keys()
-
-        return tokens
+        return self._proc_ellipse(tokens, filled=True)
 
 
-    def proc_polygon(self, tokens):
-        """ Returns the components of a filled or unfilled polygon. """
+    def proc_unfilled_ellipse(self, tokens):
+        """ Returns the components of an unfilled ellipse. """
 
-        print "POLYGON:", tokens, tokens.asList(), tokens.keys()
+        return self._proc_ellipse(tokens, filled=False)
 
-        return tokens
 
+    def _proc_ellipse(self, tokens, filled):
+        """ Returns the components of an ellipse. """
+
+        component = Ellipse(pen=self.pen,
+                            x_origin=tokens["x0"],
+                            y_origin=tokens["y0"],
+                            e_width=tokens["w"],
+                            e_height=tokens["h"],
+                            filled=filled)
+
+        return component
+
+    #--------------------------------------------------------------------------
+    #  Polygon:
+    #--------------------------------------------------------------------------
+
+    def proc_filled_polygon(self, tokens):
+        """ Returns the components of a filled polygon. """
+
+        return self._proc_polygon(tokens, filled=True)
+
+
+    def proc_unfilled_polygon(self, tokens):
+        """ Returns the components of an unfilled polygon. """
+
+        return self._proc_polygon(tokens, filled=False)
+
+
+    def _proc_polygon(self, tokens, filled):
+        """ Returns the components of a polygon. """
+
+        pts = [(p["x"], p["y"]) for p in tokens["points"]]
+        component = Polygon(pen=self.pen, points=pts, filled=filled)
+
+        return component
+
+    #--------------------------------------------------------------------------
+    #  Polyline:
+    #--------------------------------------------------------------------------
 
     def proc_polyline(self, tokens):
         """ Returns the components of a polyline. """
@@ -300,6 +353,9 @@ class XdotAttrParser:
 
         return tokens
 
+    #--------------------------------------------------------------------------
+    #  B-spline (Bezier curve):
+    #--------------------------------------------------------------------------
 
     def proc_bspline(self, tokens):
         """ Returns the components of a B-spline (Bezier curve). """
@@ -308,6 +364,9 @@ class XdotAttrParser:
 
         return tokens
 
+    #--------------------------------------------------------------------------
+    #  Text:
+    #--------------------------------------------------------------------------
 
     def proc_text(self, tokens):
         """ Returns text components. """
@@ -316,6 +375,9 @@ class XdotAttrParser:
 
         return tokens
 
+    #--------------------------------------------------------------------------
+    #  Image:
+    #--------------------------------------------------------------------------
 
     def proc_image(self, tokens):
         """ Returns the components of an image. """
