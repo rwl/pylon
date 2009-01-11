@@ -130,7 +130,7 @@ class Node(Container):
     # If no color scheme is set, the standard X11 naming is used.
     # For example, if <html:code>colorscheme=bugn9</html:code>, then <html:code>color=7</html:code>
     # is interpreted as <html:code>/bugn9/7</html:code>.
-    color_scheme = color_scheme_trait
+    colorscheme = color_scheme_trait
 
 	# Comments are inserted into output. Device-dependent.
     comment = comment_trait
@@ -158,10 +158,8 @@ class Node(Container):
     # <html:a rel="attr">width</html:a>
     # and <html:a rel="attr">height</html:a> attributes only
     # and is not expanded to contain the text label.
-    fixedsize = Bool(
-        False, desc="node size to be specified by 'width' and 'height'",
-        label="Fixed size"
-    )
+    fixedsize = Bool(False, desc="node size to be specified by 'width' and "
+        "'height'", label="Fixed size")
 
 	# Color used for text.
     fontcolor = fontcolor_trait
@@ -193,11 +191,9 @@ class Node(Container):
     # If the end points of an edge belong to the same group, i.e., have the
     # same group attribute, parameters are set to avoid crossings and keep
     # the edges straight.
-    group = Str(
-        "", desc="If the end points of an edge belong to the same group, "
-        "i.e., have the same group attribute, parameters are set to avoid "
-        "crossings and keep the edges straight."
-    )
+    group = Str("", desc="If the end points of an edge belong to the same "
+        "group, i.e., have the same group attribute, parameters are set to "
+        "avoid crossings and keep the edges straight.")
 
     # Height of node, in inches. This is taken as the initial, minimum height
     # of the node. If fixedsize is true, this will be the final height of the
@@ -216,9 +212,8 @@ class Node(Container):
     # the image is treated as node
     # content rather than the entire node. In particular, an image can
     # be contained in a node of any shape, not just a rectangle.
-    image = Str(
-        "", desc="file name containing an image to be displayed inside a node"
-    )
+    image = Str("", desc="file name containing an image to be displayed "
+        "inside a node")
 
     # Attribute controlling how an image fills its
     # containing node. In general, the image is given its natural size,
@@ -248,10 +243,8 @@ class Node(Container):
     # image is scaled down to fit the node. As with the case of
     # expansion, if <html:code>imagescale=true</html:code>, width and height are
     # scaled uniformly.
-    imagescale = Str(
-        "false", desc="how an image fills its containing node",
-        label="Image scale"
-    )
+    imagescale = Str("false", desc="how an image fills its containing node",
+        label="Image scale")
 
     # Text label attached to objects.
     # If a node's <html:a rel="attr">shape</html:a> is record, then the label can
@@ -301,10 +294,8 @@ class Node(Container):
     # workaround is to maintain the coordinates of a pinned node. The vector
     # difference between the old and new coordinates will give the translation,
     # which can then be subtracted from all of the appropriate coordinates.
-    pin = Bool(
-        False, desc="neato to prevent the node from moving from the input "
-        "position"
-    )
+    pin = Bool(False, desc="neato to prevent the node from moving from the "
+        "input position")
 
     # Position of node, or spline control points.
     # For nodes, the position indicates the center of the node.
@@ -345,10 +336,8 @@ class Node(Container):
     # the number of points used for a node whose shape is a circle or ellipse.
     # It plays the same role in neato, when adjusting the layout to avoid
     # overlapping nodes, and in image maps.
-    samplepoints = Int(
-        8, desc="number of points used for a node whose shape is a circle or "
-        "ellipse", label="Sample points"
-    )
+    samplepoints = Int(8, desc="number of points used for a node whose shape "
+        "is a circle or ellipse", label="Sample points")
 
 	# Set polygon to be regular.
     shape = shape_trait#(desc="polygon to be regular")
@@ -421,9 +410,8 @@ class Node(Container):
     # If the node is an ellipse or circle, the
     # <html:a rel="attr">samplepoints</html:a> attribute affects
     # the output.
-    vertices = List(
-        pointf_trait, desc="coordinates of the vertices of the node's polygon"
-    )
+    vertices = List(pointf_trait, desc="coordinates of the vertices of the "
+        "node's polygon")
 #    vertices = pointf_trait
 
     # Width of node, in inches. This is taken as the initial, minimum width
@@ -482,7 +470,7 @@ class Node(Container):
     #--------------------------------------------------------------------------
 
     def __init__(self, ID, **traits):
-        """ Return a new Edge instance. """
+        """ Initialises a Node instance. """
 
         self.ID = ID
         super(Container, self).__init__(**traits)

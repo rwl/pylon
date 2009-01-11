@@ -243,7 +243,6 @@ class XdotAttrParser:
         """ Sets the pen fill color. """
 
         self.pen.fill_color = self._proc_color(tokens)
-
         return []
 
 
@@ -251,7 +250,6 @@ class XdotAttrParser:
         """ Sets the pen stroke color. """
 
         self.pen.color = self._proc_color(tokens)
-
         return []
 
 
@@ -260,8 +258,6 @@ class XdotAttrParser:
         (r,g,b) or (r,g,b,a) where r, g, b, and a are integers from 0 to 255,
         a wx.Colour instance, an integer which in hex is of the form 0xRRGGBB,
         where RR is red, GG is green, and BB is blue or a valid color name. """
-
-        print "COLOR:", tokens, tokens.keys()
 
         keys = tokens.keys()
         if "red" in keys: # RGB(A)

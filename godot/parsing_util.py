@@ -447,7 +447,7 @@ arrowsize = real.setResultsName("arrowsize")
 arrowtail = arrow.setResultsName("arrowtail")
 constraint = boolean.setResultsName("constraint")
 decorate = boolean.setResultsName("decorate")
-dir = (CaselessLiteral("forward") | CaselessLiteral("back") |
+dirr = (CaselessLiteral("forward") | CaselessLiteral("back") |
     CaselessLiteral("both") | CaselessLiteral("none")).setResultsName("dir")
 edgehref = word.setResultsName("edgehref")
 edgetarget = word.setResultsName("edgetarget")
@@ -493,7 +493,7 @@ hldraw = word.setResultsName("_hldraw_") # Edge head label drawing.
 tldraw = word.setResultsName("_tldraw_") # Edge tail label drawing.
 
 edge_attr = [arrowhead, arrowsize, arrowtail, color, colorscheme, comment,
-    constraint, decorate, dir, edgehref, edgetarget, edgetooltip, edgeURL,
+    constraint, decorate, dirr, edgehref, edgetarget, edgetooltip, edgeURL,
     fontcolor, fontname, fontsize, headclip, headhref, headlabel, headport,
     headtarget, headtooltip, headURL, href, label, labelangle, labeldistance,
     labelfloat, labelfontcolor, labelfontname, labelfontsize, labelhref,
