@@ -85,7 +85,7 @@ class XdotAttrParser:
 
 #        print "COMPONENTS:", tokens
 
-        return [tok for tok in tokens if isinstance(tok, Component)]
+        return tokens#[tok for tok in tokens if isinstance(tok, Component)]
 
     #--------------------------------------------------------------------------
     #  Define the dot parser
@@ -244,13 +244,15 @@ class XdotAttrParser:
 
         self.pen.fill_color = self._proc_color(tokens)
 
-        return None
+        return []
 
 
     def proc_stroke_color(self, tokens):
         """ Sets the pen stroke color. """
 
         self.pen.color = self._proc_color(tokens)
+
+        return []
 
 
     def _proc_color(self, tokens):

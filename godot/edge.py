@@ -32,6 +32,8 @@ from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
 from enthought.traits.ui.table_filter import \
     EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
 
+from enthought.enable.api import Container
+
 from dot2tex.dotparsing import quote_if_necessary
 
 from node import Node
@@ -553,7 +555,7 @@ class Edge(HasTraits):
         self.from_node = from_node
         self.to_node = to_node
 
-        super(HasTraits, self).__init__(**traits)
+        super(Container, self).__init__(**traits)
 
 
     def __str__(self):
