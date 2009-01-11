@@ -45,6 +45,10 @@ from common import \
     root_trait, showboxes_trait, target_trait, tooltip_trait, url_trait, \
     pointf_trait, point_trait, color_trait
 
+#------------------------------------------------------------------------------
+#  Trait definitions:
+#------------------------------------------------------------------------------
+
 arrow_styles = ["normal", "inv", "dot", "invdot", "odot", "invodot", "none",
     "tee", "empty", "invempty", "diamond", "odiamond", "ediamond", "crow",
     "box", "obox", "open", "halfopen", "vee"]
@@ -79,11 +83,28 @@ arrow_trait = Enum(arrow_styles, desc="Arrow style")
 port_pos_trait = Str(desc="port position")
 
 #------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+edge_attrs = ['URL', 'arrowhead', 'arrowsize', 'arrowtail', 'color',
+    'colorscheme', 'comment', 'constraint', 'decorate', 'dir', 'edgeURL',
+    'edgehref', 'edgetarget', 'edgetooltip', 'fontcolor', 'fontname',
+    'fontsize', 'headURL', 'headclip', 'headhref', 'headlabel', 'headport',
+    'headtarget', 'headtooltip', 'href', 'label', 'labelURL', 'labelangle',
+    'labeldistance', 'labelfloat', 'labelfontcolor', 'labelfontname',
+    'labelfontsize', 'labelhref', 'labeltarget', 'labeltooltip', 'layer',
+    'len', 'lhead', 'lp', 'ltail', 'minlen', 'nojustify', 'pos', 'samehead',
+    'sametail', 'showboxes', 'style', 'tailURL', 'tailclip', 'tailhref',
+    'taillabel', 'tailport', 'tailtarget', 'tailtooltip', 'target', 'tooltip',
+    'weight']
+
+
+#------------------------------------------------------------------------------
 #  "Edge" class:
 #------------------------------------------------------------------------------
 
-class Edge(HasTraits):
-    """ Defines a graph edge """
+class Edge(Container):
+    """ Defines a graph edge. """
 
     from_node = Instance(Node, allow_none=False)
 
@@ -91,6 +112,9 @@ class Edge(HasTraits):
 
     # Nodes from which the 'to' and 'from' nodes may be selected.
     _nodes = List(Instance(Node))
+
+    # Connection string used in string output.
+    conn = Enum("--", "->")
 
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
@@ -109,10 +133,8 @@ class Edge(HasTraits):
     arrowhead = arrow_trait
 
 	# Multiplicative scale factor for arrowheads.
-    arrowsize = Float(
-        1.0, desc="multiplicative scale factor for arrowheads",
-        label="Arrow size"
-    )
+    arrowsize = Float(1.0, desc="multiplicative scale factor for arrowheads",
+        label="Arrow size")
 
     # Style of arrowhead on the tail node of an edge.
     # See also the <html:a rel="attr">dir</html:a> attribute,
@@ -150,20 +172,17 @@ class Edge(HasTraits):
 
     # If <html:span class="val">true</html:span>, attach edge label to edge by a 2-segment
     # polyline, underlining the label, then going to the closest point of spline.
-    decorate = Bool(
-        False, desc="to attach edge label to edge by a 2-segment polyline, "
-        "underlining the label, then going to the closest point of spline"
-    )
+    decorate = Bool(False, desc="to attach edge label to edge by a 2-segment "
+        "polyline, underlining the label, then going to the closest point of "
+        "spline")
 
     # Set edge type for drawing arrowheads. This indicates which ends of the
     # edge should be decorated with an arrowhead. The actual style of the
     # arrowhead can be specified using the <html:a rel="attr">arrowhead</html:a>
     # and <html:a rel="attr">arrowtail</html:a> attributes.
     # See <html:a rel="note">undirected</html:a>.
-    dir = Enum(
-        "forward", "back", "both", "none",
-        desc="edge type for drawing arrowheads", label="Direction"
-    )
+    dir = Enum("forward", "back", "both", "none",
+        desc="edge type for drawing arrowheads", label="Direction")
 
 	# Synonym for <html:a rel="attr">edgeURL</html:a>.
     edgehref = Alias("edgeURL", desc="synonym for edgeURL")
@@ -173,18 +192,14 @@ class Edge(HasTraits):
     # part of the edge. Setting it to "_graphviz" will open a new window if it
     # doesn't already exist, or reuse it if it does. If undefined, the value of
     # the target is used.
-    edgetarget = Str(
-        desc="which window of the browser is used for the URL attached to the "
-        "non-label part of the edge", label="Edge target"
-    )
+    edgetarget = Str("", desc="which window of the browser is used for the "
+        "URL attached to the non-label part of the edge", label="Edge target")
 
     # Tooltip annotation attached to the non-label part of an edge.
     # This is used only if the edge has a <html:a rel="attr">URL</html:a>
     # or <html:a rel="attr">edgeURL</html:a> attribute.
-    edgetooltip = Str(
-        desc="annotation attached to the non-label part of an edge",
-        label="Edge tooltip"
-    ) #EscString
+    edgetooltip = Str("", desc="annotation attached to the non-label part of "
+        "an edge", label="Edge tooltip") #EscString
 
     # If <html:a rel="attr">edgeURL</html:a> is defined, this is the link used for the non-label
     # parts of an edge. This value overrides any <html:a rel="attr">URL</html:a>
@@ -193,9 +208,8 @@ class Edge(HasTraits):
     # by a <html:a rel="attr">headURL</html:a> or <html:a rel="attr">tailURL</html:a> value,
     # respectively.
     # See <html:a rel="note">undirected</html:a>.
-    edgeURL = Str(
-        desc="link used for the non-label parts of an edge", label="Edge URL"
-    )#LabelStr
+    edgeURL = Str("", desc="link used for the non-label parts of an edge",
+        label="Edge URL")#LabelStr
 
 	# Color used for text.
     fontcolor = fontcolor_trait
@@ -227,19 +241,16 @@ class Edge(HasTraits):
     # If <html:span class="val">true</html:span>, the head of an edge is clipped to the boundary of the head node;
     # otherwise, the end of the edge goes to the center of the node, or the
     # center of a port, if applicable.
-    headclip = Bool(
-        True, label="Head clip",
-        desc="head of an edge to be clipped to the boundary of the head node"
-    )
+    headclip = Bool(True, desc="head of an edge to be clipped to the boundary "
+        "of the head node", label="Head clip")
 
 	# Synonym for <html:a rel="attr">headURL</html:a>.
     headhref = Alias("headURL", desc="synonym for headURL")
 
 	# Text label to be placed near head of edge.
 	# See <html:a rel="note">undirected</html:a>.
-    headlabel = Str(
-        desc="text label to be placed near head of edge", label="Head label"
-    )
+    headlabel = Str("", desc="text label to be placed near head of edge",
+        label="Head label")
 
     headport = port_pos_trait
 
@@ -254,19 +265,16 @@ class Edge(HasTraits):
 
     # Tooltip annotation attached to the head of an edge. This is used only
     # if the edge has a <html:a rel="attr">headURL</html:a> attribute.
-    headtooltip = Str(
-        desc="tooltip annotation attached to the head of an edge",
-        label="Head tooltip"
-    )
+    headtooltip = Str("", desc="tooltip annotation attached to the head of an "
+        "edge", label="Head tooltip")
 
     # If <html:a rel="attr">headURL</html:a> is defined, it is
     # output as part of the head label of the edge.
     # Also, this value is used near the head node, overriding any
     # <html:a rel="attr">URL</html:a> value.
     # See <html:a rel="note">undirected</html:a>.
-    headURL = Str(
-        desc="output as part of the head label of the edge", label="Head URL"
-    )
+    headURL = Str("", desc="output as part of the head label of the edge",
+        label="Head URL")
 
 	# Synonym for <html:a rel="attr">URL</html:a>.
     href = Alias("URL", desc="synonym for URL")
@@ -288,49 +296,37 @@ class Edge(HasTraits):
     # The angle, in degrees, specifies the rotation from the 0 degree ray,
     # with positive angles moving counterclockwise and negative angles
     # moving clockwise.
-    labelangle = Float(
-        -25.0, desc=", along with labeldistance, where the headlabel "
-        "(taillabel) are placed with respect to the head (tail)",
-        label="Label angle"
-    )
+    labelangle = Float(-25.0, desc=", along with labeldistance, where the "
+        "headlabel (taillabel) are placed with respect to the head (tail)",
+        label="Label angle")
 
     # Multiplicative scaling factor adjusting the distance that
     # the headlabel (taillabel) is from the head (tail) node.
     # The default distance is 10 points. See <html:a rel="attr">labelangle</html:a>
     # for more details.
-    labeldistance = Float(
-        1.0, desc="multiplicative scaling factor adjusting the distance that "
-        "the headlabel (taillabel) is from the head (tail) node",
-        label="Label distance"
-    )
+    labeldistance = Float(1.0, desc="multiplicative scaling factor adjusting "
+        "the distance that the headlabel (taillabel) is from the head (tail) "
+        "node", label="Label distance")
 
     # If true, allows edge labels to be less constrained in position. In
     # particular, it may appear on top of other edges.
-    labelfloat = Bool(
-        False, desc="edge labels to be less constrained in position",
-        label="Label float"
-    )
+    labelfloat = Bool(False, desc="edge labels to be less constrained in "
+        "position", label="Label float")
 
     # Color used for headlabel and taillabel.
     # If not set, defaults to edge's fontcolor.
-    labelfontcolor = Color(
-        "black", desc="color used for headlabel and taillabel",
-        label="Label font color"
-    )
+    labelfontcolor = Color("black", desc="color used for headlabel and "
+        "taillabel", label="Label font color")
 
 	# Font used for headlabel and taillabel.
 	# If not set, defaults to edge's fontname.
-    labelfontname = Font(
-        "Times-Roman", desc="Font used for headlabel and taillabel",
-        label="Label font name"
-    )
+    labelfontname = Font("Times-Roman", desc="Font used for headlabel and "
+        "taillabel", label="Label font name")
 
 	# Font size, in <html:a rel="note">points</html:a>, used for headlabel and taillabel.
 	# If not set, defaults to edge's fontsize.
-    labelfontsize = Float(
-        14.0, desc="Font size, in points, used for headlabel and taillabel",
-        label="label_font_size"
-    )
+    labelfontsize = Float(14.0, desc="Font size, in points, used for "
+        "headlabel and taillabel", label="label_font_size")
 
 	# Synonym for <html:a rel="attr">labelURL</html:a>.
     labelhref = Alias("labelURL", desc="synonym for labelURL")
@@ -340,18 +336,14 @@ class Edge(HasTraits):
     # Setting it to "_graphviz" will open a new window if it doesn't already
     # exist, or reuse it if it does. If undefined, the value of the target is
     # used.
-    labeltarget = Str(
-        desc="which window of the browser is used for the URL attached to the "
-        "label", label="Label target"
-    )
+    labeltarget = Str("", desc="which window of the browser is used for the "
+        "URL attached to the label", label="Label target")
 
     # Tooltip annotation attached to label of an edge.
     # This is used only if the edge has a <html:a rel="attr">URL</html:a>
     # or <html:a rel="attr">labelURL</html:a> attribute.
-    labeltooltip = Str(
-        desc="tooltip annotation attached to label of an edge",
-        label="Label tooltip"
-    )
+    labeltooltip = Str("", desc="tooltip annotation attached to label of an "
+        "edge", label="Label tooltip")
 
     # If <html:a rel="attr">labelURL</html:a> is defined, this is the link used for the label
     # of an edge. This value overrides any <html:a rel="attr">URL</html:a>
@@ -411,18 +403,14 @@ class Edge(HasTraits):
     # Edges with the same head and the same <html:a rel="attr">samehead</html:a> value are aimed
     # at the same point on the head.
     # See <html:a rel="note">undirected</html:a>.
-    samehead = Str(
-        desc="dges with the same head and the same samehead value are aimed "
-        "at the same point on the head"
-    )
+    samehead = Str("", desc="dges with the same head and the same samehead "
+        "value are aimed at the same point on the head")
 
     # Edges with the same tail and the same <html:a rel="attr">sametail</html:a> value are aimed
     # at the same point on the tail.
     # See <html:a rel="note">undirected</html:a>.
-    sametail = Str(
-        desc="edges with the same tail and the same sametail value are aimed "
-        "at the same point on the tail"
-    )
+    sametail = Str("", desc="edges with the same tail and the same sametail "
+        "value are aimed at the same point on the tail")
 
 	# Print guide boxes in PostScript at the beginning of
 	# routesplines if 1, or at the end if 2. (Debugging)
@@ -435,10 +423,8 @@ class Edge(HasTraits):
     # If <html:span class="val">true</html:span>, the tail of an edge is clipped to the boundary of the tail node;
     # otherwise, the end of the edge goes to the center of the node, or the
     # center of a port, if applicable.
-    tailclip = Bool(
-        True,
-        desc="tail of an edge to be clipped to the boundary of the tail node"
-    )
+    tailclip = Bool(True, desc="tail of an edge to be clipped to the boundary "
+        "of the tail node")
 
 	# Synonym for <html:a rel="attr">tailURL</html:a>.
     tailhref = Alias("tailURL", desc="synonym for tailURL")
@@ -458,19 +444,16 @@ class Edge(HasTraits):
 
 	# Tooltip annotation attached to the tail of an edge. This is used only
 	# if the edge has a <html:a rel="attr">tailURL</html:a> attribute.
-    tailtooltip = Str(
-        desc="tooltip annotation attached to the tail of an edge"
-    )
+    tailtooltip = Str("", desc="tooltip annotation attached to the tail of an "
+        "edge", label="Tail tooltip")
 
     # If <html:a rel="attr">tailURL</html:a> is defined, it is
     # output as part of the tail label of the edge.
     # Also, this value is used near the tail node, overriding any
     # <html:a rel="attr">URL</html:a> value.
     # See <html:a rel="note">undirected</html:a>.
-    tailURL = Str(
-        desc="output as part of the tail label of the edge",
-        label="Tail URL"
-    )
+    tailURL = Str("", desc="output as part of the tail label of the edge",
+        label="Tail URL")
 
 	# If the object has a URL, this attribute determines which window
 	# of the browser is used for the URL.
@@ -528,11 +511,13 @@ class Edge(HasTraits):
             Group(["label", "fontname", "fontsize", "fontcolor", "nojustify",
                 "labeltarget", "labelfloat", "labelfontsize",
                 "labeltooltip", "labelangle", "lp", "labelURL",
-                "labelfontname", "labeldistance", "labelfontcolor", "labelhref"],
+                "labelfontname", "labeldistance", "labelfontcolor",
+                "labelhref"],
                 label="Label"),
             Group(["minlen", "weight", "len", "pos"], label="Dimension"),
-            Group(["arrowhead", "samehead", "headURL", "headtooltip", "headclip",
-                "headport", "headlabel", "headtarget", "lhead", "headhref"],
+            Group(["arrowhead", "samehead", "headURL", "headtooltip",
+                "headclip", "headport", "headlabel", "headtarget", "lhead",
+                "headhref"],
                 label="Head"),
             Group(["arrowtail", "tailtarget", "tailhref", "ltail", "sametail",
                 "tailport", "taillabel", "tailtooltip", "tailURL", "tailclip"],
@@ -567,14 +552,21 @@ class Edge(HasTraits):
 
         """
 
-        attrstr = ",".join(["%s=%s" % \
-            (quote_if_necessary(key),quote_if_necessary(val)) \
-                for key,val in self.attr.items()])
-        if attrstr:
-            attrstr = "[%s]" % attrstr
-        return "%s%s %s %s%s %s;\n" % (quote_if_necessary(self.src.name),\
-            self.src_port,self.conn, \
-            quote_if_necessary(self.dst.name),self.dst_port,attrstr)
+        attrs = []
+        for trait_name in edge_attrs:
+            value = getattr(self, trait_name)
+            if value != self.trait(trait_name).default:
+                attrs.append('%s="%s"' % (trait_name, str(value)))
+
+        if attrs:
+            attrstr = "[%s]" % ", ".join(attrs)
+            return "%s%s %s %s%s %s;\n" % \
+                (self.from_node.ID, self.tailport, self.conn, \
+                 self.to_node.ID, self.headport, attrstr)
+        else:
+            return "%s%s %s %s%s;\n" % \
+                (self.from_node.ID, self.tailport, self.conn, \
+                 self.to_node.ID, self.headport)
 
 
     def get_edge_attributes(self):
@@ -633,10 +625,12 @@ edge_table_editor = TableEditor(
 )
 
 #------------------------------------------------------------------------------
-#  Standalone call:
+#  Stand-alone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    Edge(Node(), Node()).configure_traits()
+    edge = Edge(Node("node1"), Node("node2"))
+    edge.configure_traits()
+    print edge
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

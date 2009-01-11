@@ -1240,6 +1240,18 @@ class Graph(HasTraits):
         self.canvas.bgcolor = new
 
 
+    def _directed_changed(self, new):
+        """ Sets the connection string to be used by edges in the string
+        representation of the graph. """
+
+        if new:
+            for edge in self.edges:
+                edge.conn = "->"
+        else:
+            for edge in self.edges:
+                edge.conn = "--"
+
+
 #    def _anytrait_changed(self, name, new):
 #        """ Handles any graph trait changing
 #
