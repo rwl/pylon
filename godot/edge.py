@@ -21,7 +21,7 @@
 
 from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
-    List, Tuple, ListStr, Instance
+    List, Tuple, ListStr, Instance, Undefined
 
 from enthought.traits.ui.api import TableEditor, View, Group, Item, Tabbed
 
@@ -43,7 +43,7 @@ from common import \
     fontname_trait, fontsize_trait, label_trait, layer_trait, margin_trait, \
     nojustify_trait, peripheries_trait, pos_trait, rectangle_trait, \
     root_trait, showboxes_trait, target_trait, tooltip_trait, url_trait, \
-    pointf_trait, point_trait, color_trait
+    pointf_trait, point_trait, color_trait, Synced
 
 #------------------------------------------------------------------------------
 #  Trait definitions:
@@ -98,7 +98,6 @@ edge_attrs = ['URL', 'arrowhead', 'arrowsize', 'arrowtail', 'color',
     'taillabel', 'tailport', 'tailtarget', 'tailtooltip', 'target', 'tooltip',
     'weight']
 
-
 #------------------------------------------------------------------------------
 #  "Edge" class:
 #------------------------------------------------------------------------------
@@ -113,8 +112,8 @@ class Edge(Container):
     # Nodes from which the 'to' and 'from' nodes may be selected.
     _nodes = List(Instance(Node))
 
-    # Connection string used in string output.
-    conn = Enum("--", "->")
+    # Connection string used in string output. Set by Graph handler method.
+    conn = Enum("->", "--")
 
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
@@ -185,7 +184,8 @@ class Edge(Container):
         desc="edge type for drawing arrowheads", label="Direction")
 
 	# Synonym for <html:a rel="attr">edgeURL</html:a>.
-    edgehref = Alias("edgeURL", desc="synonym for edgeURL")
+#    edgehref = Alias("edgeURL", desc="synonym for edgeURL")
+    edgehref = Synced(sync_to="edgeURL")
 
     # If the edge has a URL or edgeURL  attribute, this attribute determines
     # which window of the browser is used for the URL attached to the non-label
@@ -555,8 +555,13 @@ class Edge(Container):
         attrs = []
         for trait_name in edge_attrs:
             value = getattr(self, trait_name)
-            if value != self.trait(trait_name).default:
-                attrs.append('%s="%s"' % (trait_name, str(value)))
+            default = self.trait(trait_name).default
+            # FIXME: Alias/Synced traits default to None.
+            if (value != default) and (default is not None):
+                valstr = str(value)
+                if isinstance(value, basestring):
+                    valstr = '"%s"' % valstr
+                attrs.append('%s=%s' % (trait_name, valstr))
 
         if attrs:
             attrstr = "[%s]" % ", ".join(attrs)

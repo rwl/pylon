@@ -147,10 +147,8 @@ class Graph(HasTraits):
     # set, overwriting whatever color or graphics where already on the page.
     # If this effect is not desired, and you only want to set bits explicitly
     # assigned in drawing the graph, set <html:a rel="attr">bgcolor</html:a>="transparent".
-    bgcolor = Color(
-        "white", desc="color used as the background for the entire canvas",
-        label="Background Color"
-    )
+    bgcolor = Color("white", desc="color used as the background for the "
+        "entire canvas", label="Background Color")
 
 	# If true, the drawing is centered in the output canvas.
     center = Bool(False, desc="is drawing centered in the output canvas")
@@ -202,17 +200,13 @@ class Graph(HasTraits):
     # This specifies the distance between nodes in separate connected
     # components. If set too small, connected components may overlap.
     # Only applicable if <html:a rel="attr">pack</html:a>=false.
-    defaultdist = Float(
-        desc="distance between nodes in separate connected components",
-        label="Default distance"
-    )
+    defaultdist = Float(desc="distance between nodes in separate connected "
+        "components", label="Default distance")
 
     # Set the number of dimensions used for the layout. The maximum value
     # allowed is 10.
-    dim = Range(
-        low=2, high=10, desc="number of dimensions used for the layout",
-        label="Dimensions"
-    )
+    dim = Range(low=2, high=10, desc="number of dimensions for the layout",
+        label="Dimensions")
 
     # Only valid when mode="ipsep". If true, constraints are generated for each
     # edge in the largest (heuristic) directed acyclic subgraph such that the
@@ -227,10 +221,8 @@ class Graph(HasTraits):
     # done more accurately, both in size and in placement. For SVG output,
     # it is used to guarantee that the dimensions in the output correspond to
     # the correct number of points or inches.
-    dpi = Float(
-        96.0, desc="expected number of pixels per inch on a display",
-        label="DPI"
-    )
+    dpi = Float(96.0, desc="expected number of pixels per inch on a display",
+        label="DPI")
 
     # Terminating condition. If the length squared of all energy gradients are
     # &lt; <html:a rel="attr">epsilon</html:a>, the algorithm stops.
@@ -240,10 +232,9 @@ class Graph(HasTraits):
     # coordinates by 1 + esep) for purposes of spline edge routing.
     # This should normally be strictly less than
     # <html:a rel="attr">sep</html:a>.
-    esep = Int(
-        3, desc="Fraction to increase polygons (multiply coordinates by 1 + "
-        "esep) for purposes of spline edge routing", label="Edge separation"
-    )
+    esep = Int(3, desc="Fraction to increase polygons (multiply coordinates "
+        "by 1 + esep) for purposes of spline edge routing",
+        label="Edge separation")
 
 	# Color used for text.
     fontcolor = fontcolor_trait
@@ -281,10 +272,8 @@ class Graph(HasTraits):
     # are used. Thus, <html:code>Times-Roman</html:code> would be treated as
     # <html:code>Nimbus Roman No9 L</html:code>. These last two options are useful
     # with SVG viewers that support these richer fontname spaces.
-    fontnames = Enum(
-        "svg", "ps", "gd", label="Font names",
-        desc="how basic fontnames are represented in SVG output"
-    )
+    fontnames = Enum("svg", "ps", "gd", label="Font names",
+        desc="how basic fontnames are represented in SVG output")
 
     # Directory list used by libgd to search for bitmap fonts if Graphviz
     # was not built with the fontconfig library.
@@ -316,10 +305,8 @@ class Graph(HasTraits):
     # Note that a subgraph inherits attributes from its parent. Thus, if
     # the root graph sets <html:a rel="attr">labeljust</html:a> to <html:span class="val">l</html:span>, the subgraph inherits
     # this value.
-    labeljust = Trait(
-        "c", {"Centre": "c", "Right": "r", "Left": "l"},
-        desc="justification for cluster labels", label="Label justification"
-    )
+    labeljust = Trait("c", {"Centre": "c", "Right": "r", "Left": "l"},
+        desc="justification for cluster labels", label="Label justification")
 
     # Top/bottom placement of graph and cluster labels.
     # If the attribute is <html:span class="val">t</html:span>, place label at the top;
@@ -329,11 +316,9 @@ class Graph(HasTraits):
     # Note that a subgraph inherits attributes from its parent. Thus, if
     # the root graph sets <html:a rel="attr">labelloc</html:a> to <html:span class="val">b</html:span>, the subgraph inherits
     # this value.
-    labelloc = Trait(
-        "b", {"Bottom": "b", "Top":"t"},
+    labelloc = Trait("b", {"Bottom": "b", "Top":"t"},
         desc="placement of graph and cluster labels",
-        label="Label location"
-    )
+        label="Label location")
 
     # If true, the graph is rendered in landscape mode. Synonymous with
     # <html:code><html:a rel="attr">rotate</html:a>=90</html:code> or <html:code>
@@ -348,20 +333,16 @@ class Graph(HasTraits):
 
     # Specifies the separator characters used to split the
     # <html:a rel="attr">layers </html:a>attribute into a list of layer names.
-    layersep = Enum(
-        ":\t", "\t", " ", label="Layer separation",
-        desc="separator characters used to split layer names"
-    )
+    layersep = Enum(":\t", "\t", " ", label="Layer separation",
+        desc="separator characters used to split layer names")
 
     # Specifies strictness of level constraints in neato
     # when <html:code><html:a rel="attr">mode</html:a>="ipsep" or "hier"</html:code>.
     # Larger positive values mean stricter constraints, which demand more
     # separation between levels. On the other hand, negative values will relax
     # the constraints by allowing some overlap between the levels.
-    levelsgap = Float(
-        0.0, desc="strictness of level constraints in neato",
-        label="Levels gap"
-    )
+    levelsgap = Float(0.0, desc="strictness of level constraints in neato",
+        label="Levels gap")
 
     # Label position, in points. The position indicates the center of the
     # label.
@@ -388,17 +369,13 @@ class Graph(HasTraits):
     # minimization. These correspond to the
     # number of tries without improvement before quitting and the
     # maximum number of iterations in each pass.
-    mclimit = Float(
-        1.0, desc="Multiplicative scale factor used to alter the MinQuit "
-        "(default = 8) and MaxIter (default = 24) parameters used during "
-        "crossing minimization", label="Multiplicative scale factor"
-    )
+    mclimit = Float(1.0, desc="Multiplicative scale factor used to alter the "
+        "MinQuit (default = 8) and MaxIter (default = 24) parameters used "
+        "during crossing minimization", label="Multiplicative scale factor")
 
 	# Specifies the minimum separation between all nodes.
-    mindist = Float(
-        1.0, desc="minimum separation between all nodes",
-        label="Minimum separation"
-    )
+    mindist = Float(1.0, desc="minimum separation between all nodes",
+        label="Minimum separation")
 
     # Technique for optimizing the layout. If <html:a rel="attr">mode</html:a> is <html:span class="val">major</html:span>,
     # neato uses stress majorization. If <html:a rel="attr">mode</html:a> is <html:span class="val">KK</html:span>,
@@ -411,10 +388,8 @@ class Graph(HasTraits):
     # directionality similar to the layout used in dot, and <html:span class="val">ipsep</html:span>, which
     # allows the graph to specify minimum vertical and horizontal distances
     # between nodes. (See the <html:a rel="attr">sep</html:a> attribute.)
-    mode = Enum(
-        "major", "KK", "heir", "ipsep",
-        desc="Technique for optimizing the layout"
-    )
+    mode = Enum("major", "KK", "heir", "ipsep",
+        desc="Technique for optimizing the layout")
 
     # This value specifies how the distance matrix is computed for the input
     # graph. The distance matrix specifies the ideal distance between every
@@ -428,20 +403,16 @@ class Graph(HasTraits):
     # edge length to be the number of nodes that are neighbors of exactly one
     # of the end points, and then calculates the shortest paths. This helps
     # to separate nodes with high degree.
-    model = Enum(
-        "shortpath", "circuit", "subset",
-        desc="how the distance matrix is computed for the input graph"
-    )
+    model = Enum("shortpath", "circuit", "subset",
+        desc="how the distance matrix is computed for the input graph")
 
     # If Graphviz is built with MOSEK defined, mode=ipsep and mosek=true,
     # the Mosek software (www.mosek.com) is use to solve the ipsep constraints.
     mosek = Bool(False, desc="solve the ipsep constraints with MOSEK")
 
 	# Minimum space between two adjacent nodes in the same rank, in inches.
-    nodesep = Float(
-        0.25, desc="minimum space between two adjacent nodes in the same rank",
-        label="Node separation"
-    )
+    nodesep = Float(0.25, desc="minimum space between two adjacent nodes in "
+        "the same rank", label="Node separation")
 
     # By default, the justification of multi-line labels is done within the
     # largest context that makes sense. Thus, in the label of a polygonal node,
@@ -458,42 +429,34 @@ class Graph(HasTraits):
     # If set, normalize coordinates of final
     # layout so that the first point is at the origin, and then rotate the
     # layout so that the first edge is horizontal.
-    normalize = Bool(
-        False, desc="If set, normalize coordinates of final layout so that "
-        "the first point is at the origin, and then rotate the layout so that "
-        "the first edge is horizontal"
-    )
+    normalize = Bool(False, desc="If set, normalize coordinates of final "
+        "layout so that the first point is at the origin, and then rotate the "
+        "layout so that the first edge is horizontal")
 
     # Used to set number of iterations in
     # network simplex applications, used in
     # computing node x coordinates.
     # If defined, # iterations =  <html:a rel="attr">nslimit</html:a> * # nodes;
     # otherwise,  # iterations = MAXINT.
-    nslimit = Float(
-        desc="iterations in network simplex applications",
-        label="x-coordinate limit"
-    )
+    nslimit = Float(desc="iterations in network simplex applications",
+        label="x-coordinate limit")
 
     # Used to set number of iterations in
     # network simplex applications, used for ranking nodes.
     # If defined, # iterations =  <html:a rel="attr">nslimit1</html:a> * # nodes;
     # otherwise,  # iterations = MAXINT.
-    nslimit1 = Float(
-        desc="iterations in network simplex applications",
-        label="Ranking limit"
-    )
+    nslimit1 = Float(desc="iterations in network simplex applications",
+        label="Ranking limit")
 
     # If "out" for a graph G, and n is a node in G, then edges n-&gt;* appear
     # left-to-right in the same order in which they are defined.
     # If "in", the edges *-&gt;n appear
     # left-to-right in the same order in which they are defined for all
     # nodes n.
-    ordering = Enum(
-        "out", "in", desc="If 'out' for a graph G, and n is a node in G, then "
-        "edges n->* appear left-to-right in the same order in which they are "
-        "defined. If 'in', the edges *->n appear left-to-right in the same "
-        "order in which they are defined for all nodes n."
-    )
+    ordering = Enum("out", "in", desc="If 'out' for a graph G, and n is a "
+        "node in G, then edges n->* appear left-to-right in the same order in "
+        "which they are defined. If 'in', the edges *->n appear left-to-right "
+        "in the same order in which they are defined for all nodes n.")
 
     # These specify the order in which nodes and edges are drawn in concrete
     # output. The default "breadthfirst" is the simplest, but when the graph
@@ -505,11 +468,8 @@ class Graph(HasTraits):
     # reasons, it may be desirable that all edges appear beneath nodes,
     # even if the resulting drawing is ambiguous. This can be achieved by
     # choosing "edgesfirst".
-    outputorder = Enum(
-        "breadthfirst", "nodesfirst", "edgesfirst",
-        desc="order in which nodes and edges are drawn",
-        label="Output order"
-    )
+    outputorder = Enum("breadthfirst", "nodesfirst", "edgesfirst",
+        desc="order in which nodes and edges are drawn", label="Output order")
 
     # Determines if and how node overlaps should be removed. Nodes are first
     # enlarged using the <html:a rel="attr">sep</html:a> attribute.
@@ -563,10 +523,9 @@ class Graph(HasTraits):
     # ordering is only preserved among nodes related by an edge.
     #
     # <html:b>NOTE</html:b>The methods <html:span class="val">orthoxy</html:span> and <html:span class="val">orthoyx</html:span> are still evolving. The semantics of these may change, or these methods may disappear altogether.
-    overlap = Enum(
-        "True", "False", "scale", "scalexy", "prism", "compress", "vpsc", "ipsep",
-        desc="determines if and how node overlaps should be removed"
-    )
+    overlap = Enum("True", "False", "scale", "scalexy", "prism", "compress",
+        "vpsc", "ipsep", desc="determines if and how node overlaps should be "
+        "removed")
 
     # This is true if the value of pack is "true" or a non-negative integer.
     # If true, each connected component of the graph is laid out separately,
@@ -600,10 +559,8 @@ class Graph(HasTraits):
     # has also depends on the layout algorithm. For example, neato does not
     # support clusters, so a value of "clust" will have the same effect as the
     # default "node" value.
-    packmode = Enum(
-        "node", "cluster", "graph", label="Pack mode",
-        desc="granularity and method used for packing"
-    )
+    packmode = Enum("node", "cluster", "graph", label="Pack mode",
+        desc="granularity and method used for packing")
 
     # The pad attribute specifies how much, in inches, to extend the
     # drawing area around the minimal area needed to draw the graph.
@@ -614,10 +571,8 @@ class Graph(HasTraits):
     # Normally, a small pad is used for aesthetic reasons, especially when
     # a background color is used, to avoid having nodes and edges abutting
     # the boundary of the drawn region.
-    pad = Float(
-        0.0555, desc="how much to extend the drawing area around the minimal "
-        "area needed to draw the graph"
-    )
+    pad = Float(0.0555, desc="how much to extend the drawing area around the "
+        "minimal area needed to draw the graph")
 
     # Width and height of output pages, in inches. If this is set and is
     # smaller than the size of the layout, a rectangular array of pages of the
@@ -647,19 +602,15 @@ class Graph(HasTraits):
     # If the <html:a rel="attr">page</html:a> attribute is set and applicable,
     # this attribute specifies the order in which the pages are emitted.
     # This is limited to one of the 8 row or column major orders.
-    pagedir = Enum(
-        "BL", "BR", "TL", "TR", "RB", "RT", "LB", "LT",
+    pagedir = Enum("BL", "BR", "TL", "TR", "RB", "RT", "LB", "LT",
         desc="If the page attribute is set and applicable, this attribute "
         "specifies the order in which the pages are emitted",
-        label="Page direction"
-    )
+        label="Page direction")
 
     # If <html:a rel="attr">quantum</html:a> &gt; 0.0, node label dimensions
     # will be rounded to integral multiples of the quantum.
-    quantum = Float(
-        0.0, desc="If quantum > 0.0, node label dimensions will be rounded to "
-        "integral multiples of the quantum."
-    )
+    quantum = Float(0.0, desc="If quantum > 0.0, node label dimensions will "
+        "be rounded to integral multiples of the quantum.")
 
     # Rank constraints on the nodes in a subgraph. If rank="same", all nodes
     # are placed on the same rank. If rank="min", all nodes are placed on the
@@ -668,18 +619,14 @@ class Graph(HasTraits):
     # attribute is "source" or "min". Analogous criteria hold for rank="max"
     # and rank="sink". (Note: the minimum rank is topmost or leftmost, and the
     # maximum rank is bottommost or rightmost.)
-    rank = Enum(
-        "same", "min", "source", "max", "sink",
-        desc="rank constraints on the nodes in a subgraph"
-    )
+    rank = Enum("same", "min", "source", "max", "sink",
+        desc="rank constraints on the nodes in a subgraph")
 
     # Sets direction of graph layout. For example, if <html:a rel="attr">rankdir</html:a>="LR",
     # and barring cycles, an edge <html:code>T -&gt; H;</html:code> will go
     # from left to right. By default, graphs are laid out from top to bottom.
-    rankdir = Enum(
-        "TB", "LR", "BT", "RL", desc="direction of graph layout",
-        label="Rank direction"
-    )
+    rankdir = Enum("TB", "LR", "BT", "RL", desc="direction of graph layout",
+        label="Rank direction")
 
     # In dot, this gives the desired rank separation, in inches. This is
     # the minimum vertical distance between the bottom of the nodes in one
@@ -688,11 +635,9 @@ class Graph(HasTraits):
     # Note that both
     # settings are possible, e.g., ranksep = "1.2 equally".
     # In twopi, specifies radial separation of concentric circles.
-    ranksep = Float(
-        0.5, desc="In dot, this gives the desired rank separation.  In twopi, "
-        "specifies radial separation of concentric circles",
-        label="Rank separation"
-    )
+    ranksep = Float(0.5, desc="In dot, this gives the desired rank "
+        "separation.  In twopi, specifies radial separation of concentric "
+        "circles", label="Rank separation")
 
     # Sets the aspect ratio (drawing height/drawing width) for the drawing.
     # Note that this is adjusted before the size attribute constraints are
@@ -725,17 +670,13 @@ class Graph(HasTraits):
     # multiple of the page size in that dimension which is at least half the
     # current size. The two dimensions are then scaled independently to the new
     # size. This feature only works in dot.
-    ratio = Either(
-        Float, Enum("fill", "compress", "expand", "auto"),
-        desc="aspect ratio (drawing height/drawing width) for the drawing"
-    )
+    ratio = Either(Float, Enum("fill", "compress", "expand", "auto"),
+        desc="aspect ratio (drawing height/drawing width) for the drawing")
 
     # If true and there are multiple clusters, run cross minimization a second
     # time.
-    remincross = Bool(
-        False, desc="If true and there are multiple clusters, run cross "
-        "minimization a second", label="Re-cross minimization"
-    )
+    remincross = Bool(False, desc="If true and there are multiple clusters, "
+        "run cross minimization a second", label="Re-cross minimization")
 
 	# This is a synonym for the <html:a rel="attr">dpi</html:a> attribute.
     resolution = Alias("dpi", desc="a synonym for the dpi attribute")
@@ -755,10 +696,9 @@ class Graph(HasTraits):
 
     # During network simplex, maximum number of edges with negative cut values
     # to search when looking for one with minimum cut value.
-    searchsize = Int(
-        30, desc="maximum number of edges with negative cut values to search "
-        "when looking for one with minimum cut value", label="Search size"
-    )
+    searchsize = Int(30, desc="maximum number of edges with negative cut "
+        "values to search when looking for one with minimum cut value",
+        label="Search size")
 
     # Fraction to increase polygons (multiply
     # coordinates by 1 + sep) for purposes of determining overlap. Guarantees
@@ -771,10 +711,8 @@ class Graph(HasTraits):
     # <html:a rel="attr">sep</html:a> gives a minimum distance, in inches, to be left between nodes.
     # In this case, if <html:a rel="attr">sep</html:a> is a pointf, the x and y separations can be
     # specified separately.
-    sep = Int(
-        4, desc="Fraction to increase polygons (multiply coordinates by "
-        "1 + sep) for purposes of determining overlap", label="Separation"
-    )
+    sep = Int(4, desc="Fraction to increase polygons (multiply coordinates by "
+        "1 + sep) for purposes of determining overlap", label="Separation")
 
 	# Print guide boxes in PostScript at the beginning of
 	# routesplines if 1, or at the end if 2. (Debugging)
@@ -810,9 +748,8 @@ class Graph(HasTraits):
     # requires non-overlapping nodes (cf. <html:a rel="attr">overlap</html:a>).
     # If fdp is used for layout and <html:tt>splines="compound"</html:tt>, then the edges are
     # drawn to avoid clusters as well as nodes.
-    splines = Enum(
-        "True", "False", "", desc="how, and if, edges are represented"
-    )
+    splines = Enum("True", "False", "",
+        desc="how, and if, edges are represented")
 
     # Parameter used to determine the initial layout of nodes. If unset, the
     # nodes are randomly placed in a unit square with
@@ -841,10 +778,8 @@ class Graph(HasTraits):
     start = start_trait
 
 	# A URL or pathname specifying an XML style sheet, used in SVG output.
-    stylesheet = Str(
-        desc="URL or pathname specifying an XML style sheet",
-        label="Style sheet"
-    )
+    stylesheet = Str(desc="URL or pathname specifying an XML style sheet",
+        label="Style sheet")
 
     # If the object has a URL, this attribute determines which window
     # of the browser is used for the URL.
@@ -894,10 +829,8 @@ class Graph(HasTraits):
     # <html:a rel="attr">edgeURL</html:a> allow control of various parts of an
     # edge. Also note that, if active areas of two edges overlap, it is unspecified
     # which area dominates.
-    URL = Str(
-        desc="hyperlinks incorporated into device-dependent output",
-        label="URL"
-    )
+    URL = Str(desc="hyperlinks incorporated into device-dependent output",
+        label="URL")
 
     # Clipping window on final drawing.
     #
@@ -924,11 +857,9 @@ class Graph(HasTraits):
 #        desc="clipping window on final drawing"
 #    )
 
-    voro_margin = Float(
-        0.05, desc="Factor to scale up drawing to allow margin for expansion "
-        "in Voronoi technique. dim' = (1+2*margin)*dim.",
-        label="Voronoi margin"
-    )
+    voro_margin = Float(0.05, desc="Factor to scale up drawing to allow "
+        "margin for expansion in Voronoi technique. dim' = (1+2*margin)*dim.",
+        label="Voronoi margin")
 
 
 #    def _defaultdist_default(self):
@@ -1019,62 +950,92 @@ class Graph(HasTraits):
 
         """
 
-#        return "<graph object "+str(self.nodes()) + " " + str(self.edges())+">"
-
+        padding = "    "
 
         s = ""
-        padding = self.padding
-        if len(self.allitems) > 0:
-            grstr = "".join([
-                "%s%s" % (padding, n) \
-                for n in map(str, flatten(self.allitems))]
-            )
-            attrstr = ",".join(["%s=%s" % \
-            (quote_if_necessary(key), quote_if_necessary(val)) \
-                for key, val in self.attr.items()])
-            if attrstr:
-                attrstr = "%sgraph [%s];" % (padding, attrstr)
-            if not isinstance(self, DotSubGraph):
-                s = ""
-                if self.strict:
-                    s += 'strict '
-                if self.directed:
-                    s += "digraph"
-                else:
-                    s += "graph"
-                return "%s %s{\n%s\n%s\n}" % (s,self.name, grstr, attrstr)
-            else:
-                return "%s %s{\n%s\n%s\n%s}" % \
-                    ('subgraph', self.name, grstr, attrstr, padding)
+        if self.strict:
+            s = "%s%s " % (s, "strict")
 
-        subgraphstr = "\n".join([
-            "%s%s" % (padding, n) for n in map(str, self.subgraphs)
-        ])
-
-        nodestr =  "".join(["%s%s" % (padding, n) for n in \
-            map(str,self._nodes.itervalues())])
-        edgestr =  "".join(["%s%s" % (padding, n) for n in \
-            map(str,flatten(self.edges.itervalues()))])
-
-        attrstr = ",".join(["%s=%s" % \
-            (quote_if_necessary(key), quote_if_necessary(val)) \
-                for key,val in self.attr.items()])
-        if attrstr:
-            attrstr = "%sgraph [%s];" % (padding, attrstr)
-        if not isinstance(self, DotSubGraph):
-            s = ""
-            if self.strict:
-                s += 'strict '
-            if self.directed:
-                s += "digraph"
-            else:
-                s += "graph"
-            return "%s %s{\n%s\n%s\n%s\n%s\n}" % \
-                (s, self.name, subgraphstr, attrstr, nodestr, edgestr)
+        if self.directed:
+            s = "%s%s" % (s, "digraph")
         else:
-            return "%s %s{\n%s\n%s\n%s\n%s\n%s}" % \
-                ('subgraph', self.name, subgraphstr, attrstr, nodestr,
-                 edgestr, padding)
+            s = "%s%s" % (s, "graph")
+
+        if self.ID:
+            s = "%s %s {\n" % (s, self.ID)
+        else:
+            s = "%s {\n" % s
+
+        # Graph attributes.
+        attrs = []
+        for trait_name in GRAPH_ATTRIBUTES:
+            value = getattr(self, trait_name)
+            default = self.trait(trait_name).default
+            # FIXME: Alias/Synced traits default to None.
+            if (value != default) and (default is not None):
+                valstr = str(value)
+                if isinstance(value, basestring):
+                    valstr = '"%s"' % valstr
+                    s = "%s%s%s=%s;\n" % (s, padding, trait_name, valstr)
+
+        s += "}"
+
+        return s
+
+
+#        s = ""
+#        padding = self.padding
+#        if len(self.allitems) > 0:
+#            grstr = "".join([
+#                "%s%s" % (padding, n) \
+#                for n in map(str, flatten(self.allitems))]
+#            )
+#            attrstr = ",".join(["%s=%s" % \
+#            (quote_if_necessary(key), quote_if_necessary(val)) \
+#                for key, val in self.attr.items()])
+#            if attrstr:
+#                attrstr = "%sgraph [%s];" % (padding, attrstr)
+#            if not isinstance(self, DotSubGraph):
+#                s = ""
+#                if self.strict:
+#                    s += 'strict '
+#                if self.directed:
+#                    s += "digraph"
+#                else:
+#                    s += "graph"
+#                return "%s %s{\n%s\n%s\n}" % (s,self.name, grstr, attrstr)
+#            else:
+#                return "%s %s{\n%s\n%s\n%s}" % \
+#                    ('subgraph', self.name, grstr, attrstr, padding)
+#
+#        subgraphstr = "\n".join([
+#            "%s%s" % (padding, n) for n in map(str, self.subgraphs)
+#        ])
+#
+#        nodestr =  "".join(["%s%s" % (padding, n) for n in \
+#            map(str,self._nodes.itervalues())])
+#        edgestr =  "".join(["%s%s" % (padding, n) for n in \
+#            map(str,flatten(self.edges.itervalues()))])
+#
+#        attrstr = ",".join(["%s=%s" % \
+#            (quote_if_necessary(key), quote_if_necessary(val)) \
+#                for key,val in self.attr.items()])
+#        if attrstr:
+#            attrstr = "%sgraph [%s];" % (padding, attrstr)
+#        if not isinstance(self, DotSubGraph):
+#            s = ""
+#            if self.strict:
+#                s += 'strict '
+#            if self.directed:
+#                s += "digraph"
+#            else:
+#                s += "graph"
+#            return "%s %s{\n%s\n%s\n%s\n%s\n}" % \
+#                (s, self.name, subgraphstr, attrstr, nodestr, edgestr)
+#        else:
+#            return "%s %s{\n%s\n%s\n%s\n%s\n%s}" % \
+#                ('subgraph', self.name, subgraphstr, attrstr, nodestr,
+#                 edgestr, padding)
 
 
     def __len__(self):
@@ -1142,16 +1103,6 @@ class Graph(HasTraits):
         vp.view_position = [0,0]
         vp.tools.append(ViewportPanTool(vp))
         return vp
-
-
-#    def __graph_default(self):
-#        """ Trait initialiser """
-#
-#        digraph = graph.digraph()
-#        # Add a node for holding graph attributes
-#        digraph.add_node("godot", attrs=[("name", "Godot Graph")])
-#
-#        return digraph
 
 
     def _epsilon_default(self):
@@ -1251,52 +1202,9 @@ class Graph(HasTraits):
             for edge in self.edges:
                 edge.conn = "--"
 
-
-#    def _anytrait_changed(self, name, new):
-#        """ Handles any graph trait changing
-#
-#        Sets the graph attribute for any trait that is a valid unless it is
-#        mapped.  If it is mapped then the mapped trait (ending in '_') value
-#        is set, but without the underscore.
-#
-#        """
-#
-#        if name in MAPPED_GRAPH_ATTRIBUTES:
-#            return
-#        elif name[:-1] in MAPPED_GRAPH_ATTRIBUTES:
-#            self.set_node_attribute("godot", (name[:-1], new))
-#        elif (name in GRAPH_ATTRIBUTES):
-#            self.set_node_attribute("godot", (name, new))
-#
-#
-#        print self._graph.get_node_attributes("godot")
-#        print self.trait(name).default
-##        print hasattr(self, name+"_")
-##        print self.trait(name).is_trait_type(Trait)
-
-
-#    def set_node_attribute(self, node, attr):
-#        """
-#        Set the attribute of the given node
-#
-#        @type  node: node
-#        @param node: Node identifier
-#
-#        @type  attr: tuple
-#        @param attr: Node attribute specified in the form (attribute, value).
-#        """
-#
-#        graph = self._graph
-#
-#        node_attrs = graph.node_attr[node]
-#
-#        # Remove tuple for an existing attribute
-#        attrs = [a for (a, v) in node_attrs]
-#        if attr[0] in attrs:
-#            node_attrs.pop(attrs.index(attr[0]))
-#
-#        graph.add_node_attribute(node, attr)
-
+#------------------------------------------------------------------------------
+#  "Cluster" class:
+#------------------------------------------------------------------------------
 
 class Cluster(Graph):
     """ Defines a representation of a cluster in Graphviz's dot language """
@@ -1307,7 +1215,7 @@ class Cluster(Graph):
         return "t"
 
 #------------------------------------------------------------------------------
-#  Standalone call:
+#  Stand-alone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -1316,6 +1224,15 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    Graph().configure_traits()
+    graph = Graph(ID="Foo", directed=False)
+    node1 = Node("node1", label="Node 1")
+    node2 = Node("node2", label="Node 2", shape="rect")
+    edge = Edge(node1, node2)
+    graph.nodes.extend([node1, node2])
+    graph.edges.append(edge)
+
+    graph.configure_traits()
+
+    print graph
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

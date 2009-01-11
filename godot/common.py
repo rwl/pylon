@@ -61,6 +61,16 @@ def Alias(name, desc=""):
         desc=desc
     )
 
+# Define a 'Synced' property:
+def _get_synced ( self, name ):
+    return getattr( self, self.trait( name ).sync_to )
+
+def _set_synced ( self, name, value ):
+    setattr( self, self.trait( name ).sync_to, value )
+
+Synced = Property( _get_synced, _set_synced )
+
+
 comment_trait = Str(desc="comments inserted into output")
 
 fontcolor_trait = Color(
