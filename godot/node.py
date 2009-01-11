@@ -65,6 +65,17 @@ node_shapes = ["rect", "rectangle", "box", "ellipse", "circle", "invtriangle",
 shape_trait = Enum(node_shapes, desc="node shape", label="Node shape")
 
 #------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+node_attrs = ['URL', 'color', 'color_scheme', 'comment', 'distortion',
+    'fillcolor', 'fixedsize', 'fontcolor', 'fontname', 'fontsize', 'group',
+    'height', 'image', 'imagescale', 'label', 'label_drawing', 'layer',
+    'margin', 'nojustify', 'orientation', 'peripheries', 'pin', 'pos', 'rects',
+    'regular', 'root', 'samplepoints', 'shape', 'shapefile', 'showboxes',
+    'sides', 'skew', 'style', 'target', 'tooltip', 'vertices', 'width', 'z']
+
+#------------------------------------------------------------------------------
 #  "Node" class:
 #------------------------------------------------------------------------------
 
@@ -141,9 +152,7 @@ class Node(Container):
     # Note that a cluster inherits the root graph's attributes if defined.
     # Thus, if the root graph has defined a <html:a rel="attr">fillcolor</html:a>, this will override a
     # <html:a rel="attr">color</html:a> or <html:a rel="attr">bgcolor</html:a> attribute set for the cluster.
-    fillcolor = Color(
-        "grey", desc="fill color for background of a node"
-    )
+    fillcolor = Color("grey", desc="fill color for background of a node")
 
     # If true, the node size is specified by the values of the
     # <html:a rel="attr">width</html:a>
@@ -349,9 +358,8 @@ class Node(Container):
     # image in the shapefile must be rectangular. The image formats supported
     # as well as the precise semantics of how the file is used depends on the
     # output format.
-    shapefile = File(
-        desc="file containing user-supplied node content", label="Shape file"
-    )
+    shapefile = File(desc="file containing user-supplied node content",
+        label="Shape file")
 
     # Print guide boxes in PostScript at the beginning of
     # routesplines if 1, or at the end if 2. (Debugging)
@@ -440,10 +448,8 @@ class Node(Container):
     # layout the graph in 3D but project the layout onto the xy-plane
     # for the rendering. If the <html:a rel="attr">z</html:a> attribute is declared, the final rendering
     # will be in 3D.
-    z = Float(
-        0.0, desc="z coordinate value for 3D layouts and displays",
-        label="z-coordinate"
-    )
+    z = Float(0.0, desc="z coordinate value for 3D layouts and displays",
+        label="z-coordinate")
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -475,39 +481,50 @@ class Node(Container):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-#    def __str__(self):
-#        """ Return a string representing the node when requested by str()
-#        (or print).
-#
-#        @rtype:  string
-#        @return: String representing the node.
-#
-#        """
-#
-##        return "<node object " + self.name + " " + self.label + ">"
-#
-#        attrstr = ",".join(["%s=%s" % \
-#            (quote_if_necessary(key), quote_if_necessary(val)) \
-#                for key, val in self.get_node_attributes()])
-#        if attrstr:
-#            attrstr = "[%s]" % attrstr
-#        return "%s%s;\n" % (quote_if_necessary(self.name), attrstr)
+    def __init__(self, ID, **traits):
+        """ Return a new Edge instance. """
+
+        self.ID = ID
+        super(Container, self).__init__(**traits)
+
+
+    def __str__(self):
+        """ Return a string representing the node when requested by str()
+        (or print).
+
+        @rtype:  string
+        @return: String representing the node.
+
+        """
+
+        attrs = []
+        for trait_name in node_attrs:
+            value = getattr(self, trait_name)
+            if value != self.trait(trait_name).default:
+                attrs.append('%s="%s"' % (trait_name, str(value)))
+
+        if attrs:
+            attrstr = "[%s]" % ", ".join(attrs)
+            return "%s %s;\n" % (self.ID, attrstr)
+        else:
+            return "%s;\n" % self.ID
 
 
 #    def __hash__(self):
 #        return hash(self.ID)
 
+
     @on_trait_change("_draw_")
     def parse_xdot_drawing_directive(self, new):
         """ Parses the drawing directive, updating the node components. """
 
-        print "_draw_", new
-
         components = XdotAttrParser().parse_xdot_data(new)
-        print "COMPONENTS:", components
 
-        container = Container(bounds=[200, 200])
-        self.bounds = bounds=[200, 200]
+        max_x = max([c.bounds[0] for c in components] + [1])
+        max_y = max([c.bounds[1] for c in components] + [1])
+
+        container = Container(bounds=[max_x, max_y])
+        self.bounds = bounds=[max_x, max_y]
         container.add(*components)
         self.drawing = container
 
@@ -577,8 +594,10 @@ node_table_editor = TableEditor(
 if __name__ == "__main__":
     from godot.component.component_viewer import ComponentViewer
 
-    node = Node(_draw_="c 5 -black e 32 18 32 18")
-    viewer = ComponentViewer(component=node)
-    viewer.configure_traits()
+    node = Node("node1", _draw_="c 5 -black e 32 18 32 18")
+    node.configure_traits()
+#    viewer = ComponentViewer(component=node)
+#    viewer.configure_traits()
+    print node
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
