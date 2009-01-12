@@ -28,39 +28,16 @@ References:
 #------------------------------------------------------------------------------
 
 import logging
+import numpy
 
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, exp
-from cvxopt.solvers import cp
+from cvxopt import solvers
 
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
-
-def costfmin(x=None, z=None):
-    """ Evaluates the objective and nonlinear constraint functions.
-
-    F() returns a tuple (m, x0), where m is the number of nonlinear
-    constraints and x0 is a point in the domain of f.
-
-    F(x), with x a dense real matrix of size (n,1), returns a tuple (f, Df).
-    f is a dense real matrix of size (m+1,1).  Df is a dense or sparse real
-    matrix of size (m+1, n).
-
-    F(x,z), with x a dense real matrix of size (n,1) and z a positive dense
-    real matrix of size (m+1,1) returns a tuple (f, Df, H).  H is a square
-    dense or sparse real matrix of size (n, n).
-
-    """
-
-    if x is None:
-        return 0, matrix(0.0, (n, 1))
-
-    if z is None:
-        return val, Df
-
-    return val, Df, H
 
 #------------------------------------------------------------------------------
 #  "OptimalPowerFlow" class:
@@ -94,22 +71,88 @@ class ACOPFRoutine:
     def solve(self):
         """ Solves AC OPF. """
 
-        logger.debug("Solving AC OPF [%s]" % self.network.name)
+        # Turn off output to screen.
+        solvers.options["show_progress"] = False
 
-        n_buses = len(buses)
-        n_branches = len(branches)
-        n_generators = len(generators)
+        network = self.network
+        logger.debug("Solving AC OPF [%s]" % network.name)
+
+        generators = network.in_service_generators
+
+        n_buses = len(network.non_islanded_buses)
+        n_branches = len(network.in_service_branches)
+        n_generators = len(network.in_service_generators)
 
         # The number of non-linear equality constraints.
         n_equality = 2*n_buses
         # The number of control variables.
         n_control = 2*n_buses + 2*n_generators
 
+        # Definition of indexes for optimization variable vector and
+        # constraint vector.
+        ph_base = 0 # Voltage phase angle.
+        ph_end = ph_base + n_buses-1;
+        v_base = ph_end + 1
+        v_end = v_base + n_buses-1
+        pg_base = v_end + 1
+        pg_end = pg_base + n_generators-1
+        qg_base = pg_end + 1
+        qg_end = qg_base + n_generators-1
+#        y_base = qg_end + 1
+#        y_end = y_base + ny - 1
+#        z_base = y_end + 1
+#        z_end = z_base + nz - 1
+
+#        print ph_base, ph_end, v_base, v_end, pg_base, pg_end, qg_base, qg_end
+        print pg_base, pg_end
+
         def F(x=None, z=None):
             """ Evaluates the objective and nonlinear constraint functions. """
 
             if x is None:
                 return n_equality, matrix(0.0, (n_control, 1))
+
+            print "X:", x
+
+            # Evaluate objective function -------------------------------------
+
+            p_gen = x[pg_base:pg_end+1] # Active generation in p.u.
+            q_gen = x[qg_base:qg_end+1] # Reactive generation in p.u.
+
+            # Setting P and Q for each generator triggers re-evaluation of the
+            # generator cost.
+            for i, g in enumerate(generators):
+                g.p = p_gen[i]# * network.mva_base
+                g.q = q_gen[i]# * network.mva_base
+
+            costs = matrix([g.p_cost for g in generators])
+            f = sum(costs)
+            # TODO: Generalised cost term.
+
+
+            # Evaluate cost gradient ------------------------------------------
+
+            # Partial derivative w.r.t. polynomial cost Pg and Qg.
+            df = spmatrix([], [], [], (n_generators*2, 1))
+            for i, g in enumerate(generators):
+                derivative = numpy.polyder(list(g.cost_coeffs))
+                df[i] = numpy.polyval(derivative, g.p) * network.mva_base
+            print "dF_dPgQg:", df
+
+            if z is None:
+                return f, df
+
+
+            # Evaluate cost Hessian -------------------------------------------
+
+            d2f_d2pg = spmatrix([], [], [], (n_generators, 1))
+            d2f_d2qg = spmatrix([], [], [], (n_generators, 1))
+            for i, g in enumerate(generators):
+                der = numpy.polyder(list(g.cost_coeffs))
+                d2f_d2pg[i] = numpy.polyval(der, g.p) * network.mva_base
+                # TODO: Implement reactive power costs.
+
+            return f, df, H
 
 
         # cp(F, G=None, h=None, dims=None, A=None, b=None, kktsolver=None)
@@ -118,7 +161,7 @@ class ACOPFRoutine:
         #     subject to  fk(x) <= 0, k = 1, ..., mnl
         #                 G*x   <= h
         #                 A*x   =  b.
-        solution = cp(F)
+        solution = solvers.cp(F)
 
 
     def _build_additional_linear_constraints(self):
