@@ -68,7 +68,7 @@ shape_trait = Enum(node_shapes, desc="node shape", label="Node shape")
 #  Constants:
 #------------------------------------------------------------------------------
 
-node_attrs = ['URL', 'color', 'color_scheme', 'comment', 'distortion',
+node_attrs = ['URL', 'color', 'colorscheme', 'comment', 'distortion',
     'fillcolor', 'fixedsize', 'fontcolor', 'fontname', 'fontsize', 'group',
     'height', 'image', 'imagescale', 'label', 'label_drawing', 'layer',
     'margin', 'nojustify', 'orientation', 'peripheries', 'pin', 'pos', 'rects',
