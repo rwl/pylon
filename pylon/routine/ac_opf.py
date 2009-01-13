@@ -56,13 +56,43 @@ class ACOPFRoutine:
     network = None
 
     #--------------------------------------------------------------------------
+    #  Algorithm parameters:
+    #--------------------------------------------------------------------------
+
+    # Turns the output to the screen on or off.
+    show_progress = True
+
+    # Maximum number of iterations.
+    max_iterations = 100
+
+    # Absolute accuracy.
+    absolute_tol = 1e-7
+
+    # Relative accuracy.
+    relative_tol = 1e-6
+
+    # Tolerance for feasibility conditions.
+    feasibility_tol = 1e-7
+
+    # Number of iterative refinement steps when solving KKT equations.
+    refinement = 1
+
+    #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, network):
+    def __init__(self, network, show_progress=True, max_iterations=100,
+            absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
+            refinement=1):
         """ Initialises a new ACOPFRoutine instance. """
 
         self.network = network
+        self.show_progress = show_progress
+        self.max_iterations = max_iterations
+        self.absolute_tol = absolute_tol
+        self.relative_tol = relative_tol
+        self.feasibility_tol = feasibility_tol
+        self.refinement = refinement
 
     #--------------------------------------------------------------------------
     #  Solve AC Optimal Power Flow problem:
@@ -72,7 +102,12 @@ class ACOPFRoutine:
         """ Solves AC OPF. """
 
         # Turn off output to screen.
-        solvers.options["show_progress"] = False
+        solvers.options["show_progress"] = self.show_progress
+        solvers.options["maxiters"] = self.max_iterations
+        solvers.options["abstol"] = self.absolute_tol
+        solvers.options["reltol"] = self.relative_tol
+        solvers.options["feastol"] = self.feasibility_tol
+        solvers.options["refinement"] = self.refinement
 
         network = self.network
         logger.debug("Solving AC OPF [%s]" % network.name)
@@ -88,8 +123,7 @@ class ACOPFRoutine:
         # The number of control variables.
         n_control = 2*n_buses + 2*n_generators
 
-        # Definition of indexes for optimization variable vector and
-        # constraint vector.
+        # Definition of indexes for the optimisation variable vector.
         ph_base = 0 # Voltage phase angle.
         ph_end = ph_base + n_buses-1;
         v_base = ph_end + 1
@@ -98,13 +132,8 @@ class ACOPFRoutine:
         pg_end = pg_base + n_generators-1
         qg_base = pg_end + 1
         qg_end = qg_base + n_generators-1
-#        y_base = qg_end + 1
-#        y_end = y_base + ny - 1
-#        z_base = y_end + 1
-#        z_end = z_base + nz - 1
 
-#        print ph_base, ph_end, v_base, v_end, pg_base, pg_end, qg_base, qg_end
-        print pg_base, pg_end
+        # Definition of indexes for the constraint vector
 
         def F(x=None, z=None):
             """ Evaluates the objective and nonlinear constraint functions. """
@@ -129,7 +158,6 @@ class ACOPFRoutine:
             f = sum(costs)
             # TODO: Generalised cost term.
 
-
             # Evaluate cost gradient ------------------------------------------
 
             # Partial derivative w.r.t. polynomial cost Pg and Qg.
@@ -142,7 +170,6 @@ class ACOPFRoutine:
             if z is None:
                 return f, df
 
-
             # Evaluate cost Hessian -------------------------------------------
 
             d2f_d2pg = spmatrix([], [], [], (n_generators, 1))
@@ -151,6 +178,9 @@ class ACOPFRoutine:
                 der = numpy.polyder(list(g.cost_coeffs))
                 d2f_d2pg[i] = numpy.polyval(der, g.p) * network.mva_base
                 # TODO: Implement reactive power costs.
+
+            i = matrix(range(pg_base, qg_end+1)).T
+            H = spmatrix(matrix([d2f_d2pg, d2f_d2qg]), i, i)
 
             return f, df, H
 
