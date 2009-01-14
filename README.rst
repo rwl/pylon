@@ -39,7 +39,7 @@ simulation of electric power systems. Its current features include:
 - AC power flow (Newton-Raphson method) 
 
 Note: Much of the code for the above features is translated from the excellent 
-work of Ray D. Zimmerman, Carlos E. Murillo-Sanchez & Deqiang (David) Gan for 
+work of Ray D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan for 
 the [http://www.pserc.cornell.edu/matpower MATPOWER] project and Frederico 
 Milano for the [http://www.power.uwaterloo.ca/~fmilano/psat.htm PSAT] project. 
 
@@ -113,9 +113,9 @@ was developed as part of the SUPERGEN 3: Highly Distributed Power Systems
 project.
 
 The power flow routines are derived from the MATPOWER project by
-Ray D. Zimmerman, Carlos E. Murillo-Sánchez & Deqiang (David) Gan and the PSAT
+Ray D. Zimmerman, Carlos E. Murillo-Sanchez & Deqiang (David) Gan and the PSAT
 project by Federico Milano. See http://www.pserc.cornell.edu/matpower/ and
-http://www.power .uwaterloo.ca/~fmilano/psat.htm for further details. 
+http://www.power.uwaterloo.ca/~fmilano/psat.htm for further details. 
 
 Contact 
 ======= 

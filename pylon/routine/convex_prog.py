@@ -27,25 +27,12 @@ References:
 
 """
 
-#------------------------------------------------------------------------------
-#  Imports:
-#------------------------------------------------------------------------------
-
 import logging
-
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, exp
 
-#------------------------------------------------------------------------------
-#  Constants:
-#------------------------------------------------------------------------------
+logger = logging.getLogger(__name__)
 
 options = {}
-
-#------------------------------------------------------------------------------
-#  Logging:
-#------------------------------------------------------------------------------
-
-logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  "cpnl" function:
@@ -83,17 +70,23 @@ def cpnl(x, F, constraints):
 
     # Turns output to screen on or off.
     show_progress = options["show_progress"] = True
+    
+    descent_dir = options["descent_dir"] = "newton"
 
     #--------------------------------------------------------------------------
     #  Initialisation:
     #--------------------------------------------------------------------------
 
-    c  = constraints(x)
-    n  = len(x) # Number of primal variables
-    m  = len(c) # Number of constraints
+    try:
+        m, x0 = F()   
+    except:
+        raise ValueError, "function call 'F()' failed"
+    
+    n = len(x0) # Number of primal variables
+    m = m # Number of constraints
     nv = n + m # Total number of primal-dual optimisation variables
-    z  = matrix(1, (m,1), tc="i") # Lagrange multipliers
-    B  = spmatrix(1, range(n), range(n)) # Second-order information
+    z = matrix(1, (m, 1), tc="i") # Lagrange multipliers
+    B = spmatrix(1, range(n), range(n)) # Second-order information
 
     if show_progress:
         print "  i f(x)       lg(mu) sigma   ||rx||  ||rc||  alpha   #ls\n"
@@ -102,11 +95,24 @@ def cpnl(x, F, constraints):
     #  Iterate:
     #--------------------------------------------------------------------------
 
-    # Repeat while the convergence criterion has not been satisfied, and we
-    # haven't reached the maximum number of iterations.
+    # Repeat while the convergence criteria are unsatisfied and the maximum
+    # number of iterations have not been reached.
+    for iters in xrange(MAXITERS + 1):
 
-    iter = 0
-    while iter < MAXITERS:
-        pass
+        # Compute the response and gradient of the objective function
+        f, df, H = F(x)
+        
+        # Compute the response of the inequality constraints
+        c = constraints(x)
+        
+        # Compute the Jacobian of the inequality constraints
+        (J, W) = jacobian(x,z)
+        
+        # Compute the Hessian of the Lagrangian (minus the Hessian of the
+        # objective). Optionally, compute the Hessian of the objective.
+        if descent_dir is "newton":
+            (g, B) = gradient(x)
+        else:
+            g = gradient(x)
 
 # EOF -------------------------------------------------------------------------
