@@ -30,14 +30,56 @@ References:
 import logging
 import numpy
 
-from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, exp
+from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, exp, div
 from cvxopt import solvers
+
+from pylon.routine.util import conj
 
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
+
+#------------------------------------------------------------------------------
+#  "dS_dV" function:
+#------------------------------------------------------------------------------
+
+def dS_dV(Y, v):
+    """
+    Computes the partial derivative of power injection w.r.t. voltage.
+    
+    References:
+        D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbus_dV.m",
+        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+    
+    """
+    
+    j = 0+1j
+    n = len(v)
+    I = Y * v
+    
+    diag_v = spdiag(v)
+    diag_I = spdiag(I)
+    diag_vnorm = spdiag(div(v, abs(v))) # Element-wise division.
+    
+    ds_dvm = diag_v * conj(Y * diag_vnorm) + conj(diag_I) * diag_vnorm
+    ds_dva = j * diag_v * conj(diag_I - Y * diag_v)
+    
+    return ds_dvm, ds_dva
+
+#------------------------------------------------------------------------------
+#  "dSbr_dV" function:
+#------------------------------------------------------------------------------
+
+def dSbr_dV(branches, Y_source, Y_target, v):
+    """ Computes the partial derivative of power flow w.r.t voltage.
+    
+    References:
+        D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbr_dV.m",
+        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+    
+    """
 
 #------------------------------------------------------------------------------
 #  "OptimalPowerFlow" class:
@@ -113,6 +155,7 @@ class ACOPFRoutine:
         logger.debug("Solving AC OPF [%s]" % network.name)
 
         buses = network.non_islanded_buses
+        branches = network.in_service_branches
         generators = network.in_service_generators
         n_buses = len(network.non_islanded_buses)
         n_branches = len(network.in_service_branches)
@@ -126,14 +169,14 @@ class ACOPFRoutine:
         # Definition of indexes for the optimisation variable vector.
         ph_base = 0 # Voltage phase angle.
         ph_end = ph_base + n_buses-1;
-        v_base = ph_end + 1
+        v_base = ph_end + 1 # Voltage amplitude.
         v_end = v_base + n_buses-1
         pg_base = v_end + 1
         pg_end = pg_base + n_generators-1
         qg_base = pg_end + 1
         qg_end = qg_base + n_generators-1
 
-        # Definition of indexes for the constraint vector
+        # TODO: Definition of indexes for the constraint vector.
 
         def F(x=None, z=None):
             """ Evaluates the objective and nonlinear constraint functions. """
@@ -156,23 +199,76 @@ class ACOPFRoutine:
             q_gen = x[qg_base:qg_end+1] # Reactive generation in p.u.
 
             # Setting P and Q for each generator triggers re-evaluation of the
-            # generator cost.
+            # generator cost (See _get_p_cost()).
             for i, g in enumerate(generators):
                 g.p = p_gen[i]# * network.mva_base
                 g.q = q_gen[i]# * network.mva_base
 
             costs = matrix([g.p_cost for g in generators])
-            f = sum(costs)
+            f0 = sum(costs)
             # TODO: Generalised cost term.
 
             # Evaluate cost gradient ------------------------------------------
 
             # Partial derivative w.r.t. polynomial cost Pg and Qg.
-            df = spmatrix([], [], [], (n_generators*2, 1))
+            df0 = spmatrix([], [], [], (n_generators*2, 1))
             for i, g in enumerate(generators):
-                derivative = numpy.polyder(list(g.cost_coeffs))
-                df[i] = numpy.polyval(derivative, g.p) * network.mva_base
-            print "dF_dPgQg:", df
+                der = numpy.polyder(list(g.cost_coeffs))
+                df0[i] = numpy.polyval(der, g.p) * network.mva_base
+            print "dF_dPgQg:", df0
+            
+            # Evaluate nonlinear constraints ----------------------------------
+            
+            # Net injected power in p.u.
+            s = matrix([complex(b.p_surplus, b.q_surplus) for b in buses])
+
+            # Bus voltage vector.
+            v_phase = x[ph_base:ph_end+1]
+            v_amplitude = x[v_base:v_end]   
+#            Va0r = Va0 * pi / 180 #convert to radians
+            v = mul(v_amplitude, exp(j * v_phase)) #element-wise product
+            
+            # Evaluate the power flow equations.
+            Y = make_admittance_matrix(network)
+            mismatch = mul(v, conj(Y * v)) - s
+            
+            # Evaluate power balance equality constraint function values.
+            fk_eq = matrix([mismatch.real(), mismatch.imag()])
+            
+            # Branch power flow inequality constraint function values.
+            # FIXME: This is likely slow. Add source/target_idx branch trait.
+            source_idxs = matrix([buses.index(e.source_bus) for e in branches])
+            target_idxs = matrix([buses.index(e.target_bus) for e in branches])
+            # Complex power in p.u. injected at the source bus.
+            s_source = mul(v[source_idxs], conj(Y_source, v))
+            # Complex power in p.u. injected at the target bus.
+            s_target = mul(v[target_idxs], conj(Y_target, v))
+            
+            s_max = matrix([e.s_max for e in branches])
+            
+            fk_ieq = matrix([abs(s_source)-s_max, abs(s_target)-s_max])
+            
+            # Evaluate partial derivatives of constraints ---------------------
+            # Partial derivative of injected bus power
+            ds_dvm, ds_dva = dS_dV(Y, v) # w.r.t voltage
+            pv_idxs = matrix([buses.index(bus) for bus in buses])
+            ds_dpg = spmatrix(-1, pv_idxs, range(n_generators)) # w.r.t Pg
+            ds_dqg = spmatrix(-j, pv_idxs, range(n_generators)) # w.r.t Qg
+            
+            # Transposed Jacobian of the power balance equality constraints.
+            dfk_eq = sparse([
+                sparse([
+                    ds_dva.real(), ds_dvm.real(), ds_dpg.real(), ds_dqg.real()
+                ]),
+                sparse([
+                    ds_dva.imag(), ds_dvm.imag(), ds_dpg.imag(), ds_dqg.imag()
+                ])
+            ])
+            
+            # Partial derivative of power flow w.r.t voltage.
+            
+            f = matrix([f0, fk_eq, fk_ieq])
+            df = matrix([df0, dfk_eq])
 
             if z is None:
                 return f, df
