@@ -112,8 +112,8 @@ class ACOPFRoutine:
         network = self.network
         logger.debug("Solving AC OPF [%s]" % network.name)
 
+        buses = network.non_islanded_buses
         generators = network.in_service_generators
-
         n_buses = len(network.non_islanded_buses)
         n_branches = len(network.in_service_branches)
         n_generators = len(network.in_service_generators)
@@ -139,11 +139,18 @@ class ACOPFRoutine:
             """ Evaluates the objective and nonlinear constraint functions. """
 
             if x is None:
-                return n_equality, matrix(0.0, (n_control, 1))
-
-            print "X:", x
+                # Compute initial vector.
+                x_ph = matrix([bus.v_phase_guess for bus in buses])
+                # TODO: Initialise V from any present generators.
+                x_v = matrix([bus.v_amplitude_guess for bus in buses])
+                x_pg = matrix([g.p for g in generators])
+                x_qg = matrix([g.q for g in generators])
+                
+                return n_equality, matrix([x_ph, x_v, x_pg, x_qg])
 
             # Evaluate objective function -------------------------------------
+
+            print "X:", x
 
             p_gen = x[pg_base:pg_end+1] # Active generation in p.u.
             q_gen = x[qg_base:qg_end+1] # Reactive generation in p.u.
