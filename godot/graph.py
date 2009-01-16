@@ -1139,7 +1139,7 @@ class Graph(HasTraits):
             if each_edge.to_node not in self.nodes:
                 self.nodes.append(each_edge.to_node)
             # Initialise the edge's list of available nodes.
-            each_edge._nodes = new
+            each_edge._nodes = self.nodes
 
 
     def _edges_items_changed(self, event):
@@ -1167,6 +1167,7 @@ class Graph(HasTraits):
         """ Handles nodes being added and removed.  Maintains each edge's
         list of available nodes. """
 
+        # Set the list of nodes in the graph for each branch.
         for each_edge in self.edges:
             each_edge._nodes = self.nodes
 
