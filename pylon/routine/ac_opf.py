@@ -18,8 +18,8 @@
 """ Optimal power flow routine, translated from MATPOWER.
 
 References:
-    D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, MATPOWER, version 3.2,
-    http://www.pserc.cornell.edu/matpower/
+    D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "runopf.m", MATPOWER,
+    version 3.2, http://www.pserc.cornell.edu/matpower/
 
 """
 
@@ -45,27 +45,27 @@ logger = logging.getLogger(__name__)
 #  "dS_dV" function:
 #------------------------------------------------------------------------------
 
-def dS_dV(Y, v):
+def dSbus_dV(Y, v):
     """
     Computes the partial derivative of power injection w.r.t. voltage.
-    
+
     References:
         D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbus_dV.m",
         MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-    
+
     """
-    
+
     j = 0+1j
     n = len(v)
-    I = Y * v
-    
+    i = Y * v
+
     diag_v = spdiag(v)
-    diag_I = spdiag(I)
+    diag_i = spdiag(i)
     diag_vnorm = spdiag(div(v, abs(v))) # Element-wise division.
-    
-    ds_dvm = diag_v * conj(Y * diag_vnorm) + conj(diag_I) * diag_vnorm
-    ds_dva = j * diag_v * conj(diag_I - Y * diag_v)
-    
+
+    ds_dvm = diag_v * conj(Y * diag_vnorm) + conj(diag_i) * diag_vnorm
+    ds_dva = j * diag_v * conj(diag_i - Y * diag_v)
+
     return ds_dvm, ds_dva
 
 #------------------------------------------------------------------------------
@@ -73,13 +73,108 @@ def dS_dV(Y, v):
 #------------------------------------------------------------------------------
 
 def dSbr_dV(branches, Y_source, Y_target, v):
-    """ Computes the partial derivative of power flow w.r.t voltage.
-    
+    """ Computes the branch power flow vector and the partial derivative of
+    branch power flow w.r.t voltage.
+
     References:
         D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbr_dV.m",
         MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-    
+
     """
+
+    j = 0+1j
+    n_branches = len(branches)
+    n_buses = len(v)
+
+    source_idxs = matrix([e.source_bus_idx for e in branches])
+    target_idxs = matrix([e.target_bus_idx for e in branches])
+
+    # Compute currents.
+    i_source = Y_source * v
+    i_target = Y_target * v
+
+    # dV/dVm = diag(V./abs(V))
+    v_norm = div(v, abs(v))
+
+    diagVsource = spdiag(v[source_idxs])
+    diagIsource = spdiag(i_source)
+    diagVtarget = spdiag(v[target_idxs])
+    diagItarget = spdiag(i_target)
+    diagV = spdiag(v)
+    diagVnorm = spdiag(v_norm)
+
+    # Partial derivative of S w.r.t voltage phase angle.
+    dSf_dVa = j * (conj(diagIsource) * spmatrix(v[source_idx],
+                                                range(n_branches),
+                                                source_idxs,
+                                                (n_branches, n_buses)) - \
+        diagVsource * conj(Y_source * diagV))
+
+    dSt_dVa = j * (conj(diagItarget) * spmatrix(v[target_idx],
+                                                range(n_branches),
+                                                target_idxs,
+                                                (n_branches, n_buses)) - \
+        diagVtarget * conj(Y_target * diagV))
+
+    # Partial derivative of S w.r.t. voltage amplitude.
+    dSf_dVm = diagVsource * conj(Y_source * diagVnorm) + conj(diagIsource) * \
+        spmatrix(v_norm[source_idxs], range(n_branches),
+            source_idxs, (n_branches, n_buses))
+
+    dSt_dVm = diagVtarget * conj(Y_target * diagVnorm) + conj(diagItarget) * \
+        spmatrix(v_norm[target_idxs], range(n_branches),
+            target_idxs, (n_branches, n_buses))
+
+    # Compute power flow vectors.
+    s_source = mul(v[source_idxs], conj(i_source))
+    s_target = mul(v[target_idxs], conj(i_target))
+
+    return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target
+
+#------------------------------------------------------------------------------
+#  "dAbr_dV" function:
+#------------------------------------------------------------------------------
+
+def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
+    """ Computes the partial derivatives of apparent power flow w.r.t voltage.
+
+    References:
+        D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dAbr_dV.m",
+        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+
+    """
+
+    n_branches = len(s_source)
+
+    # Compute apparent powers.
+    a_source = abs(s_source)
+    a_target = abs(s_target)
+
+    # Compute partial derivative of apparent power w.r.t active and
+    # reactive power flows.  Partial derivative must equal 1 for lines with
+    # zero flow to avoid division by zero errors (1 comes from L'Hopital).
+    def zero2one(x):
+        if x != 0: return x
+        else: return 1.0
+
+    p_source = div(s_source.real(), map(zero2one, a_source))
+    q_source = div(s_target.imag(), map(zero2one, a_source))
+    p_target = div(s_target.real(), map(zero2one, a_target))
+    q_target = div(s_target.imag(), map(zero2one, a_target))
+
+    dAf_dPf = spdiag(p_source)
+    dAf_dQf = spdiag(q_source)
+    dAt_dPt = spdiag(p_target)
+    dAt_dQt = spdiag(q_target)
+
+    # Partial derivative of apparent power magnitude w.r.t voltage phase angle.
+    dAf_dVa = dAf_dPf * dSf_dVa.real() + dAf_dQf * dSf_dVa.imag()
+    dAt_dVa = dAt_dPt * dSt_dVa.real() + dAt_dQt * dSt_dVa.imag()
+    # Partial derivative of apparent power magnitude w.r.t. voltage amplitude.
+    dAf_dVm = dAf_dPf * dSf_dVm.real() + dAf_dQf * dSf_dVm.imag()
+    dAt_dVm = dAf_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
+
+    return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
 
 #------------------------------------------------------------------------------
 #  "OptimalPowerFlow" class:
@@ -188,12 +283,10 @@ class ACOPFRoutine:
                 x_v = matrix([bus.v_amplitude_guess for bus in buses])
                 x_pg = matrix([g.p for g in generators])
                 x_qg = matrix([g.q for g in generators])
-                
+
                 return n_equality, matrix([x_ph, x_v, x_pg, x_qg])
 
             # Evaluate objective function -------------------------------------
-
-            print "X:", x
 
             p_gen = x[pg_base:pg_end+1] # Active generation in p.u.
             q_gen = x[qg_base:qg_end+1] # Reactive generation in p.u.
@@ -215,46 +308,44 @@ class ACOPFRoutine:
             for i, g in enumerate(generators):
                 der = numpy.polyder(list(g.cost_coeffs))
                 df0[i] = numpy.polyval(der, g.p) * network.mva_base
-            print "dF_dPgQg:", df0
-            
+
             # Evaluate nonlinear constraints ----------------------------------
-            
+
             # Net injected power in p.u.
             s = matrix([complex(b.p_surplus, b.q_surplus) for b in buses])
 
             # Bus voltage vector.
             v_phase = x[ph_base:ph_end+1]
-            v_amplitude = x[v_base:v_end]   
+            v_amplitude = x[v_base:v_end]
 #            Va0r = Va0 * pi / 180 #convert to radians
             v = mul(v_amplitude, exp(j * v_phase)) #element-wise product
-            
+
             # Evaluate the power flow equations.
             Y = make_admittance_matrix(network)
             mismatch = mul(v, conj(Y * v)) - s
-            
+
             # Evaluate power balance equality constraint function values.
             fk_eq = matrix([mismatch.real(), mismatch.imag()])
-            
+
             # Branch power flow inequality constraint function values.
-            # FIXME: This is likely slow. Add source/target_idx branch trait.
-            source_idxs = matrix([buses.index(e.source_bus) for e in branches])
-            target_idxs = matrix([buses.index(e.target_bus) for e in branches])
+            source_idxs = matrix([e.source_bus_idx for e in branches])
+            target_idxs = matrix([e.target_bus_idx for e in branches])
             # Complex power in p.u. injected at the source bus.
             s_source = mul(v[source_idxs], conj(Y_source, v))
             # Complex power in p.u. injected at the target bus.
             s_target = mul(v[target_idxs], conj(Y_target, v))
-            
+
             s_max = matrix([e.s_max for e in branches])
-            
+
             fk_ieq = matrix([abs(s_source)-s_max, abs(s_target)-s_max])
-            
+
             # Evaluate partial derivatives of constraints ---------------------
             # Partial derivative of injected bus power
-            ds_dvm, ds_dva = dS_dV(Y, v) # w.r.t voltage
+            ds_dvm, ds_dva = dSbus_dV(Y, v) # w.r.t voltage
             pv_idxs = matrix([buses.index(bus) for bus in buses])
             ds_dpg = spmatrix(-1, pv_idxs, range(n_generators)) # w.r.t Pg
             ds_dqg = spmatrix(-j, pv_idxs, range(n_generators)) # w.r.t Qg
-            
+
             # Transposed Jacobian of the power balance equality constraints.
             dfk_eq = sparse([
                 sparse([
@@ -263,12 +354,24 @@ class ACOPFRoutine:
                 sparse([
                     ds_dva.imag(), ds_dvm.imag(), ds_dpg.imag(), ds_dqg.imag()
                 ])
-            ])
-            
-            # Partial derivative of power flow w.r.t voltage.
-            
+            ]).T
+
+            # Partial derivative of branch power flow w.r.t voltage.
+            dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target = \
+                dSbr_dV(branches, Y_source, Y_target, v)
+
+            # Magnitude of complex power flow.
+            df_dVa, dt_dVa, df_dVm, dt_dVm = \
+                dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target)
+
+            # Transposed Jacobian of branch power flow inequality constraints.
+            dfk_ieq = matrix([
+                matrix([df_dVa, df_dVm]),
+                matrix([dt_dVa, dt_dVm])
+            ]).T
+
             f = matrix([f0, fk_eq, fk_ieq])
-            df = matrix([df0, dfk_eq])
+            df = matrix([df0, dfk_eq, dfk_ieq])
 
             if z is None:
                 return f, df
