@@ -28,10 +28,10 @@ namespace. For example:
 #------------------------------------------------------------------------------
 
 from pen import Pen
-from bspline import BSpline
+from bezier import Bezier
 from ellipse import Ellipse
 from polygon import Polygon
-from polyline import Polyline
+#from polyline import Polyline
 from text import Text
 
 # EOF -------------------------------------------------------------------------
