@@ -26,7 +26,7 @@ import logging
 
 from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Delegate, Event, \
-    Array, Bool, Range, Default, Property, Enum, Complex
+    Array, Bool, Range, Default, Property, Enum, Complex, Disallow
 
 from pylon.ui.branch_view import branch_view, line_view, transformer_view
 
@@ -64,23 +64,28 @@ class Branch(HasTraits):
 
     id = String(desc="unique branch identifier")
 
-    source_bus = Instance(
-        Bus, desc="source/from/start Bus instance", allow_none=False
-    )
+    # Source/from/start Bus instance.
+    source_bus = Instance(Bus, desc="source/from/start Bus instance",
+        allow_none=False)
 
-    target_bus = Instance(
-        Bus, desc="target/to/end Bus instance", allow_none=False
-    )
+    # Index of the source bus in the list of all buses.
+    source_bus_idx = Property(Int, depends_on=["source_bus", "buses"])
+
+    # Target/to/end Bus instance.
+    target_bus = Instance(Bus, desc="target/to/end Bus instance",
+        allow_none=False)
+
+    # Index of the target bus in the bus list.
+    target_bus_idx = Property(Int, depends_on=["target_bus", "buses"])
 
     # Parent network:
-    # TODO: Implement Drag-n-Drop and remove this two-way reference
-    network = Instance("pylon.network.Network")
+    # TODO: Add event handlers to the Network class.
+    network = Disallow #Instance("pylon.network.Network")
 
     # List of buses from which to select connections:
-    buses = Property(
-        List(Instance(Bus)),
-        depends_on=["network", "network.buses"]
-    ) #Delegate("network")
+#    buses = Property(List(Instance(Bus)),
+#        depends_on=["network", "network.buses"])
+    buses = List(Instance(Bus), desc="buses present in the network")
 
 #    from_buses = Property(List(Bus), depends_on=["buses", "buses_items"])
 #
@@ -113,13 +118,26 @@ class Branch(HasTraits):
 
     in_service = Bool(True, desc="connection status")
 
-    def _get_buses(self):
+
+    def _get_source_bus_idx(self):
         """ Property getter. """
 
-        if self.network is not None:
-            return self.network.buses
-        else:
-            return []
+        return self.buses.index(self.source_bus)
+
+
+    def _get_target_bus_idx(self):
+        """ Property getter. """
+
+        return self.buses.index(self.target_bus)
+
+
+#    def _get_buses(self):
+#        """ Property getter. """
+#
+#        if self.network is not None:
+#            return self.network.buses
+#        else:
+#            return []
 
     # TransmissionLine --------------------------------------------------------
 
@@ -284,13 +302,12 @@ class Branch(HasTraits):
         self.source_bus = source_bus
         self.target_bus = target_bus
 
-        super(Branch, self).__init__(
-            source_bus=source_bus, target_bus=target_bus, **traits
-        )
+        super(Branch, self).__init__(source_bus=source_bus,
+            target_bus=target_bus, **traits)
 
 
     def _id_default(self):
-        """ Unique identifier initialiser """
+        """ Unique identifier initialiser. """
 
         return self.name + "-#" + uuid.uuid4().hex[:6]
 

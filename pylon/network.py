@@ -216,17 +216,80 @@ class Network(HasTraits):
     traits_view = network_view
 
     #--------------------------------------------------------------------------
+    #  Event handlers:
+    #--------------------------------------------------------------------------
+
+    @on_trait_change("buses.slack")
+    def manage_slack_bus(self, obj, name, old, new):
+        """ Ensures that there is never any more than one slack bus. """
+
+        if new is True:
+            for v in self.buses:
+                if v is not obj and v.slack is True:
+                    v.slack = False
+
+
+    def _buses_items_changed(self, event):
+        """ Handles addition and removal of buses. Ensures no dangling branches
+        by removing connected to a removed bus. Also, maintians each branch's
+        list of buses in the network.
+
+        """
+
+        # Filter out any branches connected to a removed bus.
+        for v in event.removed:
+            self.branches = [e for e in self.branches if not e.source_bus == v]
+            self.branches = [e for e in self.branches if not e.target_bus == v]
+            
+        # Set the list of buses in the graph for each branch.
+        for branch in self.branches:
+            branch.buses = self.buses
+            
+            
+    def _branches_changed(self, new):
+        """ Handles the list of branches changing. Checks that the source and
+        target buses for each branch are present in the network. Sets the list
+        of buses in the network for each branch also. """
+        
+        for branch in new:
+            # Sanity check on the presence of source/target bus in network.
+            if branch.source_bus not in self.buses:
+                raise ValueError, "Source bus [%s] for branch [%s] not " \
+                    "present in network." % (branch.source_bus, branch)
+            if branch.target_bus not in self.buses:
+                raise ValueError, "Target bus [%s] for branch [%s] not " \
+                    "present in network." % (branch.target_bus, branch)
+                
+            # Set the list of buses in the network.
+            branch.buses = self.buses
+            
+            
+    def _branches_items_changed(self, event):
+        """ Handles the addition and removal of branches. Set the list of
+        buses in the network for each new branch. """
+        
+        for branch in event.added:
+            # Sanity check on the presence of source/target bus in network.
+            if branch.source_bus not in self.buses:
+                raise ValueError, "Source bus [%s] for branch [%s] not " \
+                    "present in network." % (branch.source_bus, branch)
+            if branch.target_bus not in self.buses:
+                raise ValueError, "Target bus [%s] for branch [%s] not " \
+                    "present in network." % (branch.target_bus, branch)
+                    
+            # Set the list of buses in the network.
+            branch.buses = self.buses
+
+    #--------------------------------------------------------------------------
     #  Property getters:
     #--------------------------------------------------------------------------
 
-#    @cached_property
     def _get_n_buses(self):
         """ Property getter """
 
         return len(self.buses)
 
 
-#    @cached_property
     def _get_non_islanded_buses(self):
         """ Provides a list of buses that are not islanded
         TODO: Possibly use admittance matrix values
@@ -255,14 +318,12 @@ class Network(HasTraits):
         return non_islanded
 
 
-#    @cached_property
     def _get_n_non_islanded_buses(self):
         """ Property getter """
 
         return len(self.non_islanded_buses)
 
 
-#    @cached_property
     def _get_slack_model(self):
         """ Indicates the current slack bus model """
 
@@ -577,30 +638,6 @@ class Network(HasTraits):
             return max([v.q_lambda for v in self.buses])
         else:
             return 0.0
-
-    #--------------------------------------------------------------------------
-    #  Event handlers:
-    #--------------------------------------------------------------------------
-
-    @on_trait_change("buses.slack")
-    def manage_slack_bus(self, obj, name, old, new):
-        """ Ensure that there is never any more than one slack bus """
-
-        if new is True:
-            for v in self.buses:
-                if v is not obj and v.slack is True:
-                    v.slack = False
-
-
-    def _buses_items_changed(self, event):
-        """ Ensure no dangling objects. Remove any other branch components
-        connected to a removed bus.
-
-        """
-
-        for v in event.removed:
-            self.branches = [e for e in self.branches if not e.source_bus == v]
-            self.branches = [e for e in self.branches if not e.target_bus == v]
 
     #--------------------------------------------------------------------------
     #  Public interface:

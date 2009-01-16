@@ -21,16 +21,44 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from unittest import TestCase, main
+import unittest
 
-from pylon.api import Bus, Branch
+from pylon.api import Network, Bus, Branch
 
 #------------------------------------------------------------------------------
 #  "BranchTest" class:
 #------------------------------------------------------------------------------
 
-class BranchTest(TestCase):
+class BranchTest(unittest.TestCase):
     """ Test case for the Branch class. """
+
+    def test_bus_indexes(self):
+        """ Test the source/target bus index property. """
+
+        n = Network(name="n")
+        bus1 = Bus(name="Bus 1")
+        bus2 = Bus(name="Bus 2")
+        bus3 = Bus(name="Bus 3")
+        n.buses = [bus1, bus2, bus3]
+
+        # Append to list.
+        branch1 = Branch(bus3, bus1)
+        n.branches.append(branch1)
+
+        self.assertEqual(branch1.source_bus_idx, 2)
+        self.assertEqual(branch1.target_bus_idx, 0)
+
+        # Set list.
+        branch2 = Branch(bus2, bus3)
+        branch3 = Branch(bus2, bus1)
+        n.branches = [branch2, branch3]
+
+        self.assertEqual(branch2.source_bus_idx, 1)
+        self.assertEqual(branch2.target_bus_idx, 2)
+
+        # Move branch.
+        branch2.source_bus = bus1
+        self.assertEqual(branch2.source_bus_idx, 0)
 
 
     def test_v_ratio(self):
@@ -82,5 +110,9 @@ class BranchTest(TestCase):
         self.assertNotEqual(e.id, e2.id)
 
         self.assertTrue(len(e.id) > 6)
+
+
+if __name__ == "__main__":
+    unittest.main()
 
 # EOF -------------------------------------------------------------------------
