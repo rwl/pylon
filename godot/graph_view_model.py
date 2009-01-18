@@ -1,0 +1,225 @@
+#------------------------------------------------------------------------------
+#  Copyright (c) 2008 Richard W. Lincoln
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to
+#  deal in the Software without restriction, including without limitation the
+#  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+#  sell copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+#  IN THE SOFTWARE.
+#------------------------------------------------------------------------------
+
+""" Defines a view model for Graphs. """
+
+#------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+import sys
+from os.path import join, dirname, expanduser
+import logging
+import pickle
+
+from enthought.traits.api import \
+    HasTraits, Instance, File, Bool, Str, List, on_trait_change, \
+    Float, Tuple
+
+from enthought.traits.ui.api import \
+    View, Handler, UIInfo, Group, Item, TableEditor, InstanceEditor, \
+    Label, Tabbed, HGroup, VGroup, ModelView, FileEditor, StatusItem, \
+    spring
+
+from enthought.traits.ui.menu import NoButtons, OKCancelButtons, Separator
+from enthought.pyface.api import error, confirm
+from enthought.pyface.image_resource import ImageResource
+from enthought.naming.unique_name import make_unique_name
+from enthought.logger.api import add_log_queue_handler
+from enthought.logger.log_queue_handler import LogQueueHandler
+
+#------------------------------------------------------------------------------
+#  Local imports:
+#------------------------------------------------------------------------------
+
+from godot.api import Graph, Cluster, Node, Edge, DotParser
+from godot.menu import menubar, toolbar
+
+#------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+frame_icon = ImageResource("dot.ico")
+
+#------------------------------------------------------------------------------
+#  "GraphViewModel" class:
+#------------------------------------------------------------------------------
+
+class GraphViewModel(ModelView):
+    """ Defines a view model for Graphs.  """
+
+    #--------------------------------------------------------------------------
+    #  Trait definitions:
+    #--------------------------------------------------------------------------
+
+    # File path to to use for loading/saving/importing/exporting.
+    file = File(filter=["Dot Files (*.dot)|*.dot|All Files (*.*)|*.*|"])
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    # Default model view.
+    traits_view = View(
+        Item("model", show_label=False),
+        id="graph_view_model.graph_view", title="Godot", icon=frame_icon,
+        resizable=True, style="custom", width=.81, height=.81, kind="live",
+        buttons=NoButtons, menubar=menubar, toolbar=toolbar, dock="vertical",
+#        statusbar=[StatusItem(name="status", width=0.5),
+#            StatusItem(name="versions", width=200)]
+    )
+
+    # File selection view.
+    file_view = View(
+        Item(name="file", id="file"),#, editor=FileEditor(entries=6)),
+        id="graph_view_model.file_view", title="Select a file",
+        icon=frame_icon, resizable=True, width=.3, kind="livemodal",
+        buttons=OKCancelButtons
+    )
+
+    #--------------------------------------------------------------------------
+    #  Trait initialisers:
+    #--------------------------------------------------------------------------
+
+
+    #--------------------------------------------------------------------------
+    #  Action handlers:
+    #--------------------------------------------------------------------------
+
+    def new_model(self, info):
+        """ Handles the new Graph action. """
+
+        if info.initialized:
+            self.model = Graph()
+
+
+    def open_file(self, info):
+        """ Handles the open action. """
+
+        if not info.initialized: return # Escape.
+
+        retval = self.edit_traits(parent=info.ui.control, view="file_view")
+
+        if retval.result:
+            fd = None
+            try:
+                fd = open(self.file, "rb")
+                self.model = pickle.load(fd)
+#            except:
+#                error(parent=info.ui.control, title="Load Error",
+#                    message="An error was encountered when loading\nfrom %s"
+#                    % self.file)
+            finally:
+                if fd is not None:
+                    fd.close()
+
+
+    def save(self, info):
+        """ Handles saving the current model to file """
+
+        if not info.initialized:
+            return
+
+        retval = self.edit_traits(parent=info.ui.control, view="file_view")
+
+        if retval.result:
+            fd = None
+            try:
+                fd = open(self.file, "wb")
+                pickle.dump(self.model, fd)
+#            except:
+#                error(
+#                    parent=info.ui.control, title="Save Error",
+#                    message="An error was encountered when saving\nto %s"
+#                    % self.file
+#                )
+            finally:
+                if fd is not None:
+                    fd.close()
+
+
+    def configure_graph(self, info):
+        """ Handles display of the graph dot traits. """
+
+        if info.initialized:
+            self.model.edit_traits(parent=info.ui.control, kind="livemodal")
+
+
+    def about_godot(self, info):
+        """ Handles displaying a view about Godot. """
+
+        if info.initialized:
+            self.edit_traits(view=about_view, parent=info.ui.control,
+                kind="livemodal")
+
+
+    def add_node(self, info):
+        """ Handles adding a Node to the graph. """
+
+        if not info.initialized: return
+
+        graph = self.model
+        IDs = [v.ID for v in graph.nodes]
+        node = Node(ID=make_unique_name("node", IDs))
+        graph.nodes.append(node)
+        retval = node.edit_traits(parent=info.ui.control, kind="livemodal")
+        if not retval.result:
+            graph.nodes.remove(node)
+
+
+    def add_edge(self, info):
+        """ Handles adding an Edge to the graph. """
+
+        if not info.initialized: return
+
+        graph = self.model
+        n_nodes = len(graph.nodes)
+        IDs = [v.ID for v in graph.nodes]
+
+        if n_nodes == 0:
+            from_node = Node(ID=make_unique_name("node", IDs))
+            to_node = Node(ID=make_unique_name("node", IDs))
+        elif n_nodes == 1:
+            from_node = graph.nodes[0]
+            to_node = Node(ID=make_unique_name("node", IDs))
+        else:
+            from_node = graph.nodes[0]
+            to_node = graph.nodes[1]
+
+        edge = Edge(from_node, to_node)
+        graph.edges.append(edge)
+
+        retval = edge.edit_traits(parent=info.ui.control, kind="livemodal")
+
+        if not retval.result:
+            graph.edges.remove(edge)
+
+#------------------------------------------------------------------------------
+#  Stand-alone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    graph = Graph()
+    view_model = GraphViewModel(model=graph)
+    view_model.configure_traits()
+
+# EOF -------------------------------------------------------------------------

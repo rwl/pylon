@@ -26,6 +26,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import uuid
+
 from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
     List, Tuple, ListStr, Range, Instance, on_trait_change
@@ -40,6 +42,7 @@ from enthought.traits.ui.table_filter import \
     EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
 
 from enthought.enable.api import Container
+from enthought.naming.unique_name import make_unique_name
 
 from dot2tex.dotparsing import quote_if_necessary
 
@@ -550,6 +553,21 @@ class Node(Container):
             self.add(new)
 
 #------------------------------------------------------------------------------
+#  Node factory function:
+#------------------------------------------------------------------------------
+
+def node_factory(**row_factory_kw):
+    """ Give new nodes a unique ID. """
+
+    if "__table_editor__" in row_factory_kw:
+        graph = row_factory_kw["__table_editor__"].object
+        ID = make_unique_name("node", [node.ID for node in graph.nodes])
+        del row_factory_kw["__table_editor__"]
+        return Node(ID)
+    else:
+        return Node(uuid.uuid4().hex[:6])
+
+#------------------------------------------------------------------------------
 #  Node table editor:
 #------------------------------------------------------------------------------
 
@@ -571,8 +589,8 @@ node_table_editor = TableEditor(
     show_toolbar=True, deletable=True,
     filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter(),
-    row_factory=Node,
-#    row_factory_kw={"__table_editor__": ""}
+    row_factory=node_factory,
+    row_factory_kw={"__table_editor__": ""}
 )
 
 #------------------------------------------------------------------------------

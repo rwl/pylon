@@ -936,7 +936,8 @@ class Graph(HasTraits):
                 label="Output"
             ), dock="tab",
         ),
-        title="Graph", id="godot.graph", buttons=["OK", "Cancel", "Help"],
+#        title="Graph",
+        id="godot.graph", buttons=["OK", "Cancel", "Help"],
         resizable=True, icon=ImageResource("dot")
     )
 
