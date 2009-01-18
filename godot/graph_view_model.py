@@ -53,6 +53,7 @@ from enthought.logger.log_queue_handler import LogQueueHandler
 
 from godot.api import Graph, Cluster, Node, Edge, DotParser
 from godot.menu import menubar, toolbar
+from graph_view import nodes_view, edges_view, attr_view, about_view
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -83,7 +84,9 @@ class GraphViewModel(ModelView):
         Item("model", show_label=False),
         id="graph_view_model.graph_view", title="Godot", icon=frame_icon,
         resizable=True, style="custom", width=.81, height=.81, kind="live",
-        buttons=NoButtons, menubar=menubar, toolbar=toolbar, dock="vertical",
+        buttons=NoButtons, menubar=menubar,
+#        toolbar=toolbar,
+        dock="vertical",
 #        statusbar=[StatusItem(name="status", width=0.5),
 #            StatusItem(name="versions", width=200)]
     )
@@ -161,15 +164,32 @@ class GraphViewModel(ModelView):
         """ Handles display of the graph dot traits. """
 
         if info.initialized:
-            self.model.edit_traits(parent=info.ui.control, kind="livemodal")
+            self.model.edit_traits(parent=info.ui.control,
+                kind="live", view=attr_view)
+
+
+    def configure_nodes(self, info):
+        """ Handles display of the nodes editor. """
+
+        if info.initialized:
+            self.model.edit_traits(parent=info.ui.control,
+                kind="live", view=nodes_view)
+
+
+    def configure_edges(self, info):
+        """ Handles display of the edges editor. """
+
+        if info.initialized:
+            self.model.edit_traits(parent=info.ui.control,
+                kind="live", view=edges_view)
 
 
     def about_godot(self, info):
         """ Handles displaying a view about Godot. """
 
         if info.initialized:
-            self.edit_traits(view=about_view, parent=info.ui.control,
-                kind="livemodal")
+            self.edit_traits(parent=info.ui.control,
+                kind="livemodal", view=about_view)
 
 
     def add_node(self, info):

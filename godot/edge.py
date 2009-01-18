@@ -33,6 +33,7 @@ from enthought.traits.ui.table_filter import \
     EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
 
 from enthought.enable.api import Container
+from enthought.naming.unique_name import make_unique_name
 
 from dot2tex.dotparsing import quote_if_necessary
 
@@ -504,7 +505,12 @@ class Edge(Container):
 
     traits_view = View(
         Tabbed(
-            Group(["style", "layer", "color", "colorscheme", "dir",
+            Group(
+                Item(name="from_node",
+                    editor=InstanceEditor(name="_nodes", editable=False)),
+                Item(name="to_node",
+                    editor=InstanceEditor(name="_nodes", editable=False)),
+                ["style", "layer", "color", "colorscheme", "dir",
                 "arrowsize", "constraint", "decorate", "showboxes", "tooltip",
                 "edgetooltip", "edgetarget", "target", "comment"],
                 label="Edge"),
@@ -588,6 +594,35 @@ class Edge(Container):
         ]
 
 #------------------------------------------------------------------------------
+#  Edge factory function:
+#------------------------------------------------------------------------------
+
+def edge_factory(**row_factory_kw):
+    """ Give new edges a unique ID. """
+
+    if "__table_editor__" in row_factory_kw:
+        table_editor = row_factory_kw["__table_editor__"]
+        graph = table_editor.object
+        ID = make_unique_name("node", [node.ID for node in graph.nodes])
+
+        n_nodes = len(graph.nodes)
+        IDs = [v.ID for v in graph.nodes]
+
+        if n_nodes == 0:
+            from_node = Node(ID=make_unique_name("node", IDs))
+            to_node = Node(ID=make_unique_name("node", IDs))
+        elif n_nodes == 1:
+            from_node = graph.nodes[0]
+            to_node = Node(ID=make_unique_name("node", IDs))
+        else:
+            from_node = graph.nodes[0]
+            to_node = graph.nodes[1]
+
+        return Edge(from_node, to_node, _nodes=graph.nodes)
+    else:
+        return None
+
+#------------------------------------------------------------------------------
 #  Edge table editor:
 #------------------------------------------------------------------------------
 
@@ -625,8 +660,8 @@ edge_table_editor = TableEditor(
     show_toolbar=True, deletable=True,
     filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter(),
-#    row_factory=edge_factory,
-#    row_factory_kw={"__table_editor__": ""}
+    row_factory=edge_factory,
+    row_factory_kw={"__table_editor__": ""}
 )
 
 #------------------------------------------------------------------------------

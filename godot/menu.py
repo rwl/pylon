@@ -70,9 +70,20 @@ redo_action = Action(name="Redo", action="_on_redo", accelerator="Ctrl+Y",
 #  View actions:
 #------------------------------------------------------------------------------
 
-configure_graph_action = Action(name="&Graph Attributes", accelerator="Ctrl+G",
+configure_graph_action = Action(name="&Graph Attributes",
+    accelerator="Ctrl+G",
     action="configure_graph", image=ImageResource("table"),
     tooltip="Graph Attributes (Ctrl+G)")
+
+configure_nodes_action = Action(name="&Node Table",
+    accelerator="Ctrl+Shift+N",
+    action="configure_nodes", image=ImageResource("table"),
+    tooltip="Nodes (Ctrl+Shift+N)")
+
+configure_edges_action = Action(name="&Edge Table",
+    accelerator="Ctrl+Shift+E",
+    action="configure_edges", image=ImageResource("table"),
+    tooltip="Edges (Ctrl+Shift+E)")
 
 #------------------------------------------------------------------------------
 #  Graph actions:
@@ -108,11 +119,13 @@ file_menu = Menu(
 
 edit_menu = Menu("|", undo_action, redo_action, name="&Edit")
 
-view_menu = Menu("|", configure_graph_action, name="&View")
+view_menu = Menu("|", configure_graph_action, configure_nodes_action,
+    configure_edges_action, name="&View")
 
 graph_menu = Menu("|", node_action, edge_action, name="&Graph")
 
-help_menu = Menu("|", help_action, "_", about_action, name="&Help")
+help_menu = Menu("|", #help_action, "_",
+    about_action, name="&Help")
 
 menubar = MenuBar(file_menu, edit_menu, view_menu, graph_menu, help_menu)
 
@@ -124,7 +137,10 @@ toolbar = ToolBar(
     "|", #close_action, "_",
     new_action, open_action, save_action, "_",
     undo_action, redo_action, "_",
-    node_action, edge_action, configure_graph_action,
+    node_action, edge_action,
+    configure_graph_action,
+    configure_nodes_action,
+    configure_edges_action,
     show_tool_names=False, #show_divider=False
 )
 
