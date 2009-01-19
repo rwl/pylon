@@ -46,6 +46,7 @@ from common import \
 
 from dot2tex.dotparsing import flatten, quote_if_necessary
 
+from graph_view import graph_view, tabbed_view
 from node import Node, node_table_editor
 from edge import Edge, edge_table_editor
 
@@ -97,9 +98,9 @@ class Graph(HasTraits):
     #  * an HTML string (<...>).
     ID = Str
 
-    nodes = List(Instance(Node))
+    nodes = List(Instance(HasTraits)) # List(Instance(Node))
 
-    edges = List(Instance(Edge))
+    edges = List(Instance(HasTraits)) # List(Instance(Edge))
 
     strict = Bool(False)
 
@@ -871,75 +872,11 @@ class Graph(HasTraits):
     #  Views:
     #--------------------------------------------------------------------------
 
-    traits_view = View(
-        Tabbed(
-            Group(
-                Item(name="vp", editor=ComponentEditor(),
-                    show_label=False, id=".viewport"),
-                label="Graph"
-            ),
-            Group(
-                Item(name="nodes", editor=node_table_editor, show_label=False),
-                label="Nodes"
-            ),
-            Group(
-                Item(name="edges", editor=edge_table_editor, show_label=False),
-                label="Edges"
-            ),
-            Group(
-                ["bgcolor", "colorscheme"],
-                Group(
-                    ["charset", "fontcolor", "fontname", "fontnames", "fontpath",
-                     "fontsize"], label="Font", show_border=True
-                ),
-                Group(
-                    ["label", "labelloc", "labeljust", "lp", "nojustify"],
-                    label="Label", show_border=True
-                ),
-                Group(["layers", "layersep"], label="Layer", show_border=True),
-                label="Appearance"
-            ),
-            Group(
-                ["center", "dim", "normalize", "outputorder", "overlap", "pack",
-                 "packmode", "pad", "rankdir", "ranksep", "ratio", "root",
-                 "voro_margin"],
-                 label="Layout"
-            ),
-            Group(
-                ["epsilon", "levelsgap", "maxiter", "mclimit", "mode",
-                 "model", "mosek", "nslimit", "nslimit1", "remincross",
-                 "searchsize"],
-                label="Algorithm"
-            ),
-            Group(
-                Group(
-                    ["clusterrank", "compound"], label="Cluster",
-                    show_border=True
-                ),
-                Group(
-                    ["Damping", "defaultdist", "mindist", "nodesep", "quantum",
-                     "sep", "start"], label="Node", show_border=True
-                ),
-                Group(
-                    ["concentrate", "diredgeconstraints", "esep", "K",
-                     "ordering", "splines"], label="Edge", show_border=True
-                ),
-                label="Children"
-            ),
-            Group(
-                ["dpi", "landscape", "margin", "pagedir", "resolution",
-                 "rotate", "showboxes", "size", "stylesheet"],
-                Group(
-                    ["comment", "target", "URL"], label="Misc",
-                    show_border=True
-                ),
-                label="Output"
-            ), dock="tab",
-        ),
-        title="Graph", id="godot.graph", buttons=["OK", "Cancel", "Help"],
-        resizable=True, icon=ImageResource("dot")
-    )
+    traits_view = tabbed_view
 
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
 
     def __str__(self):
         """ Return a string representing the graph when requested by str()
@@ -1139,7 +1076,7 @@ class Graph(HasTraits):
             if each_edge.to_node not in self.nodes:
                 self.nodes.append(each_edge.to_node)
             # Initialise the edge's list of available nodes.
-            each_edge._nodes = new
+            each_edge._nodes = self.nodes
 
 
     def _edges_items_changed(self, event):
@@ -1167,6 +1104,7 @@ class Graph(HasTraits):
         """ Handles nodes being added and removed.  Maintains each edge's
         list of available nodes. """
 
+        # Set the list of nodes in the graph for each branch.
         for each_edge in self.edges:
             each_edge._nodes = self.nodes
 
