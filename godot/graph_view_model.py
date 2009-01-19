@@ -126,7 +126,8 @@ class GraphViewModel(ModelView):
             fd = None
             try:
                 fd = open(self.file, "rb")
-                self.model = pickle.load(fd)
+                parser = DotParser()
+                self.model = parser.parse_dot_data(self.file)
 #            except:
 #                error(parent=info.ui.control, title="Load Error",
 #                    message="An error was encountered when loading\nfrom %s"
@@ -148,7 +149,7 @@ class GraphViewModel(ModelView):
             fd = None
             try:
                 fd = open(self.file, "wb")
-                pickle.dump(self.model, fd)
+                fd.write(str(self.model))
 #            except:
 #                error(
 #                    parent=info.ui.control, title="Save Error",
@@ -225,13 +226,12 @@ class GraphViewModel(ModelView):
             from_node = graph.nodes[0]
             to_node = graph.nodes[1]
 
-        edge = Edge(from_node, to_node)
-        graph.edges.append(edge)
+        edge = Edge(from_node, to_node, _nodes=graph.nodes)
 
         retval = edge.edit_traits(parent=info.ui.control, kind="livemodal")
 
-        if not retval.result:
-            graph.edges.remove(edge)
+        if retval.result:
+            graph.edges.append(edge)
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
