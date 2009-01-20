@@ -52,17 +52,22 @@ class ExcelWriter:
         network = self.network
         file_or_filename = self.file_or_filename
 
-        if isinstance(file_or_filename, basestring):
-            file = open(file_or_filename, "wb")
-        else:
-            file = file_or_filename
+#        if isinstance(file_or_filename, basestring):
+#            file = open(file_or_filename, "wb")
+#        else:
+#            file = file_or_filename
 
         book = Workbook()
+
+        # Bus -----------------------------------------------------------------
+
         bus_sheet = book.add_sheet("Buses")
 
         for i, bus in enumerate(network.buses):
             for j, attr in enumerate(bus_attrs):
                 bus_sheet.write(i, j, getattr(bus, attr))
+
+        # Branch --------------------------------------------------------------
 
         branch_sheet = book.add_sheet("Branches")
 
@@ -70,10 +75,32 @@ class ExcelWriter:
             for j, attr in enumerate(branch_attrs):
                 branch_sheet.write(i, j, getattr(branch, attr))
 
+        # Generator -----------------------------------------------------------
+
+        generator_sheet = book.add_sheet("Generators")
+
+        for i, bus, in enumerate(network.buses):
+            for j, generator in enumerate(bus.generators):
+                for k, attr in enumerate(generator_attrs):
+                    generator_sheet.write(j, 0, i)
+#                    generator_sheet.write(j, k+1, getattr(generator, attr))
+
+        # Load ----------------------------------------------------------------
+
+        load_sheet = book.add_sheet("Loads")
+
+        for i, attr in enumerate(load_attrs):
+            load_sheet.write(0, i, attr)
+
+        for i, bus, in enumerate(network.buses):
+            for j, load in enumerate(bus.loads):
+                for k, attr in enumerate(load_attrs):
+                    load_sheet.write(j+1, 0, i)
+                    load_sheet.write(j+1, k+1, getattr(load, attr))
 
         book.save(file_or_filename)
 
-        file.close()
+#        file.close()
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
@@ -89,7 +116,7 @@ if __name__ == "__main__":
     branch1 = Branch(bus1, bus2, name="Branch 1")
     n.buses.extend([bus1, bus2])
     n.branches.append(branch1)
-    writer = CSVWriter(n, "/tmp/network.csv")
+    writer = ExcelWriter(n, "/tmp/network.xls")
     writer.write()
 
 # EOF -------------------------------------------------------------------------
