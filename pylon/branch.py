@@ -39,6 +39,15 @@ from pylon.bus import Bus
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
+#  Branch attributes:
+#------------------------------------------------------------------------------
+
+
+branch_attrs = ["source_bus_idx", "target_bus_idx", "name", "mode",
+    "in_service", "r", "x", "b", "s_max", "phase_shift", "phase_shift_max",
+    "phase_shift_min", "in_service"]
+
+#------------------------------------------------------------------------------
 #  'Branch' class:
 #------------------------------------------------------------------------------
 

@@ -21,7 +21,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-import csv
+from pyExcelerator import Workbook, Font, XFStyle, Borders
 
 from pylon.bus import bus_attrs
 from pylon.branch import branch_attrs
@@ -29,25 +29,25 @@ from pylon.generator import generator_attrs
 from pylon.load import load_attrs
 
 #------------------------------------------------------------------------------
-#  "CSVWriter" class:
+#  "ExcelWriter" class:
 #------------------------------------------------------------------------------
 
-class CSVWriter:
-    """ Writes network data to file as CSV. """
+class ExcelWriter:
+    """ Writes network data to file in Excel format. """
 
     network = None
 
     file_or_filename = ""
 
     def __init__(self, network, file_or_filename):
-        """ Initialises a new CSVWriter instance. """
+        """ Initialises a new ExcelWriter instance. """
 
         self.network = network
         self.file_or_filename = file_or_filename
 
 
     def write(self):
-        """ Writes network data to file as CSV. """
+        """ Writes network data to file in Excel format. """
 
         network = self.network
         file_or_filename = self.file_or_filename
@@ -57,48 +57,27 @@ class CSVWriter:
         else:
             file = file_or_filename
 
-        writer = csv.writer(file)
-
-        # Bus -----------------------------------------------------------------
-
-        writer.writerow(bus_attrs)
-
-        for bus in network.buses:
-            values = [getattr(bus, attr) for attr in bus_attrs]
-            print "BUS:", values
-            writer.writerow(values)
-            del values
-
-        # Branch --------------------------------------------------------------
-
-        writer.writerow(branch_attrs)
-
-        for branch in network.branches:
-            values = [getattr(branch, attr) for attr in branch_attrs]
-            writer.writerow(values)
-            del values
-
-        # Generator -----------------------------------------------------------
-
-        writer.writerow(["bus"] + generator_attrs)
+        book = Workbook()
+        bus_sheet = book.add_sheet("Buses")
 
         for i, bus in enumerate(network.buses):
-            for generator in bus.generators:
-                values = [getattr(generator, attr) for attr in generator_attrs]
-                writer.writerow([i] + values)
-                del values
+            for j, attr in enumerate(bus_attrs):
+                bus_sheet.write(i, j, getattr(bus, attr))
 
-        # Load ----------------------------------------------------------------
+        branch_sheet = book.add_sheet("Branches")
 
-        writer.writerow(["bus"] + load_attrs)
+        for i, branch in enumerate(network.branches):
+            for j, attr in enumerate(branch_attrs):
+                branch_sheet.write(i, j, getattr(branch, attr))
 
-        for i, bus in enumerate(network.buses):
-            for load in bus.loads:
-                values = [getattr(load, attr) for attr in load_attrs]
-                writer.writerow([i] + values)
-                del values
+
+        book.save(file_or_filename)
 
         file.close()
+
+#------------------------------------------------------------------------------
+#  Stand-alone call:
+#------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     from pylon.api import Network, Bus, Branch, Generator, Load

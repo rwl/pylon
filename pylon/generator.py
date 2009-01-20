@@ -40,6 +40,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
+#  Generator attributes:
+#------------------------------------------------------------------------------
+
+generator_attrs = ["name", "base_mva", "v_amplitude", "p", "p_max", "p_min",
+    "q", "q_max", "q_min", "c_startup", "c_shutdown", "cost_model",
+    "cost_coeffs", "pwl_points", "p_cost", "u", "rate_up", "rate_down",
+    "min_up", "min_down", "initial_up", "initial_down"]
+
+#------------------------------------------------------------------------------
 #  "Generator" class:
 #------------------------------------------------------------------------------
 
