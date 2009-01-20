@@ -47,8 +47,8 @@ from common import \
 from dot2tex.dotparsing import flatten, quote_if_necessary
 
 from graph_view import graph_view, tabbed_view
-from node import Node, node_table_editor
-from edge import Edge, edge_table_editor
+from node import Node
+from edge import Edge
 
 GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
     "charset", "clusterrank", "colorscheme", "comment", "compound",
@@ -98,9 +98,9 @@ class Graph(HasTraits):
     #  * an HTML string (<...>).
     ID = Str
 
-    nodes = List(Instance(HasTraits)) # List(Instance(Node))
+    nodes = List(Instance(Node))
 
-    edges = List(Instance(HasTraits)) # List(Instance(Edge))
+    edges = List(Instance(Edge))
 
     strict = Bool(False)
 

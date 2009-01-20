@@ -553,47 +553,6 @@ class Node(Container):
             self.add(new)
 
 #------------------------------------------------------------------------------
-#  Node factory function:
-#------------------------------------------------------------------------------
-
-def node_factory(**row_factory_kw):
-    """ Give new nodes a unique ID. """
-
-    if "__table_editor__" in row_factory_kw:
-        graph = row_factory_kw["__table_editor__"].object
-        ID = make_unique_name("node", [node.ID for node in graph.nodes])
-        del row_factory_kw["__table_editor__"]
-        return Node(ID)
-    else:
-        return Node(uuid.uuid4().hex[:6])
-
-#------------------------------------------------------------------------------
-#  Node table editor:
-#------------------------------------------------------------------------------
-
-node_table_editor = TableEditor(
-    columns=[
-        ObjectColumn(name="ID"),
-        ObjectColumn(name="label"),
-        ObjectColumn(name="shape"),
-        ObjectColumn(name="fixedsize"),
-        ObjectColumn(name="width"),
-        ObjectColumn(name="height"),
-        ObjectColumn(name="pos"),
-        ObjectColumn(name="style"),
-        ObjectColumn(name="z")
-    ],
-    other_columns = [  # not initially displayed
-        ObjectColumn(name="sides")
-    ],
-    show_toolbar=True, deletable=True,
-    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
-    search=RuleTableFilter(),
-    row_factory=node_factory,
-    row_factory_kw={"__table_editor__": ""}
-)
-
-#------------------------------------------------------------------------------
 #  Standalone call:
 #------------------------------------------------------------------------------
 
