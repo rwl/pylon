@@ -20,8 +20,8 @@
 #  IN THE SOFTWARE.
 #------------------------------------------------------------------------------
 
-""" Defines a parser for UK Generic Distribution System (UKGDS) data stored as
-    Excel spreadsheets.
+""" Defines a parser for extracting network data stored according to the United
+    Kingdom Generic Distribution System (UKGDS) format in an Excel spreadsheet.
 
     @see: Foote C., Djapic P,. Ault G., Mutale J., Burt G., Strbac G., "United
     Kingdom Generic Distribution System (UKGDS) Software Tools", The Centre for
@@ -63,19 +63,17 @@ def ukgds2dss(infile, outfile):
     # Open the Excel workbook.
     book = xlrd.open_workbook(infile)
 
-    sheet_names = ["System", "Buses", "Loads", "Generators", "IndGenerators",
-        "Shunts", "Branches", "Taps"]
+    # String to be extended with OpenDSS format data and written to file.
+    s = ""
 
-    # Loop throught all of the spreadsheets in the workbook.
-#    for sheet_name in book.sheet_names():
-#        # Skip the sheet if the name is not recognised.
-#        if sheet_name not in sheet_names:
-#            continue
+    # Expected spreadsheet names in the Excel workbook.
+    sheet_names = ["System", "Buses", "Loads", "Generators",
+        "IndGenerators", "Shunts", "Branches", "Taps"]
 
     # Loop through the names of the required spreadsheets.
     for sheet_name in sheet_names:
 
-        # Log error if an expected sheet is not found in the workbook.
+        # Log an error if an expected sheet is not found in the workbook.
         lower_names = [name.lower() for name in book.sheet_names()]
         # Ignore case for comparison.
         if sheet_name.lower() not in lower_names:
@@ -83,13 +81,13 @@ def ukgds2dss(infile, outfile):
             print "Sheet named '%s' not found." % sheet_name
             continue
 
-        # Get the Excel spreadsheet from the workbook.
+        # Get the individual spreadsheet from the workbook.
         sheet = book.sheet_by_name(sheet_name)
 
         # Loop through the rows of the spreadsheet starting at row 30.
         for row_idx in range(29, sheet.nrows):
 
-            # Data types for each cell in the row.
+            # Data types for each cell in the row. @see: format_row() below.
             types = sheet.row_types(row_idx)
 
             # Values for each cell in the row.
@@ -107,6 +105,10 @@ def ukgds2dss(infile, outfile):
 
                 print "SYSTEM:", system_data
 
+#                s += "! %s\n" % system_data["std"]
+#                s += "new object=circuit.%s\n" % "name" # FIXME: Circuit name.
+#                s += "~ basekv=%f\n" % system_data["smb"]
+
             # Ignore upper/lower case sheet name.
             if sheet_name.lower() == "buses":
 
@@ -119,8 +121,23 @@ def ukgds2dss(infile, outfile):
                 # Dictionaries#Dictionary_notation
                 bus_data = dict(zip(symbols, pretty_values[1:]))
 
-                print "BUS:", bus_data
+#                print "BUS:", bus_data
 
+
+    # Write text to file to the output file.
+    fd = None
+    try:
+        fd = open(self.file, "wb")
+        fd.write(s)
+    except:
+        print "An error was encountered writing to the OpenDSS file."
+    finally:
+        if fd is not None:
+            fd.close()
+
+#------------------------------------------------------------------------------
+#  Coerce and format row values according to their type:
+#------------------------------------------------------------------------------
 
 def format_row(types, values):
     """ Coerces and formats row values according to their type. """
