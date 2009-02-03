@@ -29,7 +29,7 @@
 import uuid
 
 from enthought.traits.ui.api import View, Group, Item, Tabbed, Label
-from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.api import TableEditor, InstanceEditor, ListEditor
 from enthought.traits.ui.table_column import ObjectColumn
 from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
 
@@ -178,6 +178,18 @@ edges_item = Item(name="edges", editor=edge_table_editor, show_label=False)
 #  Groups:
 #------------------------------------------------------------------------------
 
+subgraphs_notebook_group = Group(
+    Item( name       = "subgraphs",
+          id         = "notebook",
+          show_label = False,
+          editor     = ListEditor( use_notebook = True,
+                                   deletable    = False,
+                                   export       = 'DockShellWindow',
+                                   page_name    = '.name' )
+    ),
+    label="Subgraphs", id = "subgraphs"
+)
+
 # # TODO: For want of a better word.
 appearance_group = Group(
     ["bgcolor", "colorscheme"],
@@ -248,6 +260,7 @@ tabbed_view = View(
         Group(view_port_item, label="Graph"),
         Group(nodes_item, label="Nodes"),
         Group(edges_item, label="Edges"),
+        subgraphs_notebook_group,
         appearance_group, layout_group,
         algorithm_group, children_group,
         output_group

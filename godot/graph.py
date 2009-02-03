@@ -49,6 +49,8 @@ from dot2tex.dotparsing import flatten, quote_if_necessary
 from graph_view import graph_view, tabbed_view
 from node import Node
 from edge import Edge
+from subgraph import Subgraph
+from cluster import Cluster
 
 GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
     "charset", "clusterrank", "colorscheme", "comment", "compound",
@@ -58,7 +60,7 @@ GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
     "layersep", "levelsgap", "lp", "margin", "maxiter", "mclimit", "mindist",
     "mode", "model", "mosek", "nodesep", "nojustify", "normalize", "nslimit",
     "nslimit1", "ordering", "outputorder", "overlap", "pack", "packmode",
-    "pad", "page", "pagedir", "quantum", "rank", "rankdir", "ranksep",
+    "pad", "page", "pagedir", "quantum", "rankdir", "ranksep",
     "ratio", "remincross", "resolution", "root", "rotate", "searchsize",
     "sep", "showboxes", "size", "splines", "start", "stylesheet", "target",
     "truecolor", "viewport", "voro_margin"]
@@ -87,8 +89,6 @@ class Graph(HasTraits):
     #  Trait definitions.
     #--------------------------------------------------------------------------
 
- #   _graph = Trait(graph.digraph)
-
     # An ID is one of the following:
     #  * Any string of alphabetic ([a-zA-Z\200-\377]) characters, underscores
     #    ('_') or digits ([0-9]), not beginning with a digit;
@@ -98,23 +98,28 @@ class Graph(HasTraits):
     #  * an HTML string (<...>).
     ID = Str
 
+    # Main graph nodes.
     nodes = List(Instance(Node))
 
+    # Graph edges.
     edges = List(Instance(Edge))
 
+    # A strict graph is an unweighted, undirected graph containing no
+	# graph loops or multiple edges.
     strict = Bool(False)
 
+    # Do edges have direction?
     directed = Bool
 
-    subgraphs = List(Instance(This))
+    # Separate layout regions.
+    subgraphs = List(Instance(Subgraph))
+
+    # Clusters are encoded as subgraphs whose names have the prefix 'cluster'.
+    clusters = List(Instance(Cluster))
 
     name = Str
 
     padding = Str("    ")
-
-    parent = Instance(This)
-
-    root = Instance(This)
 
     #--------------------------------------------------------------------------
     #  Enable trait definitions.
@@ -612,16 +617,6 @@ class Graph(HasTraits):
     # will be rounded to integral multiples of the quantum.
     quantum = Float(0.0, desc="If quantum > 0.0, node label dimensions will "
         "be rounded to integral multiples of the quantum.")
-
-    # Rank constraints on the nodes in a subgraph. If rank="same", all nodes
-    # are placed on the same rank. If rank="min", all nodes are placed on the
-    # minimum rank. If rank="source", all nodes are placed on the minimum rank,
-    # and the only nodes on the minimum rank belong to some subgraph whose rank
-    # attribute is "source" or "min". Analogous criteria hold for rank="max"
-    # and rank="sink". (Note: the minimum rank is topmost or leftmost, and the
-    # maximum rank is bottommost or rightmost.)
-    rank = Enum("same", "min", "source", "max", "sink",
-        desc="rank constraints on the nodes in a subgraph")
 
     # Sets direction of graph layout. For example, if <html:a rel="attr">rankdir</html:a>="LR",
     # and barring cycles, an edge <html:code>T -&gt; H;</html:code> will go
@@ -1141,18 +1136,6 @@ class Graph(HasTraits):
                 edge.conn = "--"
 
 #------------------------------------------------------------------------------
-#  "Cluster" class:
-#------------------------------------------------------------------------------
-
-class Cluster(Graph):
-    """ Defines a representation of a cluster in Graphviz's dot language """
-
-    def _labelloc_default(self):
-        """ Trait initialiser """
-
-        return "t"
-
-#------------------------------------------------------------------------------
 #  Stand-alone call:
 #------------------------------------------------------------------------------
 
@@ -1168,6 +1151,9 @@ if __name__ == "__main__":
     edge = Edge(node1, node2)
     graph.nodes.extend([node1, node2])
     graph.edges.append(edge)
+
+    subgraph1 = Subgraph(rank="same")
+    graph.subgraphs.append(subgraph1)
 
     graph.configure_traits()
 
