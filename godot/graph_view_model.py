@@ -77,7 +77,7 @@ class GraphViewModel(ModelView):
     file = File(filter=["Dot Files (*.dot)|*.dot|All Files (*.*)|*.*|"])
 
     # Is the tree view of the network displayed?
-    show_tree = Bool(False, desc="that the network tree view is visible")
+    show_tree = Bool(True, desc="that the network tree view is visible")
 
     # All graphs, subgraphs and clusters.
     all_graphs = Property(List(Instance(HasTraits)))
