@@ -70,6 +70,12 @@ class Cluster(HasTraits):
     # Edges in the cluster.
     edges = List(Instance(Edge))
 
+    # Subgraphs of the cluster.
+    subgraphs = List(Instance("godot.subgraph.Subgraph"))
+
+    # Separate rectangular layout regions.
+    clusters = List(Instance("godot.cluster.Cluster"))
+
     # Parent graph in the graph heirarchy.
 #    parent = Instance("godot.graph:Graph")
 

@@ -77,7 +77,7 @@ class GraphViewModel(ModelView):
     file = File(filter=["Dot Files (*.dot)|*.dot|All Files (*.*)|*.*|"])
 
     # Is the tree view of the network displayed?
-    show_tree = Bool(True, desc="that the network tree view is visible")
+    show_tree = Bool(False, desc="that the network tree view is visible")
 
     # All graphs, subgraphs and clusters.
     all_graphs = Property(List(Instance(HasTraits)))
@@ -95,11 +95,11 @@ class GraphViewModel(ModelView):
             Item(
                 name="model", editor=graph_tree_editor,
                 show_label=False, id=".tree_editor",
-                visible_when="show_tree==True", width=.1
+                visible_when="show_tree==True", width=.14
             ),
             Item("model", show_label=False),
         ),
-        id="graph_view_model.graph_view", title="GODOT", icon=frame_icon,
+        id="graph_view_model.graph_view", title="Godot", icon=frame_icon,
         resizable=True, style="custom", width=.81, height=.81, kind="live",
         buttons=NoButtons, menubar=menubar,
 #        toolbar=toolbar,
@@ -123,7 +123,7 @@ class GraphViewModel(ModelView):
                                       editable = False),
              label  = "Graph"),
         icon = frame_icon, kind = "livemodal", title = "Select a graph",
-        buttons = OKCancelButtons
+        buttons = OKCancelButtons, close_result = False
     )
 
     #--------------------------------------------------------------------------
@@ -246,13 +246,20 @@ class GraphViewModel(ModelView):
     def add_node(self, info):
         """ Handles adding a Node to the graph. """
 
-        if not info.initialized: return
+        if not info.initialized:
+            return
 
-        graph = self.model
+        graph = self._request_graph(info.ui.control)
+
+        if graph is None:
+            return
+
         IDs = [v.ID for v in graph.nodes]
         node = Node(ID=make_unique_name("node", IDs))
         graph.nodes.append(node)
+
         retval = node.edit_traits(parent=info.ui.control, kind="livemodal")
+
         if not retval.result:
             graph.nodes.remove(node)
 
@@ -260,9 +267,14 @@ class GraphViewModel(ModelView):
     def add_edge(self, info):
         """ Handles adding an Edge to the graph. """
 
-        if not info.initialized: return
+        if not info.initialized:
+            return
 
-        graph = self.model
+        graph = self._request_graph(info.ui.control)
+
+        if graph is None:
+            return
+
         n_nodes = len(graph.nodes)
         IDs = [v.ID for v in graph.nodes]
 
@@ -290,32 +302,53 @@ class GraphViewModel(ModelView):
         if not info.initialized:
             return
 
-        if len(self.all_graphs) > 1:
-            retval = self.edit_traits(parent = info.ui.control,
-                                      view   = "all_graphs_view")
-            if not retval.result:
-                return
+        graph = self._request_graph(info.ui.control)
 
-            graph = self.selected_graph
-        else:
-            graph = self.model
-
-        subgraph = Subgraph()#root=graph, parent=graph)
-        retval = subgraph.edit_traits(parent=info.ui.control, kind="livemodal")
-        if retval.result:
-            graph.subgraphs.append(subgraph)
+        if graph is not None:
+            subgraph = Subgraph()#root=graph, parent=graph)
+            retval = subgraph.edit_traits(parent = info.ui.control,
+                                          kind   = "livemodal")
+            if retval.result:
+                graph.subgraphs.append(subgraph)
 
 
     def add_cluster(self, info):
         """ Handles adding a Cluster to the main graph. """
 
-        if not info.initialized: return
+        if not info.initialized:
+            return
 
-        graph = self.model
-        cluster = Cluster()#root=graph, parent=graph)
-        retval = cluster.edit_traits(parent=info.ui.control, kind="livemodal")
-        if retval.result:
-            graph.clusters.append(cluster)
+        graph = self._request_graph(info.ui.control)
+
+        if graph is not None:
+            cluster = Cluster()#root=graph, parent=graph)
+            retval = cluster.edit_traits(parent = info.ui.control,
+                                         kind   = "livemodal")
+            if retval.result:
+                graph.clusters.append(cluster)
+
+
+    def _request_graph(self, parent=None):
+        """ Displays a dialog for graph selection if more than one exists.
+            Returns None if the dialog is canceled.
+        """
+
+        if len(self.all_graphs) > 1:
+            retval = self.edit_traits(parent = parent,
+                                      view   = "all_graphs_view")
+            if not retval.result:
+                return None
+
+            return self.selected_graph
+        else:
+            return self.model
+
+
+    def toggle_tree(self, info):
+        """ Handles displaying the tree view """
+
+        if info.initialized:
+            self.show_tree = not self.show_tree
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

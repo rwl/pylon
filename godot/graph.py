@@ -867,7 +867,8 @@ class Graph(HasTraits):
     #  Views:
     #--------------------------------------------------------------------------
 
-    traits_view = tabbed_view
+#    traits_view = tabbed_view
+    traits_view = graph_view
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -1025,7 +1026,8 @@ class Graph(HasTraits):
     def _canvas_default(self):
         """ Trait initialiser. """
 
-        return Canvas(bgcolor="lightsteelblue", draw_axes=True)
+        return Canvas(bgcolor   = "white",#"lightsteelblue",
+                      draw_axes = False)
 
 
     def _vp_default(self):

@@ -38,21 +38,39 @@ no_view = View()
 
 graph_tree_editor = TreeEditor(
     nodes = [
-        TreeNode(node_for=[Graph], auto_open=True, children="", label="ID"),
-        TreeNode(node_for=[Graph], auto_open=True, children="subgraphs",
+        TreeNode(node_for=[Graph], auto_open=True, children="", label="ID",
+            icon_item="graph", rename_me=True),
+        TreeNode(node_for=[Graph], auto_open=False, children="subgraphs",
             label="=Subgraphs", add=[Subgraph]),
+        TreeNode(node_for=[Graph], auto_open=False, children="clusters",
+            label="=Clusters", add=[Cluster]),
         TreeNode(node_for=[Graph], auto_open=True, children="nodes",
             label="=Nodes", add=[Node]),
+        TreeNode(node_for=[Graph], auto_open=True, children="edges",
+            label="=Edges"),
 
-        TreeNode(node_for=[Subgraph], label="ID"),
+        TreeNode(node_for=[Subgraph], label="ID", icon_item="subgraph"),
         TreeNode(node_for=[Subgraph], auto_open=False, children="subgraphs",
             label="=Subgraphs", add=[Subgraph]),
+        TreeNode(node_for=[Subgraph], auto_open=False, children="clusters",
+            label="=Clusters", add=[Cluster]),
         TreeNode(node_for=[Subgraph], auto_open=False, children="nodes",
             label="=Nodes", add=[Node]),
+        TreeNode(node_for=[Subgraph], children="edges", label="=Edges"),
 
-        TreeNode(node_for=[Node], label="ID"),
+        TreeNode(node_for=[Cluster], label="ID", icon_item="cluster"),
+        TreeNode(node_for=[Cluster], auto_open=False, children="subgraphs",
+            label="=Subgraphs", add=[Subgraph]),
+        TreeNode(node_for=[Cluster], auto_open=False, children="clusters",
+            label="=Clusters", add=[Cluster]),
+        TreeNode(node_for=[Cluster], auto_open=False, children="nodes",
+            label="=Nodes", add=[Node]),
+        TreeNode(node_for=[Cluster], children="edges", label="=Edges"),
+
+        TreeNode(node_for=[Node], label="ID", icon_item="node"),
+        TreeNode(node_for=[Edge], label="ID", icon_item="edge")
     ],
-    orientation="horizontal", editable=False
+    orientation="vertical", editable=False, hide_root=True
 )
 
 # EOF -------------------------------------------------------------------------
