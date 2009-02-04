@@ -32,6 +32,7 @@ example:
 #------------------------------------------------------------------------------
 
 from graph import Graph
+from subgraph import Subgraph
 from cluster import Cluster
 from node import Node
 from edge import Edge

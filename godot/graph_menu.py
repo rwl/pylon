@@ -70,19 +70,25 @@ redo_action = Action(name="Redo", action="_on_redo", accelerator="Ctrl+Y",
 #  View actions:
 #------------------------------------------------------------------------------
 
+tree_view_action = Action(
+    name="Tree", accelerator="Ctrl+T", action="toggle_tree",
+    tooltip="Tree view (Ctrl+T)", #image=ImageResource("tree"),
+    style="toggle", checked=False
+)
+
 configure_graph_action = Action(name="&Graph Attributes",
     accelerator="Ctrl+G",
-    action="configure_graph", image=ImageResource("table"),
+    action="configure_graph", image=ImageResource("graph"),
     tooltip="Graph Attributes (Ctrl+G)")
 
 configure_nodes_action = Action(name="&Node Table",
     accelerator="Ctrl+Shift+N",
-    action="configure_nodes", image=ImageResource("table"),
+    action="configure_nodes", image=ImageResource("node"),
     tooltip="Nodes (Ctrl+Shift+N)")
 
 configure_edges_action = Action(name="&Edge Table",
     accelerator="Ctrl+Shift+E",
-    action="configure_edges", image=ImageResource("table"),
+    action="configure_edges", image=ImageResource("edge"),
     tooltip="Edges (Ctrl+Shift+E)")
 
 #------------------------------------------------------------------------------
@@ -90,10 +96,18 @@ configure_edges_action = Action(name="&Edge Table",
 #------------------------------------------------------------------------------
 
 node_action = Action(name="&Node", accelerator="Alt+N", action="add_node",
-    image=ImageResource("add"), tooltip="Node (Alt+N)")
+    image=ImageResource("node"), tooltip="Node (Alt+N)")
 
 edge_action = Action(name="&Edge", accelerator="Alt+E", action="add_edge",
-    image=ImageResource("add2"), tooltip="Edge (Alt+E)")
+    image=ImageResource("edge"), tooltip="Edge (Alt+E)")
+
+subgraph_action = Action(name="&Subgraph", accelerator="Alt+S",
+    action="add_subgraph", image=ImageResource("subgraph"),
+    tooltip="Subgraph (Alt+S)")
+
+cluster_action = Action(name="&Cluster", accelerator="Alt+C",
+    action="add_cluster", image=ImageResource("cluster"),
+    tooltip="Cluster (Alt+C)")
 
 #------------------------------------------------------------------------------
 #  Help actions:
@@ -119,10 +133,11 @@ file_menu = Menu(
 
 edit_menu = Menu("|", undo_action, redo_action, name="&Edit")
 
-view_menu = Menu("|", configure_graph_action, configure_nodes_action,
-    configure_edges_action, name="&View")
+view_menu = Menu("|", tree_view_action, "_", configure_graph_action,
+    configure_nodes_action, configure_edges_action, name="&View")
 
-graph_menu = Menu("|", node_action, edge_action, name="&Graph")
+graph_menu = Menu("|", node_action, edge_action, subgraph_action,
+    cluster_action, name="&Graph")
 
 help_menu = Menu("|", #help_action, "_",
     about_action, name="&Help")

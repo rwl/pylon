@@ -29,7 +29,7 @@
 import uuid
 
 from enthought.traits.ui.api import View, Group, Item, Tabbed, Label
-from enthought.traits.ui.api import TableEditor, InstanceEditor
+from enthought.traits.ui.api import TableEditor, InstanceEditor, ListEditor
 from enthought.traits.ui.table_column import ObjectColumn
 from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
 
@@ -178,7 +178,31 @@ edges_item = Item(name="edges", editor=edge_table_editor, show_label=False)
 #  Groups:
 #------------------------------------------------------------------------------
 
-# # TODO: For want of a better word.
+subgraphs_notebook_group = Group(
+    Item( "subgraphs@",
+          id         = ".subgraphs_nb",
+          show_label = False,
+          editor     = ListEditor( use_notebook = True,
+                                   deletable    = True,
+                                   export       = 'DockShellWindow',
+                                   page_name    = '.ID' )
+    ),
+    label="Subgraphs", id = ".subgraphs"
+)
+
+clusters_notebook_group = Group(
+    Item( "clusters@",
+          id         = ".clusters_nb",
+          show_label = False,
+          editor     = ListEditor( use_notebook = True,
+                                   deletable    = True,
+                                   export       = "DockShellWindow",
+                                   page_name    = ".ID" )
+    ),
+    label = "Clusters", id = ".clusters"
+)
+
+# FIXME: For want of a better word.
 appearance_group = Group(
     ["bgcolor", "colorscheme"],
     Group(
@@ -248,10 +272,13 @@ tabbed_view = View(
         Group(view_port_item, label="Graph"),
         Group(nodes_item, label="Nodes"),
         Group(edges_item, label="Edges"),
+        subgraphs_notebook_group,
+        clusters_notebook_group,
         appearance_group, layout_group,
         algorithm_group, children_group,
         output_group
-    ), dock="tab",
+    ),
+    dock="tab",
     id="godot.graph.tabbed_view",
     buttons=["OK", "Cancel", "Help"],
     resizable=True, icon=frame_icon
@@ -272,7 +299,7 @@ attr_view = View(
 
 license_label = \
 """
-Copyright (c) 2008 Richard W. Lincoln
+Copyright (c) 2009 Richard W. Lincoln
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
