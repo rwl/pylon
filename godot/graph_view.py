@@ -179,18 +179,30 @@ edges_item = Item(name="edges", editor=edge_table_editor, show_label=False)
 #------------------------------------------------------------------------------
 
 subgraphs_notebook_group = Group(
-    Item( name       = "subgraphs",
-          id         = "notebook",
+    Item( "subgraphs@",
+          id         = ".subgraphs_nb",
           show_label = False,
           editor     = ListEditor( use_notebook = True,
-                                   deletable    = False,
+                                   deletable    = True,
                                    export       = 'DockShellWindow',
-                                   page_name    = '.name' )
+                                   page_name    = '.ID' )
     ),
-    label="Subgraphs", id = "subgraphs"
+    label="Subgraphs", id = ".subgraphs"
 )
 
-# # TODO: For want of a better word.
+clusters_notebook_group = Group(
+    Item( "clusters@",
+          id         = ".clusters_nb",
+          show_label = False,
+          editor     = ListEditor( use_notebook = True,
+                                   deletable    = True,
+                                   export       = "DockShellWindow",
+                                   page_name    = ".ID" )
+    ),
+    label = "Clusters", id = ".clusters"
+)
+
+# FIXME: For want of a better word.
 appearance_group = Group(
     ["bgcolor", "colorscheme"],
     Group(
@@ -261,10 +273,12 @@ tabbed_view = View(
         Group(nodes_item, label="Nodes"),
         Group(edges_item, label="Edges"),
         subgraphs_notebook_group,
+        clusters_notebook_group,
         appearance_group, layout_group,
         algorithm_group, children_group,
         output_group
-    ), dock="tab",
+    ),
+    dock="tab",
     id="godot.graph.tabbed_view",
     buttons=["OK", "Cancel", "Help"],
     resizable=True, icon=frame_icon
@@ -285,7 +299,7 @@ attr_view = View(
 
 license_label = \
 """
-Copyright (c) 2008 Richard W. Lincoln
+Copyright (c) 2009 Richard W. Lincoln
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to

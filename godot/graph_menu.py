@@ -95,6 +95,14 @@ node_action = Action(name="&Node", accelerator="Alt+N", action="add_node",
 edge_action = Action(name="&Edge", accelerator="Alt+E", action="add_edge",
     image=ImageResource("add2"), tooltip="Edge (Alt+E)")
 
+subgraph_action = Action(name="&Subgraph", accelerator="Alt+S",
+    action="add_subgraph", image=ImageResource("dot"),
+    tooltip="Subgraph (Alt+S)")
+
+cluster_action = Action(name="&Cluster", accelerator="Alt+C",
+    action="add_cluster", image=ImageResource("dot"),
+    tooltip="Cluster (Alt+C)")
+
 #------------------------------------------------------------------------------
 #  Help actions:
 #------------------------------------------------------------------------------
@@ -122,7 +130,8 @@ edit_menu = Menu("|", undo_action, redo_action, name="&Edit")
 view_menu = Menu("|", configure_graph_action, configure_nodes_action,
     configure_edges_action, name="&View")
 
-graph_menu = Menu("|", node_action, edge_action, name="&Graph")
+graph_menu = Menu("|", node_action, edge_action, subgraph_action,
+    cluster_action, name="&Graph")
 
 help_menu = Menu("|", #help_action, "_",
     about_action, name="&Help")

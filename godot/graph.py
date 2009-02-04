@@ -117,7 +117,7 @@ class Graph(HasTraits):
     # Clusters are encoded as subgraphs whose names have the prefix 'cluster'.
     clusters = List(Instance(Cluster))
 
-    name = Str
+    name = Alias("ID", desc="synonym for ID") # Used by InstanceEditor
 
     padding = Str("    ")
 
@@ -1152,8 +1152,10 @@ if __name__ == "__main__":
     graph.nodes.extend([node1, node2])
     graph.edges.append(edge)
 
-    subgraph1 = Subgraph(rank="same")
+    subgraph1 = Subgraph(ID="subgraph1", rank="same")
+    subgraph2 = Subgraph(ID="subgraph2", rank="same")
     graph.subgraphs.append(subgraph1)
+    graph.subgraphs.append(subgraph2)
 
     graph.configure_traits()
 

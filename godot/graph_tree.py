@@ -20,24 +20,39 @@
 #  IN THE SOFTWARE.
 #------------------------------------------------------------------------------
 
-""" Use this module for importing Godot names into your namespace. For
-example:
-
-    from godot.api import Graph, Cluster, Node, Edge
-
-"""
+""" Defines a tree editor for Godot graphs. """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from graph import Graph
-from subgraph import Subgraph
-from cluster import Cluster
-from node import Node
-from edge import Edge
+from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item
 
-from dot_parser import DotParser
-from xdot_attr_parser import XdotAttrParser
+from godot.api import Graph, Subgraph, Cluster, Node, Edge
+
+#------------------------------------------------------------------------------
+#  Graph tree editor:
+#------------------------------------------------------------------------------
+
+no_view = View()
+
+graph_tree_editor = TreeEditor(
+    nodes = [
+        TreeNode(node_for=[Graph], auto_open=True, children="", label="ID"),
+        TreeNode(node_for=[Graph], auto_open=True, children="subgraphs",
+            label="=Subgraphs", add=[Subgraph]),
+        TreeNode(node_for=[Graph], auto_open=True, children="nodes",
+            label="=Nodes", add=[Node]),
+
+        TreeNode(node_for=[Subgraph], label="ID"),
+        TreeNode(node_for=[Subgraph], auto_open=False, children="subgraphs",
+            label="=Subgraphs", add=[Subgraph]),
+        TreeNode(node_for=[Subgraph], auto_open=False, children="nodes",
+            label="=Nodes", add=[Node]),
+
+        TreeNode(node_for=[Node], label="ID"),
+    ],
+    orientation="horizontal", editable=False
+)
 
 # EOF -------------------------------------------------------------------------

@@ -33,7 +33,7 @@ from enthought.traits.api import \
     Either, Range, Int, Font, List, Directory, ListInstance, This, ListStr
 
 from enthought.traits.ui.api import \
-    View, Item, Group, Tabbed
+    View, Item, Group, Tabbed, HGroup, VGroup
 
 from common import \
     color_scheme_trait, comment_trait, fontcolor_trait, fontname_trait, \
@@ -42,8 +42,10 @@ from common import \
     showboxes_trait, target_trait, tooltip_trait, url_trait, pointf_trait, \
     color_trait, Alias, point_trait
 
-from node import Node
-from edge import Edge
+from godot.node import Node
+from godot.edge import Edge
+
+from graph_view import nodes_item, edges_item
 
 #------------------------------------------------------------------------------
 #  "Cluster" class:
@@ -57,7 +59,8 @@ class Cluster(HasTraits):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    ID = Str
+    ID = Str("cluster", desc="that clusters are encoded as subgraphs whose "
+        "names have the prefix 'cluster'")
 
     name = Alias("ID", desc="synonym for ID")
 
@@ -66,6 +69,12 @@ class Cluster(HasTraits):
 
     # Edges in the cluster.
     edges = List(Instance(Edge))
+
+    # Parent graph in the graph heirarchy.
+#    parent = Instance("godot.graph:Graph")
+
+    # Root graph instance.
+#    root = Instance("godot.graph:Graph")
 
     #--------------------------------------------------------------------------
     #  Xdot trait definitions:
@@ -284,8 +293,9 @@ class Cluster(HasTraits):
 
     traits_view = View(
         Tabbed(
-            Group(["fixedsize", "K", "style", "tooltip", "target", "URL"],
-                Group(["_draw_", "_ldraw_"], label="Xdot", show_border=True),
+            VGroup(
+                Item("ID"),
+                VGroup(nodes_item, edges_item),
                 label="Cluster"
             ),
             Group(["label", "fontname", "fontsize", "nojustify", "labeljust",
@@ -295,6 +305,10 @@ class Cluster(HasTraits):
             Group(["bgcolor", "color", "colorscheme", "fillcolor", "fontcolor",
                    "pencolor"],
                 label="Color"),
+            Group(["fixedsize", "K", "style", "tooltip", "target", "URL"],
+                Group(["_draw_", "_ldraw_"], label="Xdot", show_border=True),
+                label="Misc"
+            )
         ),
         title="Cluster", id="godot.cluster", buttons=["OK", "Cancel", "Help"],
         resizable=True
@@ -307,7 +321,17 @@ class Cluster(HasTraits):
     def _labelloc_default(self):
         """ Trait initialiser.
         """
-        return "t"
+        return "Top"
+
+    #--------------------------------------------------------------------------
+    #  Event handlers :
+    #--------------------------------------------------------------------------
+
+    def _ID_changed(self, new):
+        """ Handles the ID changing by ensuring that it has a 'cluster' prefix.
+        """
+        if new[:7].lower() != "cluster":
+            self.ID = "cluster_%s" % new
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

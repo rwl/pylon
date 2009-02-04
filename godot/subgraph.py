@@ -28,13 +28,17 @@
 #------------------------------------------------------------------------------
 
 from enthought.traits.api import \
-    HasTraits, Enum, List, Instance, Str
+    HasTraits, Enum, List, Instance, Str, This
 
 from enthought.traits.ui.api import \
-    View, Item, Group, Tabbed
+    View, Item, Group, Tabbed, HGroup, VGroup
 
-from node import Node
-from edge import Edge
+from godot.node import Node
+from godot.edge import Edge
+
+from graph_view import nodes_item, edges_item, subgraphs_notebook_group
+
+from common import Alias
 
 #------------------------------------------------------------------------------
 #  "Subgraph" class:
@@ -48,17 +52,34 @@ class Subgraph(HasTraits):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
+    # An ID is one of the following:
+    #  * Any string of alphabetic ([a-zA-Z\200-\377]) characters, underscores
+    #    ('_') or digits ([0-9]), not beginning with a digit;
+    #  * a number [-]?(.[0-9]+ | [0-9]+(.[0-9]*)? );
+    #  * any double-quoted string ("...") possibly containing escaped
+    #    quotes (\")1;
+    #  * an HTML string (<...>).
+    ID = Str
+
+    name = Alias("ID", desc="synonym for ID") # Used by InstanceEditor
+
     # Subgraph nodes.
     nodes = List(Instance(Node))
 
     # Subgraph edges.
     edges = List(Instance(Edge))
 
+    # Subgraphs of the subgraph.
+    subgraphs = List(Instance("godot.subgraph.Subgraph"))
+
+    # Separate rectangular layout regions.
+    clusters = List(Instance("godot.cluster.Cluster"))
+
     # Parent graph in the graph heirarchy.
-    parent = Instance("godot.graph:Graph")
+#    parent = Instance("godot.graph.Graph")
 
     # Root graph instance.
-    root = Instance("godot.graph:Graph")
+#    root = Instance("godot.graph.Graph")
 
     #--------------------------------------------------------------------------
     #  Xdot trait definitions:
@@ -90,8 +111,16 @@ class Subgraph(HasTraits):
     #  Views:
     #--------------------------------------------------------------------------
 
-    traits_view = View(["rank"], title="Subgraph", id="godot.subgraph",
-        buttons=["OK", "Cancel", "Help"], resizable=True)
+    traits_view = View(
+        VGroup(
+            HGroup(Item("ID"), Item("rank")),
+            VGroup(nodes_item, edges_item, dock="tab"),
+#            subgraphs_notebook_group
+        ),
+        title="Subgraph", id="godot.subgraph",
+        buttons=["OK", "Cancel", "Help"],
+        resizable=True
+    )
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
