@@ -73,7 +73,7 @@ redo_action = Action(name="Redo", action="_on_redo", accelerator="Ctrl+Y",
 tree_view_action = Action(
     name="Tree", accelerator="Ctrl+T", action="toggle_tree",
     tooltip="Tree view (Ctrl+T)", #image=ImageResource("tree"),
-    style="toggle", checked=False
+    style="toggle", checked=True
 )
 
 configure_graph_action = Action(name="&Graph Attributes",

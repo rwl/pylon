@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Table editor for Branch lists """
+""" Table editor for Branch lists. """
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -41,7 +41,7 @@ from pylon.ui.branch_view import branch_view
 #------------------------------------------------------------------------------
 
 def branch_factory(**row_factory_kw):
-    """ Require two or more buses for Branch instantiation """
+    """ Require two or more buses for Branch instantiation. """
 
     if "__table_editor__" in row_factory_kw:
         network = row_factory_kw["__table_editor__"].object
@@ -52,13 +52,13 @@ def branch_factory(**row_factory_kw):
             branch_names = [e.name for e in network.branches]
             branch = Branch(
                 name=make_unique_name("branch", branch_names),
-                network=network,
                 source_bus=network.buses[0],
                 target_bus=network.buses[1]
             )
             del row_factory_kw["__table_editor__"]
-            print branch.source_bus, branch.target_bus
             return branch
+    else:
+        return None
 
 #------------------------------------------------------------------------------
 #  Branches "TableEditor" instance:
