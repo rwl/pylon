@@ -129,8 +129,8 @@ def ukgds2dss(infile, outfile):
     try:
         fd = open(self.file, "wb")
         fd.write(s)
-    except:
-        print "An error was encountered writing to the OpenDSS file."
+#    except:
+#        print "An error was encountered writing to the OpenDSS file."
     finally:
         if fd is not None:
             fd.close()
