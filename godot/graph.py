@@ -882,6 +882,30 @@ class Graph(BaseGraph):
     traits_view = graph_view
 
     #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __str__(self):
+        """ Return a string representing the graph when requested by str()
+        (or print).
+
+        @rtype:  string
+        @return: String representing the graph.
+
+        """
+
+        s = ""
+        if self.strict:
+            s = "%s%s " % (s, "strict")
+
+        if self.directed:
+            s = "%s%s" % (s, "digraph")
+        else:
+            s = "%s%s" % (s, "graph")
+
+        return "%s%s" % (s, super(Graph, self).__str__())
+
+    #--------------------------------------------------------------------------
     #  Public interface:
     #--------------------------------------------------------------------------
 
@@ -898,6 +922,12 @@ class Graph(BaseGraph):
     #--------------------------------------------------------------------------
     #  Trait initialisers:
     #--------------------------------------------------------------------------
+
+    def _dot_attributes_default(self):
+        """ Trait initialiser.
+        """
+        return GRAPH_ATTRIBUTES
+
 
     def _canvas_default(self):
         """ Trait initialiser. """
@@ -958,28 +988,28 @@ class Graph(BaseGraph):
     #  Event handlers:
     #--------------------------------------------------------------------------
 
-    def _nodes_items_changed(self, event):
-        """ Handles nodes being added and removed.  Maintains each edge's
-        list of available nodes. """
-
-#        # Set the list of nodes in the graph for each branch.
-#        for each_edge in self.edges:
-#            each_edge._nodes = self.nodes
-        super(Graph, self)._nodes_items_changed(event)
-
-        # Add new nodes to the canvas.
-        from enthought.enable.primitives.api import Box
-        from enthought.enable.tools.api import MoveTool
-
-        for node in event.added:
-            box = Box(color="steelblue", border_color="darkorchid",
-                border_size=1, bounds=[50, 50], position=[10, 10])
-            box.tools.append(MoveTool(box))
-#           node.add(box)
-            self.canvas.add(box)
-            self.canvas.add(node)
-
-        self.canvas.request_redraw()
+#    def _nodes_items_changed(self, event):
+#        """ Handles nodes being added and removed.  Maintains each edge's
+#        list of available nodes. """
+#
+##        # Set the list of nodes in the graph for each branch.
+##        for each_edge in self.edges:
+##            each_edge._nodes = self.nodes
+#        super(Graph, self)._nodes_items_changed(event)
+#
+#        # Add new nodes to the canvas.
+#        from enthought.enable.primitives.api import Box
+#        from enthought.enable.tools.api import MoveTool
+#
+#        for node in event.added:
+#            box = Box(color="steelblue", border_color="darkorchid",
+#                border_size=1, bounds=[50, 50], position=[10, 10])
+#            box.tools.append(MoveTool(box))
+##           node.add(box)
+#            self.canvas.add(box)
+#            self.canvas.add(node)
+#
+#        self.canvas.request_redraw()
 
 
     def _bgcolor_changed(self, new):
@@ -1011,20 +1041,28 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    graph = Graph(ID="Foo", directed=False)
+    from godot.graph import Graph
+
+    graph = Graph(ID="Foo", strict=True, directed=False, label="Foo Graph",
+        bgcolor="blue")
+
     node1 = Node("node1", label="Node 1")
     node2 = Node("node2", label="Node 2", shape="rect")
     edge = Edge(node1, node2)
     graph.nodes.extend([node1, node2])
     graph.edges.append(edge)
 
-    subgraph1 = Subgraph(ID="subgraph1", rank="same")
-    subgraph2 = Subgraph(ID="subgraph2", rank="same")
+    subgraph1 = Subgraph(ID="subgraph1", rank="min")
+    subgraph1.nodes.append(Node("node3", label="Node 3"))
     graph.subgraphs.append(subgraph1)
-    graph.subgraphs.append(subgraph2)
 
-    graph.configure_traits()
+    subgraph2 = Subgraph(ID="subgraph2", rank="max")
+    subgraph2.nodes.append(Node("node4", label="Node 4"))
+    subgraph1.subgraphs.append(subgraph2)
 
-    print graph
+#    graph.configure_traits()
+
+    from dot_writer import write_dot_graph
+    print write_dot_graph(graph)
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

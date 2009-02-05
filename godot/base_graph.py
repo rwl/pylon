@@ -27,7 +27,7 @@
 #------------------------------------------------------------------------------
 
 from enthought.traits.api \
-    import HasTraits, Str, List, Instance, Bool, Property
+    import HasTraits, Str, List, Instance, Bool, Property, Constant, ReadOnly
 
 from node import Node
 from edge import Edge
@@ -65,6 +65,9 @@ class BaseGraph(HasTraits):
     # Tab width to use for string representation.
     padding = Str("    ")
 
+    # Graph attributes defined in the Dot language.
+    dot_attributes = ReadOnly#Constant()
+
     #--------------------------------------------------------------------------
     #  Xdot trait definitions:
     #--------------------------------------------------------------------------
@@ -78,6 +81,15 @@ class BaseGraph(HasTraits):
     _ldraw_ = Str(desc="xdot label drawing directive")
 
     #--------------------------------------------------------------------------
+    #  Trait initialisers:
+    #--------------------------------------------------------------------------
+
+    def _dot_attributes_default(self):
+        """ Trait initialiser.
+        """
+        return []
+
+    #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
@@ -89,34 +101,23 @@ class BaseGraph(HasTraits):
         @return: String representing the graph.
 
         """
-
-        padding = "    "
-
         s = ""
-        if self.strict:
-            s = "%s%s " % (s, "strict")
-
-        if self.directed:
-            s = "%s%s" % (s, "digraph")
-        else:
-            s = "%s%s" % (s, "graph")
-
         if self.ID:
             s = "%s %s {\n" % (s, self.ID)
         else:
             s = "%s {\n" % s
 
         # Graph attributes.
-#        attrs = []
-#        for trait_name in GRAPH_ATTRIBUTES:
-#            value = getattr(self, trait_name)
-#            default = self.trait(trait_name).default
-#            # FIXME: Alias/Synced traits default to None.
-#            if (value != default) and (default is not None):
-#                valstr = str(value)
-#                if isinstance(value, basestring):
-#                    valstr = '"%s"' % valstr
-#                    s = "%s%s%s=%s;\n" % (s, padding, trait_name, valstr)
+        attrs = []
+        for trait_name in self.dot_attributes:
+            value = getattr(self, trait_name)
+            default = self.trait(trait_name).default
+            # FIXME: Alias/Synced traits default to None.
+            if (value != default) and (default is not None):
+                valstr = str(value)
+                if isinstance(value, basestring):
+                    valstr = '"%s"' % valstr
+                    s = "%s%s%s=%s;\n" % (s, self.padding, trait_name, valstr)
 
         s += "}"
 
@@ -245,25 +246,25 @@ class BaseGraph(HasTraits):
             each_edge._nodes = self.nodes
 
 
-    def _nodes_changed(self, new):
-        """ Handles the list of nodes changing.  Maintains each edge's list
-        of available nodes.
-        """
-        all_nodes = [g.nodes for g in self.all_graphs]
-        # Set the list of nodes in the graph for each branch.
-        for graph in self.all_graphs:
-            for each_edge in graph.edges:
-                each_edge._nodes = all_nodes
-
-
-    def _nodes_items_changed(self, event):
-        """ Handles nodes being added and removed.  Maintains each edge's
-        list of available nodes.
-        """
-        all_nodes = [g.nodes for g in self.all_graphs]
-        # Set the list of nodes in the graph for each branch.
-        for graph in self.all_graphs:
-            for each_edge in graph.edges:
-                each_edge._nodes = all_nodes
+#    def _nodes_changed(self, new):
+#        """ Handles the list of nodes changing.  Maintains each edge's list
+#        of available nodes.
+#        """
+#        all_nodes = [g.nodes for g in self.all_graphs]
+#        # Set the list of nodes in the graph for each branch.
+#        for graph in self.all_graphs:
+#            for each_edge in graph.edges:
+#                each_edge._nodes = all_nodes
+#
+#
+#    def _nodes_items_changed(self, event):
+#        """ Handles nodes being added and removed.  Maintains each edge's
+#        list of available nodes.
+#        """
+#        all_nodes = [g.nodes for g in self.all_graphs]
+#        # Set the list of nodes in the graph for each branch.
+#        for graph in self.all_graphs:
+#            for each_edge in graph.edges:
+#                each_edge._nodes = all_nodes
 
 # EOF -------------------------------------------------------------------------
