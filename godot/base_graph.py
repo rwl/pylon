@@ -31,7 +31,7 @@ from enthought.traits.api \
 
 from node import Node
 from edge import Edge
-from common import Alias
+from common import id_trait, Alias
 
 #------------------------------------------------------------------------------
 #  "BaseGraph" class:
@@ -44,15 +44,10 @@ class BaseGraph(HasTraits):
     #  Trait definitions.
     #--------------------------------------------------------------------------
 
-    # An ID is one of the following:
-    #  * Any string of alphabetic ([a-zA-Z\200-\377]) characters, underscores
-    #    ('_') or digits ([0-9]), not beginning with a digit;
-    #  * a number [-]?(.[0-9]+ | [0-9]+(.[0-9]*)? );
-    #  * any double-quoted string ("...") possibly containing escaped
-    #    quotes (\")1;
-    #  * an HTML string (<...>).
-    ID = Str
+    # Optional unique identifier.
+    ID = id_trait
 
+    # Synonym for ID.
     name = Alias("ID", desc="synonym for ID") # Used by InstanceEditor
 
     # Main graph nodes.
@@ -112,16 +107,16 @@ class BaseGraph(HasTraits):
             s = "%s {\n" % s
 
         # Graph attributes.
-        attrs = []
-        for trait_name in GRAPH_ATTRIBUTES:
-            value = getattr(self, trait_name)
-            default = self.trait(trait_name).default
-            # FIXME: Alias/Synced traits default to None.
-            if (value != default) and (default is not None):
-                valstr = str(value)
-                if isinstance(value, basestring):
-                    valstr = '"%s"' % valstr
-                    s = "%s%s%s=%s;\n" % (s, padding, trait_name, valstr)
+#        attrs = []
+#        for trait_name in GRAPH_ATTRIBUTES:
+#            value = getattr(self, trait_name)
+#            default = self.trait(trait_name).default
+#            # FIXME: Alias/Synced traits default to None.
+#            if (value != default) and (default is not None):
+#                valstr = str(value)
+#                if isinstance(value, basestring):
+#                    valstr = '"%s"' % valstr
+#                    s = "%s%s%s=%s;\n" % (s, padding, trait_name, valstr)
 
         s += "}"
 

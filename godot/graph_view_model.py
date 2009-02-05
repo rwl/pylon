@@ -33,12 +33,12 @@ import pickle
 
 from enthought.traits.api import \
     HasTraits, Instance, File, Bool, Str, List, on_trait_change, \
-    Float, Tuple, Property, Delegate
+    Float, Tuple, Property, Delegate, Code, Button
 
 from enthought.traits.ui.api import \
     View, Handler, UIInfo, Group, Item, TableEditor, InstanceEditor, \
     Label, Tabbed, HGroup, VGroup, ModelView, FileEditor, StatusItem, \
-    spring
+    spring, TextEditor
 
 from enthought.traits.ui.menu import NoButtons, OKCancelButtons, Separator
 from enthought.pyface.api import error, confirm, YES
@@ -91,7 +91,10 @@ class GraphViewModel(ModelView):
     selected_graph = Instance(BaseGraph, allow_none=False)
 
     # Exit confirmation.
-    prompt_on_exit = Bool(True, desc="exit confirmation request")
+    prompt_on_exit = Bool(False, desc="exit confirmation request")
+
+    # Representation of the graph in the Dot language.
+    dot_code = Str
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -147,6 +150,15 @@ class GraphViewModel(ModelView):
              label        = "Graph" ),
         icon = frame_icon, kind = "livemodal", title = "Options",
         buttons = OKCancelButtons, close_result = True
+    )
+
+    # Text representation of the graph viewed in a text editor
+    dot_code_view = View(
+        Item("dot_code", show_label=False, style="custom"),
+        id="godot.view_model.dot_code",
+        icon = frame_icon, kind = "livemodal",
+        title = "Dot Code", resizable = True,
+        buttons = OKCancelButtons, height=.3, width=.3
     )
 
     #--------------------------------------------------------------------------
@@ -364,6 +376,23 @@ class GraphViewModel(ModelView):
                               kind   = "livemodal",
                               view   = "options_view" )
 
+
+    def configure_dot_code(self, info):
+        """ Handles display of the dot code in a text editor.
+        """
+        if not info.initialized:
+            return
+
+        self.dot_code = str(self.model)
+        retval = self.edit_traits( parent = info.ui.control,
+                                   kind   = "livemodal",
+                                   view   = "dot_code_view" )
+        if retval.result:
+            parser = DotParser()
+            graph  = parser.parse_dot_data(self.dot_code)
+            if graph is not None:
+                self.model = graph
+
     #---------------------------------------------------------------------------
     #  Handle the user attempting to exit Godot:
     #---------------------------------------------------------------------------
@@ -391,7 +420,7 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    graph = Graph(ID="Main Graph")
+    graph = Graph(ID="G")
     sg1 = Subgraph(ID="SG1")
     graph.subgraphs.append(sg1)
     sg2 = Subgraph(ID="SG2")

@@ -59,12 +59,14 @@ close_action = Action(name="E&xit", accelerator="Alt+X", action="on_exit",
 # Action to undo last change.
 undo_action = Action(name="Undo", action="_on_undo", accelerator="Ctrl+Z",
     defined_when="ui.history is not None", enabled_when="ui.history.can_undo",
-    image=ImageResource("undo"), tooltip="Undo (Ctrl+Z)")
+#    image=ImageResource("undo"),
+    tooltip="Undo (Ctrl+Z)")
 
 # Action to redo last undo.
 redo_action = Action(name="Redo", action="_on_redo", accelerator="Ctrl+Y",
     defined_when="ui.history is not None", enabled_when="ui.history.can_redo",
-    image=ImageResource("redo.png"), tooltip="Redo (Ctrl+Y)")
+#    image=ImageResource("redo.png"),
+    tooltip="Redo (Ctrl+Y)")
 
 options_action = Action(name="Prefere&nces", action="godot_options")
 
@@ -92,6 +94,10 @@ configure_edges_action = Action(name="&Edge Table",
     accelerator="Ctrl+Shift+E",
     action="configure_edges", image=ImageResource("edge"),
     tooltip="Edges (Ctrl+Shift+E)")
+
+configure_dot_code_action = Action(name="&Dot Editor", accelerator="Ctrl+D",
+    action="configure_dot_code", image=ImageResource("graph"),
+    tooltip="Dot Editor (Ctrl+D)")
 
 #------------------------------------------------------------------------------
 #  Graph actions:
@@ -137,7 +143,8 @@ edit_menu = Menu("|", undo_action, redo_action, "_", options_action,
     name="&Edit")
 
 view_menu = Menu("|", tree_view_action, "_", configure_graph_action,
-    configure_nodes_action, configure_edges_action, name="&View")
+    configure_nodes_action, configure_edges_action, configure_dot_code_action,
+    name="&View")
 
 graph_menu = Menu("|", node_action, edge_action, subgraph_action,
     cluster_action, name="&Graph")

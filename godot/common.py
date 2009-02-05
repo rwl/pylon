@@ -22,9 +22,26 @@
 
 from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
-    List, Tuple, ListStr, Property, Either
+    List, Tuple, ListStr, Property, Either, Regex
 
 from enthought.enable.colors import ColorTrait
+
+#------------------------------------------------------------------------------
+#  Trait definitions
+#------------------------------------------------------------------------------
+
+# An ID is one of the following:
+#  * Any string of alphabetic ([a-zA-Z\200-\377]) characters, underscores
+#    ('_') or digits ([0-9]), not beginning with a digit;
+#  * a number [-]?(.[0-9]+ | [0-9]+(.[0-9]*)? );
+#  * any double-quoted string ("...") possibly containing escaped
+#    quotes (\")1;
+#  * an HTML string (<...>).
+alphanum = "[a-zA-Z]"#\200-\377] "# | [0-9] "#| [_]"
+number   = "[-]?(.[0-9]+ | [0-9]+(.[0-9]*)? ) "
+dquote   = '\" '
+html     = "<...>"
+id_trait = Regex(regex=alphanum+"|"+number+"|"+dquote+"|"+html)
 
 pointf_trait = Tuple(Float, Float, desc="the point (x,y)")
 
