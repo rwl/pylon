@@ -49,7 +49,7 @@ revert_action = Action(name="Revert", action="_on_revert",
     defined_when="ui.history is not None", enabled_when="ui.history.can_undo")
 
 # Action to close the view window.
-close_action = Action(name="E&xit", accelerator="Alt+X", action="_on_close",
+close_action = Action(name="E&xit", accelerator="Alt+X", action="on_exit",
     image=ImageResource("exit"), tooltip="Exit (Alt+X)")
 
 #------------------------------------------------------------------------------
@@ -65,6 +65,8 @@ undo_action = Action(name="Undo", action="_on_undo", accelerator="Ctrl+Z",
 redo_action = Action(name="Redo", action="_on_redo", accelerator="Ctrl+Y",
     defined_when="ui.history is not None", enabled_when="ui.history.can_redo",
     image=ImageResource("redo.png"), tooltip="Redo (Ctrl+Y)")
+
+options_action = Action(name="Prefere&nces", action="godot_options")
 
 #------------------------------------------------------------------------------
 #  View actions:
@@ -131,7 +133,8 @@ file_menu = Menu(
     close_action, name="&File"
 )
 
-edit_menu = Menu("|", undo_action, redo_action, name="&Edit")
+edit_menu = Menu("|", undo_action, redo_action, "_", options_action,
+    name="&Edit")
 
 view_menu = Menu("|", tree_view_action, "_", configure_graph_action,
     configure_nodes_action, configure_edges_action, name="&View")

@@ -448,9 +448,9 @@ class Node(Container):
 
     traits_view = View(
         Tabbed(
-            Group(["shape", "shapefile", "color", "fillcolor", "colorscheme",
-                "style", "showboxes", "tooltip", "distortion", "sides",
-                "target", "comment"],
+            Group(["ID", "_", "shape", "shapefile", "color", "fillcolor",
+                "colorscheme", "style", "showboxes", "tooltip", "distortion",
+                "sides", "target", "comment"],
                 Group(["_draw_", "_ldraw_"], label="Xdot", show_border=True),
                 label="Node"
             ),

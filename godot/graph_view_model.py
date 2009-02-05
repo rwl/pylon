@@ -33,7 +33,7 @@ import pickle
 
 from enthought.traits.api import \
     HasTraits, Instance, File, Bool, Str, List, on_trait_change, \
-    Float, Tuple, Property
+    Float, Tuple, Property, Delegate
 
 from enthought.traits.ui.api import \
     View, Handler, UIInfo, Group, Item, TableEditor, InstanceEditor, \
@@ -41,7 +41,7 @@ from enthought.traits.ui.api import \
     spring
 
 from enthought.traits.ui.menu import NoButtons, OKCancelButtons, Separator
-from enthought.pyface.api import error, confirm
+from enthought.pyface.api import error, confirm, YES
 from enthought.pyface.image_resource import ImageResource
 from enthought.naming.unique_name import make_unique_name
 from enthought.logger.api import add_log_queue_handler
@@ -51,6 +51,7 @@ from enthought.logger.log_queue_handler import LogQueueHandler
 #  Local imports:
 #------------------------------------------------------------------------------
 
+from godot.base_graph import BaseGraph
 from godot.api import Graph, Cluster, Node, Edge, DotParser, Subgraph
 from godot.graph_menu import menubar, toolbar
 from graph_view import nodes_view, edges_view, attr_view, about_view
@@ -80,10 +81,17 @@ class GraphViewModel(ModelView):
     show_tree = Bool(True, desc="that the network tree view is visible")
 
     # All graphs, subgraphs and clusters.
-    all_graphs = Property(List(Instance(HasTraits)))
+#    all_graphs = Property(List(Instance(HasTraits)))
+    all_graphs = Delegate("model")
+
+    # Select graph when adding to the graph?
+    select_graph = Bool(True)
 
     # Working graph instance.
-    selected_graph = Instance(HasTraits)
+    selected_graph = Instance(BaseGraph, allow_none=False)
+
+    # Exit confirmation.
+    prompt_on_exit = Bool(True, desc="exit confirmation request")
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -122,8 +130,23 @@ class GraphViewModel(ModelView):
              editor = InstanceEditor( name     = "all_graphs",
                                       editable = False),
              label  = "Graph"),
+        Item("select_graph", label="Always ask?"),
         icon = frame_icon, kind = "livemodal", title = "Select a graph",
         buttons = OKCancelButtons, close_result = False
+    )
+
+    # Model view options view.
+    options_view = View(
+        Item("prompt_on_exit"),
+        "_",
+        Item("select_graph"),
+        Item("selected_graph",
+             enabled_when = "not select_graph",
+             editor       = InstanceEditor( name     = "all_graphs",
+                                            editable = False ),
+             label        = "Graph" ),
+        icon = frame_icon, kind = "livemodal", title = "Options",
+        buttons = OKCancelButtons, close_result = True
     )
 
     #--------------------------------------------------------------------------
@@ -134,25 +157,6 @@ class GraphViewModel(ModelView):
         """ Trait intialiser.
         """
         return self.model
-
-    #--------------------------------------------------------------------------
-    #  Property getters:
-    #--------------------------------------------------------------------------
-
-    def _get_all_graphs(self):
-        """ Property getter. """
-
-        top_graph = self.model
-
-        def get_subgraphs(graph):
-            subgraphs = graph.subgraphs[:]
-            for subgraph in graph.subgraphs:
-                subsubgraphs = get_subgraphs(subgraph)
-                subgraphs.extend(subsubgraphs)
-            return subgraphs
-
-        subgraphs = get_subgraphs(top_graph)
-        return [top_graph] + subgraphs
 
     #--------------------------------------------------------------------------
     #  Action handlers:
@@ -280,7 +284,7 @@ class GraphViewModel(ModelView):
 
         if n_nodes == 0:
             from_node = Node(ID=make_unique_name("node", IDs))
-            to_node = Node(ID=make_unique_name("node", IDs))
+            to_node = Node(ID=make_unique_name("node", IDs + [from_node.ID]))
         elif n_nodes == 1:
             from_node = graph.nodes[0]
             to_node = Node(ID=make_unique_name("node", IDs))
@@ -333,12 +337,13 @@ class GraphViewModel(ModelView):
             Returns None if the dialog is canceled.
         """
 
-        if len(self.all_graphs) > 1:
+        if (len(self.all_graphs) > 1) and (self.select_graph):
             retval = self.edit_traits(parent = parent,
                                       view   = "all_graphs_view")
             if not retval.result:
                 return None
 
+        if self.selected_graph is not None:
             return self.selected_graph
         else:
             return self.model
@@ -349,6 +354,32 @@ class GraphViewModel(ModelView):
 
         if info.initialized:
             self.show_tree = not self.show_tree
+
+
+    def godot_options(self, info):
+        """ Handles display of the options menu. """
+
+        if info.initialized:
+            self.edit_traits( parent = info.ui.control,
+                              kind   = "livemodal",
+                              view   = "options_view" )
+
+    #---------------------------------------------------------------------------
+    #  Handle the user attempting to exit Godot:
+    #---------------------------------------------------------------------------
+
+    def on_exit(self, info):
+        """ Handles the user attempting to exit Godot.
+        """
+        if self.prompt_on_exit:# and (not is_ok):
+            retval = confirm(parent  = info.ui.control,
+                             message = "Exit Godot?",
+                             title   = "Confirm exit",
+                             default = YES)
+            if retval == YES:
+                self._on_close( info )
+        else:
+            self._on_close( info )
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

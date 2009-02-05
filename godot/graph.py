@@ -31,7 +31,7 @@ import logging
 
 from enthought.traits.api import \
     HasTraits, Any, Instance, Trait, Tuple, Color, Bool, Str, Enum, Float, \
-    Either, Range, Int, Font, List, Directory, ListInstance, This
+    Either, Range, Int, Font, List, Directory, ListInstance, This, Property
 
 from enthought.traits.ui.api import View, Group, Item, Tabbed
 from enthought.pyface.image_resource import ImageResource
@@ -46,11 +46,17 @@ from common import \
 
 from dot2tex.dotparsing import flatten, quote_if_necessary
 
+from godot.base_graph import BaseGraph
+from godot.node import Node
+from godot.edge import Edge
+from godot.subgraph import Subgraph
+from godot.cluster import Cluster
+
 from graph_view import graph_view, tabbed_view
-from node import Node
-from edge import Edge
-from subgraph import Subgraph
-from cluster import Cluster
+
+#------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
 
 GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
     "charset", "clusterrank", "colorscheme", "comment", "compound",
@@ -82,8 +88,9 @@ start_trait = Enum("regular", "self", "random")
 #  "Graph" class:
 #------------------------------------------------------------------------------
 
-class Graph(HasTraits):
-    """ Defines a representation of a graph in Graphviz's dot language """
+class Graph(BaseGraph):
+    """ Defines a representation of a graph in Graphviz's dot language.
+    """
 
     #--------------------------------------------------------------------------
     #  Trait definitions.
@@ -96,13 +103,15 @@ class Graph(HasTraits):
     #  * any double-quoted string ("...") possibly containing escaped
     #    quotes (\")1;
     #  * an HTML string (<...>).
-    ID = Str
-
-    # Main graph nodes.
-    nodes = List(Instance(Node))
-
-    # Graph edges.
-    edges = List(Instance(Edge))
+#    ID = Str
+#
+#    name = Alias("ID", desc="synonym for ID") # Used by InstanceEditor
+#
+#    # Main graph nodes.
+#    nodes = List(Instance(Node))
+#
+#    # Graph edges.
+#    edges = List(Instance(Edge))
 
     # A strict graph is an unweighted, undirected graph containing no
 	# graph loops or multiple edges.
@@ -111,15 +120,17 @@ class Graph(HasTraits):
     # Do edges have direction?
     directed = Bool
 
-    # Separate layout regions.
-    subgraphs = List(Instance(Subgraph))
+#    # Separate layout regions.
+#    subgraphs = List(Instance(Subgraph))
+#
+#    # Clusters are encoded as subgraphs whose names have the prefix 'cluster'.
+#    clusters = List(Instance(Cluster))
 
-    # Clusters are encoded as subgraphs whose names have the prefix 'cluster'.
-    clusters = List(Instance(Cluster))
+    # All graphs, subgraphs and clusters.
+    all_graphs = Property(List(Instance(BaseGraph)))
 
-    name = Alias("ID", desc="synonym for ID") # Used by InstanceEditor
-
-    padding = Str("    ")
+#    # Tab width to use for string representation.
+#    padding = Str("    ")
 
     #--------------------------------------------------------------------------
     #  Enable trait definitions.
@@ -871,151 +882,16 @@ class Graph(HasTraits):
     traits_view = graph_view
 
     #--------------------------------------------------------------------------
-    #  "object" interface:
-    #--------------------------------------------------------------------------
-
-    def __str__(self):
-        """ Return a string representing the graph when requested by str()
-        (or print).
-
-        @rtype:  string
-        @return: String representing the graph.
-
-        """
-
-        padding = "    "
-
-        s = ""
-        if self.strict:
-            s = "%s%s " % (s, "strict")
-
-        if self.directed:
-            s = "%s%s" % (s, "digraph")
-        else:
-            s = "%s%s" % (s, "graph")
-
-        if self.ID:
-            s = "%s %s {\n" % (s, self.ID)
-        else:
-            s = "%s {\n" % s
-
-        # Graph attributes.
-        attrs = []
-        for trait_name in GRAPH_ATTRIBUTES:
-            value = getattr(self, trait_name)
-            default = self.trait(trait_name).default
-            # FIXME: Alias/Synced traits default to None.
-            if (value != default) and (default is not None):
-                valstr = str(value)
-                if isinstance(value, basestring):
-                    valstr = '"%s"' % valstr
-                    s = "%s%s%s=%s;\n" % (s, padding, trait_name, valstr)
-
-        s += "}"
-
-        return s
-
-
-#        s = ""
-#        padding = self.padding
-#        if len(self.allitems) > 0:
-#            grstr = "".join([
-#                "%s%s" % (padding, n) \
-#                for n in map(str, flatten(self.allitems))]
-#            )
-#            attrstr = ",".join(["%s=%s" % \
-#            (quote_if_necessary(key), quote_if_necessary(val)) \
-#                for key, val in self.attr.items()])
-#            if attrstr:
-#                attrstr = "%sgraph [%s];" % (padding, attrstr)
-#            if not isinstance(self, DotSubGraph):
-#                s = ""
-#                if self.strict:
-#                    s += 'strict '
-#                if self.directed:
-#                    s += "digraph"
-#                else:
-#                    s += "graph"
-#                return "%s %s{\n%s\n%s\n}" % (s,self.name, grstr, attrstr)
-#            else:
-#                return "%s %s{\n%s\n%s\n%s}" % \
-#                    ('subgraph', self.name, grstr, attrstr, padding)
-#
-#        subgraphstr = "\n".join([
-#            "%s%s" % (padding, n) for n in map(str, self.subgraphs)
-#        ])
-#
-#        nodestr =  "".join(["%s%s" % (padding, n) for n in \
-#            map(str,self._nodes.itervalues())])
-#        edgestr =  "".join(["%s%s" % (padding, n) for n in \
-#            map(str,flatten(self.edges.itervalues()))])
-#
-#        attrstr = ",".join(["%s=%s" % \
-#            (quote_if_necessary(key), quote_if_necessary(val)) \
-#                for key,val in self.attr.items()])
-#        if attrstr:
-#            attrstr = "%sgraph [%s];" % (padding, attrstr)
-#        if not isinstance(self, DotSubGraph):
-#            s = ""
-#            if self.strict:
-#                s += 'strict '
-#            if self.directed:
-#                s += "digraph"
-#            else:
-#                s += "graph"
-#            return "%s %s{\n%s\n%s\n%s\n%s\n}" % \
-#                (s, self.name, subgraphstr, attrstr, nodestr, edgestr)
-#        else:
-#            return "%s %s{\n%s\n%s\n%s\n%s\n%s}" % \
-#                ('subgraph', self.name, subgraphstr, attrstr, nodestr,
-#                 edgestr, padding)
-
-
-    def __len__(self):
-        """ Return the order of the graph when requested by len().
-
-        @rtype:  number
-        @return: Size of the graph.
-
-        """
-
-        return len(self.nodes)
-
-
-    def __iter__(self):
-        """ Return a iterator passing through all nodes in the graph.
-
-        @rtype:  iterator
-        @return: Iterator passing through all nodes in the graph.
-
-        """
-
-        for each in self.nodes:
-            yield each
-
-
-    def __getitem__(self, node):
-        """ Return a iterator passing through all neighbors of the given node.
-
-        @rtype:  iterator
-        @return: Iterator passing through all neighbors of the given node.
-
-        """
-
-        for each_edge in self.edges:
-            if (each_edge.from_node == node) or (each_edge.to_node == node):
-                yield each_edge
-
-    #--------------------------------------------------------------------------
     #  Public interface:
     #--------------------------------------------------------------------------
 
     def get_node(self, ID):
-        """ Returns a node given an ID or None if no such node exists. """
-
-        for each_node in self.nodes:
-            if each_node.ID == ID:
-                return each_node
+        """ Returns a node given an ID or None if no such node exists.
+        """
+        for graph in self.all_graphs:
+            for each_node in graph.nodes:
+                if each_node.ID == ID:
+                    return each_node
         else:
             return None
 
@@ -1060,50 +936,36 @@ class Graph(HasTraits):
             return 600
 
     #--------------------------------------------------------------------------
-    #  Event handlers:
+    #  Property getters:
     #--------------------------------------------------------------------------
 
-    def _edges_changed(self, new):
-        """ Handles the list of edges changing. """
+    def _get_all_graphs(self):
+        """ Property getter. """
 
-        for each_edge in new:
-            # Ensure the edge's nodes exist in the graph.
-            if each_edge.from_node not in self.nodes:
-                self.nodes.append(each_edge.from_node)
-            if each_edge.to_node not in self.nodes:
-                self.nodes.append(each_edge.to_node)
-            # Initialise the edge's list of available nodes.
-            each_edge._nodes = self.nodes
+        top_graph = self
 
+        def get_subgraphs(graph):
+            subgraphs = graph.subgraphs[:]
+            for subgraph in graph.subgraphs:
+                subsubgraphs = get_subgraphs(subgraph)
+                subgraphs.extend(subsubgraphs)
+            return subgraphs
 
-    def _edges_items_changed(self, event):
-        """ Handles edges being added and removed. """
+        subgraphs = get_subgraphs(top_graph)
+        return [top_graph] + subgraphs
 
-        for each_edge in event.added:
-            # Ensure the edge's nodes exist in the graph.
-            if each_edge.from_node not in self.nodes:
-                self.nodes.append(each_edge.from_node)
-            if each_edge.to_node not in self.nodes:
-                self.nodes.append(each_edge.to_node)
-            # Initialise the edge's list of available nodes.
-            each_edge._nodes = self.nodes
-
-
-    def _nodes_changed(self, new):
-        """ Handles the list of nodes changing.  Maintains each edge's list
-        of available nodes. """
-
-        for each_edge in self.edges:
-            each_edge._nodes = new
-
+    #--------------------------------------------------------------------------
+    #  Event handlers:
+    #--------------------------------------------------------------------------
 
     def _nodes_items_changed(self, event):
         """ Handles nodes being added and removed.  Maintains each edge's
         list of available nodes. """
 
-        # Set the list of nodes in the graph for each branch.
-        for each_edge in self.edges:
-            each_edge._nodes = self.nodes
+#        # Set the list of nodes in the graph for each branch.
+#        for each_edge in self.edges:
+#            each_edge._nodes = self.nodes
+        super(Graph, self)._nodes_items_changed(event)
 
         # Add new nodes to the canvas.
         from enthought.enable.primitives.api import Box
@@ -1131,11 +993,13 @@ class Graph(HasTraits):
         representation of the graph. """
 
         if new:
-            for edge in self.edges:
-                edge.conn = "->"
+            for graph in self.all_graphs:
+                for edge in graph.edges:
+                    edge.conn = "->"
         else:
-            for edge in self.edges:
-                edge.conn = "--"
+            for graph in self.all_graphs:
+                for edge in graph.edges:
+                    edge.conn = "--"
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

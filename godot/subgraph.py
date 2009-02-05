@@ -33,6 +33,7 @@ from enthought.traits.api import \
 from enthought.traits.ui.api import \
     View, Item, Group, Tabbed, HGroup, VGroup
 
+from godot.base_graph import BaseGraph
 from godot.node import Node
 from godot.edge import Edge
 
@@ -44,7 +45,7 @@ from common import Alias
 #  "Subgraph" class:
 #------------------------------------------------------------------------------
 
-class Subgraph(HasTraits):
+class Subgraph(BaseGraph):
     """ Defines a representation of a subgraph in Graphviz's dot language.
     """
 
@@ -59,21 +60,21 @@ class Subgraph(HasTraits):
     #  * any double-quoted string ("...") possibly containing escaped
     #    quotes (\")1;
     #  * an HTML string (<...>).
-    ID = Str
-
-    name = Alias("ID", desc="synonym for ID") # Used by InstanceEditor
-
-    # Subgraph nodes.
-    nodes = List(Instance(Node))
-
-    # Subgraph edges.
-    edges = List(Instance(Edge))
-
-    # Subgraphs of the subgraph.
-    subgraphs = List(Instance("godot.subgraph.Subgraph"))
-
-    # Separate rectangular layout regions.
-    clusters = List(Instance("godot.cluster.Cluster"))
+#    ID = Str
+#
+#    name = Alias("ID", desc="synonym for ID") # Used by InstanceEditor
+#
+#    # Subgraph nodes.
+#    nodes = List(Instance(Node))
+#
+#    # Subgraph edges.
+#    edges = List(Instance(Edge))
+#
+#    # Subgraphs of the subgraph.
+#    subgraphs = List(Instance("godot.subgraph.Subgraph"))
+#
+#    # Separate rectangular layout regions.
+#    clusters = List(Instance("godot.cluster.Cluster"))
 
     # Parent graph in the graph heirarchy.
 #    parent = Instance("godot.graph.Graph")
@@ -88,10 +89,10 @@ class Subgraph(HasTraits):
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
     # commands in _draw_ followed by the commands in _ldraw_.
-    _draw_ = Str(desc="xdot drawing directive")
-
-    # Label draw directive.
-    _ldraw_ = Str(desc="xdot label drawing directive")
+#    _draw_ = Str(desc="xdot drawing directive")
+#
+#    # Label draw directive.
+#    _ldraw_ = Str(desc="xdot label drawing directive")
 
     #--------------------------------------------------------------------------
     #  Dot trait definitions.
@@ -114,7 +115,7 @@ class Subgraph(HasTraits):
     traits_view = View(
         VGroup(
             HGroup(Item("ID"), Item("rank")),
-            VGroup(nodes_item, edges_item, dock="tab"),
+            Tabbed(nodes_item, edges_item, dock="tab"),
 #            subgraphs_notebook_group
         ),
         title="Subgraph", id="godot.subgraph",

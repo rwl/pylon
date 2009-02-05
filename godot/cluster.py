@@ -42,6 +42,7 @@ from common import \
     showboxes_trait, target_trait, tooltip_trait, url_trait, pointf_trait, \
     color_trait, Alias, point_trait
 
+from godot.base_graph import BaseGraph
 from godot.node import Node
 from godot.edge import Edge
 
@@ -51,7 +52,7 @@ from graph_view import nodes_item, edges_item
 #  "Cluster" class:
 #------------------------------------------------------------------------------
 
-class Cluster(HasTraits):
+class Cluster(BaseGraph):
     """ Defines a representation of a subgraph in Graphviz's dot language.
     """
 
@@ -59,22 +60,22 @@ class Cluster(HasTraits):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    ID = Str("cluster", desc="that clusters are encoded as subgraphs whose "
-        "names have the prefix 'cluster'")
-
-    name = Alias("ID", desc="synonym for ID")
-
-    # Nodes in the cluster.
-    nodes = List(Instance(Node))
-
-    # Edges in the cluster.
-    edges = List(Instance(Edge))
-
-    # Subgraphs of the cluster.
-    subgraphs = List(Instance("godot.subgraph.Subgraph"))
-
-    # Separate rectangular layout regions.
-    clusters = List(Instance("godot.cluster.Cluster"))
+#    ID = Str("cluster", desc="that clusters are encoded as subgraphs whose "
+#        "names have the prefix 'cluster'")
+#
+#    name = Alias("ID", desc="synonym for ID")
+#
+#    # Nodes in the cluster.
+#    nodes = List(Instance(Node))
+#
+#    # Edges in the cluster.
+#    edges = List(Instance(Edge))
+#
+#    # Subgraphs of the cluster.
+#    subgraphs = List(Instance("godot.subgraph.Subgraph"))
+#
+#    # Separate rectangular layout regions.
+#    clusters = List(Instance("godot.cluster.Cluster"))
 
     # Parent graph in the graph heirarchy.
 #    parent = Instance("godot.graph:Graph")
@@ -89,10 +90,10 @@ class Cluster(HasTraits):
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
     # commands in _draw_ followed by the commands in _ldraw_.
-    _draw_ = Str(desc="xdot drawing directive")
-
-    # Label draw directive.
-    _ldraw_ = Str(desc="xdot label drawing directive")
+#    _draw_ = Str(desc="xdot drawing directive")
+#
+#    # Label draw directive.
+#    _ldraw_ = Str(desc="xdot label drawing directive")
 
     #--------------------------------------------------------------------------
     #  Graphviz dot language trait definitions:
@@ -301,7 +302,7 @@ class Cluster(HasTraits):
         Tabbed(
             VGroup(
                 Item("ID"),
-                VGroup(nodes_item, edges_item),
+                Tabbed(nodes_item, edges_item, dock="tab"),
                 label="Cluster"
             ),
             Group(["label", "fontname", "fontsize", "nojustify", "labeljust",
