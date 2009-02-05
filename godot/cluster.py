@@ -49,6 +49,15 @@ from godot.edge import Edge
 from graph_view import nodes_item, edges_item
 
 #------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+CLUSTER_ATTRIBUTES = ["bgcolor", "color", "colorscheme", "fillcolor",
+    "fixedsize", "fontcolor", "fontname", "fontsize", "K", "label",
+    "labeljust", "labelloc", "lp", "nojustify", "pencolor", "style", "target",
+    "tooltip", "URL"]
+
+#------------------------------------------------------------------------------
 #  "Cluster" class:
 #------------------------------------------------------------------------------
 
@@ -320,6 +329,30 @@ class Cluster(BaseGraph):
         title="Cluster", id="godot.cluster", buttons=["OK", "Cancel", "Help"],
         resizable=True
     )
+
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __str__(self):
+        """ Return a string representing the graph when requested by str()
+        (or print).
+
+        @rtype:  string
+        @return: String representing the graph.
+
+        """
+        s = "subgraph"
+        return "%s %s" % ( s, super( Cluster, self ).__str__() )
+
+    #--------------------------------------------------------------------------
+    #  "BaseGraph" interface:
+    #--------------------------------------------------------------------------
+
+    def _dot_attributes_default(self):
+        """ Trait initialiser.
+        """
+        return CLUSTER_ATTRIBUTES
 
     #--------------------------------------------------------------------------
     #  Trait initialisers:

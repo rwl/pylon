@@ -101,82 +101,45 @@ class BaseGraph(HasTraits):
         @return: String representing the graph.
 
         """
-        s = ""
+        graph = self
+        s     = ""
+        padding = "  "
+
         if self.ID:
             s = "%s %s {\n" % (s, self.ID)
         else:
             s = "%s {\n" % s
 
         # Graph attributes.
-        attrs = []
         for trait_name in self.dot_attributes:
-            value = getattr(self, trait_name)
-            default = self.trait(trait_name).default
-            # FIXME: Alias/Synced traits default to None.
-            if (value != default) and (default is not None):
-                valstr = str(value)
-                if isinstance(value, basestring):
-                    valstr = '"%s"' % valstr
-                    s = "%s%s%s=%s;\n" % (s, self.padding, trait_name, valstr)
+            # Get the value of the trait for comparison with the default value.
+            value = getattr(graph, trait_name)
 
-        s += "}"
+            default = graph.trait(trait_name).default
+
+            # FIXME: Alias/Synced traits default to None.
+            # Only print attribute value pairs if not defaulted.
+            if ( value != default ) and ( default is not None ):
+                valstr = str(value)
+
+                if isinstance( value, basestring ):
+                    # Add double quotes to the value if it is a string.
+                    valstr = '"%s"' % valstr
+
+                s = "%s%s%s=%s;\n" % ( s, padding, trait_name, valstr )
+
+        for node in graph.nodes:
+            s = "%s%s%s" % ( s, padding+padding, str( node ) )
+        for edge in graph.edges:
+            s = "%s%s%s" % ( s, padding+padding, str( edge ) )
+        for subgraph in graph.subgraphs:
+            s = "%s%s%s" % ( s, padding, str( subgraph ) )
+        for cluster in graph.clusters:
+            s = "%s%s%s" % ( s, padding, str( cluster ) )
+
+        s += "}\n"
 
         return s
-
-
-#        s = ""
-#        padding = self.padding
-#        if len(self.allitems) > 0:
-#            grstr = "".join([
-#                "%s%s" % (padding, n) \
-#                for n in map(str, flatten(self.allitems))]
-#            )
-#            attrstr = ",".join(["%s=%s" % \
-#            (quote_if_necessary(key), quote_if_necessary(val)) \
-#                for key, val in self.attr.items()])
-#            if attrstr:
-#                attrstr = "%sgraph [%s];" % (padding, attrstr)
-#            if not isinstance(self, DotSubGraph):
-#                s = ""
-#                if self.strict:
-#                    s += 'strict '
-#                if self.directed:
-#                    s += "digraph"
-#                else:
-#                    s += "graph"
-#                return "%s %s{\n%s\n%s\n}" % (s,self.name, grstr, attrstr)
-#            else:
-#                return "%s %s{\n%s\n%s\n%s}" % \
-#                    ('subgraph', self.name, grstr, attrstr, padding)
-#
-#        subgraphstr = "\n".join([
-#            "%s%s" % (padding, n) for n in map(str, self.subgraphs)
-#        ])
-#
-#        nodestr =  "".join(["%s%s" % (padding, n) for n in \
-#            map(str,self._nodes.itervalues())])
-#        edgestr =  "".join(["%s%s" % (padding, n) for n in \
-#            map(str,flatten(self.edges.itervalues()))])
-#
-#        attrstr = ",".join(["%s=%s" % \
-#            (quote_if_necessary(key), quote_if_necessary(val)) \
-#                for key,val in self.attr.items()])
-#        if attrstr:
-#            attrstr = "%sgraph [%s];" % (padding, attrstr)
-#        if not isinstance(self, DotSubGraph):
-#            s = ""
-#            if self.strict:
-#                s += 'strict '
-#            if self.directed:
-#                s += "digraph"
-#            else:
-#                s += "graph"
-#            return "%s %s{\n%s\n%s\n%s\n%s\n}" % \
-#                (s, self.name, subgraphstr, attrstr, nodestr, edgestr)
-#        else:
-#            return "%s %s{\n%s\n%s\n%s\n%s\n%s}" % \
-#                ('subgraph', self.name, subgraphstr, attrstr, nodestr,
-#                 edgestr, padding)
 
 
     def __len__(self):
@@ -203,10 +166,10 @@ class BaseGraph(HasTraits):
 
 
     def __getitem__(self, node):
-        """ Return a iterator passing through all neighbors of the given node.
+        """ Return a iterator passing through all neighbours of the given node.
 
         @rtype:  iterator
-        @return: Iterator passing through all neighbors of the given node.
+        @return: Iterator passing through all neighbours of the given node.
 
         """
 

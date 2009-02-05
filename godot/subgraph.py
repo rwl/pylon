@@ -42,6 +42,12 @@ from graph_view import nodes_item, edges_item, subgraphs_notebook_group
 from common import Alias
 
 #------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+SUBGRAPH_ATTRIBUTES = ["rank"]
+
+#------------------------------------------------------------------------------
 #  "Subgraph" class:
 #------------------------------------------------------------------------------
 
@@ -122,6 +128,30 @@ class Subgraph(BaseGraph):
         buttons=["OK", "Cancel", "Help"],
         resizable=True
     )
+
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __str__(self):
+        """ Return a string representing the graph when requested by str()
+        (or print).
+
+        @rtype:  string
+        @return: String representing the graph.
+
+        """
+        s = "subgraph"
+        return "%s %s" % ( s, super( Subgraph, self ).__str__() )
+
+    #--------------------------------------------------------------------------
+    #  "BaseGraph" interface:
+    #--------------------------------------------------------------------------
+
+    def _dot_attributes_default(self):
+        """ Trait initialiser.
+        """
+        return SUBGRAPH_ATTRIBUTES
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

@@ -487,14 +487,25 @@ class Node(Container):
         @return: String representing the node.
 
         """
-
+        # Node attributes to be joined in a comma separated list.
         attrs = []
+
         for trait_name in node_attrs:
+            # Get the value of the trait for comparison with the default value.
             value = getattr(self, trait_name)
+
             if value != self.trait(trait_name).default:
-                attrs.append('%s="%s"' % (trait_name, str(value)))
+                # Only print attribute value pairs if not at the default value.
+                valstr = str(value)
+
+                if isinstance( value, basestring ):
+                    # Add double quotes to the value if it is a string.
+                    valstr = '"%s"' % valstr
+
+                attrs.append('%s=%s' % (trait_name, valstr))
 
         if attrs:
+            # Comma separated list with square brackets.
             attrstr = "[%s]" % ", ".join(attrs)
             return "%s %s;\n" % (self.ID, attrstr)
         else:

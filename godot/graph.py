@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-#  Copyright (c) 2008 Richard W. Lincoln
+#  Copyright (c) 2009 Richard W. Lincoln
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -20,7 +20,8 @@
 #  IN THE SOFTWARE.
 #------------------------------------------------------------------------------
 
-""" Defines a representation of a graph in Graphviz"s dot language """
+""" Defines a representation of a graph in Graphviz"s dot language.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -71,7 +72,7 @@ GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
     "sep", "showboxes", "size", "splines", "start", "stylesheet", "target",
     "truecolor", "viewport", "voro_margin"]
 
-MAPPED_GRAPH_ATTRIBUTES = ["labeljust", "labelloc", "showboxes"]
+#MAPPED_GRAPH_ATTRIBUTES = ["labeljust", "labelloc", "showboxes"]
 
 #------------------------------------------------------------------------------
 #  Trait definitions:
@@ -96,41 +97,16 @@ class Graph(BaseGraph):
     #  Trait definitions.
     #--------------------------------------------------------------------------
 
-    # An ID is one of the following:
-    #  * Any string of alphabetic ([a-zA-Z\200-\377]) characters, underscores
-    #    ('_') or digits ([0-9]), not beginning with a digit;
-    #  * a number [-]?(.[0-9]+ | [0-9]+(.[0-9]*)? );
-    #  * any double-quoted string ("...") possibly containing escaped
-    #    quotes (\")1;
-    #  * an HTML string (<...>).
-#    ID = Str
-#
-#    name = Alias("ID", desc="synonym for ID") # Used by InstanceEditor
-#
-#    # Main graph nodes.
-#    nodes = List(Instance(Node))
-#
-#    # Graph edges.
-#    edges = List(Instance(Edge))
-
     # A strict graph is an unweighted, undirected graph containing no
 	# graph loops or multiple edges.
-    strict = Bool(False)
+    strict = Bool ( False, desc = "A strict graph is an unweighted, "
+        "undirected graph containing no graph loops or multiple edges." )
 
     # Do edges have direction?
-    directed = Bool
-
-#    # Separate layout regions.
-#    subgraphs = List(Instance(Subgraph))
-#
-#    # Clusters are encoded as subgraphs whose names have the prefix 'cluster'.
-#    clusters = List(Instance(Cluster))
+    directed = Bool ( desc = "directed edges." )
 
     # All graphs, subgraphs and clusters.
     all_graphs = Property(List(Instance(BaseGraph)))
-
-#    # Tab width to use for string representation.
-#    padding = Str("    ")
 
     #--------------------------------------------------------------------------
     #  Enable trait definitions.
@@ -893,17 +869,17 @@ class Graph(BaseGraph):
         @return: String representing the graph.
 
         """
-
+        graph = self
         s = ""
-        if self.strict:
+        if graph.strict:
             s = "%s%s " % (s, "strict")
 
-        if self.directed:
-            s = "%s%s" % (s, "digraph")
+        if graph.directed:
+            s += "digraph"
         else:
-            s = "%s%s" % (s, "graph")
+            s += "graph"
 
-        return "%s%s" % (s, super(Graph, self).__str__())
+        return "%s%s" % ( s, super( Graph, self ).__str__() )
 
     #--------------------------------------------------------------------------
     #  Public interface:
@@ -1062,7 +1038,9 @@ if __name__ == "__main__":
 
 #    graph.configure_traits()
 
-    from dot_writer import write_dot_graph
-    print write_dot_graph(graph)
+#    from dot_writer import write_dot_graph
+#    print write_dot_graph(graph)
+
+    print graph
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

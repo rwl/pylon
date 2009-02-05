@@ -87,15 +87,25 @@ def _dot_node_str(node, padding="    "):
     """
     attrs = []
     for trait_name in NODE_ATTRIBUTES:
-        value = getattr(node, trait_name)
-        if value != node.trait(trait_name).default:
-            attrs.append('%s="%s"' % (trait_name, str(value)))
+        # Get the value of the trait for comparison with the default value.
+        value = getattr(self, trait_name)
+
+        if value != self.trait(trait_name).default:
+            # Only print attribute value pairs if not at the default value.
+            valstr = str(value)
+
+            if isinstance( value, basestring ):
+                # Add double quotes to the value if it is a string.
+                valstr = '"%s"' % valstr
+
+            attrs.append('%s=%s' % (trait_name, valstr))
 
     if attrs:
+        # Comma separated list with square brackets.
         attrstr = "[%s]" % ", ".join(attrs)
-        return "%s%s %s;\n" % (padding, node.ID, attrstr)
+        return "%s %s;\n" % (self.ID, attrstr)
     else:
-        return "%s;\n" % node.ID
+        return "%s;\n" % self.ID
 
 
 def _dot_edge_str(edge, padding="    "):
@@ -103,33 +113,42 @@ def _dot_edge_str(edge, padding="    "):
     """
     attrs = []
     for trait_name in EDGE_ATTRIBUTES:
-        value = getattr(edge, trait_name)
-        default = edge.trait(trait_name).default
+        # Get the value of the trait for comparison with the default value.
+        value = getattr(self, trait_name)
+
+        default = self.trait(trait_name).default
+
         # FIXME: Alias/Synced traits default to None.
         if (value != default) and (default is not None):
+            # Only print attribute value pairs if not at the default value.
             valstr = str(value)
+
             if isinstance(value, basestring):
+                # Add double quotes to the value if it is a string.
                 valstr = '"%s"' % valstr
             attrs.append('%s=%s' % (trait_name, valstr))
 
     if attrs:
         attrstr = "[%s]" % ", ".join(attrs)
-        return "%s%s%s %s %s%s %s;\n" % \
-            (padding, edge.from_node.ID, edge.tailport, edge.conn, \
-             edge.to_node.ID, edge.headport, attrstr)
+        return "%s%s %s %s%s %s;\n" % \
+            (self.from_node.ID, self.tailport, self.conn, \
+             self.to_node.ID, self.headport, attrstr)
     else:
-        return "%s%s%s %s %s%s;\n" % \
-            (padding, edge.from_node.ID, edge.tailport, edge.conn, \
-             edge.to_node.ID, edge.headport)
+        return "%s%s %s %s%s;\n" % \
+            (self.from_node.ID, self.tailport, self.conn, \
+             self.to_node.ID, self.headport)
 
 
 def write_dot_graph(graph, level=0, padding="    "):
     """ Returns a string representation of the given graph in the Dot language.
     """
+    # Offset from the left margin.
     root_padding = padding * level
+    # Offset from the components of the graph.
     nested_padding = root_padding + padding
 
-    if isinstance(graph, Graph):
+    # The top level graph can be directed and/or strict.
+    if isinstance( graph, Graph ):
         s = ""
         if graph.strict:
             s = "%s%s " % (s, "strict")
@@ -139,6 +158,7 @@ def write_dot_graph(graph, level=0, padding="    "):
         else:
             s = "%s%s" % (s, "graph")
     else:
+        # Clusters are defined as subgraphs with an ID prefix 'cluster'.
         s = "%ssubgraph" % root_padding
 
     if graph.ID:
@@ -156,15 +176,23 @@ def write_dot_graph(graph, level=0, padding="    "):
     else:
         raise ValueError
 
+    # Graph attributes.
     for trait_name in attrs:
+        # Get the value of the trait for comparison with the default value.
         value = getattr(graph, trait_name)
+
         default = graph.trait(trait_name).default
+
         # FIXME: Alias/Synced traits default to None.
-        if (value != default) and (default is not None):
+        # Only print attribute value pairs if not defaulted.
+        if ( value != default ) and ( default is not None ):
             valstr = str(value)
-            if isinstance(value, basestring):
+
+            if isinstance( value, basestring ):
+                # Add double quotes to the value if it is a string.
                 valstr = '"%s"' % valstr
-                s = "%s%s%s=%s;\n" % (s, nested_padding, trait_name, valstr)
+
+            s = "%s%s=%s;\n" % ( s, trait_name, valstr )
 
     for node in graph.nodes:
         s += _dot_node_str(node, nested_padding)

@@ -56,6 +56,7 @@ from godot.api import Graph, Cluster, Node, Edge, DotParser, Subgraph
 from godot.graph_menu import menubar, toolbar
 from graph_view import nodes_view, edges_view, attr_view, about_view
 from godot.graph_tree import graph_tree_editor
+from godot.dot_writer import write_dot_graph
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -178,7 +179,12 @@ class GraphViewModel(ModelView):
         """ Handles the new Graph action. """
 
         if info.initialized:
-            self.model = Graph()
+            retval = confirm(parent  = info.ui.control,
+                             message = "Replace existing graph?",
+                             title   = "New Graph",
+                             default = YES)
+            if retval == YES:
+                self.model = Graph()
 
 
     def open_file(self, info):
@@ -383,7 +389,7 @@ class GraphViewModel(ModelView):
         if not info.initialized:
             return
 
-        self.dot_code = str(self.model)
+        self.dot_code = write_dot_graph(self.model)
         retval = self.edit_traits( parent = info.ui.control,
                                    kind   = "livemodal",
                                    view   = "dot_code_view" )

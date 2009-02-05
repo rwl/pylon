@@ -560,12 +560,18 @@ class Edge(Container):
 
         attrs = []
         for trait_name in edge_attrs:
+            # Get the value of the trait for comparison with the default value.
             value = getattr(self, trait_name)
+
             default = self.trait(trait_name).default
+
             # FIXME: Alias/Synced traits default to None.
             if (value != default) and (default is not None):
+                # Only print attribute value pairs if not at the default value.
                 valstr = str(value)
+
                 if isinstance(value, basestring):
+                    # Add double quotes to the value if it is a string.
                     valstr = '"%s"' % valstr
                 attrs.append('%s=%s' % (trait_name, valstr))
 
