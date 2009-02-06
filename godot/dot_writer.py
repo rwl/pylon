@@ -103,9 +103,9 @@ def _dot_node_str(node, padding="    "):
     if attrs:
         # Comma separated list with square brackets.
         attrstr = "[%s]" % ", ".join(attrs)
-        return "%s %s;\n" % (node.ID, attrstr)
+        return "%s%s %s;\n" % (padding, node.ID, attrstr)
     else:
-        return "%s;\n" % node.ID
+        return "%s%s;\n" % (padding, node.ID)
 
 
 def _dot_edge_str(edge, padding="    ", directed = True):
@@ -139,16 +139,17 @@ def _dot_edge_str(edge, padding="    ", directed = True):
     else:
         attrstr = ""
 
-    edge_str = "%s%s %s %s%s%s;\n" % ( edge.from_node.ID, edge.tailport,
-                                       conn, edge.to_node.ID, edge.headport,
-                                       attrstr )
+    edge_str = "%s%s%s %s %s%s%s;\n" % ( padding, edge.from_node.ID,
+                                         edge.tailport, conn, edge.to_node.ID,
+                                         edge.headport, attrstr )
 
     return edge_str
 
 
-def write_dot_graph(graph, level=0, padding="    ", directed=True):
+def write_dot_graph(graph, level=0, directed=True):
     """ Returns a string representation of the given graph in the Dot language.
     """
+    padding="    "
     # Offset from the left margin.
     root_padding = padding * level
     # Offset from the components of the graph.
@@ -201,7 +202,7 @@ def write_dot_graph(graph, level=0, padding="    ", directed=True):
                 # Add double quotes to the value if it is a string.
                 valstr = '"%s"' % valstr
 
-            s = "%s%s=%s;\n" % ( s, trait_name, valstr )
+            s = "%s%s%s=%s;\n" % ( s, nested_padding, trait_name, valstr )
 
     for node in graph.nodes:
         s += _dot_node_str(node, nested_padding)
