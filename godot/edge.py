@@ -21,7 +21,7 @@
 
 from enthought.traits.api import \
     HasTraits, Color, Str, Enum, Float, Font, Any, Bool, Int, File, Trait, \
-    List, Tuple, ListStr, Instance, Undefined
+    List, Tuple, ListStr, Instance, Undefined, Property
 
 from enthought.traits.ui.api import TableEditor, View, Group, Item, Tabbed
 
@@ -115,6 +115,10 @@ class Edge(Container):
 
     # To/target/end node.
     to_node = Instance(Node, allow_none=False)
+
+    # String identifier (TreeNode label).
+    name = Property(Str, depends_on=["from_node", "from_node.ID",
+                                     "to_node", "to_node.ID"])
 
     # Nodes from which the 'to' and 'from' nodes may be selected.
     _nodes = List(Instance(Node)) # GUI specific.
@@ -558,6 +562,18 @@ class Edge(Container):
         self.to_node = to_node
 
         super(Container, self).__init__(**traits)
+
+    #--------------------------------------------------------------------------
+    #  Property getters:
+    #--------------------------------------------------------------------------
+
+    def _get_name(self):
+        """ Property getter.
+        """
+        if (self.from_node is not None) and (self.to_node is not None):
+            return "%s -> %s" % (self.from_node.ID, self.to_node.ID)
+        else:
+            return "Edge"
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
