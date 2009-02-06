@@ -561,7 +561,7 @@ class Edge(Container):
         self.from_node = from_node
         self.to_node = to_node
 
-        super(Container, self).__init__(**traits)
+        super(Edge, self).__init__(**traits)
 
     #--------------------------------------------------------------------------
     #  Property getters:

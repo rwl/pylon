@@ -31,15 +31,15 @@ import math
 import logging
 
 from enthought.traits.api import \
-    HasTraits, Any, Instance, Trait, Tuple, Color, Bool, Str, Enum, Float, \
+    HasTraits, Any, Instance, Trait, Tuple, Bool, Str, Enum, Float, Color, \
     Either, Range, Int, Font, List, Directory, ListInstance, This, Property
 
 from enthought.traits.trait_handlers import TraitListEvent
 
 from enthought.traits.ui.api import View, Group, Item, Tabbed
 from enthought.pyface.image_resource import ImageResource
-from enthought.enable.api import Canvas, Viewport
-from enthought.enable.tools.api import ViewportPanTool
+from enthought.enable.api import Canvas, Viewport, Container
+from enthought.enable.tools.api import ViewportPanTool, ViewportZoomTool
 from enthought.enable.component_editor import ComponentEditor
 
 from common import \
@@ -110,18 +110,12 @@ class Graph(BaseGraph):
     # All graphs, subgraphs and clusters.
     all_graphs = Property( List( Instance( BaseGraph ) ) )
 
-    # Nodes in all graphs, subgraphs and clusters.
-#    all_nodes = Property( List( Instance( Node ) ) )
-
-    # Edges in all graphs, subgraphs and clusters.
-#    all_edges = Property( List( Instance( Edge ) ) )
-
     #--------------------------------------------------------------------------
     #  Enable trait definitions.
     #--------------------------------------------------------------------------
 
-    # Canvas on which to draw the graph.
-    canvas = Instance(Canvas, desc="the canvas on which to draw the graph")
+    # Overriding the BaseGraph to use a Canvas for the root graph.
+#    component = Instance(Canvas, desc="canvas for graph drawing")
 
     # A view into a sub-region of the canvas.
     vp = Instance(Viewport, desc="a view of a sub-region of the canvas")
@@ -227,7 +221,7 @@ class Graph(BaseGraph):
 
     # Terminating condition. If the length squared of all energy gradients are
     # &lt; <html:a rel="attr">epsilon</html:a>, the algorithm stops.
-    epsilon = Float(desc="terminating condition")
+    epsilon = Float(0.0001, desc="terminating condition")
 
     # Fraction to increase polygons (multiply
     # coordinates by 1 + esep) for purposes of spline edge routing.
@@ -363,7 +357,8 @@ class Graph(BaseGraph):
     margin = margin_trait#Either(Float, pointf_trait, desc="x and y margins of canvas")
 
     # Sets the number of iterations used.
-    maxiter = Int(desc="number of iterations used", label="Maximum iterations")
+    maxiter = Int(200, desc="number of iterations used",
+        label="Maximum iterations")
 
     # Multiplicative scale factor used to alter the MinQuit (default = 8)
     # and MaxIter (default = 24) parameters used during crossing
@@ -586,20 +581,6 @@ class Graph(BaseGraph):
     # output files. Or use the viewport to generate multiple files.
     page = pointf_trait
 
-
-    # Width and height of output pages, in inches. If this is set and is
-    # smaller than the size of the layout, a rectangular array of pages of
-    # the specified page size is overlaid on the layout, with origins
-    # aligned in the lower-left corner, thereby partitioning the layout
-    # into pages. The pages are then produced one at a time, in
-    # <html:a rel="attr">pagedir</html:a> order.
-    #
-    # At present, this only works for PostScript output. For other types of
-    # output, one should use another tool to split the output into multiple
-    # output files. Or use the <html:a rel="attr">viewport</html:a> to generate
-    # multiple files.
-#    page = Tuple(Float, Float, desc="width and height of output pages")
-
     # If the <html:a rel="attr">page</html:a> attribute is set and applicable,
     # this attribute specifies the order in which the pages are emitted.
     # This is limited to one of the 8 row or column major orders.
@@ -661,7 +642,8 @@ class Graph(BaseGraph):
     # multiple of the page size in that dimension which is at least half the
     # current size. The two dimensions are then scaled independently to the new
     # size. This feature only works in dot.
-    ratio = Either(Float, Enum("fill", "compress", "expand", "auto"),
+#    ratio = Either(Float, Enum("fill", "compress", "expand", "auto"),
+    ratio = Enum("fill", "compress", "expand", "auto",
         desc="aspect ratio (drawing height/drawing width) for the drawing")
 
     # If true and there are multiple clusters, run cross minimization a second
@@ -865,6 +847,10 @@ class Graph(BaseGraph):
 #    traits_view = tabbed_view
     traits_view = graph_view
 
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
     def __init__(self, *args, **kw_args):
         """ Initialises the graph.
         """
@@ -898,19 +884,24 @@ class Graph(BaseGraph):
     #  Trait initialisers:
     #--------------------------------------------------------------------------
 
-    def _canvas_default(self):
-        """ Trait initialiser. """
-
-        return Canvas(bgcolor   = "white",#"lightsteelblue",
-                      draw_axes = False)
+#    def _component_default(self):
+#        """ Trait initialiser.  Overrides the base class to use a Canvas for
+#            the root Graph.
+#        """
+#        return Canvas( bgcolor   = "white",#"lightsteelblue",
+#                       draw_axes = False)
 
 
     def _vp_default(self):
-        """ Trait initialiser. """
+        """ Trait initialiser.
+        """
+        vp = Viewport(component=self.component)
+        vp.enable_zoom=True
 
-        vp = Viewport(component=self.canvas, enable_zoom=True)
         vp.view_position = [0,0]
+
         vp.tools.append(ViewportPanTool(vp))
+
         return vp
 
 
@@ -993,29 +984,16 @@ class Graph(BaseGraph):
             each_edge._nodes = all_nodes
 
 
-#    def _nodes_items_changed(self, event):
-#        """ Handles nodes being added and removed.  Maintains each edge's
-#        list of available nodes. """
-#
-#        # Add new nodes to the canvas.
-#        from enthought.enable.primitives.api import Box
-#        from enthought.enable.tools.api import MoveTool
-#
-#        for node in event.added:
-#            box = Box(color="steelblue", border_color="darkorchid",
-#                border_size=1, bounds=[50, 50], position=[10, 10])
-#            box.tools.append(MoveTool(box))
-##           node.add(box)
-#            self.canvas.add(box)
-#            self.canvas.add(node)
-#
-#        self.canvas.request_redraw()
-
-
-    def _bgcolor_changed(self, new):
-        """ Handles the canvas background colour.
+    def _component_changed(self, new):
+        """ Handles the graph canvas changing.
         """
-        self.canvas.bgcolor = new
+        self.vp.component = new
+
+
+#    def _bgcolor_changed(self, new):
+#        """ Handles the canvas background colour.
+#        """
+#        self.canvas.bgcolor = new
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
@@ -1030,27 +1008,30 @@ if __name__ == "__main__":
     from godot.graph import Graph
 
     graph = Graph(ID="Foo", strict=True, directed=False, label="Foo Graph",
-        bgcolor="blue")
+        bgcolor="pink")
 
-    node1 = Node("node1", label="Node 1")
-    node2 = Node("node2", label="Node 2", shape="rect")
+    node1 = Node("node1", label="Node 1",  _draw_="c 5 -black e 32 18 32 18")
+    node2 = Node("node2", label="Node 2", shape="rect",
+                 _draw_="c 5 -black e 32 18 32 18")
     edge = Edge(node1, node2)
     graph.nodes.extend([node1, node2])
     graph.edges.append(edge)
 
-    subgraph1 = Subgraph(ID="subgraph1", rank="min")
-    subgraph1.nodes.append(Node("node3", label="Node 3"))
-    graph.subgraphs.append(subgraph1)
-
-    subgraph2 = Subgraph(ID="subgraph2", rank="max")
-    subgraph2.nodes.append(Node("node4", label="Node 4"))
-    subgraph1.subgraphs.append(subgraph2)
+#    subgraph1 = Subgraph(ID="subgraph1", rank="min")
+#    subgraph1.nodes.append(Node("node3", label="Node 3"))
+#    graph.subgraphs.append(subgraph1)
+#
+#    subgraph2 = Subgraph(ID="subgraph2", rank="max")
+#    subgraph2.nodes.append(Node("node4", label="Node 4"))
+#    subgraph1.subgraphs.append(subgraph2)
 
 #    graph.configure_traits()
 
-#    from dot_writer import write_dot_graph
-#    print write_dot_graph(graph)
+    from godot.component.component_viewer import ComponentViewer
+    viewer = ComponentViewer(component=graph.component)
+    viewer.configure_traits()
 
-    print graph
+    from dot_writer import write_dot_graph
+    print write_dot_graph(graph)
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

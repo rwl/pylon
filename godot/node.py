@@ -82,7 +82,7 @@ shape_trait = Enum(node_shapes, desc="node shape", label="Node shape")
 #  "Node" class:
 #------------------------------------------------------------------------------
 
-class Node(Container):
+class Node(HasTraits):
     """ A graph node. """
 
     #--------------------------------------------------------------------------
@@ -105,6 +105,9 @@ class Node(Container):
     #--------------------------------------------------------------------------
     #  Enable trait definitions:
     #--------------------------------------------------------------------------
+
+    # Container for the drawing and label components.
+    component = Instance(Container, desc="container of graph components.")
 
     # Container of drawing components, typically the node shape.
     drawing = Instance(Container)
@@ -477,15 +480,29 @@ class Node(Container):
     #--------------------------------------------------------------------------
 
     def __init__(self, ID, **traits):
-        """ Initialises a Node instance. """
-
+        """ Initialises a Node instance.
+        """
         self.ID = ID
-        super(Container, self).__init__(**traits)
+        super(Node, self).__init__(**traits)
 
 
-#    def __hash__(self):
-#        return hash(self.ID)
+    def __hash__(self):
+        """ objects which compare equal have the same hash value.
+        """
+        return hash(self.ID)
 
+    #--------------------------------------------------------------------------
+    #  Trait initialisers:
+    #--------------------------------------------------------------------------
+
+    def _component_default(self):
+        """ Trait initialiser.
+        """
+        return Container(fit_window=False, auto_size=True)
+
+    #--------------------------------------------------------------------------
+    #  Event handlers:
+    #--------------------------------------------------------------------------
 
     @on_trait_change("_draw_")
     def parse_xdot_drawing_directive(self, new):
@@ -493,11 +510,13 @@ class Node(Container):
 
         components = XdotAttrParser().parse_xdot_data(new)
 
-        max_x = max([c.bounds[0] for c in components] + [1])
-        max_y = max([c.bounds[1] for c in components] + [1])
+#        max_x = max([c.bounds[0] for c in components] + [1])
+#        max_y = max([c.bounds[1] for c in components] + [1])
+#
+#        container = Container(bounds=[max_x, max_y])
+#        self.bounds = bounds=[max_x, max_y]
 
-        container = Container(bounds=[max_x, max_y])
-        self.bounds = bounds=[max_x, max_y]
+        container = Container(fit_window=False, auto_size=True)
         container.add(*components)
         self.drawing = container
 
@@ -512,7 +531,7 @@ class Node(Container):
         components = XdotAttrParser().parse_xdot_data(new)
         print "COMPONENTS:", components
 
-        container = Container(bounds=[200, 200])
+        container = Container(fit_window=False, auto_size=True)#bounds=[200, 200])
         container.add(*components)
         self.label_drawing = container
 
@@ -521,30 +540,34 @@ class Node(Container):
         """ Handles the container of drawing components changing. """
 
         if old is not None:
-            self.remove(old)
+            self.component.remove(old)
         if new is not None:
-            self.add(new)
+            self.component.add(new)
 
 
     def _label_drawing_changed(self, old, new):
         """ Handles the container of label components changing. """
 
         if old is not None:
-            self.remove(old)
+            self.component.remove(old)
         if new is not None:
-            self.add(new)
+            self.component.add(new)
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    import sys, logging
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
     from godot.component.component_viewer import ComponentViewer
 
     node = Node("node1", _draw_="c 5 -black e 32 18 32 18")
-    node.configure_traits()
-#    viewer = ComponentViewer(component=node)
-#    viewer.configure_traits()
-    print node
+#    node.configure_traits()
+    viewer = ComponentViewer(component=node.component)
+    viewer.configure_traits()
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

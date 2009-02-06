@@ -235,7 +235,8 @@ class GraphViewModel(ModelView):
             fd = None
             try:
                 fd = open(self.file, "wb")
-                fd.write(str(self.model))
+                dot_code = write_dot_graph(self.model)
+                fd.write(dot_code)
 #            except:
 #                error(
 #                    parent=info.ui.control, title="Save Error",

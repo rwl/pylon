@@ -22,7 +22,7 @@
 #------------------------------------------------------------------------------
 
 from enthought.traits.api import HasTraits, Instance
-from enthought.traits.ui.api import View, Item, HGroup
+from enthought.traits.ui.api import View, Item, HGroup, HSplit, Group
 from enthought.enable.api import Component, Canvas, Viewport
 from enthought.enable.tools.api import ViewportPanTool
 from enthought.enable.component_editor import ComponentEditor
@@ -45,9 +45,13 @@ class ComponentViewer(HasTraits):
 
     # Default view
     traits_view = View(
-        HGroup(
-            Item("viewport", editor=ComponentEditor(), show_label=False), "_",
-            Item(name="component", style="custom", show_label=False)
+        HSplit(
+            Group(
+                Item("viewport", editor=ComponentEditor(), show_label=False)
+            ),
+            Group(
+                Item(name="component", style="custom", show_label=False),
+            )
         ),
         resizable=True, id="canvas_viewer", width=.6, height=.4,
         title="Viewer"
@@ -57,8 +61,6 @@ class ComponentViewer(HasTraits):
         """ Trait initialiser """
 
         canvas = Canvas(draw_axes=True, bgcolor="honeydew")
-        if self.component is not None:
-            canvas.add(self.component)
         return canvas
 
     def _viewport_default(self):
@@ -67,6 +69,15 @@ class ComponentViewer(HasTraits):
         viewport = Viewport(component=self.canvas, enable_zoom=True)
         viewport.tools.append(ViewportPanTool(viewport))
         return viewport
+
+    def _component_changed(self, old, new):
+        """ Handles the component being changed.
+        """
+        canvas = self.canvas
+        if old is not None:
+            canvas.remove(old)
+        if new is not None:
+            canvas.add(new)
 
     def _anytrait_changed_for_component(self, new):
         """ Handles redrawing of the canvas. """

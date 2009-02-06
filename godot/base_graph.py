@@ -29,6 +29,9 @@
 from enthought.traits.api \
     import HasTraits, Str, List, Instance, Bool, Property, Constant, ReadOnly
 
+from enthought.enable.api \
+    import Container
+
 from node import Node
 from edge import Edge
 from common import id_trait, Alias
@@ -62,8 +65,12 @@ class BaseGraph(HasTraits):
     # Clusters are encoded as subgraphs whose names have the prefix 'cluster'.
     clusters = List(Instance("godot.cluster.Cluster"))
 
-    # Tab width to use for string representation.
-    padding = Str("    ")
+    #--------------------------------------------------------------------------
+    #  Enable trait definitions.
+    #--------------------------------------------------------------------------
+
+    # Container of graph components.
+    component = Instance(Container, desc="container of graph components.")
 
     #--------------------------------------------------------------------------
     #  Xdot trait definitions:
@@ -115,5 +122,35 @@ class BaseGraph(HasTraits):
         for each_edge in self.edges:
             if (each_edge.from_node == node) or (each_edge.to_node == node):
                 yield each_edge
+
+    #--------------------------------------------------------------------------
+    #  Trait initialisers:
+    #--------------------------------------------------------------------------
+
+    def _component_default(self):
+        """ Trait initialiser.
+        """
+        return Container(fit_window=False, auto_size=True)
+
+    #--------------------------------------------------------------------------
+    #  "BaseGraph" interface:
+    #--------------------------------------------------------------------------
+
+    def _nodes_items_changed(self, event):
+        """ Handles nodes being added and removed.  Maintains each edge's
+        list of available nodes. """
+
+        # Add new nodes to the canvas.
+        from enthought.enable.primitives.api import Box
+        from enthought.enable.tools.api import MoveTool
+
+        for node in event.added:
+            box = Box(color="steelblue", border_color="darkorchid",
+                border_size=1, bounds=[50, 50], position=[10, 10])
+            box.tools.append(MoveTool(box))
+            self.component.add(box)
+            self.component.add(node.component)
+
+        self.component.request_redraw()
 
 # EOF -------------------------------------------------------------------------
