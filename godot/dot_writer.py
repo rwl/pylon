@@ -88,9 +88,9 @@ def _dot_node_str(node, padding="    "):
     attrs = []
     for trait_name in NODE_ATTRIBUTES:
         # Get the value of the trait for comparison with the default value.
-        value = getattr(self, trait_name)
+        value = getattr(node, trait_name)
 
-        if value != self.trait(trait_name).default:
+        if value != node.trait(trait_name).default:
             # Only print attribute value pairs if not at the default value.
             valstr = str(value)
 
@@ -103,20 +103,26 @@ def _dot_node_str(node, padding="    "):
     if attrs:
         # Comma separated list with square brackets.
         attrstr = "[%s]" % ", ".join(attrs)
-        return "%s %s;\n" % (self.ID, attrstr)
+        return "%s %s;\n" % (node.ID, attrstr)
     else:
-        return "%s;\n" % self.ID
+        return "%s;\n" % node.ID
 
 
-def _dot_edge_str(edge, padding="    "):
+def _dot_edge_str(edge, padding="    ", directed = True):
     """ Returns a string representation of the given edge in the Dot language.
     """
+    if directed:
+        conn = "->"
+    else:
+        conn = "--"
+
     attrs = []
+
     for trait_name in EDGE_ATTRIBUTES:
         # Get the value of the trait for comparison with the default value.
-        value = getattr(self, trait_name)
+        value = getattr(edge, trait_name)
 
-        default = self.trait(trait_name).default
+        default = edge.trait(trait_name).default
 
         # FIXME: Alias/Synced traits default to None.
         if (value != default) and (default is not None):
@@ -129,17 +135,18 @@ def _dot_edge_str(edge, padding="    "):
             attrs.append('%s=%s' % (trait_name, valstr))
 
     if attrs:
-        attrstr = "[%s]" % ", ".join(attrs)
-        return "%s%s %s %s%s %s;\n" % \
-            (self.from_node.ID, self.tailport, self.conn, \
-             self.to_node.ID, self.headport, attrstr)
+        attrstr = " [%s]" % ", ".join(attrs)
     else:
-        return "%s%s %s %s%s;\n" % \
-            (self.from_node.ID, self.tailport, self.conn, \
-             self.to_node.ID, self.headport)
+        attrstr = ""
+
+    edge_str = "%s%s %s %s%s%s;\n" % ( edge.from_node.ID, edge.tailport,
+                                       conn, edge.to_node.ID, edge.headport,
+                                       attrstr )
+
+    return edge_str
 
 
-def write_dot_graph(graph, level=0, padding="    "):
+def write_dot_graph(graph, level=0, padding="    ", directed=True):
     """ Returns a string representation of the given graph in the Dot language.
     """
     # Offset from the left margin.
@@ -155,8 +162,10 @@ def write_dot_graph(graph, level=0, padding="    "):
 
         if graph.directed:
             s = "%s%s" % (s, "digraph")
+            directed = True # Edge connection string '->' or '--'.
         else:
             s = "%s%s" % (s, "graph")
+            directed = False
     else:
         # Clusters are defined as subgraphs with an ID prefix 'cluster'.
         s = "%ssubgraph" % root_padding
@@ -197,11 +206,11 @@ def write_dot_graph(graph, level=0, padding="    "):
     for node in graph.nodes:
         s += _dot_node_str(node, nested_padding)
     for edge in graph.edges:
-        s += _dot_edge_str(edge, nested_padding)
+        s += _dot_edge_str(edge, nested_padding, directed)
     for subgraph in graph.subgraphs:
-        s += write_dot_graph(subgraph, level+1)
+        s += write_dot_graph(subgraph, level+1, directed)
     for cluster in graph.clusters:
-        s += write_dot_graph(cluster, level+1)
+        s += write_dot_graph(cluster, level+1, directed)
 
     s = "%s%s}\n" % (s, root_padding)
 
