@@ -71,7 +71,8 @@ graph_tree_editor = TreeEditor(
         TreeNode(node_for=[Edge], label="name", icon_item="edge")
     ],
     orientation="vertical", editable=False, hide_root=True,
-    on_dclick=lambda obj: obj.edit_traits(kind="livemodal")
+    on_dclick=lambda obj: obj.edit_traits(kind="livemodal"),
+#    selected="selected_graph"
 )
 
 # EOF -------------------------------------------------------------------------

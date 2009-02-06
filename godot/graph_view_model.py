@@ -27,7 +27,7 @@
 #------------------------------------------------------------------------------
 
 import sys
-from os.path import join, dirname, expanduser
+from os.path import join, dirname, expanduser, isfile
 import logging
 import pickle
 
@@ -41,7 +41,7 @@ from enthought.traits.ui.api import \
     spring, TextEditor
 
 from enthought.traits.ui.menu import NoButtons, OKCancelButtons, Separator
-from enthought.pyface.api import error, confirm, YES
+from enthought.pyface.api import error, confirm, YES, FileDialog, OK
 from enthought.pyface.image_resource import ImageResource
 from enthought.naming.unique_name import make_unique_name
 from enthought.logger.api import add_log_queue_handler
@@ -75,8 +75,8 @@ class GraphViewModel(ModelView):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    # File path to to use for loading/saving/importing/exporting.
-    file = File(filter=["Dot Files (*.dot)|*.dot|All Files (*.*)|*.*|"])
+    # File path to to use for saving.
+    save_file = File
 
     # Is the tree view of the network displayed?
     show_tree = Bool(True, desc="that the network tree view is visible")
@@ -125,12 +125,12 @@ class GraphViewModel(ModelView):
     )
 
     # File selection view.
-    file_view = View(
-        Item(name="file", id="file"),#, editor=FileEditor(entries=6)),
-        id="graph_view_model.file_view", title="Select a file",
-        icon=frame_icon, resizable=True, width=.3, kind="livemodal",
-        buttons=OKCancelButtons
-    )
+#    file_view = View(
+#        Item(name="file", id="file"),#, editor=FileEditor(entries=6)),
+#        id="graph_view_model.file_view", title="Select a file",
+#        icon=frame_icon, resizable=True, width=.3, kind="livemodal",
+#        buttons=OKCancelButtons
+#    )
 
     # Graph selection view.
     all_graphs_view = View(
@@ -206,37 +206,75 @@ class GraphViewModel(ModelView):
 
         if not info.initialized: return # Escape.
 
-        retval = self.edit_traits(parent=info.ui.control, view="file_view")
+#        retval = self.edit_traits(parent=info.ui.control, view="file_view")
 
-        if retval.result:
+        dlg = FileDialog( action = "open",
+            wildcard = "Graphviz Files (*.dot, *.xdot, *.txt)|"
+                "*.dot, *.xdot, *.txt|Dot Files (*.dot)|*.dot|"
+                "All Files (*.*)|*.*|")
+
+        if dlg.open() == OK:
+            parser = DotParser()
+            self.model = parser.parse_dot_file(dlg.path)
+
+            self.save_file = dlg.path
+
+        del dlg
+
+#            fd = None
+#            try:
+#                fd = open(self.file, "rb")
+#                parser = DotParser()
+#                self.model = parser.parse_dot_file(self.file)
+##            except:
+##                error(parent=info.ui.control, title="Load Error",
+##                    message="An error was encountered when loading\nfrom %s"
+##                    % self.file)
+#            finally:
+#                if fd is not None:
+#                    fd.close()
+
+
+    def save(self, info):
+        """ Handles saving the current model to the last file.
+        """
+        save_file = self.save_file
+
+        if not isfile(save_file):
+            self.save_as(info)
+        else:
             fd = None
             try:
-                fd = open(self.file, "rb")
-                parser = DotParser()
-                self.model = parser.parse_dot_file(self.file)
-#            except:
-#                error(parent=info.ui.control, title="Load Error",
-#                    message="An error was encountered when loading\nfrom %s"
-#                    % self.file)
+                fd = open(save_file, "wb")
+                dot_code = write_dot_graph(self.model)
+                fd.write(dot_code)
             finally:
                 if fd is not None:
                     fd.close()
 
 
-    def save(self, info):
-        """ Handles saving the current model to file """
-
+    def save_as(self, info):
+        """ Handles saving the current model to file.
+        """
         if not info.initialized:
             return
 
-        retval = self.edit_traits(parent=info.ui.control, view="file_view")
+#        retval = self.edit_traits(parent=info.ui.control, view="file_view")
 
-        if retval.result:
+        dlg = FileDialog( action = "save as",
+            wildcard = "Graphviz Files (*.dot, *.xdot, *.txt)|" \
+                "*.dot, *.xdot, *.txt|Dot Files (*.dot)|*.dot|" \
+                "All Files (*.*)|*.*|")
+
+        if dlg.open() == OK:
             fd = None
             try:
-                fd = open(self.file, "wb")
+                fd = open(dlg.path, "wb")
                 dot_code = write_dot_graph(self.model)
                 fd.write(dot_code)
+
+                self.save_file = dlg.path
+
 #            except:
 #                error(
 #                    parent=info.ui.control, title="Save Error",
@@ -246,6 +284,8 @@ class GraphViewModel(ModelView):
             finally:
                 if fd is not None:
                     fd.close()
+
+        del dlg
 
 
     def configure_graph(self, info):

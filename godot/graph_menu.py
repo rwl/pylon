@@ -41,8 +41,12 @@ new_action = Action(name="&New", accelerator="Ctrl+N", action="new_model",
 open_action = Action(name="&Open", accelerator="Ctrl+O", action="open_file",
     image=ImageResource("open"), tooltip="Open (Ctrl+O)")
 
-save_action = Action(name="&Save", accelerator="Ctrl+S", action="save",
-    image=ImageResource("save"), tooltip="Save (Ctrl+S)")
+save_action = Action(name="&Save", accelerator="Ctrl+S",
+    action="save", image=ImageResource("save"), tooltip="Save (Ctrl+S)")
+
+save_as_action = Action(name="Save &As", accelerator="Ctrl+Shift+S",
+    action="save_as", image=ImageResource("save"),
+    tooltip="Save As (Ctrl+Shift+S)")
 
 # Action to revert all changes.
 revert_action = Action(name="Revert", action="_on_revert",
@@ -135,7 +139,7 @@ about_action = Action(name="About Godot", action="about_godot",
 file_menu = Menu(
     "|", # Hack suggested by Brennan Williams to achieve correct ordering
     new_action, "_",
-    open_action, save_action, revert_action, "_",
+    open_action, save_action, save_as_action, revert_action, "_",
     close_action, name="&File"
 )
 
@@ -160,7 +164,7 @@ menubar = MenuBar(file_menu, edit_menu, view_menu, graph_menu, help_menu)
 
 toolbar = ToolBar(
     "|", #close_action, "_",
-    new_action, open_action, save_action, "_",
+    new_action, open_action, save_action, save_as_action, "_",
     undo_action, redo_action, "_",
     node_action, edge_action,
     configure_graph_action,
