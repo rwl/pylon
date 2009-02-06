@@ -65,9 +65,6 @@ class BaseGraph(HasTraits):
     # Tab width to use for string representation.
     padding = Str("    ")
 
-    # Graph attributes defined in the Dot language.
-    dot_attributes = ReadOnly#Constant()
-
     #--------------------------------------------------------------------------
     #  Xdot trait definitions:
     #--------------------------------------------------------------------------
@@ -83,64 +80,6 @@ class BaseGraph(HasTraits):
     #--------------------------------------------------------------------------
     #  Trait initialisers:
     #--------------------------------------------------------------------------
-
-    def _dot_attributes_default(self):
-        """ Trait initialiser.
-        """
-        return []
-
-    #--------------------------------------------------------------------------
-    #  "object" interface:
-    #--------------------------------------------------------------------------
-
-    def __str__(self):
-        """ Return a string representing the graph when requested by str()
-        (or print).
-
-        @rtype:  string
-        @return: String representing the graph.
-
-        """
-        graph = self
-        s     = ""
-        padding = "  "
-
-        if self.ID:
-            s = "%s %s {\n" % (s, self.ID)
-        else:
-            s = "%s {\n" % s
-
-        # Graph attributes.
-        for trait_name in self.dot_attributes:
-            # Get the value of the trait for comparison with the default value.
-            value = getattr(graph, trait_name)
-
-            default = graph.trait(trait_name).default
-
-            # FIXME: Alias/Synced traits default to None.
-            # Only print attribute value pairs if not defaulted.
-            if ( value != default ) and ( default is not None ):
-                valstr = str(value)
-
-                if isinstance( value, basestring ):
-                    # Add double quotes to the value if it is a string.
-                    valstr = '"%s"' % valstr
-
-                s = "%s%s%s=%s;\n" % ( s, padding, trait_name, valstr )
-
-        for node in graph.nodes:
-            s = "%s%s%s" % ( s, padding+padding, str( node ) )
-        for edge in graph.edges:
-            s = "%s%s%s" % ( s, padding+padding, str( edge ) )
-        for subgraph in graph.subgraphs:
-            s = "%s%s%s" % ( s, padding, str( subgraph ) )
-        for cluster in graph.clusters:
-            s = "%s%s%s" % ( s, padding, str( cluster ) )
-
-        s += "}\n"
-
-        return s
-
 
     def __len__(self):
         """ Return the order of the graph when requested by len().
@@ -176,58 +115,5 @@ class BaseGraph(HasTraits):
         for each_edge in self.edges:
             if (each_edge.from_node == node) or (each_edge.to_node == node):
                 yield each_edge
-
-    #--------------------------------------------------------------------------
-    #  Event handlers:
-    #--------------------------------------------------------------------------
-
-    def _edges_changed(self, new):
-        """ Handles the list of edges changing. """
-
-        for each_edge in new:
-            # Ensure the edge's nodes exist in the graph.
-            if each_edge.from_node not in self.nodes:
-                self.nodes.append(each_edge.from_node)
-            if each_edge.to_node not in self.nodes:
-                self.nodes.append(each_edge.to_node)
-
-            # Initialise the edge's list of available nodes.
-            each_edge._nodes = self.nodes
-
-
-    def _edges_items_changed(self, event):
-        """ Handles edges being added and removed. """
-
-        for each_edge in event.added:
-            # Ensure the edge's nodes exist in the graph.
-            if each_edge.from_node not in self.nodes:
-                self.nodes.append(each_edge.from_node)
-            if each_edge.to_node not in self.nodes:
-                self.nodes.append(each_edge.to_node)
-
-            # Initialise the edge's list of available nodes.
-            each_edge._nodes = self.nodes
-
-
-#    def _nodes_changed(self, new):
-#        """ Handles the list of nodes changing.  Maintains each edge's list
-#        of available nodes.
-#        """
-#        all_nodes = [g.nodes for g in self.all_graphs]
-#        # Set the list of nodes in the graph for each branch.
-#        for graph in self.all_graphs:
-#            for each_edge in graph.edges:
-#                each_edge._nodes = all_nodes
-#
-#
-#    def _nodes_items_changed(self, event):
-#        """ Handles nodes being added and removed.  Maintains each edge's
-#        list of available nodes.
-#        """
-#        all_nodes = [g.nodes for g in self.all_graphs]
-#        # Set the list of nodes in the graph for each branch.
-#        for graph in self.all_graphs:
-#            for each_edge in graph.edges:
-#                each_edge._nodes = all_nodes
 
 # EOF -------------------------------------------------------------------------

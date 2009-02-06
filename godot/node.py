@@ -71,19 +71,23 @@ shape_trait = Enum(node_shapes, desc="node shape", label="Node shape")
 #  Constants:
 #------------------------------------------------------------------------------
 
-node_attrs = ['URL', 'color', 'colorscheme', 'comment', 'distortion',
-    'fillcolor', 'fixedsize', 'fontcolor', 'fontname', 'fontsize', 'group',
-    'height', 'image', 'imagescale', 'label', 'label_drawing', 'layer',
-    'margin', 'nojustify', 'orientation', 'peripheries', 'pin', 'pos', 'rects',
-    'regular', 'root', 'samplepoints', 'shape', 'shapefile', 'showboxes',
-    'sides', 'skew', 'style', 'target', 'tooltip', 'vertices', 'width', 'z']
+#node_attrs = ['URL', 'color', 'colorscheme', 'comment', 'distortion',
+#    'fillcolor', 'fixedsize', 'fontcolor', 'fontname', 'fontsize', 'group',
+#    'height', 'image', 'imagescale', 'label', 'label_drawing', 'layer',
+#    'margin', 'nojustify', 'orientation', 'peripheries', 'pin', 'pos', 'rects',
+#    'regular', 'root', 'samplepoints', 'shape', 'shapefile', 'showboxes',
+#    'sides', 'skew', 'style', 'target', 'tooltip', 'vertices', 'width', 'z']
 
 #------------------------------------------------------------------------------
 #  "Node" class:
 #------------------------------------------------------------------------------
 
 class Node(Container):
-    """ A graph node """
+    """ A graph node. """
+
+    #--------------------------------------------------------------------------
+    #  Trait definitions:
+    #--------------------------------------------------------------------------
 
     ID = Str
     name = Alias("ID", desc="synonym for ID")
@@ -479,39 +483,6 @@ class Node(Container):
         super(Container, self).__init__(**traits)
 
 
-    def __str__(self):
-        """ Return a string representing the node when requested by str()
-        (or print).
-
-        @rtype:  string
-        @return: String representing the node.
-
-        """
-        # Node attributes to be joined in a comma separated list.
-        attrs = []
-
-        for trait_name in node_attrs:
-            # Get the value of the trait for comparison with the default value.
-            value = getattr(self, trait_name)
-
-            if value != self.trait(trait_name).default:
-                # Only print attribute value pairs if not at the default value.
-                valstr = str(value)
-
-                if isinstance( value, basestring ):
-                    # Add double quotes to the value if it is a string.
-                    valstr = '"%s"' % valstr
-
-                attrs.append('%s=%s' % (trait_name, valstr))
-
-        if attrs:
-            # Comma separated list with square brackets.
-            attrstr = "[%s]" % ", ".join(attrs)
-            return "%s %s;\n" % (self.ID, attrstr)
-        else:
-            return "%s;\n" % self.ID
-
-
 #    def __hash__(self):
 #        return hash(self.ID)
 
@@ -564,7 +535,7 @@ class Node(Container):
             self.add(new)
 
 #------------------------------------------------------------------------------
-#  Standalone call:
+#  Stand-alone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":

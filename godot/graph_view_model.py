@@ -97,6 +97,10 @@ class GraphViewModel(ModelView):
     # Representation of the graph in the Dot language.
     dot_code = Str
 
+    # Parse the dot_code and replace the existing model.
+    parse_dot_code = Button("Parse", desc="dot code parsing action that "
+        "replaces the existing model.")
+
     #--------------------------------------------------------------------------
     #  Views:
     #--------------------------------------------------------------------------
@@ -156,10 +160,11 @@ class GraphViewModel(ModelView):
     # Text representation of the graph viewed in a text editor
     dot_code_view = View(
         Item("dot_code", show_label=False, style="custom"),
+        Item("parse_dot_code", show_label=False),
         id="godot.view_model.dot_code",
         icon = frame_icon, kind = "livemodal",
         title = "Dot Code", resizable = True,
-        buttons = OKCancelButtons, height=.3, width=.3
+        buttons = [], height = .3, width = .3
     )
 
     #--------------------------------------------------------------------------
@@ -170,6 +175,15 @@ class GraphViewModel(ModelView):
         """ Trait intialiser.
         """
         return self.model
+
+
+    def _parse_dot_code_fired(self):
+        """ Parses the dot_code string and replaces the existing model.
+        """
+        parser = DotParser()
+        graph  = parser.parse_dot_data(self.dot_code)
+        if graph is not None:
+            self.model = graph
 
     #--------------------------------------------------------------------------
     #  Action handlers:
@@ -199,7 +213,7 @@ class GraphViewModel(ModelView):
             try:
                 fd = open(self.file, "rb")
                 parser = DotParser()
-                self.model = parser.parse_dot_data(self.file)
+                self.model = parser.parse_dot_file(self.file)
 #            except:
 #                error(parent=info.ui.control, title="Load Error",
 #                    message="An error was encountered when loading\nfrom %s"
@@ -393,11 +407,11 @@ class GraphViewModel(ModelView):
         retval = self.edit_traits( parent = info.ui.control,
                                    kind   = "livemodal",
                                    view   = "dot_code_view" )
-        if retval.result:
-            parser = DotParser()
-            graph  = parser.parse_dot_data(self.dot_code)
-            if graph is not None:
-                self.model = graph
+#        if retval.result:
+#            parser = DotParser()
+#            graph  = parser.parse_dot_data(self.dot_code)
+#            if graph is not None:
+#                self.model = graph
 
     #---------------------------------------------------------------------------
     #  Handle the user attempting to exit Godot:
@@ -431,6 +445,9 @@ if __name__ == "__main__":
     graph.subgraphs.append(sg1)
     sg2 = Subgraph(ID="SG2")
     sg1.subgraphs.append(sg2)
+
+    n1 = Node(ID="N1")
+    sg2.nodes = [n1]
 
     view_model = GraphViewModel(model=graph)
     view_model.configure_traits()

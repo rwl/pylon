@@ -50,6 +50,8 @@ from parsing_util import \
     quoted_string, nsplit, windows, graph_attr, node_attr, edge_attr, all_attr
 
 from godot.graph import Graph
+from godot.subgraph import Subgraph
+from godot.cluster import Cluster
 from godot.node import Node
 from godot.edge import Edge
 
@@ -74,6 +76,18 @@ class DotParser:
     #--------------------------------------------------------------------------
     #  Public interface:
     #--------------------------------------------------------------------------
+
+    def parse_dot_file(self, file):
+        """ Parses the contents of an entire file and returns a graph.
+        """
+        parser = self.parser
+
+        if pyparsing_version >= "1.2":
+            parser.parseWithTabs()
+
+        tokens = parser.parseFile(file)
+        return tokens[0]
+
 
     def parse_dot_data(self, data):
         """ Parses dot data and returns a godot.Graph instance. """
@@ -109,7 +123,7 @@ class DotParser:
         node_ = CaselessLiteral("node").setResultsName("node")
         edge_ = CaselessLiteral("edge").setResultsName("edge")
 
-#        subgraph_.setParseAction(self.push_subgraph_stmt)
+#        subgraph_.setParseAction(self._proc_subgraph_stmt)
 
         # token definitions
         identifier = Word(alphanums + "_").setName("identifier")
@@ -170,10 +184,12 @@ class DotParser:
         edgeRHS = OneOrMore(edgeop + edge_point)
         edge_stmt = edge_point + edgeRHS + Optional(attr_list)
 
-        subgraph = (Optional(subgraph_) + Optional(ID) + #Group(graph_stmt)
-            graph_stmt).setName("subgraph").setResultsName("ssubgraph")
+        # Subgraph and cluster statements.
+        subgraph = (Suppress(subgraph_) + Optional(ID, "") + #Group(graph_stmt)
+            graph_stmt.setResultsName("subgraph_stmt"))
 
-        edge_point << node_id#(subgraph | node_id) # Connect forward declaration.
+        # Connect forward declaration that required subgraph definition.
+        edge_point << node_id#(subgraph | node_id)
 
         # Node statement.
         node_stmt = (
@@ -192,7 +208,8 @@ class DotParser:
             node_stmt
         ).setName("stmt")
 
-        # Reconnect forward declaration to real definition.
+        # Reconnect forward declaration to real definition now that stmt has
+        # been defined.
         stmt_list << OneOrMore(stmt + Optional(semi.suppress()))
 
         # A strict graph is an unweighted, undirected graph containing no
@@ -213,15 +230,15 @@ class DotParser:
         graphparser.ignore(preprocessorOutput)
         graphparser.ignore(cppStyleComment)
 
-        # Actions
-        node_id.setParseAction(self.push_node_id)
-        assignment.setParseAction(self.push_attr_assignment)
-        a_list.setParseAction(self.push_attr_list)
-        edge_stmt.setParseAction(self.proc_edge_stmt)
-        node_stmt.setParseAction(self.proc_node_stmt)
-        attr_stmt.setParseAction(self.push_default_attr_stmt)
-        attr_list.setParseAction(self.push_attr_list_combine)
-        subgraph.setParseAction(self.push_subgraph_stmt)
+        # Parse actions.
+        node_id.setParseAction(self._proc_node_id)
+        assignment.setParseAction(self._proc_attr_assignment)
+        a_list.setParseAction(self._proc_attr_list)
+        edge_stmt.setParseAction(self._proc_edge_stmt)
+        node_stmt.setParseAction(self._proc_node_stmt)
+        attr_stmt.setParseAction(self._proc_default_attr_stmt)
+        attr_list.setParseAction(self._proc_attr_list_combine)
+        subgraph.setParseAction(self._proc_subgraph_stmt)
         #graph_stmt.setParseAction(self.push_graph_stmt)
 
         strict.setParseAction(self._proc_strict)
@@ -286,20 +303,16 @@ class DotParser:
 #        self.graph.ID = tokens["graph_id"]
 
 
-    def push_attr_assignment(self, tokens):
-        """ Sets the graph attribute to the parsed value. """
-
+    def _proc_attr_assignment(self, tokens):
+        """ Sets the graph attribute to the parsed value.
+        """
         print "ASSIGNMENT:", tokens, tokens.asList(), tokens.keys()
-
-#        graph = self.graph
-#        setattr(graph, tokens[0], tokens[1])
-
         return nsplit(tokens, 2)
 
 
-    def push_node_id(self, tokens):
-        """ Returns a tuple if more than one id exists. """
-
+    def _proc_node_id(self, tokens):
+        """ Returns a tuple if more than one id exists.
+        """
         print "NODE ID:", tokens, tokens.keys()
 
         if len(tokens) > 1:
@@ -308,18 +321,15 @@ class DotParser:
             return tokens
 
 
-    def push_attr_list(self, tokens):
+    def _proc_attr_list(self, tokens):
         """ Splits the attributes into tuples and returns a dictionary using
         the first tuple value as the key and the second as the value.
-
         """
-
         print "ATTR LIST:", tokens
-
         return dict(nsplit(tokens, 2))
 
 
-    def push_attr_list_combine(self, tokens):
+    def _proc_attr_list_combine(self, tokens):
         """ Combines a list of dictionaries, overwriting existing keys """
 
         print "ATTR LIST COMBINE:", tokens
@@ -333,7 +343,7 @@ class DotParser:
         return tokens
 
 
-    def proc_node_stmt(self, tokens):
+    def _proc_node_stmt(self, tokens):
         """ Returns tuple of the form (ADD_NODE, node_name, options) """
 
         print "NODE STMT:", tokens, tokens.asList(), tokens.keys()
@@ -361,7 +371,7 @@ class DotParser:
 #            return tuple(["add_node"] + list(tokens) + [{}])
 
 
-    def proc_edge_stmt(self, tokens):
+    def _proc_edge_stmt(self, tokens):
         """ Returns tuple of the form (ADD_EDGE, src, dst, options) """
 
         print "EDGE STMT:", tokens, tokens.asList(), tokens.keys()
@@ -428,7 +438,7 @@ class DotParser:
 #        return tokens
 
 
-    def push_default_attr_stmt(self, toks):
+    def _proc_default_attr_stmt(self, toks):
         """ If a default attribute is defined using a node, edge, or graph
         statement, or by an attribute assignment not attached to a node or
         edge, any object of the appropriate type defined afterwards will
@@ -452,12 +462,21 @@ class DotParser:
             return ("unknown", toks)
 
 
-    def push_subgraph_stmt(self, toks):
+    def _proc_subgraph_stmt(self, tokens):
         """ Returns a tuple of the form (ADD_SUBGRAPH, name, elements) """
 
-        print "SUBGRAPH:", toks, toks.asList(), toks.keys()
+        print "SUBGRAPH/CLUSTER:", tokens["subgraph_stmt"]
 
-        return ("add_subgraph", toks)#[1], toks[2])#.asList())
+        ID = tokens["ID"]
+        # Clusters are just like subgraphs, but with a 'cluster' ID prefix.
+        if ID[:7].lower() == "cluster":
+            subgraph = Cluster( ID = ID )
+        else:
+            subgraph = Subgraph( ID = ID )
+
+        self._populate_graph( subgraph, tokens["subgraph_stmt"] )
+
+        return subgraph
 
 
     def _proc_main_graph(self, tokens):
@@ -471,26 +490,33 @@ class DotParser:
 #        else:
 #            opts = {}
 
-        graph = Graph(ID=tokens["graph_id"], strict=tokens["strict"],
-            directed=tokens["directed"])#, **opts)
+        graph = Graph( ID       = tokens["graph_id"],
+                       strict   = tokens["strict"],
+                       directed = tokens["directed"])#, **opts)
 
-#        print "STMT LIST:", stmt_list, stmt_list.keys()
-#        print "GRAPH ASSIGNMENT:", stmt_list["assignment"], stmt_list["assignment"].keys()
+        self._populate_graph( graph, elements = tokens["stmt_list"] )
 
-        for element in tokens["stmt_list"]:
-            if isinstance(element, Node):
-                graph.nodes.append(element)
-            elif isinstance(element, Edge):
-                graph.edges.append(element)
-            elif isinstance(element, tuple):
-                setattr(graph, element[0], element[1])
+        return graph
 
 
-#        nodes = [e for e in stmt_list if isinstance(e, Node)]
-#        edges = [e for e in stmt_list if isinstance(e, Edge)]
-#        assign = [e for e in stmt_list if isinstance(e, tuple)]
+    def _populate_graph(self, graph, elements):
+        """ Populates a graph, subgraph or cluster with graph elements.
+        """
+        for element in elements:
+            if isinstance( element, Subgraph ):
+                graph.subgraphs.append( element )
 
-#        graph.configure_traits()
+            elif isinstance( element, Cluster ):
+                graph.clusters.append( element )
+
+            elif isinstance( element, Node ):
+                graph.nodes.append( element )
+
+            elif isinstance( element, Edge ):
+                graph.edges.append( element )
+
+            elif isinstance( element, tuple ):
+                setattr( graph, element[0], element[1] )
 
         return graph
 

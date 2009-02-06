@@ -59,18 +59,18 @@ from graph_view import graph_view, tabbed_view
 #  Constants:
 #------------------------------------------------------------------------------
 
-GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
-    "charset", "clusterrank", "colorscheme", "comment", "compound",
-    "concentrate", "defaultdist", "dim", "diredgeconstraints", "dpi",
-    "epsilon", "esep", "fontcolor", "fontname", "fontnames", "fontpath",
-    "fontsize", "label", "labeljust", "labelloc", "landscape", "layers",
-    "layersep", "levelsgap", "lp", "margin", "maxiter", "mclimit", "mindist",
-    "mode", "model", "mosek", "nodesep", "nojustify", "normalize", "nslimit",
-    "nslimit1", "ordering", "outputorder", "overlap", "pack", "packmode",
-    "pad", "page", "pagedir", "quantum", "rankdir", "ranksep",
-    "ratio", "remincross", "resolution", "root", "rotate", "searchsize",
-    "sep", "showboxes", "size", "splines", "start", "stylesheet", "target",
-    "truecolor", "viewport", "voro_margin"]
+#GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
+#    "charset", "clusterrank", "colorscheme", "comment", "compound",
+#    "concentrate", "defaultdist", "dim", "diredgeconstraints", "dpi",
+#    "epsilon", "esep", "fontcolor", "fontname", "fontnames", "fontpath",
+#    "fontsize", "label", "labeljust", "labelloc", "landscape", "layers",
+#    "layersep", "levelsgap", "lp", "margin", "maxiter", "mclimit", "mindist",
+#    "mode", "model", "mosek", "nodesep", "nojustify", "normalize", "nslimit",
+#    "nslimit1", "ordering", "outputorder", "overlap", "pack", "packmode",
+#    "pad", "page", "pagedir", "quantum", "rankdir", "ranksep",
+#    "ratio", "remincross", "resolution", "root", "rotate", "searchsize",
+#    "sep", "showboxes", "size", "splines", "start", "stylesheet", "target",
+#    "truecolor", "viewport", "voro_margin"]
 
 #MAPPED_GRAPH_ATTRIBUTES = ["labeljust", "labelloc", "showboxes"]
 
@@ -106,7 +106,13 @@ class Graph(BaseGraph):
     directed = Bool ( desc = "directed edges." )
 
     # All graphs, subgraphs and clusters.
-    all_graphs = Property(List(Instance(BaseGraph)))
+    all_graphs = Property( List( Instance( BaseGraph ) ) )
+
+    # Nodes in all graphs, subgraphs and clusters.
+#    all_nodes = Property( List( Instance( Node ) ) )
+
+    # Edges in all graphs, subgraphs and clusters.
+#    all_edges = Property( List( Instance( Edge ) ) )
 
     #--------------------------------------------------------------------------
     #  Enable trait definitions.
@@ -857,29 +863,15 @@ class Graph(BaseGraph):
 #    traits_view = tabbed_view
     traits_view = graph_view
 
-    #--------------------------------------------------------------------------
-    #  "object" interface:
-    #--------------------------------------------------------------------------
-
-    def __str__(self):
-        """ Return a string representing the graph when requested by str()
-        (or print).
-
-        @rtype:  string
-        @return: String representing the graph.
-
+    def __init__(self, *args, **kw_args):
+        """ Initialises the graph.
         """
-        graph = self
-        s = ""
-        if graph.strict:
-            s = "%s%s " % (s, "strict")
+        super(Graph, self).__init__(*args, **kw_args)
 
-        if graph.directed:
-            s += "digraph"
-        else:
-            s += "graph"
-
-        return "%s%s" % ( s, super( Graph, self ).__str__() )
+        # Listen for the addition or removal of nodes and update each branch's
+        # list of available nodes so that they can move themselves.
+        self.on_trait_change(self.manage_node_list, "subgraphs*.nodes")
+        self.on_trait_change(self.manage_node_list, "subgraphs*.nodes_items")
 
     #--------------------------------------------------------------------------
     #  Public interface:
@@ -898,12 +890,6 @@ class Graph(BaseGraph):
     #--------------------------------------------------------------------------
     #  Trait initialisers:
     #--------------------------------------------------------------------------
-
-    def _dot_attributes_default(self):
-        """ Trait initialiser.
-        """
-        return GRAPH_ATTRIBUTES
-
 
     def _canvas_default(self):
         """ Trait initialiser. """
@@ -964,6 +950,68 @@ class Graph(BaseGraph):
     #  Event handlers:
     #--------------------------------------------------------------------------
 
+    def manage_node_list(self):
+        """ Maintains each branch's list of available nodes in order that they
+            may move themselves (InstanceEditor values).
+        """
+        all_graphs = self.all_graphs
+
+        all_nodes = [n for g in all_graphs for n in g.nodes]
+
+        for graph in all_graphs:
+            for edge in graph.edges:
+                edge._nodes = all_nodes
+
+#    def _edges_changed(self, new):
+#        """ Handles the list of edges changing. """
+#
+#        for each_edge in new:
+#            # Ensure the edge's nodes exist in the graph.
+#            if each_edge.from_node not in self.nodes:
+#                self.nodes.append( each_edge.from_node )
+#
+#            if each_edge.to_node not in self.nodes:
+#                self.nodes.append( each_edge.to_node )
+#
+#            # Initialise the edge's list of available nodes.
+#            each_edge._nodes = self.nodes
+#
+#
+#    def _edges_items_changed(self, event):
+#        """ Handles edges being added and removed. """
+#
+#        for each_edge in event.added:
+#            # Ensure the edge's nodes exist in the graph.
+#            if each_edge.from_node not in self.nodes:
+#                self.nodes.append(each_edge.from_node)
+#            if each_edge.to_node not in self.nodes:
+#                self.nodes.append(each_edge.to_node)
+#
+#            # Initialise the edge's list of available nodes.
+#            each_edge._nodes = self.nodes
+
+
+#    def _nodes_changed(self, new):
+#        """ Handles the list of nodes changing.  Maintains each edge's list
+#        of available nodes.
+#        """
+#        all_nodes = [g.nodes for g in self.all_graphs]
+#        # Set the list of nodes in the graph for each branch.
+#        for graph in self.all_graphs:
+#            for each_edge in graph.edges:
+#                each_edge._nodes = all_nodes
+#
+#
+#    def _nodes_items_changed(self, event):
+#        """ Handles nodes being added and removed.  Maintains each edge's
+#        list of available nodes.
+#        """
+#        all_nodes = [g.nodes for g in self.all_graphs]
+#        # Set the list of nodes in the graph for each branch.
+#        for graph in self.all_graphs:
+#            for each_edge in graph.edges:
+#                each_edge._nodes = all_nodes
+
 #    def _nodes_items_changed(self, event):
 #        """ Handles nodes being added and removed.  Maintains each edge's
 #        list of available nodes. """
@@ -992,20 +1040,6 @@ class Graph(BaseGraph):
         """ Handles the canvas background colour. """
 
         self.canvas.bgcolor = new
-
-
-    def _directed_changed(self, new):
-        """ Sets the connection string to be used by edges in the string
-        representation of the graph. """
-
-        if new:
-            for graph in self.all_graphs:
-                for edge in graph.edges:
-                    edge.conn = "->"
-        else:
-            for graph in self.all_graphs:
-                for edge in graph.edges:
-                    edge.conn = "--"
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

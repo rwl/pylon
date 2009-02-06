@@ -87,17 +87,17 @@ port_pos_trait = Str(desc="port position")
 #  Constants:
 #------------------------------------------------------------------------------
 
-edge_attrs = ['URL', 'arrowhead', 'arrowsize', 'arrowtail', 'color',
-    'colorscheme', 'comment', 'constraint', 'decorate', 'dir', 'edgeURL',
-    'edgehref', 'edgetarget', 'edgetooltip', 'fontcolor', 'fontname',
-    'fontsize', 'headURL', 'headclip', 'headhref', 'headlabel', 'headport',
-    'headtarget', 'headtooltip', 'href', 'label', 'labelURL', 'labelangle',
-    'labeldistance', 'labelfloat', 'labelfontcolor', 'labelfontname',
-    'labelfontsize', 'labelhref', 'labeltarget', 'labeltooltip', 'layer',
-    'len', 'lhead', 'lp', 'ltail', 'minlen', 'nojustify', 'pos', 'samehead',
-    'sametail', 'showboxes', 'style', 'tailURL', 'tailclip', 'tailhref',
-    'taillabel', 'tailport', 'tailtarget', 'tailtooltip', 'target', 'tooltip',
-    'weight']
+#edge_attrs = ['URL', 'arrowhead', 'arrowsize', 'arrowtail', 'color',
+#    'colorscheme', 'comment', 'constraint', 'decorate', 'dir', 'edgeURL',
+#    'edgehref', 'edgetarget', 'edgetooltip', 'fontcolor', 'fontname',
+#    'fontsize', 'headURL', 'headclip', 'headhref', 'headlabel', 'headport',
+#    'headtarget', 'headtooltip', 'href', 'label', 'labelURL', 'labelangle',
+#    'labeldistance', 'labelfloat', 'labelfontcolor', 'labelfontname',
+#    'labelfontsize', 'labelhref', 'labeltarget', 'labeltooltip', 'layer',
+#    'len', 'lhead', 'lp', 'ltail', 'minlen', 'nojustify', 'pos', 'samehead',
+#    'sametail', 'showboxes', 'style', 'tailURL', 'tailclip', 'tailhref',
+#    'taillabel', 'tailport', 'tailtarget', 'tailtooltip', 'target', 'tooltip',
+#    'weight']
 
 #------------------------------------------------------------------------------
 #  "Edge" class:
@@ -106,15 +106,22 @@ edge_attrs = ['URL', 'arrowhead', 'arrowsize', 'arrowtail', 'color',
 class Edge(Container):
     """ Defines a graph edge. """
 
+    #--------------------------------------------------------------------------
+    #  Trait definitions:
+    #--------------------------------------------------------------------------
+
+    # From/source/start node.
     from_node = Instance(Node, allow_none=False)
 
+    # To/target/end node.
     to_node = Instance(Node, allow_none=False)
 
     # Nodes from which the 'to' and 'from' nodes may be selected.
-    _nodes = List(Instance(Node))
+    _nodes = List(Instance(Node)) # GUI specific.
 
-    # Connection string used in string output. Set by Graph handler method.
-    conn = Enum("->", "--")
+    #--------------------------------------------------------------------------
+    #  Xdot trait definitions:
+    #--------------------------------------------------------------------------
 
     # For a given graph object, one will typically a draw directive before the
     # label directive. For example, for a node, one would first use the
@@ -126,6 +133,10 @@ class Edge(Container):
     _tdraw_ = Str(desc="edge tail arrowhead drawing directive.", label="tdraw")
     _hldraw_ = Str(desc="edge head label drawing directive.", label="hldraw")
     _tldraw_ = Str(desc="edge tail label drawing directive.", label="tldraw")
+
+    #--------------------------------------------------------------------------
+    #  Dot trait definitions:
+    #--------------------------------------------------------------------------
 
     # Style of arrowhead on the head node of an edge.
     # See also the <html:a rel="attr">dir</html:a> attribute,
@@ -547,57 +558,6 @@ class Edge(Container):
         self.to_node = to_node
 
         super(Container, self).__init__(**traits)
-
-
-    def __str__(self):
-        """ Return a string representing the edge when requested by str()
-        (or print).
-
-        @rtype:  string
-        @return: String representing the edge.
-
-        """
-
-        attrs = []
-        for trait_name in edge_attrs:
-            # Get the value of the trait for comparison with the default value.
-            value = getattr(self, trait_name)
-
-            default = self.trait(trait_name).default
-
-            # FIXME: Alias/Synced traits default to None.
-            if (value != default) and (default is not None):
-                # Only print attribute value pairs if not at the default value.
-                valstr = str(value)
-
-                if isinstance(value, basestring):
-                    # Add double quotes to the value if it is a string.
-                    valstr = '"%s"' % valstr
-                attrs.append('%s=%s' % (trait_name, valstr))
-
-        if attrs:
-            attrstr = "[%s]" % ", ".join(attrs)
-            return "%s%s %s %s%s %s;\n" % \
-                (self.from_node.ID, self.tailport, self.conn, \
-                 self.to_node.ID, self.headport, attrstr)
-        else:
-            return "%s%s %s %s%s;\n" % \
-                (self.from_node.ID, self.tailport, self.conn, \
-                 self.to_node.ID, self.headport)
-
-
-    def get_edge_attributes(self):
-        """ Return the attributes of an edge.
-
-        @rtype:  list
-        @return: List of attributes specified tuples in the form (attr, value).
-
-        """
-
-        return [
-#            (edge_attr, self.get_attr(edge_attr)) \
-#            for edge_attr in EDGE_ATTRIBUTES
-        ]
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
