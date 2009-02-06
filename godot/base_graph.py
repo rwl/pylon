@@ -78,7 +78,7 @@ class BaseGraph(HasTraits):
     _ldraw_ = Str(desc="xdot label drawing directive")
 
     #--------------------------------------------------------------------------
-    #  Trait initialisers:
+    #  "object" interface:
     #--------------------------------------------------------------------------
 
     def __len__(self):

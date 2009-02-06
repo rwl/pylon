@@ -34,6 +34,8 @@ from enthought.traits.api import \
     HasTraits, Any, Instance, Trait, Tuple, Color, Bool, Str, Enum, Float, \
     Either, Range, Int, Font, List, Directory, ListInstance, This, Property
 
+from enthought.traits.trait_handlers import TraitListEvent
+
 from enthought.traits.ui.api import View, Group, Item, Tabbed
 from enthought.pyface.image_resource import ImageResource
 from enthought.enable.api import Canvas, Viewport
@@ -870,8 +872,13 @@ class Graph(BaseGraph):
 
         # Listen for the addition or removal of nodes and update each branch's
         # list of available nodes so that they can move themselves.
-        self.on_trait_change(self.manage_node_list, "subgraphs*.nodes")
-        self.on_trait_change(self.manage_node_list, "subgraphs*.nodes_items")
+        self.on_trait_change(self._on_nodes, "subgraphs*.nodes")
+        self.on_trait_change(self._on_nodes, "subgraphs*.nodes_items")
+
+        # Listen for the addition of edges and check that the to_node and
+        # from_node instances exist in the graph or any subgraphs.
+        self.on_trait_change(self._on_edges, "subgraphs*.edges")
+        self.on_trait_change(self._on_edges, "subgraphs*.edges_items")
 
     #--------------------------------------------------------------------------
     #  Public interface:
@@ -932,8 +939,8 @@ class Graph(BaseGraph):
     #--------------------------------------------------------------------------
 
     def _get_all_graphs(self):
-        """ Property getter. """
-
+        """ Property getter.
+        """
         top_graph = self
 
         def get_subgraphs(graph):
@@ -950,76 +957,45 @@ class Graph(BaseGraph):
     #  Event handlers:
     #--------------------------------------------------------------------------
 
-    def manage_node_list(self):
+    def _on_nodes(self):
         """ Maintains each branch's list of available nodes in order that they
             may move themselves (InstanceEditor values).
         """
         all_graphs = self.all_graphs
-
         all_nodes = [n for g in all_graphs for n in g.nodes]
 
         for graph in all_graphs:
             for edge in graph.edges:
                 edge._nodes = all_nodes
 
-#    def _edges_changed(self, new):
-#        """ Handles the list of edges changing. """
-#
-#        for each_edge in new:
-#            # Ensure the edge's nodes exist in the graph.
-#            if each_edge.from_node not in self.nodes:
-#                self.nodes.append( each_edge.from_node )
-#
-#            if each_edge.to_node not in self.nodes:
-#                self.nodes.append( each_edge.to_node )
-#
-#            # Initialise the edge's list of available nodes.
-#            each_edge._nodes = self.nodes
-#
-#
-#    def _edges_items_changed(self, event):
-#        """ Handles edges being added and removed. """
-#
-#        for each_edge in event.added:
-#            # Ensure the edge's nodes exist in the graph.
-#            if each_edge.from_node not in self.nodes:
-#                self.nodes.append(each_edge.from_node)
-#            if each_edge.to_node not in self.nodes:
-#                self.nodes.append(each_edge.to_node)
-#
-#            # Initialise the edge's list of available nodes.
-#            each_edge._nodes = self.nodes
 
+    def _on_edges(self, object, name, old, new):
+        """ Handles the list of edges for any graph changing.
+        """
+        if name == "edges_items":
+            edges = new.added
+        elif name == "edges":
+            edges = new
+        else:
+            edges = []
 
-#    def _nodes_changed(self, new):
-#        """ Handles the list of nodes changing.  Maintains each edge's list
-#        of available nodes.
-#        """
-#        all_nodes = [g.nodes for g in self.all_graphs]
-#        # Set the list of nodes in the graph for each branch.
-#        for graph in self.all_graphs:
-#            for each_edge in graph.edges:
-#                each_edge._nodes = all_nodes
-#
-#
-#    def _nodes_items_changed(self, event):
-#        """ Handles nodes being added and removed.  Maintains each edge's
-#        list of available nodes.
-#        """
-#        all_nodes = [g.nodes for g in self.all_graphs]
-#        # Set the list of nodes in the graph for each branch.
-#        for graph in self.all_graphs:
-#            for each_edge in graph.edges:
-#                each_edge._nodes = all_nodes
+        all_nodes = [n for g in self.all_graphs for n in g.nodes]
+
+        for each_edge in edges:
+            # Ensure the edge's nodes exist in the graph.
+            if each_edge.from_node not in all_nodes:
+                object.nodes.append( each_edge.from_node )
+
+            if each_edge.to_node not in all_nodes:
+                object.nodes.append( each_edge.to_node )
+
+            # Initialise the edge's list of available nodes.
+            each_edge._nodes = all_nodes
+
 
 #    def _nodes_items_changed(self, event):
 #        """ Handles nodes being added and removed.  Maintains each edge's
 #        list of available nodes. """
-#
-##        # Set the list of nodes in the graph for each branch.
-##        for each_edge in self.edges:
-##            each_edge._nodes = self.nodes
-#        super(Graph, self)._nodes_items_changed(event)
 #
 #        # Add new nodes to the canvas.
 #        from enthought.enable.primitives.api import Box
@@ -1037,8 +1013,8 @@ class Graph(BaseGraph):
 
 
     def _bgcolor_changed(self, new):
-        """ Handles the canvas background colour. """
-
+        """ Handles the canvas background colour.
+        """
         self.canvas.bgcolor = new
 
 #------------------------------------------------------------------------------
