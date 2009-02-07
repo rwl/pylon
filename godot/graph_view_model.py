@@ -95,7 +95,7 @@ class GraphViewModel(ModelView):
     prompt_on_exit = Bool(False, desc="exit confirmation request")
 
     # Representation of the graph in the Dot language.
-    dot_code = Str
+    dot_code = Code
 
     # Parse the dot_code and replace the existing model.
     parse_dot_code = Button("Parse", desc="dot code parsing action that "
@@ -184,6 +184,15 @@ class GraphViewModel(ModelView):
         graph  = parser.parse_dot_data(self.dot_code)
         if graph is not None:
             self.model = graph
+
+    #--------------------------------------------------------------------------
+    #  Event handlers:
+    #--------------------------------------------------------------------------
+
+    def _model_changed(self, old, new):
+        """ Handles the model changing.
+        """
+        self.selected_graph = new
 
     #--------------------------------------------------------------------------
     #  Action handlers:

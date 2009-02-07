@@ -32,7 +32,8 @@ import logging
 
 from enthought.traits.api import \
     HasTraits, Any, Instance, Trait, Tuple, Bool, Str, Enum, Float, Color, \
-    Either, Range, Int, Font, List, Directory, ListInstance, This, Property
+    Either, Range, Int, Font, List, Directory, ListInstance, This, Property, \
+    Dict
 
 from enthought.traits.trait_handlers import TraitListEvent
 
@@ -41,6 +42,9 @@ from enthought.pyface.image_resource import ImageResource
 from enthought.enable.api import Canvas, Viewport, Container
 from enthought.enable.tools.api import ViewportPanTool, ViewportZoomTool
 from enthought.enable.component_editor import ComponentEditor
+
+# FIXME: Remove Pydot dependency
+from pydot import find_graphviz
 
 from common import \
     Alias, color_scheme_trait, rectangle_trait, fontcolor_trait, \
@@ -57,9 +61,13 @@ from godot.cluster import Cluster
 
 from graph_view import graph_view, tabbed_view
 
+#from dot_writer import write_dot_graph
+
 #------------------------------------------------------------------------------
-#  Constants:
+#  Logging:
 #------------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
 
 #GRAPH_ATTRIBUTES = ["Damping", "K", "URL", "bb", "bgcolor", "center",
 #    "charset", "clusterrank", "colorscheme", "comment", "compound",
@@ -109,6 +117,22 @@ class Graph(BaseGraph):
 
     # All graphs, subgraphs and clusters.
     all_graphs = Property( List( Instance( BaseGraph ) ) )
+
+    # A dictionary containing the Graphviz executable names as keys
+    # and their paths as values.  See the trait initialiser.
+    programs = Dict(desc="names and paths of Graphviz executables")
+
+    # The Graphviz layout program
+    program = Enum("dot", "circo", "neato", "twopi", "fdp",
+        desc="layout program used by Graphviz")
+
+    # Format for writing to file.
+    format = Enum('dot', 'canon', 'cmap', 'cmapx', 'cmapx_np', 'dia',
+        'fig', 'gd', 'gd2', 'gif', 'hpgl', 'imap', 'imap_np', 'ismap',
+        'jpe', 'jpeg', 'jpg', 'mif', 'mp', 'pcl', 'pdf', 'pic', 'plain',
+        'plain-ext', 'png', 'ps', 'ps2', 'svg', 'svgz', 'vml', 'vmlz',
+        'vrml', 'vtx', 'wbmp', 'xdot', 'xlib', 'bmp', 'eps', 'gtk', 'ico',
+        'tga', 'tif', 'tiff', desc="format used when writing to file")
 
     #--------------------------------------------------------------------------
     #  Enable trait definitions.
@@ -880,6 +904,144 @@ class Graph(BaseGraph):
         else:
             return None
 
+
+    def to_string(self):
+        """ Returns a string representation of the graph in dot language. It
+            will return the graph and all its subelements in string form.
+        """
+        pass
+
+
+    def write(self, path, prog=None, format=None):
+        """ Writes a graph to a file.
+
+            Given a filename 'path' it will open/create and truncate
+            such file and write on it a representation of the graph
+            defined by the dot object and in the format specified by
+            'format'.
+            The format 'raw' is used to dump the string representation
+            of the Dot object, without further processing.
+            The output can be processed by any of graphviz tools, defined
+            in 'prog', which defaults to 'dot'
+            Returns True or False according to the success of the write
+            operation.
+        """
+
+        if prog is None:
+            prog = self.prog
+
+        if format is None:
+            format = self.format
+
+
+        dot_fd = None
+        try:
+            dot_fd = open( path, "wb" )
+#            dot_fd = file( path, "w+b" )
+            if format == 'raw':
+                dot_fd.write( write_dot_graph( self ) )
+            else:
+                dot_fd.write( self.create( prog, format ) )
+        finally:
+            if dot_fd is not None:
+                dot_fd.close()
+
+        return True
+
+
+
+    def create(self, prog=None, format=None):
+        """ Creates and returns a representation of the graph using the
+            Graphviz layout program given by 'prog', according to the given
+            format.
+
+            Writes the graph to a temporary dot file and processes
+            it with the program given by 'prog' (which defaults to 'dot'),
+            reading the output and returning it as a string if the
+            operation is successful.
+            On failure None is returned.
+        """
+
+        if prog is None:
+            prog = self.prog
+
+        if format is None:
+            format = self.format
+
+        tmp_fd, tmp_name = tempfile.mkstemp()
+        os.close(tmp_fd)
+        self.write(tmp_name)
+        tmp_dir = os.path.dirname(tmp_name )
+
+        # For each of the image files...
+        #
+        for img in self.shape_files:
+
+            # Get its data
+            #
+            f = file(img, 'rb')
+            f_data = f.read()
+            f.close()
+
+            # And copy it under a file with the same name in the temporary directory
+            #
+            f = file( os.path.join( tmp_dir, os.path.basename(img) ), 'wb' )
+            f.write(f_data)
+            f.close()
+
+        p = subprocess.Popen(
+            (self.progs[prog], '-T'+format, tmp_name),
+            cwd=tmp_dir,
+            stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+
+        stderr = p.stderr
+        stdout = p.stdout
+
+        stdout_output = list()
+        while True:
+            data = stdout.read()
+            if not data:
+                break
+            stdout_output.append(data)
+        stdout.close()
+
+        if stdout_output:
+            stdout_output = ''.join(stdout_output)
+
+        if not stderr.closed:
+            stderr_output = list()
+            while True:
+                data = stderr.read()
+                if not data:
+                    break
+                stderr_output.append(data)
+            stderr.close()
+
+            if stderr_output:
+                stderr_output = ''.join(stderr_output)
+
+        #pid, status = os.waitpid(p.pid, 0)
+        status = p.wait()
+
+        if status != 0 :
+            raise InvocationException(
+                'Program terminated with status: %d. stderr follows: %s' % (
+                    status, stderr_output) )
+        elif stderr_output:
+            print stderr_output
+
+        # For each of the image files...
+        #
+        for img in self.shape_files:
+
+            # remove it
+            #
+            os.unlink( os.path.join( tmp_dir, os.path.basename(img) ) )
+
+        os.unlink(tmp_name)
+
+        return stdout_output
+
     #--------------------------------------------------------------------------
     #  Trait initialisers:
     #--------------------------------------------------------------------------
@@ -890,6 +1052,16 @@ class Graph(BaseGraph):
 #        """
 #        return Canvas( bgcolor   = "white",#"lightsteelblue",
 #                       draw_axes = False)
+
+    def _programs_default(self):
+        """ Trait initaliser.
+        """
+        progs = find_graphviz()
+        if progs is None:
+            logger.warning("GraphViz's executables not found")
+            return {}
+        else:
+            return progs
 
 
     def _vp_default(self):
@@ -984,6 +1156,20 @@ class Graph(BaseGraph):
             each_edge._nodes = all_nodes
 
 
+    def _program_changed(self, new):
+        """ Handles the Graphviz layout program selection changing.
+        """
+        progs = self.progs
+
+        if not progs.has_key(prog):
+            logger.warning( 'GraphViz\'s executable "%s" not found' % prog )
+
+        if not os.path.exists( progs[prog] ) or not \
+            os.path.isfile( progs[prog] ):
+            logger.warning( "GraphViz's executable '%s' is not a "
+                "file or doesn't exist" % progs[prog] )
+
+
     def _component_changed(self, new):
         """ Handles the graph canvas changing.
         """
@@ -1031,7 +1217,6 @@ if __name__ == "__main__":
     viewer = ComponentViewer(component=graph.component)
     viewer.configure_traits()
 
-    from dot_writer import write_dot_graph
     print write_dot_graph(graph)
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

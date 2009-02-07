@@ -138,8 +138,8 @@ about_action = Action(name="About Godot", action="about_godot",
 
 file_menu = Menu(
     "|", # Hack suggested by Brennan Williams to achieve correct ordering
-    new_action, "_",
-    open_action, save_action, save_as_action, revert_action, "_",
+    new_action, open_action, "_",
+    save_action, save_as_action, revert_action, "_",
     close_action, name="&File"
 )
 
