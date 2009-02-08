@@ -36,6 +36,8 @@ from node import Node
 from edge import Edge
 from common import id_trait, Alias
 
+from dot_writer import write_dot_graph
+
 #------------------------------------------------------------------------------
 #  "BaseGraph" class:
 #------------------------------------------------------------------------------
@@ -122,6 +124,16 @@ class BaseGraph(HasTraits):
         for each_edge in self.edges:
             if (each_edge.from_node == node) or (each_edge.to_node == node):
                 yield each_edge
+
+    #--------------------------------------------------------------------------
+    #  Public interface::
+    #--------------------------------------------------------------------------
+
+    def to_string(self):
+        """ Returns a string representation of the graph in dot language. It
+            will return the graph and all its subelements in string form.
+        """
+        return write_dot_graph(self)
 
     #--------------------------------------------------------------------------
     #  Trait initialisers:

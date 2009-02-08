@@ -27,6 +27,9 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import os
+import subprocess
+import tempfile
 import math
 import logging
 
@@ -60,8 +63,6 @@ from godot.subgraph import Subgraph
 from godot.cluster import Cluster
 
 from graph_view import graph_view, tabbed_view
-
-#from dot_writer import write_dot_graph
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -905,13 +906,6 @@ class Graph(BaseGraph):
             return None
 
 
-    def to_string(self):
-        """ Returns a string representation of the graph in dot language. It
-            will return the graph and all its subelements in string form.
-        """
-        pass
-
-
     def write(self, path, prog=None, format=None):
         """ Writes a graph to a file.
 
@@ -928,7 +922,7 @@ class Graph(BaseGraph):
         """
 
         if prog is None:
-            prog = self.prog
+            prog = self.program
 
         if format is None:
             format = self.format
@@ -939,7 +933,7 @@ class Graph(BaseGraph):
             dot_fd = open( path, "wb" )
 #            dot_fd = file( path, "w+b" )
             if format == 'raw':
-                dot_fd.write( write_dot_graph( self ) )
+                dot_fd.write( self.to_string() )
             else:
                 dot_fd.write( self.create( prog, format ) )
         finally:
@@ -963,40 +957,32 @@ class Graph(BaseGraph):
         """
 
         if prog is None:
-            prog = self.prog
+            prog = self.program
 
         if format is None:
             format = self.format
 
+        # Make a temporary file ...
         tmp_fd, tmp_name = tempfile.mkstemp()
-        os.close(tmp_fd)
-        self.write(tmp_name)
-        tmp_dir = os.path.dirname(tmp_name )
+        os.close( tmp_fd )
+        # ... and write the graph to it.
+        self.write( tmp_name, format="raw" )
 
-        # For each of the image files...
-        #
-        for img in self.shape_files:
+        # Get the temporary file directory name.
+        tmp_dir = os.path.dirname( tmp_name )
 
-            # Get its data
-            #
-            f = file(img, 'rb')
-            f_data = f.read()
-            f.close()
+        # TODO: Shape image files (See Pydot).
 
-            # And copy it under a file with the same name in the temporary directory
-            #
-            f = file( os.path.join( tmp_dir, os.path.basename(img) ), 'wb' )
-            f.write(f_data)
-            f.close()
-
+        # Process the file using the layout program, specifying the format.
         p = subprocess.Popen(
-            (self.progs[prog], '-T'+format, tmp_name),
+            ( self.programs[ prog ], '-T'+format, tmp_name ),
             cwd=tmp_dir,
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
         stderr = p.stderr
         stdout = p.stdout
 
+        # Make sense of the standard output form the process.
         stdout_output = list()
         while True:
             data = stdout.read()
@@ -1008,6 +994,7 @@ class Graph(BaseGraph):
         if stdout_output:
             stdout_output = ''.join(stdout_output)
 
+        # Similarly so for any standard error.
         if not stderr.closed:
             stderr_output = list()
             while True:
@@ -1024,23 +1011,24 @@ class Graph(BaseGraph):
         status = p.wait()
 
         if status != 0 :
-            raise InvocationException(
-                'Program terminated with status: %d. stderr follows: %s' % (
-                    status, stderr_output) )
+            logger.error("Program terminated with status: %d. stderr " \
+                "follows: %s" % ( status, stderr_output ) )
         elif stderr_output:
-            print stderr_output
+            logger.error( "%s", stderr_output )
 
-        # For each of the image files...
-        #
-        for img in self.shape_files:
+        # TODO: Remove shape image files from the temporary directory.
 
-            # remove it
-            #
-            os.unlink( os.path.join( tmp_dir, os.path.basename(img) ) )
-
+        # Remove the temporary file.
         os.unlink(tmp_name)
 
         return stdout_output
+
+
+    def arrange_all(self):
+        """ Sets for the _draw_ and _ldraw_ attributes for each of the graph
+            sub-elements by processing the xdot format of the graph.
+        """
+        xdot_data = self.create( format = "xdot" )
 
     #--------------------------------------------------------------------------
     #  Trait initialisers:
@@ -1193,8 +1181,10 @@ if __name__ == "__main__":
 
     from godot.graph import Graph
 
-    graph = Graph(ID="Foo", strict=True, directed=False, label="Foo Graph",
-        bgcolor="pink")
+    graph = Graph(ID="Foo", strict=True, directed=False,
+        label="Foo Graph",
+#        bgcolor="pink"
+    )
 
     node1 = Node("node1", label="Node 1",  _draw_="c 5 -black e 32 18 32 18")
     node2 = Node("node2", label="Node 2", shape="rect",
@@ -1213,10 +1203,12 @@ if __name__ == "__main__":
 
 #    graph.configure_traits()
 
-    from godot.component.component_viewer import ComponentViewer
-    viewer = ComponentViewer(component=graph.component)
-    viewer.configure_traits()
+#    from godot.component.component_viewer import ComponentViewer
+#    viewer = ComponentViewer(component=graph.component)
+#    viewer.configure_traits()
 
-    print write_dot_graph(graph)
+    graph.write("/tmp/graph.xdot", "dot", "xdot")
+
+#    print write_dot_graph(graph)
 
 # EOF +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
