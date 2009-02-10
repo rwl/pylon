@@ -49,6 +49,10 @@ class UnitCommitmentRoutine:
     # The network passed to the routine
     network = Network
 
+    # Selects one of three available LP solvers: the default solver written in
+    # Python, the GLPK solver or the MOSEK LP solver.
+    solver = None # "glpk" "mosek"
+
     # Time horizon
     periods = 1
 
@@ -59,22 +63,25 @@ class UnitCommitmentRoutine:
     reserve = matrix
 
     # Maximum generation output limits.
-    p_max = []
+    p_max = matrix
 
     # Minimum generation output limits.
-    p_min = []
+    p_min = matrix
+
+    # fixed generator costs.
+    cost = matrix
 
     # Minimum up time limits.
-    min_up = []
+    min_up = matrix
 
     # Minimum down time limits.
-    min_down = []
+    min_down = matrix
 
     # Ramp up rate limits.
-    ramp_up = []
+    ramp_up = matrix
 
     # Ramp down limits.
-    ramp_down = []
+    ramp_down = matrix
 
     # Vector of the Market Clearing Prices for each period:
 #    mcps = Array
@@ -99,6 +106,8 @@ class UnitCommitmentRoutine:
 
     def solve(self):
         """ Solves the unit commitment problem for the current network. """
+
+        # Sanity checks -------------------------------------------------------
 
         # Time horizon sanity check
         p = self.periods
@@ -130,25 +139,32 @@ class UnitCommitmentRoutine:
                 self.reserve = r = self.reserve.extend([0.0]*(p-w))
                 logger.info("Extending reserve vector [%s]." % r)
 
+        # Generation ----------------------------------------------------------
+
         generators = self.network.in_service_generators
 
         # Generation output limits
-        p_min = [g.p_min for g in generators]
-        p_max = [g.p_max for g in generators]
+        self.p_min = matrix( [ g.p_min for g in generators ] )
+        self.p_max = matrix( [ g.p_max for g in generators ] )
+
+        # fixed generation costs.
+        self.cost = matrix( [ g.p_cost for g in generators ] )
 
         # Minimum up/down times
-        min_up = [g.min_up for g in generators]
-        min_down = [g.min_down for g in generators]
+        self.min_up = matrix( [ g.min_up for g in generators ] )
+        self.min_down = matrix( [ g.min_down for g in generators ] )
 
         # Ramp up/down rates
-        ramp_up = [g.ramp_up for g in generators]
-        ramp_down = [g.ramp_down for g in generators]
+        self.ramp_up = matrix( [ g.ramp_up for g in generators ] )
+        self.ramp_down = matrix( [ g.ramp_down for g in generators ] )
 
-        # Solve LP for the current period.
+        # Solve LP ------------------------------------------------------------
+
         lp, alloc_vols = self.solve_lp()
         logger.info("Solution status: %s", lp.status)
 
-        # Process results
+        # Process results -----------------------------------------------------
+
 #        self._process_results(lp, alloc_vols)
 
     #--------------------------------------------------------------------------
@@ -159,31 +175,49 @@ class UnitCommitmentRoutine:
         """ Solves the linearised unit commitment problem. """
 
         n = self.network
-        n_gen = n.n_in_service_generators
+        n_gen = len( n.in_service_generators )
+        n_periods = self.periods
+
+        # Partition problem creation from problem instantiation and solution.
 
         # Problem variables declaration
-        p_gen = variable(size=n_gen, name="Pg")
+        period = variable()
 
-#        p_min = variable(n_gen, "Pmin")
-#        p_max = variable(n_gen, "Pmax")
+        unit_number = variable( n_gen )
+        commitment = matrix( 0.0, ( n_gen, n_periods ) )
+
+        demand = variable( self.periods, name = "Demand" )
+
+        # Output of each generator at time t.
+        p_gen = variable( size = n_gen, name = "Pg" )
+
+        p_min = variable( n_gen, "Pmin" )
+        p_max = variable( n_gen, "Pmax" )
 #        min_up = variable(n_gen, "MinUp")
 #        min_down = variable(n_gen, "MinDown")
-#
-#        p_min.value = matrix(self.p_min)
-#        p_max.value = matrix(self.p_max)
+
+        c = self.cost[ :, period ]
 
         # Problem constraints
-        gt_min = (p >= matrix(self.p_min))
-        lt_max = (p <= matrix(self.p_max))
-        dmd = matrix(self.demand)
-        load = (sum(p) == dmd[period])
+        gt_min = ( p >= self.p_min ) # Lower output limits.
+        lt_max = ( p <= self.p_max ) # Upper output limits.
+        # Supply must balance with demand for each period.
+        balance = ( sum( p ) == demand[ period ] )
 
-        # Problem solution
-        c = matrix(self.bid_costs[:, period].copy())
 
-        lp = op(dot(c, p), [lt_max, gt_zero, load])
-        logger.debug("Solving the Unit Commitment problem [%s]." % n.name)
-        lp.solve()
+        # Specify variable values.
+        unit_number.value = range( n_gen )
+        p_min.value  = self.p_min
+        p_max.value  = self.p_max
+        demand.value = self.demand
+
+        # Objective function.
+        objective = dot( c, p )
+
+        lp = op( objective, [ lt_max, gt_min, balance ] )
+
+        logger.debug( "Solving the Unit Commitment problem [%s]." % n.name )
+        lp.solve( format = "dense", solver = self.solver )
 
         return lp, p
 

@@ -21,7 +21,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from unittest import TestCase, main
+import unittest
 
 from pylon.api import Network
 from pylon.routine.api import UnitCommitmentRoutine
@@ -30,7 +30,7 @@ from pylon.routine.api import UnitCommitmentRoutine
 #  "UnitCommitmentTest" class:
 #------------------------------------------------------------------------------
 
-class UnitCommitmentTest(TestCase):
+class UnitCommitmentTest(unittest.TestCase):
     """ Tests the unit commitment routine. """
 
     def test_time_horizon(self):
@@ -74,6 +74,6 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    main()
+    unittest.main()
 
 # EOF -------------------------------------------------------------------------
