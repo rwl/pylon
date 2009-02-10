@@ -54,7 +54,7 @@ class UnitCommitmentRoutine:
     solver = None # "glpk" "mosek"
 
     # Time horizon
-    periods = 1
+    n_periods = 1
 
     # Total demand vector
     demand = [0.0]
@@ -78,10 +78,10 @@ class UnitCommitmentRoutine:
     min_down = matrix
 
     # Ramp up rate limits.
-    ramp_up = matrix
+    rate_up = matrix
 
     # Ramp down limits.
-    ramp_down = matrix
+    rate_down = matrix
 
     # Vector of the Market Clearing Prices for each period:
 #    mcps = Array
@@ -93,10 +93,8 @@ class UnitCommitmentRoutine:
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, network, *args, **kw):
+    def __init__(self, network):
         """ Returns a UnitCommitmentRoutine instance. """
-
-        super(UnitCommitmentRoutine, self).__init__(*kw, **args)
 
         self.network = network
 
@@ -110,10 +108,10 @@ class UnitCommitmentRoutine:
         # Sanity checks -------------------------------------------------------
 
         # Time horizon sanity check
-        p = self.periods
+        p = self.n_periods
         if p < 1:
             logger.warn("Invalid time horizon [%d] using '1'." % p)
-            self.periods = p = 1
+            self.n_periods = p = 1
 
         # Demand vector sanity check
         d = self.demand
@@ -128,16 +126,16 @@ class UnitCommitmentRoutine:
                 logger.info("Extending demand vector [%s]." % d)
 
         # Reserve vector sanity check
-        r = self.reserve
-        w, h = r.size
-        if w != r:
-            logger.warn("Reserve vector length does not match time horizon.")
-            if w > r:
-                self.reserve = r = self.reserve[:p]
-                logger.info("Slicing reserve vector [%s]." % r)
-            elif w < p:
-                self.reserve = r = self.reserve.extend([0.0]*(p-w))
-                logger.info("Extending reserve vector [%s]." % r)
+#        r = self.reserve
+#        w, h = r.size
+#        if w != r:
+#            logger.warn("Reserve vector length does not match time horizon.")
+#            if w > r:
+#                self.reserve = r = self.reserve[:p]
+#                logger.info("Slicing reserve vector [%s]." % r)
+#            elif w < p:
+#                self.reserve = r = self.reserve.extend([0.0]*(p-w))
+#                logger.info("Extending reserve vector [%s]." % r)
 
         # Generation ----------------------------------------------------------
 
@@ -155,13 +153,13 @@ class UnitCommitmentRoutine:
         self.min_down = matrix( [ g.min_down for g in generators ] )
 
         # Ramp up/down rates
-        self.ramp_up = matrix( [ g.ramp_up for g in generators ] )
-        self.ramp_down = matrix( [ g.ramp_down for g in generators ] )
+        self.rate_up = matrix( [ g.rate_up for g in generators ] )
+        self.rate_down = matrix( [ g.rate_down for g in generators ] )
 
         # Solve LP ------------------------------------------------------------
 
-        lp, alloc_vols = self.solve_lp()
-        logger.info("Solution status: %s", lp.status)
+        lp, p_gen = self.solve_lp()
+#        logger.info("Solution status: %s", lp.status)
 
         # Process results -----------------------------------------------------
 
@@ -172,54 +170,55 @@ class UnitCommitmentRoutine:
     #--------------------------------------------------------------------------
 
     def solve_lp(self):
-        """ Solves the linearised unit commitment problem. """
+        """ Solves the linearised unit commitment problem.  Partitions problem
+            creation from problem instantiation and solution.
+        """
 
         n = self.network
         n_gen = len( n.in_service_generators )
-        n_periods = self.periods
-
-        # Partition problem creation from problem instantiation and solution.
+        n_periods = self.n_periods
 
         # Problem variables declaration
-        period = variable()
+#        period = variable()
 
-        unit_number = variable( n_gen )
-        commitment = matrix( 0.0, ( n_gen, n_periods ) )
+#        unit_number = variable( n_gen )
+#        commitment = matrix( 0.0, ( n_gen, n_periods ) )
 
-        demand = variable( self.periods, name = "Demand" )
+#        demand = variable( n_periods, name = "Demand" )
 
         # Output of each generator at time t.
         p_gen = variable( size = n_gen, name = "Pg" )
 
-        p_min = variable( n_gen, "Pmin" )
-        p_max = variable( n_gen, "Pmax" )
+#        p_min = variable( n_gen, "Pmin" )
+#        p_max = variable( n_gen, "Pmax" )
 #        min_up = variable(n_gen, "MinUp")
 #        min_down = variable(n_gen, "MinDown")
 
-        c = self.cost[ :, period ]
+#        c = self.cost[ :, period ]
 
         # Problem constraints
-        gt_min = ( p >= self.p_min ) # Lower output limits.
-        lt_max = ( p <= self.p_max ) # Upper output limits.
+        gt_min = ( p_gen >= self.p_min ) # Lower output limits.
+        print gt_min
+        lt_max = ( p_gen <= self.p_max ) # Upper output limits.
         # Supply must balance with demand for each period.
-        balance = ( sum( p ) == demand[ period ] )
+#        balance = ( sum( p ) == demand[ period ] )
 
 
         # Specify variable values.
-        unit_number.value = range( n_gen )
-        p_min.value  = self.p_min
-        p_max.value  = self.p_max
-        demand.value = self.demand
+#        unit_number.value = range( n_gen )
+#        p_min.value  = self.p_min
+#        p_max.value  = self.p_max
+#        demand.value = self.demand
 
         # Objective function.
-        objective = dot( c, p )
+#        objective = dot( c, p )
 
-        lp = op( objective, [ lt_max, gt_min, balance ] )
+        lp = None#op( objective, [ lt_max, gt_min, balance ] )
 
-        logger.debug( "Solving the Unit Commitment problem [%s]." % n.name )
-        lp.solve( format = "dense", solver = self.solver )
+#        logger.debug( "Solving the Unit Commitment problem [%s]." % n.name )
+#        lp.solve( format = "dense", solver = self.solver )
 
-        return lp, p
+        return lp, p_gen
 
     #--------------------------------------------------------------------------
     #  Process LP solution:
@@ -268,5 +267,26 @@ class UnitCommitmentRoutine:
 #                                     mcp=mcp)
 #
 #            self.status = "Closed"
+
+#------------------------------------------------------------------------------
+#  Stand-alone call:
+#------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    from pylon.api import Bus, Generator
+
+    network = Network(name="net1")
+    bus1 = Bus(name="bus1")
+    network.buses.append(bus1)
+
+    gen1 = Generator(p_min=0.1, p_max=0.8, cost_coefs=(1.0, 0.0, 0.0))
+    gen2 = Generator(p_min=0.2, p_max=0.6, cost_coefs=(2.0, 0.0, 0.0))
+    bus1.generators.append(gen1)
+    bus1.generators.append(gen2)
+
+    routine = UnitCommitmentRoutine( network )
+    routine.n_periods = 2
+    routine.demand = matrix([1.0, 0.8])
+    routine.solve()
 
 # EOF -------------------------------------------------------------------------
