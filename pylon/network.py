@@ -240,17 +240,17 @@ class Network(HasTraits):
         for v in event.removed:
             self.branches = [e for e in self.branches if not e.source_bus == v]
             self.branches = [e for e in self.branches if not e.target_bus == v]
-            
+
         # Set the list of buses in the graph for each branch.
         for branch in self.branches:
             branch.buses = self.buses
-            
-            
+
+
     def _branches_changed(self, new):
         """ Handles the list of branches changing. Checks that the source and
         target buses for each branch are present in the network. Sets the list
         of buses in the network for each branch also. """
-        
+
         for branch in new:
             # Sanity check on the presence of source/target bus in network.
             if branch.source_bus not in self.buses:
@@ -259,15 +259,15 @@ class Network(HasTraits):
             if branch.target_bus not in self.buses:
                 raise ValueError, "Target bus [%s] for branch [%s] not " \
                     "present in network." % (branch.target_bus, branch)
-                
+
             # Set the list of buses in the network.
             branch.buses = self.buses
-            
-            
+
+
     def _branches_items_changed(self, event):
         """ Handles the addition and removal of branches. Set the list of
         buses in the network for each new branch. """
-        
+
         for branch in event.added:
             # Sanity check on the presence of source/target bus in network.
             if branch.source_bus not in self.buses:
@@ -276,7 +276,7 @@ class Network(HasTraits):
             if branch.target_bus not in self.buses:
                 raise ValueError, "Target bus [%s] for branch [%s] not " \
                     "present in network." % (branch.target_bus, branch)
-                    
+
             # Set the list of buses in the network.
             branch.buses = self.buses
 
@@ -304,6 +304,9 @@ class Network(HasTraits):
 #                non_islanded.append(e.source_bus)
 #            if e.target_bus not in non_islanded:
 #                non_islanded.append(e.target_bus)
+
+        if self.n_buses <= 1:
+            return self.buses
 
         # This is a very slow way, but it returns a list in the same
         # order as the list of all buses and this is useful for
