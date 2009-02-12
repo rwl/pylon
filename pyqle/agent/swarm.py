@@ -151,17 +151,17 @@ class Swarm(Agent):
 
         env = self.environment
 
-        logger.debug(
-            "Swarm [%s] noticed the environment state [%s] change" %
-            (self.name, new_state)
-        )
+        logger.debug("Swarm [%s] notified of environment state [%s] change." %
+            ( self.name, new_state ) )
 
         if new_state is not None:
+            # Get the list of selected actions from the elementary agents.
             # NB: The action list is None as the list of possible actions
             # is provided by the agents local environment
-            composed_action = self.choose(new_state, env.action_list)
+            composed_action = self.choose( new_state, env.action_list )
 
-            self._apply_action(composed_action)
+            # Perform the actions on the environment.
+            self._apply_action( composed_action )
 
 
     def _reward_changed_for_environment(self, new):
@@ -170,10 +170,8 @@ class Swarm(Agent):
 
         """
 
-        logger.debug(
-            "Swarm [%s] received collective reward [%s]" %
-            (self.name, new)
-        )
+        logger.debug( "Swarm [%s] received collective reward [%s]." %
+            ( self.name, new ) )
 
         for i, agent in enumerate(self.elementary_agents):
             reward = new[i]
@@ -193,10 +191,8 @@ class Swarm(Agent):
 
         """
 
-        logger.debug(
-            "Swarm [%s] requesting a choice of action from agents [%s]" %
-            (self.name, self.elementary_agents)
-        )
+        logger.debug( "Swarm [%s] requesting a choice of action from "
+            "its elementary agents.\n" % self.name )
 
         composed_action = []#ComposedAction()
 
@@ -213,10 +209,11 @@ class Swarm(Agent):
 
 #        old_state = self.state.copy()
 
-        logger.debug(
-            "Swarm [%s] applying composed action [%s] on the environment "
-            "[%s]" % (self.name, composed_action, self.environment)
-        )
+        logger.debug( "Swarm [%s] applying composed action [%s] on the "
+            "environment [%s]." %
+            ( self.name,
+              [str(a) for a in composed_action],
+              self.environment.name ) )
 
         self.environment.apply_action(composed_action)
 

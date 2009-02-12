@@ -21,13 +21,19 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import logging
 from random import Random, randint
 
 from enthought.traits.api import HasTraits, implements, Str
-
 from enthought.traits.ui.api import View, Item
 
 from pyqle.selector.i_selector import ISelector
+
+#------------------------------------------------------------------------------
+#  Setup a logger for this module:
+#------------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  "RandomSelector" class:
@@ -49,21 +55,35 @@ class RandomSelector(HasTraits):
     traits_view = View(Item("name"))
 
     #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __str__(self):
+        """ Returns a string representation of the selector.
+        """
+        return self.name
+
+    #--------------------------------------------------------------------------
     #  "ISelector" interface:
     #--------------------------------------------------------------------------
 
     def choose(self, state, action_list):
-        """ Selects an action at random """
-
+        """ Selects an action at random.
+        """
         n_action = len(action_list)
 
         if n_action == 0:
-            raise ValueError
+            raise ValueError, "No actions to choose from."
         elif n_action == 1:
-            return action_list[0]
+            chosen = action_list[0]
         else:
-            idx = randint(0, n_action-1)
-            return action_list[idx]
+            idx = randint( 0, n_action-1 )
+            chosen = action_list[ idx ]
+
+        logger.debug( "Selector algorithm [%s] selected an action [%s].\n" %
+            ( self, chosen) )
+
+        return chosen
 
 
     def learn(self, starting_state, action, resulting_state, reward):

@@ -48,24 +48,26 @@ class MarketState(State):
 #    demand = Int(0, desc="Total system demand")
 
 
-    def __eq__(self, o):
-        """ Defines when two states are declared equal """
+    def __str__(self):
+        """ Defines a string representation of the state.
+        """
+        return "MarketState: %d" % self.period
 
-#        if self.demand == o.demand:
-#            return True
-#        else:
-#            return False
-        return True
+
+    def __eq__(self, o):
+        """ Defines when two states are declared equal.
+        """
+        if self.period == o.period:
+            return True
+        else:
+            return False
 
 
     def copy(self):
-        """ Return a copy of this state """
-
-        new = MarketState(environment=self.environment)
-
-        new.period = self.period
-#        new.demand = self.demand
-
-        return new
+        """ Return a copy of this state.
+        """
+        copy = MarketState(environment = self.environment,
+                          period      = self.period)
+        return copy
 
 # EOF -------------------------------------------------------------------------

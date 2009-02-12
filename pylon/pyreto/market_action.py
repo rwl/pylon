@@ -51,6 +51,11 @@ class MarketAction(HasTraits):
 
     value = Float
 
+    def __str__(self):
+        """ Returns a string representation of the action.
+        """
+        return "Action: %s" % self.name
+
 #    def __eq__(self, o):
 #        """ Defines when two actions are declared equal """
 #

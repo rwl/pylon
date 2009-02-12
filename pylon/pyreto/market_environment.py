@@ -140,7 +140,7 @@ class MarketEnvironment(Environment):
         """ The participant swarm listens for the state change """
 
         logger.debug(
-            "Setting initial market [%s] state [%s]" %
+            "Setting initial market [%s] state [%s]." %
             (self.name, self.initial_state)
         )
 

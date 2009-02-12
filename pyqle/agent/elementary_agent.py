@@ -97,37 +97,26 @@ class ElementaryAgent(Agent):
 
 
     def choose(self, state, action_list):
-        """ Ask the algorithm to choose the next action
-
-        Overridden here so as to get the list of actions from the local env.
-
+        """ Ask the algorithm to choose the next action. Overridden here so as
+            to get the list of actions from the local environment.
         """
-
-        logger.debug(
-            "Elementary agent [%s] getting an action list from its local "
-            "environment [%s]" % (self.name, self.environment.name)
-        )
-
         action_list = self.environment.action_list
 
-        logger.debug(
-            "Elementary agent [%s] asking the selector [%s] to choose the "
-            "next action" % (self.name, self.selector)
-        )
+        logger.debug( "Elementary agent [%s] received action list [%s] from "
+            "its local environment [%s]." %
+            (self.name, [str(a) for a in action_list], self.environment.name))
 
         choice = self.selector.choose(state, action_list)
 
-        logger.debug(
-            "Elementary agent [%s] selected an action [%s]" %
-            (self.name, choice)
-        )
+#        logger.debug( "Elementary agent [%s] selected an action [%s]." %
+#            ( self.name, choice ) )
 
         return choice
 
 
     def _apply_action(self, action):
-        """ Add the action to the composed action of the swarm """
-
+        """ Add the action to the composed action of the swarm.
+        """
         pass
 
 
