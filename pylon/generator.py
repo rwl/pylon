@@ -54,9 +54,8 @@ generator_attrs = ["name", "base_mva", "v_amplitude", "p", "p_max", "p_min",
 
 class Generator(HasTraits):
     """ Fixes voltage magnitude and active power injected at the bus
-    or when at its reactive power limit fixes active and reactive power
-    injected.
-
+        or when at its reactive power limit fixes active and reactive power
+        injected.
     """
 
     #--------------------------------------------------------------------------
@@ -168,11 +167,8 @@ class Generator(HasTraits):
 
     @cached_property
     def _get_p_cost(self):
+        """ Real power cost given power output and the current cost function
         """
-        Real power cost given power output and the current cost function
-
-        """
-
         if self.cost_model == "Polynomial":
             x = self.p
             c0, c1, c2 = self.cost_coeffs
@@ -234,15 +230,13 @@ class Generator(HasTraits):
 
     @cached_property
     def _get_xdata(self):
+        """ Like Python range, but with (potentially) real-valued arrays.
+            a = numpy.arange(start, stop, increment)
+
+            Create array of equally-spaced points using specified number of
+            points.
+            b = numpy.linspace(start, stop, num_elements)
         """
-        Like Python range, but with (potentially) real-valued arrays
-        a = numpy.arange(start, stop, increment)
-
-        Create array of equally-spaced points using specified number of points
-        b = numpy.linspace(start, stop, num_elements)
-
-        """
-
         if self.cost_model is "Polynomial":
             xdata = linspace(self.p_min, self.p_max, 10)
 #            print "POLYNOMIAL XDATA:", xdata
@@ -257,6 +251,8 @@ class Generator(HasTraits):
 
     @cached_property
     def _get_ydata(self):
+        """ Property getter.
+        """
         if self.cost_model is "Polynomial":
             ydata = []
             for x in self.xdata:
@@ -492,6 +488,8 @@ class Generator(HasTraits):
     #--------------------------------------------------------------------------
 
     def _id_default(self):
+        """ Trait initialiser.
+        """
         return self.name + "-#" + uuid.uuid4().hex[:6]
 
     #--------------------------------------------------------------------------
@@ -506,8 +504,8 @@ class Generator(HasTraits):
     #--------------------------------------------------------------------------
 
     def _q_changed(self, new):
-        """ Indicates if at reactive power limit. """
-
+        """ Handles the reactive power limit trait.
+        """
         if (new >= self.q_max) or (new <= self.q_min):
             self.q_limited = True
 
