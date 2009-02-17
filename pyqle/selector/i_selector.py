@@ -21,7 +21,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import Interface, Str
+from enthought.traits.api import Interface, Str, Disallow
 
 #------------------------------------------------------------------------------
 #  "ISelector" class:
@@ -32,6 +32,10 @@ class ISelector(Interface):
 
     # Human readable identifier
     name = Str("Selector")
+
+    # A selector should not be allowed to use aspects of the agent, only the
+    # percepts.
+    agent = Disallow
 
 
     def choose(self, state, action_list):

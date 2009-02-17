@@ -37,7 +37,7 @@ from pyqle.environment.environment import Environment
 from pylon.pyreto.market_state import MarketState
 
 from pylon.api import Network, Generator, Load
-from pylon.routine.api import DCOPFRoutine
+from pylon.routine.api import DCOPFRoutine, ACOPFRoutine
 from pylon.ui.plot.actions_plot import ActionsPlot
 from pylon.ui.plot.rewards_plot import RewardsPlot
 from pylon.ui.plot.colours import dark, light
@@ -125,24 +125,22 @@ class MarketEnvironment(Environment):
     #--------------------------------------------------------------------------
 
     def _actions_plot_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         return ActionsPlot(environment=self)
 
 
     def _rewards_plot_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         return RewardsPlot(environment=self)
 
 
     def _start_fired(self):
-        """ The participant swarm listens for the state change """
-
-        logger.debug(
-            "Setting initial market [%s] state [%s]." %
-            (self.name, self.initial_state)
-        )
+        """ The participant swarm listens for the state change.
+        """
+        logger.debug( "Setting initial market [%s] state [%s]." %
+            ( self.name, self.initial_state ) )
 
         self.state = self.initial_state
 
@@ -151,31 +149,31 @@ class MarketEnvironment(Environment):
     #--------------------------------------------------------------------------
 
     def _initial_state_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         return MarketState(environment=self, period=1)
 
 
     def apply_action(self, composed_action):
-        """ Computes the next state, given the current state and a
-        list of actions
-
+        """ Computes the next state, given the current state and a list of
+            actions.
         """
+        network = self.network
 
-        if self.network is None:
-            logger.error("Market environment contains no Network")
+        if network is None:
+            logger.error("Market environment contains no network.")
             return []
 
-        generators = self.network.in_service_generators
-        loads = self.network.in_service_loads
-        n_buses = self.network.n_non_islanded_buses
-        n_generators = self.network.n_in_service_generators
+        generators   = network.in_service_generators
+        loads        = network.in_service_loads
+        n_buses      = network.n_non_islanded_buses
+        n_generators = network.n_in_service_generators
 
-        self.actions_plot.update_action_plot(composed_action)
+        self.actions_plot.update_action_plot( composed_action )
 
         # Perform the supply actions on the environment
         for action in composed_action:
-            if isinstance(action.asset, Generator):
+            if isinstance( action.asset, Generator ):
                 # FIXME: We have to find the generator using the id trait since
                 # post-pickling the asset trait of the participant environment
                 # is to a different generator object than that which exists
@@ -185,22 +183,24 @@ class MarketEnvironment(Environment):
                         break
                 generator.p_max = action.value
 
-            elif isinstance(action.asset, Load):
+            elif isinstance( action.asset, Load ):
                 for load in loads:
                     if load.id == action.asset.id:
                         break
                 load.p = action.value
 
             else:
-                raise ValueError
+                raise ValueError, "Unrecognised asset type."
 
-        # Run the routine using demand from the previous period
-        routine = DCOPFRoutine(network=self.network)
+#        network.edit_traits()
+
+        # Run the routine using demand from the previous period.
+        routine = DCOPFRoutine( network, show_progress = False )
+#        routine = ACOPFRoutine( network, False )
         solution = routine.solve()
-        del routine
 
         # Extract the despatched generator outputs
-        if solution["x"] is not None:
+        if solution["status"] != "optimal":
             p_despatch = solution["x"][n_buses:n_buses+n_generators]
             logger.debug("Generators despatched at:\n%s" % (p_despatch))
         else:
@@ -224,9 +224,8 @@ class MarketEnvironment(Environment):
                 # Zero reward for loads
                 rewards.append(0.0)
 
-        logger.debug(
-            "Market [%s] determined agent rewards: %s" % (self.name, rewards)
-        )
+        logger.debug( "Market [%s] determined agent rewards: %s" %
+            ( self.name, rewards ) )
 
         if rewards == self.reward:
             self.reward = rewards
@@ -235,14 +234,16 @@ class MarketEnvironment(Environment):
         else:
             self.reward = rewards
 
+        del routine
+
 
 #    def successor_state(self):
-#        """ Computes the successor state """
+#        """ Computes the successor state.
+#        """
 
         if not self.is_final:
-            logger.debug(
-                "Environment [%s] determining successor state" % self.name
-            )
+            logger.debug( "Environment [%s] determining successor state" %
+                self.name )
             successor_state = self.state.copy()
             successor_state.period += 1
 #            successor_state.demand = sum([l.p for l in loads])
@@ -254,17 +255,15 @@ class MarketEnvironment(Environment):
 
     def _get_action_list(self, event):
         """ The list of possible actions is given by each elementary
-        agents local environment
-
+            agents local environment.
         """
-
         return None
 
 
 #    @cached_property
     def _get_is_final(self):
-        """ Determines if the new state is the final state """
-
+        """ Determines if the new state is the final state.
+        """
         if self.state is not None:
             if self.state.period == self.periods:
                 return True
@@ -275,9 +274,8 @@ class MarketEnvironment(Environment):
 
 
     def _get_winner(self):
-        """ Property getter """
-
+        """ Property getter.
+        """
         pass
-
 
 # EOF -------------------------------------------------------------------------

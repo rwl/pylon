@@ -73,6 +73,8 @@ class Environment(HasTraits):
     #--------------------------------------------------------------------------
 
     def _initial_state_default(self):
+        """ Trait initialiser.
+        """
         raise NotImplementedError, ("default_initial_state() in "
             "Environment should not be used, but overridden in "
             "all derived classes")
@@ -80,8 +82,8 @@ class Environment(HasTraits):
 
 
     def _get_action_list(self, event):
-        """ Gives the list of possible actions from a given state """
-
+        """ Gives the list of possible actions from a given state.
+        """
         raise NotImplementedError, ("get_action_list() in "
             "Environment should not be used, but overridden in "
             "all derived classes")
@@ -89,20 +91,20 @@ class Environment(HasTraits):
 
 
     def _get_reward(self):
-        """ Property getter """
-
+        """ Property getter.
+        """
         raise NotImplementedError
 
 
     def _get_is_final(self):
-        """ Property getter """
-
+        """ Property getter.
+        """
         raise NotImplementedError
 
 
     def _get_winner(self):
-        """ Property getter """
-
+        """ Property getter.
+        """
         raise NotImplementedError
 
     #--------------------------------------------------------------------------
@@ -111,8 +113,9 @@ class Environment(HasTraits):
 
     #def successor_state(self, state, action):
     def apply_action(self, action):
-        """ Computes the next state, given a start state and an action """
-
+        """ Defines the effects of executing an action.  Computes the successor
+            state, given an initial state and an action.
+        """
         raise NotImplementedError, ("successor_state() in "
             "Environment should not be used, but overridden in "
             "all derived classes")

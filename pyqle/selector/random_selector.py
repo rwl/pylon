@@ -22,7 +22,7 @@
 #------------------------------------------------------------------------------
 
 import logging
-from random import Random, randint
+import random
 
 from enthought.traits.api import HasTraits, implements, Str
 from enthought.traits.ui.api import View, Item
@@ -74,11 +74,10 @@ class RandomSelector(HasTraits):
 
         if n_action == 0:
             raise ValueError, "No actions to choose from."
-        elif n_action == 1:
-            chosen = action_list[0]
         else:
-            idx = randint( 0, n_action-1 )
-            chosen = action_list[ idx ]
+#            idx = randint( 0, n_action-1 )
+#            chosen = action_list[ idx ]
+            chosen = random.choice( action_list )
 
         logger.debug( "Selector algorithm [%s] selected an action [%s].\n" %
             ( self, chosen) )

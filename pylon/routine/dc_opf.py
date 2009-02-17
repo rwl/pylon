@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,12 +15,11 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" DC Optimal Power Flow for routine
+""" DC Optimal Power Flow for routine.
 
-References:
-    D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan,
-    MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-
+    References:
+        D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan,
+        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
 """
 
 #------------------------------------------------------------------------------
@@ -34,11 +33,11 @@ from math import pi
 
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul
 from cvxopt.umfpack import linsolve
+from cvxopt import solvers
 from cvxopt.solvers import qp
 
 from pylon.api import Network
 from pylon.routine.y import make_susceptance_matrix
-from pylon.traits import Matrix, SparseMatrix
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -54,10 +53,9 @@ logger.setLevel(logging.INFO)
 class DCOPFRoutine:
     """ A method class for solving the DC optimal power flow problem
 
-    References:
-        D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan,
-        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-
+        References:
+            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan,
+            MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
     """
 
     #--------------------------------------------------------------------------
@@ -70,7 +68,33 @@ class DCOPFRoutine:
     # Choice of solver (May be None or "mosek")
     solver = None
 
-    # Branche susceptance matirx.  The bus real power injections are related
+    #--------------------------------------------------------------------------
+    #  Algorithm parameters:
+    #--------------------------------------------------------------------------
+
+    # Turns the output to the screen on or off.
+    show_progress = True
+
+    # Maximum number of iterations.
+    max_iterations = 100
+
+    # Absolute accuracy.
+    absolute_tol = 1e-7
+
+    # Relative accuracy.
+    relative_tol = 1e-6
+
+    # Tolerance for feasibility conditions.
+    feasibility_tol = 1e-7
+
+    # Number of iterative refinement steps when solving KKT equations.
+    refinement = 1
+
+    #--------------------------------------------------------------------------
+    #  Private interface:
+    #--------------------------------------------------------------------------
+
+    # Branch susceptance matrix.  The bus real power injections are related
     # to bus voltage angles by P = Bbus * Va + Pbusinj
     _B = spmatrix
 
@@ -130,23 +154,46 @@ class DCOPFRoutine:
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, network):
-        """ Returns a new DCOPFRoutine instance """
-
+    def __init__( self, network, show_progress   = True,
+                                 max_iterations  = 100,
+                                 absolute_tol    = 1e-7,
+                                 relative_tol    = 1e-6,
+                                 feasibility_tol = 1e-7,
+                                 refinement      = 1 ):
+        """ Initialises the new DCOPFRoutine instance.
+        """
         self.network = network
+
+        self.show_progress = show_progress
+        self.max_iterations = max_iterations
+        self.absolute_tol = absolute_tol
+        self.relative_tol = relative_tol
+        self.feasibility_tol = feasibility_tol
+        self.refinement = refinement
 
     #--------------------------------------------------------------------------
     #  Solve DC Optimal Power Flow problem:
     #--------------------------------------------------------------------------
 
-    def solve(self):
+    def solve(self, network=None):
         """ Solves a DC OPF """
 
-        logger.debug("Solving DC OPF [%s]" % self.network.name)
+        if network is None:
+            network = self.network
+
+        logger.debug("Solving DC OPF [%s]" % network.name)
+
+        # Turn output to screen on or off.
+        solvers.options["show_progress"] = self.show_progress
+        solvers.options["maxiters"] = self.max_iterations
+        solvers.options["abstol"] = self.absolute_tol
+        solvers.options["reltol"] = self.relative_tol
+        solvers.options["feastol"] = self.feasibility_tol
+        solvers.options["refinement"] = self.refinement
 
         solution = None
 
-        self._B, self._B_source = make_susceptance_matrix(self.network)
+        self._B, self._B_source = make_susceptance_matrix( network )
         self._build_theta_inj_source()
         self._build_theta_inj_bus()
         self._check_cost_model_consistency()
@@ -182,12 +229,10 @@ class DCOPFRoutine:
     def _build_theta_inj_source(self):
         """ Builds the phase shift "quiescent" injections
 
-        | Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
-        |    | = |          | * |     | + |       |
-        | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
-
+            | Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
+            |    | = |          | * |     | + |       |
+            | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
         """
-
         branches = self.network.in_service_branches
 
 #        b = matrix([1/e.x * e.in_service for e in branches])
@@ -214,8 +259,8 @@ class DCOPFRoutine:
 
 
     def _build_theta_inj_bus(self):
-        """ Pbusinj = dot(Cf, Pfinj) + dot(Ct, Ptinj) """
-
+        """ Pbusinj = dot(Cf, Pfinj) + dot(Ct, Ptinj)
+        """
         buses = self.network.non_islanded_buses
         branches = self.network.in_service_branches
         n_buses = self.network.n_non_islanded_buses
@@ -248,11 +293,9 @@ class DCOPFRoutine:
 
     def _check_cost_model_consistency(self):
         """ Checks the generator cost models. If they are not all polynomial
-        then those that are get converted to piecewise linear models.  The
-        algorithm trait is then set accordingly.
-
+            then those that are get converted to piecewise linear models. The
+            algorithm trait is then set accordingly.
         """
-
         buses = self.network.non_islanded_buses
         generators = self.network.in_service_generators
 
@@ -289,11 +332,9 @@ class DCOPFRoutine:
 
     def _build_x(self):
         """ Builds the vector x where, AA * x <= bb.  Stack the initial voltage
-        phases for each generator bus, the generator real power output and
-        if using pw linear costs, the output cost.
-
+            phases for each generator bus, the generator real power output and
+            if using pw linear costs, the output cost.
         """
-
         buses = self.network.non_islanded_buses
 
         v_phase = matrix([v.v_phase_guess*pi/180 for v in buses])
@@ -326,12 +367,10 @@ class DCOPFRoutine:
     def _build_cost_constraint(self):
         """ Set up constraint matrix AA where, AA * x <= bb
 
-        For pw linear cost models we must include a constraint for each
-        segment of the function. For polynomial (quadratic) models we
-        just add an appropriately sized empty matrix.
-
+            For pw linear cost models we must include a constraint for each
+            segment of the function. For polynomial (quadratic) models we
+            just add an appropriately sized empty matrix.
         """
-
         buses = self.network.non_islanded_buses
         generators = self.network.in_service_generators
         n_buses = self.network.n_non_islanded_buses
@@ -395,8 +434,8 @@ class DCOPFRoutine:
     #--------------------------------------------------------------------------
 
     def _build_reference_angle_constraint(self):
-        """ Use the slack bus angle for reference or buses[0] """
-
+        """ Use the slack bus angle for reference or buses[0].
+        """
         buses = self.network.non_islanded_buses
         generators = self.network.in_service_generators
         n_buses = self.network.n_non_islanded_buses
@@ -410,7 +449,7 @@ class DCOPFRoutine:
         elif len(ref_idxs) == 1:
             ref_idx = ref_idxs[0]
         else:
-            raise ValueError, "More than on slack/reference bus"
+            raise ValueError, "More than one slack/reference bus"
 
         # Append zeros for piecewise linear cost constraints
         if self._solver_type == "linear":
@@ -434,8 +473,8 @@ class DCOPFRoutine:
     #--------------------------------------------------------------------------
 
     def _build_active_power_flow_equations(self):
-        """ P mismatch (B*Va + Pg = Pd) """
-
+        """ P mismatch (B*Va + Pg = Pd).
+        """
         buses = self.network.non_islanded_buses
         generators = self.network.in_service_generators
         n_buses = self.network.n_non_islanded_buses
@@ -541,12 +580,10 @@ class DCOPFRoutine:
 
     def _build_branch_flow_limit_constraint(self):
         """ The real power flows at the from end the lines are related to the
-        bus voltage angles by Pf = Bf * Va + Pfinj
+            bus voltage angles by Pf = Bf * Va + Pfinj
 
-        FIXME!
-
+            FIXME: No solution when adding this constraint.
         """
-
         branches = self.network.in_service_branches
         generators = self.network.in_service_generators
         n_branches = self.network.n_in_service_branches
@@ -654,12 +691,10 @@ class DCOPFRoutine:
     def _build_h(self):
         """ H is a sparse square matrix.
 
-        The objective function has the form 0.5 * x'*H*x + c'*x
+            The objective function has the form 0.5 * x'*H*x + c'*x
 
-        Quadratic cost function coefficients: a + bx + cx^2
-
+            Quadratic cost function coefficients: a + bx + cx^2
         """
-
         base_mva = self.network.mva_base
         buses = self.network.non_islanded_buses
         generators = self.network.in_service_generators
@@ -695,10 +730,8 @@ class DCOPFRoutine:
     def _build_c(self):
         """ Build c in the objective function of the form 0.5 * x'*H*x + c'*x
 
-        Quadratic cost function coefficients: c0*x^2 + c1*x + c2
-
+            Quadratic cost function coefficients: c0*x^2 + c1*x + c2
         """
-
         base_mva = self.network.mva_base
         buses = self.network.non_islanded_buses
         generators = self.network.in_service_generators
@@ -780,10 +813,8 @@ class DCOPFRoutine:
 
     def _update_solution_data(self, solution):
         """ Sets bus voltages angles, generator output powers and branch
-        power flows using the solution.
-
+            power flows using the solution.
         """
-
         base_mva = self.network.mva_base
         buses = self.network.non_islanded_buses
         branches = self.network.in_service_branches
@@ -819,7 +850,7 @@ class DCOPFRoutine:
             branch.q_target = 0.0
 
 #------------------------------------------------------------------------------
-#  Standalone call:
+#  Stand-alone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -838,6 +869,5 @@ if __name__ == "__main__":
     dc_opf = DCOPFRoutine(network=n)
     dc_opf.solve()
 #    dc_opf.configure_traits()
-
 
 # EOF -------------------------------------------------------------------------
