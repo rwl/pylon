@@ -15,39 +15,53 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines an environment in which multiple agents compete.
+""" Defines an environment for market participants.
 """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pybrain.rl.environments.twoplayergames.twoplayergame \
-    import CompetitiveEnvironment
+from scipy import array
+from pybrain.rl.environments import Environment
 
-from pylon.api import Network
+from pylon.api import Generator
 
 #------------------------------------------------------------------------------
-#  "MarketEnvironment" class:
+#  "ParticipantEnvironment" class:
 #------------------------------------------------------------------------------
 
-class MarketEnvironment(CompetitiveEnvironment):
-    """ Defines an environment in which multiple agents compete.
+class ParticipantEnvironment(Environment):
+    """ Defines an environment for market participant agents.
     """
 
-    # Power system on which the agents compete.
-    network = None
+    #--------------------------------------------------------------------------
+    #  "Environment" interface:
+    #--------------------------------------------------------------------------
+
+    # The number of action values the environment accepts.
+    indim = 3
+
+    # The number of sensor values the environment produces.
+    outdim = 1
+
+    #--------------------------------------------------------------------------
+    #  "ParticipantEnvironment" interface:
+    #--------------------------------------------------------------------------
+
+    # Generator instance that the agent controls.
+    asset = None
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, network):
-        """ Initialises the market environment.
+    def __init__(self, asset):
+        """ Initialises the environment.
         """
-        super(MarketEnvironment, self).__init__()
-        assert isinstance(network, Network)
-        self.network = network
+        super(ParticipantEnvironment, self).__init__()
+        assert isinstance(network, Generator)
+        self.asset = asset
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -57,16 +71,31 @@ class MarketEnvironment(CompetitiveEnvironment):
         """ Returns the currently visible state of the world as a numpy array
             of doubles.
         """
+        asset = self.asset
+        if asset is not None:
+            min = asset.p_min_bid
+            max = asset.p_max_bid
+            half = min + ((max - min) / 2)
+            return array( [ min, half, max ] )
+        else:
+            return []
+
 
     def performAction(self, action):
         """ Performs an action on the world that changes it's internal state.
             @param action: an action that should be executed in the Environment
             @type action: tuple: (agentID, action value)
         """
+        if self.asset is not None:
+            self.asset.p_max_bid = action[0]
+        else:
+            raise ValueError, "Environment [%s] has no asset." % self
+
 
     def reset(self):
         """ Reinitialises the environment.
         """
-        pass
+        if self.asset is not None:
+            self.asset.p_max_bid = self.asset.p_max
 
 # EOF -------------------------------------------------------------------------

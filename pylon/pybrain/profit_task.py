@@ -22,6 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from scipy import array
 from pybrain.rl.tasks import EpisodicTask, Task
 
 #------------------------------------------------------------------------------
@@ -40,6 +41,9 @@ class ProfitTask(Task):
         """ Computes and returns the reward corresponding to the last action
             performed.
         """
-        return 0.0
+        asset  = self.env.asset
+        profit = asset.p_despatch() * asset.p_cost
+
+        return array( [ profit ] )
 
 # EOF -------------------------------------------------------------------------

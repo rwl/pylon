@@ -23,13 +23,15 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pybrain.rl.experiments import EpisodicExperiment
+from pybrain.rl.experiments import Experiment, EpisodicExperiment
+
+from pylon.routine.api import DCOPFRoutine
 
 #------------------------------------------------------------------------------
 #  "MarketExperiment" class:
 #------------------------------------------------------------------------------
 
-class MarketExperiment(object):
+class MarketExperiment(Experiment):
     """ Defines an experiment that matches up agents with tasks and handles
         their interaction.
     """
@@ -40,17 +42,24 @@ class MarketExperiment(object):
 
     agents = list
 
+    # The power system model containing the agent's assets.
+    power_sys = None
+
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, tasks, agents):
+    def __init__(self, tasks, agents, power_sys):
         """ Initialises the market experiment.
         """
+        super(MarketExperiment, self).__init__(task=None, agent=None)
         assert len(tasks) == len(agents)
+
         self.tasks = tasks
         self.agents = agents
         self.stepid = 0
+
+        self.power_sys = power_sys
 
     #--------------------------------------------------------------------------
     #  "Experiment" interface:
@@ -60,14 +69,27 @@ class MarketExperiment(object):
         """ Directly maps the agents and the tasks.
         """
         all_rewards = []
-        for dummy in range(number):
-            rewards = []
+        for interaction in range(number):
+            # Perform action for each agent.
             for i, agent in enumerate(self.agents):
                 task = self.tasks[i]
 
                 self.stepid += 1
-                agent.integrateObservation(task.getObservation())
-                task.performAction(agent.getAction())
+                agent.integrateObservation( task.getObservation() )
+                task.performAction( agent.getAction() )
+
+            # Optimise the power system model.
+            routine = DCOPFRoutine(self.power_sys, show_progress=False)
+            solution = routine.solve()
+            if solution["status"] != "optimal":
+                print "NO OPTIMAL SOLUTION FOR INTERACTION %d." % interaction
+                break
+
+            # Reward each agent appropriately.
+            rewards = []
+            for i, agent in enumerate(self.agents):
+                task = self.tasks[i]
+
                 reward = task.getReward()
                 agent.giveReward(reward)
 

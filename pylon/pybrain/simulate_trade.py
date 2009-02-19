@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Simulates energy trade in a test network.
+""" Simulates energy trade in a test power system.
 """
 
 #------------------------------------------------------------------------------
@@ -23,12 +23,13 @@
 #------------------------------------------------------------------------------
 
 from pybrain.tools.shortcuts import buildNetwork
-from pybrain.rl.agents.finitedifference import FiniteDifferenceAgent
-from pybrain.rl.learners import SPLA
+from pybrain.rl.agents import FiniteDifferenceAgent, PolicyGradientAgent
+from pybrain.rl.learners import SPLA, ENAC
+from pybrain.structure.modules import SigmoidLayer
 
 from pylon.readwrite.api import read_matpower
 
-from environment import MarketEnvironment
+from environment import ParticipantEnvironment
 from experiment import MarketExperiment
 from profit_task import ProfitTask
 
@@ -46,23 +47,25 @@ DATA_FILE = "/home/rwl/python/aes/Pylon/pylon/test/data/case6ww.m"
 power_sys = read_matpower(DATA_FILE)
 generators = power_sys.in_service_generators
 
-# Create environment.
-env = MarketEnvironment(power_sys)
-
-# create controller network
-net = buildNetwork(len(generators), 1)
-
 # Create tasks.
 tasks = []
 agents = []
 for generator in generators:
-    task = ProfitTask(env)
-    agent = FiniteDifferenceAgent(modules=net, learner=SPLA())
+    # Create environment.
+    env = ParticipantEnvironment( asset=generator )
 
-    tasks.append(task)
-    agents.append(agent)
+    # Create controller network (min, 50%, max).
+    net = buildNetwork( 3, 6, 1, bias=False, outclass=SigmoidLayer )
 
-experiment = MarketExperiment(tasks, agents)
-experiment.doInteractions(number=24)
+    # Create a task for the agent.
+    task = ProfitTask( env )
+    # Create agent.
+    agent = FiniteDifferenceAgent( modules=net, learner=ENAC() )
+
+    tasks.append( task )
+    agents.append( agent )
+
+experiment = MarketExperiment( tasks, agents, power_sys )
+experiment.doInteractions( number = 2 )
 
 # EOF -------------------------------------------------------------------------
