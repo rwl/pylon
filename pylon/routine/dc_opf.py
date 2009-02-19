@@ -838,7 +838,8 @@ class DCOPFRoutine:
         p = solution["x"][n_buses:n_buses+n_generators]
 #        print "Pg:", p
         for i, generator in enumerate(generators):
-            generator.p = p[i]
+            generator.p          = p[i]
+            generator.p_despatch = p[i]
 
         # Branch power flows.
         p_source = self._B_source * v_phase * base_mva
