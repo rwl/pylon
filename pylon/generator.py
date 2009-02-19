@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Generator components. """
+""" Generator components.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -29,8 +30,11 @@ from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Bool, Range, \
     Property, Enum, Any, Delegate, Tuple, Array, ReadOnly, cached_property
 
-from pylon.traits import ConvexPiecewise
-from pylon.ui.generator_view import generator_view
+from pylon.traits import \
+    ConvexPiecewise
+
+from pylon.ui.generator_view import \
+    generator_view
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -72,48 +76,57 @@ class Generator(HasTraits):
 #
 #    buses = Delegate("bus", desc="list of buses from which to select connection")
 
+    # Human readable identifier.
     name = String("g", desc="generator name")
 
-    base_mva = Float(
-        desc="total MVA base of this machine"#, defaults to self.bus.base_mva"
-    )
+    # Total MVA base of this machine
+    # FIXME: default to self.bus.base_mva
+    base_mva = Float(desc="total MVA base of this machine")
 
 #    rating_s = Float(desc="power rating MVA (p.u.)")
 #
 #    rating_v = Float(desc="voltage rating kV (p.u.)")
 
+    # Voltage amplitude setpoint (PV) (p.u.).
     v_amplitude = Float(desc="voltage amplitude setpoint (PV) (p.u.)")
 
 #    v_max = Float(desc="maximum voltage (p.u.)")
 #
 #    v_min = Float(desc="minimum voltage (p.u.)")
 
+    # Active power (p.u.).
     p = Float(1.0, desc="active power (p.u.)")
 
+    # Maximum real power output rating (p.u.).
     p_max = Float(5.0, desc="maximum real power output (p.u.)")
 
+    # Minimum real power output rating (p.u.).
     p_min = Float(0.0, desc="minimum real power output (p.u.)")
 
     mu_p_max = Float(style="readonly")
-
     mu_p_min = Float(style="readonly")
 
+    # Reactive power output (p.u.).
     q = Float(0.0, style='readonly', desc="reactive power output (p.u.)")
 
+    # Maximum reactive power rating (p.u.).
     q_max = Float(3.0, desc="maximum reactive power (PV) (p.u.)")
 
+    # Minimum reactive power (p.u.).
     q_min = Float(-3.0, desc="minimum reactive power (PV) (p.u.)")
 
-    q_limited = Bool(False, desc="true if generator at reactive power limit")
+    # Is the generator at its reactive power limit?
+    q_limited = Bool(False, style="readonly",
+        desc="true if generator at reactive power limit")
 
     mu_q_max = Float(style="readonly")
-
     mu_q_min = Float(style="readonly")
 
 #    z = Bool(desc="allow conversion to impedance (PQ) (p.u.)")
 #
 #    zeta = Float(desc="loss participation coefficient")
 
+    # Is the generator in service?
     in_service = Bool(True, desc="connection status")
 
     #--------------------------------------------------------------------------
@@ -124,42 +137,58 @@ class Generator(HasTraits):
     # as a result of solving the OPF problem:
     p_despatch = Float(desc="a result of the OPF (p.u.)")
 
-#    p_max_bid = Float(500.0, desc="maximum active power bid (p.u.)")
-#
-#    p_min_bid = Float(0.0, desc="minimum active power bid (p.u.)")
-#
+    # Maximum active power output bid.  Used in OPF routines.  Should be less
+    # than or equal to p_max.  Defaults to p_max.
+    p_max_bid = Float(5.0, desc="maximum active power bid (p.u.)")
+
+    # Minimum active power bid. Used in OPF routines.  Should be greater than
+    # or equal to p_min. Defaults to p_min.
+    p_min_bid = Float(0.0, desc="minimum active power bid (p.u.)")
+
 #    p_bid = Float(desc="actual active power bid (p.u.)")
 
+    # Start up cost (GBP).
     c_startup = Float(desc="start up cost (GBP)")
 
+    # Shut down cost (GBP)
     c_shutdown = Float(desc="shut down cost (GBP)")
 
+    # Model type used to define the generator cost.
     cost_model = Enum("Polynomial", "Piecewise Linear")
 
 #    polynomial = List(Float, [1.0, 0.1, 0.01])
 
     # Only quadratic polynomial cost curves supported
-    cost_coeffs = Tuple(
-        Float(1.0), Float(0.1), Float(0.01),
-        desc="polynomial cost curve coefficients"
-    )
+    cost_coeffs = Tuple(Float(1.0), Float(0.1), Float(0.01),
+        desc="polynomial cost curve coefficients")
 
-    pwl_points = List(
-        Tuple(Float, Float, labels=["x", "y"], cols=2),
-        [(0.0, 0.0), (1.0, 1.0)]
-    )
+    #  Points of the piecewise linear cost curve.
+    pwl_points = List(Tuple(Float, Float, labels=["x", "y"], cols=2),
+        [(0.0, 0.0), (1.0, 1.0)])
+#    pwl_points = ConvexPiecewise # FIXME: Implement trait with validation.
 
-#    pwl_points = ConvexPiecewise
+    # Real power cost at current output.
+    p_cost = Property(Float, desc="generator real power output cost",
+        depends_on=["p", "cost_coeffs", "pwl_points", "cost_model"])
 
-    # Real power cost.
-    p_cost = Property(
-        Float, desc="generator real power output cost",
-        depends_on=["p", "cost_coeffs", "pwl_points", "cost_model"]
-    )
-
+    # Plot data.
     xdata = Property(Array, depends_on=["p_min", "p_max", "pw_linear"])
-
     ydata = Property(Array, depends_on=["cost_coeffs", "pwl_points"])
+
+    #--------------------------------------------------------------------------
+    #  Trait initialisers:
+    #--------------------------------------------------------------------------
+
+    def _p_max_bid_default(self):
+        """ Trait initialiser.
+        """
+        return self.p_max
+
+
+    def _p_min_bid_default(self):
+        """ Trait initialiser.
+        """
+        return self.p_min
 
     #--------------------------------------------------------------------------
     #  Compute arrays for cost curve plotting:

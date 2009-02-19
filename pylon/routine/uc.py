@@ -142,8 +142,8 @@ class UnitCommitmentRoutine:
         generators = self.network.in_service_generators
 
         # Generation output limits
-        self.p_min = matrix( [ g.p_min for g in generators ] )
-        self.p_max = matrix( [ g.p_max for g in generators ] )
+        self.p_min = matrix( [ g.p_min_bid for g in generators ] )
+        self.p_max = matrix( [ g.p_max_bid for g in generators ] )
 
         # fixed generation costs.
         self.cost = matrix( [ g.p_cost for g in generators ] )
