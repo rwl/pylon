@@ -59,8 +59,8 @@ class ParticipantEnvironment(Environment):
     def __init__(self, asset):
         """ Initialises the environment.
         """
-        super(ParticipantEnvironment, self).__init__()
-        assert isinstance(network, Generator)
+#        super(ParticipantEnvironment, self).__init__()
+        assert isinstance( asset, Generator )
         self.asset = asset
 
     #--------------------------------------------------------------------------
@@ -73,9 +73,11 @@ class ParticipantEnvironment(Environment):
         """
         asset = self.asset
         if asset is not None:
+            # Define actions (inputs to the network).
             min = asset.p_min_bid
             max = asset.p_max_bid
             half = min + ((max - min) / 2)
+
             return array( [ min, half, max ] )
         else:
             return []

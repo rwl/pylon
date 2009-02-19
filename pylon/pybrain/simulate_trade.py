@@ -22,12 +22,18 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from os.path import dirname, join
+
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.rl.agents import FiniteDifferenceAgent, PolicyGradientAgent
 from pybrain.rl.learners import SPLA, ENAC
 from pybrain.structure.modules import SigmoidLayer
 
 from pylon.readwrite.api import read_matpower
+from pylon.network import Network
+from pylon.bus import Bus
+from pylon.generator import Generator
+from pylon.load import Load
 
 from environment import ParticipantEnvironment
 from experiment import MarketExperiment
@@ -37,35 +43,66 @@ from profit_task import ProfitTask
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = "/home/rwl/python/aes/Pylon/pylon/test/data/case6ww.m"
+# FIXME: Relative path.
+DATA_FILE = join( dirname(__file__), "../test/data/case6ww.m" )
 
 #------------------------------------------------------------------------------
 #  Simulate trade:
 #------------------------------------------------------------------------------
 
-# Read network data.
-power_sys = read_matpower(DATA_FILE)
-generators = power_sys.in_service_generators
+def get_power_sys():
+    # Read network data.
+#    power_sys = read_matpower( DATA_FILE )
 
-# Create tasks.
-tasks = []
-agents = []
-for generator in generators:
-    # Create environment.
-    env = ParticipantEnvironment( asset=generator )
+    # One bus test network.
+    power_sys = Network( name = "1bus", mva_base = 100.0 )
 
-    # Create controller network (min, 50%, max).
-    net = buildNetwork( 3, 6, 1, bias=False, outclass=SigmoidLayer )
+    bus1 = Bus( name = "Bus 1" )
 
-    # Create a task for the agent.
-    task = ProfitTask( env )
-    # Create agent.
-    agent = FiniteDifferenceAgent( modules=net, learner=ENAC() )
+    generator = Generator( name        = "G1",
+                           p_max       = 6.0,
+                           p_min       = 1.0,
+                           cost_model  = "Polynomial",
+                           cost_coeffs = ( 0.0, 0.0, 6.0 ) )
 
-    tasks.append( task )
-    agents.append( agent )
+    load = Load( name = "L1",
+                 p    = 5.0,
+                 q    = 0.0 )
 
-experiment = MarketExperiment( tasks, agents, power_sys )
-experiment.doInteractions( number = 2 )
+    bus1.generators.append( generator )
+    bus1.loads.append( load )
+    power_sys.buses = [ bus1 ]
+
+    print "POWER SYSTEM:", power_sys
+    power_sys.configure_traits()
+
+    return power_sys
+
+def main(power_sys):
+    # Create tasks.
+    tasks = []
+    agents = []
+    for generator in power_sys.in_service_generators:
+        # Create environment.
+        env = ParticipantEnvironment( asset = generator )
+
+        # Create controller network (min, 50%, max).
+        net = buildNetwork( 3, 6, 1, bias = False, outclass = SigmoidLayer )
+
+        # Create a task for the agent.
+        task = ProfitTask( env )
+        # Create agent.
+        agent = FiniteDifferenceAgent( module = net, learner = ENAC() )
+
+        tasks.append( task )
+        agents.append( agent )
+
+    experiment = MarketExperiment( tasks, agents, power_sys )
+    experiment.doInteractions( number = 2 )
+
+if __name__ == "__main__":
+    power_sys = get_power_sys()
+    power_sys.configure_traits()
+    main( power_sys )
 
 # EOF -------------------------------------------------------------------------

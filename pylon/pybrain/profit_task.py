@@ -42,7 +42,7 @@ class ProfitTask(Task):
             performed.
         """
         asset  = self.env.asset
-        profit = asset.p_despatch() * asset.p_cost
+        profit = asset.p_despatch * asset.p_cost
 
         return array( [ profit ] )
 

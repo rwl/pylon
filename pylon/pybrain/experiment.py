@@ -83,7 +83,7 @@ class MarketExperiment(Experiment):
             solution = routine.solve()
             if solution["status"] != "optimal":
                 print "NO OPTIMAL SOLUTION FOR INTERACTION %d." % interaction
-                break
+#                break
 
             # Reward each agent appropriately.
             rewards = []
@@ -97,6 +97,7 @@ class MarketExperiment(Experiment):
 
             all_rewards.append(rewards)
 
+        print "REWARDS:", rewards
         return all_rewards
 
 # EOF -------------------------------------------------------------------------
