@@ -23,15 +23,19 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from enthought.traits.api import HasTraits, Int, List, Instance, Button
+from enthought.traits.ui.api import View, Group, Item
+
 from pybrain.rl.experiments import Experiment, EpisodicExperiment
 
+from pylon.api import Network
 from pylon.routine.api import DCOPFRoutine
 
 #------------------------------------------------------------------------------
 #  "MarketExperiment" class:
 #------------------------------------------------------------------------------
 
-class MarketExperiment(Experiment):
+class MarketExperiment ( HasTraits ):
     """ Defines an experiment that matches up agents with tasks and handles
         their interaction.
     """
@@ -42,8 +46,28 @@ class MarketExperiment(Experiment):
 
     agents = list
 
+    #--------------------------------------------------------------------------
+    #  Trait definitions:
+    #--------------------------------------------------------------------------
+
     # The power system model containing the agent's assets.
-    power_sys = None
+    power_sys = Instance( Network )
+
+    step = Button
+
+    #--------------------------------------------------------------------------
+    #  View definitions:
+    #--------------------------------------------------------------------------
+
+    traits_view = View( Item( name       = "power_sys",
+                              show_label = False,
+                              style      = "custom" ),
+                        Item( name       = "step",
+                              show_label = False ),
+                        id        = "pylon.pybrain.experiment",
+                        title     = "Market Experiment",
+                        resizable = True,
+                        buttons   = [ "OK" ] )
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -62,6 +86,15 @@ class MarketExperiment(Experiment):
         self.power_sys = power_sys
 
     #--------------------------------------------------------------------------
+    #  Event handlers:
+    #--------------------------------------------------------------------------
+
+    def _step_fired(self):
+        """ Handles the 'step' button event.
+        """
+        self.doInteractions( number = 1 )
+
+    #--------------------------------------------------------------------------
     #  "Experiment" interface:
     #--------------------------------------------------------------------------
 
@@ -77,6 +110,8 @@ class MarketExperiment(Experiment):
                 self.stepid += 1
                 agent.integrateObservation( task.getObservation() )
                 task.performAction( agent.getAction() )
+
+#            self.power_sys.configure_traits()
 
             # Optimise the power system model.
             routine = DCOPFRoutine(self.power_sys, show_progress=False)
@@ -95,9 +130,9 @@ class MarketExperiment(Experiment):
 
                 rewards.append(reward)
 
+            print "REWARDS (%d): %s" % (interaction, rewards)
             all_rewards.append(rewards)
 
-        print "REWARDS:", rewards
         return all_rewards
 
 # EOF -------------------------------------------------------------------------

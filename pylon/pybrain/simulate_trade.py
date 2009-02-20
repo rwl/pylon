@@ -52,29 +52,26 @@ DATA_FILE = join( dirname(__file__), "../test/data/case6ww.m" )
 
 def get_power_sys():
     # Read network data.
-#    power_sys = read_matpower( DATA_FILE )
+    power_sys = read_matpower( DATA_FILE )
 
     # One bus test network.
-    power_sys = Network( name = "1bus", mva_base = 100.0 )
-
-    bus1 = Bus( name = "Bus 1" )
-
-    generator = Generator( name        = "G1",
-                           p_max       = 6.0,
-                           p_min       = 1.0,
-                           cost_model  = "Polynomial",
-                           cost_coeffs = ( 0.0, 0.0, 6.0 ) )
-
-    load = Load( name = "L1",
-                 p    = 5.0,
-                 q    = 0.0 )
-
-    bus1.generators.append( generator )
-    bus1.loads.append( load )
-    power_sys.buses = [ bus1 ]
-
-    print "POWER SYSTEM:", power_sys
-    power_sys.configure_traits()
+#    power_sys = Network( name = "1bus", mva_base = 100.0 )
+#
+#    bus1 = Bus( name = "Bus 1" )
+#
+#    generator = Generator( name        = "G1",
+#                           p_max       = 6.0,
+#                           p_min       = 1.0,
+#                           cost_model  = "Polynomial",
+#                           cost_coeffs = ( 0.0, 0.0, 6.0 ) )
+#
+#    load = Load( name = "L1",
+#                 p    = 5.0,
+#                 q    = 0.0 )
+#
+#    bus1.generators.append( generator )
+#    bus1.loads.append( load )
+#    power_sys.buses = [ bus1 ]
 
     return power_sys
 
@@ -98,11 +95,11 @@ def main(power_sys):
         agents.append( agent )
 
     experiment = MarketExperiment( tasks, agents, power_sys )
-    experiment.doInteractions( number = 2 )
+#    experiment.doInteractions( number = 2 )
+    experiment.configure_traits()
 
 if __name__ == "__main__":
     power_sys = get_power_sys()
-    power_sys.configure_traits()
     main( power_sys )
 
 # EOF -------------------------------------------------------------------------
