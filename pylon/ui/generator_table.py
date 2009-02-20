@@ -38,6 +38,8 @@ from pylon.generator import Generator
 
 from pylon.ui.generator_view import generator_view
 
+from common import InServiceColumn, InServiceFloatColumn
+
 #------------------------------------------------------------------------------
 #  Generator factory function:
 #------------------------------------------------------------------------------
@@ -56,59 +58,47 @@ def generator_factory(**row_factory_kw):
         return Generator(name=name)
 
 #------------------------------------------------------------------------------
-#  "GeneratorColumn" class:
-#------------------------------------------------------------------------------
-
-class GeneratorColumn(ObjectColumn):
-    """ A specialised column to set the text color differently
-    based upon whether or not the generator is in service
-
-    """
-
-    width = 0.08
-
-    horizontal_alignment = "center"
-
-    def get_text_color(self, object):
-        return ["light grey", "black"][object.in_service]
-
-#------------------------------------------------------------------------------
 #  Generators "TableEditor" instance:
 #------------------------------------------------------------------------------
 
 generators_table_editor = TableEditor(
     columns = [
         CheckboxColumn(name="in_service", label="In Service", width=0.12),
-        GeneratorColumn(name="name"),
-#        GeneratorColumn(
+        InServiceColumn(name="name"),
+#        InServiceColumn(
 #            name="bus",
 #            editor=InstanceEditor(name="buses", editable=False)
 #        ),
-#        GeneratorColumn(name="rating_s"),
-#        GeneratorColumn(name="rating_v"),
-        GeneratorColumn(name="p"),
-        GeneratorColumn(name="q"),
-        GeneratorColumn(name="q_max"),
-        GeneratorColumn(name="q_min"),
-        GeneratorColumn(name="p_cost", editable=False),
-#        GeneratorColumn(name="v_max"),
-#        GeneratorColumn(name="v_min"),
-#        GeneratorColumn(name="p_max_bid"),
-#        GeneratorColumn(name="p_min_bid"),
-#        GeneratorColumn(name="p_bid"),
-#        GeneratorColumn(name="p_cost_fixed"),
-#        GeneratorColumn(name="p_cost_proportional"),
-#        GeneratorColumn(name="p_cost_quadratic"),
-#        GeneratorColumn(name="q_cost_fixed"),
-#        GeneratorColumn(name="q_cost_proportional"),
-#        GeneratorColumn(name="q_cost_quadratic"),
-#        GeneratorColumn(name="rate_up"),
-#        GeneratorColumn(name="rate_down"),
-#        GeneratorColumn(name="min_period_up"),
-#        GeneratorColumn(name="min_period_down"),
-#        GeneratorColumn(name="initial_period_up"),
-#        GeneratorColumn(name="initial_period_down"),
-#        GeneratorColumn(name="c_startup"),
+#        InServiceColumn(name="rating_s"),
+#        InServiceColumn(name="rating_v"),
+        InServiceFloatColumn(name="p"),
+        InServiceFloatColumn(name="q"),
+        InServiceFloatColumn(name="q_max"),
+        InServiceFloatColumn(name="q_min"),
+        InServiceFloatColumn(name="p_cost", editable=False),
+#        InServiceColumn(name="v_max"),
+#        InServiceColumn(name="v_min"),
+        InServiceFloatColumn( name    = "p_max",
+                              tooltip = "Maximum real power output rating" ),
+        InServiceFloatColumn( name    = "p_min",
+                              tooltip = "Minimum real power output rating" ),
+        InServiceFloatColumn(name="p_max_bid"),
+        InServiceFloatColumn(name="p_min_bid"),
+        InServiceFloatColumn(name="p_despatch", editable=False),
+#        InServiceColumn(name="p_bid"),
+#        InServiceColumn(name="p_cost_fixed"),
+#        InServiceColumn(name="p_cost_proportional"),
+#        InServiceColumn(name="p_cost_quadratic"),
+#        InServiceColumn(name="q_cost_fixed"),
+#        InServiceColumn(name="q_cost_proportional"),
+#        InServiceColumn(name="q_cost_quadratic"),
+#        InServiceColumn(name="rate_up"),
+#        InServiceColumn(name="rate_down"),
+#        InServiceColumn(name="min_period_up"),
+#        InServiceColumn(name="min_period_down"),
+#        InServiceColumn(name="initial_period_up"),
+#        InServiceColumn(name="initial_period_down"),
+#        InServiceColumn(name="c_startup"),
     ],
     show_toolbar=True,
     deletable=True,
@@ -127,12 +117,19 @@ generators_table_editor = TableEditor(
 all_generators_table_editor = TableEditor(
     columns = [
         CheckboxColumn(name="in_service", label="In Service", width=0.12),
-        GeneratorColumn(name="name"),
-        GeneratorColumn(name="p"),
-        GeneratorColumn(name="q"),
-        GeneratorColumn(name="q_max"),
-        GeneratorColumn(name="q_min"),
-        GeneratorColumn(name="p_cost", editable=False),
+        InServiceColumn(name="name"),
+        InServiceFloatColumn(name="p"),
+        InServiceFloatColumn(name="q"),
+        InServiceFloatColumn(name="q_max"),
+        InServiceFloatColumn(name="q_min"),
+        InServiceFloatColumn(name="p_cost", editable=False),
+        InServiceFloatColumn( name    = "p_max",
+                              tooltip = "Maximum real power output rating" ),
+        InServiceFloatColumn( name    = "p_min",
+                              tooltip = "Minimum real power output rating" ),
+        InServiceFloatColumn(name="p_max_bid"),
+        InServiceFloatColumn(name="p_min_bid"),
+        InServiceFloatColumn(name="p_despatch", editable=False),
     ],
     deletable=False, orientation="horizontal",# edit_view=generator_view,
 #    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],

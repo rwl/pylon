@@ -35,7 +35,8 @@ from enthought.traits.ui.table_filter import \
 
 from pylon.bus import Bus
 
-from pylon.ui.bus_view import bus_view
+from bus_view import bus_view
+from common import FloatColumn
 
 #------------------------------------------------------------------------------
 #  Bus factory function:
@@ -58,17 +59,25 @@ buses_table_editor = TableEditor(
     columns = [
         ObjectColumn(name="name"),
         ObjectColumn(name="mode", editable=False),
-        ObjectColumn(name="p_supply", label="Ps", editable=False),
-        ObjectColumn(name="q_supply", label="Qs", editable=False),
-        ObjectColumn(name="p_demand", label="Pd", editable=False),
-        ObjectColumn(name="q_demand", label="Qd", editable=False),
+        FloatColumn( name     = "p_supply",
+                     label    = "Ps",
+                     editable = False ),
+        FloatColumn( name     = "q_supply",
+                     label    = "Qs",
+                     editable = False ),
+        FloatColumn( name     = "p_demand",
+                     label    = "Pd",
+                     editable = False ),
+        FloatColumn( name     = "q_demand",
+                     label    = "Qd",
+                     editable = False ),
         ObjectColumn(name="slack", label="slack"),
 #        ObjectColumn(name="v_amplitude", label="Vnom"),
-        ObjectColumn(name="v_amplitude_guess", label="Vm0"),
-        ObjectColumn(name="v_phase_guess", label="Va0"),
+        FloatColumn(name="v_amplitude_guess", label="Vm0"),
+        FloatColumn(name="v_phase_guess", label="Va0"),
     #    ObjectColumn(name="v_max", label="Vmax"),
     #    ObjectColumn(name="v_min", label="Vmin"),
-        ObjectColumn(name="v_amplitude", editable=False, label="Va"),
+        FloatColumn(name="v_amplitude", editable=False, label="Va"),
     #    ObjectColumn(name="v_phase", editable=False, label="Vp")
     ],
     show_toolbar=True,
