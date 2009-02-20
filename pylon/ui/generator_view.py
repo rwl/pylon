@@ -210,8 +210,8 @@ generator_view = View(
 #                ),
             Group(
                 Item("rate_up"), Item("rate_down"),
-                Item("min_period_up"), Item("min_period_down"),
-                Item("initial_period_up"), Item("initial_period_down"),
+                Item("min_up"), Item("min_down"),
+                Item("initial_up"), Item("initial_down"),
             ),
             Group(
                 Item(name="p_cost", style="readonly"),

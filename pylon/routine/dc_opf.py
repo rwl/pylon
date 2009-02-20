@@ -802,9 +802,9 @@ class DCOPFRoutine:
 
         logger.debug("Quadratic solver returned:%s" % solution)
 
-        print "S:", solution["s"]
-        print "Y:", solution["y"]
-        print "Z:", solution["z"]
+#        print "S:", solution["s"]
+#        print "Y:", solution["y"]
+#        print "Z:", solution["z"]
 
         self.x = solution["x"]
 

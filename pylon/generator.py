@@ -171,6 +171,10 @@ class Generator(HasTraits):
     p_cost = Property(Float, desc="generator real power output cost",
         depends_on=["p", "cost_coeffs", "pwl_points", "cost_model"])
 
+    # Cost to produce one extra MW.
+    p_cost_marginal = Property(Float, desc="cost to produce one extra MW",
+        depends_on=["p_cost"])
+
     # Plot data.
     xdata = Property(Array, depends_on=["p_min", "p_max", "pw_linear"])
     ydata = Property(Array, depends_on=["cost_coeffs", "pwl_points"])
@@ -191,7 +195,7 @@ class Generator(HasTraits):
         return self.p_min
 
     #--------------------------------------------------------------------------
-    #  Compute arrays for cost curve plotting:
+    #  Property getters:
     #--------------------------------------------------------------------------
 
     @cached_property
@@ -202,9 +206,8 @@ class Generator(HasTraits):
             x = self.p
             c0, c1, c2 = self.cost_coeffs
             cost = c0*x**2 + c1*x + c2
-            logger.debug(
-                "Generator [%s] cost (polynomial) set to: %f" % (self, cost)
-            )
+            logger.debug("Generator [%s] cost (polynomial) set to: %f" %
+                (self, cost))
             return cost
 
         elif self.cost_model == "Piecewise Linear":
@@ -226,19 +229,15 @@ class Generator(HasTraits):
                 x0, y0 = points[0]
                 if p <= x0:
                     cost = y0
-                    logger.debug(
-                        "Generator power less then lowest pw point. "
-                        "Cost set to: %f" % cost
-                    )
+                    logger.debug("Generator power less then lowest pw point. "
+                        "Cost set to: %f" % cost)
                     return cost
                 # Handle power being above last point
                 xn, yn = points[n_points-1]
                 if p >= xn:
                     cost = yn
-                    logger.debug(
-                        "Generator power greater then last pw point. "
-                        "Cost set to: %f" % cost
-                    )
+                    logger.debug("Generator power greater then last pw point. "
+                        "Cost set to: %f" % cost)
                     return cost
                 # Compute the cost for the piece
                 for i in range(n_points-1):
@@ -248,14 +247,31 @@ class Generator(HasTraits):
                         # y = mx + c
                         m = (y2-y1)/(x2-x1)
                         cost = m*p + y1
-                        logger.debug(
-                            "Generator [%s] cost (pw linear) set to: %f" %
-                            (self, cost)
-                        )
+                        logger.debug( "Generator [%s] cost (pw linear) set "
+                            "to: %f" % (self, cost))
                         return cost
         else:
             logger.error("Invalid cost model [%s]" % self.cost_model)
 
+
+    def _get_p_cost_marginal(self):
+        """ Property getter.
+        """
+#        if self.cost_model == "Polynomial":
+#            x = 1
+#            c0, c1, c2 = self.cost_coeffs
+#            return c0*x**2 + c1*x + c2
+#        else:
+#            logger.warn("PW linear cost model not supported for marginal "
+#                "cost property")
+        if self.p != 0.0:
+            return self.p_cost / self.p
+        else:
+            return 0.0
+
+    #--------------------------------------------------------------------------
+    #  Cost curve plot data:
+    #--------------------------------------------------------------------------
 
     @cached_property
     def _get_xdata(self):

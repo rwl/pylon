@@ -109,9 +109,7 @@ class MarketExperiment ( HasTraits ):
 
                 self.stepid += 1
                 agent.integrateObservation( task.getObservation() )
-                task.performAction( agent.getAction() )
-
-#            self.power_sys.configure_traits()
+#                task.performAction( agent.getAction() )
 
             # Optimise the power system model.
             routine = DCOPFRoutine(self.power_sys, show_progress=False)
@@ -126,7 +124,7 @@ class MarketExperiment ( HasTraits ):
                 task = self.tasks[i]
 
                 reward = task.getReward()
-                agent.giveReward(reward)
+#                agent.giveReward(reward)
 
                 rewards.append(reward)
 
@@ -134,5 +132,9 @@ class MarketExperiment ( HasTraits ):
             all_rewards.append(rewards)
 
         return all_rewards
+
+    #--------------------------------------------------------------------------
+    #  Private interface:
+    #--------------------------------------------------------------------------
 
 # EOF -------------------------------------------------------------------------

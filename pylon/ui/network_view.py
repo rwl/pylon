@@ -162,7 +162,7 @@ network_view = View(
                     editor=all_generators_table_editor,
                     id=".network_generators_table"
                 ),
-                label="_generators"
+                label="All Generators"
             ),
             Group(
                 Item(
@@ -170,7 +170,7 @@ network_view = View(
                     editor=all_loads_table_editor,
                     id=".network_loads_table"
                 ),
-                label="_loads"
+                label="All Loads"
             ),
             dock="tab", springy=True
         ),

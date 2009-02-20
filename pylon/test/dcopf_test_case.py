@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +15,15 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #-------------------------------------------------------------------------------
 
-""" Test case for the DC Optimal Power Flow routine. """
+""" Test case for the DC Optimal Power Flow routine.
+"""
 
 #-------------------------------------------------------------------------------
 #  Imports:
 #-------------------------------------------------------------------------------
 
 from os.path import join, dirname
-from unittest import TestCase, main
+import unittest
 
 from pylon.readwrite.api import read_matpower
 from pylon.routine.api import DCOPFRoutine
@@ -37,43 +38,41 @@ DATA_FILE = join(dirname(__file__), "data/case6ww.m")
 #  "DCOPFTest" class:
 #-------------------------------------------------------------------------------
 
-class DCOPFTest(TestCase):
+class DCOPFTest(unittest.TestCase):
     """ We use a MATPOWER data file and validate the results against those
-    obtained from running the MATPOWER rundcopf.m script with the same data
-    file. See reader_test_case.py for validation of MATPOWER data file parsing.
-
+        obtained from running the MATPOWER rundcopf.m script with the same data
+        file. See reader_test_case.py for validation of MATPOWER data file
+        parsing.
     """
 
     routine = DCOPFRoutine
 
     def setUp(self):
-        """ The test runner will execute this method prior to each test. """
-
+        """ The test runner will execute this method prior to each test.
+        """
         network = read_matpower(DATA_FILE)
-        self.routine = DCOPFRoutine(network)
+        self.routine = DCOPFRoutine(network, show_progress=False)
         self.routine.solve()
 
 
     def test_theta_injection_source(self):
         """ Test phase shift 'quiescent' injections, used for calculating
-        branch real power flows at the from end.
+            branch real power flows at the from end.
 
-        Pfinj =
+            Pfinj =
 
-             0
-             0
-             0
-             0
-             0
-             0
-             0
-             0
-             0
-             0
-             0
-
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
         """
-
         theta_inj = self.routine._theta_inj_source
 
         self.assertEqual(len(theta_inj), 11)
@@ -84,19 +83,17 @@ class DCOPFTest(TestCase):
 
     def test_theta_injection_bus(self):
         """ Test phase shift injection vector used for bus real power
-        injection calcualtion.
+            injection calcualtion.
 
-        Pbusinj =
+            Pbusinj =
 
-             0
-             0
-             0
-             0
-             0
-             0
-
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
         """
-
         theta_inj = self.routine._theta_inj_bus
 
         self.assertEqual(len(theta_inj), 6)
@@ -106,28 +103,26 @@ class DCOPFTest(TestCase):
 
 
     def test_cost_model(self):
-        """ Test selection of quadratic solver for polynomial cost model. """
-
+        """ Test selection of quadratic solver for polynomial cost model.
+        """
         self.assertEqual(self.routine._solver_type, "quadratic")
 
 
     def test_x_vector(self):
         """ Test the the x vector where AA * x <= bb.
 
-        x =
+            x =
 
-             0
-             0
-             0
-             0
-             0
-             0
-             0
-        0.5000
-        0.6000
-
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+                 0
+            0.5000
+            0.6000
         """
-
         x = self.routine._x
 
         places = 4
@@ -143,8 +138,8 @@ class DCOPFTest(TestCase):
 
 
     def test_cost_constraints(self):
-        """ Test the DC OPF cost constaints. """
-
+        """ Test the DC OPF cost constaints.
+        """
         # TODO: Repeat for case with piecewise-linear cost curves.
         Acc = self.routine._aa_cost
         bcc = self.routine._bb_cost
@@ -156,16 +151,14 @@ class DCOPFTest(TestCase):
     def test_ref_bus_phase_angle_constraint(self):
         """ Test reference bus phase angle constraint.
 
-        Aref =
+            Aref =
 
-             1     0     0     0     0     0     0     0     0
+                 1     0     0     0     0     0     0     0     0
 
-        bref =
+            bref =
 
-             0
-
+                 0
         """
-
         Aref = self.routine._aa_ref
         bref = self.routine._bb_ref
 
@@ -187,26 +180,24 @@ class DCOPFTest(TestCase):
     def test_power_balance_constraint(self):
         """ Test power balance (mismatch) constraint.
 
-        A_mismatch =
+            A_mismatch =
 
-           13.3333   -5.0000         0   -5.0000   -3.3333         0   -1.0000         0         0
-           -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000         0   -1.0000         0
-                 0   -4.0000   17.8462         0   -3.8462  -10.0000         0         0   -1.0000
-           -5.0000  -10.0000         0   17.5000   -2.5000         0         0         0         0
-           -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333         0         0         0
-                 0   -5.0000  -10.0000         0   -3.3333   18.3333         0         0         0
+               13.3333   -5.0000         0   -5.0000   -3.3333         0   -1.0000         0         0
+               -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000         0   -1.0000         0
+                     0   -4.0000   17.8462         0   -3.8462  -10.0000         0         0   -1.0000
+               -5.0000  -10.0000         0   17.5000   -2.5000         0         0         0         0
+               -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333         0         0         0
+                     0   -5.0000  -10.0000         0   -3.3333   18.3333         0         0         0
 
-        b_mismatch =
+            b_mismatch =
 
-                 0
-                 0
-                 0
-           -0.7000
-           -0.7000
-           -0.7000
-
+                     0
+                     0
+                     0
+               -0.7000
+               -0.7000
+               -0.7000
         """
-
         # TODO: Repeat for case with piecewise-linear cost curves.
         A_mismatch = self.routine._aa_mismatch
         b_mismatch = self.routine._bb_mismatch
@@ -242,26 +233,24 @@ class DCOPFTest(TestCase):
     def test_generator_limit_constraints(self):
         """ Test the upper and lower generator output constraints.
 
-        A_gen =
+            A_gen =
 
-             0     0     0     0     0     0    -1     0     0
-             0     0     0     0     0     0     0    -1     0
-             0     0     0     0     0     0     0     0    -1
-             0     0     0     0     0     0     1     0     0
-             0     0     0     0     0     0     0     1     0
-             0     0     0     0     0     0     0     0     1
+                 0     0     0     0     0     0    -1     0     0
+                 0     0     0     0     0     0     0    -1     0
+                 0     0     0     0     0     0     0     0    -1
+                 0     0     0     0     0     0     1     0     0
+                 0     0     0     0     0     0     0     1     0
+                 0     0     0     0     0     0     0     0     1
 
-        b_gen =
+            b_gen =
 
-           -0.5000
-           -0.3750
-           -0.4500
-            2.0000
-            1.5000
-            1.8000
-
+               -0.5000
+               -0.3750
+               -0.4500
+                2.0000
+                1.5000
+                1.8000
         """
-
         A_gen = self.routine._aa_generation
         b_gen = self.routine._bb_generation
 
@@ -303,60 +292,58 @@ class DCOPFTest(TestCase):
     def test_branch_flow_limit_constraints(self):
         """ Test branch maximum flow limit constraints.
 
-        A_flow =
+            A_flow =
 
-            5.0000   -5.0000         0         0         0         0         0         0         0
-            5.0000         0         0   -5.0000         0         0         0         0         0
-            3.3333         0         0         0   -3.3333         0         0         0         0
-                 0    4.0000   -4.0000         0         0         0         0         0         0
-                 0   10.0000         0  -10.0000         0         0         0         0         0
-                 0    3.3333         0         0   -3.3333         0         0         0         0
-                 0    5.0000         0         0         0   -5.0000         0         0         0
-                 0         0    3.8462         0   -3.8462         0         0         0         0
-                 0         0   10.0000         0         0  -10.0000         0         0         0
-                 0         0         0    2.5000   -2.5000         0         0         0         0
-                 0         0         0         0    3.3333   -3.3333         0         0         0
+                5.0000   -5.0000         0         0         0         0         0         0         0
+                5.0000         0         0   -5.0000         0         0         0         0         0
+                3.3333         0         0         0   -3.3333         0         0         0         0
+                     0    4.0000   -4.0000         0         0         0         0         0         0
+                     0   10.0000         0  -10.0000         0         0         0         0         0
+                     0    3.3333         0         0   -3.3333         0         0         0         0
+                     0    5.0000         0         0         0   -5.0000         0         0         0
+                     0         0    3.8462         0   -3.8462         0         0         0         0
+                     0         0   10.0000         0         0  -10.0000         0         0         0
+                     0         0         0    2.5000   -2.5000         0         0         0         0
+                     0         0         0         0    3.3333   -3.3333         0         0         0
 
-           -5.0000    5.0000         0         0         0         0         0         0         0
-           -5.0000         0         0    5.0000         0         0         0         0         0
-           -3.3333         0         0         0    3.3333         0         0         0         0
-                 0   -4.0000    4.0000         0         0         0         0         0         0
-                 0  -10.0000         0   10.0000         0         0         0         0         0
-                 0   -3.3333         0         0    3.3333         0         0         0         0
-                 0   -5.0000         0         0         0    5.0000         0         0         0
-                 0         0   -3.8462         0    3.8462         0         0         0         0
-                 0         0  -10.0000         0         0   10.0000         0         0         0
-                 0         0         0   -2.5000    2.5000         0         0         0         0
-                 0         0         0         0   -3.3333    3.3333         0         0         0
+               -5.0000    5.0000         0         0         0         0         0         0         0
+               -5.0000         0         0    5.0000         0         0         0         0         0
+               -3.3333         0         0         0    3.3333         0         0         0         0
+                     0   -4.0000    4.0000         0         0         0         0         0         0
+                     0  -10.0000         0   10.0000         0         0         0         0         0
+                     0   -3.3333         0         0    3.3333         0         0         0         0
+                     0   -5.0000         0         0         0    5.0000         0         0         0
+                     0         0   -3.8462         0    3.8462         0         0         0         0
+                     0         0  -10.0000         0         0   10.0000         0         0         0
+                     0         0         0   -2.5000    2.5000         0         0         0         0
+                     0         0         0         0   -3.3333    3.3333         0         0         0
 
-        b_flow =
+            b_flow =
 
-            0.4000
-            0.6000
-            0.4000
-            0.4000
-            0.6000
-            0.3000
-            0.9000
-            0.7000
-            0.8000
-            0.2000
-            0.4000
+                0.4000
+                0.6000
+                0.4000
+                0.4000
+                0.6000
+                0.3000
+                0.9000
+                0.7000
+                0.8000
+                0.2000
+                0.4000
 
-            0.4000
-            0.6000
-            0.4000
-            0.4000
-            0.6000
-            0.3000
-            0.9000
-            0.7000
-            0.8000
-            0.2000
-            0.4000
-
+                0.4000
+                0.6000
+                0.4000
+                0.4000
+                0.6000
+                0.3000
+                0.9000
+                0.7000
+                0.8000
+                0.2000
+                0.4000
         """
-
         A_flow = self.routine._aa_flow
         b_flow = self.routine._bb_flow
 
@@ -402,34 +389,32 @@ class DCOPFTest(TestCase):
     def test_objective_function(self):
         """ Test objective function of the form: 0.5 * x'*H*x + c'*x
 
-        H =
+            H =
 
-             0         0         0         0         0         0         0         0         0
-             0         0         0         0         0         0         0         0         0
-             0         0         0         0         0         0         0         0         0
-             0         0         0         0         0         0         0         0         0
-             0         0         0         0         0         0         0         0         0
-             0         0         0         0         0         0         0         0         0
-             0         0         0         0         0         0  106.6000         0         0
-             0         0         0         0         0         0         0  177.8000         0
-             0         0         0         0         0         0         0         0  148.2000
+                 0         0         0         0         0         0         0         0         0
+                 0         0         0         0         0         0         0         0         0
+                 0         0         0         0         0         0         0         0         0
+                 0         0         0         0         0         0         0         0         0
+                 0         0         0         0         0         0         0         0         0
+                 0         0         0         0         0         0         0         0         0
+                 0         0         0         0         0         0  106.6000         0         0
+                 0         0         0         0         0         0         0  177.8000         0
+                 0         0         0         0         0         0         0         0  148.2000
 
-        c =
+            c =
 
-           1.0e+03 *
+               1.0e+03 *
 
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
-            1.1669
-            1.0333
-            1.0833
-
+                     0
+                     0
+                     0
+                     0
+                     0
+                     0
+                1.1669
+                1.0333
+                1.0833
         """
-
         H = self.routine._hh
         c = self.routine._cc
 
@@ -463,20 +448,18 @@ class DCOPFTest(TestCase):
     def test_solver_output(self):
         """ Test the output from the solver.
 
-        x =
+            x =
 
-                 0
-           -0.0052
-           -0.0049
-           -0.0521
-           -0.0640
-           -0.0539
-            0.5000
-            0.8807
-            0.7193
-
+                     0
+               -0.0052
+               -0.0049
+               -0.0521
+               -0.0640
+               -0.0539
+                0.5000
+                0.8807
+                0.7193
         """
-
         x = self.routine.x
 
         places = 4
@@ -496,11 +479,11 @@ class DCOPFTest(TestCase):
 
 
     def test_model_update(self):
-        """ Test update of the model with the results. """
-
+        """ Test update of the model with the results.
+        """
         pass
 
 if __name__ == "__main__":
-    main()
+    unittest.main()
 
 # EOF -------------------------------------------------------------------------
