@@ -295,7 +295,7 @@ class MATPOWERReader:
 
 #        bus_names = [v.name for v in self.network.buses]
 #        bus = Bus(name=make_unique_name("v", bus_names))
-        name = str(tokens["bus_id"])
+        name = "v_" + str(tokens["bus_id"])
         bus  = Bus(name=name)
 
         base_kv    = tokens["baseKV"]
