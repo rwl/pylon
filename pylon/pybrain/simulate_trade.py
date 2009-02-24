@@ -66,7 +66,7 @@ def get_power_sys():
                            cost_coeffs = ( 0.0, 0.0, 6.0 ) )
 
     load = Load( name = "L1",
-                 p    = 5.0,
+                 p    = 1.0,
                  q    = 0.0 )
 
     bus1.generators.append( generator )

@@ -37,12 +37,23 @@ class ProfitTask(Task):
     #  "Task" interface:
     #--------------------------------------------------------------------------
 
+    def __init__(self, environment):
+        """ Initialises the task.
+        """
+        Task.__init__(self, environment)
+
+        self.sensor_limits = [None] * 3
+        asset = environment.asset
+        self.actor_limits = [(asset.p_min, asset.p_max)]
+
+
     def performAction(self, action):
         """ A filtered mapping the .performAction() method of the underlying
             environment.
         """
         print "ACTION:", action
-        self.env.performAction(action)
+#        self.env.performAction(action)
+        Task.performAction(self, action)
 
 
     def getObservation(self):
@@ -50,7 +61,8 @@ class ProfitTask(Task):
             environment.
         """
         print "OBSERVATION:", self.env.getSensors()
-        return self.env.getSensors()
+#        return self.env.getSensors()
+        return Task.getObservation(self)
 
 
     def getReward(self):
@@ -59,7 +71,7 @@ class ProfitTask(Task):
         """
         asset  = self.env.asset
 #        profit = asset.p_despatch * asset.p_cost
-        profit = asset.p_cost
+        profit = asset.p_despatch
 
         print "REWARD:", profit
         return array( [ profit ] )

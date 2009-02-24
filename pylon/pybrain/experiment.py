@@ -122,8 +122,8 @@ class MarketExperiment ( HasTraits ):
             # Reward each agent appropriately.
             for i, agent in enumerate(self.agents):
                 task   = self.tasks[i]
-                reward = 0.0#task.getReward()
-                agent.giveReward(reward)
+                reward = task.getReward()
+                agent.giveReward(0.0)
 
             # Update each agent's environment state attributes.
             for task in self.tasks:
