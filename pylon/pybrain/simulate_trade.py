@@ -52,51 +52,61 @@ DATA_FILE = join( dirname(__file__), "../test/data/case6ww.m" )
 
 def get_power_sys():
     # Read network data.
-    power_sys = read_matpower( DATA_FILE )
+#    power_sys = read_matpower( DATA_FILE )
 
     # One bus test network.
-#    power_sys = Network( name = "1bus", mva_base = 100.0 )
-#
-#    bus1 = Bus( name = "Bus 1" )
-#
-#    generator = Generator( name        = "G1",
-#                           p_max       = 6.0,
-#                           p_min       = 1.0,
-#                           cost_model  = "Polynomial",
-#                           cost_coeffs = ( 0.0, 0.0, 6.0 ) )
-#
-#    load = Load( name = "L1",
-#                 p    = 5.0,
-#                 q    = 0.0 )
-#
-#    bus1.generators.append( generator )
-#    bus1.loads.append( load )
-#    power_sys.buses = [ bus1 ]
+    power_sys = Network( name = "1bus", mva_base = 100.0 )
+
+    bus1 = Bus( name = "Bus 1" )
+
+    generator = Generator( name        = "G1",
+                           p_max       = 6.0,
+                           p_min       = 1.0,
+                           cost_model  = "Polynomial",
+                           cost_coeffs = ( 0.0, 0.0, 6.0 ) )
+
+    load = Load( name = "L1",
+                 p    = 5.0,
+                 q    = 0.0 )
+
+    bus1.generators.append( generator )
+    bus1.loads.append( load )
+    power_sys.buses = [ bus1 ]
 
     return power_sys
+
 
 def main(power_sys):
     # Create tasks.
     tasks = []
     agents = []
     for generator in power_sys.in_service_generators:
-        # Create environment.
+        # Create the world in which the trading agent acts.
         env = ParticipantEnvironment( asset = generator )
 
-        # Create controller network (min, 50%, max).
-        net = buildNetwork( 3, 6, 1, bias = False, outclass = SigmoidLayer )
-
-        # Create a task for the agent.
+        # Create a task that connects each agent to it's environment. The task
+        # defines what the goal is for an agent and how the agent is rewarded
+        # for it's actions.
         task = ProfitTask( env )
-        # Create agent.
-        agent = FiniteDifferenceAgent( module = net, learner = ENAC() )
 
+        # Create a linear controller network. Each agent needs a controller
+        # that maps the current state to an action.
+#        net = buildNetwork( 3, 6, 1, bias = False, outclass = SigmoidLayer )
+        net = buildNetwork( 3, 1, bias = False )
+
+        # Create agent. The agent is where the learning happens. For continuous
+        # problems a policy gradient agent is required.  Each agent has a
+        # module (network) and a learner, that modifies the module.
+        agent = PolicyGradientAgent( module = net, learner = ENAC() )
+
+        # Collect tasks and agents.
         tasks.append( task )
         agents.append( agent )
 
     experiment = MarketExperiment( tasks, agents, power_sys )
 #    experiment.doInteractions( number = 2 )
     experiment.configure_traits()
+
 
 if __name__ == "__main__":
     power_sys = get_power_sys()

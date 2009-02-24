@@ -44,6 +44,7 @@ class MarketExperiment ( HasTraits ):
 
     tasks = list
 
+    # Agents capable of producing actions based on previous observations.
     agents = list
 
     #--------------------------------------------------------------------------
@@ -101,7 +102,6 @@ class MarketExperiment ( HasTraits ):
     def doInteractions(self, number=1):
         """ Directly maps the agents and the tasks.
         """
-        all_rewards = []
         for interaction in range(number):
             # Perform action for each agent.
             for i, agent in enumerate(self.agents):
@@ -109,32 +109,43 @@ class MarketExperiment ( HasTraits ):
 
                 self.stepid += 1
                 agent.integrateObservation( task.getObservation() )
-#                task.performAction( agent.getAction() )
+                task.performAction( agent.getAction() )
 
             # Optimise the power system model.
-            routine = DCOPFRoutine(self.power_sys, show_progress=False)
+            routine  = DCOPFRoutine(self.power_sys, show_progress=False)
             solution = routine.solve()
+
             if solution["status"] != "optimal":
                 print "NO OPTIMAL SOLUTION FOR INTERACTION %d." % interaction
 #                break
 
             # Reward each agent appropriately.
-            rewards = []
             for i, agent in enumerate(self.agents):
-                task = self.tasks[i]
+                task   = self.tasks[i]
+                reward = 0.0#task.getReward()
+                agent.giveReward(reward)
 
-                reward = task.getReward()
-#                agent.giveReward(reward)
+            # Update each agent's environment state attributes.
+            for task in self.tasks:
+                demand = sum([l.p for l in self.power_sys.in_service_loads])
+                task.env.demand = demand
+                # TODO: Implement computation of MCP and demand forecast.
+                task.env.mcp      = 0.0
+                task.env.forecast = demand
 
-                rewards.append(reward)
+        ret = []
+        for agent in self.agents:
+            rewards = []
+            for n in range(agent.history.getNumSequences()):
+                returns = agent.history.getSequence(n)
+                state   = returns[0]
+                action  = returns[1]
+                reward  = returns[2]
+                rewards.append( reward )#sum(reward, 0).item() )
+            ret.append(rewards)
 
-            print "REWARDS (%d): %s" % (interaction, rewards)
-            all_rewards.append(rewards)
+        print "REWARDS:", ret
 
-        return all_rewards
-
-    #--------------------------------------------------------------------------
-    #  Private interface:
-    #--------------------------------------------------------------------------
+        return ret
 
 # EOF -------------------------------------------------------------------------

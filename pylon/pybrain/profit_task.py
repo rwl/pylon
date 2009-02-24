@@ -30,20 +30,38 @@ from pybrain.rl.tasks import EpisodicTask, Task
 #------------------------------------------------------------------------------
 
 class ProfitTask(Task):
-    """ Defines a profit maximisation task.
+    """ Defines the task of maximising profit.
     """
 
     #--------------------------------------------------------------------------
     #  "Task" interface:
     #--------------------------------------------------------------------------
 
+    def performAction(self, action):
+        """ A filtered mapping the .performAction() method of the underlying
+            environment.
+        """
+        print "ACTION:", action
+        self.env.performAction(action)
+
+
+    def getObservation(self):
+        """ A filtered mapping to the .getSample() method of the underlying
+            environment.
+        """
+        print "OBSERVATION:", self.env.getSensors()
+        return self.env.getSensors()
+
+
     def getReward(self):
         """ Computes and returns the reward corresponding to the last action
             performed.
         """
         asset  = self.env.asset
-        profit = asset.p_despatch * asset.p_cost
+#        profit = asset.p_despatch * asset.p_cost
+        profit = asset.p_cost
 
+        print "REWARD:", profit
         return array( [ profit ] )
 
 # EOF -------------------------------------------------------------------------
