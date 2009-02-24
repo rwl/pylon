@@ -109,7 +109,8 @@ class MarketExperiment ( HasTraits ):
 
                 self.stepid += 1
                 agent.integrateObservation( task.getObservation() )
-                task.performAction( agent.getAction() )
+                action = agent.getAction()
+                task.performAction( action )
 
             # Optimise the power system model.
             routine  = DCOPFRoutine(self.power_sys, show_progress=False)
@@ -123,7 +124,7 @@ class MarketExperiment ( HasTraits ):
             for i, agent in enumerate(self.agents):
                 task   = self.tasks[i]
                 reward = task.getReward()
-                agent.giveReward(0.0)
+                agent.giveReward( reward )
 
             # Update each agent's environment state attributes.
             for task in self.tasks:

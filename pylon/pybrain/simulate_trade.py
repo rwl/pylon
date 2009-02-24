@@ -34,6 +34,7 @@ from pylon.network import Network
 from pylon.bus import Bus
 from pylon.generator import Generator
 from pylon.load import Load
+from pylon.routine.api import DCOPFRoutine
 
 from environment import ParticipantEnvironment
 from experiment import MarketExperiment
@@ -55,23 +56,32 @@ def get_power_sys():
 #    power_sys = read_matpower( DATA_FILE )
 
     # One bus test network.
-    power_sys = Network( name = "1bus", mva_base = 100.0 )
+    power_sys = Network( name = "1 Bus", mva_base = 100.0 )
 
     bus1 = Bus( name = "Bus 1" )
 
     generator = Generator( name        = "G1",
-                           p_max       = 6.0,
+                           p_max       = 3.0,
                            p_min       = 1.0,
                            cost_model  = "Polynomial",
                            cost_coeffs = ( 0.0, 0.0, 6.0 ) )
 
+    generator2 = Generator( name        = "G2",
+                            p_max       = 6.0,
+                            p_min       = 2.0,
+                            cost_model  = "Polynomial",
+                            cost_coeffs = ( 0.0, 0.0, 10.0 ) )
+
     load = Load( name = "L1",
-                 p    = 1.0,
+                 p    = 3.0,
                  q    = 0.0 )
 
     bus1.generators.append( generator )
+    bus1.generators.append( generator2 )
     bus1.loads.append( load )
     power_sys.buses = [ bus1 ]
+
+#    DCOPFRoutine(power_sys).solve()
 
     return power_sys
 

@@ -42,7 +42,7 @@ class ProfitTask(Task):
         """
         Task.__init__(self, environment)
 
-        self.sensor_limits = [None] * 3
+        self.sensor_limits = None#[None] * 3
         asset = environment.asset
         self.actor_limits = [(asset.p_min, asset.p_max)]
 
@@ -51,7 +51,7 @@ class ProfitTask(Task):
         """ A filtered mapping the .performAction() method of the underlying
             environment.
         """
-        print "ACTION:", action
+        print "ACTION:", action, self.denormalize(action)
 #        self.env.performAction(action)
         Task.performAction(self, action)
 
@@ -60,9 +60,9 @@ class ProfitTask(Task):
         """ A filtered mapping to the .getSample() method of the underlying
             environment.
         """
-        print "OBSERVATION:", self.env.getSensors()
-#        return self.env.getSensors()
-        return Task.getObservation(self)
+        sensors = Task.getObservation(self)
+        print "OBSERVATION:", sensors
+        return sensors
 
 
     def getReward(self):
