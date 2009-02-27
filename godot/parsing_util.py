@@ -241,6 +241,9 @@ word = quoted_string.setName("word") # Word(alphanums)
 
 # Graph attributes ------------------------------------------------------------
 
+draw = word.setResultsName("_draw_") # Xdot drawing directive.
+ldraw = word.setResultsName("_ldraw_") # Xdot label drawing directive.
+
 rect = real.setResultsName("llx") + real.setResultsName("lly") + \
     real.setResultsName("urx") + real.setResultsName("ury")
 
@@ -397,7 +400,8 @@ graph_attr = [bb, bgcolor, center, charset, clusterrank, colorscheme, comment,
     normalize, nslimit, nslimit1, ordering, outputorder, overlap, pack,
     packmode, pad, page, pagedir, quantum, rank, rankdir, ranksep, ratio,
     remincross, resolution, root, rotate, searchsize, sep, showboxes, size,
-    splines, start, stylesheet, target, truecolor, URL, viewport, voro_margin]
+    splines, start, stylesheet, target, truecolor, URL, viewport,
+    voro_margin] + [draw, ldraw]
 
 # Node attributes -------------------------------------------------------------
 
@@ -428,9 +432,6 @@ tooltip = word.setResultsName("tooltip")
 vertices = ToList(pointf).setResultsName("vertices")
 width = real.setResultsName("width")
 z = real.setResultsName("z")
-
-draw = word.setResultsName("_draw_") # Xdot drawing directive.
-ldraw = word.setResultsName("_ldraw_") # Xdot label drawing directive.
 
 node_attr = [color, colorscheme, comment, distortion, fillcolor, fixedsize,
     fontcolor, fontname, fontsize, group, height, image, imagescale, label,

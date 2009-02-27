@@ -27,6 +27,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import godot
 #from godot.base_graph import BaseGraph
 #from godot.graph import Graph
 #from godot.subgraph import Subgraph
@@ -175,17 +176,17 @@ def write_dot_graph(graph, level=0, directed=True):
         s = "%s {\n" % s
 
     # Graph attributes.
-    if hasattr(graph, "directed"):
-#    if isinstance(graph, Graph):
+#    if hasattr(graph, "directed"):
+    if isinstance(graph, godot.graph.Graph):
         attrs = GRAPH_ATTRIBUTES
-    elif hasattr(graph, "rank"):
-#    if isinstance(graph, Subgraph):
+#    elif hasattr(graph, "rank"):
+    if isinstance(graph, godot.subgraph.Subgraph):
         attrs = SUBGRAPH_ATTRIBUTES
-    else:
-#    elif isinstance(graph, Cluster):
-        attrs = CLUSTER_ATTRIBUTES
 #    else:
-#        raise ValueError
+    elif isinstance(graph, godot.cluster.Cluster):
+        attrs = CLUSTER_ATTRIBUTES
+    else:
+        raise ValueError
 
     # Graph attributes.
     for trait_name in attrs:

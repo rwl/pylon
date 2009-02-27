@@ -44,8 +44,6 @@ from enthought.traits.ui.table_filter import \
 from enthought.enable.api import Container
 from enthought.naming.unique_name import make_unique_name
 
-from dot2tex.dotparsing import quote_if_necessary
-
 from common import \
     color_scheme_trait, comment_trait, fontcolor_trait, fontname_trait, \
     fontsize_trait, label_trait, layer_trait, margin_trait, nojustify_trait, \

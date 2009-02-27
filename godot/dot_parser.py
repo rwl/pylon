@@ -22,12 +22,11 @@
 
 """ Defines a Graphviz dot language parser.
 
-The parser parses graphviz files dot code and files and transforms them
-into a class representation defined by Godot.
+    The parser parses graphviz files dot code and files and transforms them
+    into a class representation defined by Godot.
 
-References:
-    Michael Krause, Ero Carrera, "pydot"
-
+    References:
+        Michael Krause, Ero Carrera, "pydot"
 """
 
 #------------------------------------------------------------------------------
@@ -49,7 +48,7 @@ from parsing_util import \
     dot, slash, bslash, star, semi, at, pluss, double_quoted_string, \
     quoted_string, nsplit, windows, graph_attr, node_attr, edge_attr, all_attr
 
-from godot.graph import Graph
+import godot.graph
 from godot.subgraph import Subgraph
 from godot.cluster import Cluster
 from godot.node import Node
@@ -60,7 +59,8 @@ from godot.edge import Edge
 #------------------------------------------------------------------------------
 
 class DotParser:
-    """ Defines a Graphviz dot language parser. """
+    """ Defines a Graphviz dot language parser.
+    """
 
     parser = None
 
@@ -90,8 +90,8 @@ class DotParser:
 
 
     def parse_dot_data(self, data):
-        """ Parses dot data and returns a godot.Graph instance. """
-
+        """ Parses dot data and returns a godot.Graph instance.
+        """
         parser = self.parser
 
         if pyparsing_version >= "1.2":
@@ -113,8 +113,8 @@ class DotParser:
     def define_parser(self):
         """ Defines dot grammar.
 
-        @see: http://www.graphviz.org/doc/info/lang.html """
-
+            @see: http://www.graphviz.org/doc/info/lang.html
+        """
         # keywords
         strict_ = CaselessLiteral("strict").setResultsName("strict")
         graph_ = CaselessLiteral("graph").setResultsName("directed")
@@ -122,8 +122,6 @@ class DotParser:
         subgraph_ = CaselessLiteral("subgraph").setResultsName("subgraph_")
         node_ = CaselessLiteral("node").setResultsName("node")
         edge_ = CaselessLiteral("edge").setResultsName("edge")
-
-#        subgraph_.setParseAction(self._proc_subgraph_stmt)
 
         # token definitions
         identifier = Word(alphanums + "_").setName("identifier")
@@ -145,7 +143,7 @@ class DotParser:
             identifier | html_text | quoted_string | alphastring_
         ).setName("ID").setResultsName("ID")
 
-        # Portnames (node1:port1 -> node2:port5:nw;)
+        # Port names (node1:port1 -> node2:port5:nw;)
         port_angle = (at + ID).setName("port_angle")
 
         port_location = (
@@ -214,14 +212,14 @@ class DotParser:
 
         # A strict graph is an unweighted, undirected graph containing no
         # graph loops or multiple edges.
-        strict = Optional(strict_, "notstrict").setResultsName("strict")
+        strict = Optional(strict_).setResultsName("strict")
         # Do edges have direction?
         directed = (graph_ | digraph_).setResultsName("directed")
         # Optional graph identifier.
-        graph_id = Optional(ID, "G").setResultsName("graph_id")
+#        graph_id = Optional(ID).setResultsName("graph_id")
 
         # Parser for graphs defined in the DOT language.
-        graphparser = (strict + directed + graph_id + Suppress(lbrace) +
+        graphparser = (strict + directed + Optional(ID) + Suppress(lbrace) +
             Group(Optional(stmt_list)).setResultsName("stmt_list") +
             Suppress(rbrace))
 
@@ -253,60 +251,32 @@ class DotParser:
     #--------------------------------------------------------------------------
 
     def _proc_strict(self, tokens):
-        """ Coerces the 'strict' token to a boolean value. """
+        """ Coerces the 'strict' token to a boolean value.
+        """
+        print "STRICT:", ("strict" in tokens)
 
-        print "STRICT:", tokens, tokens.asList(), tokens.keys(), tokens["strict"]
-
-#        graph = self.graph
-        strict = tokens["strict"]
-
-        if strict == "strict":
-#            graph.strict = True
-#            tokens["strict"] = True
-            return True
-        else:#if strict == "notstrict":
-#            graph.strict = False
-#            tokens["strict"] = False
-            return False
-#        else:
-#            raise ValueError
+        return "strict" in tokens
 
 
     def _proc_directed(self, tokens):
-        """ Coerces the 'digraph' token to a boolean value. """
+        """ Coerces the 'digraph' token to a boolean value.
+        """
+        print "DIRECTED:", tokens["directed"] == "digraph"
 
-        print "DIRECTED:", tokens, tokens.asList(), tokens.keys(), tokens["directed"]
-
-#        graph = self.graph
-        directed = tokens["directed"]
-
-        if directed == "graph":
-#            graph.directed = False
-#            tokens["directed"] = False
-            return False
-        elif directed == "digraph":
-#            graph.directed = True
-#            tokens["directed"] = True
-            return True
-        else:
-            raise ValueError
-
-#        print "DIRECTED:", tokens, tokens.asList(), tokens.keys(), tokens["directed"]
-#
-#        return tokens
+        return tokens["directed"] == "digraph"
 
 
-#    def _proc_graph_id(self, tokens):
-#        """ Optional graph identifier. """
-#
-#        print "GRAPH ID:", tokens
+    def _proc_graph_id(self, tokens):
+        """ Optional graph identifier.
+        """
+        print "GRAPH ID:", tokens, "o", tokens["graph_id"], "o"
 #        self.graph.ID = tokens["graph_id"]
 
 
     def _proc_attr_assignment(self, tokens):
         """ Sets the graph attribute to the parsed value.
         """
-        print "ASSIGNMENT:", tokens, tokens.asList(), tokens.keys()
+        print "ASSIGNMENT:", tokens, tokens.keys()
         return nsplit(tokens, 2)
 
 
@@ -323,15 +293,15 @@ class DotParser:
 
     def _proc_attr_list(self, tokens):
         """ Splits the attributes into tuples and returns a dictionary using
-        the first tuple value as the key and the second as the value.
+            the first tuple value as the key and the second as the value.
         """
         print "ATTR LIST:", tokens
         return dict(nsplit(tokens, 2))
 
 
     def _proc_attr_list_combine(self, tokens):
-        """ Combines a list of dictionaries, overwriting existing keys """
-
+        """ Combines a list of dictionaries, overwriting existing keys.
+        """
         print "ATTR LIST COMBINE:", tokens
 
         if tokens:
@@ -344,36 +314,27 @@ class DotParser:
 
 
     def _proc_node_stmt(self, tokens):
-        """ Returns tuple of the form (ADD_NODE, node_name, options) """
-
-        print "NODE STMT:", tokens, tokens.asList(), tokens.keys()
+        """ Returns tuple of the form (ADD_NODE, node_name, options).
+        """
+        print "NODE STMT:", tokens, tokens.keys()
 
         graph = self.graph
         node_id = tokens["ID"]
+        if isinstance(node_id, tuple):
+            node_id, port = node_id
 
         if len(tokens) == 2:
             opts = tokens[1]
             node = Node(ID=node_id, **opts)
         else:
             node = Node(ID=node_id)
-#            options = {}
-        # Set the attributes of the node.
-#        for option in options:
-#            setattr(node, option, options[option])
-        # Add the node to the graph.
-#        graph.nodes.append(node)
 
         return node
 
-#        if len(tokens) == 2:
-#            return tuple(["add_node"] + list(tokens))
-#        else:
-#            return tuple(["add_node"] + list(tokens) + [{}])
-
 
     def _proc_edge_stmt(self, tokens):
-        """ Returns tuple of the form (ADD_EDGE, src, dst, options) """
-
+        """ Returns tuple of the form (ADD_EDGE, src, dst, options).
+        """
         print "EDGE STMT:", tokens, tokens.asList(), tokens.keys()
 
 #        graph = self.graph
@@ -440,11 +401,12 @@ class DotParser:
 
     def _proc_default_attr_stmt(self, toks):
         """ If a default attribute is defined using a node, edge, or graph
-        statement, or by an attribute assignment not attached to a node or
-        edge, any object of the appropriate type defined afterwards will
-        inherit this attribute value. This holds until the default attribute
-        is set to a new value, from which point the new value is used. """
-
+            statement, or by an attribute assignment not attached to a node or
+            edge, any object of the appropriate type defined afterwards will
+            inherit this attribute value. This holds until the default
+            attribute is set to a new value, from which point the new value is
+            used.
+        """
         print "DEFAULT ATTR STMT:", toks
 
         if len(toks)== 1:
@@ -463,8 +425,8 @@ class DotParser:
 
 
     def _proc_subgraph_stmt(self, tokens):
-        """ Returns a tuple of the form (ADD_SUBGRAPH, name, elements) """
-
+        """ Returns a tuple of the form (ADD_SUBGRAPH, name, elements).
+        """
         print "SUBGRAPH/CLUSTER:", tokens["subgraph_stmt"]
 
         ID = tokens["ID"]
@@ -480,19 +442,13 @@ class DotParser:
 
 
     def _proc_main_graph(self, tokens):
-        """ Starts a new Graph. """
-
+        """ Starts a new Graph.
+        """
         print "GRAPH:", tokens, tokens.keys()
 
-#        stmt_list = tokens["stmt_list"]
-#        if "assignment" in stmt_list.keys():
-#            opts = stmt_list["assignment"]
-#        else:
-#            opts = {}
-
-        graph = Graph( ID       = tokens["graph_id"],
-                       strict   = tokens["strict"],
-                       directed = tokens["directed"])#, **opts)
+        graph = godot.graph.Graph( ID       = tokens["ID"],
+                                   strict   = tokens["strict"],
+                                   directed = tokens["directed"] )
 
         self._populate_graph( graph, elements = tokens["stmt_list"] )
 
@@ -520,10 +476,13 @@ class DotParser:
 
         return graph
 
+#------------------------------------------------------------------------------
+#  Stand-alone call:
+#------------------------------------------------------------------------------
 
-#    def _main_graph_stmt(self, toks):
-#        print "MAIN GRAPH:", toks
-#
-#        return (toks[0], toks[1], toks[2], toks[3])#.asList())
+if __name__ == "__main__":
+    graph_data = """digraph G {"aa\\" -> b [label="12"];}"""
+    graph = DotParser().parse_dot_data(graph_data)
+    graph.configure_traits()
 
 # EOF -------------------------------------------------------------------------

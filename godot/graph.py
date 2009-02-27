@@ -54,8 +54,6 @@ from common import \
     fontname_trait, fontsize_trait, label_trait, point_trait, pointf_trait, \
     nojustify_trait, root_trait, showboxes_trait, target_trait, margin_trait
 
-from dot2tex.dotparsing import flatten, quote_if_necessary
-
 from godot.base_graph import BaseGraph
 from godot.node import Node
 from godot.edge import Edge
@@ -63,6 +61,8 @@ from godot.subgraph import Subgraph
 from godot.cluster import Cluster
 
 from graph_view import graph_view, tabbed_view
+
+import dot_parser
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -1030,6 +1030,11 @@ class Graph(BaseGraph):
         """
         xdot_data = self.create( format = "xdot" )
 
+        print "XDOT DATA:\n\n", xdot_data
+
+        parser = dot_parser.DotParser()
+        xdot_graph = parser.parse_dot_data( xdot_data )
+
     #--------------------------------------------------------------------------
     #  Trait initialisers:
     #--------------------------------------------------------------------------
@@ -1190,8 +1195,9 @@ if __name__ == "__main__":
     node2 = Node("node2", label="Node 2", shape="rect",
                  _draw_="c 5 -black e 32 18 32 18")
     edge = Edge(node1, node2)
-    graph.nodes.extend([node1, node2])
-    graph.edges.append(edge)
+#    graph.nodes.extend([node1, node2])
+#    graph.edges.append(edge)
+
 
 #    subgraph1 = Subgraph(ID="subgraph1", rank="min")
 #    subgraph1.nodes.append(Node("node3", label="Node 3"))
@@ -1207,7 +1213,9 @@ if __name__ == "__main__":
 #    viewer = ComponentViewer(component=graph.component)
 #    viewer.configure_traits()
 
-    graph.write("/tmp/graph.xdot", "dot", "xdot")
+#    graph.write("/tmp/graph.xdot", "dot", "xdot")
+
+    graph.arrange_all()
 
 #    print write_dot_graph(graph)
 
