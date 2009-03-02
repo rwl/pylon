@@ -38,4 +38,8 @@ from m3_reader import M3Reader, read_m3
 
 from rst_writer import ReSTWriter
 
+from csv_writer import CSVWriter
+
+from excel_writer import ExcelWriter
+
 # EOF -------------------------------------------------------------------------

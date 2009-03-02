@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,16 +19,13 @@ from setuptools import setup, find_packages
 
 setup(
     author="Richard W. Lincoln",
-    author_email="richard.lincoln@eee.strath.ac.uk",
-    description="Open source power system and energy market analysis",
-    url="https://pylon.eee.strath.ac.uk",
+    author_email="rlincoln@eee.strath.ac.uk",
+    description="Power system and energy market simulator.",
+    url="http://pylon.eee.strath.ac.uk",
     version="0.1.9",
     entry_points={
-        "gui_scripts": [
-            "envisage = pylon.plugin.main:main",
-            "pylon = pylon.solve:main",
-            "pyreto = pylon.ui.model_view.pyreto:main"
-        ]
+        "gui_scripts": ["envisage = pylon.plugin.main:main",
+                        "pylon = pylon.main:main"]
     },
 #    extras_require={},
 #    ext_modules=[],
