@@ -15,9 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines the Network class that represents an electric power system as
-a graph of Buses connected by Branches.
-
+""" Defines the Network class that represents an electric power system
+    as a graph of Bus objects connected by Branch objects.
 """
 
 #------------------------------------------------------------------------------
@@ -26,12 +25,9 @@ a graph of Buses connected by Branches.
 
 import logging
 
-from numpy import array
-
 from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Delegate, \
-    Event, Tuple, Button, Array, Bool, Property, Enum, cached_property, \
-    on_trait_change
+    Tuple, Array, Bool, Property, Enum, cached_property, on_trait_change
 
 from pylon.bus import Bus
 from pylon.branch import Branch
@@ -39,6 +35,7 @@ from pylon.generator import Generator
 from pylon.load import Load
 
 from pylon.ui.network_view import network_view
+from pylon.ui.report_view import pf_report_view, opf_report_view
 
 # Setup a logger for this module
 logger = logging.getLogger(__name__)
@@ -48,9 +45,8 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class Network(HasTraits):
-    """ Defines the Network class that represents an electric power system as
-    a graph of Buses connected by Branches.
-
+    """ Defines the Network class that represents an electric power system
+        as a graph of Bus objects connected by Branch objects.
     """
 
     #--------------------------------------------------------------------------
@@ -61,7 +57,7 @@ class Network(HasTraits):
     name = String("Untitled", desc="network name")
 
     # System base apparent power
-    mva_base = Float(100.0, desc="the base apparent power (MVA)")
+    base_mva = Float(100.0, desc="the base apparent power (MVA)")
 
     #--------------------------------------------------------------------------
     #  Bus objects:
@@ -70,21 +66,10 @@ class Network(HasTraits):
     # Node of the power system graph
     buses = List(Instance(Bus), desc="graph nodes")
 
-    # The total number of buses
-    n_buses = Property(Int, depends_on=["buses"],
-        desc="total number of buses", label="Buses")
-
     # Buses that are connected by active branches
-    non_islanded_buses = Property(List(Instance(Bus)),
+    connected_buses = Property(List(Instance(Bus)),
         depends_on=["in_service_branches"],
         desc="buses that are not islanded")
-
-    # The total number of non-islanded buses
-    n_non_islanded_buses = Property(Int, depends_on=["non_islanded_buses"],
-        desc="total number of non islanded buses")
-
-    # All bus names
-#    bus_names = Property(List(String), depends_on=["buses"])
 
     # The slack model type
     slack_model = Property(Enum("Distributed", "Single"),
@@ -97,29 +82,13 @@ class Network(HasTraits):
         depends_on=["buses.generators"],
         desc="convenience list of all generators")
 
-    # The total number of generators
-    n_generators = Property(Int, depends_on=["generators"],
-        desc="total number of generators", label="Generators")
-
     # Convenience list of all in service generators attached to
     # non islanded buses
-    in_service_generators = Property(List(Instance(Generator)),
-        depends_on=[
-            "non_islanded_buses.generators",
-            "non_islanded_buses.generators.in_service"
-        ],
+    online_generators = Property(List(Instance(Generator)),
+        depends_on=["connected_buses.generators",
+                    "connected_buses.generators.in_service"],
         desc="""convenience list of all in service generators attached "
         to non islanded buses""")
-
-    # The total number of generators in service
-    n_in_service_generators = Property(Int,
-        depends_on=["in_service_generators"])
-
-    committed_generators = Property(List(Instance(Generator)),
-        depends_on=["generators.p"])
-
-    n_committed_generators = Property(Int, depends_on=["committed_generators"],
-        label="Committed Gens")
 
     # Loads -------------------------------------------------------------------
 
@@ -127,86 +96,31 @@ class Network(HasTraits):
     loads = Property(List(Instance(Load)), depends_on=["buses.loads"],
         desc="convenience list of all loads")
 
-    # The total number of all loads
-    n_loads = Property(Int, depends_on=["loads"], label="Loads")
-
     # Convenience list of all in service loads connected to
     # non islanded buses
-    in_service_loads = Property(
+    online_loads = Property(
         List(Instance(Load)),
-        depends_on=[
-            "non_islanded_buses.loads",
-            "non_islanded_buses.loads.in_service"
-        ],
+        depends_on=["connected_buses.loads",
+                    "connected_buses.loads.in_service"],
         desc="""convenience list of all in service loads connected to
-        non islanded buses"""
-    )
-
-    # The total number of loads in service
-    n_in_service_loads = Property(Int, depends_on=["in_service_loads"])
-
-    fixed = Property(List(Instance(Load)), depends_on=["loads"],
-        desc="Fixed loads")
-    n_fixed = Property(Int, depends_on=["fixed"])
-
-    despatchable = Property(List(Instance(Load)),
-        depends_on=["generators"], desc="negative generators")
-    n_despatchable = Property(Int, depends_on=["despatchable"])
+        non islanded buses""")
 
     # Shunts ------------------------------------------------------------------
 
-    shunts = List(Instance(HasTraits))
-
-    n_shunts = Property(Int, depends_on=["shunts"])
+#    shunts = List(Instance(HasTraits))
 
     # Branches ----------------------------------------------------------------
 
-    branches = List(Instance(Branch), desc="edges")
-    n_branches = Property(Int, depends_on=["branches"])
+    # Branch edges.
+    branches = List(Instance(Branch), desc="branch edges")
 
-    in_service_branches = Property(List(Instance(Branch)),
+    # Branch edges that are in service.
+    online_branches = Property(List(Instance(Branch)),
         depends_on=["branches.in_service"],
         desc="a convenient list of all in service branches")
 
-    n_in_service_branches = Property(Int, depends_on=["in_service_branches"])
-
+    # Branches operating as transformers.
     transformers = Property(List(Instance(Branch)), depends_on=["branches"])
-    n_transformers = Property(Int, depends_on=["transformers"])
-
-    # Inter-ties --------------------------------------------------------------
-
-    inter_ties = List(Instance(HasTraits))
-    n_inter_ties = Property(Int, depends_on=["inter_ties"])
-
-    # Areas -------------------------------------------------------------------
-
-    areas = List(Instance(HasTraits))
-    n_areas = Property(Int, depends_on=["areas"])
-
-    #--------------------------------------------------------------------------
-    #  How much?:
-    #--------------------------------------------------------------------------
-
-    total_gen_capacity = Property(Float, depends_on=["generators.p"])
-    online_capacity = Property(Float, depends_on=["in_service_generators.p"])
-    generation_actual = Property(Float, depends_on=["generators.p_despatch"])
-    load = Property(Float, depends_on=["loads.p"])
-    fixed_load = Property(Float, depends_on=["fixed.p"])
-    despatchable_load = Property(Float, depends_on=["despatchable.p"])
-    shunt_injection = Property(Float, depends_on=["shunts"])
-    losses = Property(Float, depends_on=["branches.p_losses"])
-    branch_charging = Property(Float, depends_on=["branches"])
-    total_inter_tie_flow = Property(Float, depends_on=["inter_ties"])
-
-    min_voltage_amplitude = Property(Float, depends_on=["buses.v_amplitude"])
-    max_voltage_amplitude = Property(Float, depends_on=["buses.v_amplitude"])
-    min_voltage_phase = Property(Float, depends_on=["buses.v_phase"])
-    max_voltage_phase = Property(Float, depends_on=["buses.v_phase"])
-
-    min_p_lambda = Property(Float, depends_on=["buses.p_lambda"])
-    max_p_pambda = Property(Float, depends_on=["buses.p_lambda"])
-    min_q_lambda = Property(Float, depends_on=["buses.q_lambda"])
-    max_q_lambda = Property(Float, depends_on=["buses.q_lambda"])
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -221,8 +135,8 @@ class Network(HasTraits):
 
     @on_trait_change("buses.slack")
     def manage_slack_bus(self, obj, name, old, new):
-        """ Ensures that there is never any more than one slack bus. """
-
+        """ Ensures that there is never any more than one slack bus.
+        """
         if new is True:
             for v in self.buses:
                 if v is not obj and v.slack is True:
@@ -230,10 +144,10 @@ class Network(HasTraits):
 
 
     def _buses_items_changed(self, event):
-        """ Handles addition and removal of buses. Ensures no dangling branches
-        by removing connected to a removed bus. Also, maintians each branch's
-        list of buses in the network.
+        """ Handles addition and removal of buses. Ensures no dangling
+            branches by removing connected to a removed bus.
 
+            Also, maintains each branch's list of buses in the network.
         """
 
         # Filter out any branches connected to a removed bus.
@@ -247,10 +161,11 @@ class Network(HasTraits):
 
 
     def _branches_changed(self, new):
-        """ Handles the list of branches changing. Checks that the source and
-        target buses for each branch are present in the network. Sets the list
-        of buses in the network for each branch also. """
+        """ Handles the list of branches changing. Checks that the source
+            and target buses for each branch are present in the network.
 
+            Sets the list of buses in the network for each branch also.
+        """
         for branch in new:
             # Sanity check on the presence of source/target bus in network.
             if branch.source_bus not in self.buses:
@@ -265,9 +180,10 @@ class Network(HasTraits):
 
 
     def _branches_items_changed(self, event):
-        """ Handles the addition and removal of branches. Set the list of
-        buses in the network for each new branch. """
+        """ Handles the addition and removal of branches.
 
+            Set the list of buses in the network for each new branch.
+        """
         for branch in event.added:
             # Sanity check on the presence of source/target bus in network.
             if branch.source_bus not in self.buses:
@@ -284,16 +200,10 @@ class Network(HasTraits):
     #  Property getters:
     #--------------------------------------------------------------------------
 
-    def _get_n_buses(self):
-        """ Property getter """
-
-        return len(self.buses)
-
-
     def _get_non_islanded_buses(self):
-        """ Provides a list of buses that are not islanded
-        TODO: Possibly use admittance matrix values
+        """ Provides a list of buses that are not islanded.
 
+            TODO: Possibly use admittance matrix values.
         """
 
         # This list is in a very different order to the list of all buses
@@ -321,15 +231,9 @@ class Network(HasTraits):
         return non_islanded
 
 
-    def _get_n_non_islanded_buses(self):
-        """ Property getter """
-
-        return len(self.non_islanded_buses)
-
-
     def _get_slack_model(self):
-        """ Indicates the current slack bus model """
-
+        """ Indicates the current slack bus model.
+        """
         slackers = [v for v in self.buses if v.slack == True]
 
         if len(slackers) == 0:
@@ -345,12 +249,6 @@ class Network(HasTraits):
         return [g for v in self.buses for g in v.generators]
 
 
-    def _get_n_generators(self):
-        """ Property getter """
-
-        return len(self.generators)
-
-
     def _get_in_service_generators(self):
         """ Provides a convenient list of all generators that are connected
         to non islanded buses.
@@ -361,36 +259,12 @@ class Network(HasTraits):
 
         return [g for v in buses for g in v.generators if g.in_service]
 
-
-    def _get_n_in_service_generators(self):
-        """ Property getter """
-
-        return len(self.in_service_generators)
-
-
-    def _get_committed_generators(self):
-        """ Property getter """
-
-        return [g for g in self.generators if g.p > 0.0]
-
-
-    def _get_n_committed_generators(self):
-        """ Property getter """
-
-        return len(self.committed_generators)
-
     # Load property getters ---------------------------------------------------
 
     def _get_loads(self):
         """ Property getter """
 
         return [l for v in self.buses for l in v.loads]
-
-
-    def _get_n_loads(self):
-        """ Property getter """
-
-        return len(self.loads)
 
 
     def _get_in_service_loads(self):
@@ -400,247 +274,15 @@ class Network(HasTraits):
 
         return [l for v in buses for l in v.loads if l.in_service]
 
-
-    def _get_n_in_service_loads(self):
-        """ Property getter """
-
-        return len(self.in_service_loads)
-
-
-    def _get_fixed(self):
-        """ Property getter """
-
-        return self.loads
-
-
-    def _get_n_fixed(self):
-        """ Property getter """
-
-        return len(self.fixed)
-
-
-    def _get_despatchable(self):
-        """ Property getter """
-
-        return [g for g in self.generators if g.p < 0.0]
-
-
-    def _get_n_despatchable(self):
-        """ Property getter """
-
-        return len(self.despatchable)
-
-    #--------------------------------------------------------------------------
-    #  Shunt property getters:
-    #--------------------------------------------------------------------------
-
-    def _get_n_shunts(self):
-        """ Property getter """
-
-        return len(self.shunts)
-
     #--------------------------------------------------------------------------
     #  Branch property getters:
     #--------------------------------------------------------------------------
-
-    def _get_n_branches(self):
-        """ Property getter """
-
-        return len(self.branches)
 
 
     def _get_in_service_branches(self):
         """ Property getter """
 
         return [e for e in self.branches if e.in_service]
-
-
-    def _get_n_in_service_branches(self):
-        """ Property getter """
-
-        return len(self.in_service_branches)
-
-
-    def _get_transformers(self):
-        """ Property getter """
-
-        return [e for e in self.branches if e.mode == "Transformer"]
-
-
-    def _get_n_transformers(self):
-        """ Property getter """
-
-        return len(self.transformers)
-
-    #--------------------------------------------------------------------------
-    #  Inter-tie property getters:
-    #--------------------------------------------------------------------------
-
-    def _get_n_inter_ties(self):
-        """ Property getter """
-
-        return len(self.inter_ties)
-
-    #--------------------------------------------------------------------------
-    #  Area property getters:
-    #--------------------------------------------------------------------------
-
-    def _get_n_areas(self):
-        """ Property getter """
-
-        return len(self.areas)
-
-    #--------------------------------------------------------------------------
-    #  "How much?" property getters:
-    #--------------------------------------------------------------------------
-
-    def _get_total_gen_capacity(self):
-        """ Property getter """
-
-        mva_base = self.mva_base
-        p = sum([g.p for g in self.generators])
-        q = sum([g.q for g in self.generators])
-        return complex(p*mva_base, q*mva_base)
-
-
-    def _get_online_capacity(self):
-        """ Property getter """
-
-        p = sum([g.p for g in self.in_service_generators])
-        q = sum([g.q for g in self.in_service_generators])
-        return complex(p, q)
-
-
-    def _get_generation_actual(self):
-        """ Property getter """
-
-        p = sum([g.p_despatch for g in self.generators])
-        q = sum([g.q for g in self.generators])
-        return complex(p, q)
-
-
-    def _get_load(self):
-        """ Property getter """
-
-        p = sum([l.p for l in self.loads])
-        q = sum([l.q for l in self.loads])
-        return complex(p, q)
-
-
-    def _get_fixed_load(self):
-        """ Property getter """
-
-        p = sum([l.p for l in self.fixed])
-        q = sum([l.q for l in self.fixed])
-        return complex(p, q)
-
-
-    def _get_despatchable_load(self):
-        """ Property getter """
-
-        p = sum([l.p for l in self.despatchable])
-        q = sum([l.q for l in self.despatchable])
-        return complex(p, q)
-
-
-    def _get_shunt_injection(self):
-        """ Property getter """
-
-        return 0.0 + 0.0j # FIXME: Implement shunts
-
-
-    def _get_losses(self):
-        """ Property getter """
-
-        p = sum([e.p_losses for e in self.branches])
-        q = sum([e.q_losses for e in self.branches])
-        return complex(p, q)
-
-
-    def _get_branch_charging(self):
-        """ Property getter """
-
-        return 0.0 + 0.0j # FIXME: Calculate branch charging injections
-
-
-    def _get_total_inter_tie_flow(self):
-        """ Property getter """
-
-        return 0.0 + 0.0j # FIXME: Implement inter-ties
-
-
-    def _get_min_voltage_amplitude(self):
-        """ Property getter """
-
-        if self.buses:
-#            l.index(min(l))
-            return min([bus.v_amplitude for bus in self.buses])
-        else:
-            return 0.0
-
-
-    def _get_max_voltage_amplitude(self):
-        """ Property getter """
-
-        if self.buses:
-            return max([bus.v_amplitude for bus in self.buses])
-        else:
-            return 0.0
-
-
-
-    def _get_min_voltage_phase(self):
-        """ Property getter """
-
-        if self.buses:
-            return min([bus.v_phase for bus in self.buses])
-        else:
-            return 0.0
-
-
-    def _get_max_voltage_phase(self):
-        """ Property getter """
-
-        if self.buses:
-            return max([bus.v_phase for bus in self.buses])
-        else:
-            return 0.0
-
-
-    def _get_min_p_lambda(self):
-        """ Property getter """
-
-        if self.buses:
-            return min([v.p_lambda for v in self.buses])
-        else:
-            return 0.0
-
-
-    def _get_max_p_lambda(self):
-        """ Property getter """
-
-        if self.buses:
-            return max([v.p_lambda for v in self.buses])
-        else:
-            return 0.0
-
-
-    def _get_min_q_lambda(self):
-        """ Property getter """
-
-        if self.buses:
-            return min([v.q_lambda for v in self.buses])
-        else:
-            return 0.0
-
-
-    def _get_max_q_lambda(self):
-        """ Property getter """
-
-        if self.buses:
-            return max([v.q_lambda for v in self.buses])
-        else:
-            return 0.0
 
     #--------------------------------------------------------------------------
     #  Public interface:
@@ -658,9 +300,451 @@ class Network(HasTraits):
 #        else:
 #            self.branches.append(branch)
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+#  "NetworkReport" class:
+#------------------------------------------------------------------------------
+
+class NetworkReport(HasTraits):
+    """ Defines a statistical report of a network.
+    """
+
+    #--------------------------------------------------------------------------
+    #  Trait definitions:
+    #--------------------------------------------------------------------------
+
+    # Network being reported.
+    network = Instance(Network, desc="reported network")
+
+    #--------------------------------------------------------------------------
+    #  Delegate trait definitions:
+    #--------------------------------------------------------------------------
+
+    # System bus nodes.
+    buses = Delegate("network")
+
+    # Connected system buses.
+    connected_buses = Delegate("network")
+
+    # All system generators.
+    generators = Delegate("network")
+
+    # On generators.
+    on_generators = Delegate("network")
+
+    # All system loads.
+    loads = Delegate("network")
+
+    # On loads.
+    on_loads = Delegate("network")
+
+    # Branch edges.
+    branches = Delegate("network")
+
+    # Active branches.
+    on_branches = Delegate("network")
+
+    #--------------------------------------------------------------------------
+    #  Property trait definitions:
+    #--------------------------------------------------------------------------
+
+    # The total number of buses
+    n_buses = Property(Int, depends_on=["buses"],
+        desc="total number of buses", label="Buses")
+
+    # The total number of non-islanded buses
+    n_non_islanded_buses = Property(Int, depends_on=["non_islanded_buses"],
+        desc="total number of non islanded buses")
+
+    # The total number of generators
+    n_generators = Property(Int, depends_on=["generators"],
+        desc="total number of generators", label="Generators")
+
+    # The total number of generators in service
+    n_in_service_generators = Property(Int,
+        depends_on=["in_service_generators"])
+
+    committed_generators = Property(List(Instance(Generator)),
+        depends_on=["generators.p"])
+
+    n_committed_generators = Property(Int, depends_on=["committed_generators"],
+        label="Committed Gens")
+
+    # The total number of all loads
+    n_loads = Property(Int, depends_on=["loads"], label="Loads")
+
+    # The total number of loads in service
+    n_in_service_loads = Property(Int, depends_on=["in_service_loads"])
+
+    fixed = Property(List(Instance(Load)), depends_on=["loads"],
+        desc="Fixed loads")
+    n_fixed = Property(Int, depends_on=["fixed"])
+
+    despatchable = Property(List(Instance(Load)),
+        depends_on=["generators"], desc="negative generators")
+    n_despatchable = Property(Int, depends_on=["despatchable"])
+
+    n_shunts = Property(Int, depends_on=["shunts"])
+
+    n_branches = Property(Int, depends_on=["branches"])
+
+    n_in_service_branches = Property(Int, depends_on=["in_service_branches"])
+
+    n_transformers = Property(Int, depends_on=["transformers"])
+
+    # Inter-ties --------------------------------------------------------------
+
+    inter_ties = List(Instance(HasTraits))
+    n_inter_ties = Property(Int, depends_on=["inter_ties"])
+
+    # Areas -------------------------------------------------------------------
+
+    areas = List(Instance(HasTraits))
+    n_areas = Property(Int, depends_on=["areas"])
+
+    #--------------------------------------------------------------------------
+    #  Quantity property traits:
+    #--------------------------------------------------------------------------
+
+    # Total system generation capacity.
+    total_gen_capacity = Property(Float, depends_on=["generators.p"])
+
+    # Total capacity of online generation.
+    online_capacity = Property(Float, depends_on=["in_service_generators.p"])
+
+    # Total capacity of despatched generation.
+    generation_actual = Property(Float, depends_on=["generators.p_despatch"])
+
+    # Total system load.
+    load = Property(Float, depends_on=["loads.p"])
+
+    # Total capacity of fixed system load.
+    fixed_load = Property(Float, depends_on=["fixed.p"])
+
+    # Total capacity of despatchable loads.
+    despatchable_load = Property(Float, depends_on=["despatchable.p"])
+
+    # Total system shunt injection.
+#    shunt_injection = Property(Float, depends_on=["shunts"])
+
+    # Total system losses.
+    losses = Property(Float, depends_on=["branches.p_losses"])
+
+    # Total branch charging injections.
+    branch_charging = Property(Float, depends_on=["branches"])
+
+    # Total inter-tie flow.
+#    inter_tie_flow = Property(Float, depends_on=["inter_ties"])
+
+    # Minimum and maximum bus voltages.
+    min_voltage_amplitude = Property(Float, depends_on=["buses.v_amplitude"])
+    max_voltage_amplitude = Property(Float, depends_on=["buses.v_amplitude"])
+    min_voltage_phase = Property(Float, depends_on=["buses.v_phase"])
+    max_voltage_phase = Property(Float, depends_on=["buses.v_phase"])
+
+    # Minimum and maximum bus Lagrangian multipliers.
+    min_p_lambda = Property(Float, depends_on=["buses.p_lambda"])
+    max_p_pambda = Property(Float, depends_on=["buses.p_lambda"])
+    min_q_lambda = Property(Float, depends_on=["buses.q_lambda"])
+    max_q_lambda = Property(Float, depends_on=["buses.q_lambda"])
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    # Power flow results view.
+    pf_view = pf_report_view
+
+    # Optimal power flow results view.
+    opf_view = opf_report_view
+
+    #--------------------------------------------------------------------------
+    #  Property getters:
+    #--------------------------------------------------------------------------
+
+    def _get_n_buses(self):
+        """ Property getter for the total number of buses.
+        """
+        return len(self.buses)
+
+
+    def _get_n_non_islanded_buses(self):
+        """ Property getter for the number of connected buses.
+        """
+        return len(self.non_islanded_buses)
+
+
+    def _get_n_generators(self):
+        """ Property getter for the total number of generators.
+        """
+        return len(self.generators)
+
+
+    def _get_n_in_service_generators(self):
+        """ Property getter for the number of active generators.
+        """
+        return len(self.in_service_generators)
+
+
+    def _get_committed_generators(self):
+        """ Property getter for the list of generators that have
+            been despatched.
+        """
+        return [g for g in self.generators if g.p > 0.0]
+
+
+    def _get_n_committed_generators(self):
+        """ Property getter for the number of committed generators.
+        """
+        return len(self.committed_generators)
+
+
+    def _get_n_loads(self):
+        """ Property getter for the total number of loads.
+        """
+        return len(self.loads)
+
+
+    def _get_n_in_service_loads(self):
+        """ Property getter for the number of active loads.
+        """
+        return len(self.in_service_loads)
+
+
+    def _get_fixed(self):
+        """ Property getter for the list of fixed loads.
+        """
+        return self.loads
+
+
+    def _get_n_fixed(self):
+        """ Property getter for the total number of fixed loads.
+        """
+        return len(self.fixed)
+
+
+    def _get_despatchable(self):
+        """ Property getter for the list of generators with negative output.
+        """
+        return [g for g in self.generators if g.p < 0.0]
+
+
+    def _get_n_despatchable(self):
+        """ Property getter for the number of despatchable loads.
+        """
+        return len(self.despatchable)
+
+#    def _get_n_shunts(self):
+#        """ Property getter for the total number of shunts.
+#        """
+#        return len(self.shunts)
+
+    #--------------------------------------------------------------------------
+    #  Branch property getters:
+    #--------------------------------------------------------------------------
+
+    def _get_n_branches(self):
+        """ Property getter for the total number of branches.
+        """
+        return len(self.branches)
+
+
+    def _get_n_in_service_branches(self):
+        """ Property getter for the total number of active branches.
+        """
+        return len(self.in_service_branches)
+
+
+    def _get_transformers(self):
+        """ Property getter for the list of branches operating as transformers.
+        """
+        return [e for e in self.branches if e.mode == "Transformer"]
+
+
+    def _get_n_transformers(self):
+        """ Property getter for the total number of transformers.
+        """
+        return len(self.transformers)
+
+    #--------------------------------------------------------------------------
+    #  Inter-tie property getters:
+    #--------------------------------------------------------------------------
+
+#    def _get_n_inter_ties(self):
+#        """ Property getter for the total number of inter-ties.
+#        """
+#        return len(self.inter_ties)
+
+    #--------------------------------------------------------------------------
+    #  Area property getters:
+    #--------------------------------------------------------------------------
+
+#    def _get_n_areas(self):
+#        """ Property getter for the total number of areas.
+#        """
+#        return len(self.areas)
+
+    #--------------------------------------------------------------------------
+    #  "How much?" property getters:
+    #--------------------------------------------------------------------------
+
+    def _get_total_gen_capacity(self):
+        """ Property getter for the total generation capacity.
+        """
+        mva_base = self.mva_base
+        p = sum([g.p for g in self.generators])
+        q = sum([g.q for g in self.generators])
+
+        return complex(p*mva_base, q*mva_base)
+
+
+    def _get_online_capacity(self):
+        """ Property getter for the total online generation capacity.
+        """
+        p = sum([g.p for g in self.in_service_generators])
+        q = sum([g.q for g in self.in_service_generators])
+
+        return complex(p, q)
+
+
+    def _get_generation_actual(self):
+        """ Property getter for the total despatched generation.
+        """
+        p = sum([g.p_despatch for g in self.generators])
+        q = sum([g.q for g in self.generators])
+
+        return complex(p, q)
+
+
+    def _get_load(self):
+        """ Property getter for the total system load.
+        """
+        p = sum([l.p for l in self.loads])
+        q = sum([l.q for l in self.loads])
+
+        return complex(p, q)
+
+
+    def _get_fixed_load(self):
+        """ Property getter for the total fixed system load.
+        """
+        p = sum([l.p for l in self.fixed])
+        q = sum([l.q for l in self.fixed])
+
+        return complex(p, q)
+
+
+    def _get_despatchable_load(self):
+        """ Property getter for the total volume of despatchable load.
+        """
+        p = sum([l.p for l in self.despatchable])
+        q = sum([l.q for l in self.despatchable])
+
+        return complex(p, q)
+
+
+#    def _get_shunt_injection(self):
+#        """ Property getter for the total system shunt injection.
+#        """
+#        return 0.0 + 0.0j # FIXME: Implement shunts
+
+
+    def _get_losses(self):
+        """ Property getter for the total system losses.
+        """
+        p = sum([e.p_losses for e in self.branches])
+        q = sum([e.q_losses for e in self.branches])
+
+        return complex(p, q)
+
+
+    def _get_branch_charging(self):
+        """ Property getter for the total branch charging injections.
+        """
+        return 0.0 + 0.0j # FIXME: Calculate branch charging injections
+
+
+#    def _get_total_inter_tie_flow(self):
+#        """ Property getter for the total inter-tie flow.
+#        """
+#        return 0.0 + 0.0j # FIXME: Implement inter-ties
+
+
+    def _get_min_voltage_amplitude(self):
+        """ Property getter for the minimum bus voltage amplitude.
+        """
+        if self.buses:
+#            l.index(min(l))
+            return min([bus.v_amplitude for bus in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_max_voltage_amplitude(self):
+        """ Property getter for the maximum bus voltage amplitude.
+        """
+        if self.buses:
+            return max([bus.v_amplitude for bus in self.buses])
+        else:
+            return 0.0
+
+
+
+    def _get_min_voltage_phase(self):
+        """ Property getter for the minimum bus voltage phase angle.
+        """
+        if self.buses:
+            return min([bus.v_phase for bus in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_max_voltage_phase(self):
+        """ Property getter for the maximum bus voltage phase angle.
+        """
+        if self.buses:
+            return max([bus.v_phase for bus in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_min_p_lambda(self):
+        """ Property getter.
+        """
+        if self.buses:
+            return min([v.p_lambda for v in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_max_p_lambda(self):
+        """ Property getter.
+        """
+        if self.buses:
+            return max([v.p_lambda for v in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_min_q_lambda(self):
+        """ Property getter.
+        """
+        if self.buses:
+            return min([v.q_lambda for v in self.buses])
+        else:
+            return 0.0
+
+
+    def _get_max_q_lambda(self):
+        """ Property getter.
+        """
+        if self.buses:
+            return max([v.q_lambda for v in self.buses])
+        else:
+            return 0.0
+
+#------------------------------------------------------------------------------
 #  "AreaRegion" class:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 #class AreaRegion(HasTraits):
 #    """
@@ -678,7 +762,7 @@ class Network(HasTraits):
 #    p_delta = Float(desc="annual growth rate")
 
 #------------------------------------------------------------------------------
-#  Standalone call:
+#  Stand-alone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -686,7 +770,7 @@ if __name__ == "__main__":
     v1 = Bus()
     v2 = Bus()
     n.buses=[v1, v2]
-#    e1 = Branch(network=n, source_bus=v1, target_bus=v2)
+#    e1 = Branch(source_bus=v1, target_bus=v2)
 #    n.branches=[e1]
 
 
