@@ -324,7 +324,7 @@ class OneLineDot(NetworkDot):
         self.generator_node_edges.append(gne)
 
 
-    @on_trait_change("network.generators")
+    @on_trait_change("network.all_generators")
     def on_generators_change(self, obj, name, old, new):
         """ Handles the population of generators changing """
 
@@ -345,7 +345,7 @@ class OneLineDot(NetworkDot):
         self.load_node_edges.append(lne)
 
 
-    @on_trait_change("network.loads")
+    @on_trait_change("network.all_loads")
     def on_loads_change(self, obj, old, new):
         """ Handles the population of loads changing """
 

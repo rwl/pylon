@@ -81,7 +81,7 @@ class Network(HasTraits):
     # Generators --------------------------------------------------------------
 
     # Convenience list of all generators
-    generators = Property(List(Instance(Generator)),
+    all_generators = Property(List(Instance(Generator)),
         depends_on=["buses.generators"],
         desc="convenience list of all generators")
 
@@ -96,7 +96,7 @@ class Network(HasTraits):
     # Loads -------------------------------------------------------------------
 
     # Convenience list of all loads
-    loads = Property(List(Instance(Load)), depends_on=["buses.loads"],
+    all_loads = Property(List(Instance(Load)), depends_on=["buses.loads"],
         desc="convenience list of all loads")
 
     # Convenience list of all in service loads connected to
@@ -215,7 +215,7 @@ class Network(HasTraits):
 #            if e.target_bus not in non_islanded:
 #                non_islanded.append(e.target_bus)
 
-        if self.n_buses <= 1:
+        if len(self.buses) <= 1:
             return self.buses
 
         # This is a very slow way, but it returns a list in the same
@@ -243,7 +243,7 @@ class Network(HasTraits):
 
     # Generator property getters ----------------------------------------------
 
-    def _get_generators(self):
+    def _get_all_generators(self):
         """ Property getter """
 
         return [g for v in self.buses for g in v.generators]
@@ -258,7 +258,7 @@ class Network(HasTraits):
 
     # Load property getters ---------------------------------------------------
 
-    def _get_loads(self):
+    def _get_all_loads(self):
         """ Property getter.
         """
         return [l for v in self.buses for l in v.loads]
@@ -306,13 +306,13 @@ class NetworkReport(HasTraits):
     connected_buses = Delegate("network")
 
     # All system generators.
-    generators = Delegate("network")
+    all_generators = Delegate("network")
 
     # On generators.
     on_generators = Delegate("network")
 
     # All system loads.
-    loads = Delegate("network")
+    all_loads = Delegate("network")
 
     # On loads.
     on_loads = Delegate("network")
@@ -336,7 +336,7 @@ class NetworkReport(HasTraits):
         desc="total number of non islanded buses")
 
     # The total number of generators
-    n_generators = Property(Int, depends_on=["generators"],
+    n_generators = Property(Int, depends_on=["all_generators"],
         desc="total number of generators", label="Generators")
 
     # The total number of generators in service
@@ -344,23 +344,23 @@ class NetworkReport(HasTraits):
         depends_on=["online_generators"])
 
     committed_generators = Property(List(Instance(Generator)),
-        depends_on=["generators.p"])
+        depends_on=["all_generators.p"])
 
     n_committed_generators = Property(Int, depends_on=["committed_generators"],
         label="Committed Gens")
 
     # The total number of all loads
-    n_loads = Property(Int, depends_on=["loads"], label="Loads")
+    n_loads = Property(Int, depends_on=["all_loads"], label="Loads")
 
     # The total number of loads in service
     n_online_loads = Property(Int, depends_on=["online_loads"])
 
-    fixed = Property(List(Instance(Load)), depends_on=["loads"],
+    fixed = Property(List(Instance(Load)), depends_on=["all_loads"],
         desc="Fixed loads")
     n_fixed = Property(Int, depends_on=["fixed"])
 
     despatchable = Property(List(Instance(Load)),
-        depends_on=["generators"], desc="negative generators")
+        depends_on=["all_generators"], desc="negative generators")
     n_despatchable = Property(Int, depends_on=["despatchable"])
 
     n_shunts = Property(Int, depends_on=["shunts"])
@@ -459,7 +459,7 @@ class NetworkReport(HasTraits):
     def _get_n_generators(self):
         """ Property getter for the total number of generators.
         """
-        return len(self.generators)
+        return len(self.all_generators)
 
 
     def _get_n_online_generators(self):
@@ -472,7 +472,7 @@ class NetworkReport(HasTraits):
         """ Property getter for the list of generators that have
             been despatched.
         """
-        return [g for g in self.generators if g.p > 0.0]
+        return [g for g in self.all_generators if g.p > 0.0]
 
 
     def _get_n_committed_generators(self):
@@ -484,7 +484,7 @@ class NetworkReport(HasTraits):
     def _get_n_loads(self):
         """ Property getter for the total number of loads.
         """
-        return len(self.loads)
+        return len(self.all_loads)
 
 
     def _get_n_online_loads(self):
@@ -496,7 +496,7 @@ class NetworkReport(HasTraits):
     def _get_fixed(self):
         """ Property getter for the list of fixed loads.
         """
-        return self.loads
+        return self.all_loads
 
 
     def _get_n_fixed(self):
@@ -508,7 +508,7 @@ class NetworkReport(HasTraits):
     def _get_despatchable(self):
         """ Property getter for the list of generators with negative output.
         """
-        return [g for g in self.generators if g.p < 0.0]
+        return [g for g in self.all_generators if g.p < 0.0]
 
 
     def _get_n_despatchable(self):
@@ -574,8 +574,8 @@ class NetworkReport(HasTraits):
         """ Property getter for the total generation capacity.
         """
         base_mva = self.base_mva
-        p = sum([g.p for g in self.generators])
-        q = sum([g.q for g in self.generators])
+        p = sum([g.p for g in self.all_generators])
+        q = sum([g.q for g in self.all_generators])
 
         return complex(p * base_mva, q * base_mva)
 
@@ -592,8 +592,8 @@ class NetworkReport(HasTraits):
     def _get_generation_actual(self):
         """ Property getter for the total despatched generation.
         """
-        p = sum([g.p_despatch for g in self.generators])
-        q = sum([g.q for g in self.generators])
+        p = sum([g.p_despatch for g in self.all_generators])
+        q = sum([g.q for g in self.all_generators])
 
         return complex(p, q)
 
@@ -601,8 +601,8 @@ class NetworkReport(HasTraits):
     def _get_load(self):
         """ Property getter for the total system load.
         """
-        p = sum([l.p for l in self.loads])
-        q = sum([l.q for l in self.loads])
+        p = sum([l.p for l in self.all_loads])
+        q = sum([l.q for l in self.all_loads])
 
         return complex(p, q)
 

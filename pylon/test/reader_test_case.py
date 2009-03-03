@@ -72,13 +72,13 @@ class ReaderTest(TestCase):
         )
 
         self.assertEqual(
-            len(n.generators), n_gen,
-            "%d generators expected, %d found" % (n_gen, len(n.generators))
+            len(n.all_generators), n_gen,
+            "%d generators expected, %d found" % (n_gen, len(n.all_generators))
         )
 
         self.assertEqual(
-            len(n.loads), n_loads,
-            "%d loads expected, %d found" % (n_loads, len(n.loads))
+            len(n.all_loads), n_loads,
+            "%d loads expected, %d found" % (n_loads, len(n.all_loads))
         )
 
 

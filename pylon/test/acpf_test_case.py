@@ -139,7 +139,7 @@ class ACPFTest(TestCase):
         # Perform preliminary steps
         self.routine._make_admittance_matrix()
         self.routine._initialise_voltage_vector()
-        self.routine._make_apparent_power_injection_vector()
+        self.routine._make_power_injection_vector()
         self.routine._index_buses()
 
         self.routine._evaluate_function()
@@ -170,7 +170,7 @@ class ACPFTest(TestCase):
         # Perform preliminary steps
         routine._make_admittance_matrix()
         routine._initialise_voltage_vector()
-        routine._make_apparent_power_injection_vector()
+        routine._make_power_injection_vector()
         routine._index_buses()
         routine._evaluate_function()
 
@@ -339,7 +339,7 @@ class ACPFTest(TestCase):
 
         routine._make_admittance_matrix()
         routine._initialise_voltage_vector()
-        routine._make_apparent_power_injection_vector()
+        routine._make_power_injection_vector()
         routine._index_buses()
 
         J = routine._make_jacobian()
@@ -401,7 +401,7 @@ class ACPFTest(TestCase):
 
         routine._make_admittance_matrix()
         routine._initialise_voltage_vector()
-        routine._make_apparent_power_injection_vector()
+        routine._make_power_injection_vector()
         routine._index_buses()
 
         # Initial evaluation of f(x0) and convergency check

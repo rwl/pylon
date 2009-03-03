@@ -200,7 +200,7 @@ class Generator(HasTraits):
         if self.cost_model == "Polynomial":
             x = self.p
             c0, c1, c2 = self.cost_coeffs
-            cost = c0*x**2 + c1*x + c2
+            cost = c0 + c1*x + c2*x**2
             logger.debug("Generator [%s] cost (polynomial) set to: %f" %
                 (self, cost))
             return cost

@@ -101,17 +101,6 @@ class BranchTest(unittest.TestCase):
         self.assertAlmostEqual(e.q_losses, 0.2, places=4)
 
 
-    def test_id(self):
-        """ Test that the id attribute is unique and suitably long. """
-
-        e = Branch(Bus(), Bus())
-        e2 = Branch(Bus(), Bus())
-
-        self.assertNotEqual(e.id, e2.id)
-
-        self.assertTrue(len(e.id) > 6)
-
-
 if __name__ == "__main__":
     unittest.main()
 

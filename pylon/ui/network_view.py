@@ -60,9 +60,9 @@ minimal_view = View(
         Item(name="base_mva", label="Base MVA", style="simple"),
         Item(name="slack_model", style="readonly"),
         "_",
-        Item(name="n_buses", label="Buses", style="readonly"),
+#        Item(name="n_buses", label="Buses", style="readonly"),
     #    Item(name="n_branches", label="Branches", style="readonly"),
-        Item(name="n_generators", label="Generators", style="readonly"),
+#        Item(name="n_generators", label="Generators", style="readonly"),
     ),
     id="network_view.minimal_view",
     buttons=OKCancelButtons
@@ -107,7 +107,7 @@ branches_view = View(
 all_generators_view = View(
     Group(
         Item(
-            name="generators", show_label=False,
+            name="all_generators", show_label=False,
             editor=all_generators_table_editor, id=".generators_table"
         )
     ),
@@ -121,7 +121,7 @@ all_generators_view = View(
 all_loads_view = View(
     Group(
         Item(
-            name="loads", show_label=False,
+            name="all_loads", show_label=False,
             editor=all_loads_table_editor, id=".loads_table"
         )
     ),
@@ -158,7 +158,7 @@ network_view = View(
             ),
             Group(
                 Item(
-                    name="generators", show_label=False,
+                    name="all_generators", show_label=False,
                     editor=all_generators_table_editor,
                     id=".network_generators_table"
                 ),
@@ -166,7 +166,7 @@ network_view = View(
             ),
             Group(
                 Item(
-                    name="loads", show_label=False,
+                    name="all_loads", show_label=False,
                     editor=all_loads_table_editor,
                     id=".network_loads_table"
                 ),

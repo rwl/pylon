@@ -57,7 +57,7 @@ env = MarketEnvironment( network = n, name = "Market Environment" )
 
 swarm = Swarm( environment = env, name = "Participant Swarm" )
 
-for p in n.generators + n.loads:
+for p in n.all_generators + n.all_loads:
     env_name = "Env (%s)" % p.name
     p_env = ParticipantEnvironment( name = env_name, asset = p )
 

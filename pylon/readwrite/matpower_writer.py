@@ -66,7 +66,7 @@ class MATPOWERWriter:
 
         self._export_buses(network.buses, file, network.base_mva)
         file.write("\n")
-        self._export_generators(network.generators, file, network.buses)
+        self._export_generators(network.all_generators, file, network.buses)
         file.write("\n")
         self._export_branches(
             network.branches, file, network.base_mva, network.buses

@@ -89,17 +89,6 @@ class BusTest(TestCase):
         self.assertEqual(v.p_surplus, 5.0)
         self.assertEqual(v.q_surplus, 2.5)
 
-
-    def test_id(self):
-        """ Test that the id attribute is unique and suitably long. """
-
-        v = Bus()
-        v2 = Bus()
-
-        self.assertNotEqual(v.id, v2.id)
-
-        self.assertTrue(len(v.id) > 6)
-
 if __name__ == "__main__":
     main()
 

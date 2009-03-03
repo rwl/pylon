@@ -135,12 +135,12 @@ class NetworkTest(TestCase):
         """
 
         bus_1 = Bus()
-        bus_2 = bus()
+        bus_2 = Bus()
         bus_3 = Bus()
         self.network.buses.extend([bus_1, bus_2, bus_3])
 
         branch_1 = Branch(
-            source_bus=bus1,
+            source_bus=bus_1,
             target_bus=bus_2,
             r=0.01,
             x=0.02,
@@ -149,7 +149,7 @@ class NetworkTest(TestCase):
         self.network.branches.append(branch_1)
 
         branch_2 = Branch(
-            source_bus=bus1,
+            source_bus=bus_1,
             target_bus=bus_3,
             r=0.04,
             x=0.05,
@@ -158,7 +158,7 @@ class NetworkTest(TestCase):
         self.network.branches.append(branch_2)
 
         branch_3 = Branch(
-            source_bus=bus2,
+            source_bus=bus_2,
             target_bus=bus_3,
             r=0.07,
             x=0.08,

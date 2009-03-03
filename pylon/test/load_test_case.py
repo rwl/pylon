@@ -65,23 +65,6 @@ class LoadTest(unittest.TestCase):
         self.assertAlmostEqual(load.p_profiled, 0.40, places)
         self.assertAlmostEqual(load.p_profiled, 0.08, places)
 
-
-#    def test_id(self):
-#        """ Test that the id attribute is unique. """
-#
-#        l = Load()
-#        l2 = Load()
-#
-#        self.assertNotEqual(
-#            l.id, l2.id,
-#            "IDs [%s, %s] of two loads found equal" % (self.l.id, l2.id)
-#        )
-#
-#        self.assertTrue(
-#            len(l.id) > 6,
-#            "ID [%s] of load is of insufficient length" % (self.l.id)
-#        )
-
 if __name__ == "__main__":
     unittest.main()
 

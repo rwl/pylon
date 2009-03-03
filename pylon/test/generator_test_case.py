@@ -104,17 +104,6 @@ class GeneratorTest(TestCase):
         g.pw_linear = [p0, p1, p2]
 
 
-    def test_id(self):
-        """ Test that the id attribute is unique and of suitable length. """
-
-        g = Generator()
-        g2 = Generator()
-
-        self.assertNotEqual(g.id, g2.id)
-
-        self.assertTrue(len(g.id) > 6)
-
-
 if __name__ == "__main__":
     main()
 

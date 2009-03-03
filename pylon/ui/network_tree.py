@@ -66,12 +66,12 @@ network_tree_editor = TreeEditor(
         ),
         TreeNode(
             node_for=[Network], auto_open=False,
-            children="generators", label="=_generators",
+            children="all_generators", label="=All Generators",
             view=all_generators_view,
         ),
         TreeNode(
             node_for=[Network], auto_open=False,
-            children="loads", label="=_loads",
+            children="all_loads", label="=All Loads",
             view=all_loads_view
         ),
         TreeNode(

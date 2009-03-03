@@ -85,19 +85,19 @@ class PylonTableEditor(ResourceEditor):
                     ),
                     Group(
                         Item(
-                            name="generators", show_label=False,
+                            name="all_generators", show_label=False,
                             editor=all_generators_table_editor,
                             id=".network_generators_table"
                         ),
-                        label="_generators"
+                        label="All Generators"
                     ),
                     Group(
                         Item(
-                            name="loads", show_label=False,
+                            name="all_loads", show_label=False,
                             editor=all_loads_table_editor,
                             id=".network_loads_table"
                         ),
-                        label="_loads"
+                        label="All Loads"
                     ),
                     dock="tab", scrollable=True, springy=True
                 ),
