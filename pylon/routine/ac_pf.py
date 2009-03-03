@@ -136,7 +136,7 @@ class ACPFRoutine:
 
         j = 0+1j #cmath.sqrt(-1)
         pi = math.pi
-        buses = self.network.non_islanded_buses
+        buses = self.network.connected_buses
 
         Vm0 = matrix([bus.v_amplitude_guess for bus in buses], tc='z')
         Va0 = matrix([bus.v_phase_guess for bus in buses]) #degrees
@@ -172,7 +172,7 @@ class ACPFRoutine:
     def _make_power_injection_vector(self):
         """ Makes the vector of complex bus power injections (gen - load). """
 
-        buses = self.network.non_islanded_buses
+        buses = self.network.connected_buses
 
         self.s_surplus = matrix(
             [complex(v.p_surplus, v.q_surplus) for v in buses], tc="z"
@@ -185,7 +185,7 @@ class ACPFRoutine:
     def _index_buses(self):
         """ Set up indexing for updating v. """
 
-        buses = self.network.non_islanded_buses
+        buses = self.network.connected_buses
 
         # Indexing for updating v
         pv_idxs = [i for i, v in enumerate(buses) if v.mode is "PV"]

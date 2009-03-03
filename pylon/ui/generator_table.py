@@ -63,7 +63,7 @@ def generator_factory(**row_factory_kw):
 
 generators_table_editor = TableEditor(
     columns = [
-        CheckboxColumn(name="in_service", label="In Service", width=0.12),
+        CheckboxColumn(name="online", label="In Service", width=0.12),
         InServiceColumn(name="name"),
 #        InServiceColumn(
 #            name="bus",
@@ -115,7 +115,7 @@ generators_table_editor = TableEditor(
 
 all_generators_table_editor = TableEditor(
     columns = [
-        CheckboxColumn(name="in_service", label="In Service", width=0.12),
+        CheckboxColumn(name="online", label="In Service", width=0.12),
         InServiceColumn(name="name"),
         InServiceFloatColumn(name="p"),
         InServiceFloatColumn(name="q"),

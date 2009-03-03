@@ -37,21 +37,23 @@ from enthought.pyface.image_resource import ImageResource
 
 IMAGE_LOCATION = dirname(__file__)
 
+frame_icon = ImageResource("frame.ico", search_path=[IMAGE_LOCATION])
+
 #------------------------------------------------------------------------------
 #  Minimal view:
 #------------------------------------------------------------------------------
 
 minimal_view = View(
     Item(name="name"),
-    Item(name="in_service"),
+    Item(name="online"),
     "_",
     Item(
         "source_bus", enabled_when="network is not None",
-        editor=InstanceEditor(name="buses", editable=False)
+        editor=InstanceEditor(name="_source_buses", editable=False)
     ),
     Item(
         "target_bus", enabled_when="network is not None",
-        editor=InstanceEditor(name="buses", editable=False)
+        editor=InstanceEditor(name="_target_buses", editable=False)
     ),
     "_", ["r", "x", "b"],
     "_", ["ratio", "phase_shift"]
@@ -63,21 +65,21 @@ minimal_view = View(
 
 line_view = View(
     Item(name="name"),
-    Item(name="in_service"),
+    Item(name="online"),
     Item(name="mode", style="readonly"),
     "_",
     Item(
         "source_bus", enabled_when="network is not None",
-        editor=InstanceEditor(name="buses", editable=False)
+        editor=InstanceEditor(name="_source_buses", editable=False)
     ),
     Item(
         "target_bus", enabled_when="network is not None",
-        editor=InstanceEditor(name="buses", editable=False)
+        editor=InstanceEditor(name="_target_buses", editable=False)
     ),
     "_",
     ["r", "x", "b"],
     id="pylon.ui.line_view", title="Line properties",
-    icon = ImageResource("frame.ico", search_path=[IMAGE_LOCATION]),
+    icon = frame_icon,
     resizable = True, scrollable=True,
     buttons=["OK", "Cancel", "Help"]
 )
@@ -88,16 +90,16 @@ line_view = View(
 
 transformer_view = View(
     Item(name="name"),
-    Item(name="in_service"),
+    Item(name="online"),
     Item(name="mode", style="readonly"),
     "_",
     Item(
         "source_bus", enabled_when="network is not None",
-        editor=InstanceEditor(name="buses", editable=False)
+        editor=InstanceEditor(name="_source_buses", editable=False)
     ),
     Item(
         "target_bus", enabled_when="network is not None",
-        editor=InstanceEditor(name="buses", editable=False)
+        editor=InstanceEditor(name="_target_buses", editable=False)
     ),
     "_",
     Item(name="ratio"),
@@ -105,7 +107,7 @@ transformer_view = View(
     Item(name="phase_shift_max"),
     Item(name="phase_shift_min"),
     id="pylon.ui.transformer_view", title="Transformer properties",
-    icon = ImageResource("frame.ico", search_path=[IMAGE_LOCATION]),
+    icon = frame_icon,
     resizable = True, scrollable=True,
     buttons=["OK", "Cancel", "Help"]
 )
@@ -118,7 +120,7 @@ branch_view = View(
     VGroup(
         Group(
             Item(name="name"),
-            Item(name="in_service"),
+            Item(name="online"),
             Item(name="mode", style="readonly"),
             "_",
             Item(
@@ -190,7 +192,7 @@ branch_view = View(
         )
     ),
     id="pylon.ui.branch_view", title="Branch properties",
-#    icon = ImageResource(path.join(IMAGE_LOCATION, "frame.ico")),
+    icon = frame_icon,
     resizable = True,
     scrollable=True,
     buttons=["OK", "Cancel", "Help"]

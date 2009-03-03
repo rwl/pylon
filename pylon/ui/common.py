@@ -40,7 +40,7 @@ class FloatColumn(ObjectColumn):
 
 class InServiceColumn(ObjectColumn):
     """ A specialised column to set the text color differently based upon the
-        state of the 'in_service' trait of the object.
+        state of the 'online' trait of the object.
     """
 
     width = 0.08
@@ -48,7 +48,7 @@ class InServiceColumn(ObjectColumn):
     horizontal_alignment = "center"
 
     def get_text_color(self, object):
-        return ["light grey", "black"][object.in_service]
+        return ["light grey", "black"][object.online]
 
 #------------------------------------------------------------------------------
 #  "InServiceFloatColumn" class:
@@ -56,7 +56,7 @@ class InServiceColumn(ObjectColumn):
 
 class InServiceFloatColumn(InServiceColumn):
     """ Defines a column that formats floating point numbers and sets the text
-        color differently based upon the state of the 'in_service' trait of the
+        color differently based upon the state of the 'online' trait of the
         object.
     """
 

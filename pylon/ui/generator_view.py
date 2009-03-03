@@ -46,7 +46,7 @@ ICON_LOCATION = path.join(path.dirname(__file__), "images")
 
 minimal_view = View(
     Item(name="name"),
-    Item(name="in_service"),
+    Item(name="online"),
     Item(name="p"),
     Item(name="p_max"),
     Item(name="p_min"),
@@ -78,7 +78,7 @@ minimal_view = View(
 uc_view = View(
     Group(
         Item(name="name"),
-        Item(name="in_service"),
+        Item(name="online"),
     ),
     Group(
         Item(name="p", style="readonly"),
@@ -163,7 +163,7 @@ generator_view = View(
     VGroup(
         VGroup(
             Group(
-                Item(name="name"), Item(name="in_service"),
+                Item(name="name"), Item(name="online"),
             ),
 #            Group(
 #                Item(name="rating_s"),
@@ -253,7 +253,7 @@ generator_view = View(
 synchronous_view = View(
     Group(
         Item(name="name"),
-        Item(name="in_service"),
+        Item(name="online"),
     ),
     HGroup(
         Group(
@@ -300,7 +300,7 @@ synchronous_view = View(
 dfig_view = View(
     Group(
         Item(name="name"),
-        Item(name="in_service"),
+        Item(name="online"),
     ),
     HGroup(
         Group(

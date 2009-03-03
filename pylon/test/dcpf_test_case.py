@@ -129,9 +129,9 @@ class DCPFTest(TestCase):
 
         places = 4
 
-        n = self.routine.network
-        buses = n.non_islanded_buses
-        branches = n.in_service_branches
+        n        = self.routine.network
+        buses    = n.connected_buses
+        branches = n.online_branches
 
         # Buses
         v_0 = 0.0000

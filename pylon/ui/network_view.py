@@ -57,7 +57,7 @@ minimal_view = View(
     Group(
         Item(name="name", style="simple"),
         "_",
-        Item(name="mva_base", label="Base MVA", style="simple"),
+        Item(name="base_mva", label="Base MVA", style="simple"),
         Item(name="slack_model", style="readonly"),
         "_",
         Item(name="n_buses", label="Buses", style="readonly"),
@@ -136,7 +136,7 @@ network_view = View(
     VGroup(
         HGroup(
             Item(name="name", style="simple"),
-            Item(name="mva_base", label="Base MVA", style="simple")
+            Item(name="base_mva", label="Base MVA", style="simple")
         ),
         Tabbed(
             Group(

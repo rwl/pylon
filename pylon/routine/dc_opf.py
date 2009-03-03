@@ -233,9 +233,9 @@ class DCOPFRoutine:
             |    | = |          | * |     | + |       |
             | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
         """
-        branches = self.network.in_service_branches
+        branches = self.network.online_branches
 
-#        b = matrix([1/e.x * e.in_service for e in branches])
+#        b = matrix([1/e.x * e.online for e in branches])
         susc = []
         for branch in branches:
             if branch.x != 0.0:
@@ -261,10 +261,10 @@ class DCOPFRoutine:
     def _build_theta_inj_bus(self):
         """ Pbusinj = dot(Cf, Pfinj) + dot(Ct, Ptinj)
         """
-        buses = self.network.non_islanded_buses
-        branches = self.network.in_service_branches
-        n_buses = self.network.n_non_islanded_buses
-        n_branches = self.network.n_in_service_branches
+        buses = self.network.connected_buses
+        branches = self.network.online_branches
+        n_buses = len(self.network.connected_buses)
+        n_branches = len(self.network.online_branches)
 
         # Build incidence matrices
         source_incd = matrix(0, (n_buses, n_branches), tc="i")
@@ -296,8 +296,8 @@ class DCOPFRoutine:
             then those that are get converted to piecewise linear models. The
             algorithm trait is then set accordingly.
         """
-        buses = self.network.non_islanded_buses
-        generators = self.network.in_service_generators
+        buses = self.network.connected_buses
+        generators = self.network.online_generators
 
         models = [g.cost_model for g in generators]
 
@@ -335,7 +335,7 @@ class DCOPFRoutine:
             phases for each generator bus, the generator real power output and
             if using pw linear costs, the output cost.
         """
-        buses = self.network.non_islanded_buses
+        buses = self.network.connected_buses
 
         v_phase = matrix([v.v_phase_guess*pi/180 for v in buses])
 
@@ -371,10 +371,10 @@ class DCOPFRoutine:
             segment of the function. For polynomial (quadratic) models we
             just add an appropriately sized empty matrix.
         """
-        buses = self.network.non_islanded_buses
-        generators = self.network.in_service_generators
-        n_buses = self.network.n_non_islanded_buses
-        n_generators = self.network.n_in_service_generators
+        buses        = self.network.connected_buses
+        generators   = self.network.online_generators
+        n_buses      = len(buses)
+        n_generators = len(generators)
 
         #----------------------------------------------------------------------
         #  Cost constraints ([Cp >= m*Pg + b] => [m*Pg - Cp <= -b]):
@@ -436,10 +436,10 @@ class DCOPFRoutine:
     def _build_reference_angle_constraint(self):
         """ Use the slack bus angle for reference or buses[0].
         """
-        buses = self.network.non_islanded_buses
-        generators = self.network.in_service_generators
-        n_buses = self.network.n_non_islanded_buses
-        n_generators = self.network.n_in_service_generators
+        buses        = self.network.connected_buses
+        generators   = self.network.online_generators
+        n_buses      = len(buses)
+        n_generators = len(generators)
 
         # Indices of slack buses
         ref_idxs = [buses.index(v) for v in buses if v.slack]
@@ -475,10 +475,10 @@ class DCOPFRoutine:
     def _build_active_power_flow_equations(self):
         """ P mismatch (B*Va + Pg = Pd).
         """
-        buses = self.network.non_islanded_buses
-        generators = self.network.in_service_generators
-        n_buses = self.network.n_non_islanded_buses
-        n_generators = self.network.n_in_service_generators
+        buses        = self.network.connected_buses
+        generators   = self.network.online_generators
+        n_buses      = len(buses)
+        n_generators = len(generators)
 
 #        g_buses = [v for v in buses if len(v.generators) > 0]
 #        n_g_buses = len(g_buses)
@@ -493,9 +493,8 @@ class DCOPFRoutine:
                 i_bus_generator[i,j] = 1
                 j += 1
 
-        logger.debug(
-            "Built bus generator incidence matrix:\n%s" % i_bus_generator
-        )
+        logger.debug("Built bus generator incidence matrix:\n%s" %
+                     i_bus_generator)
 
         # Include zero matrix for pw linear cost constraints
         if self._solver_type == "linear":
@@ -509,9 +508,8 @@ class DCOPFRoutine:
             [self._B.T, -i_bus_generator.T, cost_mismatch.T]
         ).T
 
-        logger.debug(
-            "Built power balance constraint matrix Aflow:\n%s" % a_mismatch
-        )
+        logger.debug("Built power balance constraint matrix Aflow:\n%s" %
+                     a_mismatch)
 
         self._aa_mismatch = a_mismatch
 
@@ -520,9 +518,8 @@ class DCOPFRoutine:
 
         b_mismatch = -(p_demand+g_shunt)-self._theta_inj_bus
 
-        logger.debug(
-            "Built power balance constraint vector bflow:\n%s" % b_mismatch
-        )
+        logger.debug("Built power balance constraint vector bflow:\n%s" %
+                     b_mismatch)
 
         self._bb_mismatch = b_mismatch
 
@@ -532,10 +529,10 @@ class DCOPFRoutine:
 
     def _build_generation_limit_constraint(self):
 
-        buses = self.network.n_non_islanded_buses
-        generators = self.network.in_service_generators
-        n_buses = self.network.n_non_islanded_buses
-        n_generators = self.network.n_in_service_generators
+        buses        = self.network.connected_buses
+        generators   = self.network.online_generators
+        n_buses      = len(buses)
+        n_generators = len(generators)
 
         # An all zero sparse matrix to exclude voltage angles from the
         # constraint.
@@ -584,10 +581,10 @@ class DCOPFRoutine:
 
             FIXME: No solution when adding this constraint.
         """
-        branches = self.network.in_service_branches
-        generators = self.network.in_service_generators
-        n_branches = self.network.n_in_service_branches
-        n_generators = self.network.n_in_service_generators
+        branches     = self.network.online_branches
+        generators   = self.network.online_generators
+        n_branches   = len(branches)
+        n_generators = len(generators)
 
         # All zero sparse matrix to exclude power generation from the
         # constraint.
@@ -695,11 +692,11 @@ class DCOPFRoutine:
 
             Quadratic cost function coefficients: a + bx + cx^2
         """
-        base_mva = self.network.mva_base
-        buses = self.network.non_islanded_buses
-        generators = self.network.in_service_generators
-        n_buses = self.network.n_non_islanded_buses
-        n_generators = self.network.n_in_service_generators
+        base_mva     = self.network.base_mva
+        buses        = self.network.connected_buses
+        generators   = self.network.online_generators
+        n_buses      = len(buses)
+        n_generators = len(generators)
 
         if self._solver_type == "linear":
             raise NotImplementedError
@@ -732,11 +729,11 @@ class DCOPFRoutine:
 
             Quadratic cost function coefficients: c0*x^2 + c1*x + c2
         """
-        base_mva = self.network.mva_base
-        buses = self.network.non_islanded_buses
-        generators = self.network.in_service_generators
-        n_buses = self.network.n_non_islanded_buses
-        n_generators = self.network.n_in_service_generators
+        base_mva     = self.network.base_mva
+        buses        = self.network.connected_buses
+        generators   = self.network.online_generators
+        n_buses      = len(buses)
+        n_generators = len(generators)
 
         if self._solver_type == "linear":
             raise NotImplementedError
@@ -815,12 +812,12 @@ class DCOPFRoutine:
         """ Sets bus voltages angles, generator output powers and branch
             power flows using the solution.
         """
-        base_mva = self.network.mva_base
-        buses = self.network.non_islanded_buses
-        branches = self.network.in_service_branches
-        generators = self.network.in_service_generators
-        n_buses = self.network.n_non_islanded_buses
-        n_generators = self.network.n_in_service_generators
+        base_mva     = self.network.base_mva
+        buses        = self.network.connected_buses
+        branches     = self.network.online_branches
+        generators   = self.network.online_generators
+        n_buses      = len(buses)
+        n_generators = len(generators)
 
 #        print "Solution x:\n", solution["x"]
 #        print "Solution s:\n", solution["s"]

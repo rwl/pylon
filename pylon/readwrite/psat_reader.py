@@ -420,7 +420,7 @@ class PSATReader:
         e.phase_shift = tokens["shift"]
         # Optional parameter
 #        if "status" in tokens.keys:
-#        e.in_service = tokens["status"]
+#        e.online = tokens["status"]
 
         self.network.branches.append(e)
 
@@ -440,7 +440,7 @@ class PSATReader:
         g.q_min = tokens["q_min"]
         # Optional parameter
 #        if tokens.has_key("status"):
-#        g.in_service = tokens["status"]
+#        g.online = tokens["status"]
 
         bus.generators.append(g)
 
@@ -461,7 +461,7 @@ class PSATReader:
         g.q_min = tokens["q_min"]
         # Optional parameter
 #        if tokens.has_key("status"):
-#        g.in_service = tokens["status"]
+#        g.online = tokens["status"]
 
         bus = self.network.buses[tokens["bus_no"]-1]
         bus.generators.append(g)
@@ -480,7 +480,7 @@ class PSATReader:
         l.q = tokens["q"]
         # Optional parameter
 #        if tokens.has_key("status"):
-#            l.in_service = tokens["status"]
+#            l.online = tokens["status"]
 
         bus = self.network.buses[tokens["bus_no"]-1]
         bus.loads.append(l)
@@ -541,7 +541,7 @@ class PSATReader:
         )
         # Optional parameter
 #        if tokens.has_key("status"):
-#            g.in_service = tokens["status"]
+#            g.online = tokens["status"]
 
 #------------------------------------------------------------------------------
 #  Convenience function for reading PSAT files

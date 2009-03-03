@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 #------------------------------------------------------------------------------
 
 """ Defines the Network class that represents an electric power system
-    as a graph of Bus objects connected by Branch objects.
+    as a graph of Bus objects connected with Branch objects.
 """
 
 #------------------------------------------------------------------------------
@@ -37,7 +37,10 @@ from pylon.load import Load
 from pylon.ui.network_view import network_view
 from pylon.ui.report_view import pf_report_view, opf_report_view
 
-# Setup a logger for this module
+#------------------------------------------------------------------------------
+#  Setup a logger for this module:
+#------------------------------------------------------------------------------
+
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
@@ -54,7 +57,7 @@ class Network(HasTraits):
     #--------------------------------------------------------------------------
 
     # Human-readable identifier
-    name = String("Untitled", desc="network name")
+    name = String("Network", desc="network name")
 
     # System base apparent power
     base_mva = Float(100.0, desc="the base apparent power (MVA)")
@@ -68,7 +71,7 @@ class Network(HasTraits):
 
     # Buses that are connected by active branches
     connected_buses = Property(List(Instance(Bus)),
-        depends_on=["in_service_branches"],
+        depends_on=["online_branches"],
         desc="buses that are not islanded")
 
     # The slack model type
@@ -86,7 +89,7 @@ class Network(HasTraits):
     # non islanded buses
     online_generators = Property(List(Instance(Generator)),
         depends_on=["connected_buses.generators",
-                    "connected_buses.generators.in_service"],
+                    "connected_buses.generators.online"],
         desc="""convenience list of all in service generators attached "
         to non islanded buses""")
 
@@ -101,7 +104,7 @@ class Network(HasTraits):
     online_loads = Property(
         List(Instance(Load)),
         depends_on=["connected_buses.loads",
-                    "connected_buses.loads.in_service"],
+                    "connected_buses.loads.online"],
         desc="""convenience list of all in service loads connected to
         non islanded buses""")
 
@@ -116,11 +119,8 @@ class Network(HasTraits):
 
     # Branch edges that are in service.
     online_branches = Property(List(Instance(Branch)),
-        depends_on=["branches.in_service"],
+        depends_on=["branches.online"],
         desc="a convenient list of all in service branches")
-
-    # Branches operating as transformers.
-    transformers = Property(List(Instance(Branch)), depends_on=["branches"])
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -155,7 +155,7 @@ class Network(HasTraits):
             self.branches = [e for e in self.branches if not e.source_bus == v]
             self.branches = [e for e in self.branches if not e.target_bus == v]
 
-        # Set the list of buses in the graph for each branch.
+        # Set the list of buses in the network for each branch.
         for branch in self.branches:
             branch.buses = self.buses
 
@@ -200,7 +200,7 @@ class Network(HasTraits):
     #  Property getters:
     #--------------------------------------------------------------------------
 
-    def _get_non_islanded_buses(self):
+    def _get_connected_buses(self):
         """ Provides a list of buses that are not islanded.
 
             TODO: Possibly use admittance matrix values.
@@ -208,7 +208,7 @@ class Network(HasTraits):
 
         # This list is in a very different order to the list of all buses
 #        non_islanded = []
-#        for e in self.in_service_branches:
+#        for e in self.online_branches:
 #            # Ensure the bus has not already been added (Could use a set)
 #            if e.source_bus not in non_islanded:
 #                non_islanded.append(e.source_bus)
@@ -223,7 +223,7 @@ class Network(HasTraits):
         # testing against MATPOWER and PSAT
         non_islanded = []
         for v in self.buses:
-            for e in self.in_service_branches:
+            for e in self.online_branches:
                 if e.source_bus == v or e.target_bus == v:
                     if v not in non_islanded:
                         non_islanded.append(v)
@@ -249,56 +249,36 @@ class Network(HasTraits):
         return [g for v in self.buses for g in v.generators]
 
 
-    def _get_in_service_generators(self):
-        """ Provides a convenient list of all generators that are connected
-        to non islanded buses.
-
+    def _get_online_generators(self):
+        """ Provides a convenient list of all generators that are
+            connected to non islanded buses.
         """
-
-        buses = self.non_islanded_buses
-
-        return [g for v in buses for g in v.generators if g.in_service]
+        buses = self.connected_buses
+        return [g for v in buses for g in v.generators if g.online]
 
     # Load property getters ---------------------------------------------------
 
     def _get_loads(self):
-        """ Property getter """
-
+        """ Property getter.
+        """
         return [l for v in self.buses for l in v.loads]
 
 
-    def _get_in_service_loads(self):
-        """ Property getter """
-
-        buses = self.non_islanded_buses
-
-        return [l for v in buses for l in v.loads if l.in_service]
+    def _get_online_loads(self):
+        """ Property getter.
+        """
+        buses = self.connected_buses
+        return [l for v in buses for l in v.loads if l.online]
 
     #--------------------------------------------------------------------------
     #  Branch property getters:
     #--------------------------------------------------------------------------
 
 
-    def _get_in_service_branches(self):
-        """ Property getter """
-
-        return [e for e in self.branches if e.in_service]
-
-    #--------------------------------------------------------------------------
-    #  Public interface:
-    #--------------------------------------------------------------------------
-
-#    def add_branch(self, branch):
-#        """ Add a Branch instance """
-#
-#        if len(self.buses) < 2:
-#            logger.error("For Branch addition two or more buses are required")
-#        elif branch.source_bus not in self.buses:
-#            raise ValueError, "source bus not present in model"
-#        elif branch.target_bus not in self.buses:
-#            raise ValueError, "destination bus not found in model"
-#        else:
-#            self.branches.append(branch)
+    def _get_online_branches(self):
+        """ Property getter.
+        """
+        return [e for e in self.branches if e.online]
 
 #------------------------------------------------------------------------------
 #  "NetworkReport" class:
@@ -352,7 +332,7 @@ class NetworkReport(HasTraits):
         desc="total number of buses", label="Buses")
 
     # The total number of non-islanded buses
-    n_non_islanded_buses = Property(Int, depends_on=["non_islanded_buses"],
+    n_connected_buses = Property(Int, depends_on=["connected_buses"],
         desc="total number of non islanded buses")
 
     # The total number of generators
@@ -360,8 +340,8 @@ class NetworkReport(HasTraits):
         desc="total number of generators", label="Generators")
 
     # The total number of generators in service
-    n_in_service_generators = Property(Int,
-        depends_on=["in_service_generators"])
+    n_online_generators = Property(Int,
+        depends_on=["online_generators"])
 
     committed_generators = Property(List(Instance(Generator)),
         depends_on=["generators.p"])
@@ -373,7 +353,7 @@ class NetworkReport(HasTraits):
     n_loads = Property(Int, depends_on=["loads"], label="Loads")
 
     # The total number of loads in service
-    n_in_service_loads = Property(Int, depends_on=["in_service_loads"])
+    n_online_loads = Property(Int, depends_on=["online_loads"])
 
     fixed = Property(List(Instance(Load)), depends_on=["loads"],
         desc="Fixed loads")
@@ -387,7 +367,10 @@ class NetworkReport(HasTraits):
 
     n_branches = Property(Int, depends_on=["branches"])
 
-    n_in_service_branches = Property(Int, depends_on=["in_service_branches"])
+    n_online_branches = Property(Int, depends_on=["online_branches"])
+
+    # Branches operating as transformers.
+    transformers = Property(List(Instance(Branch)), depends_on=["branches"])
 
     n_transformers = Property(Int, depends_on=["transformers"])
 
@@ -409,7 +392,7 @@ class NetworkReport(HasTraits):
     total_gen_capacity = Property(Float, depends_on=["generators.p"])
 
     # Total capacity of online generation.
-    online_capacity = Property(Float, depends_on=["in_service_generators.p"])
+    online_capacity = Property(Float, depends_on=["online_generators.p"])
 
     # Total capacity of despatched generation.
     generation_actual = Property(Float, depends_on=["generators.p_despatch"])
@@ -467,10 +450,10 @@ class NetworkReport(HasTraits):
         return len(self.buses)
 
 
-    def _get_n_non_islanded_buses(self):
+    def _get_n_connected_buses(self):
         """ Property getter for the number of connected buses.
         """
-        return len(self.non_islanded_buses)
+        return len(self.connected_buses)
 
 
     def _get_n_generators(self):
@@ -479,10 +462,10 @@ class NetworkReport(HasTraits):
         return len(self.generators)
 
 
-    def _get_n_in_service_generators(self):
+    def _get_n_online_generators(self):
         """ Property getter for the number of active generators.
         """
-        return len(self.in_service_generators)
+        return len(self.online_generators)
 
 
     def _get_committed_generators(self):
@@ -504,10 +487,10 @@ class NetworkReport(HasTraits):
         return len(self.loads)
 
 
-    def _get_n_in_service_loads(self):
+    def _get_n_online_loads(self):
         """ Property getter for the number of active loads.
         """
-        return len(self.in_service_loads)
+        return len(self.online_loads)
 
 
     def _get_fixed(self):
@@ -548,10 +531,10 @@ class NetworkReport(HasTraits):
         return len(self.branches)
 
 
-    def _get_n_in_service_branches(self):
+    def _get_n_online_branches(self):
         """ Property getter for the total number of active branches.
         """
-        return len(self.in_service_branches)
+        return len(self.online_branches)
 
 
     def _get_transformers(self):
@@ -590,18 +573,18 @@ class NetworkReport(HasTraits):
     def _get_total_gen_capacity(self):
         """ Property getter for the total generation capacity.
         """
-        mva_base = self.mva_base
+        base_mva = self.base_mva
         p = sum([g.p for g in self.generators])
         q = sum([g.q for g in self.generators])
 
-        return complex(p*mva_base, q*mva_base)
+        return complex(p * base_mva, q * base_mva)
 
 
     def _get_online_capacity(self):
         """ Property getter for the total online generation capacity.
         """
-        p = sum([g.p for g in self.in_service_generators])
-        q = sum([g.q for g in self.in_service_generators])
+        p = sum([g.p for g in self.online_generators])
+        q = sum([g.q for g in self.online_generators])
 
         return complex(p, q)
 

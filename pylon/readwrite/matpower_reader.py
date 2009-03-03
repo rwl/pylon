@@ -139,11 +139,11 @@ class MATPOWERReader:
     def _get_base_mva_construct(self):
         """ Returns a construct for the base MVA expression """
 
-        mva_base = integer.setResultsName("baseMVA")
-        mva_base.setParseAction(self._push_mva_base)
-        mva_base_expr = Literal("baseMVA") + Literal("=") + mva_base + scolon
+        base_mva = integer.setResultsName("baseMVA")
+        base_mva.setParseAction(self._push_base_mva)
+        base_mva_expr = Literal("baseMVA") + Literal("=") + base_mva + scolon
 
-        return mva_base_expr
+        return base_mva_expr
 
 
     def _get_bus_array_construct(self):
@@ -181,13 +181,13 @@ class MATPOWERReader:
         max_reactive = real.setResultsName("Qmax")
         min_reactive = real.setResultsName("Qmin")
         voltage = real.setResultsName("Vg")
-        mva_base = real.setResultsName("mBase")
+        base_mva = real.setResultsName("mBase")
         status = boolean.setResultsName("status")
         max_active = real.setResultsName("Pmax")
         min_active = real.setResultsName("Pmin")
 
         gen_data = bus_id + active + reactive + max_reactive + \
-            min_reactive + voltage + mva_base + status + max_active + \
+            min_reactive + voltage + base_mva + status + max_active + \
             min_active + scolon
 
         gen_data.setParseAction(self._push_generator)
@@ -283,11 +283,11 @@ class MATPOWERReader:
         self.network.name = tokens["title"]
 
 
-    def _push_mva_base(self, tokens):
+    def _push_base_mva(self, tokens):
         """ Set the MVA base for the network """
 
         self.base_mva = base_mva = tokens["baseMVA"]
-        self.network.mva_base = base_mva
+        self.network.base_mva = base_mva
 
 
     def _push_bus(self, tokens):
@@ -354,7 +354,7 @@ class MATPOWERReader:
         g.q_min       = tokens["Qmin"]/base_mva
         g.v_amplitude = tokens["Vg"]
         g.base_mva    = tokens["mBase"]
-        g.in_service  = tokens["status"]
+        g.online      = tokens["status"]
         g.p_max       = tokens["Pmax"]/base_mva
         g.p_min       = tokens["Pmin"]/base_mva
 
@@ -390,7 +390,7 @@ class MATPOWERReader:
         e.s_max       = tokens["rateA"] / self.base_mva
         e.ratio       = tokens["ratio"]
         e.phase_shift = tokens["angle"]
-        e.in_service  = tokens["status"]
+        e.online      = tokens["status"]
 
         self.network.branches.append(e)
 

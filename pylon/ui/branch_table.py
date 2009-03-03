@@ -67,7 +67,7 @@ def branch_factory(**row_factory_kw):
 branches_table_editor = TableEditor(
     columns = [
         ObjectColumn(name="name"),
-        ObjectColumn(name="in_service", label="On"),
+        ObjectColumn(name="online", label="On"),
         ObjectColumn(name="mode", editable=False),
         ObjectColumn(
             name="source_bus",

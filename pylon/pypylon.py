@@ -111,7 +111,7 @@ class Branch(object):
     # Target bus
     target_bus = None
     # Connection status
-    in_service = True
+    online = True
     # Positive sequence resistance (pu)
     r = 0.0
     # Positive sequence reactance (pu)
@@ -159,7 +159,7 @@ class Generator(object):
     # Unique identifier
     id = ""
     # Connection status
-    in_service = True
+    online = True
     # Machine MVA base
     base_mva = 100.0
     # Active power output (pu)
@@ -205,7 +205,7 @@ class Load(object):
     # Unique identifier
     id = ""
     # Connection status
-    in_service = True
+    online = True
     # Active power demand (pu)
     p = 1.0
     # Reactive power demand (pu)

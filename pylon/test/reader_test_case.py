@@ -48,12 +48,12 @@ class ReaderTest(TestCase):
 
     network = Network
 
-    def _validate_base(self, mva_base):
+    def _validate_base(self, base_mva):
         """ Validate the Network objects properties """
 
         n = self.network
 
-        self.assertEqual(n.mva_base, mva_base)
+        self.assertEqual(n.base_mva, base_mva)
 
 
     def _validate_object_numbers(self, n_buses, n_branches, n_gen, n_loads):
@@ -142,7 +142,7 @@ class MatpowerReaderTest(ReaderTest):
         # Parse the file
         self.network = read_matpower(MATPOWER_DATA_FILE)
 
-        self._validate_base(mva_base=100)
+        self._validate_base(base_mva=100)
 
         # Network structure validation
         self._validate_object_numbers(
@@ -176,7 +176,7 @@ class MatpowerReaderTest(ReaderTest):
 #        self.network = filter.parse_file(PSSE_DATA_FILE)
 #
 #        # Network structure validation
-#        self._validate_base(mva_base=100)
+#        self._validate_base(base_mva=100)
 #
 #        self._validate_object_numbers(
 #            n_buses=102,

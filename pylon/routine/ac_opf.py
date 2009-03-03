@@ -249,27 +249,27 @@ class ACOPFRoutine:
         network = self.network
         logger.debug("Solving AC OPF [%s]" % network.name)
 
-        buses = network.non_islanded_buses
-        branches = network.in_service_branches
-        generators = network.in_service_generators
-        n_buses = len(network.non_islanded_buses)
-        n_branches = len(network.in_service_branches)
-        n_generators = len(network.in_service_generators)
+        buses = network.connected_buses
+        branches = network.online_branches
+        generators = network.online_generators
+        n_buses = len(network.connected_buses)
+        n_branches = len(network.online_branches)
+        n_generators = len(network.online_generators)
 
         # The number of non-linear equality constraints.
-        n_equality = 2*n_buses
+        n_equality = 2 * n_buses
         # The number of control variables.
-        n_control = 2*n_buses + 2*n_generators
+        n_control = 2 * n_buses + 2 * n_generators
 
         # Definition of indexes for the optimisation variable vector.
         ph_base = 0 # Voltage phase angle.
-        ph_end = ph_base + n_buses-1;
-        v_base = ph_end + 1 # Voltage amplitude.
-        v_end = v_base + n_buses-1
+        ph_end  = ph_base + n_buses-1;
+        v_base  = ph_end + 1 # Voltage amplitude.
+        v_end   = v_base + n_buses-1
         pg_base = v_end + 1
-        pg_end = pg_base + n_generators-1
+        pg_end  = pg_base + n_generators-1
         qg_base = pg_end + 1
-        qg_end = qg_base + n_generators-1
+        qg_end  = qg_base + n_generators-1
 
         # TODO: Definition of indexes for the constraint vector.
 
@@ -294,8 +294,8 @@ class ACOPFRoutine:
             # Setting P and Q for each generator triggers re-evaluation of the
             # generator cost (See _get_p_cost()).
             for i, g in enumerate(generators):
-                g.p = p_gen[i]# * network.mva_base
-                g.q = q_gen[i]# * network.mva_base
+                g.p = p_gen[i]# * network.base_mva
+                g.q = q_gen[i]# * network.base_mva
 
             costs = matrix([g.p_cost for g in generators])
             f0 = sum(costs)
@@ -307,7 +307,7 @@ class ACOPFRoutine:
             df0 = spmatrix([], [], [], (n_generators*2, 1))
             for i, g in enumerate(generators):
                 der = numpy.polyder(list(g.cost_coeffs))
-                df0[i] = numpy.polyval(der, g.p) * network.mva_base
+                df0[i] = numpy.polyval(der, g.p) * network.base_mva
 
             # Evaluate nonlinear constraints ----------------------------------
 
@@ -382,7 +382,7 @@ class ACOPFRoutine:
             d2f_d2qg = spmatrix([], [], [], (n_generators, 1))
             for i, g in enumerate(generators):
                 der = numpy.polyder(list(g.cost_coeffs))
-                d2f_d2pg[i] = numpy.polyval(der, g.p) * network.mva_base
+                d2f_d2pg[i] = numpy.polyval(der, g.p) * network.base_mva
                 # TODO: Implement reactive power costs.
 
             i = matrix(range(pg_base, qg_end+1)).T

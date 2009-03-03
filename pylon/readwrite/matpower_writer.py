@@ -60,16 +60,16 @@ class MATPOWERWriter:
 
         file.write("%%-----  Power Flow Data  -----%%\n")
         file.write("%% system MVA base\n")
-        file.write("baseMVA = %.1f;\n" % network.mva_base)
+        file.write("baseMVA = %.1f;\n" % network.base_mva)
 
         file.write("\n")
 
-        self._export_buses(network.buses, file, network.mva_base)
+        self._export_buses(network.buses, file, network.base_mva)
         file.write("\n")
         self._export_generators(network.generators, file, network.buses)
         file.write("\n")
         self._export_branches(
-            network.branches, file, network.mva_base, network.buses
+            network.branches, file, network.base_mva, network.buses
         )
         file.write("\n")
         file.write("%%-----  OPF Data  -----%%\n")
@@ -166,13 +166,13 @@ class MATPOWERWriter:
             g_data["Qmin"] = g.q_min * g_base
             g_data["Vg"] = g.v_amplitude
             g_data["mBase"] = g.base_mva
-            if g.in_service:
-                in_service = 1
+            if g.online:
+                online = 1
             else:
-                in_service = 0
-            g_data["status"] = in_service
-            g_data["Pmax"] = g.p_max * g_base
-            g_data["Pmin"] = g.p_min * g_base
+                online = 0
+            g_data["status"] = online
+            g_data["Pmax"]   = g.p_max * g_base
+            g_data["Pmin"]   = g.p_min * g_base
 
             # Convert all values to strings
             for key in g_data.keys():
@@ -223,11 +223,11 @@ class MATPOWERWriter:
             e_data["rateC"] = e.s_max * base_mva
             e_data["ratio"] = e.ratio
             e_data["angle"] = e.phase_shift
-            if e.in_service:
-                in_service = 1
+            if e.online:
+                online = 1
             else:
-                in_service = 0
-            e_data["status"] = in_service
+                online = 0
+            e_data["status"] = online
 
             # Convert all values to strings
             for key in e_data.keys():

@@ -111,7 +111,7 @@ class DCPFRoutine:
         """ Make the vector of voltage phase guesses """
 
         if self.network is not None:
-            buses = self.network.non_islanded_buses
+            buses = self.network.connected_buses
             guesses = [v.v_phase_guess for v in buses]
             self.v_phase_guess = matrix(guesses)
             logger.debug("Vector of voltage phase guesses:\n%s" % guesses)
@@ -123,7 +123,7 @@ class DCPFRoutine:
     def _make_v_phase_vector(self):
         """ Caluclates the voltage phase angles """
 
-        buses = self.network.non_islanded_buses
+        buses = self.network.connected_buses
 
         # Remove the column and row from the susceptance matrix that
         # correspond to the slack bus
@@ -180,9 +180,9 @@ class DCPFRoutine:
 
         """
 
-        base_mva = self.network.mva_base
-        buses = self.network.non_islanded_buses
-        branches = self.network.in_service_branches
+        base_mva = self.network.base_mva
+        buses    = self.network.connected_buses
+        branches = self.network.online_branches
 
         p_source = self.B_source * self.v_phase * base_mva
         p_target = -p_source

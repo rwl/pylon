@@ -41,7 +41,7 @@ ICON_LOCATION = path.join(path.dirname(__file__), "images")
 
 minimal_view = View(
     Item(name="name"),
-    Item(name="in_service"),
+    Item(name="online"),
     "_",
     Item(name="p"),
     Item(name="q"),
@@ -56,7 +56,7 @@ load_view = View(
     VGroup(
         Group(
             Item(name="name"),
-            Item(name="in_service"),
+            Item(name="online"),
 #            Item(
 #                name="bus",
 #                editor=InstanceEditor(

@@ -66,7 +66,7 @@ def load_factory(**row_factory_kw):
 loads_table_editor = TableEditor(
     columns = [
         ObjectColumn(name="name"),
-        ObjectColumn(name="in_service"),
+        ObjectColumn(name="online"),
 #        ObjectColumn(
 #            name="bus",
 #            editor=InstanceEditor(name="buses", editable=False)
@@ -108,7 +108,7 @@ loads_table_editor = TableEditor(
 all_loads_table_editor = TableEditor(
     columns = [
         ObjectColumn(name="name"),
-        ObjectColumn(name="in_service"),
+        ObjectColumn(name="online"),
         ObjectColumn(name="p"),
         ObjectColumn(name="q")
     ],

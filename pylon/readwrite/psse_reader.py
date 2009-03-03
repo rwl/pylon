@@ -197,7 +197,7 @@ class PSSEReader:
 #        mvar_min = real
 #        v_setpoint = real
 #        reg_idx = integer
-#        mva_base = real
+#        base_mva = real
 #        z_r = real
 #        z_x = real
 #        r_t = real
@@ -209,7 +209,7 @@ class PSSEReader:
 #        mw_min = real
 #
 #        generator_data = bus_idx + machine_id + mw_out + mvar_out + mvar_max + \
-#                         mvar_min + v_setpoint + reg_idx + mva_base + z_r + \
+#                         mvar_min + v_setpoint + reg_idx + base_mva + z_r + \
 #                         z_x + r_t + x_t + g_tap + status + rmpct + mw_max + \
 #                         mw_min
 
@@ -224,7 +224,7 @@ class PSSEReader:
         q_min = real.setResultsName("Qmin")
         v_sched = real.setResultsName("SchedV")
         reg_bus = integer.setResultsName("RegBs")
-        mva_base = real.setResultsName("MVAbase")
+        base_mva = real.setResultsName("MVAbase")
         r_zero = real.setResultsName("ZR")
         x_zero = real.setResultsName("ZX")
         r_tr = real.setResultsName("RTr")
@@ -236,7 +236,7 @@ class PSSEReader:
         p_min = real.setResultsName("Pmin")
 
         generator_data = bus_id + generator_id + p + q + q_max + q_min + \
-            v_sched + reg_bus + mva_base + r_zero + x_zero + r_tr + x_tr + \
+            v_sched + reg_bus + base_mva + r_zero + x_zero + r_tr + x_tr + \
             gtap + status + percent + p_max + p_min
 
         generator_data.setParseAction(self._push_generator)
@@ -351,7 +351,7 @@ class PSSEReader:
         """ Set the system base """
 
         print 'System base:', tokens
-        self.network.mva_base = float(tokens[0])
+        self.network.base_mva = float(tokens[0])
 
 
     def _push_title(self, tokens):
@@ -512,7 +512,7 @@ class PSSEReader:
         branch.s_max = tokens["RateA"]
         branch.s_max_winter = tokens["RateB"]
         branch.s_max_summer = tokens["RateC"]
-        branch.in_service = tokens["Stat"]
+        branch.online = tokens["Stat"]
 
         self.network.branches.append(branch)
 
@@ -554,7 +554,7 @@ class PSSEReader:
             target_bus=to_bus
         )
 
-        branch.in_service = tokens["STAT"]
+        branch.online = tokens["STAT"]
 
         self.network.branches.append(branch)
 

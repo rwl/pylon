@@ -23,10 +23,7 @@
 
 from pyExcelerator import Workbook, Font, XFStyle, Borders
 
-from pylon.bus import bus_attrs
-from pylon.branch import branch_attrs
-from pylon.generator import generator_attrs
-from pylon.load import load_attrs
+from common import bus_attrs, branch_attrs, generator_attrs, load_attrs
 
 #------------------------------------------------------------------------------
 #  "ExcelWriter" class:
@@ -108,7 +105,7 @@ class ExcelWriter:
 
 if __name__ == "__main__":
     from pylon.api import Network, Bus, Branch, Generator, Load
-    n = Network(name="network", mva_base=100.0)
+    n = Network(name="network", base_mva=100.0)
     bus1 = Bus(name="Bus 1")
     bus2 = Bus(name="Bus 2")
     bus1.generators.append(Generator(name="G"))

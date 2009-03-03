@@ -139,7 +139,7 @@ class UnitCommitmentRoutine:
 
         # Generation ----------------------------------------------------------
 
-        generators = self.network.in_service_generators
+        generators = self.network.online_generators
 
         # Generation output limits
         self.p_min = matrix( [ g.p_min_bid for g in generators ] )
@@ -175,7 +175,7 @@ class UnitCommitmentRoutine:
         """
 
         n = self.network
-        n_gen = len( n.in_service_generators )
+        n_gen = len( n.online_generators )
         n_periods = self.n_periods
 
         # Problem variables declaration

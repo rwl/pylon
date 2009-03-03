@@ -164,10 +164,10 @@ class MarketEnvironment(Environment):
             logger.error("Market environment contains no network.")
             return []
 
-        generators   = network.in_service_generators
-        loads        = network.in_service_loads
-        n_buses      = network.n_non_islanded_buses
-        n_generators = network.n_in_service_generators
+        generators   = network.online_generators
+        loads        = network.online_loads
+        n_buses      = len(network.connected_buses)
+        n_generators = len(generators)
 
         self.actions_plot.update_action_plot( composed_action )
 

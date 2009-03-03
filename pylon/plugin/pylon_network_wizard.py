@@ -188,7 +188,7 @@ class NetworkWizard(SimpleWizard):
         file = IOFile(join(csp.directory, nwp.network_name))
         if not file.exists:
             name, ext = splitext(nwp.network_name)
-            n = Network(name=name, mva_base=nwp.base_mva)
+            n = Network(name=name, base_mva=nwp.base_mva)
 #            file.create_file(contents=pickle.dumps(n))
             PickledProvider().do_save(file, n)
 

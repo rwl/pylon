@@ -272,7 +272,7 @@ class SPFRoutine:
         for i, v in enumerate(buses):
             # gcall(PQ)
             for l in v.loads:
-                if l.in_service:
+                if l.online:
                     dae.g[i] += l.p
                     dae.g[n_buses+i] += l.q
                     # TODO: Conversion to impedance (See @PQclass/gcall.m)
@@ -281,7 +281,7 @@ class SPFRoutine:
         for i, v in enumerate(buses):
             # gcall(PV)
             for g in v.generators:
-                if v.type == "PV" and g.in_service:
+                if v.type == "PV" and g.online:
                     #TODO: Distributed losses (See @PVclass/gcall.m)
                     if not self.q_limiting:
                         dae.g[n_buses+i] = 0

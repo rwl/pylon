@@ -128,7 +128,7 @@ class MarketExperiment ( HasTraits ):
 
             # Update each agent's environment state attributes.
             for task in self.tasks:
-                demand = sum([l.p for l in self.power_sys.in_service_loads])
+                demand = sum([l.p for l in self.power_sys.online_loads])
                 task.env.demand = demand
                 # TODO: Implement computation of MCP and demand forecast.
                 task.env.mcp      = 0.0

@@ -45,10 +45,10 @@ def make_susceptance_matrix(network):
 
     """
 
-    buses = network.non_islanded_buses
-    branches = network.in_service_branches
-    n_buses = network.n_non_islanded_buses
-    n_branches = network.n_in_service_branches
+    buses      = network.connected_buses
+    branches   = network.online_branches
+    n_buses    = len(buses)
+    n_branches = len(branches)
 
     # Create an empty sparse susceptance matrix.
     # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node32.html
@@ -58,7 +58,7 @@ def make_susceptance_matrix(network):
     b_source = spmatrix([], [], [], (n_branches, n_buses))
 
     # Filter out branches that are out of service
-#        active_branches = [e for e in branches if e.in_service]
+#        active_branches = [e for e in branches if e.online]
 
     for e in branches:
         e_idx = branches.index(e)
@@ -104,9 +104,9 @@ def make_susceptance_matrix(network):
 def make_admittance_matrix(network):
     """ Returns an admittance matrix for the supplied network. """
 
-    buses = network.non_islanded_buses
-    n_buses = network.n_non_islanded_buses
-    branches = network.in_service_branches
+    buses    = network.connected_buses
+    n_buses  = len(buses)
+    branches = network.online_branches
 
     Y = spmatrix([], [], [], size=(n_buses, n_buses), tc="z")
 
@@ -147,10 +147,10 @@ def make_admittance_matrix(network):
 class AdmittanceMatrix:
     """ Build sparse Y matrix.
 
-    References:
-        D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, "makeYbus.m", MATPOWER,
-        version 1.8, http://www.pserc.cornell.edu/matpower/, June 26, 2007
-
+        References:
+            D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, "makeYbus.m",
+            MATPOWER, version 1.8, http://www.pserc.cornell.edu/matpower/,
+            June 26, 2007
     """
 
     # Network represented by the matrix
@@ -194,13 +194,13 @@ class AdmittanceMatrix:
 
         j = 0+1j
         network = self.network
-        base_mva = network.mva_base
-        buses = network.non_islanded_buses
-        n_buses = network.n_non_islanded_buses
-        branches = network.in_service_branches
-        n_branches = network.n_in_service_branches
+        base_mva = network.base_mva
+        buses = network.connected_buses
+        n_buses = len(buses)
+        branches = network.online_branches
+        n_branches = len(branches)
 
-        in_service = matrix([e.in_service for e in branches])
+        online = matrix([e.online for e in branches])
 
         # Series admittance.
         # Ys = stat ./ (branch(:, BR_R) + j * branch(:, BR_X))
@@ -211,7 +211,7 @@ class AdmittanceMatrix:
 
         x = matrix([e.x for e in branches])
 
-        Ys = div(in_service, (r + j*x))
+        Ys = div(online, (r + j*x))
 
         # Line charging susceptance
         # Bc = stat .* branch(:, BR_B);
@@ -219,7 +219,7 @@ class AdmittanceMatrix:
             b = matrix([e.b for e in branches])
         else:
             b = matrix(0.0, (n_branches, 1)) # Zero out line charging shunts.
-        Bc = mul(in_service, b)
+        Bc = mul(online, b)
 
         # Default tap ratio = 1
         tap = matrix(1.0, (n_branches, 1), tc="d")
@@ -294,15 +294,14 @@ class AdmittanceMatrix:
 class SusceptanceMatrix:
     """ Build sparse B matrices
 
-    The bus real power injections are related to bus voltage angles by
-        P = Bbus * Va + Pbusinj
+        The bus real power injections are related to bus voltage angles by
+            P = Bbus * Va + Pbusinj
 
-    The real power flows at the from end the lines are related to the bus
-    voltage angles by
-        Pf = Bf * Va + Pfinj
+        The real power flows at the from end the lines are related to the bus
+        voltage angles by
+            Pf = Bf * Va + Pfinj
 
-    TODO: Speed up by using spdiag(x)
-
+        TODO: Speed up by using spdiag(x)
     """
 
     # Network represented by the matrix
@@ -330,10 +329,10 @@ class SusceptanceMatrix:
         else:
             network = self.network
 
-        buses = network.buses
-        branches = network.branches
-        n_buses = network.n_buses
-        n_branches = network.n_branches
+        buses      = network.buses
+        branches   = network.branches
+        n_buses    = len(buses)
+        n_branches = len(branches)
 
         # Create an empty sparse susceptance matrix.
         # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node32.html
@@ -343,7 +342,7 @@ class SusceptanceMatrix:
         b_source = spmatrix([], [], [], (n_branches, n_buses))
 
         # Filter out branches that are out of service
-#        active_branches = [e for e in branches if e.in_service]
+#        active_branches = [e for e in branches if e.online]
 
         for e in branches:
             e_idx = branches.index(e)
@@ -390,9 +389,9 @@ class PSATAdmittanceMatrix:
 
     def build(self, network):
         j = 0 + 1j
-        buses = network.non_islanded_buses
-        n_buses = network.n_non_islanded_buses
-        branches = network.in_service_branches
+        buses = network.connected_buses
+        n_buses = len(buses)
+        branches = network.online_branches
 
         y = spmatrix([], [], [], size=(n_buses, n_buses), tc='z')
 

@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Generator components.
+""" Defines power system generator components.
 """
 
 #------------------------------------------------------------------------------
@@ -23,18 +23,16 @@
 #------------------------------------------------------------------------------
 
 import logging
-import uuid
+
 from numpy import linspace, pi, array, power
 
 from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Bool, Range, \
-    Property, Enum, Any, Delegate, Tuple, Array, ReadOnly, cached_property
+    Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
 
-from pylon.traits import \
-    ConvexPiecewise
+from pylon.traits import ConvexPiecewise
 
-from pylon.ui.generator_view import \
-    generator_view
+from pylon.ui.generator_view import generator_view
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -42,15 +40,6 @@ from pylon.ui.generator_view import \
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-#------------------------------------------------------------------------------
-#  Generator attributes:
-#------------------------------------------------------------------------------
-
-generator_attrs = ["name", "base_mva", "v_amplitude", "p", "p_max", "p_min",
-    "q", "q_max", "q_min", "c_startup", "c_shutdown", "cost_model",
-    "cost_coeffs", "pwl_points", "p_cost", "u", "rate_up", "rate_down",
-    "min_up", "min_down", "initial_up", "initial_down"]
 
 #------------------------------------------------------------------------------
 #  "Generator" class:
@@ -66,15 +55,8 @@ class Generator(HasTraits):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    # A default view.
-    traits_view = generator_view
-
-    # Unique identifier.
-    id = String(desc="Unique identifier")
-
-#    bus = Instance("pylon.bus.Bus", desc="parent Bus instance", allow_none=False)
-#
-#    buses = Delegate("bus", desc="list of buses from which to select connection")
+    # Obsolete identifier
+    id = Disallow
 
     # Human readable identifier.
     name = String("g", desc="generator name")
@@ -83,18 +65,16 @@ class Generator(HasTraits):
     # FIXME: default to self.bus.base_mva
     base_mva = Float(desc="total MVA base of this machine")
 
-#    rating_s = Float(desc="power rating MVA (p.u.)")
-#
-#    rating_v = Float(desc="voltage rating kV (p.u.)")
-
     # Voltage amplitude setpoint (PV) (p.u.).
     v_amplitude = Float(desc="voltage amplitude setpoint (PV) (p.u.)")
 
+    # Maximum voltage (p.u.).
 #    v_max = Float(desc="maximum voltage (p.u.)")
-#
+
+    # Minimum voltage (p.u.).
 #    v_min = Float(desc="minimum voltage (p.u.)")
 
-    # Active power (p.u.).
+    # Active power output (p.u.).
     p = Float(1.0, desc="active power (p.u.)")
 
     # Maximum real power output rating (p.u.).
@@ -102,9 +82,6 @@ class Generator(HasTraits):
 
     # Minimum real power output rating (p.u.).
     p_min = Float(0.0, desc="minimum real power output (p.u.)")
-
-    mu_p_max = Float(style="readonly")
-    mu_p_min = Float(style="readonly")
 
     # Reactive power output (p.u.).
     q = Float(0.0, style='readonly', desc="reactive power output (p.u.)")
@@ -119,15 +96,32 @@ class Generator(HasTraits):
     q_limited = Bool(False, style="readonly",
         desc="true if generator at reactive power limit")
 
+    def _q_changed(self, new):
+        """ Handles the reactive power limit of the generator.
+        """
+        if (new >= self.q_max) or (new <= self.q_min):
+            self.q_limited = True
+
+
+    # Apparent power rating (MVA).
+#    s_rating = Float(desc="power rating MVA (p.u.)")
+
+    # Voltage rating.
+#    v_rating = Float(desc="voltage rating kV (p.u.)")
+
+    mu_p_max = Float(style="readonly")
+    mu_p_min = Float(style="readonly")
     mu_q_max = Float(style="readonly")
     mu_q_min = Float(style="readonly")
 
-#    z = Bool(desc="allow conversion to impedance (PQ) (p.u.)")
-#
+    # Allow conversion to impedance.
+#    z = Bool(desc="allow conversion to impedance (PQ)")
+
+    # Loss participation coefficient.
 #    zeta = Float(desc="loss participation coefficient")
 
     # Is the generator in service?
-    in_service = Bool(True, desc="connection status")
+    online = Bool(True, desc="connection status")
 
     #--------------------------------------------------------------------------
     #  OPF traits:
@@ -145,6 +139,7 @@ class Generator(HasTraits):
     # or equal to p_min. Defaults to p_min.
     p_min_bid = Float(0.0, desc="minimum active power bid (p.u.)")
 
+    # Actual active power bid.
 #    p_bid = Float(desc="actual active power bid (p.u.)")
 
     # Start up cost (GBP).
@@ -319,27 +314,27 @@ class Generator(HasTraits):
 #        desc="fixed cost (active power) (GBP/h)",
 #        label="Pcost (fixed)"
 #    )
-#
+
 #    p_cost_proportional = Float(
 #        desc="proportional cost (active power) (GBP/MWh)",
 #        label="Pcost (proportional)"
 #    )
-#
+
 #    p_cost_quadratic = Float(
 #        desc="quadratic cost (active power) (GBP/MW^2h)",
 #        label="Pcost (quadratic)"
 #    )
-#
+
 #    q_cost_fixed = Float(
 #        desc="fixed cost (reactive power) (GBP/h)",
 #        label="Qcost (fixed)"
 #    )
-#
+
 #    q_cost_proportional = Float(
 #        desc="proportional cost (reactive power) (GBP/MVarh)",
 #        label="Qcost (proportional)"
 #    )
-#
+
 #    q_cost_quadratic = Float(
 #        desc="quadratic cost (reactive power) (GBP/MVar^2h)",
 #        label="Qcost (quadratic)"
@@ -348,47 +343,47 @@ class Generator(HasTraits):
     # Optimisation.
 
     # Is the unit committed?
-    u = Bool(False, desc="binary unit commitment variable indicating if the"
-             "unit is despatched")
+    u = Bool(False, desc="binary unit commitment variable indicating "
+        "if the unit is despatched")
 
 #    cost_tie = Float(desc="tie breaking cost (GBP/MWh)")
-#
+
 #    zeta = Float(desc="loss participation factor")
-#
+
 #    cost_congestion_up = Float(desc="congestion up cost (GBP/h)")
-#
+
 #    cost_congestion_down = Float(desc="congestion down cost (GBP/h)")
-#
+
 #    p_lower = Float(desc="lower real power output of PQ capability curve (MW)")
-#
+
 #    p_upper = Float(desc="upper real power output of PQ capability curve (MW)")
-#
+
 #    q_lower_min = Float(desc="minimum reactive power output at Pc1 (MVAr)")
-#
+
 #    q_lower_max = Float(desc="maximum reactive power output at Pc1 (MVAr)")
-#
+
 #    q_upper_min = Float(desc="minimum reactive power output at Pc2 (MVAr)")
-#
+
 #    q_upper_max = Float(desc="maximum reactive power output at Pc2 (MVAr)")
-#
+
 #    ramp_rate = Float(desc="ramp rate for load following/AGC (MW/min)")
-#
+
 #    ramp_rate_10 = Float(desc="ramp rate for 10 minute reserves (MW)")
-#
+
 #    ramp_rate_30 = Float(desc="ramp rate for 30 minute reserves (MW)")
-#
+
 #    ramp_rate_q = Float(desc="ramp rate for reactive power (2 sec timescale) (MVAr/min)")
-#
+
 #    area_participation_factor = Float
-#
+
 #    p_direction = Bool(desc="only used in continuation power flow analysis (p.u.)")
 
     # Reserve -----------------------------------------------------------------
 
 #    p_max_reserve = Float(desc="maximum active power reserve (p.u.)")
-#
+
 #    p_min_reserve = Float(desc="minimum active power reserve (p.u.)")
-#
+
 #    cost_reserve = Float(desc="reserve offer price (GBP/MWh)")
 
     # Ramping -----------------------------------------------------------------
@@ -406,153 +401,133 @@ class Generator(HasTraits):
     initial_down = Int(desc="initial number of periods down")
 
 #    # Synchoronous machine ----------------------------------------------------
-#
+
 #    # TODO: Implement Range
 #    v_objective = Float(desc="Target bus voltage in per-unit")
-#
+
 #    p_generated = Float
-#
+
 #    q_generated = Float
-#
+
 #    resistance_ps = Float(desc="Positive sequence or armature resistance")
-#
+
 #    reactance_ps = Float(desc="Positive sequence or d-axis reactance")
-#
+
 #    resistance_zs = Float(desc="Zero sequence resistance")
-#
+
 #    reactance_zs = Float(desc="Zero sequence reactance")
-#
+
 #    resistance_d_axis_transient = Float
-#
+
 #    time_constant_d_axis_transient = Float(desc="D-axis transient open-circuit time constant")
-#
+
 #    resistance_d_axis_subtransient = Float
-#
+
 #    time_constant_d_axis_subtransient = Float(desc="D-axis subtransient open-circuit time constant")
-#
+
 #    resistance_q_axis_transient = Float
-#
+
 #    time_constant_q_axis_transient = Float(desc="Q-axis transient open-circuit time constant")
-#
+
 #    resistance_q_axis_subtransient = Float
-#
+
 #    time_constant_q_axis_subtransient = Float(desc="Q-axis subtransient open-circuit time constant")
-#
+
 #    inertia = Float(desc="Inertia constant")
-#
+
 #    damping_factor = Float
-#
+
 #    reactance_potier = Float(desc="Requisite if saturation factor used")
-#
+
 #    saturation_factor = Float(desc="Field current required to generate 1.2pu voltage on open-circuit")
-#
+
 #    p_max_mech = Float
-#
+
 #    q_max_mech = Float
-#
+
 #    s_max_mech = Property
-#
-#    # DoublyFedInductionMachine -----------------------------------------------
-#
+
+    # DoublyFedInductionMachine -----------------------------------------------
+
 #    slip = Range(0, 100, value=10, desc="The difference between the supply "
 #        "frequency and the machine rotation frequency")
-#
+
 #    # TODO: Confirm description accuracy
 #    reactance_magnetising = Float(desc="The reactance placed in parallel with "
 #        "the terminals that is used to represent the current required to induce "
 #        "a flux in the stator winding")
-#
+
 #    resistance_stator = Float("The stator resistance")
-#
+
 #    reactance_stator = Float("The stator reactance")
-#
+
 #    # TODO: Find model types
 #    motor_model = Enum("DFIG", desc="The model used for the motor")
-#
+
 #    resistance_rotor = Float(desc="The rotor resistance")
-#
+
 #    reactance_rotor = Float(desc="The rotor reactance")
-#
+
 #    resistance_start = Float(desc="Startup rotor resistance")
-#
+
 #    reactance_start = Float(desc="Startup rotor reactance")
-#
+
 #    b = Float(desc="Torque-speed coefficient")
-#
+
 #    c = Float(desc="Torque-speed coefficient")
-#
+
 #    inertia = Float(desc="Inertia constant in Ws/VA")
-#
+
 #    trip_voltage = Float(desc="Voltage below which the machine will be "
 #        "disconnected")
-#
+
 #    trip_time = Float(desc="The time required for disconnection")
-#
+
 #    lockout_time = Float(desc="The time after trip beyond which reconnection "
 #        "will not be attempted")
-#
+
 #    underspeed = Float(desc="Lower rotational speed limit")
-#
+
 #    overspeed = Float(desc="Upper rotational speed limit")
-#
+
 #    reconnect_time = Float(desc="The time required for reconnection")
-#
+
 #    reconnect_volt = Float(desc="The threshold voltage for reconnection")
-#
+
 #    n_reconnect_max = Int(desc="The maximum number of automatic reconnect "
 #        "attempts")
-#
+
 #    p_stator = Property
-#
+
 #    q_stator = Property
-#
+
 #    p_rotor = Property
-#
+
 #    q_rotor = Property
-#
+
 #    p_mechanical = Property
-#
+
 #    power_factor = Property
-#
+
 #    efficiency = Property(Float, depends_on=["p_stator", "p_mechanical"])
-#
+
 #    current = Property
-#
+
 #    torque = Property
-#
+
 #    feed_busbar = Instance("pylon.bus.Bus")
-#
+
 #    df_power_factor = Float
-#
+
 #    is_q_exported = Bool(desc="If false then reactive power is imported")
-#
+
 #    rotor_reference_frame = Enum("Direct-quadrature", "Real-imaginary")
 
     #--------------------------------------------------------------------------
-    # Generate unique identifier:
+    #  Views:
     #--------------------------------------------------------------------------
 
-    def _id_default(self):
-        """ Trait initialiser.
-        """
-        return self.name + "-#" + uuid.uuid4().hex[:6]
-
-    #--------------------------------------------------------------------------
-    #  String representation of the object:
-    #--------------------------------------------------------------------------
-
-#    def __str__(self):
-#        return self.name
-
-    #--------------------------------------------------------------------------
-    #  Indicate if the generator is a its reactive power limit:
-    #--------------------------------------------------------------------------
-
-    def _q_changed(self, new):
-        """ Handles the reactive power limit trait.
-        """
-        if (new >= self.q_max) or (new <= self.q_min):
-            self.q_limited = True
+    traits_view = generator_view
 
     #--------------------------------------------------------------------------
     #  Property getters:
