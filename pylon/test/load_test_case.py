@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,13 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Test case for the Load class. """
+""" Defines a test case for the Load class.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from unittest import TestCase, main
+import unittest
 
 from pylon.api import Load
 
@@ -29,26 +30,59 @@ from pylon.api import Load
 #  "LoadTest" class:
 #------------------------------------------------------------------------------
 
-class LoadTest(TestCase):
-    """ Test case for the Load class. """
+class LoadTest(unittest.TestCase):
+    """ Defines a test case for the Load class.
+    """
 
-    def test_id(self):
-        """ Test that the id attribute is unique. """
+    def test_profile(self):
+        """ Test profiled active power output.
+        """
+        profile = [100.0, 50.0, 20.0, 90.0]
 
-        l = Load()
-        l2 = Load()
+        load = Load(p_min=0.1, p_max=0.9, p_profile=profile)
 
-        self.assertNotEqual(
-            l.id, l2.id,
-            "IDs [%s, %s] of two loads found equal" % (self.l.id, l2.id)
-        )
+        places = 2
 
-        self.assertTrue(
-            len(l.id) > 6,
-            "ID [%s] of load is of insufficient length" % (self.l.id)
-        )
+        self.assertAlmostEqual(load.p_profiled, 0.80, places)
+        self.assertAlmostEqual(load.p_profiled, 0.40, places)
+        self.assertAlmostEqual(load.p_profiled, 0.16, places)
+        self.assertAlmostEqual(load.p_profiled, 0.72, places)
+        self.assertAlmostEqual(load.p_profiled, 0.80, places)
+
+        # Set new profile.
+        profile2 = [10.0, 20.0]
+        load.p_profile = profile2
+
+        self.assertAlmostEqual(load.p_profiled, 0.08, places)
+        self.assertAlmostEqual(load.p_profiled, 0.16, places)
+        self.assertAlmostEqual(load.p_profiled, 0.08, places)
+
+        # Change profile items.
+        load.p_profile.append(50.0)
+
+        self.assertAlmostEqual(load.p_profiled, 0.08, places)
+        self.assertAlmostEqual(load.p_profiled, 0.16, places)
+        self.assertAlmostEqual(load.p_profiled, 0.40, places)
+        self.assertAlmostEqual(load.p_profiled, 0.08, places)
+
+
+#    def test_id(self):
+#        """ Test that the id attribute is unique. """
+#
+#        l = Load()
+#        l2 = Load()
+#
+#        self.assertNotEqual(
+#            l.id, l2.id,
+#            "IDs [%s, %s] of two loads found equal" % (self.l.id, l2.id)
+#        )
+#
+#        self.assertTrue(
+#            len(l.id) > 6,
+#            "ID [%s] of load is of insufficient length" % (self.l.id)
+#        )
 
 if __name__ == "__main__":
-    main()
+    unittest.main()
 
 # EOF -------------------------------------------------------------------------
