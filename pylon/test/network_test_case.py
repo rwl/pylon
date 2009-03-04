@@ -22,10 +22,10 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from os.path import join, dirname
 import unittest
 
 from pylon.api import Network, Bus, Branch, Generator, Load
-
 from pylon.readwrite.api import read_matpower
 
 #-------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ DATA_FILE = join(dirname(__file__), "data/case6ww.m")
 #  "NetworkTest" class:
 #------------------------------------------------------------------------------
 
-class NetworkTest(TestCase):
+class NetworkTest(unittest.TestCase):
     """ Defines a test case for the Pylon network.
     """
 
@@ -79,5 +79,8 @@ class NetworkTest(TestCase):
         self.assertEqual(len(get_slackers(network)), 1)
         self.assertFalse(network.buses[5].slack)
         self.assertTrue(network.buses[1].slack)
+
+if __name__ == "__main__":
+    unittest.main()
 
 # EOF -------------------------------------------------------------------------

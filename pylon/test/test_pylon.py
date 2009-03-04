@@ -72,6 +72,6 @@ if __name__ == '__main__':
 #    suiteFew.addTest(testBlogger("testDeleteAllEntries"))
 #    unittest.TextTestRunner(verbosity=2).run(suiteFew)
 
-    unittest.TextTestRunner(verbosity=2).run(suite())
+    unittest.TextTestRunner(verbosity = 2).run(suite())
 
 # EOF -------------------------------------------------------------------------
