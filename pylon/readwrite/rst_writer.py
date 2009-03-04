@@ -58,25 +58,25 @@ class ReSTWriter:
 
         # Document title
         title = "Power Flow Solution"
-        file.write("="*len(title))
+        file.write("=" * len(title))
         file.write("\n")
         file.write(title)
         file.write("\n")
-        file.write("="*len(title))
+        file.write("=" * len(title))
         file.write("\n")
 
         # Document subtitle
         subtitle = network.name
-        file.write("-"*len(subtitle))
+        file.write("-" * len(subtitle))
         file.write("\n")
         file.write(subtitle)
         file.write("\n")
-        file.write("-"*len(subtitle))
+        file.write("-" * len(subtitle))
         file.write("\n")
 
         # Section I
         file.write("System Summary\n")
-        file.write("-"*14)
+        file.write("-" * 14)
         file.write("\n")
 
         self._write_how_many(file)
@@ -85,14 +85,20 @@ class ReSTWriter:
 
         # Section II
         file.write("Bus Data\n")
-        file.write("-"*8 + "\n")
+        file.write("-" * 8 + "\n")
         self._write_bus_data(file)
         file.write("\n")
 
         # Section III
         file.write("Branch Data\n")
-        file.write("-"*11 + "\n")
+        file.write("-" * 11 + "\n")
         self._write_branch_data(file)
+        file.write("\n")
+
+        # Section IV
+        file.write("Generator Data\n")
+        file.write("-" * 14 + "\n")
+        self._write_generator_data(file)
         file.write("\n")
 
         # Only close if passed a file name.
@@ -325,10 +331,9 @@ class ReSTWriter:
         branches = network.branches
         report   = self._report
 
-
-        col_width = 8
+        col_width   = 8
         col_width_2 = col_width*2+1
-        col1_width = 7
+        col1_width  = 7
 
         sep = ("="*7 + " ")*3 + ("="*col_width + " ")*6 + "\n"
 
@@ -383,6 +388,71 @@ class ReSTWriter:
         val = report.losses
         file.write("%8.2f" % val.real + " ")
         file.write("%8.2f" % val.imag + " ")
+        file.write("\n")
+
+        file.write(sep)
+
+
+    def _write_generator_data(self, file):
+        """ Writes generator data to a ReST table.
+        """
+        network    = self.network
+        generators = network.all_generators
+        report     = self._report
+
+        col_width   = 8
+        col_width_2 = col_width*2+1
+        col1_width  = 6
+
+        sep = ("=" * col1_width + " ") * 3 + ("=" * col_width + " ") * 4 + "\n"
+
+        file.write(sep)
+
+        # Line one of column headers
+        file.write("Name".center(col1_width) + " ")
+        file.write("Bus".center(col1_width) + " ")
+        file.write("Status".center(col1_width) + " ")
+        file.write("Pg".center(col_width) + " ")
+        file.write("Qg".center(col_width) + " ")
+        file.write("Lambda ($/MVA-hr)".center(col_width_2) + " ")
+        file.write("\n")
+
+        file.write(("-" * col1_width + " ") * 3)
+        file.write(("-" * col_width + " ") * 2)
+        file.write(("-" * col_width_2 + " ") * 1 + "\n")
+
+        # Line two of column header
+        file.write("..".ljust(col1_width) + " ")
+        file.write("..".ljust(col1_width) + " ")
+        file.write("..".ljust(col1_width) + " ")
+        file.write("(MW)".center(col_width) + " ")
+        file.write("(MVAr)".center(col_width) + " ")
+        file.write("P".center(col_width) + " ")
+        file.write("Q".center(col_width) + " ")
+        file.write("\n")
+
+        file.write(sep)
+
+        # Branch rows
+        for each in generators:
+            file.write(each.name[:col1_width].ljust(col1_width) + " ")
+            file.write("..".ljust(col1_width) + " ")
+            file.write(str(each.online)[:col1_width].ljust(col1_width) + " ")
+            file.write("%8.2f" % each.p + " ")
+            file.write("%8.2f" % each.q + " ")
+            file.write("..".ljust(col_width) + " ")
+            file.write("..".ljust(col_width) + " ")
+            file.write("\n")
+
+        file.write(sep)
+
+        # Totals
+        file.write(("..".ljust(col1_width) +  " ") * 2)
+        file.write("*Tot:*".rjust(col1_width) + " ")
+        capacity = getattr(report, "online_capacity")
+        file.write("%8.2f" % capacity.real + " ")
+        file.write("%8.2f" % capacity.imag + " ")
+        file.write(("..".ljust(col_width) + " ") * 2)
         file.write("\n")
 
         file.write(sep)
