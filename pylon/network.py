@@ -304,7 +304,7 @@ class NetworkReport(HasTraits):
     #--------------------------------------------------------------------------
 
     # Network being reported.
-    network = Instance(Network, desc="reported network")
+    network = Instance(Network, desc="reported network", allow_none=False)
 
     #--------------------------------------------------------------------------
     #  Delegate trait definitions:
@@ -320,19 +320,19 @@ class NetworkReport(HasTraits):
     all_generators = Delegate("network")
 
     # On generators.
-    on_generators = Delegate("network")
+    online_generators = Delegate("network")
 
     # All system loads.
     all_loads = Delegate("network")
 
     # On loads.
-    on_loads = Delegate("network")
+    online_loads = Delegate("network")
 
     # Branch edges.
     branches = Delegate("network")
 
     # Active branches.
-    on_branches = Delegate("network")
+    online_branches = Delegate("network")
 
     #--------------------------------------------------------------------------
     #  Property trait definitions:
@@ -374,7 +374,7 @@ class NetworkReport(HasTraits):
         depends_on=["all_generators"], desc="negative generators")
     n_despatchable = Property(Int, depends_on=["despatchable"])
 
-    n_shunts = Property(Int, depends_on=["shunts"])
+#    n_shunts = Property(Int, depends_on=["shunts"])
 
     n_branches = Property(Int, depends_on=["branches"])
 
@@ -387,29 +387,30 @@ class NetworkReport(HasTraits):
 
     # Inter-ties --------------------------------------------------------------
 
-    inter_ties = List(Instance(HasTraits))
-    n_inter_ties = Property(Int, depends_on=["inter_ties"])
+#    inter_ties = List(Instance(HasTraits))
+#    n_inter_ties = Property(Int, depends_on=["inter_ties"])
 
     # Areas -------------------------------------------------------------------
 
-    areas = List(Instance(HasTraits))
-    n_areas = Property(Int, depends_on=["areas"])
+#    areas = List(Instance(HasTraits))
+#    n_areas = Property(Int, depends_on=["areas"])
 
     #--------------------------------------------------------------------------
     #  Quantity property traits:
     #--------------------------------------------------------------------------
 
     # Total system generation capacity.
-    total_gen_capacity = Property(Float, depends_on=["generators.p"])
+    total_gen_capacity = Property(Float, depends_on=["all_generators.p"])
 
     # Total capacity of online generation.
     online_capacity = Property(Float, depends_on=["online_generators.p"])
 
     # Total capacity of despatched generation.
-    generation_actual = Property(Float, depends_on=["generators.p_despatch"])
+    generation_actual = Property(Float,
+                                 depends_on=["all_generators.p_despatch"])
 
     # Total system load.
-    load = Property(Float, depends_on=["loads.p"])
+    load = Property(Float, depends_on=["all_loads.p"])
 
     # Total capacity of fixed system load.
     fixed_load = Property(Float, depends_on=["fixed.p"])
@@ -450,6 +451,16 @@ class NetworkReport(HasTraits):
 
     # Optimal power flow results view.
     opf_view = opf_report_view
+
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __init__(self, network, **traits):
+        assert isinstance(network, Network)
+
+        self.network = network
+        super(NetworkReport, self).__init__(network=network, **traits)
 
     #--------------------------------------------------------------------------
     #  Property getters:
@@ -584,7 +595,7 @@ class NetworkReport(HasTraits):
     def _get_total_gen_capacity(self):
         """ Property getter for the total generation capacity.
         """
-        base_mva = self.base_mva
+        base_mva = self.network.base_mva
         p = sum([g.p for g in self.all_generators])
         q = sum([g.q for g in self.all_generators])
 

@@ -15,7 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a class for writing network data to a ReStructuredText file """
+""" Defines a class for writing network data to a ReStructuredText file.
+"""
+
+#------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+from pylon.network import Network, NetworkReport
 
 #------------------------------------------------------------------------------
 #  "ReSTWriter" class:
@@ -28,9 +35,14 @@ class ReSTWriter:
 
     file_or_filename = ""
 
+    _report = None
+
     def __init__(self, network, file_or_filename):
+        assert isinstance(network, Network)
+
         self.network = network
         self.file_or_filename = file_or_filename
+        self._report = NetworkReport(network)
 
 
     def write(self):
@@ -89,17 +101,18 @@ class ReSTWriter:
 
 
     def _write_how_many(self, file):
-        """ Writes component numbers to a table """
-
-        network = self.network
+        """ Writes component numbers to a table.
+        """
+        report = self._report
 
         # Map component labels to attribute names
         components = [("Bus", "n_buses"), ("Generator", "n_generators"),
             ("Committed Generator", "n_committed_generators"),
             ("Load", "n_loads"), ("Fixed Load", "n_fixed"),
-            ("Despatchable Load", "n_despatchable"), ("Shunt", "n_shunts"),
+            ("Despatchable Load", "n_despatchable"),# ("Shunt", "n_shunts"),
             ("Branch", "n_branches"), ("Transformer", "n_transformers"),
-            ("Inter-tie", "n_inter_ties"), ("Area", "n_areas")]
+#            ("Inter-tie", "n_inter_ties"), ("Area", "n_areas")
+        ]
 
         # Column 1 width
         longest = max([len(c[0]) for c in components])
@@ -123,25 +136,24 @@ class ReSTWriter:
 
         # Rows
         for label, attr in components:
-            col2_value = str(getattr(network, attr))
+            col2_value = str(getattr(report, attr))
             file.write("%s %s\n" %
-                (label.ljust(col1_width), col2_value.rjust(col2_width))
-            )
+                (label.ljust(col1_width), col2_value.rjust(col2_width)))
         else:
             file.write(sep)
             file.write("\n")
 
 
     def _write_how_much(self, file):
-        """ Write component quantities to a table """
-
-        network = self.network
+        """ Write component quantities to a table.
+        """
+        report = self._report
 
         col1_header = "Attribute"
-        col1_width = 24
+        col1_width  = 24
         col2_header = "P (MW)"
         col3_header = "Q (MVAr)"
-        col_width = 8
+        col_width   = 8
 
         sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
 
@@ -158,60 +170,60 @@ class ReSTWriter:
         file.write(sep)
 
         # Rows
-        val = getattr(network, "total_gen_capacity")
+        val = getattr(report, "total_gen_capacity")
         file.write("%s %8.1f %8.1f\n" %
             ("Total Gen Capacity".ljust(col1_width), val.real, val.imag))
 
-        val = getattr(network, "online_capacity")
+        val = getattr(report, "online_capacity")
         file.write("%s %8.1f %8.1f\n" %
             ("On-line Capacity".ljust(col1_width), val.real, val.imag))
 
-        val = getattr(network, "generation_actual")
+        val = getattr(report, "generation_actual")
         file.write("%s %8.1f %8.1f\n" %
             ("Generation (actual)".ljust(col1_width), val.real, val.imag))
 
-        val = getattr(network, "load")
+        val = getattr(report, "load")
         file.write("%s %8.1f %8.1f\n" %
             ("Load".ljust(col1_width), val.real, val.imag))
 
-        val = getattr(network, "fixed_load")
+        val = getattr(report, "fixed_load")
         file.write("%s %8.1f %8.1f\n" %
             ("  Fixed".ljust(col1_width), val.real, val.imag))
 
-        val = getattr(network, "despatchable_load")
+        val = getattr(report, "despatchable_load")
         file.write("%s %8.1f %8.1f\n" %
             ("  Despatchable".ljust(col1_width), val.real, val.imag))
 
-        val = getattr(network, "shunt_injection")
-        file.write("%s %8.1f %8.1f\n" %
-            ("Shunt (inj)".ljust(col1_width), val.real, val.imag))
+#        val = getattr(report, "shunt_injection")
+#        file.write("%s %8.1f %8.1f\n" %
+#            ("Shunt (inj)".ljust(col1_width), val.real, val.imag))
 
-        val = getattr(network, "losses")
+        val = getattr(report, "losses")
         file.write("%s %8.1f %8.1f\n" %
             ("Losses".ljust(col1_width), val.real, val.imag))
 
-        val = getattr(network, "branch_charging")
+        val = getattr(report, "branch_charging")
         file.write("%s %8.1f %8.1f\n" %
             ("Branch Charging (inj)".ljust(col1_width), val.real, val.imag))
 
-        val = getattr(network, "total_inter_tie_flow")
-        file.write("%s %8.1f %8.1f\n" %
-            ("Total Inter-tie Flow".ljust(col1_width), val.real, val.imag))
+#        val = getattr(report, "total_inter_tie_flow")
+#        file.write("%s %8.1f %8.1f\n" %
+#            ("Total Inter-tie Flow".ljust(col1_width), val.real, val.imag))
 
         file.write(sep)
         file.write("\n")
 
 
     def _write_min_max(self, file):
-        """ Writes minimum and maximum values to a table """
-
-        network = self.network
+        """ Writes minimum and maximum values to a table.
+        """
+        report = self._report
 
         col1_header = "Attribute"
-        col1_width = 19
+        col1_width  = 19
         col2_header = "Minimum"
         col3_header = "Maximum"
-        col_width = 16
+        col_width   = 16
 
         sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
 
@@ -228,13 +240,13 @@ class ReSTWriter:
         file.write(sep)
 
         # Rows
-        min_val = getattr(network, "min_voltage_amplitude")
-        max_val = getattr(network, "max_voltage_amplitude")
+        min_val = getattr(report, "min_voltage_amplitude")
+        max_val = getattr(report, "max_voltage_amplitude")
         file.write("%s %16.1f %16.1f\n" %
             ("Voltage Amplitude".ljust(col1_width), min_val, max_val))
 
-        min_val = getattr(network, "min_voltage_phase")
-        max_val = getattr(network, "max_voltage_phase")
+        min_val = getattr(report, "min_voltage_phase")
+        max_val = getattr(report, "max_voltage_phase")
         file.write("%s %16.1f %16.1f\n" %
             ("Voltage Phase Angle".ljust(col1_width), min_val, max_val))
 
@@ -243,11 +255,11 @@ class ReSTWriter:
 
 
     def _write_bus_data(self, file):
-        """ Writes bus data to a ReST table """
-
+        """ Writes bus data to a ReST table.
+        """
         network = self.network
-        buses = self.network.buses
-
+        buses   = network.buses
+        report  = self._report
 
         col_width = 8
         col_width_2 = col_width*2+1
@@ -295,10 +307,10 @@ class ReSTWriter:
 #        file.write(("_"*col_width + " ")*4 + "\n")
         file.write("..".ljust(col1_width) + " " + "..".ljust(col_width) + " ")
         file.write("*Total:*".rjust(col_width) + " ")
-        val = network.total_gen_capacity
+        val = report.total_gen_capacity
         file.write("%8.2f" % val.real + " ")
         file.write("%8.2f" % val.imag + " ")
-        val = network.load
+        val = report.load
         file.write("%8.2f" % val.real + " ")
         file.write("%8.2f" % val.imag + " ")
         file.write("\n")
@@ -307,10 +319,11 @@ class ReSTWriter:
 
 
     def _write_branch_data(self, file):
-        """ Writes branch data to a ReST table """
-
-        network = self.network
-        branches = self.network.branches
+        """ Writes branch data to a ReST table.
+        """
+        network  = self.network
+        branches = network.branches
+        report   = self._report
 
 
         col_width = 8
@@ -367,7 +380,7 @@ class ReSTWriter:
         file.write(("..".ljust(col1_width) + " ")*3)
         file.write(("..".ljust(col_width) + " ")*3)
         file.write("*Total:*".rjust(col_width) + " ")
-        val = network.losses
+        val = report.losses
         file.write("%8.2f" % val.real + " ")
         file.write("%8.2f" % val.imag + " ")
         file.write("\n")
