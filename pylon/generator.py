@@ -66,7 +66,7 @@ class Generator(HasTraits):
     base_mva = Float(desc="total MVA base of this machine")
 
     # Voltage amplitude setpoint (PV) (p.u.).
-    v_amplitude = Float(desc="voltage amplitude setpoint (PV) (p.u.)")
+    v_amplitude = Float(1.0, desc="voltage amplitude setpoint (PV) (p.u.)")
 
     # Maximum voltage (p.u.).
 #    v_max = Float(desc="maximum voltage (p.u.)")

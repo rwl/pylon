@@ -37,79 +37,107 @@ class ReSTWriter:
 
     _report = None
 
-    def __init__(self, network, file_or_filename):
+    include_title = True
+    include_summary = True
+    include_bus_data = True
+    include_branch_data = True
+    include_generator_data = True
+
+    def __init__(self, network, file_or_filename, include_title=True,
+            include_summary=True, include_bus_data=True, include_branch_data=True,
+            include_generator_data=True):
         assert isinstance(network, Network)
 
         self.network = network
         self.file_or_filename = file_or_filename
         self._report = NetworkReport(network)
 
+        self.include_title = include_title
+        self.include_summary = include_summary
+        self.include_bus_data = include_bus_data
+        self.include_branch_data = include_branch_data
+        self.include_generator_data = include_generator_data
 
-    def write(self):
+
+    def write(self, network=None, file_or_filename=None):
         """ Writes network data to file in ReStructuredText format """
 
-        network = self.network
-        file_or_filename = self.file_or_filename
+        if network is None:
+            network = self.network
 
-        if isinstance(file_or_filename, basestring):
-            file = open(file_or_filename, "wb")
-        else:
-            file = file_or_filename
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
 
-        # Document title
-        title = "Power Flow Solution"
-        file.write("=" * len(title))
-        file.write("\n")
-        file.write(title)
-        file.write("\n")
-        file.write("=" * len(title))
-        file.write("\n")
+        file = self._get_file(file_or_filename)
 
-        # Document subtitle
-        subtitle = network.name
-        file.write("-" * len(subtitle))
-        file.write("\n")
-        file.write(subtitle)
-        file.write("\n")
-        file.write("-" * len(subtitle))
-        file.write("\n")
+        # Document title.
+        if self.include_title:
+            title = "Power Flow Solution"
+            file.write("=" * len(title))
+            file.write("\n")
+            file.write(title)
+            file.write("\n")
+            file.write("=" * len(title))
+            file.write("\n")
 
-        # Section I
-        file.write("System Summary\n")
-        file.write("-" * 14)
-        file.write("\n")
+            # Document subtitle.
+            subtitle = network.name
+            file.write("-" * len(subtitle))
+            file.write("\n")
+            file.write(subtitle)
+            file.write("\n")
+            file.write("-" * len(subtitle))
+            file.write("\n")
 
-        self._write_how_many(file)
-        self._write_how_much(file)
-        self._write_min_max(file)
+        # Section I.
+        if self.include_summary:
+            file.write("System Summary\n")
+            file.write("-" * 14)
+            file.write("\n")
 
-        # Section II
-        file.write("Bus Data\n")
-        file.write("-" * 8 + "\n")
-        self._write_bus_data(file)
-        file.write("\n")
+            self.write_how_many(network, file)
+            self.write_how_much(network, file)
+            self.write_min_max(network, file)
 
-        # Section III
-        file.write("Branch Data\n")
-        file.write("-" * 11 + "\n")
-        self._write_branch_data(file)
-        file.write("\n")
+        # Section II.
+        if self.include_bus_data:
+            file.write("Bus Data\n")
+            file.write("-" * 8 + "\n")
+            self.write_bus_data(network, file)
+            file.write("\n")
+
+        # Section III.
+        if self.include_branch_data:
+            file.write("Branch Data\n")
+            file.write("-" * 11 + "\n")
+            self.write_branch_data(network, file)
+            file.write("\n")
 
         # Section IV
-        file.write("Generator Data\n")
-        file.write("-" * 14 + "\n")
-        self._write_generator_data(file)
-        file.write("\n")
+        if self.include_generator_data:
+            file.write("Generator Data\n")
+            file.write("-" * 14 + "\n")
+            self.write_generator_data(network, file)
+            file.write("\n")
 
-        # Only close if passed a file name.
+        # Close if passed the name of a file.
         if isinstance(file_or_filename, basestring):
             file.close()
 
 
-    def _write_how_many(self, file):
+    def write_how_many(self, network=None, file_or_filename=None):
         """ Writes component numbers to a table.
         """
-        report = self._report
+        if network is None:
+            network = self.network
+            report  = NetworkReport(network)
+        else:
+            report = self._report
+
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
+
+        file = self._get_file(file_or_filename)
 
         # Map component labels to attribute names
         components = [("Bus", "n_buses"), ("Generator", "n_generators"),
@@ -150,10 +178,19 @@ class ReSTWriter:
             file.write("\n")
 
 
-    def _write_how_much(self, file):
+    def write_how_much(self, network=None, file_or_filename=None):
         """ Write component quantities to a table.
         """
-        report = self._report
+        if network is None:
+            network = self.network
+            report  = NetworkReport(network)
+        else:
+            report = self._report
+
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
+
+        file = self._get_file(file_or_filename)
 
         col1_header = "Attribute"
         col1_width  = 24
@@ -220,10 +257,19 @@ class ReSTWriter:
         file.write("\n")
 
 
-    def _write_min_max(self, file):
+    def write_min_max(self, network=None, file_or_filename=None):
         """ Writes minimum and maximum values to a table.
         """
-        report = self._report
+        if network is None:
+            network = self.network
+            report  = NetworkReport(network)
+        else:
+            report = self._report
+
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
+
+        file = self._get_file(file_or_filename)
 
         col1_header = "Attribute"
         col1_width  = 19
@@ -260,12 +306,21 @@ class ReSTWriter:
         file.write("\n")
 
 
-    def _write_bus_data(self, file):
+    def write_bus_data(self, network=None, file_or_filename=None):
         """ Writes bus data to a ReST table.
         """
-        network = self.network
-        buses   = network.buses
-        report  = self._report
+        if network is None:
+            network = self.network
+            report  = NetworkReport(network)
+        else:
+            report = self._report
+
+        buses = network.buses
+
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
+
+        file = self._get_file(file_or_filename)
 
         col_width = 8
         col_width_2 = col_width*2+1
@@ -324,12 +379,21 @@ class ReSTWriter:
         file.write(sep)
 
 
-    def _write_branch_data(self, file):
+    def write_branch_data(self, network=None, file_or_filename=None):
         """ Writes branch data to a ReST table.
         """
-        network  = self.network
+        if network is None:
+            network = self.network
+            report  = NetworkReport(network)
+        else:
+            report = self._report
+
         branches = network.branches
-        report   = self._report
+
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
+
+        file = self._get_file(file_or_filename)
 
         col_width   = 8
         col_width_2 = col_width*2+1
@@ -393,67 +457,110 @@ class ReSTWriter:
         file.write(sep)
 
 
-    def _write_generator_data(self, file):
+    def write_generator_data(self, network=None, file_or_filename=None):
         """ Writes generator data to a ReST table.
         """
-        network    = self.network
+        if network is None:
+            network = self.network
+            report  = NetworkReport(network)
+        else:
+            report = self._report
+
         generators = network.all_generators
-        report     = self._report
+
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
+
+        file = self._get_file(file_or_filename)
 
         col_width   = 8
         col_width_2 = col_width*2+1
         col1_width  = 6
+        col_width_bool = 3
+        col_width_poly = 4
+        col_width_3 = col_width_poly*3+2
 
-        sep = ("=" * col1_width + " ") * 3 + ("=" * col_width + " ") * 4 + "\n"
+        sep = ("=" * col1_width + " ") * 2 + ("=" * col_width_bool + " ") + \
+            ("=" * col_width + " ") * 5 + \
+            ("=" * col_width_poly + " ") * 3 + "\n"
 
         file.write(sep)
 
-        # Line one of column headers
+        # Line one of column headers.
         file.write("Name".center(col1_width) + " ")
         file.write("Bus".center(col1_width) + " ")
-        file.write("Status".center(col1_width) + " ")
+        file.write("On".center(col_width_bool) + " ")
+        file.write("Voltage".center(col_width) + " ")
         file.write("Pg".center(col_width) + " ")
         file.write("Qg".center(col_width) + " ")
         file.write("Lambda ($/MVA-hr)".center(col_width_2) + " ")
+        file.write("Polynomial".center(col_width_3) + " ")
         file.write("\n")
 
-        file.write(("-" * col1_width + " ") * 3)
-        file.write(("-" * col_width + " ") * 2)
-        file.write(("-" * col_width_2 + " ") * 1 + "\n")
+        file.write(("-" * col1_width + " ") * 2)
+        file.write(("-" * col_width_bool + " "))
+        file.write(("-" * col_width + " ") * 3)
+        file.write(("-" * col_width_2 + " "))
+        file.write(("-" * col_width_3 + " ") + "\n")
 
         # Line two of column header
         file.write("..".ljust(col1_width) + " ")
         file.write("..".ljust(col1_width) + " ")
-        file.write("..".ljust(col1_width) + " ")
+        file.write("..".ljust(col_width_bool) + " ")
+        file.write("..".ljust(col_width) + " ")
         file.write("(MW)".center(col_width) + " ")
         file.write("(MVAr)".center(col_width) + " ")
         file.write("P".center(col_width) + " ")
         file.write("Q".center(col_width) + " ")
+        file.write("c2".center(col_width_poly) + " ")
+        file.write("c1".center(col_width_poly) + " ")
+        file.write("c0".center(col_width_poly) + " ")
         file.write("\n")
 
         file.write(sep)
 
-        # Branch rows
+        # Branch rows.
         for each in generators:
             file.write(each.name[:col1_width].ljust(col1_width) + " ")
             file.write("..".ljust(col1_width) + " ")
-            file.write(str(each.online)[:col1_width].ljust(col1_width) + " ")
+            if each.online:
+                file.write("1".center(col_width_bool) + " ")
+            else:
+                file.write("0".center(col_width_bool) + " ")
+            file.write("%8.2f" % each.v_amplitude + " ")
             file.write("%8.2f" % each.p + " ")
             file.write("%8.2f" % each.q + " ")
             file.write("..".ljust(col_width) + " ")
             file.write("..".ljust(col_width) + " ")
+            n2, n1, n = each.cost_coeffs
+            file.write("%4.2f" % n2 + " ")
+            file.write("%4.1f" % n1 + " ")
+            file.write("%4.0f" % n + " ")
             file.write("\n")
 
-        # Totals
+        # Totals.
         file.write(("..".ljust(col1_width) +  " ") * 2)
-        file.write("*Tot:*".rjust(col1_width) + " ")
+        file.write(("..".ljust(col_width_bool) +  " "))
+        file.write("*Total:*".rjust(col1_width) + " ")
         capacity = getattr(report, "online_capacity")
         file.write("%8.2f" % capacity.real + " ")
         file.write("%8.2f" % capacity.imag + " ")
         file.write(("..".ljust(col_width) + " ") * 2)
+        file.write(("..".ljust(col_width_poly) + " ") * 3)
         file.write("\n")
 
         file.write(sep)
+
+
+    def _get_file(self, file_or_filename):
+        """ Returns a file from a file or a filename.
+        """
+        if isinstance(file_or_filename, basestring):
+            file = open(file_or_filename, "wb")
+        else:
+            file = file_or_filename
+
+        return file
 
 #------------------------------------------------------------------------------
 #  Standalone call:
@@ -466,7 +573,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
     from matpower_reader import read_matpower
-    data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
+    data_file = "/home/rwl/python/aes/matpower_3.2/case9.m"
 
     n = read_matpower(data_file)
 

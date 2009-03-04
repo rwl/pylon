@@ -488,11 +488,12 @@ if __name__ == "__main__":
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-#    data_file = "/home/rwl/python/aes/matpower_3.2/case2736sp.m"
-    data_file = "/home/rwl/python/aes/matpower_3.2/case30.m"
-    filter = MATPOWERReader(data_file)
+    data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
+#    data_file = "/home/rwl/python/aes/matpower_3.2/case30.m"
+    reader = MATPOWERReader(data_file)
 
-    print "n branches:", len(filter.network.branches)
+    print "V:", [g.v_amplitude for g in reader.network.all_generators]
+    print "n branches:", len(reader.network.branches)
 #    filter.network.configure_traits()
 
 # EOF -------------------------------------------------------------------------

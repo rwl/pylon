@@ -81,7 +81,8 @@ def get_power_sys():
     power_sys.buses = [ bus1 ]
 
     DCOPFRoutine(power_sys).solve()
-    ReSTWriter(power_sys, sys.stdout).write()
+    writer = ReSTWriter(power_sys, sys.stdout)
+    writer.write_generator_data()
 
     return power_sys
 

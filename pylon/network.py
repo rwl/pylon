@@ -457,6 +457,8 @@ class NetworkReport(HasTraits):
     #--------------------------------------------------------------------------
 
     def __init__(self, network, **traits):
+        """ Initialises a NetworkReport instance.
+        """
         assert isinstance(network, Network)
 
         self.network = network
