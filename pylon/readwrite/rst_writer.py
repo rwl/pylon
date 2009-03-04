@@ -444,8 +444,6 @@ class ReSTWriter:
             file.write("..".ljust(col_width) + " ")
             file.write("\n")
 
-        file.write(sep)
-
         # Totals
         file.write(("..".ljust(col1_width) +  " ") * 2)
         file.write("*Tot:*".rjust(col1_width) + " ")
