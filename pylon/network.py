@@ -137,10 +137,21 @@ class Network(HasTraits):
     def manage_slack_bus(self, obj, name, old, new):
         """ Ensures that there is never any more than one slack bus.
         """
-        if new is True:
-            for v in self.buses:
-                if v is not obj and v.slack is True:
+        if new:
+            for bus in self.buses:
+                if (bus is not obj) and (bus.slack is True):
                     v.slack = False
+
+
+    def _buses_changed(self, new):
+        """ Handles the bus list being set.
+        """
+        self.branches = [e for e in self.branches if \
+                         (e.source_bus in new) or (e.target_bus in new)]
+
+        # Set the new list of all buses in the network for each branch.
+        for branch in self.branches:
+            branch.buses = new
 
 
     def _buses_items_changed(self, event):
