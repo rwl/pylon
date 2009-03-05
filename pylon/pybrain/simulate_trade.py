@@ -121,6 +121,6 @@ def main(power_sys):
 
 if __name__ == "__main__":
     power_sys = get_power_sys()
-#    main( power_sys )
+    main( power_sys )
 
 # EOF -------------------------------------------------------------------------
