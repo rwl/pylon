@@ -53,30 +53,22 @@ minimal_view = View(
 
 
 load_view = View(
+    HGroup(
     VGroup(
         Group(
             Item(name="name"),
             Item(name="online"),
-#            Item(
-#                name="bus",
-#                editor=InstanceEditor(
-#                    name="buses",
-#                    editable=False,
-#                    label="Connected to:"
-#                )
-#            ),
 #            Item(name="rating_s"),
 #            Item(name="rating_v"),
-            label="Traits",
-            show_border=True
-        ),
-        Group(
-            Item(name="p"),
-            Item(name="q"),
 #            Item(name="v_max"),
 #            Item(name="v_min"),
-            label="Power Flow",
             show_border=True
+        ),
+        Group(Item("p_max"), Item("p_min"),
+              Item("p_profile", show_label=False, height=200, width=400),
+#              Item("p_profiled"),
+              label="Profile",
+              show_border=True
         ),
 #        Group(
 #            Item(name="p_max_bid"),
@@ -121,6 +113,7 @@ load_view = View(
 #            Item(name="torque"),
 #            label="Induction machine"
 #        )
+    ),
     ),
 #    title='PQ Load properties',
 #    icon = ImageResource(path.join(ICON_LOCATION, 'frame.ico')),

@@ -94,7 +94,7 @@ loads_table_editor = TableEditor(
     show_toolbar=True,
     deletable=True,
     orientation="vertical",
-#    edit_view=load_view,
+    edit_view=load_view,
 #    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter(),
     row_factory=load_factory,
@@ -112,7 +112,7 @@ all_loads_table_editor = TableEditor(
         ObjectColumn(name="p"),
         ObjectColumn(name="q")
     ],
-    deletable=False, orientation="horizontal",# edit_view=load_view,
+    deletable=False, orientation="horizontal", edit_view=load_view,
 #    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter()
 )

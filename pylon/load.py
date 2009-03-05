@@ -87,7 +87,7 @@ class Load(HasTraits):
     p_min = Float(desc="minimum reactive power (p.u.)")
 
     # Active power profile (%).
-    p_profile = List(percent_trait)
+    p_profile = List(percent_trait, [100])
 
     # Iterator that cycles through the active power profile indefinitely.
     _p_cycle = Trait(cycle, transient=True)

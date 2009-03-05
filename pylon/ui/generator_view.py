@@ -160,6 +160,7 @@ uc_view = View(
 #------------------------------------------------------------------------------
 
 generator_view = View(
+    HGroup(
     VGroup(
         VGroup(
             Group(
@@ -237,6 +238,7 @@ generator_view = View(
             ),
             dock="tab"
         ),
+    ),
     ),
 #    title="Generator properties",
 #    icon=ImageResource("frame.ico", ICON_LOCATION)),
