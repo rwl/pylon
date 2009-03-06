@@ -23,13 +23,16 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Int, List, Instance, Button
-from enthought.traits.ui.api import View, Group, Item
+from numpy import array, zeros
+
+from enthought.traits.api import HasTraits, Int, List, Instance, Button, Range
+from enthought.traits.ui.api import View, Group, Item, HGroup
 
 from pybrain.rl.experiments import Experiment, EpisodicExperiment
 
 from pylon.api import Network
 from pylon.routine.api import DCOPFRoutine
+from pylon.ui.plot.rewards_plot import RewardsPlot
 
 #------------------------------------------------------------------------------
 #  "MarketExperiment" class:
@@ -54,21 +57,34 @@ class MarketExperiment ( HasTraits ):
     # The power system model containing the agent's assets.
     power_sys = Instance( Network )
 
+    # Perform interactions.
     step = Button
+
+    # Number of interactions to perfrom.
+    steps = Range(1, 999, auto_set=False, mode="spinner",
+                  desc="number of interactions to perfrom")
+
+    # Plot of agent rewards.
+    rewards_plot = Instance(RewardsPlot, RewardsPlot(title="Rewards"))
+
+    # Plot of agent actions.
+    actions_plot = Instance(RewardsPlot, RewardsPlot(title="Actions"))
 
     #--------------------------------------------------------------------------
     #  View definitions:
     #--------------------------------------------------------------------------
 
-    traits_view = View( Item( name       = "power_sys",
-                              show_label = False,
-                              style      = "custom" ),
-                        Item( name       = "step",
-                              show_label = False ),
-                        id        = "pylon.pybrain.experiment",
-                        title     = "Market Experiment",
-                        resizable = True,
-                        buttons   = [ "OK" ] )
+    traits_view = View(
+        Item("power_sys", show_label=False, style="simple" ),
+        HGroup(Item("rewards_plot", show_label=False, style="custom"),
+#               Item("actions_plot", show_label=False, style="custom")
+               ),
+        HGroup(Item("steps"), Item("step", show_label=False)),
+        id        = "pylon.pybrain.experiment",
+        title     = "Market Experiment",
+        resizable = True,
+        buttons   = ["OK"]
+    )
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -93,7 +109,7 @@ class MarketExperiment ( HasTraits ):
     def _step_fired(self):
         """ Handles the 'step' button event.
         """
-        self.doInteractions( number = 1 )
+        self.doInteractions( number = self.steps )
 
     #--------------------------------------------------------------------------
     #  "Experiment" interface:
@@ -134,19 +150,40 @@ class MarketExperiment ( HasTraits ):
                 task.env.mcp      = 0.0
                 task.env.forecast = demand
 
-        ret = []
-        for agent in self.agents:
-            rewards = []
-            for n in range(agent.history.getNumSequences()):
-                returns = agent.history.getSequence(n)
-                state   = returns[0]
-                action  = returns[1]
-                reward  = returns[2]
-                rewards.append( reward )#sum(reward, 0).item() )
-            ret.append(rewards)
+            # Update plot data.
+            all_rewards = []
+            all_actions = []
+#            if self.agents:
+#                n_seq = self.agents[0].history.getNumSequences()
+#                print "N_SEQUENCES:", n_seq
+#                all_rewards = zeros(shape=(len(self.agents), n_seq))
+#            else:
+#                n_seq = 0
+#                all_rewards = array([])
 
-        print "REWARDS:", ret
+            for j, agent in enumerate(self.agents):
+                rewards = agent.history.getField("reward")
+                all_rewards.append(rewards.transpose())
 
-        return ret
+                actions = agent.history.getField("action")
+                print "AGENT ACTIONS:", actions
+                all_actions.append(actions.transpose())
+
+#                print "REWARDS:", rewards
+#                print "SIZE:", rewards.shape
+#                print "ALL SIZE:", all_rewards.shape
+#                all_rewards[j, :] = rewards.transpose()
+
+#                rewards = zeros(shape=(n_seq))
+#                for n in range(agent.history.getNumSequences()):
+#                    returns = agent.history.getSequence(n)
+#                    state   = returns[0]
+#                    action  = returns[1]
+#                    reward  = returns[2]
+#                    rewards[n] = reward
+#                all_rewards[j,:] = rewards
+
+            self.rewards_plot.set_data(all_rewards)
+#            self.actions_plot.set_data(all_actions)
 
 # EOF -------------------------------------------------------------------------

@@ -34,6 +34,8 @@ from enthought.chaco.api import \
     AbstractPlotData, ArrayPlotData, FilledLinePlot, add_default_grids, \
     PlotLabel
 
+from enthought.chaco.tools.api import PanTool, SimpleZoom, DragZoom, ZoomTool
+
 from pybrain.rl.agents.history import HistoryAgent
 
 #------------------------------------------------------------------------------

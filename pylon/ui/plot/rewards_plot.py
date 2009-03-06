@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Plot of Pyreto rewards """
+""" Plot of Pyreto rewards.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -26,17 +27,17 @@ from random import randint
 from numpy import array, arange, append
 
 from enthought.traits.api import \
-    HasTraits, Instance, Button, Any, on_trait_change
+    HasTraits, Instance, Button, Any, File, Button, Enum, Str, on_trait_change
 
-from enthought.traits.ui.api import View, Group, Item, Label
+from enthought.traits.ui.api import View, Group, Item, Label, HGroup, VGroup
 from enthought.traits.ui.menu import OKCancelButtons, NoButtons
 
 from enthought.chaco.api import \
     ArrayDataSource, BarPlot, DataRange1D, LabelAxis, LinearMapper, Plot, \
     OverlayPlotContainer, PlotAxis, PlotGrid, VPlotContainer, HPlotContainer, \
-    AbstractPlotData, ArrayPlotData
+    AbstractPlotData, ArrayPlotData, add_default_grids, PlotGraphicsContext
 
-from enthought.chaco.tools.api import PanTool, SimpleZoom, DragZoom
+from enthought.chaco.tools.api import PanTool, SimpleZoom, DragZoom, ZoomTool
 
 from enthought.enable.component_editor import ComponentEditor
 
@@ -47,28 +48,52 @@ from pylon.ui.plot.colours import dark, light
 #------------------------------------------------------------------------------
 
 class RewardsPlot(HasTraits):
-    """ Plot of Pyreto rewards """
+    """ Plot of Pyreto rewards.
+    """
 
     #--------------------------------------------------------------------------
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    # The reward producing environment
-    environment = Instance("pyqle.environment.environment.Environment")
+    # Title for the plot.
+    title = Str
 
-    # A plot of all rewards received
+    # A plot of all rewards received.
     plot = Instance(Plot)
+
+    # Index and reward data.
     data = Instance(AbstractPlotData, ArrayPlotData(x=[0]))
+
+    # Save plot to file.
+    save_to_file = Button
+
+    # File to which to save plot.
+    save_file = File("/tmp/plot.png")
+
+    # Format in which to save the plot.
+    format = Enum("PNG", "PDF", desc="output format for saved plot")
+
+    # Copy a bitmap of the plot to the clipboard.
+    clipboard_copy = Button("Copy to Clipboard", desc="a bitmap of "
+                            "the plot copied to the clipboard")
 
     #--------------------------------------------------------------------------
     #  Views:
     #--------------------------------------------------------------------------
 
     traits_view = View(
-        Item(name="plot", editor=ComponentEditor(), show_label=False),
+        Item(name="plot", editor=ComponentEditor(), show_label=False,
+             style="custom"),
+        HGroup(Item("format", show_label=False),
+               Item("save_to_file", show_label=False),
+               Item("clipboard_copy", show_label=False)
+        ),
         id="pylon.ui.plot.rewards_plot",
-        resizable=True, style="custom", width=.3
+        resizable=True
     )
+
+    file_view = View(Item("save_file"), title="Select file",
+                     buttons=["OK", "Cancel"], width=.3)
 
     #--------------------------------------------------------------------------
     #  "RewardsPlot" interface:
@@ -77,28 +102,37 @@ class RewardsPlot(HasTraits):
     def _plot_default(self):
         """ Trait initialiser """
 
-        plot = Plot(
-            self.data, title="Rewards",
-            bgcolor="ivory",
-            padding_bg_color="powderblue"
-        )
+        plot = Plot(self.data, title=self.title,
+                    bgcolor="white",
+                    padding_bg_color="powderblue",
+                    border_visible=True)
 
-        # Plot tools
-        plot.tools.append(PanTool(plot))
-#        plot.overlays.append(SimpleZoom(plot))
+        add_default_grids(plot)
+
+        # Plot axes.
+        index_axis = PlotAxis(component=plot, orientation="bottom",
+            title="Time", mapper=plot.index_mapper)
+        value_axis = PlotAxis(component=plot, orientation="left",
+            title="Value", mapper=plot.value_mapper)
+        plot.underlays.append(index_axis)
+        plot.underlays.append(value_axis)
+
+        # Plot tools.
+        plot.tools.append(PanTool(plot, constrain=True,
+                                  constrain_direction="x"))
+
+        plot.overlays.append(ZoomTool(plot, drag_button="right",
+                                      always_on=True, tool_mode="range",
+                                      axis="index"))
         # The DragZoom tool just zooms in and out as the user drags
         # the mouse vertically.
-        plot.tools.append(DragZoom(plot, drag_button="right"))
+#        plot.tools.append(DragZoom(plot, drag_button="right"))
 
         # Plot axes
-        index_axis = PlotAxis(
-            orientation="bottom", title="Periods",
-            mapper=plot.index_mapper, component=plot
-        )
-        value_axis = PlotAxis(
-            orientation="left", title="Value",
-            mapper=plot.value_mapper, component=plot
-        )
+        index_axis = PlotAxis(component=plot, orientation="bottom",
+            title="Time", mapper=plot.index_mapper)
+        value_axis = PlotAxis(component=plot, orientation="left",
+            title="Value", mapper=plot.value_mapper)
         plot.underlays.append(index_axis)
         plot.underlays.append(value_axis)
 
@@ -108,33 +142,101 @@ class RewardsPlot(HasTraits):
         return plot
 
 
-#    @on_trait_change("environment.reward")
-    def _reward_changed_for_environment(self, rewards):
-        """ Maintains the reward plot data """
-
+#    @on_trait_change("experiment.step")
+    def set_data(self, rewards):
+        """ Sets the reward plot data.
+        """
         plot = self.plot
         plot_data = self.data
 
-        # Increment the index values
-        size = len(plot_data.get_data("x"))
-        plot_data.set_data("x", range(size+1))
+        # Set the index values.
+#        size = len(plot_data.get_data("x"))
+        if len(rewards) > 0:
+            rows, cols = rewards[0].shape
+        else:
+            cols = 1
+        print "COLUMNS:", rows, cols
+        plot_data.set_data("x", range(cols))
 
         for i, reward in enumerate(rewards):
-            # Update plots or add new plots for new agents
+
+            print "REWARD DATA:", reward[0]
+            # Update plot data or add a new plot
             plot_name = str(i)
             if plot_name in plot_data.list_data():
                 past_data = plot_data.get_data(plot_name)
-                plot_data.set_data(plot_name, append(past_data, reward))
+                plot_data.set_data(plot_name, reward[0])
             else:
-                plot_data.set_data(plot_name, [reward])
+                plot_data.set_data(plot_name, reward[0])
 
                 colour = dark[randint(0, len(dark)-1)]
 #                colour = self._get_colour(action.asset.id)
 
-                plot.plot(
-                    ("x", plot_name), color=colour, type="line",
-                    marker_size=6, market="square", line_width=4
-                )
+                plot.plot(("x", plot_name), color=colour, type="line",
+                    marker_size=6, marker="square", line_width=4)
+
+
+    def _save_to_file_fired(self, new):
+        """ Handles the save plot button event.
+        """
+        self.save_plot()
+
+
+    def save_plot(self, filename=None, size=(800, 600)):
+        """ Draws the plot to a pdf file.
+        """
+        plot = self.plot
+
+        if filename is None:
+            retval = self.edit_traits(view="file_view", kind="livemodal")
+            if retval.result:
+                filename = self.save_file
+            else:
+                return
+
+#        plot.bounds = list(size)
+        plot.outer_bounds = list(size)
+        plot.do_layout(force=True)
+
+        if self.format == "PDF":
+            from enthought.chaco.pdf_graphics_context \
+                import PdfPlotGraphicsContext
+
+            gc = PdfPlotGraphicsContext(filename=filename,
+                                        dest_box = (0.5, 0.5, 5.0, 5.0))
+
+
+        elif self.format == "PNG":
+            gc = PlotGraphicsContext(size, dpi=72)
+
+        gc.render_component(plot)
+        gc.save(filename)
+
+
+    @on_trait_change("clipboard_copy")
+    def copy_to_clipboard(self):
+        """ WX specific, though QT implementation is similar using
+            QImage and QClipboard.
+        """
+        import wx
+        width, height = self.plot.outer_bounds
+
+        gc = PlotGraphicsContext((width, height), dpi=72)
+        gc.render_component(self.plot)
+
+        # Create a bitmap the same size as the plot
+        # and copy the plot data to it
+        bitmap = wx.BitmapFromBufferRGBA(width+1, height+1,
+                                    gc.bmp_array.flatten())
+        data = wx.BitmapDataObject()
+        data.SetBitmap(bitmap)
+
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(data)
+            wx.TheClipboard.Close()
+#            wx.MessageBox("Plot copied to the clipboard.", "Success")
+        else:
+            wx.MessageBox("Unable to open the clipboard.", "Error")
 
 
     def _get_colour(self, id):
