@@ -117,6 +117,7 @@ transformer_view = View(
 #------------------------------------------------------------------------------
 
 branch_view = View(
+    HGroup(
     VGroup(
         Group(
             Item(name="name"),
@@ -190,6 +191,7 @@ branch_view = View(
             show_border=True,
             label="Transformer"
         )
+    ),
     ),
     id="pylon.ui.branch_view", title="Branch properties",
     icon = frame_icon,
