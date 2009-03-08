@@ -21,7 +21,9 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Instance, Trait, Button
+from enthought.traits.api import \
+    HasTraits, Instance, Trait, Button, Bool, Int, Float, Range, \
+    on_trait_change
 
 from enthought.traits.ui.api import \
     Item, Group, View, InstanceEditor, HGroup, DropEditor, VGroup
@@ -53,6 +55,35 @@ class DCOPFViewModel(HasTraits):
     # CVXOPT can optionally make use of the MOSEK solver
     solver = Trait("CVXOPT", {"CVXOPT": None, "MOSEK": "mosek"})
 
+    #--------------------------------------------------------------------------
+    #  Algorithm parameters:
+    #--------------------------------------------------------------------------
+
+    # Turns the output to the screen on or off.
+    show_progress = Bool(True, desc="the output to screen to be on or off")
+
+    # Maximum number of iterations.
+    max_iterations = Range(low=2, high=999, value=100, mode="spinner",
+                           desc="maximum number of iterations")
+
+    # Absolute accuracy.
+    absolute_tol = Float(1e-7, desc="absolute accuracy")
+
+    # Relative accuracy.
+    relative_tol = Float(1e-6, desc="relative accuracy")
+
+    # Tolerance for feasibility conditions.
+    feasibility_tol = Float(1e-7, desc="tolerance for feasibility conditions")
+
+    # Number of iterative refinement steps when solving KKT equations.
+    refinement = Range(low=2, high=999, value=100, mode="spinner",
+                       desc="number of iterative refinement steps when "
+                       "solving KKT equations")
+
+    #--------------------------------------------------------------------------
+    #  Constraint and objective function traits:
+    #--------------------------------------------------------------------------
+
     # The equality and inequality problem constraints combined:
     A_eq = SparseMatrix
     A_ieq = SparseMatrix
@@ -72,12 +103,17 @@ class DCOPFViewModel(HasTraits):
 
     traits_view = View(
         HGroup(
-            Item(
-                name="network", style="readonly",
-                editor=DropEditor(klass=Network)
+            VGroup(
+                Item(
+                    name="network", style="readonly",
+                    editor=DropEditor(klass=Network)
+                ),
+                Item(name="solver"),
+                Item(name="run", style="simple", show_label=False)
             ),
-            Item(name="solver"),
-            Item(name="run", style="simple", show_label=False)
+            VGroup(["show_progress", "max_iterations", "refinement"]),
+            VGroup(["absolute_tol", "relative_tol", "feasibility_tol"],
+                   style="simple")
         ),
         "_",
         HGroup(
@@ -136,10 +172,21 @@ class DCOPFViewModel(HasTraits):
         """ Sets the solver attribute of the routine """
 
         print "SOLVER:", self.solver_
-        self.routine.solver = self.solver_ # NB Mapped trait
+        self.routine.solver = self.solver_ # N.B. Mapped trait.
 
 
-    def _run_fired(self):
+    @on_trait_change("show_progress,max_iterations,refinement")
+    def map_to_model(self, obj, name, old, new):
+        """ Maps view model attributes to the model.
+        """
+        if hasattr(self.routine, name):
+            setattr(self.routine, name, new)
+        else:
+            raise ValueError("%s" % name)
+
+
+    on_trait_change("run")
+    def solve(self):
         """ Solves the routine and gets the resulting matrices """
 
         self.routine.solve()

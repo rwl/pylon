@@ -62,7 +62,7 @@ def get_power_sys():
     bus1 = Bus( name = "Bus 1" )
 
     generator = Generator( name        = "G1",
-                           p_max       = 3.0,
+                           p_max       = 2.0,
                            p_min       = 0.0,
                            cost_model  = "Polynomial",
                            cost_coeffs = ( 0.0, 6.0, 0.0 ) )
@@ -80,7 +80,8 @@ def get_power_sys():
     bus1.loads.append( load )
     power_sys.buses = [ bus1 ]
 
-    DCOPFRoutine(power_sys).solve()
+    solution = DCOPFRoutine(power_sys).solve()
+    print solution
     writer = ReSTWriter(power_sys, sys.stdout)
     writer.write_generator_data()
 
@@ -93,7 +94,8 @@ def main(power_sys):
     agents = []
     for generator in power_sys.online_generators:
         # Create the world in which the trading agent acts.
-        env = ParticipantEnvironment( asset = generator )
+        env = ParticipantEnvironment( power_system = power_sys,
+                                      asset        = generator )
 
         # Create a task that connects each agent to it's environment. The task
         # defines what the goal is for an agent and how the agent is rewarded
@@ -103,7 +105,7 @@ def main(power_sys):
         # Create a linear controller network. Each agent needs a controller
         # that maps the current state to an action.
 #        net = buildNetwork( 3, 6, 1, bias = False, outclass = SigmoidLayer )
-        net = buildNetwork( 3, 1, bias = False )
+        net = buildNetwork( 1, 1, bias = False )
 
         # Create agent. The agent is where the learning happens. For continuous
         # problems a policy gradient agent is required.  Each agent has a

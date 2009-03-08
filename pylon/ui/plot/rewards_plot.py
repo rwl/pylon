@@ -22,14 +22,16 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os import path
+from os.path import expanduser, join
 from random import randint
 from numpy import array, arange, append
 
 from enthought.traits.api import \
     HasTraits, Instance, Button, Any, File, Button, Enum, Str, on_trait_change
 
-from enthought.traits.ui.api import View, Group, Item, Label, HGroup, VGroup
+from enthought.traits.ui.api \
+    import View, Group, Item, Label, HGroup, VGroup, spring
+
 from enthought.traits.ui.menu import OKCancelButtons, NoButtons
 
 from enthought.chaco.api import \
@@ -41,7 +43,7 @@ from enthought.chaco.tools.api import PanTool, SimpleZoom, DragZoom, ZoomTool
 
 from enthought.enable.component_editor import ComponentEditor
 
-from pylon.ui.plot.colours import dark, light
+from pylon.ui.plot.colours import dark, light, color_blind
 
 #------------------------------------------------------------------------------
 #  "RewardsPlot" class:
@@ -58,23 +60,29 @@ class RewardsPlot(HasTraits):
     # Title for the plot.
     title = Str
 
+    # Label for the index axis.
+    index_label = Str("Index")
+
+    # Label for the y-axis.
+    value_label = Str("Value")
+
     # A plot of all rewards received.
     plot = Instance(Plot)
 
     # Index and reward data.
-    data = Instance(AbstractPlotData, ArrayPlotData(x=[0]))
+    data = Instance(AbstractPlotData)
 
     # Save plot to file.
-    save_to_file = Button
+    save_to_file = Button("Save")
 
     # File to which to save plot.
-    save_file = File("/tmp/plot.png")
+    save_file = File(join(expanduser("~"), "plot.pdf"))
 
     # Format in which to save the plot.
-    format = Enum("PNG", "PDF", desc="output format for saved plot")
+    format = Enum("PDF", "PNG", desc="output format for saved plot")
 
     # Copy a bitmap of the plot to the clipboard.
-    clipboard_copy = Button("Copy to Clipboard", desc="a bitmap of "
+    clipboard_copy = Button("Copy", desc="a bitmap of "
                             "the plot copied to the clipboard")
 
     #--------------------------------------------------------------------------
@@ -82,12 +90,13 @@ class RewardsPlot(HasTraits):
     #--------------------------------------------------------------------------
 
     traits_view = View(
-        Item(name="plot", editor=ComponentEditor(), show_label=False,
-             style="custom"),
-        HGroup(Item("format", show_label=False),
-               Item("save_to_file", show_label=False),
-               Item("clipboard_copy", show_label=False)
-        ),
+        HGroup(Item(name="plot", editor=ComponentEditor(height=200),
+                    show_label=False, style="custom"),
+               VGroup(spring,
+                      Item("format", show_label=False),
+                      Item("save_to_file", show_label=False),
+#                      Item("clipboard_copy", show_label=False)
+                      spring)),
         id="pylon.ui.plot.rewards_plot",
         resizable=True
     )
@@ -99,23 +108,36 @@ class RewardsPlot(HasTraits):
     #  "RewardsPlot" interface:
     #--------------------------------------------------------------------------
 
+    def _data_default(self):
+        """ Trait initialiser.
+        """
+        return ArrayPlotData()#x=[0])
+
+
     def _plot_default(self):
         """ Trait initialiser """
 
         plot = Plot(self.data, title=self.title,
                     bgcolor="white",
+                    padding_top=50,
+#                    fill_padding=True,
+#                    height = 50,
+#                    resizable = "v",
                     padding_bg_color="powderblue",
-                    border_visible=True)
+                    border_visible=True,
+                    auto_colors=color_blind+dark)
 
         add_default_grids(plot)
 
         # Plot axes.
         index_axis = PlotAxis(component=plot, orientation="bottom",
-            title="Time", mapper=plot.index_mapper)
+            title=self.index_label, mapper=plot.index_mapper,
+            title_font="modern 14", title_spacing=25,
+            tick_label_font="modern 12", tick_interval=1.0)
         value_axis = PlotAxis(component=plot, orientation="left",
-            title="Value", mapper=plot.value_mapper)
-        plot.underlays.append(index_axis)
-        plot.underlays.append(value_axis)
+            title=self.value_label, mapper=plot.value_mapper)
+#        plot.underlays.append(index_axis)
+#        plot.underlays.append(value_axis)
 
         # Plot tools.
         plot.tools.append(PanTool(plot, constrain=True,
@@ -166,14 +188,16 @@ class RewardsPlot(HasTraits):
             if plot_name in plot_data.list_data():
                 past_data = plot_data.get_data(plot_name)
                 plot_data.set_data(plot_name, reward[0])
+#                self.plot.request_redraw
             else:
                 plot_data.set_data(plot_name, reward[0])
 
                 colour = dark[randint(0, len(dark)-1)]
 #                colour = self._get_colour(action.asset.id)
 
-                plot.plot(("x", plot_name), color=colour, type="line",
-                    marker_size=6, marker="square", line_width=4)
+                plot.plot(("x", plot_name), name=plot_name, color="auto",
+                          type="line", marker_size=6, marker="square",
+                          line_width=2, tick_interval=1.0)
 
 
     def _save_to_file_fired(self, new):
@@ -182,10 +206,11 @@ class RewardsPlot(HasTraits):
         self.save_plot()
 
 
-    def save_plot(self, filename=None, size=(800, 600)):
+    def save_plot(self, filename=None, size=(1024, 768)):
         """ Draws the plot to a pdf file.
         """
         plot = self.plot
+        orig_w, orig_h = self.plot.outer_bounds
 
         if filename is None:
             retval = self.edit_traits(view="file_view", kind="livemodal")
@@ -211,6 +236,21 @@ class RewardsPlot(HasTraits):
 
         gc.render_component(plot)
         gc.save(filename)
+
+        plot.outer_bounds = orig_w, orig_h
+
+
+    def _format_changed(self, new):
+        """ Updates the file extension.
+        """
+        if new == "PDF":
+            if self.save_file.endswith(".png"):
+                self.save_file = self.save_file[:-4] + ".pdf"
+        elif new == "PNG":
+            if self.save_file.endswith(".pdf"):
+                self.save_file = self.save_file[:-4] + ".png"
+        else:
+            pass
 
 
     @on_trait_change("clipboard_copy")

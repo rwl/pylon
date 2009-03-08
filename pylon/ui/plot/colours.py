@@ -197,4 +197,9 @@ light = [
 
 colours = dark + light
 
+# Picked and ordered to be red-green color-blind friendly, though should not
+# be an issue for blue-yellow.
+color_blind = ["green", "lightgreen", "blue", "lightblue", "red", "pink",
+               "darkgray", "silver"]
+
 # EOF -------------------------------------------------------------------------
