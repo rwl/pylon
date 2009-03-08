@@ -140,7 +140,7 @@ class Network(HasTraits):
         if new:
             for bus in self.buses:
                 if (bus is not obj) and (bus.slack is True):
-                    v.slack = False
+                    bus.slack = False
 
 
     def _buses_changed(self, new):
