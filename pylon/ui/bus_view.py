@@ -68,6 +68,7 @@ minimal_view = View(
 
 bus_view = View(
     VGroup(
+        HGroup(
         VGroup(
             Group(
                 Item(name="name"),
@@ -97,7 +98,8 @@ bus_view = View(
 #                Item(name="v_phase"),
                 Item(name="g_shunt"),
             )
-        ),
+        )),
+        HGroup(
         Tabbed(
             Group(
                 Item(
@@ -118,7 +120,7 @@ bus_view = View(
                 label="Loads"
             ),
             dock="tab", springy=True
-        ),
+        )),
     ),
 #    dock="fixed",
     id="pylon.ui.bus_view", title="Bus properties",
