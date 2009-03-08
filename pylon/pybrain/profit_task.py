@@ -22,8 +22,11 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import logging
 from scipy import array
 from pybrain.rl.tasks import EpisodicTask, Task
+
+logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  "ProfitTask" class:
@@ -42,7 +45,13 @@ class ProfitTask(Task):
         """
         Task.__init__(self, environment)
 
-        self.sensor_limits = None#[None] * 3
+        # Limits for scaling of sensors.
+        power_sys = environment.power_system
+        base_mva = power_sys.base_mva
+        sensor_max = [l.p_max * base_mva for l in power_sys.online_loads]
+        self.sensor_limits = None#[(0.000, sensor_max)]
+
+        # Limits for scaling of actors.
         asset = environment.asset
         self.actor_limits = [(asset.p_min, asset.p_max)]
 
@@ -51,8 +60,8 @@ class ProfitTask(Task):
         """ A filtered mapping the .performAction() method of the underlying
             environment.
         """
-        print "ACTION:", action, self.denormalize(action)
-#        self.env.performAction(action)
+        logger.debug("Task filtering action: \n%s", action)
+        logger.debug("Denormalised action: \n%s", self.denormalize(action))
         Task.performAction(self, action)
 
 
@@ -61,7 +70,7 @@ class ProfitTask(Task):
             environment.
         """
         sensors = Task.getObservation(self)
-        print "OBSERVATION:", sensors
+        logger.debug("Normalised sensors: \n%s", sensors)
         return sensors
 
 
@@ -71,9 +80,9 @@ class ProfitTask(Task):
         """
         asset  = self.env.asset
 #        profit = asset.p_despatch * asset.p_cost
-        profit = asset.p_despatch
+        profit = asset.p_despatch * environment.power_system.base_mva
 
-        print "REWARD:", profit
+        logger.debug("Task reward: \n%s", profit)
         return array( [ profit ] )
 
 # EOF -------------------------------------------------------------------------

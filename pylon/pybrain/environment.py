@@ -25,7 +25,7 @@
 from scipy import array
 from pybrain.rl.environments import Environment
 
-from pylon.api import Generator
+from pylon.api import Network, Generator
 
 #------------------------------------------------------------------------------
 #  "ParticipantEnvironment" class:
@@ -55,11 +55,14 @@ class ParticipantEnvironment(Environment):
     #  "ParticipantEnvironment" interface:
     #--------------------------------------------------------------------------
 
+    # Energy network in which the asset operates.
+    power_system = None
+
     # Generator instance that the agent controls.
     asset = None
 
     # Sum of demand for each Load for the current period.
-    demand = 0.0
+#    demand = 0.0
 
     # Market Clearing Price for the current period.
     mcp = 0.0
@@ -71,14 +74,24 @@ class ParticipantEnvironment(Environment):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, asset):
+    def __init__(self, power_system, asset):
         """ Initialises the environment.
         """
+        assert isinstance( power_system, Network )
         assert isinstance( asset, Generator )
+
+        self.power_system = power_system
         self.asset    = asset
-        self.demand   = 0.0
         self.mcp      = 0.0
         self.forecast = 0.0
+
+
+    @property
+    def demand(self):
+        """ Total system demand.
+        """
+        base = self.power_system.base_mva
+        return sum([l.p  * base for l in self.power_system.online_loads])
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -90,16 +103,18 @@ class ParticipantEnvironment(Environment):
             The state consists of 'total demand', 'market clearing price' and
             'forecast demand'.
         """
-        return array( [ self.demand, self.mcp, self.forecast ] )
+        return array( [ self.demand ] )#, self.mcp, self.forecast ] )
 
 
     def performAction(self, action):
         """ Performs an action on the world that changes it's internal state.
             @param action: an action that should be executed in the Environment
-            @type action: array: [ p_max_bid ]
+            @type action: array: [ p_max_bid, proportional_cost ]
         """
         if self.asset is not None:
-            self.asset.p_max_bid = action[0]
+            base_mva = self.power_system.base_mva
+            self.asset.p_max_bid = action[0] / base_mva
+#            self.asset.cost_coeffs = (0.0, action[1], 0.0)
         else:
             raise ValueError, "Environment [%s] has no asset." % self
 
@@ -107,7 +122,6 @@ class ParticipantEnvironment(Environment):
     def reset(self):
         """ Reinitialises the environment.
         """
-        self.demand   = 0.0
         self.mcp      = 0.0
         self.forecast = 0.0
         if self.asset is not None:
