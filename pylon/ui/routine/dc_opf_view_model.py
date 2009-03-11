@@ -189,7 +189,7 @@ class DCOPFViewModel(HasTraits):
     def solve(self):
         """ Solves the routine and gets the resulting matrices """
 
-        self.routine.solve()
+        solution = self.routine.solve()
 
         self.A_eq = self.routine._AA_eq
         self.A_ieq = self.routine._AA_ieq
@@ -199,6 +199,8 @@ class DCOPFViewModel(HasTraits):
         self.H = self.routine._hh
         self.c = self.routine._cc
         self.x = self.routine.x
+
+        return solution
 
 #------------------------------------------------------------------------------
 #  Standalone call:
