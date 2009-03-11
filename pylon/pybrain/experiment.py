@@ -23,6 +23,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import sys
 import logging
 from numpy import array, zeros
 
@@ -94,9 +95,10 @@ class MarketExperiment ( HasTraits ):
     #--------------------------------------------------------------------------
 
     traits_view = View(
-        VGroup(VGroup(Item("state_plot", show_label=False, style="custom"),
+        VGroup(VGroup(#Item("state_plot", show_label=False, style="custom"),
                       Item("actions_plot", show_label=False, style="custom"),
-                      Item("rewards_plot", show_label=False, style="custom"),),
+                      #Item("rewards_plot", show_label=False, style="custom")
+                      ),
                HGroup(Item("power_system", show_label=False, style="simple",
                            width=200),
                       Item("routine", show_label=False, style="simple",
@@ -187,30 +189,40 @@ class MarketExperiment ( HasTraits ):
 
                 self.stepid += 1
                 observation = task.getObservation()
-                logger.debug("Agent [%s] integrating observation.", agent)
+                logger.debug("Agent [%s] integrating observation: %s" %
+                             (agent.name, observation))
                 agent.integrateObservation( observation )
 
                 action = agent.getAction()
                 logger.debug("Agent [%s] performing action: %s" %
-                             (agent, action))
+                             (agent.name, action))
                 task.performAction( action )
 
             # Optimise the power system model.
             solution = self.routine.solve()
-            self.routine.edit_traits(kind="livemodal")
+#            self.routine.edit_traits(kind="livemodal")
 
             if solution["status"] != "optimal":
-                print "NO OPTIMAL SOLUTION FOR INTERACTION %d." % interaction
-#                break
+                logger.debug("No solution for interaction: %d" % interaction)
+                if logger.handlers:
+                    stream = logger.handlers[0].stream
+                else:
+                    stream = sys.stdout
+                writer = ReSTWriter(self.power_system, stream)
+                writer.write_generator_data()
 
             # Reward each agent appropriately.
             for i, agent in enumerate(self.agents):
                 task   = self.tasks[i]
                 reward = task.getReward()
+                logger.debug("Agent [%s] receiving reward: %s" %
+                             (agent.name, reward))
                 agent.giveReward( reward )
 
             # Instruct each agent to learn from it's actions.
             for agent in self.agents:
+                logger.debug("Agent [%s] being instructed to learn." %
+                             agent.name)
                 agent.learn()
 
             # Update each agent's environment state attributes.
@@ -241,15 +253,15 @@ class MarketExperiment ( HasTraits ):
 
         for j, agent in enumerate(self.agents):
             observations = agent.history.getField("state")
-            print "AGENT STATES:", observations
+            print "AGENT STATES:", observations[0]
             all_states.append(observations.transpose())
 
             actions = agent.history.getField("action")
-            print "AGENT ACTIONS:", actions
+            print "AGENT ACTIONS:", actions[0]
             all_actions.append(actions.transpose())
 
             rewards = agent.history.getField("reward")
-            print "AGENT REWARDS:", rewards
+            print "AGENT REWARDS:", rewards[0]
             all_rewards.append(rewards.transpose())
 
 #                print "REWARDS:", rewards
@@ -275,7 +287,8 @@ class MarketExperiment ( HasTraits ):
     def reset(self):
         """ Set initial conditions.
         """
-        print "RESETTING!"
+        self.stepid = 0
+
         for task in self.tasks:
             task.env.reset()
 

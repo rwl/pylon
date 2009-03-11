@@ -48,7 +48,7 @@ class ProfitTask(Task):
         # Limits for scaling of sensors.
         power_sys = environment.power_system
         base_mva = power_sys.base_mva
-        sensor_max = [l.p_max * base_mva for l in power_sys.online_loads]
+        sensor_max = [l.p_max for l in power_sys.online_loads]
         self.sensor_limits = None#[(0.000, sensor_max)]
 
         # Limits for scaling of actors.
@@ -60,8 +60,8 @@ class ProfitTask(Task):
         """ A filtered mapping the .performAction() method of the underlying
             environment.
         """
-        logger.debug("Task filtering action: \n%s", action)
-        logger.debug("Denormalised action: \n%s", self.denormalize(action))
+        logger.debug("Task filtering action: %s", action)
+        logger.debug("Denormalised action: %s", self.denormalize(action))
         Task.performAction(self, action)
 
 
@@ -70,7 +70,7 @@ class ProfitTask(Task):
             environment.
         """
         sensors = Task.getObservation(self)
-        logger.debug("Normalised sensors: \n%s", sensors)
+        logger.debug("Normalised sensors: %s", sensors)
         return sensors
 
 
@@ -80,9 +80,9 @@ class ProfitTask(Task):
         """
         asset  = self.env.asset
 #        profit = asset.p_despatch * asset.p_cost
-        profit = asset.p_despatch * environment.power_system.base_mva
+        profit = asset.p_despatch# * self.environment.power_system.base_mva
 
-        logger.debug("Task reward: \n%s", profit)
+        logger.debug("Task reward: %s", profit)
         return array( [ profit ] )
 
 # EOF -------------------------------------------------------------------------

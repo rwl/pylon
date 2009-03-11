@@ -49,7 +49,7 @@ class ParticipantEnvironment(Environment):
     indim = 1
 
     # The number of sensor values the environment produces.
-    outdim = 3
+    outdim = 1
 
     #--------------------------------------------------------------------------
     #  "ParticipantEnvironment" interface:
@@ -91,7 +91,7 @@ class ParticipantEnvironment(Environment):
         """ Total system demand.
         """
         base = self.power_system.base_mva
-        return sum([l.p  * base for l in self.power_system.online_loads])
+        return sum([l.p for l in self.power_system.online_loads])
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -113,7 +113,7 @@ class ParticipantEnvironment(Environment):
         """
         if self.asset is not None:
             base_mva = self.power_system.base_mva
-            self.asset.p_max_bid = action[0] / base_mva
+            self.asset.p_max_bid = action[0]# / base_mva
 #            self.asset.cost_coeffs = (0.0, action[1], 0.0)
         else:
             raise ValueError, "Environment [%s] has no asset." % self

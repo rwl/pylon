@@ -41,6 +41,8 @@ from environment import ParticipantEnvironment
 from experiment import MarketExperiment
 from profit_task import ProfitTask
 
+from pylon.ui.plot.experiment_plot import ExperimentPlot
+
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
@@ -73,7 +75,7 @@ def get_power_sys():
                             cost_model  = "Polynomial",
                             cost_coeffs = ( 0.0, 10.0, 0.0 ) )
 
-    load = Load( name = "L1", p = 3.0, q = 0.0 )
+    load = Load( name = "L1", p = 1.0, q = 0.0 )
 
     bus1.generators.append( generator )
     bus1.generators.append( generator2 )
@@ -81,7 +83,6 @@ def get_power_sys():
     power_sys.buses = [ bus1 ]
 
     solution = DCOPFRoutine(power_sys).solve()
-    print solution
     writer = ReSTWriter(power_sys, sys.stdout)
     writer.write_generator_data()
 
@@ -111,6 +112,7 @@ def main(power_sys):
         # problems a policy gradient agent is required.  Each agent has a
         # module (network) and a learner, that modifies the module.
         agent = PolicyGradientAgent( module = net, learner = ENAC() )
+        agent.name = "PolicyGradientAgent-%s" % generator.name
 
         # Collect tasks and agents.
         tasks.append( task )
@@ -118,10 +120,20 @@ def main(power_sys):
 
     experiment = MarketExperiment( tasks, agents, power_sys )
 #    experiment.doInteractions( number = 2 )
-    experiment.configure_traits()
+#    experiment.configure_traits()
+
+    plot = ExperimentPlot(experiment)
+    plot.configure_traits()
+
+    return experiment
 
 
 if __name__ == "__main__":
+    import logging
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
     power_sys = get_power_sys()
     main( power_sys )
 
