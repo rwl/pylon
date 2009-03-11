@@ -36,7 +36,7 @@ from enthought.chaco.api import \
     ArrayDataSource, BarPlot, DataRange1D, LabelAxis, LinearMapper, Plot, \
     OverlayPlotContainer, PlotAxis, PlotGrid, VPlotContainer, HPlotContainer, \
     AbstractPlotData, ArrayPlotData, FilledLinePlot, add_default_grids, \
-    PlotLabel, create_line_plot, create_scatter_plot
+    PlotLabel, create_line_plot, create_scatter_plot, add_default_axes
 
 from enthought.chaco.tools.api import PanTool, SimpleZoom, DragZoom, ZoomTool
 
@@ -68,28 +68,22 @@ class ExperimentPlot(HasTraits):
     plot_container = Instance(VPlotContainer)
 
     # Plot of environment observations.
-    state_plot = Instance(OverlayPlotContainer,
-                          desc="observations of the environment")
+    state_plot = Instance(Plot, desc="observations of the environment")
 
     # Actions performed on the environment.
-    action_plot = Instance(OverlayPlotContainer,
-                           desc="actions performed on the environment")
+    action_plot = Instance(Plot, desc="actions performed on the environment")
 
     # Rewards received for performing actions.
-    reward_plot = Instance(OverlayPlotContainer,
-                           desc="received rewards")
+    reward_plot = Instance(Plot, desc="received rewards")
 
-    # Data source for the index axis of all plots.
-    index_data = Instance(ArrayDataSource)
-
-    # Mapping of an agent's name to the data source for its state plot.
-    state_data = Dict(Str, Instance(ArrayDataSource))
-
-    # Mapping of an agent's name to the data source for its action plot.
-    action_data = Dict(Str, Instance(ArrayDataSource))
-
-    # Mapping of an agent's name to the data source for its reward plot.
-    reward_data = Dict(Str, Instance(ArrayDataSource))
+#    # Data source that drives the state plot.
+#    state_plot_data = Instance(ArrayPlotData)
+#
+#    # Data source that drives the action plot.
+#    action_plot_data = Instance(ArrayPlotData)
+#
+#    # Data source that drives the reward plot.
+#    reward_plot_data = Instance(ArrayPlotData)
 
     # Iterator that cycles through a list of colours.
     _color_cycle = Trait(cycle)
@@ -114,18 +108,41 @@ class ExperimentPlot(HasTraits):
         self.experiment = experiment
 
         self.plot_container = VPlotContainer(resizable="hv",
-            bgcolor="lightgray", fill_padding=True, padding=10)
+            bgcolor="transparent")#, fill_padding=True, padding=10)
 
-        self.state_plot  = OverlayPlotContainer(bgcolor="yellow")
-        self.action_plot = OverlayPlotContainer(bgcolor="white")
-        self.reward_plot = OverlayPlotContainer(bgcolor="powderblue")
+        self.state_plot = Plot(ArrayPlotData(), bgcolor="white",
+                                padding_top=0, padding_right=0,
+                                padding_bottom=4, border_visible=False)
 
-#        self.plot_container.add(self.reward_plot)
+        self.action_plot = Plot(ArrayPlotData(), bgcolor="white",
+                                padding_top=2, padding_right=0,
+                                padding_bottom=2, border_visible=False)
+
+        self.reward_plot = Plot(ArrayPlotData(), bgcolor="white",
+                                padding_top=4, padding_right=0,
+                                padding_bottom=0, border_visible=False)
+
+        for plot in [self.state_plot, self.action_plot, self.reward_plot]:
+            plot.tools.append(PanTool(plot, constrain=True,
+                                      constrain_direction="x"))
+
+            plot.overlays.append(ZoomTool(plot, drag_button="right",
+                                          always_on=True, tool_mode="range",
+                                          axis="index"))
+
+        self.plot_container.add(self.reward_plot)
         self.plot_container.add(self.action_plot)
-#        self.plot_container.add(self.state_plot)
+        self.plot_container.add(self.state_plot)
+
+#        self.reward_plot.index_mapper.range = \
+#            self.action_plot.index_mapper.range
+
+        self.state_plot.index_mapper.range = \
+        self.action_plot.index_mapper.range = \
+        self.reward_plot.index_mapper.range
 
         # Use the same data source for the index axis of all plots.
-        self.index_data = ArrayDataSource( array([0]) )
+#        self.index_data = ArrayDataSource( array([0]) )
 
         self._color_cycle = cycle(color_blind + dark)
 
@@ -139,75 +156,82 @@ class ExperimentPlot(HasTraits):
     def _step_changed_for_experiment(self):
         """ Returns a plot component.
         """
-        print "STEP FIRED!", self.experiment.stepid
+        print "STEP: ", self.experiment.stepid
+
         # Index axis data.
         actions0 = self.experiment.agents[0].history.getField("action")
         rows, cols = actions0.shape
 #        print "NO. SEQ:", rows
         index_array = array( range(rows) )
-        self.index_data.set_data(index_array)
+        self.state_plot.data.set_data("x", index_array)
+        self.action_plot.data.set_data("x", index_array)
+        self.reward_plot.data.set_data("x", index_array)
 
         for agent in self.experiment.agents:
             # State observations.
-#            observations = agent.history.getField("state")
-#            if agent.name in self.state_data.keys():
-#                self.state_data[agent.name].set_data( observations[0] )
-#            else:
-#                state_ds = ArrayDataSource(observations[0])
-#                self.state_data[agent.name] = state_ds
-#
-#                plot = self._create_plot_component(self.index_data, state_ds)
-#                self.state_plot.add(plot)
+            observations = agent.history.getField("state")
+            self.state_plot.data.set_data(agent.name, observations[:, 0])
+
+            if agent.name not in self.state_plot.plots.keys():
+                self.state_plot.plot(("x", agent.name), name=agent.name,
+                    color="auto", type="line", marker_size=6,
+                    marker="square", line_width=2, tick_interval=1.0,
+                    padding=0)
+                self.state_plot.x_axis = None
 
             # Agent actions.
             actions = agent.history.getField("action")
-#            print "PLOT ACTIONS:", actions[:, 0], index_array
-            if agent.name in self.action_data.keys():
-                self.action_data[agent.name].set_data(actions[:, 0])
-            else:
-                action_ds = ArrayDataSource(actions[:, 0])
-                self.action_data[agent.name] = action_ds
+            self.action_plot.data.set_data(agent.name, actions[:, 0])
 
-                plot = self._create_plot_component(self.index_data, action_ds)
-                self.action_plot.add(plot)
-
-#            plot = self._create_plot_component( [0, 1, 2], [0, 6, 10] )
-#            self.action_plot.add(plot)
-            self.plot_container.request_redraw()
+#            if agent.name not in plot_data.list_data():
+            if agent.name not in self.action_plot.plots.keys():
+                self.action_plot.plot(("x", agent.name), name=agent.name,
+                    color="auto", type="line", marker_size=6,
+                    marker="square", line_width=2, tick_interval=1.0,
+                    padding=0)
+                self.action_plot.x_axis = None
 
             # Task rewards.
-#            rewards = agent.history.getField("reward")
-#            if agent.name in self.reward_data.keys():
-#                self.reward_data[agent.name].set_data(rewards[0])
-#            else:
-#                reward_ds = ArrayDataSource(rewards[0])
-#                self.reward_data[agent.name] = reward_ds
+            rewards = agent.history.getField("reward")
+            self.reward_plot.data.set_data(agent.name, rewards[:, 0])
+
+            if agent.name not in self.reward_plot.plots.keys():
+                self.reward_plot.plot(("x", agent.name), name=agent.name,
+                    color="auto", type="line", marker_size=6,
+                    marker="square", line_width=2, tick_interval=1.0,
+                    padding=0)
+
+        self.plot_container.request_redraw()
+
+
+#    def _create_plot_component(self, x, y):
+#        """ Returns a plot component.
+#        """
+#        logger.debug("Creating plot: %s %s" % (x, y))
+#        plot = create_line_plot((x, y), color=self._color_cycle.next(),
+#                                orientation="h",
+#                                add_axis=False, add_grid=False,
+#                                dash="solid", width=2.0)
 #
-#                plot = self._create_plot_component(self.index_data, reward_ds)
-#                self.reward_plot.add(plot)
-
-
-    def _create_plot_component(self, x, y):
-        """ Returns a plot component.
-        """
-        logger.debug("Creating plot: %s %s" % (x, y))
-        plot = create_line_plot((x, y),# color=self._color_cycle.next(),
-                                orientation="h", add_axis=True, add_grid=True,
-                                dash="solid", width=2.0)
-
-        v_mapper = plot.value_mapper
-        h_mapper = plot.index_mapper
-        left_axis = PlotAxis(plot, mapper=v_mapper, orientation='left')
-#        plot.underlays.append(left_axis)
-#        plot.overlays.append(left_axis)
-
-        # Plot tools.
-        pan_tool  = PanTool(plot, constrain=True, constrain_direction="x")
-        zoom_tool = ZoomTool(plot, drag_button="right", always_on=True,
-                             tool_mode="range", axis="index")
-        plot.tools.append(pan_tool)
-        plot.overlays.append(zoom_tool)
-
-        return plot
+#        plot.padding = 50
+#
+#        if len(self.action_data) == 1:
+#            # Plot tools.
+#            pan_tool  = PanTool(plot, constrain=True, constrain_direction="x")
+#            zoom_tool = ZoomTool(plot, drag_button="right", always_on=True,
+#                                 tool_mode="range", axis="index")
+#            plot.tools.append(pan_tool)
+#            plot.overlays.append(zoom_tool)
+#
+#            add_default_grids(plot)
+#            add_default_axes(plot)
+#
+#            v_mapper = plot.value_mapper
+#            h_mapper = plot.index_mapper
+#            left_axis = PlotAxis(plot, mapper=v_mapper, orientation='left')
+#    #        plot.underlays.append(left_axis)
+#    #        plot.overlays.append(left_axis)
+#
+#        return plot
 
 # EOF -------------------------------------------------------------------------
