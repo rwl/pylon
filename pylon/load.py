@@ -93,8 +93,8 @@ class Load(HasTraits):
     _p_cycle = Trait(cycle, transient=True)
 
     @on_trait_change("p_profile,p_profile_items")
-    def _update_p_cycle(self):
-        """ Handles the profile changing.
+    def reset_profile(self):
+        """ Handles the profile changing and allows the iterator to be reset.
         """
         self._p_cycle = cycle(self.p_profile)
 
