@@ -27,6 +27,10 @@ from os.path import join, dirname, expanduser, isfile
 import logging
 import pickle
 
+import enthought.traits
+
+from enthought.traits.trait_base import ETSConfig
+
 from enthought.traits.api import \
     HasTraits, Instance, File, Bool, Str, List, on_trait_change, \
     Float, Tuple, Property, Delegate, Code, Button, Directory, Callable
@@ -38,6 +42,12 @@ from enthought.traits.ui.api \
 
 from enthought.traits.ui.menu \
     import NoButtons, OKCancelButtons, Separator
+
+#from enthought.logger.api \
+#    import add_log_queue_handler
+
+from enthought.logger.log_queue_handler \
+    import LogQueueHandler
 
 from enthought.pyface.api \
     import error, confirm, YES, FileDialog, OK
@@ -92,10 +102,22 @@ class DesktopViewModel ( ModelView ):
     wd = Directory( desc = "path to save file", label = "Working Directory" )
 
     # Exit confirmation.
-    prompt_on_exit = Bool( True, desc = "exit confirmation request" )
+    prompt_on_exit = Bool( False, desc = "exit confirmation request" )
 
     # Any callable that returns a new model.
     _model_factory = Callable
+
+    # The current status of the model.
+    status = Str
+
+    # Tuple of library versions.
+    versions = Str
+
+    # Buffers up the log messages so that they can be displayed later
+#    handler = Instance(LogQueueHandler)
+
+    # Log history
+#    log_entries = List(Instance(LogEntry))
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -111,8 +133,8 @@ class DesktopViewModel ( ModelView ):
                         buttons   = NoButtons,
                         menubar   = menubar,
 #                        toolbar   = toolbar,
-#                        statusbar = [ StatusItem( name = "status",
-#                                                  width = 0.5 ) ],
+#                        statusbar=[StatusItem(name="status"),
+#                                   StatusItem(name="versions", width=200)],
                         dock      = "vertical" )
 
     #--------------------------------------------------------------------------
@@ -137,6 +159,71 @@ class DesktopViewModel ( ModelView ):
                        title   = "About",
                        buttons = ["OK"],
                        icon    = frame_icon )
+
+    #--------------------------------------------------------------------------
+    #  Trait initialisers:
+    #--------------------------------------------------------------------------
+
+    def _handler_default(self):
+        """ Trait initialiser.
+        """
+        logger = getLogger()#__name__)
+        handler = add_log_queue_handler(logger, level=LOG_LEVEL)
+        # set the view to update when something is logged.
+#        handler._view = self
+
+        return handler
+
+
+    def _versions_default(self):
+        """ Trait initialiser.
+        """
+        # Get the version numbers.
+        py_version = sys.version[0:sys.version.find("(")]
+
+        if ETSConfig.toolkit == "wx":
+            import wx
+            toolkit_version = wx.VERSION_STRING
+        elif ETSConfig.toolkit == "qt4":
+            from PyQt4 import QtCore
+            toolkit_version = QtCore.PYQT_VERSION_STR
+        else:
+            toolkit_verion = ""
+
+        traits_version = enthought.traits.version.__version__
+
+        return "%s, %s, %s" % (py_version, toolkit_version, traits_version)
+
+    #--------------------------------------------------------------------------
+    #  Event handlers:
+    #--------------------------------------------------------------------------
+
+    def update(self):
+        """ Update the table if new records are available """
+
+
+
+        if self.handler.has_new_records():
+
+            records = self.handler.get()
+
+            self.log_entries = []
+            for record in records[:]:
+                print "BLAPP ", record.message
+
+#                level_name = record.levelname
+#                time=record.asctime
+#                message=record.message
+
+                entry = LogEntry(level_name="name", time="12:00", message="foo")
+                print entry
+                self.log_entries.append(entry)
+
+            print "RECORDS", len(records), len(self.log_entries)
+
+
+            if self.log_entries:
+                self.status = self.log_entries[-1].message
 
     #--------------------------------------------------------------------------
     #  Action handlers:

@@ -41,21 +41,38 @@ from enthought.logger.api import add_log_queue_handler
 from enthought.logger.log_queue_handler import LogQueueHandler
 
 from pylon.api import Network, Bus, Branch
-from pylon.routine.api import DCPFRoutine, DCOPFRoutine
+
+from pylon.network import NetworkReport
 
 from pylon.readwrite.api import \
     MATPOWERReader, PSSEReader, PSATReader, \
     MATPOWERWriter, CSVWriter, ExcelWriter, ReSTWriter
 
+from pylon.ui.report_view import pf_report_view, opf_report_view
 from pylon.ui.network_tree import network_tree_editor
 from pylon.ui.graph.graph_image import GraphImage
-from pylon.ui.graph.graph_editor import GraphEditor
 from pylon.ui.graph.graph import Graph
 from pylon.ui.about_view import about_view
 
-from network_menu import network_menubar, network_toolbar
+from pylon.ui.routine.dc_pf_view_model \
+    import DCPFViewModel
 
-from desktop_vm import DesktopViewModel
+from pylon.ui.routine.dc_opf_view_model \
+    import DCOPFViewModel
+
+from pylon.ui.routine.ac_pf_view_model \
+    import ACPFViewModel
+
+from pylon.ui.routine.ac_opf_view_model \
+    import ACOPFViewModel
+
+from network_menu import \
+    network_menubar, network_toolbar
+
+from desktop_vm \
+    import DesktopViewModel
+
+logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -362,6 +379,26 @@ class NetworkViewModel(DesktopViewModel):
         if info.initialized:
             self.model.edit_traits(parent=info.ui.control, kind="livemodal")
 
+
+    def display_pf_report(self, info):
+        """ Handles display of the power flow report view.
+        """
+        if info.initialized:
+            report = NetworkReport(self.model)
+            report.edit_traits(view=pf_report_view, parent=info.ui.control,
+                                   kind="livemodal")
+            del report
+
+
+    def display_opf_report(self, info):
+        """ Handles display of the OPF report view.
+        """
+        if info.initialized:
+            report = NetworkReport(self.model)
+            report.edit_traits(view=opf_report_view,
+                                   parent=info.ui.control, kind="livemodal")
+            del report
+
     #--------------------------------------------------------------------------
     #  Network action handlers:
     #--------------------------------------------------------------------------
@@ -370,9 +407,13 @@ class NetworkViewModel(DesktopViewModel):
         """ Handles adding a bus to the network.
         """
         if info.initialized:
+            # Provide the new bus with a name unique to the network.
             bus_names = [v.name for v in self.model.buses]
-            name = make_unique_name("v", bus_names)
-            self.model.buses.append(Bus(name=name))
+            bus = Bus( name = make_unique_name("v", bus_names) )
+            self.model.buses.append(bus)
+#            retval = bus.edit_traits(parent=info.ui.control, kind="livemodal")
+#            if not retval.result:
+#                n.buses.remove(bus)
 
 
     def add_branch(self, info):
@@ -394,17 +435,67 @@ class NetworkViewModel(DesktopViewModel):
                                        buses      = network.buses)
             network.branches.append(branch)
 
+            retval = branch.edit_traits(parent=info.ui.control,
+                                        kind="livemodal")
+            if not retval.result:
+                network.branches.remove(branch)
+
     #--------------------------------------------------------------------------
     #  Routine action handlers:
     #--------------------------------------------------------------------------
 
+    def dcpf(self, info):
+        """ Runs the model using a DC Power Flow routine.
+        """
+        view_model = DCPFViewModel(network=self.model)
+        retval = view_model.edit_traits(parent=info.ui.control,
+                                        kind="livemodal")
+
+        if retval.result:
+            self.display_pf_report(info)
+
+        del view_model
+
+
     def dcopf(self, info):
-        """ Runs the model using a DC OPF routine """
+        """ Runs the model using a DC OPF routine.
+        """
+        view_model = DCOPFViewModel(network=self.model)
+        view_model.solve()
+        retval = view_model.edit_traits(parent=info.ui.control,
+                                        kind="livemodal")
 
-        routine = DCOPFRoutine(network=self.model)
-        routine.edit_traits(parent=info.ui.control, kind="livemodal")
+        if retval.result:
+            self.display_opf_report(info)
 
-        del routine
+        del view_model
+
+
+    def acpf(self, info):
+        """ Runs the model using a AC Power Flow routine.
+        """
+        view_model = ACPFViewModel(network=self.model)
+        retval = view_model.edit_traits(parent=info.ui.control,
+                                        kind="livemodal")
+
+        if retval.result:
+            self.display_pf_report(info)
+
+        del view_model
+
+
+    def acopf(self, info):
+        """ Runs the model using a AC OPF routine.
+        """
+        view_model = ACOPFViewModel(network=self.model)
+        view_model.solve()
+        retval = view_model.edit_traits(parent=info.ui.control,
+                                        kind="livemodal")
+
+        if retval.result:
+            self.display_opf_report(info)
+
+        del view_model
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

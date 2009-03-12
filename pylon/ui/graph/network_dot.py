@@ -91,9 +91,10 @@ class BusNode(HasTraits):
 
         bus = self.bus
         if bus is not None:
-            node = Node(bus.id)
-            node.set_name(bus.id)
+            node = Node( id(bus) )
+            node.set_name( id(bus) )
             node.set_label(bus.name)
+
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
                 node.set_shape(self._get_node_shape(bus.mode))
@@ -119,7 +120,7 @@ class BusNode(HasTraits):
 
         self.node.set_label(new)
         self.updated = True
- 
+
 
     def _mode_changed_for_bus(self, new):
         """ Handles the bus mode changing """
@@ -131,7 +132,7 @@ class BusNode(HasTraits):
         """ Returns a shape according to the bus mode """
 
         prefs = self.dot_attrs
-        
+
         if mode == "PV":
             shape = prefs.pv_shape
         elif mode == "PQ":
@@ -201,7 +202,7 @@ class BranchEdge(HasTraits):
 
         br = self.branch
         if br is not None:
-            edge = Edge(br.source_bus.id, br.target_bus.id)
+            edge = Edge( id(br.source_bus), id(br.target_bus) )
 #            node.set_name(br.id)
             edge.set_label(br.name)
             if self.dot_attrs is not None:

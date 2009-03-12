@@ -96,12 +96,12 @@ map_view_action = Action(
 )
 
 pf_report_action = Action(
-    name="PF Report", accelerator="F5", action="show_pf_report_view",
+    name="PF Report", accelerator="F5", action="display_pf_report",
     tooltip="Power Flow Report View (F5)"
 )
 
 opf_report_action = Action(
-    name="OPF Report", accelerator="F6", action="show_opf_report_view",
+    name="OPF Report", accelerator="F6", action="display_opf_report",
     tooltip="Optimal Power Flow Report View (F6)"
 )
 
