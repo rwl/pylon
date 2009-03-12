@@ -22,15 +22,144 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pylon.network import Network, NetworkReport
+from pylon.network \
+    import Network, NetworkReport
+
+from pylon.pybrain.experiment \
+    import MarketExperiment
+
+#------------------------------------------------------------------------------
+#  "ReSTExperimentWriter" class:
+#------------------------------------------------------------------------------
+
+class ReSTExperimentWriter:
+    """ Writes market experiment data to file in ReStructuredText format.
+    """
+    # Market experiment whose data is to be written.
+    experiment = None
+
+    # File object or name of a file to be written to.
+    file_or_filename = ""
+
+    # Sections to include.
+    include_state  = True
+    include_action = True
+    include_reward = True
+
+    def __init__(self, experiment, file_or_filename, include_state=True,
+                 include_action=True, include_reward=True):
+#        assert isinstance(experiment, MarketExperiment)
+
+        self.experiment = experiment
+        self.file_or_filename = file_or_filename
+
+        self.include_state  = include_state
+        self.include_action = include_action
+        self.include_reward = include_reward
+
+
+    def write(self, experiment=None, file_or_filename=None):
+        """ Writes market experiment data to file in ReStructuredText format.
+        """
+        if experiment is None:
+            experiment = self.experiment
+        else:
+            assert isinstance(experiment, MarketExperiment)
+            self.experiment = experiment
+
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
+        else:
+            self.file_or_filename = file_or_filename
+
+        if isinstance(file_or_filename, basestring):
+            file = open(file_or_filename, "wb")
+        else:
+            file = file_or_filename
+
+        # Write environment state data.
+        if self.include_state:
+            file.write("State\n")
+            file.write( ("-" * 5) + "\n")
+
+            self.write_state_data()
+
+
+    def write_state_data(self):
+        """ Writes the state history for each agent in a market experiment
+            to a ReST table.
+        """
+        self._write_data_table(type="state")
+
+
+    def write_action_data(self):
+        """ Writes the action history for each agent in a market experiment
+            to a ReST table.
+        """
+        self._write_data_table(type="action")
+
+
+    def write_reward_data(self):
+        """ Writes the reward history for each agent in a market experiment
+            to a ReST table.
+        """
+        self._write_data_table(type="reward")
+
+
+    def _write_data_table(self, type):
+        """ Writes agent data to an ReST table.  The 'type' argument may
+            be 'state', 'action' or 'reward'.
+        """
+        agents = self.experiment.agents
+        n_agents = len(self.experiment.agents)
+
+        if isinstance(self.file_or_filename, basestring):
+            file = open(self.file_or_filename, "wb")
+        else:
+            file = self.file_or_filename
+
+        col_width = 8
+        idx_col_width = 3
+
+        sep = ("=" * idx_col_width) + " " + \
+            ("=" * col_width + " ") * n_agents + "\n"
+
+        file.write(sep)
+
+        # Table column headers.
+        file.write("..".rjust(idx_col_width) + " ")
+        for agent in agents:
+            # The end of the name is typically the unique part.
+            file.write(agent.name[-col_width:].center(col_width) + " ")
+        file.write("\n")
+
+        file.write(sep)
+
+        # Table values.
+        if agents:
+            rows, cols = agents[0].history.getField( type ).shape
+        else:
+            rows, cols = (0, 0)
+
+        for sequence in range( min(rows, 999) ):
+            file.write( str(sequence + 1).rjust(idx_col_width) + " " )
+
+            for agent in agents:
+                field = agent.history.getField( type )
+                # FIXME: Handle multiple state values.
+                file.write("%8.3f " % field[sequence, 0])
+
+            file.write("\n")
+
+        file.write(sep)
 
 #------------------------------------------------------------------------------
 #  "ReSTWriter" class:
 #------------------------------------------------------------------------------
 
 class ReSTWriter:
-    """ Write network data to a file in ReStructuredText format """
-
+    """ Write network data to a file in ReStructuredText format.
+    """
     network = None
 
     file_or_filename = ""
@@ -44,8 +173,8 @@ class ReSTWriter:
     include_generator_data = True
 
     def __init__(self, network, file_or_filename, include_title=True,
-            include_summary=True, include_bus_data=True, include_branch_data=True,
-            include_generator_data=True):
+            include_summary=True, include_bus_data=True,
+            include_branch_data=True, include_generator_data=True):
         assert isinstance(network, Network)
 
         self.network = network
@@ -60,8 +189,8 @@ class ReSTWriter:
 
 
     def write(self, network=None, file_or_filename=None):
-        """ Writes network data to file in ReStructuredText format """
-
+        """ Writes network data to file in ReStructuredText format.
+        """
         if network is None:
             network = self.network
 

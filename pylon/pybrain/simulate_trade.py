@@ -43,6 +43,8 @@ from profit_task import ProfitTask
 
 from pylon.ui.plot.experiment_plot import ExperimentPlot
 
+from pylon.readwrite.rst_writer import ReSTExperimentWriter
+
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
@@ -119,11 +121,16 @@ def main(power_sys):
         agents.append( agent )
 
     experiment = MarketExperiment( tasks, agents, power_sys )
-#    experiment.doInteractions( number = 2 )
+    experiment.doInteractions( number = 9 )
 #    experiment.configure_traits()
 
-    plot = ExperimentPlot(experiment)
-    plot.configure_traits()
+#    plot = ExperimentPlot(experiment)
+#    plot.configure_traits()
+
+    writer = ReSTExperimentWriter(experiment, sys.stdout)
+    writer.write_state_data()
+    writer.write_action_data()
+    writer.write_reward_data()
 
     return experiment
 
