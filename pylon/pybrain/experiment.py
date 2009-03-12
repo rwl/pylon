@@ -225,6 +225,9 @@ class MarketExperiment ( HasTraits ):
                              agent.name)
                 agent.learn()
 
+                logger.debug("Module [%s] parameters: %s" %
+                             (agent.module.name, agent.module.params))
+
             # Update each agent's environment state attributes.
 #            for task in self.tasks:
 #                demand = sum([l.p for l in self.power_system.online_loads])
@@ -253,15 +256,12 @@ class MarketExperiment ( HasTraits ):
 
         for j, agent in enumerate(self.agents):
             observations = agent.history.getField("state")
-            print "AGENT STATES:", observations[0]
             all_states.append(observations.transpose())
 
             actions = agent.history.getField("action")
-            print "AGENT ACTIONS:", actions[0]
             all_actions.append(actions.transpose())
 
             rewards = agent.history.getField("reward")
-            print "AGENT REWARDS:", rewards[0]
             all_rewards.append(rewards.transpose())
 
 #                print "REWARDS:", rewards

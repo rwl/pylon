@@ -177,12 +177,10 @@ class RewardsPlot(HasTraits):
             rows, cols = rewards[0].shape
         else:
             cols = 1
-        print "COLUMNS:", rows, cols
         plot_data.set_data("x", range(cols))
 
         for i, reward in enumerate(rewards):
 
-            print "REWARD DATA:", reward[0]
             # Update plot data or add a new plot
             plot_name = str(i)
             if plot_name in plot_data.list_data():

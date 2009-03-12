@@ -60,8 +60,10 @@ class ProfitTask(Task):
         """ A filtered mapping the .performAction() method of the underlying
             environment.
         """
-        logger.debug("Task filtering action: %s", action)
-        logger.debug("Denormalised action: %s", self.denormalize(action))
+        logger.debug("Profit task [%s] filtering action: %s" %
+                     (self.env.asset.name, action))
+        logger.debug("Profit task [%s] denormalised action: %s" %
+                     (self.env.asset.name, self.denormalize(action)))
         Task.performAction(self, action)
 
 
@@ -70,7 +72,8 @@ class ProfitTask(Task):
             environment.
         """
         sensors = Task.getObservation(self)
-        logger.debug("Normalised sensors: %s", sensors)
+        logger.debug("Profit task [%s] normalised sensors: %s" %
+                     (self.env.asset.name, sensors))
         return sensors
 
 
@@ -82,7 +85,7 @@ class ProfitTask(Task):
 #        profit = asset.p_despatch * asset.p_cost
         profit = asset.p_despatch# * self.environment.power_system.base_mva
 
-        logger.debug("Task reward: %s", profit)
+        logger.debug("Profit task [%s] reward: %s" % (asset.name, profit))
         return array( [ profit ] )
 
 # EOF -------------------------------------------------------------------------

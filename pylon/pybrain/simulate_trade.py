@@ -84,9 +84,9 @@ def get_power_sys():
     bus1.loads.append( load )
     power_sys.buses = [ bus1 ]
 
-    solution = DCOPFRoutine(power_sys).solve()
-    writer = ReSTWriter(power_sys, sys.stdout)
-    writer.write_generator_data()
+#    solution = DCOPFRoutine(power_sys).solve()
+#    writer = ReSTWriter(power_sys, sys.stdout)
+#    writer.write_generator_data()
 
     return power_sys
 
@@ -116,21 +116,40 @@ def main(power_sys):
         agent = PolicyGradientAgent( module = net, learner = ENAC() )
         agent.name = "PolicyGradientAgent-%s" % generator.name
 
+        # Backpropagation parameters.
+        gradient_descent = agent.learner.gd
+        # Learning rate (0.1-0.001, down to 1e-7 for RNNs).
+        agent.alpha = 0.1
+
+        # Alpha decay (0.999; 1.0 = disabled).
+#        gradient_descent.alphadecay = 1.0
+#
+#        # momentum parameters (0.1 or 0.9)
+#        gradient_descent.momentum = 0.0
+#        gradient_descent.momentumvector = None
+#
+#        # --- RProp parameters ---
+#        gradient_descent.rprop = False
+#        # maximum step width (1 - 20)
+#        gradient_descent.deltamax = 5.0
+#        # minimum step width (0.01 - 1e-6)
+#        gradient_descent.deltamin = 0.01
+
         # Collect tasks and agents.
         tasks.append( task )
         agents.append( agent )
 
     experiment = MarketExperiment( tasks, agents, power_sys )
-    experiment.doInteractions( number = 9 )
+    experiment.doInteractions( number = 1 )
 #    experiment.configure_traits()
 
 #    plot = ExperimentPlot(experiment)
 #    plot.configure_traits()
 
     writer = ReSTExperimentWriter(experiment, sys.stdout)
-    writer.write_state_data()
+#    writer.write_state_data()
     writer.write_action_data()
-    writer.write_reward_data()
+#    writer.write_reward_data()
 
     return experiment
 
@@ -138,7 +157,9 @@ def main(power_sys):
 if __name__ == "__main__":
     import logging
     logger = logging.getLogger()
-    logger.addHandler(logging.StreamHandler(sys.stdout))
+    for handler in logger.handlers:
+        logger.removeHandler( handler )
+    logger.addHandler( logging.StreamHandler(sys.stdout) )
     logger.setLevel(logging.DEBUG)
 
     power_sys = get_power_sys()
