@@ -30,11 +30,11 @@ from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Bool, Range, \
     Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
 
-from iec61970.wires import EnergyConsumer
+from iec61970.Wires import EnergyConsumer
 
-from iec61970.core import IdentifiedObject, RegularIntervalSchedule
+from iec61970.Core import IdentifiedObject, RegularIntervalSchedule
 
-from iec61970.domain import CurrentFlow
+from iec61970.Domain import CurrentFlow
 
 #------------------------------------------------------------------------------
 #  "EnergyArea" class:
@@ -56,17 +56,17 @@ class LoadArea(EnergyArea):
     """
 
     # The SubLoadAreas in the LoadArea.
-    SubLoadAreas = List(Instance("SubLoadArea"), minlen=1)
+    SubLoadAreas = List(Instance("SubLoadArea"))#, minlen=1)
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, sub_load_areas, **traits):
-        """ Initialises a new SubLoadArea instance.
-        """
-        self.SubLoadAreas = sub_load_areas
-        super(LoadArea, self).__init__(**traits)
+#    def __init__(self, sub_load_areas, **traits):
+#        """ Initialises a new SubLoadArea instance.
+#        """
+#        self.SubLoadAreas = sub_load_areas
+#        super(LoadArea, self).__init__(**traits)
 
 #------------------------------------------------------------------------------
 #  "SubLoadArea" class:
@@ -81,18 +81,17 @@ class SubLoadArea(EnergyArea):
     LoadArea = Instance(LoadArea, allow_none=False)
 
     # The Loadgroups in the SubLoadArea.
-    LoadGroups = List(Instance("LoadGroup"), minlen=1,
+    LoadGroups = List(Instance("LoadGroup"),# minlen=1,
         desc="load groups in the SubLoadArea")
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, load_area, load_groups, **traits):
+    def __init__(self, load_area, **traits):
         """ Initialises a new SubLoadArea instance.
         """
         self.LoadArea = load_area
-        self.LoadGroups = load_groups
         super(SubLoadArea, self).__init__(**traits)
 
 #------------------------------------------------------------------------------
@@ -104,6 +103,7 @@ class SeasonDayTypeSchedule(RegularIntervalSchedule):
         for a specific type of day and season. This means that curves of this
         type cover a 24 hour period.
     """
+    pass
 
     # Load demand models can be based on seasons.
 #    Season = Instance(Season)
@@ -121,6 +121,8 @@ class ConformLoadSchedule(SeasonDayTypeSchedule):
         covered. This curve represents a typical pattern of load over the time
         period for a given day type and season.
     """
+
+#    LoadDataSets = List(Instance(LoadDataSet))
 
     # The ConformLoadGroup where the ConformLoadSchedule belongs.
     ConformLoadGroup = Instance("ConformLoadGroup", allow_none=False,
@@ -146,18 +148,18 @@ class LoadGroup(IdentifiedObject):
     """
 
     # The SubLoadArea where the load group belongs.
-    SubLoadArea = Instance(SubLoadArea, allow_none=False,
+    SubLoadArea = Instance(SubLoadArea,# allow_none=False,
         desc="where the load group belongs")
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, sub_load_area, **traits):
-        """ Initialises a new LoadGroup instance.
-        """
-        self.SubLoadArea = sub_load_area
-        super(LoadGroup, self).__init__(**traits)
+#    def __init__(self, sub_load_area, **traits):
+#        """ Initialises a new LoadGroup instance.
+#        """
+#        self.SubLoadArea = sub_load_area
+#        super(LoadGroup, self).__init__(**traits)
 
 #------------------------------------------------------------------------------
 #  "ConformLoadGroup" class:
@@ -172,17 +174,16 @@ class ConformLoadGroup(LoadGroup):
         "assigned to a load area")
 
     # The ConformLoadSchedules in the ConformLoadGroup.
-    ConformLoadSchedules = List(Instance(ConformLoadSchedule), minlen=1)
+    ConformLoadSchedules = List(Instance(ConformLoadSchedule))#, minlen=1)
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, conform_load_schedules, sub_load_area, **traits):
-        """ Initialises a new LoadGroup instance.
-        """
-        self.ConformLoadSchedules = conform_load_schedules
-        super(ConformLoadGroup, self).__init__(sub_load_area, **traits)
+#    def __init__(self, sub_load_area, **traits):
+#        """ Initialises a new LoadGroup instance.
+#        """
+#        super(ConformLoadGroup, self).__init__(sub_load_area, **traits)
 
 #------------------------------------------------------------------------------
 #  "ConformLoad" class:
@@ -214,9 +215,5 @@ class Load(ConformLoad):
     # could be allocated on the feeder as 20, 50 and 30 amps.
     loadAllocationFactor = Float(desc="assignment of loads on a participation "
         "factor basis")
-
-if __name__ == "__main__":
-    load = Load()
-    load.configure_traits()
 
 # EOF -------------------------------------------------------------------------

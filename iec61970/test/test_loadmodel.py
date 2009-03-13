@@ -5,9 +5,9 @@ Created on 13 Mar 2009
 '''
 import unittest
 
-from iec61970.core import Terminal
+from iec61970.Core import Terminal, RegularTimePoint
 
-from iec61970.loadmodel \
+from iec61970.LoadModel \
     import Load, ConformLoadGroup, ConformLoadSchedule, SubLoadArea, LoadArea
 
 
@@ -17,18 +17,21 @@ class Test(unittest.TestCase):
     def test_load_model(self):
         """ Test instantiation of load model classes.
         """
-        load_area = LoadArea(sub_load_areas)
+#        load_area = LoadArea()
+#
+#        sub_load_area = SubLoadArea(load_area=load_area)
+#        load_area.SubLoadAreas.append(sub_load_area)
 
-        sub_load_area = SubLoadArea(load_area, load_groups)
+        conform_load_group = ConformLoadGroup()#sub_load_area)
 
-        load_schedule = ConformLoadSchedule(conform_load_group)
+        schedule = ConformLoadSchedule(conform_load_group)
+        tp1 = RegularTimePoint(interval_schedule=schedule)
+        schedule.TimePoints.append(tp1)
 
-        load_group = ConformLoadGroup(conform_load_schedules, sub_load_area)
+        conform_load_group.ConformLoadSchedules.append(schedule)
 
 
-        load = Load(name="Load 1")
-        t1 = Terminal(conducting_equipment=load)
-        load.Terminals = [t1]
+        load = Load(name="Load 1", LoadGroup=conform_load_group)
 
         load.configure_traits()
 

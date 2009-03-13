@@ -30,7 +30,7 @@ from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Bool, Range, \
     Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
 
-from iec61970.core import ConductingEquipment
+from iec61970.Core import ConductingEquipment
 
 #------------------------------------------------------------------------------
 #  "EnergyConsumer" class:

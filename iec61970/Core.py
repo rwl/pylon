@@ -31,7 +31,7 @@ from enthought.traits.api import \
 from iec61850 \
     import BaseElement, LNodeContainer, SubEquipmentContainer
 
-from iec61970.domain \
+from iec61970.Domain \
     import Seconds, AbsoluteDateTime, UnitSymbol, UnitMultiplier
 
 #------------------------------------------------------------------------------
@@ -200,17 +200,17 @@ class RegularIntervalSchedule(BasicIntervalSchedule):
     endTime = AbsoluteDateTime
 
     # The point data values that define a curve.
-    TimePoints = List(Instance(RegularTimePoint), minlen=1,
+    TimePoints = List(Instance(RegularTimePoint),# minlen=1,
         desc="point data values that define a curve")
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, time_points, **traits):
-        """ Initialises a new RegularIntervalSchedule instance.
-        """
-        self.TimePoints = time_points
-        super(RegularIntervalSchedule, self).__init__(**traits)
+#    def __init__(self, time_points, **traits):
+#        """ Initialises a new RegularIntervalSchedule instance.
+#        """
+#        self.TimePoints = time_points
+#        super(RegularIntervalSchedule, self).__init__(**traits)
 
 # EOF -------------------------------------------------------------------------
