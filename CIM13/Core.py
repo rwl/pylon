@@ -116,15 +116,22 @@ class ConductingEquipment(Equipment):#, SubEquipmentContainer):
     """
 
     # Describes the phases carried by a conducting equipment.
-    phases = Enum("ABCN", "ABC", "ABN", "ACN", "BCN", "AB", "AC", "BC",
-                  "AN", "BN", "CN", "A", "B", "C", "N",
-                  desc="the phases carried by a conducting equipment")
+#    phases = Enum("ABCN", "ABC", "ABN", "ACN", "BCN", "AB", "AC", "BC",
+#                  "AN", "BN", "CN", "A", "B", "C", "N",
+#                  desc="the phases carried by a conducting equipment")
 
     # ConductingEquipment has 1 or 2 terminals that may be connected to other
     # ConductingEquipment terminals via ConnectivityNodes
-    Terminals = List(Instance(Terminal),# minlen=1, maxlen=2,
-        desc="1 or 2 terminals that may be connected to other "
-        "ConductingEquipment terminals via ConnectivityNodes")
+#    Terminals = List(Instance(Terminal), maxlen=2,# minlen=1,
+#        desc="1 or 2 terminals that may be connected to other "
+#        "ConductingEquipment terminals via ConnectivityNodes")
+#
+#
+#    def _Terminals_default(self):
+#        """ Trait initialiser.
+#        """
+#        return [Terminal(conducting_equipment=self),
+#                Terminal(conducting_equipment=self)]
 
 #------------------------------------------------------------------------------
 #  "RegularTimePoint" class:
@@ -152,17 +159,17 @@ class RegularTimePoint(HasTraits):
     value2 = Float(desc="second value at the time")
 
     # A RegularTimePoint belongs to a RegularIntervalSchedule.
-    IntervalSchedule = Instance("RegularIntervalSchedule", allow_none=False)
+    IntervalSchedule = Instance("RegularIntervalSchedule")#, allow_none=False)
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, interval_schedule, **traits):
-        """ Initialises a new RegularIntervalSchedule instance.
-        """
-        self.IntervalSchedule = interval_schedule
-        super(RegularTimePoint, self).__init__(**traits)
+#    def __init__(self, interval_schedule, **traits):
+#        """ Initialises a new RegularIntervalSchedule instance.
+#        """
+#        self.IntervalSchedule = interval_schedule
+#        super(RegularTimePoint, self).__init__(**traits)
 
 #------------------------------------------------------------------------------
 #  "BasicIntervalSchedule" class:
@@ -212,5 +219,11 @@ class RegularIntervalSchedule(BasicIntervalSchedule):
 #        """
 #        self.TimePoints = time_points
 #        super(RegularIntervalSchedule, self).__init__(**traits)
+
+
+    def _TimePoints_default(self):
+        """ Trait initialiser.
+        """
+        return [RegularTimePoint(IntervalSchedule=self)]
 
 # EOF -------------------------------------------------------------------------

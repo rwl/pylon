@@ -34,7 +34,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import Float, Date, Long, Enum
+from enthought.traits.api import Float, Long, Enum, Tuple, Time, Date
 
 #------------------------------------------------------------------------------
 #  Trait definitions:
@@ -45,8 +45,8 @@ from enthought.traits.api import Float, Date, Long, Enum
 # relative UTC is specified as "yyyy-mm-ddThh:mm:ss.sss-hh:mm".
 # AbsoluteDateTime can be used both for calender time, e.g. 2007-02-07T10:30,
 # and for relative time, e.g. 10:30.
-AbsoluteDateTime = Date(desc="Date and time as 'yyyy-mm-ddThh:mm:ss.sss', "
-                        "which conforms with ISO 8601")
+AbsoluteDateTime = Tuple(Time, Date, desc="Date and time as "
+    "'yyyy-mm-ddThh:mm:ss.sss', which conforms with ISO 8601")
 
 # Electrical current (positive flow is out of the ConductingEquipment into the
 # ConnectivityNode)

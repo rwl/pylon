@@ -27,14 +27,19 @@
 #------------------------------------------------------------------------------
 
 from enthought.traits.api import \
-    HasTraits, String, Int, Float, List, Trait, Instance, Bool, Range, \
-    Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
+    HasTraits, String, Int, Float, List, Instance, Bool, Range, Enum
 
-from iec61970.Wires import EnergyConsumer
+from enthought.traits.ui.api \
+    import View, Group, Item, VGroup, HGroup
 
-from iec61970.Core import IdentifiedObject, RegularIntervalSchedule
+from iec61970.Wires \
+    import EnergyConsumer
 
-from iec61970.Domain import CurrentFlow
+from iec61970.Core \
+    import IdentifiedObject, RegularIntervalSchedule
+
+from iec61970.Domain \
+    import CurrentFlow
 
 #------------------------------------------------------------------------------
 #  "EnergyArea" class:
@@ -129,6 +134,22 @@ class ConformLoadSchedule(SeasonDayTypeSchedule):
         desc="where the ConformLoadSchedule belongs")
 
     #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(VGroup(["name", "description", "startTime",
+                               "value1Multiplier", "value1Unit",
+                               "value2Multiplier", "value2Unit",
+                               "timeStep", "endTime"],
+                       Group(Item("TimePoints", show_label=False,
+                                  height=100),
+                             label="Time Points", show_border=True),
+                       Item("ConformLoadGroup", show_label=False)),
+                       id="iec61970.LoadModel.ConformLoadSchedule",
+                       title="Conform Load Schedule", resizable=True,
+                       buttons=["Help", "OK", "Cancel"])
+
+    #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
@@ -136,6 +157,10 @@ class ConformLoadSchedule(SeasonDayTypeSchedule):
         """ Initialises a new ConformLoadSchedule instance.
         """
         self.ConformLoadGroup = conform_load_group
+        self.value1Multiplier = "k"
+        self.value1Unit = "W"
+        self.value2Multiplier = "k"
+        self.value2Unit = "VAr"
         super(ConformLoadSchedule, self).__init__(**traits)
 
 #------------------------------------------------------------------------------
@@ -177,6 +202,22 @@ class ConformLoadGroup(LoadGroup):
     ConformLoadSchedules = List(Instance(ConformLoadSchedule))#, minlen=1)
 
     #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(VGroup(["name", "description"],
+                       Group(Item("SubLoadArea", show_label=False)),
+                       Group(Item("ConformLoadSchedules", show_label=False,
+                                  height=120),
+                             label="Load Schedules", show_border=True),
+                       Group(Item("EnergyConsumers", show_label=False,
+                                  height=90),
+                             label="Energy Consumers", show_border=True)),
+                       id="iec61970.LoadModel.ConformLoadGroup",
+                       title="Conform Load Group", resizable=True,
+                       buttons=["Help", "OK", "Cancel"])
+
+    #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
@@ -215,5 +256,21 @@ class Load(ConformLoad):
     # could be allocated on the feeder as 20, 50 and 30 amps.
     loadAllocationFactor = Float(desc="assignment of loads on a participation "
         "factor basis")
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(VGroup(["name", "description", "customerCount",
+                       Group(Item("MemberOf_EquipmentContainer",
+                                  show_label=False)),
+#                       Group(Item("Terminals", show_label=False, height=80),
+#                             label="Terminals", show_border=True),
+                       ],
+                       Group(Item("LoadGroup", style="simple",
+                                  show_label=False))),
+                       id="iec61970.LoadModel.Load",
+                       title="Load", resizable=True,
+                       buttons=["Help", "OK", "Cancel"])
 
 # EOF -------------------------------------------------------------------------

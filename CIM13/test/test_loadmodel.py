@@ -25,13 +25,18 @@ class Test(unittest.TestCase):
         conform_load_group = ConformLoadGroup()#sub_load_area)
 
         schedule = ConformLoadSchedule(conform_load_group)
+
+        # Add a time point to the load schedule.
         tp1 = RegularTimePoint(interval_schedule=schedule)
         schedule.TimePoints.append(tp1)
 
+        # Add the schedule to the load group's list of load schedules.
         conform_load_group.ConformLoadSchedules.append(schedule)
 
-
         load = Load(name="Load 1", LoadGroup=conform_load_group)
+
+        # Add the load to the load group's list of energy consumers.
+        conform_load_group.EnergyConsumers.append(load)
 
         load.configure_traits()
 
