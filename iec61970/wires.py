@@ -15,7 +15,11 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines IEC 61970 CIM.
+""" This module is responsible for modeling the energy consumers and the system
+    load as curves and associated curve data. Special circumstances that may
+    affect the load, such as seasons and daytypes, are also included here.
+
+    This information is used by Load Forecasting and Load Management.
 """
 
 #------------------------------------------------------------------------------
@@ -26,28 +30,19 @@ from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Bool, Range, \
     Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
 
+from iec61970.core import ConductingEquipment
+
 #------------------------------------------------------------------------------
-#  "IEC61970" class:
+#  "EnergyConsumer" class:
 #------------------------------------------------------------------------------
 
-class IEC61970(HasTraits):
-    """ Defines IEC 61970 CIM.
+class EnergyConsumer(ConductingEquipment):
+    """ Generic user of energy - a point of consumption on the power system
+        model.
     """
 
-    # This package is responsible for modeling the energy consumers and the
-    # system load as curves and associated curve data. Special circumstances
-    # that may affect the load, such as seasons and daytypes, are also
-    # included here.
-    #
-    # This information is used by Load Forecasting and Load Management.
-    loadmodel = List(Instance(HasTraits), desc="""package is responsible for
-        modeling the energy consumers and the system load as curves and
-        associated curve data.""")
-
-
-    generation = List(Instance(HasTraits), desc="""packages that have
-        information for Unit Commitment and Economic Dispatch of Hydro and
-        Thermal Generating Units, Load Forecasting, Automatic Generation
-        Control, and Unit Modeling for Dynamic Training Simulator""")
+    # Number of individual customers represented by this Demand.
+    customerCount = Int(desc="number of individual customers represented "
+        "by this demand")
 
 # EOF -------------------------------------------------------------------------

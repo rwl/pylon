@@ -29,3 +29,8 @@ class BaseElement(HasTraits):
 
 class LNodeContainer(HasTraits):
     pass
+
+class SubEquipmentContainer(HasTraits):
+    pass
+
+# EOF -------------------------------------------------------------------------
