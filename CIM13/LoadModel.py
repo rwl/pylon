@@ -30,7 +30,7 @@ from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Instance, Bool, Range, Enum
 
 from enthought.traits.ui.api \
-    import View, Group, Item, VGroup, HGroup
+    import View, Group, Item, VGroup, HGroup, InstanceEditor
 
 from CIM13.Wires \
     import EnergyConsumer
@@ -137,7 +137,8 @@ class ConformLoadSchedule(SeasonDayTypeSchedule):
     #  Views:
     #--------------------------------------------------------------------------
 
-    traits_view = View(VGroup(["name", "description", "startTime",
+    traits_view = View(VGroup(["name", Item("description", style="custom"),
+                               "startTime",
                                "value1Multiplier", "value1Unit",
                                "value2Multiplier", "value2Unit",
                                "timeStep", "endTime"],
@@ -205,7 +206,7 @@ class ConformLoadGroup(LoadGroup):
     #  Views:
     #--------------------------------------------------------------------------
 
-    traits_view = View(VGroup(["name", "description"],
+    traits_view = View(VGroup(["name", Item("description", style="custom")],
                        Group(Item("SubLoadArea", show_label=False)),
                        Group(Item("ConformLoadSchedules", show_label=False,
                                   height=120),
@@ -226,6 +227,19 @@ class ConformLoadGroup(LoadGroup):
 #        """
 #        super(ConformLoadGroup, self).__init__(sub_load_area, **traits)
 
+
+    def _EnergyConsumers_changed(self, old, new):
+        for old_consumer in old:
+            old_consumer.LoadGroup = None
+        for new_consumer in new:
+            new_consumer.LoadGroup = self
+
+    def _EnergyConsumers_items_changed(self, event):
+        for removed_consumer in event.removed:
+            removed_consumer.LoadGroup = None
+        for added_consumer in event.added:
+            added_consumer.LoadGroup = self
+
 #------------------------------------------------------------------------------
 #  "ConformLoad" class:
 #------------------------------------------------------------------------------
@@ -237,6 +251,15 @@ class ConformLoad(EnergyConsumer):
 
     # Consumers may be assigned to a load area.
     LoadGroup = Instance(ConformLoadGroup, desc="load area for consumers")
+
+    _LoadGroups = List(Instance(ConformLoadGroup))
+
+    def _LoadGroup_changed(self, old, new):
+        if (old is not None) and (self in old.EnergyConsumers):
+            old.EnergyConsumers.remove(self)
+
+        if (old is not None) and (self not in new.EnergyConsumers):
+            new.EnergyConsumers.append(self)
 
 #------------------------------------------------------------------------------
 #  "Load" class:
@@ -261,13 +284,16 @@ class Load(ConformLoad):
     #  Views:
     #--------------------------------------------------------------------------
 
-    traits_view = View(VGroup(["name", "description", "customerCount",
+    traits_view = View(VGroup(["name", Item("description", style="custom"),
+                               "customerCount",
                        Group(Item("MemberOf_EquipmentContainer",
                                   show_label=False)),
 #                       Group(Item("Terminals", show_label=False, height=80),
 #                             label="Terminals", show_border=True),
                        ],
                        Group(Item("LoadGroup", style="simple",
+                                  editor=InstanceEditor(name="_LoadGroups",
+                                                        editable=True),
                                   show_label=False))),
                        id="CIM13.LoadModel.Load",
                        title="Load", resizable=True,

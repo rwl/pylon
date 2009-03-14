@@ -26,10 +26,10 @@ from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Instance, Bool, Range, Enum
 
 from enthought.traits.ui.api \
-    import View, Group, Item, VGroup, HGroup
+    import View, Group, Item, VGroup, HGroup, InstanceEditor
 
 from CIM13.Core \
-    import Equipment, Curve
+    import Equipment, Curve, RegularIntervalSchedule
 
 #------------------------------------------------------------------------------
 #  "GeneratingUnit" class:
@@ -146,7 +146,7 @@ class GeneratingUnit(Equipment):
     # considered greater than this value regardless of the current operating
     # point.
     maximumAllowableSpinningReserve = Float(desc="maximum allowable spinning "
-        "reserve")
+        "reserve", label="Max Allowable Reserve")
 
     # The planned unused capacity (spinning reserve) which can be used to
     # support emergency load
@@ -159,6 +159,37 @@ class GeneratingUnit(Equipment):
     # Minimum time interval between unit shutdown and startup
     minimumOffTime = Float(desc="minimum time interval between unit shutdown "
         "and startup")
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(VGroup(["name", Item("description", style="custom"),
+                               "efficiency", "startupCost", "variableCost",
+                               "startupTime", "minimumOffTime",
+                        Group(["initialP", "ratedGrossMaxP", "ratedGrossMinP",
+                               "maxOperatingP", "minOperatingP",
+                               "maxEconomicP", "minEconomicP",
+                               "ratedNetMaxP"],
+                            label="Active Power", show_border=True),
+                        Group(["maximumAllowableSpinningReserve",
+                               "allocSpinResP"],
+                              label="Reserve", show_border=True),
+                        Group(["raiseRampRate", "lowerRampRate"],
+                              label="Ramp rate", show_border=True),
+#                       Group(Item("MemberOf_EquipmentContainer",
+#                                  show_label=False)),
+                       Group(Item("GenUnitOpCostCurves", show_label=False,
+                                  height=80),
+                             label="GenUnitOpCostCurves", show_border=True),
+                       ],
+                       Group(Item("GenUnitOpSchedule", style="simple",
+#                            editor=InstanceEditor(name="_GenUnitOpSchedules",
+#                                                  editable=True),
+                            show_label=False))),
+                       id="CIM13.Generation.Production.GeneratingUnit",
+                       title="GeneratingUnit", resizable=True,
+                       buttons=["Help", "OK", "Cancel"])
 
 #------------------------------------------------------------------------------
 #  "GrossToNetActivePowerCurve" class:
@@ -181,9 +212,58 @@ class GrossToNetActivePowerCurve(Curve):
     GeneratingUnit = Instance(GeneratingUnit, desc="a generating unit may "
         "have a gross active power to net active power curve")
 
+#------------------------------------------------------------------------------
+#  "GenUnitOpCostCurve" class:
+#------------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    unit = GeneratingUnit()
-    unit.configure_traits()
+class GenUnitOpCostCurve(Curve):
+    """ Relationship between unit operating cost (Y-axis) and unit output
+        active power (X-axis). The operating cost curve for thermal units is
+        derived from heat input and fuel costs. The operating cost curve for
+        hydro units is derived from water flow rates and equivalent water
+        costs.
+    """
+
+    # Flag is set to true when output is expressed in net active power.
+    isNetGrossP = Bool
+
+    # A generating unit may have one or more cost curves, depending upon fuel
+    # mixture and fuel cost.
+    GeneratingUnit = Instance(GeneratingUnit, desc="parent unit")
+
+#------------------------------------------------------------------------------
+#  "GenUnitOpSchedule" class:
+#------------------------------------------------------------------------------
+
+class GenUnitOpSchedule(RegularIntervalSchedule):
+    """ The generating unit's Operator-approved current operating schedule
+        (or plan), typically produced with the aid of unit commitment type
+        analyses. The X-axis represents absolute time. The Y1-axis represents
+        the status (0=off-line and unavailable: 1=available: 2=must run: 3=must
+        run at fixed power value: etc.). The Y2-axis represents the must run
+        fixed power value where required.
+    """
+
+    # A generating unit may have an operating schedule, indicating the planned
+    # operation of the unit.
+    GeneratingUnit = Instance(GeneratingUnit, desc="parent unit")
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(VGroup(["name", Item("description", style="custom"),
+                               "startTime",
+                               "value1Multiplier", "value1Unit",
+                               "value2Multiplier", "value2Unit",
+                               "timeStep", "endTime"],
+                       Group(Item("TimePoints", show_label=False,
+                                  height=100),
+                             label="Time Points", show_border=True),
+                       Item("GeneratingUnit", show_label=False)),
+                       id="CIM13.Generation.Production.GenUnitOpSchedule",
+                       title="Generating Unit Operating Schedule",
+                       resizable=True,
+                       buttons=["Help", "OK", "Cancel"])
 
 # EOF -------------------------------------------------------------------------

@@ -10,6 +10,9 @@ from CIM13.Core import Terminal, RegularTimePoint
 from CIM13.LoadModel \
     import Load, ConformLoadGroup, ConformLoadSchedule, SubLoadArea, LoadArea
 
+from CIM13.Generation.Production \
+    import GeneratingUnit, GenUnitOpCostCurve, GenUnitOpSchedule
+
 
 class Test(unittest.TestCase):
 
@@ -38,7 +41,17 @@ class Test(unittest.TestCase):
         # Add the load to the load group's list of energy consumers.
         conform_load_group.EnergyConsumers.append(load)
 
-        load.configure_traits()
+#        load.configure_traits()
+
+
+    def test_generation(self):
+        """ Test creation of generation.
+        """
+        curve = GenUnitOpCostCurve()
+        schedule = GenUnitOpSchedule()
+        unit = GeneratingUnit(GenUnitOpCostCurves=[curve],
+                              GenUnitOpSchedule=schedule)
+        unit.configure_traits()
 
 
 if __name__ == "__main__":

@@ -28,6 +28,9 @@ from enthought.traits.api import \
     HasTraits, Str, Int, Float, List, Trait, Instance, Bool, Range, \
     Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
 
+from enthought.traits.ui.api \
+    import View, Group, Item, VGroup, HGroup, InstanceEditor
+
 from CIM13 import Root
 
 from CIM13.Domain \
@@ -163,6 +166,16 @@ class RegularTimePoint(Root):
 
     # A RegularTimePoint belongs to a RegularIntervalSchedule.
     IntervalSchedule = Instance("RegularIntervalSchedule")#, allow_none=False)
+
+    #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = View(["sequenceNumber", "value1", "value2",
+                        "IntervalSchedule"],
+                       id="CIM13.Core.RegularTimePoint",
+                       title="Time Point", resizable=True,
+                       buttons=["Help", "OK", "Cancel"])
 
     #--------------------------------------------------------------------------
     #  "object" interface:
