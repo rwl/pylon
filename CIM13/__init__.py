@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-from enthought.traits.api import HasTraits, Str
+from enthought.traits.api import HasTraits, Instance, Str
 
 class Root(HasTraits):
 
@@ -27,3 +27,5 @@ class Root(HasTraits):
 class Model(HasTraits):
 
     Contains = Instance(Root)
+
+# EOF -------------------------------------------------------------------------

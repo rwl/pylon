@@ -28,17 +28,20 @@ from enthought.traits.api import \
     HasTraits, Str, Int, Float, List, Trait, Instance, Bool, Range, \
     Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
 
-from iec61850 \
-    import BaseElement, LNodeContainer, SubEquipmentContainer
+from CIM13 import Root
 
-from iec61970.Domain \
+from CIM13.Domain \
     import Seconds, AbsoluteDateTime, UnitSymbol, UnitMultiplier
+
+
+CurveStyle = Enum("straightLineYValues", "rampYValue", "constantYValue",
+    "formula")
 
 #------------------------------------------------------------------------------
 #  "IdentifiedObject" class:
 #------------------------------------------------------------------------------
 
-class IdentifiedObject(BaseElement):
+class IdentifiedObject(Root):
     """ This is a root class to provide common naming attributes for all
         classes needing naming attributes.
     """
@@ -64,7 +67,7 @@ class Terminal(IdentifiedObject):
 
     # ConductingEquipment has 1 or 2 terminals that may be connected to other
     # ConductingEquipment terminals via ConnectivityNodes
-    ConductingEquipment = Instance(HasTraits,#"iec61970.core.ConductngEquipment",
+    ConductingEquipment = Instance(HasTraits,#"CIM13.core.ConductngEquipment",
         allow_none=False)
 
     #--------------------------------------------------------------------------
@@ -81,7 +84,7 @@ class Terminal(IdentifiedObject):
 #  "PowerSystemResource" class:
 #------------------------------------------------------------------------------
 
-class PowerSystemResource(IdentifiedObject):#, LNodeContainer):
+class PowerSystemResource(IdentifiedObject):
     """ A power system resource can be an item of equipment such as a Switch,
         an EquipmentContainer containing many individual items of equipment
         such as a Substation, or an organisational entity such as Company or
@@ -108,7 +111,7 @@ class Equipment(PowerSystemResource):
 #  "ConductingEquipment" class:
 #------------------------------------------------------------------------------
 
-class ConductingEquipment(Equipment):#, SubEquipmentContainer):
+class ConductingEquipment(Equipment):
     """ The parts of the power system that are designed to carry current or
         that are conductively connected therewith. ConductingEquipment is
         contained within an EquipmentContainer that may be a Substation, or
@@ -137,7 +140,7 @@ class ConductingEquipment(Equipment):#, SubEquipmentContainer):
 #  "RegularTimePoint" class:
 #------------------------------------------------------------------------------
 
-class RegularTimePoint(HasTraits):
+class RegularTimePoint(Root):
     """ TimePoints for a schedule where the time between the points is
         constant.
     """
@@ -225,5 +228,62 @@ class RegularIntervalSchedule(BasicIntervalSchedule):
         """ Trait initialiser.
         """
         return [RegularTimePoint(IntervalSchedule=self)]
+
+#------------------------------------------------------------------------------
+#  "Curve" class:
+#------------------------------------------------------------------------------
+
+class Curve(IdentifiedObject):
+    """ Relationship between an independent variable (X-axis) and one or
+        two dependent variables (Y1-axis and Y2-axis). Curves can also serve
+        as schedules.
+    """
+
+    # The point data values that define a curve
+    CurveScheduleDatas = List(Instance("CurveScheduleData"),
+        desc="point data values that define a curve")
+
+    # The style or shape of the curve.
+    curveStyle = CurveStyle
+
+    # Multiplier for X-axis.
+    xMultiplier = UnitMultiplier
+
+    # The X-axis units of measure.
+    xUnit = UnitSymbol
+
+    # Multiplier for Y1-axis.
+    y1Multiplier = UnitMultiplier
+
+    # The Y1-axis units of measure.
+    y1Unit = UnitSymbol
+
+    # Multiplier for Y1-axis.
+    y1Multiplier = UnitMultiplier
+
+    # The Y1-axis units of measure.
+    y1Unit = UnitSymbol
+
+#------------------------------------------------------------------------------
+#  "CurveData" class:
+#------------------------------------------------------------------------------
+
+class CurveData(Root):
+    """ Data point values for defining a curve or schedule.
+    """
+
+    # The point data values that define a curve.
+    CurveSchedule = Instance(Curve)
+
+    # The data value of the X-axis variable,  depending on the X-axis units
+    xvalue = Float(desc="data value of the X-axis variable")
+
+    # The data value of the  first Y-axis variable, depending on the Y-axis
+    # units.
+    y1value = Float(desc="data value of the  first Y-axis variable")
+
+    # The data value of the second Y-axis variable (if present), depending on
+    # the Y-axis units
+    y2value = Float(desc="data value of the second Y-axis variable")
 
 # EOF -------------------------------------------------------------------------

@@ -32,13 +32,13 @@ from enthought.traits.api import \
 from enthought.traits.ui.api \
     import View, Group, Item, VGroup, HGroup
 
-from iec61970.Wires \
+from CIM13.Wires \
     import EnergyConsumer
 
-from iec61970.Core \
+from CIM13.Core \
     import IdentifiedObject, RegularIntervalSchedule
 
-from iec61970.Domain \
+from CIM13.Domain \
     import CurrentFlow
 
 #------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ class ConformLoadSchedule(SeasonDayTypeSchedule):
                                   height=100),
                              label="Time Points", show_border=True),
                        Item("ConformLoadGroup", show_label=False)),
-                       id="iec61970.LoadModel.ConformLoadSchedule",
+                       id="CIM13.LoadModel.ConformLoadSchedule",
                        title="Conform Load Schedule", resizable=True,
                        buttons=["Help", "OK", "Cancel"])
 
@@ -213,7 +213,7 @@ class ConformLoadGroup(LoadGroup):
                        Group(Item("EnergyConsumers", show_label=False,
                                   height=90),
                              label="Energy Consumers", show_border=True)),
-                       id="iec61970.LoadModel.ConformLoadGroup",
+                       id="CIM13.LoadModel.ConformLoadGroup",
                        title="Conform Load Group", resizable=True,
                        buttons=["Help", "OK", "Cancel"])
 
@@ -269,7 +269,7 @@ class Load(ConformLoad):
                        ],
                        Group(Item("LoadGroup", style="simple",
                                   show_label=False))),
-                       id="iec61970.LoadModel.Load",
+                       id="CIM13.LoadModel.Load",
                        title="Load", resizable=True,
                        buttons=["Help", "OK", "Cancel"])
 

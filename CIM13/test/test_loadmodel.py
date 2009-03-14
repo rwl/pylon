@@ -5,9 +5,9 @@ Created on 13 Mar 2009
 '''
 import unittest
 
-from iec61970.Core import Terminal, RegularTimePoint
+from CIM13.Core import Terminal, RegularTimePoint
 
-from iec61970.LoadModel \
+from CIM13.LoadModel \
     import Load, ConformLoadGroup, ConformLoadSchedule, SubLoadArea, LoadArea
 
 
