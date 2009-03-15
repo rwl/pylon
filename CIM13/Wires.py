@@ -15,11 +15,11 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" This module is responsible for modeling the energy consumers and the system
-    load as curves and associated curve data. Special circumstances that may
-    affect the load, such as seasons and daytypes, are also included here.
+""" An extension to the Core and Topology package that models information on
+    the electrical characteristics of Transmission and Distribution networks.
 
-    This information is used by Load Forecasting and Load Management.
+    This package is used by network applications such as State Estimation,
+    Load Flow and Optimal Power Flow.
 """
 
 #------------------------------------------------------------------------------
@@ -30,11 +30,13 @@ from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Bool, Range, \
     Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
 
-from CIM13.Core import Curve, ConductingEquipment
+from CIM13.Core import Curve, Equipment, ConductingEquipment, PhaseCode
 
 SynchronousMachineOperatingMode = Enum("generator", "condenser")
 
 SynchronousMachineType = Enum("generatorcondenser", "condenser", "generator")
+
+ConnectionType = Enum("D", "Z", "Y")
 
 #------------------------------------------------------------------------------
 #  "EnergyConsumer" class:
@@ -172,35 +174,35 @@ class Conductor(ConductingEquipment):
     """
 
     # Positive sequence series resistance of the entire line section.
-    r = Float
+    r = Float(desc="positive sequence series resistance")
 
     # Positive sequence series reactance of the entire line section.
-    x = Float
+    x = Float(desc="positive sequence series reactance")
 
     # Positive sequence shunt (charging) susceptance, uniformly distributed,
     # of the entire line section.
-    bch = Float
+    bch = Float(desc="positive sequence shunt (charging) susceptance")
 
     # Positive sequence shunt (charging) conductance, uniformly distributed,
     # of the entire line section.
-    gch = Float
+    gch = Float(desc="positive sequence shunt (charging) conductance")
 
     # Zero sequence series resistance of the entire line section.
-    r0 = Float
+    r0 = Float(desc="zero sequence series resistance")
 
     # Zero sequence series reactance of the entire line section.
-    x0 = Float
+    x0 = Float(desc="zero sequence series reactance")
 
     # Zero sequence shunt (charging) susceptance, uniformly distributed, of
     # the entire line section.
-    b0ch = Float
+    b0ch = Float(desc="zero sequence shunt (charging) susceptance")
 
     # Zero sequence shunt (charging) conductance, uniformly distributed, of
     # the entire line section.
-    g0ch = Float
+    g0ch = Float(desc="zero sequence shunt (charging) conductance")
 
     # Segment length for calculating line section capabilities.
-    length = Float
+    length = Float(desc="segment length")
 
 #------------------------------------------------------------------------------
 #  "ACLineSegment" class:
@@ -239,5 +241,83 @@ class BusbarSection(Connector):
     """
 
     pass
+
+#------------------------------------------------------------------------------
+#  "PowerTransformer" class:
+#------------------------------------------------------------------------------
+
+class PowerTransformer(Equipment):
+    """ An electrical device consisting of two or more coupled windings, with
+        or without a magnetic core, for introducing mutual coupling between
+        electric circuits. Transformers can be used to control voltage and
+        phase shift (active power flow).
+    """
+
+    # A transformer has windings.
+    Contains_TransformerWindings = List(Instance("TransformerWinding"))
+
+    # The reference voltage at which the magnetizing saturation measurements
+    # were made.
+#    magBaseU = Float
+
+    # Describes the phases carried by a power transformer.
+    phases = PhaseCode
+
+#------------------------------------------------------------------------------
+#  "PowerTransformer" class:
+#------------------------------------------------------------------------------
+
+class TransformerWinding(ConductingEquipment):
+    """ A winding is associated with each defined terminal of a transformer
+        (or phase shifter).
+    """
+
+    # A transformer winding may have tap changers, separately for voltage and
+    # phase angle.  If a TransformerWinding does not have an associated
+    # TapChanger, the winding is assumed to be fixed tap.
+#    TapChangers = List(Instance(TapChanger))
+
+    # A transformer has windings
+    MemeberOf_PowerTransformer = Instance(PowerTransformer)
+
+    # The rated voltage (phase-to-phase) of the winding, usually the same as
+    # the neutral voltage.
+    ratedU = Float(desc="rated voltage (phase-to-phase) of the winding")
+
+    connectionType = ConnectionType
+
+    # Positive sequence series resistance of the winding.
+    r = Float(desc="positive sequence series resistance")
+
+    # Positive sequence series reactance of the winding.
+    x = Float(desc="positive sequence series reactance")
+
+    # Magnetizing branch susceptance (B mag).
+    b = Float(desc="magnetizing branch susceptance")
+
+    # Magnetizing branch conductance (G mag).
+    g = Float(desc="magnetizing branch conductance")
+
+    # Zero sequence series resistance of the winding.
+    r0 = Float(desc="zero sequence series resistance")
+
+    # Zero sequence series reactance of the winding.
+    x0 = Float(desc="zero sequence series reactance")
+
+    # Zero sequence magnetizing branch susceptance.
+    b0 = Float(desc="zero sequence magnetizing branch susceptance")
+
+    # Zero sequence magnetizing branch conductance.
+    g0 = Float(desc="zero sequence magnetizing branch conductance")
+
+    # The normal apparent power rating for the winding.
+    ratedS = Float(desc="normal apparent power rating")
+
+    # Apparent power that the winding can carry for a short period of time.
+    shortTermS = Float(desc="short term apparent power rating")
+
+    # The apparent power that the winding can carry  under emergency
+    # conditions.
+    emergencyS = Float(desc="normal apparent power rating")
 
 # EOF -------------------------------------------------------------------------

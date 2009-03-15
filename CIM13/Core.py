@@ -24,9 +24,10 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from itertools import count
+
 from enthought.traits.api import \
-    HasTraits, Str, Int, Float, List, Trait, Instance, Bool, Range, \
-    Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
+    HasTraits, Str, Int, Float, List, Instance, Bool, Property, Enum, Tuple
 
 from enthought.traits.ui.api \
     import View, Group, Item, VGroup, HGroup, InstanceEditor
@@ -36,6 +37,8 @@ from CIM13 import Root
 from CIM13.Domain \
     import Seconds, AbsoluteDateTime, UnitSymbol, UnitMultiplier
 
+PhaseCode = Enum("ABCN", "ABC", "ABN", "ACN", "BCN", "AB", "AC", "BC",
+                  "AN", "BN", "CN", "A", "B", "C", "N",)
 
 CurveStyle = Enum("straightLineYValues", "rampYValue", "constantYValue",
     "formula")
@@ -51,12 +54,51 @@ class IdentifiedObject(Root):
 
     # The name is a free text human readable name of the object. It may be non
     # unique and may not correlate to a naming hierarchy.
-    name = Str(desc="a free text human readable name of the object")
+#    name = Str(desc="a free text human readable name of the object")
+    name = Property(Str)
+    _name = None
 
     # The description is a free human readable text describing or naming the
     # object. It may be non unique and may not correlate to a naming hierarchy.
     description = Str(desc="a free human readable text describing or naming " \
         "the object")
+
+    #--------------------------------------------------------------------------
+    #  Guarantee unique name:
+    #--------------------------------------------------------------------------
+
+    _name_ids = count(0)
+
+    def _name_default(self):
+        """ Trait initialiser.
+        """
+        return self._generate_name()
+
+
+    def _get_name(self):
+        """ Returns the name, which is generated if it has not been already.
+        """
+        if self._name is None:
+            self._name = self._generate_name()
+        return self._name
+
+
+    def _set_name(self, newname):
+        """ Change name to newname. Uniqueness is not guaranteed anymore.
+        """
+        self._name = newname
+
+
+    def _generate_name(self):
+        """ Return a unique name for this object.
+        """
+        return "%s-%i" % (self.__class__.__name__,  self._name_ids.next())
+
+
+    def __repr__(self):
+        """ The default representation of a named object is its name.
+        """
+        return "<%s '%s'>" % (self.__class__.__name__, self.name)
 
 #------------------------------------------------------------------------------
 #  "Terminal" class:
@@ -122,22 +164,19 @@ class ConductingEquipment(Equipment):
     """
 
     # Describes the phases carried by a conducting equipment.
-#    phases = Enum("ABCN", "ABC", "ABN", "ACN", "BCN", "AB", "AC", "BC",
-#                  "AN", "BN", "CN", "A", "B", "C", "N",
-#                  desc="the phases carried by a conducting equipment")
+    phases = PhaseCode
 
     # ConductingEquipment has 1 or 2 terminals that may be connected to other
     # ConductingEquipment terminals via ConnectivityNodes
-#    Terminals = List(Instance(Terminal), maxlen=2,# minlen=1,
-#        desc="1 or 2 terminals that may be connected to other "
-#        "ConductingEquipment terminals via ConnectivityNodes")
-#
-#
-#    def _Terminals_default(self):
-#        """ Trait initialiser.
-#        """
-#        return [Terminal(conducting_equipment=self),
-#                Terminal(conducting_equipment=self)]
+    Terminals = List(Instance(Terminal), maxlen=2,# minlen=1,
+        desc="1 or 2 terminals that may be connected to other "
+        "ConductingEquipment terminals via ConnectivityNodes")
+
+    def _Terminals_default(self):
+        """ Trait initialiser.
+        """
+        return [Terminal(conducting_equipment=self),
+                Terminal(conducting_equipment=self)]
 
 #------------------------------------------------------------------------------
 #  "RegularTimePoint" class:

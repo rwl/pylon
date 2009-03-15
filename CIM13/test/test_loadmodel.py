@@ -53,6 +53,8 @@ class Test(unittest.TestCase):
                               GenUnitOpSchedule=schedule)
         unit.configure_traits()
 
+        print unit.name
+
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.test_load_model']
