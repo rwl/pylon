@@ -22,24 +22,202 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from rdflib.Graph import ConjunctiveGraph
+from enthought.traits.api import Str, Int, Float, Bool, Instance, List
 
-from rdflib.Namespace import Namespace
+#from rdflib.Graph import ConjunctiveGraph
+#from rdflib.Namespace import Namespace
+#from rdflib import RDF
 
+from CIM13 import Model
+from CIM13.Core import Terminal
+from CIM13.LoadModel import Load
 from CIM13.Generation.Production import GeneratingUnit
 
-#class iec61970(HasTraits):
-#    core = Instance(Core)
-#    domain = Instance(Domain)
-#    equivalents = Instance(Equivalents)
-#    generation = Instance(Generation)
-#    load_model = Instance(LoadModel)
-#    meas = Instance(Meas)
-#    outage = Instance(Outage)
-#    protection = Instance(Protection)
-#    scada = Instance(SCADA)
-#    topology = Instance(Topology)
-#    wires = Instance(Wires)
+import rdfxml
+
+ns_cim = rdfxml.Namespace("http://iec.ch/TC57/2009/CIM-schema-cim14#")
+
+#------------------------------------------------------------------------------
+#  Split fragment from an URI:
+#------------------------------------------------------------------------------
+
+def split_uri(uri):
+    """ Splits the fragment from an URI and returns a tuple.
+
+        For example:
+            <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>
+        returns:
+            ('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'type')
+
+            http://www.github.com/rwl/pylon
+        returns:
+            (http://www.github.com/rwl/pylon, "")
+    """
+    if (uri[0] == "<") and (uri[-1] == ">"):
+        uri = uri[1:-1]
+
+    head, sep, tail = uri.rpartition("#")
+    if head and sep:
+        print "PARTIONING:", (head + sep, tail)
+        return (head + sep, tail)
+    else:
+        print "NOT PARTITIONING:", (tail, "")
+        return (tail, "")
+
+#------------------------------------------------------------------------------
+#  "CIMAttributeSink" class:
+#------------------------------------------------------------------------------
+
+class CIMAttributeSink:
+    """ Uses triples from the RDF parser to populate a dictionary that maps
+        rdf:IDs to objects.  The objects are instantiated and their attributes
+        are set, but any references are not.  This is done with a second pass
+        using a CIMReferenceSink that is passed this sink.
+    """
+
+    def __init__(self):
+        self.uri_object_map = {}
+
+    def triple(self, sub, pred, obj):
+        """ Handles triples from the RDF parser.
+        """
+        print "%s %s %s" % (sub, pred, obj)
+
+        ns_sub, frag_sub = split_uri(sub)
+        ns_pred, frag_pred = split_uri(pred)
+        ns_obj, frag_obj = split_uri(obj)
+
+        # Instantiate an object if the preicate is an RDF type and the object
+        # is in the CIM namespace.
+        #
+        # Prevent re-instantiation of objects on second pass.
+        if (ns_pred == rdfxml.rdf) and (frag_pred == "type") and \
+            (ns_obj == ns_cim) and \
+            (frag_sub not in self.uri_object_map.keys()):
+
+            cls_name = frag_obj
+#            print "CLASS:", cls_name
+            uri = frag_sub
+#            print "URI:", uri
+
+            try:
+                klass = eval( cls_name )
+            except NameError:
+                print "FAILED TO IMPORT:", cls_name
+                return
+
+            element = klass(URI=uri)
+            self.uri_object_map[uri] = element
+
+        # Set object attributes.
+        elif ns_pred == ns_cim:
+            uri = frag_sub
+            value = ns_obj
+
+            # Split the class name and the attribute name.
+            class_name, attr_name = frag_pred.rsplit(".", 1)
+
+            try:
+                obj = self.uri_object_map[uri]
+            except KeyError:
+                print "Object not found:", uri
+                return
+
+            trait = obj.trait( attr_name )
+            if trait is None:
+                print "ATTRIBUTE NOT FOUND:", class_name, attr_name
+                return
+
+            # Strip the double quotes that rdfxml adds to literals.
+            value = value.strip('"')
+
+            # Stitch together references later.
+            if trait.is_trait_type( Instance ):
+                return
+
+            elif trait.is_trait_type( List ):
+                # One to many and many to many references (List(Instance)).
+                if trait.inner_traits[0].is_trait_type( Instance ):
+                    return
+                else:
+                    value = list( frag_obj )
+
+            if trait.is_trait_type( Int ):
+                print "INT:", value
+                value = int( value )
+
+            elif trait.is_trait_type( Float ):
+                print "FLOAT:", value, type(value)
+                value = float( value )
+
+            elif trait.is_trait_type( Bool ):
+                print "BOOL:", value
+                value = bool( value )
+
+            else:
+                value = value
+
+            setattr(obj, attr_name, value)
+
+#------------------------------------------------------------------------------
+#  "CIMReferenceSink" class:
+#------------------------------------------------------------------------------
+
+class CIMReferenceSink:
+    """ Handles setting the references for a CIM.
+    """
+
+    def __init__(self, attr_sink):
+        assert isinstance(attr_sink, CIMAttributeSink)
+
+        self.attr_sink = attr_sink
+        self.model = Model()
+
+    def triple(self, sub, pred, obj):
+        """ Handles triples from the RDF parser.
+        """
+        ns_pred, frag_pred = split_uri(pred)
+
+        # Set object references.
+        if ns_pred == ns_cim:
+            ns_sub, uri_subject = split_uri(sub)
+
+            # Try to get the object with the reference being set.
+            try:
+                sub_obj = self.attr_sink.uri_object_map[uri_subject]
+            except KeyError:
+                print "SUBJECT OBJECT NOT FOUND:", uri_subject
+                return
+
+            # Split the predicate fragment into class name and attribute name.
+            class_name, attr_name = frag_pred.rsplit(".", 1)
+            # Assert that the object from the dictionary has the same type as
+            # that specified in the predicate.
+#            assert sub_obj.__class__.__name__ == class_name
+
+            # Get the attribute object so the type can be determined.
+            trait = sub_obj.trait( attr_name )
+            if trait is None:
+                print "TRAIT NOT FOUND:", class_name, attr_name
+                return
+
+            # Set reference traits.
+            if trait.is_trait_type( Instance ):
+                ns_obj, obj_uri = split_uri(obj)
+                # Try to get the object being referenced.
+                try:
+                    obj_obj = self.attr_sink.uri_object_map[obj_uri]
+                except KeyError:
+                    print "OBJECT OBJECT NOT FOUND:", obj
+                    return
+
+                setattr(sub_obj, attr_name, obj_obj)
+
+            # One to many and many to many references (List(Instance)).
+            elif trait.is_trait_type( List ) and \
+                trait.inner_traits[0].is_trait_type( Instance ):
+
+                raise NotImplementedError
 
 #------------------------------------------------------------------------------
 #  "CIMReader" class:
@@ -62,43 +240,57 @@ class CIMReader:
 
 
     def parse_file(self, filename=None):
-        """ Parses an RDF?XML file and returns a model containing CIM elements.
+        """ Parses an RDF/XML file and returns a model containing CIM elements.
         """
         if filename is None:
             filename = self.filename
         else:
             self.filename = filename
+
+        # Instantiate CIM objects and set their attributes.
+        attr_sink = CIMAttributeSink()
+        rdfxml.parseURI(filename, sink=attr_sink)
+
+        # Second pass to set references.
+        ref_sink = CIMReferenceSink(attr_sink)
+        rdfxml.parseURI(filename, sink=ref_sink)
+
+#        for obj in sink._uri_object_map.values():
+#            obj.configure_traits()
+
 #
 #        if isinstance(file_or_filename, basestring):
 #            file = open(file_or_filename, "wb")
 #        else:
 #            file = file_or_filename
 
-        ns_cim = Namespace("http://iec.ch/TC57/2009/CIM-schema-cim14#")
-        ns_rdf = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-        ns_ngt = Namespace("http://com.ngtuk/2005/NGT-schema-cim11#")
+#        ns_cim = Namespace("http://iec.ch/TC57/2009/CIM-schema-cim14#")
+#        ns_ngt = Namespace("http://com.ngtuk/2005/NGT-schema-cim11#")
+#
+#        store = ConjunctiveGraph()
+#
+#        context = store.parse(filename)
+#        print context.identifier
+#        print dir(context)
 
-        store = ConjunctiveGraph()
-
-        context = store.parse(filename)
-        print context.identifier
-        print dir(context)
-
-        for subject, predicate, object in store:
-            print "SUBJECT:", subject
-            print "PREDICATE:", predicate
-            print "OBJECT:", object
+#        for subject, predicate, object in store:
+#            print "SUBJECT:", subject
+#            print "PREDICATE:", predicate
+#            print "OBJECT:", object
 
 #        for s, o in store.subject_objects(ns_rdf["type"]):
 #            print "NAME:", o
 
-        for s in store.subjects(ns_rdf["type"], ns_cim["GeneratingUnit"]):
-            print "SUBJECT:", type(s), s
-            unit = GeneratingUnit()
-
-            for p, o in store.predicate_objects(s):
-                print "PREDICATE:", type(p), p
-                print "OBJECT:", type(o), o
+#        for s in store.subjects(RDF.type, ns_cim["GeneratingUnit"]):
+#            print "SUBJECT:", type(s), s
+#            unit = GeneratingUnit()
+#
+#            for p, o in store.predicate_objects(s):
+#                print "PREDICATE:", type(p), p
+#                print "OBJECT:", type(o), o
+#
+#            for obj in store.objects(s, ns_cim["GeneratingUnit.nominalP"]):
+#                print "OBJ:", obj
 
 
 if __name__ == "__main__":
