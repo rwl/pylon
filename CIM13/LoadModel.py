@@ -38,9 +38,6 @@ from CIM13.Wires \
 from CIM13.Core \
     import IdentifiedObject, RegularIntervalSchedule
 
-from CIM13.Domain \
-    import CurrentFlow
-
 #------------------------------------------------------------------------------
 #  "EnergyArea" class:
 #------------------------------------------------------------------------------
@@ -73,6 +70,20 @@ class LoadArea(EnergyArea):
 #        self.SubLoadAreas = sub_load_areas
 #        super(LoadArea, self).__init__(**traits)
 
+
+    @on_trait_change("SubLoadAreas,SubLoadAreas_items")
+    def _on_subload_areas(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if isinstance(new, TraitListEvent):
+            old = new.removed
+            new = new.added
+
+        for each_old in old:
+            each_old.LoadArea = None
+        for each_new in new:
+            each_new.LoadArea = self
+
 #------------------------------------------------------------------------------
 #  "SubLoadArea" class:
 #------------------------------------------------------------------------------
@@ -93,11 +104,36 @@ class SubLoadArea(EnergyArea):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, load_area, **traits):
-        """ Initialises a new SubLoadArea instance.
+#    def __init__(self, load_area, **traits):
+#        """ Initialises a new SubLoadArea instance.
+#        """
+#        self.LoadArea = load_area
+#        super(SubLoadArea, self).__init__(**traits)
+
+
+    @on_trait_change("LoadArea")
+    def _on_load_area(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
         """
-        self.LoadArea = load_area
-        super(SubLoadArea, self).__init__(**traits)
+        if (old is not None) and (self in old.SubLoadAreas):
+            old.SubLoadAreas.remove(self)
+
+        if (old is not None) and (self not in new.SubLoadAreas):
+            new.SubLoadAreas.append(self)
+
+
+    @on_trait_change("LoadGroups,LoadGroups_items")
+    def _on_load_groups(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if isinstance(new, TraitListEvent):
+            old = new.removed
+            new = new.added
+
+        for each_old in old:
+            each_old.SubLoadArea = None
+        for each_new in new:
+            each_new.SubLoadArea = self
 
 #------------------------------------------------------------------------------
 #  "SeasonDayTypeSchedule" class:
@@ -164,6 +200,17 @@ class ConformLoadSchedule(SeasonDayTypeSchedule):
         self.value2Unit = "VAr"
         super(ConformLoadSchedule, self).__init__(**traits)
 
+
+    @on_trait_change("ConformLoadGroup")
+    def _on_conform_load_group(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if (old is not None) and (self in old.ConformLoadSchedules):
+            old.ConformLoadSchedules.remove(self)
+
+        if (old is not None) and (self not in new.ConformLoadSchedules):
+            new.ConformLoadSchedules.append(self)
+
 #------------------------------------------------------------------------------
 #  "LoadGroup" class:
 #------------------------------------------------------------------------------
@@ -186,6 +233,17 @@ class LoadGroup(IdentifiedObject):
 #        """
 #        self.SubLoadArea = sub_load_area
 #        super(LoadGroup, self).__init__(**traits)
+
+
+    @on_trait_change("SubLoadArea")
+    def _on_subload_area(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if (old is not None) and (self in old.LoadGroups):
+            old.LoadGroups.remove(self)
+
+        if (old is not None) and (self not in new.LoadGroups):
+            new.LoadGroups.append(self)
 
 #------------------------------------------------------------------------------
 #  "ConformLoadGroup" class:
@@ -228,17 +286,32 @@ class ConformLoadGroup(LoadGroup):
 #        super(ConformLoadGroup, self).__init__(sub_load_area, **traits)
 
 
-    def _EnergyConsumers_changed(self, old, new):
-        for old_consumer in old:
-            old_consumer.LoadGroup = None
-        for new_consumer in new:
-            new_consumer.LoadGroup = self
+    @on_trait_change("EnergyConsumers,EnergyConsumers_items")
+    def _on_energy_consumers(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if isinstance(new, TraitListEvent):
+            old = new.removed
+            new = new.added
 
-    def _EnergyConsumers_items_changed(self, event):
-        for removed_consumer in event.removed:
-            removed_consumer.LoadGroup = None
-        for added_consumer in event.added:
-            added_consumer.LoadGroup = self
+        for each_old in old:
+            each_old.LoadGroup = None
+        for each_new in new:
+            each_new.LoadGroup = self
+
+
+    @on_trait_change("ConformLoadSchedules,ConformLoadSchedules_items")
+    def _on_conform_load_schedules(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if isinstance(new, TraitListEvent):
+            old = new.removed
+            new = new.added
+
+        for each_old in old:
+            each_old.ConformLoadGroup = None
+        for each_new in new:
+            each_new.ConformLoadGroup = self
 
 #------------------------------------------------------------------------------
 #  "ConformLoad" class:
@@ -254,7 +327,11 @@ class ConformLoad(EnergyConsumer):
 
     _LoadGroups = List(Instance(ConformLoadGroup))
 
-    def _LoadGroup_changed(self, old, new):
+
+    @on_trait_change("LoadGroup")
+    def _on_load_group(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
         if (old is not None) and (self in old.EnergyConsumers):
             old.EnergyConsumers.remove(self)
 
@@ -272,7 +349,7 @@ class Load(ConformLoad):
     """
 
     # The rated individual phase current.
-    phaseRatedCurrent = CurrentFlow
+    phaseRatedCurrent = Float(desc="rated individual phase current")
 
     # Permit assignment of loads on a participation factor basis. Given three
     # equivalent loads with factors of 10, 25 and 15, a feeder load of 100 amps
@@ -286,8 +363,8 @@ class Load(ConformLoad):
 
     traits_view = View(VGroup(["name", Item("description", style="custom"),
                                "customerCount",
-                       Group(Item("MemberOf_EquipmentContainer",
-                                  show_label=False)),
+#                       Group(Item("MemberOf_EquipmentContainer",
+#                                  show_label=False)),
 #                       Group(Item("Terminals", show_label=False, height=80),
 #                             label="Terminals", show_border=True),
                        ],

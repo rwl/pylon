@@ -35,7 +35,7 @@ from enthought.traits.ui.api \
 from CIM13 import Root
 
 from CIM13.Domain \
-    import Seconds, AbsoluteDateTime, UnitSymbol, UnitMultiplier
+    import UnitSymbol, UnitMultiplier
 
 PhaseCode = Enum("ABCN", "ABC", "ABN", "ACN", "BCN", "AB", "AC", "BC",
                   "AN", "BN", "CN", "A", "B", "C", "N",)
@@ -112,18 +112,28 @@ class Terminal(IdentifiedObject):
 
     # ConductingEquipment has 1 or 2 terminals that may be connected to other
     # ConductingEquipment terminals via ConnectivityNodes
-    ConductingEquipment = Instance(HasTraits,#"CIM13.core.ConductngEquipment",
+    ConductingEquipment = Instance("CIM13.Core.ConductngEquipment",
         allow_none=False)
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, conducting_equipment, **traits):
-        """ Initialises a new Terminal instance.
+#    def __init__(self, conducting_equipment, **traits):
+#        """ Initialises a new Terminal instance.
+#        """
+#        self.ConductingEquipment = conducting_equipment
+#        super(Terminal, self).__init__(**traits)
+
+    @on_trait_change("ConductingEquipment")
+    def _on_conducting_equipment(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
         """
-        self.ConductingEquipment = conducting_equipment
-        super(Terminal, self).__init__(**traits)
+        if (old is not None) and (self in old.Terminals):
+            old.Terminals.remove(self)
+
+        if (old is not None) and (self not in new.Terminals):
+            new.Terminals.append(self)
 
 #------------------------------------------------------------------------------
 #  "PowerSystemResource" class:
@@ -149,8 +159,8 @@ class Equipment(PowerSystemResource):
     """
 
     # The association is used in the naming hierarchy.
-    MemberOf_EquipmentContainer = Instance(HasTraits,
-        desc="used in the naming hierarchy")
+#    MemberOf_EquipmentContainer = Instance(HasTraits,
+#        desc="used in the naming hierarchy")
 
 #------------------------------------------------------------------------------
 #  "ConductingEquipment" class:
@@ -163,20 +173,42 @@ class ConductingEquipment(Equipment):
         a VoltageLeve or a Bay within a Substation.
     """
 
-    # Describes the phases carried by a conducting equipment.
-    phases = PhaseCode
-
     # ConductingEquipment has 1 or 2 terminals that may be connected to other
     # ConductingEquipment terminals via ConnectivityNodes
     Terminals = List(Instance(Terminal), maxlen=2,# minlen=1,
         desc="1 or 2 terminals that may be connected to other "
         "ConductingEquipment terminals via ConnectivityNodes")
 
-    def _Terminals_default(self):
-        """ Trait initialiser.
+    # Describes the phases carried by a conducting equipment.
+    phases = PhaseCode
+
+#    def _Terminals_default(self):
+#        """ Trait initialiser.
+#        """
+#        return [Terminal(conducting_equipment=self),
+#                Terminal(conducting_equipment=self)]
+
+    @on_trait_change("Terminals,Terminals_items")
+    def _on_terminals(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
         """
-        return [Terminal(conducting_equipment=self),
-                Terminal(conducting_equipment=self)]
+        if isinstance(new, TraitListEvent):
+            old = new.removed
+            new = new.added
+
+        for each_old in old:
+            each_old.ConductingEquipment = None
+        for each_new in new:
+            each_new.ConductingEquipment = self
+
+#    @on_trait_change("Terminals_items")
+#    def OnTerminalsItems(self, event):
+#        """ Handles addition and removal of items.
+#        """
+#        for each_removed in event.removed:
+#            each_removed.ConductingEquipment = None
+#        for each_added in event.added:
+#            each_added.ConductingEquipment = self
 
 #------------------------------------------------------------------------------
 #  "RegularTimePoint" class:
@@ -186,6 +218,9 @@ class RegularTimePoint(Root):
     """ TimePoints for a schedule where the time between the points is
         constant.
     """
+
+    # A RegularTimePoint belongs to a RegularIntervalSchedule.
+    IntervalSchedule = Instance("RegularIntervalSchedule")#, allow_none=False)
 
     # The position of the RegularTimePoint in the sequence. Note that time
     # points don't have to be sequential, i.e. time points may be omitted.
@@ -202,9 +237,6 @@ class RegularTimePoint(Root):
     # The second value at the time. The meaning of the value is defined by the
     # class inhering the RegularIntervalSchedule.
     value2 = Float(desc="second value at the time")
-
-    # A RegularTimePoint belongs to a RegularIntervalSchedule.
-    IntervalSchedule = Instance("RegularIntervalSchedule")#, allow_none=False)
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -226,6 +258,16 @@ class RegularTimePoint(Root):
 #        self.IntervalSchedule = interval_schedule
 #        super(RegularTimePoint, self).__init__(**traits)
 
+    @on_trait_change("IntervalSchedule")
+    def _on_interval_schedule(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if (old is not None) and (self in old.TimePoints):
+            old.TimePoints.remove(self)
+
+        if (old is not None) and (self not in new.TimePoints):
+            new.TimePoints.append(self)
+
 #------------------------------------------------------------------------------
 #  "BasicIntervalSchedule" class:
 #------------------------------------------------------------------------------
@@ -235,7 +277,7 @@ class BasicIntervalSchedule(IdentifiedObject):
     """
 
     # The time for the first time point.
-    startTime = AbsoluteDateTime
+    startTime = Str
 
     # Value1 units of measure.
     value1Unit = UnitSymbol
@@ -257,13 +299,13 @@ class RegularIntervalSchedule(BasicIntervalSchedule):
     """ The schedule has TimePoints where the time between them is constant.
     """
 
-    timeStep = Seconds
-
-    endTime = AbsoluteDateTime
-
     # The point data values that define a curve.
     TimePoints = List(Instance(RegularTimePoint),# minlen=1,
         desc="point data values that define a curve")
+
+    timeStep = Float
+
+    endTime = Str
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -281,6 +323,20 @@ class RegularIntervalSchedule(BasicIntervalSchedule):
         """
         return [RegularTimePoint(IntervalSchedule=self)]
 
+
+    @on_trait_change("TimePoints,TimePoints_items")
+    def _on_time_points(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if isinstance(new, TraitListEvent):
+            old = new.removed
+            new = new.added
+
+        for each_old in old:
+            each_old.IntervalSchedule = None
+        for each_new in new:
+            each_new.IntervalSchedule = self
+
 #------------------------------------------------------------------------------
 #  "Curve" class:
 #------------------------------------------------------------------------------
@@ -292,7 +348,7 @@ class Curve(IdentifiedObject):
     """
 
     # The point data values that define a curve
-    CurveScheduleDatas = List(Instance("CurveScheduleData"),
+    CurveScheduleDatas = List(Instance("CurveData"),
         desc="point data values that define a curve")
 
     # The style or shape of the curve.
@@ -316,6 +372,20 @@ class Curve(IdentifiedObject):
     # The Y1-axis units of measure.
     y1Unit = UnitSymbol
 
+
+    @on_trait_change("CurveScheduleDatas,CurveScheduleDatas_items")
+    def _on_time_points(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if isinstance(new, TraitListEvent):
+            old = new.removed
+            new = new.added
+
+        for each_old in old:
+            each_old.CurveSchedule = None
+        for each_new in new:
+            each_new.CurveSchedule = self
+
 #------------------------------------------------------------------------------
 #  "CurveData" class:
 #------------------------------------------------------------------------------
@@ -337,5 +407,16 @@ class CurveData(Root):
     # The data value of the second Y-axis variable (if present), depending on
     # the Y-axis units
     y2value = Float(desc="data value of the second Y-axis variable")
+
+
+    @on_trait_change("CurveSchedule")
+    def _on_curve_schedule(self, obj, name, old, new):
+        """ Handles the bidirectional relationship.
+        """
+        if (old is not None) and (self in old.CurveScheduleDatas):
+            old.CurveScheduleDatas.remove(self)
+
+        if (old is not None) and (self not in new.CurveScheduleDatas):
+            new.CurveScheduleDatas.append(self)
 
 # EOF -------------------------------------------------------------------------

@@ -17,12 +17,91 @@
 
 from enthought.traits.api import HasTraits, Instance, Str, List
 
+#------------------------------------------------------------------------------
+#  "Root" class:
+#------------------------------------------------------------------------------
+
 class Root(HasTraits):
 
     URI = Str
 
     ContainedBy = Instance("Model")
 
+    def __init__(self, **traits):
+        super(Root, self).__init__(**traits)
+
+        opposed = self.traits(opposite = lambda val: bool(val))
+
+        for name, trait in opposed.iteritems():
+            if trait.is_trait_type( Instance ):
+                self.on_trait_change(self._on_instance, name)
+
+            elif trait.is_trait_type( List ):# and \
+#                trait.inner_traits[0].is_trait_type( Instance ):
+                self.on_trait_change(self._on_list, name)
+                self.on_trait_change(self._on_list, name + "_items")
+
+
+    def _on_instance(self, obj, name, old, new):
+        opposite = obj.trait(name).opposite
+
+        if old is not None:
+            opposite_trait = old.trait(opposite)
+
+            if opposite_trait.is_trait_type( Instance ):
+                setattr(old, opposite, None)
+
+            elif opposite_trait.is_trait_type( List ) and \
+                (obj in getattr(old, opposite)):
+                    getattr(old, opposite).remove(obj)
+
+        if new is not None:
+            opposite_trait = new.trait(opposite)
+
+            if opposite_trait.is_trait_type( Instance ):
+                setattr(new, opposite, obj)
+
+            elif opposite_trait.is_trait_type( List ) and \
+                (obj not in getattr(new, opposite)):
+                    getattr(new, opposite).append(obj)
+
+
+    def _on_list(self, obj, name, old, new):
+
+        # Use the same method for the list being set and for items being
+        # added and removed from the list.  When individual items are changed
+        # the last argument is an event with '.added' and '.removed' traits.
+        if isinstance(new, TraitListEvent):
+            old = new.removed
+            new = new.added
+
+        # Name of the trait on the referenced object that is the 'opposite'
+        # reference back to obj.
+        opposite = obj.trait(name).opposite
+
+        for old_obj in old:
+            opposite_trait = old_obj.trait(opposite)
+
+            if opposite_trait.is_trait_type( Instance ):
+                setattr(old_obj, opposite, None)
+
+            elif opposite_trait.is_trait_type( List ) and \
+                (old_obj in getattr(old_obj, opposite)):
+                    getattr(old_obj, opposite).remove(obj)
+
+        for new_obj in new:
+            opposite_trait = new_obj.trait(opposite)
+
+            if opposite_trait.is_trait_type( Instance ):
+                setattr(new_obj, opposite, obj)
+
+            elif opposite_trait.is_trait_type( List ) and \
+                (new_obj not in getattr(new_obj, opposite)):
+                    getattr(new_obj, opposite).append(obj)
+
+#------------------------------------------------------------------------------
+#  "Model" class:
+#------------------------------------------------------------------------------
 
 class Model(HasTraits):
 
