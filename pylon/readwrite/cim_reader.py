@@ -89,11 +89,8 @@ class CIMAttributeSink:
 
         # Instantiate an object if the preicate is an RDF type and the object
         # is in the CIM namespace.
-        #
-        # Prevent re-instantiation of objects on second pass.
         if (ns_pred == rdfxml.rdf) and (frag_pred == "type") and \
-            (ns_obj == ns_cim) and \
-            (frag_sub not in self.uri_object_map.keys()):
+            (ns_obj == ns_cim):
 
             cls_name = frag_obj
 #            print "CLASS:", cls_name
