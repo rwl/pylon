@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<rdf:RDF xmlns:cim="http://iec.ch/TC57/2003/CIM-schema-cim10#" xmlns:ngt="http://com.ngtuk/2005/NGT-schema-cim11#" xmlns:mercury="http://eee.strath.ac.uk/mercury/app-data-1.0#" xmlns:strath="http://eee.strath.ac.uk/CIM/CIM-Extended-SU01#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+
+
+<cim:BusbarSection rdf:ID="_70996a17">
+  <cim:ConductingEquipment.Terminals rdf:resource="#_4343ae8b"/>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_74744bba"/>
+  <cim:IdentifiedObject.name>Bus 1</cim:IdentifiedObject.name>
+</cim:BusbarSection>
+<cim:ConnectivityNode rdf:ID="_5f44d8de">
+  <cim:ConnectivityNode.TopologicalNode rdf:resource="#_38760c4a"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_4343ae8b"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_7b360c69"/>
+</cim:ConnectivityNode>
+<cim:Terminal rdf:ID="_4343ae8b">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_70996a17"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_5f44d8de"/>
+  <cim:IdentifiedObject.name>Terminal of BusbarSection 5-12</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:ConnectivityNode rdf:ID="_32b36b86">
+  <cim:ConnectivityNode.TopologicalNode rdf:resource="#_38760c4a"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_74744bba"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_49fcfc59"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_1a484f22"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_898963b"/>
+</cim:ConnectivityNode>
+<cim:Terminal rdf:ID="_74744bba">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_70996a17"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_32b36b86"/>
+  <cim:IdentifiedObject.name>Terminal of BusbarSection 7-13</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:SynchronousMachine rdf:ID="_49647859">
+  <cim:ConductingEquipment.Terminals rdf:resource="#_7b360c69"/>
+  <cim:ConductingEquipment.BaseVoltage rdf:resource="#_55219c73"/>
+  <cim:IdentifiedObject.name>SynchronousMachine 4-12</cim:IdentifiedObject.name>
+</cim:SynchronousMachine>
+<cim:Terminal rdf:ID="_7b360c69">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_49647859"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_5f44d8de"/>
+  <cim:IdentifiedObject.name>Terminal of SynchronousMachine 5-12</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:ACLineSegment rdf:ID="_61ec00ff">
+  <cim:Conductor.bch>0.06</cim:Conductor.bch>
+  <cim:Conductor.r>0.04</cim:Conductor.r>
+  <cim:Conductor.x>0.05</cim:Conductor.x>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_49fcfc59"/>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_53bb502d"/>
+  <cim:IdentifiedObject.name>ACLineSegment 1-3</cim:IdentifiedObject.name>
+</cim:ACLineSegment>
+<cim:Terminal rdf:ID="_49fcfc59">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_61ec00ff"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_32b36b86"/>
+</cim:Terminal>
+<cim:ConnectivityNode rdf:ID="_2e811e93">
+  <cim:ConnectivityNode.TopologicalNode rdf:resource="#_77a0abc8"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_53bb502d"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_6e0fe24f"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_3b518fce"/>
+</cim:ConnectivityNode>
+<cim:Terminal rdf:ID="_53bb502d">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_61ec00ff"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_2e811e93"/>
+</cim:Terminal>
+<cim:ACLineSegment rdf:ID="_56c4f019">
+  <cim:ConductingEquipment.Terminals rdf:resource="#_1a484f22"/>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_3017848a"/>
+  <cim:IdentifiedObject.name>ACLineSegment 8-13</cim:IdentifiedObject.name>
+</cim:ACLineSegment>
+<cim:Terminal rdf:ID="_1a484f22">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_56c4f019"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_32b36b86"/>
+</cim:Terminal>
+<cim:ConnectivityNode rdf:ID="_62ce499d">
+  <cim:ConnectivityNode.Terminals rdf:resource="#_3017848a"/>
+</cim:ConnectivityNode>
+<cim:Terminal rdf:ID="_3017848a">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_56c4f019"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_62ce499d"/>
+</cim:Terminal>
+<cim:ACLineSegment rdf:ID="_74383d1b">
+  <cim:Conductor.bch>0.03</cim:Conductor.bch>
+  <cim:Conductor.r>0.01</cim:Conductor.r>
+  <cim:Conductor.x>0.02</cim:Conductor.x>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_898963b"/>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_7352897e"/>
+  <cim:IdentifiedObject.name>ACLineSegment 1-2</cim:IdentifiedObject.name>
+</cim:ACLineSegment>
+<cim:Terminal rdf:ID="_898963b">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_74383d1b"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_32b36b86"/>
+</cim:Terminal>
+<cim:ConnectivityNode rdf:ID="_ac8914a">
+  <cim:ConnectivityNode.TopologicalNode rdf:resource="#_993f7b0"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_7352897e"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_2606f6a4"/>
+</cim:ConnectivityNode>
+<cim:Terminal rdf:ID="_7352897e">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_74383d1b"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_ac8914a"/>
+</cim:Terminal>
+<cim:ACLineSegment rdf:ID="_329534ce">
+  <cim:Conductor.bch>0.09</cim:Conductor.bch>
+  <cim:Conductor.r>0.07</cim:Conductor.r>
+  <cim:Conductor.x>0.08</cim:Conductor.x>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_6e0fe24f"/>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_4f04340c"/>
+  <cim:IdentifiedObject.name>ACLineSegment 2-3</cim:IdentifiedObject.name>
+</cim:ACLineSegment>
+<cim:Terminal rdf:ID="_6e0fe24f">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_329534ce"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_2e811e93"/>
+</cim:Terminal>
+<cim:ConnectivityNode rdf:ID="_157279a9">
+  <cim:ConnectivityNode.TopologicalNode rdf:resource="#_993f7b0"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_4f04340c"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_57fbb1b9"/>
+</cim:ConnectivityNode>
+<cim:Terminal rdf:ID="_4f04340c">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_329534ce"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_157279a9"/>
+</cim:Terminal>
+<cim:BusbarSection rdf:ID="_11cd3934">
+  <cim:ConductingEquipment.Terminals rdf:resource="#_3b518fce"/>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_34c66193"/>
+  <cim:IdentifiedObject.name>Bus 3</cim:IdentifiedObject.name>
+</cim:BusbarSection>
+<cim:Terminal rdf:ID="_3b518fce">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_11cd3934"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_2e811e93"/>
+  <cim:IdentifiedObject.name>Terminal of BusbarSection 7-19</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:ConnectivityNode rdf:ID="_223e4cd7">
+  <cim:ConnectivityNode.TopologicalNode rdf:resource="#_77a0abc8"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_34c66193"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_5cfa15da"/>
+</cim:ConnectivityNode>
+<cim:Terminal rdf:ID="_34c66193">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_11cd3934"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_223e4cd7"/>
+  <cim:IdentifiedObject.name>Terminal of BusbarSection 5-20</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:SynchronousMachine rdf:ID="_57310b75">
+  <cim:ConductingEquipment.Terminals rdf:resource="#_5cfa15da"/>
+  <cim:IdentifiedObject.name>SynchronousMachine 4-20</cim:IdentifiedObject.name>
+</cim:SynchronousMachine>
+<cim:Terminal rdf:ID="_5cfa15da">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_57310b75"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_223e4cd7"/>
+  <cim:IdentifiedObject.name>Terminal of SynchronousMachine 5-20</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:BusbarSection rdf:ID="_2a1699f7">
+  <cim:ConductingEquipment.Terminals rdf:resource="#_57fbb1b9"/>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_2606f6a4"/>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_7b760b52"/>
+  <cim:IdentifiedObject.name>Bus 2</cim:IdentifiedObject.name>
+</cim:BusbarSection>
+<cim:Terminal rdf:ID="_57fbb1b9">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_2a1699f7"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_157279a9"/>
+  <cim:IdentifiedObject.name>Terminal of BusbarSection 12-19</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:Terminal rdf:ID="_2606f6a4">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_2a1699f7"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_ac8914a"/>
+  <cim:IdentifiedObject.name>Terminal of BusbarSection 12-13</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:ConnectivityNode rdf:ID="_64e26442">
+  <cim:ConnectivityNode.TopologicalNode rdf:resource="#_993f7b0"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_7b760b52"/>
+  <cim:ConnectivityNode.Terminals rdf:resource="#_9e71d00"/>
+</cim:ConnectivityNode>
+<cim:Terminal rdf:ID="_7b760b52">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_2a1699f7"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_64e26442"/>
+  <cim:IdentifiedObject.name>Terminal of BusbarSection 13-17</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:EnergyConsumer rdf:ID="_3aa8a545">
+  <cim:EnergyConsumer.pfixed>100.0</cim:EnergyConsumer.pfixed>
+  <cim:EnergyConsumer.qfixed>100.0</cim:EnergyConsumer.qfixed>
+  <cim:ConductingEquipment.Terminals rdf:resource="#_9e71d00"/>
+  <cim:IdentifiedObject.name>EnergyConsumer 2</cim:IdentifiedObject.name>
+</cim:EnergyConsumer>
+<cim:Terminal rdf:ID="_9e71d00">
+  <cim:Terminal.ConductingEquipment rdf:resource="#_3aa8a545"/>
+  <cim:Terminal.ConnectivityNode rdf:resource="#_64e26442"/>
+  <cim:IdentifiedObject.name>Terminal of EnergyConsumer 13-17</cim:IdentifiedObject.name>
+</cim:Terminal>
+<cim:BaseVoltage rdf:ID="_55219c73">
+  <cim:BaseVoltage.nominalVoltage>400.0</cim:BaseVoltage.nominalVoltage>
+  <cim:BaseVoltage.BasePower rdf:resource="#_37f0dd05"/>
+</cim:BaseVoltage>
+
+<cim:BasePower rdf:ID="_37f0dd05"/>
+<cim:TopologicalNode rdf:ID="_38760c4a">
+  <cim:TopologicalNode.ConnectivityNodes rdf:resource="#_32b36b86"/>
+  <cim:TopologicalNode.ConnectivityNodes rdf:resource="#_5f44d8de"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_49fcfc59"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_7b360c69"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_1a484f22"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_898963b"/>
+  <cim:IdentifiedObject.name>Topological Node 0</cim:IdentifiedObject.name>
+</cim:TopologicalNode>
+<cim:TopologicalNode rdf:ID="_77a0abc8">
+  <cim:TopologicalNode.ConnectivityNodes rdf:resource="#_2e811e93"/>
+  <cim:TopologicalNode.ConnectivityNodes rdf:resource="#_223e4cd7"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_53bb502d"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_6e0fe24f"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_5cfa15da"/>
+  <cim:IdentifiedObject.name>Topological Node 1</cim:IdentifiedObject.name>
+</cim:TopologicalNode>
+<cim:TopologicalNode rdf:ID="_993f7b0">
+  <cim:TopologicalNode.ConnectivityNodes rdf:resource="#_64e26442"/>
+  <cim:TopologicalNode.ConnectivityNodes rdf:resource="#_157279a9"/>
+  <cim:TopologicalNode.ConnectivityNodes rdf:resource="#_ac8914a"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_9e71d00"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_4f04340c"/>
+  <strath:TopologicalNode.ExternalTerminals rdf:resource="#_7352897e"/>
+  <cim:IdentifiedObject.name>Topological Node 2</cim:IdentifiedObject.name>
+</cim:TopologicalNode>
+<mercury:library>
+<mercury:entry>
+	<mercury:name>3bus-kiro</mercury:name>
+	<mercury:description/>
+	<mercury:owner>r.w.lincoln@gmail.com</mercury:owner>
+	<mercury:status>WRITE</mercury:status>
+</mercury:entry>
+</mercury:library>
+<mercury:workspace>
+<mercury:cell x="12" y="4">
+	<mercury:uri>_49647859</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.SynchronousMachine</mercury:class>
+	<mercury:wire>4</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>Wires.SynchronousMachine180.png</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="12" y="5">
+	<mercury:uri>_5f44d8de</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Topology.ConnectivityNode</mercury:class>
+	<mercury:wire>5</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="12" y="6">
+	<mercury:uri>_70996a17</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.BusbarSection</mercury:class>
+	<mercury:wire>1</mercury:wire>
+	<mercury:busbar>2</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>2</mercury:connections>
+</mercury:cell>
+<mercury:cell x="13" y="6">
+	<mercury:uri>_70996a17</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.BusbarSection</mercury:class>
+	<mercury:wire>4</mercury:wire>
+	<mercury:busbar>8</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>2</mercury:connections>
+</mercury:cell>
+<mercury:cell x="13" y="7">
+	<mercury:uri>_32b36b86</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Topology.ConnectivityNode</mercury:class>
+	<mercury:wire>7</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="13" y="8">
+	<mercury:uri>_74383d1b</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>4</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>Wires.ACLineSegment0.png</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="13" y="9">
+	<mercury:uri>_74383d1b</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>-1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>5</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>-1</mercury:connections>
+</mercury:cell>
+<mercury:cell x="13" y="10">
+	<mercury:uri>_74383d1b</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>-1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>5</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>-1</mercury:connections>
+</mercury:cell>
+<mercury:cell x="13" y="11">
+	<mercury:uri>_74383d1b</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>4</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>Wires.ACLineSegment180.png</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="13" y="12">
+	<mercury:uri>_ac8914a</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Topology.ConnectivityNode</mercury:class>
+	<mercury:wire>3</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="14" y="7">
+	<mercury:uri>_61ec00ff</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>8</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>2</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>Wires.ACLineSegment270.png</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="14" y="12">
+	<mercury:uri>_2a1699f7</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.BusbarSection</mercury:class>
+	<mercury:wire>8</mercury:wire>
+	<mercury:busbar>2</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>2</mercury:connections>
+</mercury:cell>
+<mercury:cell x="15" y="7">
+	<mercury:uri>_61ec00ff</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>-1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>10</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>-1</mercury:connections>
+</mercury:cell>
+<mercury:cell x="15" y="12">
+	<mercury:uri>_2a1699f7</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.BusbarSection</mercury:class>
+	<mercury:wire>-1</mercury:wire>
+	<mercury:busbar>10</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>2</mercury:connections>
+</mercury:cell>
+<mercury:cell x="16" y="7">
+	<mercury:uri>_61ec00ff</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>-1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>10</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>-1</mercury:connections>
+</mercury:cell>
+<mercury:cell x="16" y="12">
+	<mercury:uri>_2a1699f7</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.BusbarSection</mercury:class>
+	<mercury:wire>-1</mercury:wire>
+	<mercury:busbar>10</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>2</mercury:connections>
+</mercury:cell>
+<mercury:cell x="17" y="7">
+	<mercury:uri>_61ec00ff</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>-1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>10</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>-1</mercury:connections>
+</mercury:cell>
+<mercury:cell x="17" y="12">
+	<mercury:uri>_2a1699f7</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.BusbarSection</mercury:class>
+	<mercury:wire>4</mercury:wire>
+	<mercury:busbar>10</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>1</mercury:connections>
+</mercury:cell>
+<mercury:cell x="17" y="13">
+	<mercury:uri>_64e26442</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Topology.ConnectivityNode</mercury:class>
+	<mercury:wire>5</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="17" y="14">
+	<mercury:uri>_3aa8a545</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.EnergyConsumer</mercury:class>
+	<mercury:wire>1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>Wires.EnergyConsumer0.png</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="18" y="7">
+	<mercury:uri>_61ec00ff</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>2</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>8</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>Wires.ACLineSegment90.png</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="18" y="12">
+	<mercury:uri>_2a1699f7</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.BusbarSection</mercury:class>
+	<mercury:wire>2</mercury:wire>
+	<mercury:busbar>8</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>2</mercury:connections>
+</mercury:cell>
+<mercury:cell x="19" y="6">
+	<mercury:uri>_11cd3934</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.BusbarSection</mercury:class>
+	<mercury:wire>4</mercury:wire>
+	<mercury:busbar>2</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>2</mercury:connections>
+</mercury:cell>
+<mercury:cell x="19" y="7">
+	<mercury:uri>_2e811e93</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Topology.ConnectivityNode</mercury:class>
+	<mercury:wire>13</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="19" y="8">
+	<mercury:uri>_329534ce</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>4</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>Wires.ACLineSegment0.png</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="19" y="9">
+	<mercury:uri>_329534ce</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>-1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>5</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>-1</mercury:connections>
+</mercury:cell>
+<mercury:cell x="19" y="10">
+	<mercury:uri>_329534ce</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>-1</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>5</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>-1</mercury:connections>
+</mercury:cell>
+<mercury:cell x="19" y="11">
+	<mercury:uri>_329534ce</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.ACLineSegment</mercury:class>
+	<mercury:wire>4</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>Wires.ACLineSegment180.png</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="19" y="12">
+	<mercury:uri>_157279a9</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Topology.ConnectivityNode</mercury:class>
+	<mercury:wire>9</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="20" y="4">
+	<mercury:uri>_57310b75</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.SynchronousMachine</mercury:class>
+	<mercury:wire>4</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>Wires.SynchronousMachine180.png</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="20" y="5">
+	<mercury:uri>_223e4cd7</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Topology.ConnectivityNode</mercury:class>
+	<mercury:wire>5</mercury:wire>
+	<mercury:busbar>-1</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>0</mercury:connections>
+</mercury:cell>
+<mercury:cell x="20" y="6">
+	<mercury:uri>_11cd3934</mercury:uri>
+	<mercury:class>uk.ac.strath.eee.mercury.cim.v10.Wires.BusbarSection</mercury:class>
+	<mercury:wire>1</mercury:wire>
+	<mercury:busbar>8</mercury:busbar>
+	<mercury:line>-1</mercury:line>
+	<mercury:orien>-1</mercury:orien>
+	<mercury:graphic>null</mercury:graphic>
+	<mercury:connections>2</mercury:connections>
+</mercury:cell>
+</mercury:workspace>
+
+
+</rdf:RDF>
