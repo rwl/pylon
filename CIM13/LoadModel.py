@@ -27,7 +27,8 @@
 #------------------------------------------------------------------------------
 
 from enthought.traits.api import \
-    HasTraits, String, Int, Float, List, Instance, Bool, Range, Enum
+    HasTraits, String, Int, Float, List, Instance, Bool, Range, Enum, \
+    on_trait_change
 
 from enthought.traits.ui.api \
     import View, Group, Item, VGroup, HGroup, InstanceEditor

@@ -29,9 +29,9 @@ from pylon.network import Network
 from pylon.readwrite.matpower_reader import read_matpower
 from pylon.readwrite.api import PSSEReader
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Constants:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 MATPOWER_DATA_FILE = "data/case6ww.m"
 
@@ -56,7 +56,7 @@ class ReaderTest(TestCase):
         self.assertEqual(n.base_mva, base_mva)
 
 
-    def _validate_object_numbers(self, n_buses, n_branches, n_gen, n_loads):
+    def _validate_object_numbers(self, **numbers):
         """ Validates the expected number of objects """
 
         n = self.network
@@ -128,7 +128,6 @@ class ReaderTest(TestCase):
                 "Target bus %d expected, %d found" %
                 (target_expected, target_idx)
             )
-
 
 #------------------------------------------------------------------------------
 #  "MatpowerReaderTest" class:

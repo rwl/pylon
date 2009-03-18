@@ -27,7 +27,8 @@
 from itertools import count
 
 from enthought.traits.api import \
-    HasTraits, Str, Int, Float, List, Instance, Bool, Property, Enum, Tuple
+    HasTraits, Str, Int, Float, List, Instance, Bool, Property, Enum, Tuple, \
+    on_trait_change
 
 from enthought.traits.ui.api \
     import View, Group, Item, VGroup, HGroup, InstanceEditor
