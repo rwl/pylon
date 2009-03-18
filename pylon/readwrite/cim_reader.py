@@ -22,6 +22,12 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import gzip
+import bz2
+import zipfile
+
+from os.path import basename, exists, splitext
+
 from enthought.traits.api import Str, Int, Float, Bool, Instance, List
 
 #from rdflib.Graph import ConjunctiveGraph
@@ -228,39 +234,112 @@ class CIMReader:
 
     model = None
 
-    region = "iec61970.core.geographical_region.GeographicalRegion"
-
     def __init__(self, filename):
-        """ Returns a new MATPOWERReader instance """
-
         self.filename = filename
 
 
-    def parse_file(self, filename=None):
+    def parse_file(self, filename=None, pwd=None):
         """ Parses an RDF/XML file and returns a model containing CIM elements.
+
+            pwd is the password used for encrypted files.
         """
-        if filename is None:
-            filename = self.filename
-        else:
-            self.filename = filename
+        filename = filename or self.filename
+        assert exists(filename)
+
+        # Split the extension from the pathname
+        root, extension = splitext( filename )
+
+        if isinstance(file_or_filename, file):
+            s = file_or_filename.read()
+
+        if extension == ".xml":
+            fd = None
+            try:
+                fd = open(filename, "rb")
+                s = fd.read()
+            finally:
+                if fd is not None:
+                    fd.close()
+
+        elif zipfile.is_zipfile(filename):
+            zipdatafile = None
+            try:
+                zipdatafile = zipfile.ZipFile(filename)
+                member_names = zipdatafile.namelist()
+                if member_names:
+                    member_name = member_names[0]
+                else:
+                    print "Zip file contains no members."
+                    return
+
+                # FIXME: Perhaps extract to a temporary directory.
+                zipextdatafile = zipdatafile.open( member_name, "rb", pwd )
+                s = zipextdatafile.read()
+                zipextdatafile.close()
+            finally:
+                if zipdatafile is not None:
+                    zipdatafile.close()
+
+        elif extension == ".gz":
+            fd = None
+            try:
+                fd = gzip.open(filename, "rb")
+                s = f.read()
+            finally:
+                if fd is not None:
+                    fd.close()
+
+        elif extension == ".bz2":
+            bz2datafile = None
+            try:
+                bz2file = bz2.BZ2File( filename )
+                s = bz2file.read()
+            finally:
+                if bz2datafile is not None:
+                    bz2datafile.close()
 
         # Instantiate CIM objects and set their attributes.
         attr_sink = CIMAttributeSink()
-        rdfxml.parseURI(filename, sink=attr_sink)
+#        rdfxml.parseURI(filename, sink=attr_sink)
+        rdfxml.parseRDF(s, base=filename, sink=attr_sink)
 
         # Second pass to set references.
         ref_sink = CIMReferenceSink(attr_sink)
-        rdfxml.parseURI(filename, sink=ref_sink)
+#        rdfxml.parseURI(filename, sink=ref_sink)
+        rdfxml.parseRDF(s, base=filename, sink=ref_sink)
 
+        return Model( Contains = attr_sink.uri_object_map.values() )
+
+#------------------------------------------------------------------------------
+#  "CIMReader2" class:
+#------------------------------------------------------------------------------
+
+#class CIMReader2:
+#    """ Reads RDF/XML files with CIM data.
+#    """
+#
+#    filename = ""
+#
+#    model = None
+#
+#    def __init__(self, filename):
+#        self.filename = filename
+#
+#
+#    def parse_file(self, filename=None):
+#        """ Parses an RDF/XML file and returns a model containing CIM elements.
+#        """
+#        filename = filename or self.filename
+#
 #        for obj in sink._uri_object_map.values():
 #            obj.configure_traits()
-
+#
 #
 #        if isinstance(file_or_filename, basestring):
 #            file = open(file_or_filename, "wb")
 #        else:
 #            file = file_or_filename
-
+#
 #        ns_cim = Namespace("http://iec.ch/TC57/2009/CIM-schema-cim14#")
 #        ns_ngt = Namespace("http://com.ngtuk/2005/NGT-schema-cim11#")
 #
@@ -269,15 +348,15 @@ class CIMReader:
 #        context = store.parse(filename)
 #        print context.identifier
 #        print dir(context)
-
+#
 #        for subject, predicate, object in store:
 #            print "SUBJECT:", subject
 #            print "PREDICATE:", predicate
 #            print "OBJECT:", object
-
+#
 #        for s, o in store.subject_objects(ns_rdf["type"]):
 #            print "NAME:", o
-
+#
 #        for s in store.subjects(RDF.type, ns_cim["GeneratingUnit"]):
 #            print "SUBJECT:", type(s), s
 #            unit = GeneratingUnit()
@@ -289,9 +368,13 @@ class CIMReader:
 #            for obj in store.objects(s, ns_cim["GeneratingUnit.nominalP"]):
 #                print "OBJ:", obj
 
+#------------------------------------------------------------------------------
+#  Function for reading CIM RDF/XML files:
+#------------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    reader = CIMReader("/tmp/10bus.xml")
-    reader.parse_file()
+def read_cim(filename):
+    """ Function for import of CIM RDF/XML data files given the file path.
+    """
+    return CIMReader(filename).parse_file()
 
 # EOF -------------------------------------------------------------------------
