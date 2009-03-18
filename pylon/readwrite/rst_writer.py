@@ -25,8 +25,8 @@
 from pylon.network \
     import Network, NetworkReport
 
-from pylon.pybrain.experiment \
-    import MarketExperiment
+#from pylon.pybrain.experiment \
+#    import MarketExperiment
 
 #------------------------------------------------------------------------------
 #  "ReSTExperimentWriter" class:
@@ -64,7 +64,7 @@ class ReSTExperimentWriter:
         if experiment is None:
             experiment = self.experiment
         else:
-            assert isinstance(experiment, MarketExperiment)
+#            assert isinstance(experiment, MarketExperiment)
             self.experiment = experiment
 
         if file_or_filename is None:
@@ -622,7 +622,8 @@ class ReSTWriter:
         file.write("Voltage".center(col_width) + " ")
         file.write("Pg".center(col_width) + " ")
         file.write("Qg".center(col_width) + " ")
-        file.write("Lambda ($/MVA-hr)".center(col_width_2) + " ")
+#        file.write("Lambda ($/MVA-hr)".center(col_width_2) + " ")
+        file.write("Active Power".center(col_width_2) + " ")
         file.write("Polynomial".center(col_width_3) + " ")
         file.write("\n")
 
@@ -639,8 +640,8 @@ class ReSTWriter:
         file.write("..".ljust(col_width) + " ")
         file.write("(MW)".center(col_width) + " ")
         file.write("(MVAr)".center(col_width) + " ")
-        file.write("P".center(col_width) + " ")
-        file.write("Q".center(col_width) + " ")
+        file.write("Pmax".center(col_width) + " ")
+        file.write("Pmax bid".center(col_width) + " ")
         file.write("c2".center(col_width_poly) + " ")
         file.write("c1".center(col_width_poly) + " ")
         file.write("c0".center(col_width_poly) + " ")
@@ -659,8 +660,10 @@ class ReSTWriter:
             file.write("%8.2f" % each.v_amplitude + " ")
             file.write("%8.2f" % each.p + " ")
             file.write("%8.2f" % each.q + " ")
-            file.write("..".ljust(col_width) + " ")
-            file.write("..".ljust(col_width) + " ")
+#            file.write("..".ljust(col_width) + " ")
+#            file.write("..".ljust(col_width) + " ")
+            file.write("%8.2f" % each.p_max + " ")
+            file.write("%8.2f" % each.p_max_bid + " ")
             n2, n1, n = each.cost_coeffs
             file.write("%4.2f" % n2 + " ")
             file.write("%4.1f" % n1 + " ")

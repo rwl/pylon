@@ -25,8 +25,10 @@
 import sys
 from os.path import dirname, join
 
+from numpy import array
+
 from pybrain.tools.shortcuts import buildNetwork
-from pybrain.rl.agents import FiniteDifferenceAgent, PolicyGradientAgent
+from pybrain.rl.agents import LearningAgent, PolicyGradientAgent
 from pybrain.rl.learners import SPLA, ENAC
 from pybrain.structure.modules import SigmoidLayer
 
@@ -110,11 +112,15 @@ def main(power_sys):
 #        net = buildNetwork( 3, 6, 1, bias = False, outclass = SigmoidLayer )
         net = buildNetwork( 1, 1, bias = False )
 
+        net._setParameters( array([0.5]) )
+
         # Create agent. The agent is where the learning happens. For continuous
         # problems a policy gradient agent is required.  Each agent has a
         # module (network) and a learner, that modifies the module.
-        agent = PolicyGradientAgent( module = net, learner = ENAC() )
-        agent.name = "PolicyGradientAgent-%s" % generator.name
+        agent = LearningAgent( module = net, learner = ENAC() )
+        agent.name = "LearningAgent-%s" % generator.name
+#        agent = PolicyGradientAgent( module = net, learner = ENAC() )
+#        agent.name = "PolicyGradientAgent-%s" % generator.name
 
         # Backpropagation parameters.
         gradient_descent = agent.learner.gd

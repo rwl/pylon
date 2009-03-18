@@ -38,6 +38,7 @@ from pylon.api import Network
 from pylon.routine.api import DCOPFRoutine
 from pylon.ui.routine.dc_opf_view_model import DCOPFViewModel
 from pylon.ui.plot.rewards_plot import RewardsPlot
+from pylon.readwrite.rst_writer import ReSTWriter
 
 logger = logging.getLogger(__name__)
 
@@ -198,9 +199,15 @@ class MarketExperiment ( HasTraits ):
                              (agent.name, action))
                 task.performAction( action )
 
+
+            writer = ReSTWriter(self.power_system, sys.stdout)
+            writer.write_generator_data()
+
             # Optimise the power system model.
             solution = self.routine.solve()
 #            self.routine.edit_traits(kind="livemodal")
+
+            writer.write_generator_data()
 
             if solution["status"] != "optimal":
                 logger.debug("No solution for interaction: %d" % interaction)
