@@ -137,7 +137,7 @@ class Network(HasTraits):
     def manage_slack_bus(self, obj, name, old, new):
         """ Ensures that there is never any more than one slack bus.
         """
-        if new:
+        if new and self.traits_inited():
             for bus in self.buses:
                 if (bus is not obj) and (bus.slack is True):
                     bus.slack = False
