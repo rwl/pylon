@@ -52,7 +52,7 @@ from pylon.readwrite.rst_writer import ReSTExperimentWriter
 #------------------------------------------------------------------------------
 
 # FIXME: Relative path.
-DATA_FILE = join( dirname(__file__), "../test/data/case6ww.m" )
+DATA_FILE = join( dirname(__file__), "..", "test", "data", "case6ww.m" )
 
 #------------------------------------------------------------------------------
 #  Simulate trade:

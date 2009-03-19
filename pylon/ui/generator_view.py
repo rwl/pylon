@@ -200,6 +200,12 @@ generator_view = View(
             ),
             label="Power Flow", show_border=True
         ),
+        VGroup(
+            Item("p_despatch", style="readonly"),
+            Item("p_max_bid"),
+            Item("p_min_bid"),
+            label="Optimal Power Flow", show_border=True
+        ),
         HGroup(
 #            VGroup(
 #                Group(
@@ -234,7 +240,7 @@ generator_view = View(
 #                Item(name="q_cost_fixed"),
 #                Item(name="q_cost_proportional"),
 #                Item(name="q_cost_quadratic"),
-#                label="Costs"
+                label="Costs", show_border=True
             ),
             dock="tab"
         ),
@@ -243,7 +249,7 @@ generator_view = View(
 #    title="Generator properties",
 #    icon=ImageResource("frame.ico", ICON_LOCATION)),
     id="default_generator_view",
-    resizable=True,
+#    resizable=True,
 #    scrollable=True,
     buttons=["OK", "Cancel", "Help"]
 )

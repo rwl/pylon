@@ -30,7 +30,7 @@ from enthought.traits.api import \
     HasTraits, String, Int, Float, List, Trait, Instance, Bool, Range, \
     Property, Enum, Any, Delegate, Tuple, Array, Disallow, cached_property
 
-from pylon.traits import ConvexPiecewise
+#from pylon.traits import ConvexPiecewise
 
 from pylon.ui.generator_view import generator_view
 
@@ -55,9 +55,6 @@ class Generator(HasTraits):
     #  Trait definitions:
     #--------------------------------------------------------------------------
 
-    # Obsolete identifier
-    id = Disallow
-
     # Human readable identifier.
     name = String("g", desc="generator name")
 
@@ -75,7 +72,8 @@ class Generator(HasTraits):
 #    v_min = Float(desc="minimum voltage (p.u.)")
 
     # Active power output (p.u.).
-    p = Float(1.0, desc="active power (p.u.)")
+#    p = Float(1.0, desc="active power (p.u.)")
+    p = Range(value=1.0, low="p_min", high="p_max", desc="active power (p.u.)")
 
     # Maximum real power output rating (p.u.).
     p_max = Float(5.0, desc="maximum real power output (p.u.)")
@@ -84,7 +82,9 @@ class Generator(HasTraits):
     p_min = Float(0.0, desc="minimum real power output (p.u.)")
 
     # Reactive power output (p.u.).
-    q = Float(0.0, style='readonly', desc="reactive power output (p.u.)")
+#    q = Float(0.0, style='readonly', desc="reactive power output (p.u.)")
+    q = Range(value=0.0, low="q_min", high="q_max",
+              desc="reactive power output (p.u.)")
 
     # Maximum reactive power rating (p.u.).
     q_max = Float(3.0, desc="maximum reactive power (PV) (p.u.)")
@@ -99,8 +99,10 @@ class Generator(HasTraits):
     def _q_changed(self, new):
         """ Handles the reactive power limit of the generator.
         """
-        if (new >= self.q_max) or (new <= self.q_min):
+        if not (self.q_min <= new <= self.q_max):
             self.q_limited = True
+        else:
+            self.q_limited = False
 
 
     # Apparent power rating (MVA).
@@ -129,15 +131,71 @@ class Generator(HasTraits):
 
     # The output power that the Generator is despatched to generate
     # as a result of solving the OPF problem:
-    p_despatch = Float(desc="a result of the OPF (p.u.)")
+#    p_despatch = Float(desc="a result of the OPF (p.u.)")
+    p_despatch = Range(low="p_min_bid", high="p_max_bid",
+                       desc="OPF result (p.u.)")
 
     # Maximum active power output bid.  Used in OPF routines.  Should be less
     # than or equal to p_max.  Defaults to p_max.
-    p_max_bid = Float(5.0, desc="maximum active power bid (p.u.)")
+#    p_max_bid = Float(5.0, desc="maximum active power bid (p.u.)")
+#    p_max_bid = Range(value="p_max", low="p_min_bid", high="p_max",
+#                      desc="maximum active power bid (p.u.)")
+    p_max_bid = Property(Range(value="p_max", low="p_min_bid", high="p_max"),
+                         depends_on=["p_max", "p_min_bid"],
+                         desc="maximum active power bid (p.u.)")
+    _p_max_bid = Float
+
+    def _get_p_max_bid(self):
+        """ Property getter.
+        """
+        return self._p_max_bid
+
+    def _set_p_max_bid(self, value):
+        """ Property setter.
+        """
+        if value > self.p_max:
+            self._p_max_bid = self.p_max
+        elif value < self.p_min_bid:
+            self._p_max_bid = self.p_min_bid
+        else:
+            self._p_max_bid = value
+
+#    def _p_max_bid_changed(self, new):
+#        """ Static event handler.
+#        """
+#        if new > self.p_max:
+#            self.p_max_bid = self.p_max
 
     # Minimum active power bid. Used in OPF routines.  Should be greater than
     # or equal to p_min. Defaults to p_min.
     p_min_bid = Float(0.0, desc="minimum active power bid (p.u.)")
+#    p_min_bid = Range(value="p_min", low="p_min", high="p_max_bid",
+#                      desc="minimum active power bid (p.u.)")
+#    p_min_bid = Property(Range(value="p_min", low="p_min", high="p_max_bid"),
+#                         depends_on=["p_min", "p_max_bid"],
+#                         desc="minimum active power bid (p.u.)")
+#    _p_min_bid = Float
+#
+#    def _get_p_min_bid(self):
+#        """ Property getter.
+#        """
+#        return self._p_min_bid
+#
+#    def _set_p_min_bid(self, value):
+#        """ Property setter.
+#        """
+#        if value < self.p_min:
+#            self._p_min_bid = self.p_min
+#        elif value > self.p_max_bid:
+#            self._p_min_bid = self.p_max_bid
+#        else:
+#            self._p_min_bid = value
+
+#    def _p_min_bid_changed(self, new):
+#        """ Static event handler.
+#        """
+#        if new < self.p_min:
+#            self.p_min_bid = self.p_min
 
     # Actual active power bid.
 #    p_bid = Float(desc="actual active power bid (p.u.)")
@@ -562,5 +620,9 @@ class Generator(HasTraits):
 #
 #    def _get_torque(self):
 #        return
+
+if __name__ == "__main__":
+    generator = Generator()
+    generator.configure_traits()
 
 # EOF -------------------------------------------------------------------------
