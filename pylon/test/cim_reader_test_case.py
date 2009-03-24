@@ -34,7 +34,7 @@ from pylon.readwrite.cim_reader import CIMReader, read_cim
 #  Constants:
 #------------------------------------------------------------------------------
 
-CIM_DATA_FILE = join(dirname(__file__), "data", "3bus.xml")
+CIM_DATA_FILE = join(dirname(__file__), "data", "9bus.xml")
 
 #------------------------------------------------------------------------------
 #  "CIMReaderTest" class:
