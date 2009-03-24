@@ -117,10 +117,10 @@ def main(power_sys):
         # Create agent. The agent is where the learning happens. For continuous
         # problems a policy gradient agent is required.  Each agent has a
         # module (network) and a learner, that modifies the module.
-        agent = LearningAgent( module = net, learner = ENAC() )
-        agent.name = "LearningAgent-%s" % generator.name
-#        agent = PolicyGradientAgent( module = net, learner = ENAC() )
-#        agent.name = "PolicyGradientAgent-%s" % generator.name
+#        agent = LearningAgent( module = net, learner = ENAC() )
+#        agent.name = "LearningAgent-%s" % generator.name
+        agent = PolicyGradientAgent( module = net, learner = ENAC() )
+        agent.name = "PolicyGradientAgent-%s" % generator.name
 
         # Backpropagation parameters.
         gradient_descent = agent.learner.gd

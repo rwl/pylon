@@ -99,10 +99,10 @@ class Generator(HasTraits):
     def _q_changed(self, new):
         """ Handles the reactive power limit of the generator.
         """
-        if not (self.q_min <= new <= self.q_max):
-            self.q_limited = True
-        else:
+        if self.q_min <= new <= self.q_max:
             self.q_limited = False
+        else:
+            self.q_limited = True
 
 
     # Apparent power rating (MVA).
@@ -126,6 +126,12 @@ class Generator(HasTraits):
     online = Bool(True, desc="connection status")
 
     #--------------------------------------------------------------------------
+    #  Views:
+    #--------------------------------------------------------------------------
+
+    traits_view = generator_view
+
+    #--------------------------------------------------------------------------
     #  OPF traits:
     #--------------------------------------------------------------------------
 
@@ -140,10 +146,14 @@ class Generator(HasTraits):
 #    p_max_bid = Float(5.0, desc="maximum active power bid (p.u.)")
 #    p_max_bid = Range(value="p_max", low="p_min_bid", high="p_max",
 #                      desc="maximum active power bid (p.u.)")
-    p_max_bid = Property(Range(value="p_max", low="p_min_bid", high="p_max"),
-                         depends_on=["p_max", "p_min_bid"],
+    p_max_bid = Property(Float,
+#                         Range(value="p_max", low="p_min_bid", high="p_max"),
+#                         depends_on=["p_max", "p_min_bid"],
                          desc="maximum active power bid (p.u.)")
     _p_max_bid = Float
+
+    def __p_max_bid_default(self):
+        return self.p_max
 
     def _get_p_max_bid(self):
         """ Property getter.
@@ -168,28 +178,32 @@ class Generator(HasTraits):
 
     # Minimum active power bid. Used in OPF routines.  Should be greater than
     # or equal to p_min. Defaults to p_min.
-    p_min_bid = Float(0.0, desc="minimum active power bid (p.u.)")
+#    p_min_bid = Float(0.0, desc="minimum active power bid (p.u.)")
 #    p_min_bid = Range(value="p_min", low="p_min", high="p_max_bid",
 #                      desc="minimum active power bid (p.u.)")
-#    p_min_bid = Property(Range(value="p_min", low="p_min", high="p_max_bid"),
+    p_min_bid = Property(Float,
+#                         Range(value="p_min", low="p_min", high="p_max_bid"),
 #                         depends_on=["p_min", "p_max_bid"],
-#                         desc="minimum active power bid (p.u.)")
-#    _p_min_bid = Float
-#
-#    def _get_p_min_bid(self):
-#        """ Property getter.
-#        """
-#        return self._p_min_bid
-#
-#    def _set_p_min_bid(self, value):
-#        """ Property setter.
-#        """
-#        if value < self.p_min:
-#            self._p_min_bid = self.p_min
-#        elif value > self.p_max_bid:
-#            self._p_min_bid = self.p_max_bid
-#        else:
-#            self._p_min_bid = value
+                         desc="minimum active power bid (p.u.)")
+    _p_min_bid = Float
+
+    def __p_min_bid_default(self):
+        return self.p_min
+
+    def _get_p_min_bid(self):
+        """ Property getter.
+        """
+        return self._p_min_bid
+
+    def _set_p_min_bid(self, value):
+        """ Property setter.
+        """
+        if value < self.p_min:
+            self._p_min_bid = self.p_min
+        elif value > self.p_max_bid:
+            self._p_min_bid = self.p_max_bid
+        else:
+            self._p_min_bid = value
 
 #    def _p_min_bid_changed(self, new):
 #        """ Static event handler.
@@ -582,12 +596,6 @@ class Generator(HasTraits):
 #    rotor_reference_frame = Enum("Direct-quadrature", "Real-imaginary")
 
     #--------------------------------------------------------------------------
-    #  Views:
-    #--------------------------------------------------------------------------
-
-    traits_view = generator_view
-
-    #--------------------------------------------------------------------------
     #  Property getters:
     #--------------------------------------------------------------------------
 
@@ -622,7 +630,8 @@ class Generator(HasTraits):
 #        return
 
 if __name__ == "__main__":
-    generator = Generator()
-    generator.configure_traits()
+    generator = Generator(p_min=1.0, p_max=6.0, p_min_bid=0.0, p_max_bid=7.0)
+    print "Min/max bid:", generator.p_min_bid, generator.p_max_bid
+#    generator.configure_traits()
 
 # EOF -------------------------------------------------------------------------

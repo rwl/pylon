@@ -819,10 +819,15 @@ class DCOPFRoutine:
         n_buses      = len(buses)
         n_generators = len(generators)
 
-#        print "Solution x:\n", solution["x"]
-#        print "Solution s:\n", solution["s"]
-#        print "Solution y:\n", solution["y"]
-#        print "Solution z:\n", solution["z"]
+        offline_branches = [e for e in self.network.branches \
+                            if e not in branches]
+        offline_generators = [g for g in self.network.all_generators \
+                              if g not in generators]
+
+        print "Solution x:\n", solution["x"]
+        print "Solution s:\n", solution["s"]
+        print "Solution y:\n", solution["y"]
+        print "Solution z:\n", solution["z"]
 
         # Bus voltage angles.
         v_phase = solution["x"][:n_buses]
@@ -846,6 +851,40 @@ class DCOPFRoutine:
             branch.p_target = p_target[j]
             branch.q_source = 0.0
             branch.q_target = 0.0
+
+        # Update lambda and mu.
+        # A Lagrange multiplier is the increase in the value of the objective
+        # function due to the relaxation of a given constraint.
+        eqlin   = solution["y"]
+        ineqlin = solution["z"]
+
+        for i, bus in enumerate(buses):
+            bus.p_lambda = eqlin[i + 1] / base_mva
+            bus.q_lambda = 0.0
+            bus.mu_v_min = 0.0
+            bus.mu_v_max = 0.0
+
+        for j, branch in enumerate(branches):
+            # TODO: Find multipliers for lower and upper bound constraints.
+            branch.mu_s_source = 0.0
+            branch.mu_s_target = 0.0
+
+        for k, generator in enumerate(generators):
+            generator.mu_p_min = ineqlin[k] / base_mva
+            generator.mu_p_max = ineqlin[k + n_generators] / base_mva
+            generator.mu_q_min = 0.0
+            generator.mu_q_max = 0.0
+
+        # Zero multipliers for all offline components.
+        for branch in offline_branches:
+            branch.mu_s_source = 0.0
+            branch.mu_s_target = 0.0
+
+        for generator in offline_generators:
+            generator.mu_p_min = 0.0
+            generator.mu_p_max = 0.0
+            generator.mu_q_min = 0.0
+            generator.mu_q_max = 0.0
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

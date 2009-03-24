@@ -53,11 +53,11 @@ class ProfitTask(Task):
 
         # Limits for scaling of actors.
         asset = environment.asset
-        self.actor_limits = [(asset.p_min, asset.p_max)]
+        self.actor_limits = None#[(asset.p_min, asset.p_max)]
 
 
     def performAction(self, action):
-        """ A filtered mapping the .performAction() method of the underlying
+        """ A filtered mapping of the .performAction() method of the underlying
             environment.
         """
         logger.debug("Profit task [%s] filtering action: %s" %

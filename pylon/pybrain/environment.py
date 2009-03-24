@@ -33,11 +33,9 @@ from pylon.api import Network, Generator
 
 class ParticipantEnvironment(Environment):
     """ Defines the world in which an agent acts.  It receives an input with
-        .performAction() and returns an output with .getSensors(). The
-        ParticipantEnviroment has no notion of the whole network and
-        attributes used to represent the state of the power system must be
-        set by the Experiment. Each environment requires an asset component
-        (Generator), the parameters of which are changed with the
+        .performAction() and returns an output with .getSensors(). Each
+        environment requires a reference to an asset (Generator) and the whole
+        power system. The parameters of the asset are changed with the
         .performAction() method.
     """
 
@@ -61,14 +59,12 @@ class ParticipantEnvironment(Environment):
     # Generator instance that the agent controls.
     asset = None
 
-    # Sum of demand for each Load for the current period.
-#    demand = 0.0
-
-    # Market Clearing Price for the current period.
-    mcp = 0.0
-
-    # Forecast demand for the successive period.
-    forecast = 0.0
+    @property
+    def demand(self):
+        """ Total system demand.
+        """
+        base = self.power_system.base_mva
+        return sum([l.p for l in self.power_system.online_loads])
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -81,17 +77,7 @@ class ParticipantEnvironment(Environment):
         assert isinstance( asset, Generator )
 
         self.power_system = power_system
-        self.asset    = asset
-        self.mcp      = 0.0
-        self.forecast = 0.0
-
-
-    @property
-    def demand(self):
-        """ Total system demand.
-        """
-        base = self.power_system.base_mva
-        return sum([l.p for l in self.power_system.online_loads])
+        self.asset = asset
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -103,7 +89,7 @@ class ParticipantEnvironment(Environment):
             The state consists of 'total demand', 'market clearing price' and
             'forecast demand'.
         """
-        return array( [ self.demand ] )#, self.mcp, self.forecast ] )
+        return array( [self.demand] )
 
 
     def performAction(self, action):
@@ -122,9 +108,13 @@ class ParticipantEnvironment(Environment):
     def reset(self):
         """ Reinitialises the environment.
         """
-        self.mcp      = 0.0
-        self.forecast = 0.0
         if self.asset is not None:
             self.asset.p_max_bid = self.asset.p_max
+        else:
+            raise ValueError, "Environment [%s] has no asset." % self
+
+        # Reset the load profile for each online load.
+        for load in self.power_system.online_loads:
+            load.reset_profile()
 
 # EOF -------------------------------------------------------------------------

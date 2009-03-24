@@ -30,7 +30,8 @@ from enthought.traits.api import \
     HasTraits, String, Instance, Delegate, Any, Property, List
 
 from enthought.traits.ui.api import \
-    Item, Group, View, InstanceEditor, HGroup, VGroup, Tabbed, RangeEditor
+    Item, Group, View, InstanceEditor, HGroup, VGroup, Tabbed, RangeEditor, \
+    ScrubberEditor
 
 #from enthought.chaco.chaco_plot_editor import ChacoPlotItem
 
@@ -183,7 +184,13 @@ generator_view = View(
 #                        mode="auto"
 #                    )
                 ),
-                Item(name="p_max"),
+                Item(name="p_max",
+#                     editor=ScrubberEditor(low="p_min",
+#                                           increment=0.1,
+#                                           hover_color=0xFFFFFF,
+#                                           active_color=0xA0CD9E,
+#                                           border_color=0x808080)
+                ),
                 Item(name="p_min"),
                 "_",
                 Item(
