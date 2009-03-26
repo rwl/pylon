@@ -61,12 +61,12 @@ also available for:</p>
 <div class="section" id="matpower">
 <h2>MATPOWER<a class="headerlink" href="#matpower" title="Permalink to this headline">¶</a></h2>
 <p>Simply:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pylon.readwrite.api</span> <span class="kn">import</span> <span class="n">read_matpower</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">pylon.readwrite.api</span> <span class="k">import</span> <span class="n">read_matpower</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">network</span> <span class="o">=</span> <span class="n">read_matpower</span><span class="p">(</span><span class="s">&#39;/path/to/casefile.m&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The parser class is in the API also:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pylon.readwrite.api</span> <span class="kn">import</span> <span class="n">MATPOWERReader</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">pylon.readwrite.api</span> <span class="k">import</span> <span class="n">MATPOWERReader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">MATPOWERReader</span><span class="p">(</span><span class="s">&#39;/path/to/casefile.m&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">network</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">network</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">network2</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&#39;/path/to/casefile2.m&#39;</span><span class="p">)</span>
@@ -76,7 +76,7 @@ also available for:</p>
 <div class="section" id="pti-pss-e">
 <h2>PTI PSS/E<a class="headerlink" href="#pti-pss-e" title="Permalink to this headline">¶</a></h2>
 <p>The PSS/E parser is tested with RAW files from the <a class="reference external" href="http://www.sedg.ac.uk/ukgds/redirect.htm">UKGDS</a> project:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pylon.readwrite.api</span> <span class="kn">import</span> <span class="n">read_psse</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">pylon.readwrite.api</span> <span class="k">import</span> <span class="n">read_psse</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">network</span> <span class="o">=</span> <span class="n">read_psse</span><span class="p">(</span><span class="s">&#39;ehv3.raw&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -88,7 +88,7 @@ The parser builds a <tt class="docutils literal"><span class="pre">Model</span><
 available in the <tt class="docutils literal"><span class="pre">CIM13</span></tt> package.  <tt class="docutils literal"><span class="pre">Model</span></tt> is not yet compatible with any
 of the routines.</p>
 <p>The parser can accept XML, Zip, Gzip and bzip2 files:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pylon.readwrite.cim_reader</span> <span class="kn">import</span> <span class="n">CIMReader</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">pylon.readwrite.cim_reader</span> <span class="k">import</span> <span class="n">CIMReader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">CIMReader</span><span class="p">(</span><span class="s">&#39;/path/to/data.xml&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">parse_file</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model2</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&#39;/path/to/data.gz&#39;</span><span class="p">)</span>

@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Power System Model &mdash; Pylon v0.1.1 documentation</title>
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pylon.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -22,7 +22,7 @@
     <link rel="copyright" title="Copyright" href="copyright.html" />
     <link rel="top" title="Pylon v0.1.1 documentation" href="index.html" />
     <link rel="next" title="Parsers" href="parser.html" />
-    <link rel="prev" title="Installation" href="install.html" /> 
+    <link rel="prev" title="Simple Usage" href="usage.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +35,7 @@
           <a href="parser.html" title="Parsers"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation"
+          <a href="usage.html" title="Simple Usage"
              accesskey="P">previous</a> |</li>
     <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
     
@@ -66,51 +66,47 @@ contains a list of <tt class="xref docutils literal"><span class="pre">Bus</span
 of the graph and a list of <tt class="xref docutils literal"><span class="pre">Branch</span></tt> objects that
 define the edges.</p>
 <p>For convenience, a <tt class="docutils literal"><span class="pre">Network</span></tt> provides certain read-only properties, such as
-<tt class="docutils literal"><span class="pre">all_generators</span></tt>, that are used regularly by other modules.</p>
+<tt class="docutils literal"><span class="pre">all_generators</span></tt>, that are used regularly by other modules:</p>
+<div class="highlight-python"><pre>[1]: from pylon import Network
+[2]: network = Network(name="net1", mva_base=100.0)</pre>
+</div>
 <dl class="class">
 <dt id="Bus">
 <!--[Bus]-->class <tt class="descname">Bus</tt><a class="headerlink" href="#Bus" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <p>A <tt class="docutils literal"><span class="pre">Bus</span></tt> is a node in the power system graph to which <tt class="docutils literal"><span class="pre">Generator</span></tt> and
-<tt class="docutils literal"><span class="pre">Load</span></tt> objects may be added.  The objects connected determine the <tt class="docutils literal"><span class="pre">mode</span></tt>
-of the <tt class="docutils literal"><span class="pre">Bus</span></tt>, which may be one of three values:</p>
+<tt class="docutils literal"><span class="pre">Load</span></tt> objects may be added:</p>
+<div class="highlight-python"><pre>[1]: from pylon import Network, Bus
+[2]: network = Network()
+[3]: bus = Bus(name="bus1", v_amplitude_guess=1.1)
+[4]: network.buses.append(bus)</pre>
+</div>
+<p>The objects connected determine the <tt class="docutils literal"><span class="pre">mode</span></tt> of the <tt class="docutils literal"><span class="pre">Bus</span></tt>, which may be one
+of three values:</p>
 <ul class="simple">
-<li>PQ
-* Default mode for a plain bus.
-* Set when one or more <tt class="docutils literal"><span class="pre">Load</span></tt> is present, but no <tt class="docutils literal"><span class="pre">Generator</span></tt>.
-* Set when the connected generation has reached one of it&#8217;s reactive power</li>
-</ul>
-<dl class="docutils">
-<dt>limits.</dt>
-<dd><ul class="first last simple">
+<li>PQ<ul>
+<li>Default mode for a plain bus.</li>
+<li>Set when one or more <tt class="docutils literal"><span class="pre">Load</span></tt> is present, but no <tt class="docutils literal"><span class="pre">Generator</span></tt>.</li>
+<li>Set when the connected generation has reached one of it&#8217;s reactive power
+limits.</li>
 <li>Active and reactive power are the known variables.</li>
 </ul>
-</dd>
-</dl>
-<ul class="simple">
-<li>PV
-* Set when one or more <tt class="docutils literal"><span class="pre">Generator</span></tt> is connected to the <tt class="docutils literal"><span class="pre">Bus</span></tt> and the</li>
-</ul>
-<dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">slack</span></tt> attribute of the <tt class="docutils literal"><span class="pre">Bus</span></tt> is not set.</dt>
-<dd><ul class="first last simple">
+</li>
+<li>PV<ul>
+<li>Set when one or more <tt class="docutils literal"><span class="pre">Generator</span></tt> is connected to the <tt class="docutils literal"><span class="pre">Bus</span></tt> and the
+<tt class="docutils literal"><span class="pre">slack</span></tt> attribute of the <tt class="docutils literal"><span class="pre">Bus</span></tt> is not set.</li>
 <li>Active power and voltage magnitude are the known system variables.</li>
 </ul>
-</dd>
-</dl>
-<ul class="simple">
-<li>Slack
-* Sometimes known as the &#8220;swing&#8221; of reference bus.
-* Set when one or more <tt class="docutils literal"><span class="pre">Generator</span></tt> is connected to the <tt class="docutils literal"><span class="pre">Bus</span></tt> and the</li>
-</ul>
-<dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">slack</span></tt> attribute is true.</dt>
-<dd><ul class="first last simple">
+</li>
+<li>Slack<ul>
+<li>Sometimes known as the &#8220;swing&#8221; of reference bus.</li>
+<li>Set when one or more <tt class="docutils literal"><span class="pre">Generator</span></tt> is connected to the <tt class="docutils literal"><span class="pre">Bus</span></tt> and the
+<tt class="docutils literal"><span class="pre">slack</span></tt> attribute is true.</li>
 <li>No variables to be solved for in the power flow solution.</li>
 </ul>
-</dd>
-</dl>
+</li>
+</ul>
 <p>The shunt conductance and susceptance at the bus are specified by the
 <tt class="docutils literal"><span class="pre">g_shunt</span></tt> and <tt class="docutils literal"><span class="pre">b_shunt</span></tt> attributes respectively.</p>
 <p>For convenience, <tt class="docutils literal"><span class="pre">Bus</span></tt> provides read-only properties that return values of
@@ -122,7 +118,12 @@ total supply and demand of power at the node.</p>
 
 <p>Transmission lines and transformers are both defined by the <tt class="docutils literal"><span class="pre">Branch</span></tt> class
 which uses a standard pi-circuit model.  The <tt class="docutils literal"><span class="pre">source_bus</span></tt> and <tt class="docutils literal"><span class="pre">target_bus</span></tt>
-must be specified when creating a <tt class="docutils literal"><span class="pre">Branch</span></tt>.</p>
+must be specified when creating a <tt class="docutils literal"><span class="pre">Branch</span></tt>:</p>
+<div class="highlight-python"><pre>[1]: network = Network()
+[2]: bus1, bus2 = Bus(), Bus()
+[3]: e = Branch(bus1, bus2, r=0.06, x=0.03)
+[4]: network.branches.append(branch)</pre>
+</div>
 <dl class="class">
 <dt id="Generator">
 <!--[Generator]-->class <tt class="descname">Generator</tt><a class="headerlink" href="#Generator" title="Permalink to this definition">¶</a></dt>
@@ -130,14 +131,23 @@ must be specified when creating a <tt class="docutils literal"><span class="pre"
 
 <p>A <tt class="docutils literal"><span class="pre">Generator</span></tt> specifies the voltage magnitude and the active power injected
 at a node.  If reactive power limits are enforced then a <tt class="docutils literal"><span class="pre">Generator</span></tt> may
-switch to fixing active and reactive power at a node if a limit is violated.</p>
+switch to fixing active and reactive power at a node if a limit is violated:</p>
+<div class="highlight-python"><pre>[1]: bus = Bus()
+[2]: g = Generator(p=6.0, v_amplitude=1.1)
+[3]: bus.generators.append(g)
+[4]: print bus.mode
+PV</pre>
+</div>
 <p><tt class="docutils literal"><span class="pre">Generator</span></tt> objects define the despatchable units for the optimal power flow
 problem.  The <tt class="docutils literal"><span class="pre">p_max_bid</span></tt> and <tt class="docutils literal"><span class="pre">p_min_bid</span></tt> attributes define the range in
 which the generator is willing to operate and this must be within the rated
 capacity of the unit as defined by <tt class="docutils literal"><span class="pre">p_max</span></tt> and <tt class="docutils literal"><span class="pre">p_min</span></tt>.  The cost of the
 generator with respect to active power is defined using the <tt class="docutils literal"><span class="pre">cost_coeffs</span></tt>
 attribute.  This is a triple of floating point values, restricting the
-definition of cost curves to quadratic functions.</p>
+definition of cost curves to quadratic functions:</p>
+<div class="highlight-python"><pre>[1]: g = Generator(p_max=6.0, p_min=1.0, cost_coeffs=(0.0, 6.0, 0.0)
+                   p_max_bid=5.0, p_min_bid=1.0)</pre>
+</div>
 <dl class="class">
 <dt id="Load">
 <!--[Load]-->class <tt class="descname">Load</tt><a class="headerlink" href="#Load" title="Permalink to this definition">¶</a></dt>
@@ -148,7 +158,15 @@ definition of cost curves to quadratic functions.</p>
 <tt class="docutils literal"><span class="pre">p_profile</span></tt> specifies a list of percentages that define how the profile
 varies between the limits defined by <tt class="docutils literal"><span class="pre">p_max</span></tt> and <tt class="docutils literal"><span class="pre">p_min</span></tt>.  <tt class="docutils literal"><span class="pre">p_profiled</span></tt>
 is a property that uses a cycle iterator to return the next value in the
-profile sequence each time it is called.</p>
+profile sequence each time it is called:</p>
+<div class="highlight-python"><pre>[1]: l = Load(p_min=1.0, p_max=2.0, p_profile=[100, 50])
+[2]: print l.p_profiled
+2.0
+[3]: print l.p_profiled
+1.5
+[4]: print l.p_profiled
+2.0</pre>
+</div>
 </div>
 </div>
 
@@ -167,7 +185,7 @@ profile sequence each time it is called.</p>
 </ul>
 
             <h4>Previous topic</h4>
-            <p class="topless"><a href="install.html" title="previous chapter">Installation</a></p>
+            <p class="topless"><a href="usage.html" title="previous chapter">Simple Usage</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="parser.html" title="next chapter">Parsers</a></p>
             <h3>This Page</h3>
@@ -194,7 +212,7 @@ profile sequence each time it is called.</p>
           <a href="parser.html" title="Parsers"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation"
+          <a href="usage.html" title="Simple Usage"
              accesskey="P">previous</a> |</li>
     <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
     

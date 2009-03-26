@@ -1,5 +1,3 @@
-.. _users-guide-index:
-
 #####
 PYLON
 #####
@@ -8,11 +6,20 @@ PYLON
 
 **Richard W. Lincoln**
 
+Contents:
+
 .. toctree::
 
-    copyright.rst
     intro.rst
     install.rst
+    usage.rst
     model.rst
     parser.rst
     routine.rst
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

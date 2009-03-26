@@ -4,10 +4,15 @@
 Installation
 ============
 
+Pylon is a package of Python modules.  It needs to be on the PYTHON_PATH
+environment variable and for some core dependencies to be met for model and
+solver functionality.  Optionally, easily installed additional libraries
+enable other features.
+
 Dependencies
 ------------
 
-  Python_ 2.4 or later
+  2.5 <= Python_ < 3.0
 
   Traits_ 3.0 or later
     Provide Python object attributes with additional characteristics.
@@ -43,7 +48,9 @@ Windows
 -------
 
 The `Enthought Python Distribution`_ provides the majority of the dependencies
-for Pylon and is free for academic use.  CVXOPT_ is not included.
+for Pylon and is free for academic use.  CVXOPT_ is not included, but comes as
+a `Windows Installer <http://abel.ee.ucla.edu/cvxopt/download-2.5-win32.php>`_
+also.
 
 Setuptools
 ----------
@@ -54,8 +61,8 @@ With Python_ and setuptools_ installed, simply::
 
 Virtualenv_ may be used to build a virtual Python environment::
 
-  $ virtualenv vpython
-  $ ./vpython/bin/easy_install pylon
+  $ virtualenv env
+  $ ./env/bin/easy_install pylon
 
 Installation from source
 ------------------------
@@ -72,5 +79,17 @@ Run the ``setup.py`` script::
 or::
 
   $ python setup.py develop
+
+Working directory
+-----------------
+
+Change in to the source directory and run IPython_::
+
+  $ cd ~/path/to/pylon-X.X
+  $ ipython
+
+Access the ``pylon`` package::
+
+  [1]: from pylon import Generator, DCOPFRoutine
 
 .. include:: ../links_names.txt

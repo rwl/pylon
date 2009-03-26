@@ -31,7 +31,7 @@ Full details of the command line options are available::
 
   $ pylon --help
 
-Refer to the user's guide documentation for detailed usage information.
+Refer to the documentation for detailed usage information.
 
 -------
 Credits
@@ -45,7 +45,7 @@ translated from MATPOWER_ by R. D. Zimmerman, C. E. Murillo-Sanchez & D. Gan.
 Pylon is funded by the `Engineering and Physical Sciences Research Council
 <http://www.epsrc.ac.uk/default.htm>`_ through `Grant GR/T28836/01
 <http://gow.epsrc.ac.uk/ViewGrant.aspx?GrantRef=GR/T28836/01>`_ for the
-`SUPERGEN Highly Distributed Power Systems Consortium
-<http://www.supergen-hdps.org>`_.
+`SUPERGEN <http://www.supergen-hdps.org>`_ Highly Distributed Power Systems
+Consortium.
 
 .. include:: ../links_names.txt

@@ -4,10 +4,15 @@
 Installation
 ============
 
+Pylon is a package of Python modules.  It needs to be on the PYTHON_PATH
+environment variable and for some core dependencies to be met for model and
+solver functionality.  Optionally, easily installed additional libraries
+enable other features.
+
 Dependencies
 ------------
 
-  Python_ 2.4 or later
+  2.5 <= Python_ < 3.0
 
   Traits_ 3.0 or later
     Provide Python object attributes with additional characteristics.
@@ -43,7 +48,9 @@ Windows
 -------
 
 The `Enthought Python Distribution`_ provides the majority of the dependencies
-for Pylon and is free for academic use.  CVXOPT_ is not included.
+for Pylon and is free for academic use.  CVXOPT_ is not included, but comes as
+a `Windows Installer <http://abel.ee.ucla.edu/cvxopt/download-2.5-win32.php>`_
+also.
 
 Setuptools
 ----------
