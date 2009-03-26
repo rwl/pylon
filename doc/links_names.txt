@@ -1,0 +1,39 @@
+.. This file contains commonly used link targets and name substitutions.
+
+.. _Sphinx: http://sphinx.pocoo.org/
+.. _`Sphinx reST`: http://sphinx.pocoo.org/rest.html
+.. _ReStructuredText: http://docutils.sf.net/rst.html
+
+.. _`GNU General Public License`: http://www.gnu.org/licenses/gpl.html
+
+.. _Virtualenv: http://pypi.python.org/pypi/virtualenv
+.. _Git: http://git.or.cz/
+
+.. _NumPy: http://www.scipy.org/NumPy
+.. _SciPy: http://www.scipy.org
+.. _iPython: http://ipython.scipy.org
+
+.. _ETS: http://code.enthought.com/projects/tool-suite.php
+.. _`Enthought Tool Suite`: http://code.enthought.com/projects/tool-suite.php
+.. _`Enthought Python Distribution`: https://www.enthought.com/products/epd.php
+.. _Python: http://www.python.org
+.. _Setuptools: http://peak.telecommunity.com/DevCenter/setuptools
+
+.. _CVXOPT: http://abel.ee.ucla.edu/cvxopt/
+.. _PyBrain: http://www.pybrain.org
+.. _MATPOWER: http://www.pserc.cornell.edu/matpower/
+.. _PSAT: http://www.power.uwaterloo.ca/~fmilano/psat.htm
+.. _ReStructuredText: http://docutils.sf.net/rst.html
+.. _Traits: http://code.enthought.com/projects/traits/
+.. _TraitsGUI: http://code.enthought.com/projects/traits_gui/
+.. _Chaco: http://code.enthought.com/projects/chaco/
+.. _Godot: http://www.github.com/rwl/godot/
+.. _Envisage: http://code.enthought.com/projects/envisage/
+.. _Graphviz: http://www.graphviz.org/
+.. _Pyparsing: http://pyparsing.wikispaces.com/
+.. _wxPython: http://www.wxpython.org/
+.. _CHOLMOD: http://www.cise.ufl.edu/research/sparse/cholmod/
+.. _UMFPACK: http://www.cise.ufl.edu/research/sparse/umfpack/
+.. _MOSEK: http://www.mosek.com/
+
+.. _UKGDS: http://www.sedg.ac.uk/ukgds/redirect.htm

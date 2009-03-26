@@ -26,6 +26,12 @@ help:
 clean:
 	-rm -rf build/*
 
+all: html pdf
+
+web: html
+	cd www && make html
+	@echo "Build web finished."
+
 html:
 	mkdir -p build/html build/doctrees
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) build/html
@@ -37,8 +43,6 @@ pickle:
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) build/pickle
 	@echo
 	@echo "Build finished; now you can process the pickle files."
-
-web: pickle
 
 json:
 	mkdir -p build/json build/doctrees

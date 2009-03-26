@@ -4,7 +4,7 @@
 Parsers
 *******
 
-Pylon uses Pyarsing_ to parse power system data files.  The MATPOWER parser is
+Pylon uses Pyparsing_ to parse power system data files.  The MATPOWER parser is
 the most robust as it is used in test cases for the routines.  Parsers are
 also available for:
 
@@ -52,6 +52,4 @@ The parser can accept XML, Zip, Gzip and bzip2 files::
     >>> model = reader.parse_file()
     >>> model2 = reader.parse_file('/path/to/data.gz')
 
-.. _Pyparsing: http://pyparsing.wikispaces.com/
-.. _PSAT: http://www.power.uwaterloo.ca/~fmilano/psat.htm
-.. _UKGDS: http://www.sedg.ac.uk/ukgds/redirect.htm
+.. include:: ../links_names.txt

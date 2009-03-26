@@ -1,8 +1,8 @@
 # Sphinx inventory version 1
 # Project: Pylon
-# Version: 0.1.1
+# Version: 0.1
 Load class model.html
 Bus class model.html
-Branch class model.html
-Network class model.html
 Generator class model.html
+Network class model.html
+Branch class model.html

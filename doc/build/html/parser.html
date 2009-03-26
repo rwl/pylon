@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Parsers &mdash; Pylon v0.1.1 documentation</title>
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pylon.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -19,7 +19,10 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="Pylon v0.1.1 documentation" href="index.html" /> 
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Pylon v0.1.1 documentation" href="index.html" />
+    <link rel="next" title="Routines" href="routine.html" />
+    <link rel="prev" title="Power System Model" href="model.html" /> 
   </head>
   <body>
     <div class="related">
@@ -28,7 +31,16 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="index.html">Pylon v0.1.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="routine.html" title="Routines"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="model.html" title="Power System Model"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="index.html">Pylon v0.1.1 documentation</a> </li>
+ 
       </ul>
     </div>  
     <div class="document">
@@ -39,7 +51,7 @@
   
   <div class="section" id="parsers">
 <span id="parser"></span><h1>Parsers<a class="headerlink" href="#parsers" title="Permalink to this headline">¶</a></h1>
-<p>Pylon uses <a href="#id1"><span class="problematic" id="id2">Pyarsing_</span></a> to parse power system data files.  The MATPOWER parser is
+<p>Pylon uses <a class="reference external" href="http://pyparsing.wikispaces.com/">Pyparsing</a> to parse power system data files.  The MATPOWER parser is
 the most robust as it is used in test cases for the routines.  Parsers are
 also available for:</p>
 <ul class="simple">
@@ -49,12 +61,12 @@ also available for:</p>
 <div class="section" id="matpower">
 <h2>MATPOWER<a class="headerlink" href="#matpower" title="Permalink to this headline">¶</a></h2>
 <p>Simply:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">pylon.readwrite.api</span> <span class="k">import</span> <span class="n">read_matpower</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pylon.readwrite.api</span> <span class="kn">import</span> <span class="n">read_matpower</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">network</span> <span class="o">=</span> <span class="n">read_matpower</span><span class="p">(</span><span class="s">&#39;/path/to/casefile.m&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The parser class is in the API also:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">pylon.readwrite.api</span> <span class="k">import</span> <span class="n">MATPOWERReader</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pylon.readwrite.api</span> <span class="kn">import</span> <span class="n">MATPOWERReader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">MATPOWERReader</span><span class="p">(</span><span class="s">&#39;/path/to/casefile.m&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">network</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">network</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">network2</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&#39;/path/to/casefile2.m&#39;</span><span class="p">)</span>
@@ -64,7 +76,7 @@ also available for:</p>
 <div class="section" id="pti-pss-e">
 <h2>PTI PSS/E<a class="headerlink" href="#pti-pss-e" title="Permalink to this headline">¶</a></h2>
 <p>The PSS/E parser is tested with RAW files from the <a class="reference external" href="http://www.sedg.ac.uk/ukgds/redirect.htm">UKGDS</a> project:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">pylon.readwrite.api</span> <span class="k">import</span> <span class="n">read_psse</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pylon.readwrite.api</span> <span class="kn">import</span> <span class="n">read_psse</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">network</span> <span class="o">=</span> <span class="n">read_psse</span><span class="p">(</span><span class="s">&#39;ehv3.raw&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -76,7 +88,7 @@ The parser builds a <tt class="docutils literal"><span class="pre">Model</span><
 available in the <tt class="docutils literal"><span class="pre">CIM13</span></tt> package.  <tt class="docutils literal"><span class="pre">Model</span></tt> is not yet compatible with any
 of the routines.</p>
 <p>The parser can accept XML, Zip, Gzip and bzip2 files:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">from</span> <span class="nn">pylon.readwrite.cim_reader</span> <span class="k">import</span> <span class="n">CIMReader</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pylon.readwrite.cim_reader</span> <span class="kn">import</span> <span class="n">CIMReader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">reader</span> <span class="o">=</span> <span class="n">CIMReader</span><span class="p">(</span><span class="s">&#39;/path/to/data.xml&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">parse_file</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model2</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&#39;/path/to/data.gz&#39;</span><span class="p">)</span>
@@ -101,6 +113,10 @@ of the routines.</p>
 </li>
 </ul>
 
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="model.html" title="previous chapter">Power System Model</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="routine.html" title="next chapter">Routines</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="_sources/parser.txt">Show Source</a></li>
@@ -121,11 +137,19 @@ of the routines.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="index.html">Pylon v0.1.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="routine.html" title="Routines"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="model.html" title="Power System Model"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="index.html">Pylon v0.1.1 documentation</a> </li>
+ 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2009, Richard W. Lincoln.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
   </body>

@@ -16,16 +16,16 @@ Subpackages of :mod:`pylon <pylon>` define further functionality.
 
 :mod:`pylon.routine <pylon.routine>`
   Routines for solving power flow and optimal power flow problems.  The
-routines are translated from MATPOWER_ and use the sparse matrix types and
-optimisation routines from CVXOPT_.
+  routines are translated from MATPOWER_ and use the sparse matrix types and
+  optimisation routines from CVXOPT_.
 
 :mod:`pylon.pyreto <pylon.pyreto>`
   Modules for simulating competitive energy trade using reinforcement learning
-algorithms and artificial neural networks from PyBrain_.
+  algorithms and artificial neural networks from PyBrain_.
 
 :mod:`pylon.readwrite <pylon.readwrite>`
   Parsers for a selection of power system data file formats including
-MATPOWER_, PSS/E, and PSAT_.
+  MATPOWER_, PSS/E, and PSAT_.
   Export of data in MATPOWER_ and Excel file formats.
   Reports in ReStructuredText_ format.
 
@@ -34,7 +34,7 @@ MATPOWER_, PSS/E, and PSAT_.
 
 :mod:`pylon.ui` <pylon.ui>`
   Cross-platform, toolkit independent user interfaces via the TraitsGUI_
-package.
+  package.
   Interactive, publication quality data plots using Chaco_.
   Graphviz powered interactive 2D graph visualisation using Godot_.
   Plug-ins for the Envisage_ application framework.
@@ -45,12 +45,5 @@ Much of Pylon translated from MATPOWER_, the `user manual
 <http://www.pserc.cornell.edu/matpower/manual.pdf>` for which will likely
 provide a more useful reference.
 
-.. _CVXOPT: http://abel.ee.ucla.edu/cvxopt/
-.. _PyBrain: http://www.pybrain.org
-.. _MATPOWER: http://www.pserc.cornell.edu/matpower/
-.. _PSAT: http://www.power.uwaterloo.ca/~fmilano/psat.htm
-.. _ReStructuredText: http://docutils.sf.net/rst.html
-.. _TraitsGUI: http://code.enthought.com/projects/traits_gui/
-.. _Chaco: http://code.enthought.com/projects/chaco/
-.. _Godot: http://www.github.com/rwl/godot/
-.. _Envisage: http://code.enthought.com/projects/envisage/
+.. include:: ../links_names.txt
+

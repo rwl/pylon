@@ -1,3 +1,5 @@
+.. _users-guide-index:
+
 #####
 PYLON
 #####
@@ -10,6 +12,7 @@ PYLON
 
     copyright.rst
     intro.rst
+    install.rst
     model.rst
     parser.rst
     routine.rst

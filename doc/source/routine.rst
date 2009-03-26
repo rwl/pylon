@@ -48,8 +48,5 @@ minimise a non-linear objective function that is subject to non-linear
 constraints.  The solver is written in Python and may be found in the
 ``cvxprog.py`` module in the CVXOPT_ distribution.
 
-.. _MATPOWER: http://www.pserc.cornell.edu/matpower/
-.. _CVXOPT: http://abel.ee.ucla.edu/cvxopt/
-.. _CHOLMOD: http://www.cise.ufl.edu/research/sparse/cholmod/
-.. _UMFPACK: http://www.cise.ufl.edu/research/sparse/umfpack/
-.. _MOSEK: http://www.mosek.com/
+.. include:: ../links_names.txt
+
