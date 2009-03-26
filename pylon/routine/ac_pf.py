@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a base class for may AC power flow routines.
+""" Defines a base class for many AC power flow routines.
 
 References:
     D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan,

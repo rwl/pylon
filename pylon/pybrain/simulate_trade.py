@@ -146,8 +146,7 @@ def main(power_sys):
         agents.append( agent )
 
     experiment = MarketExperiment( tasks, agents, power_sys )
-    experiment.doInteractions( number = 1 )
-#    experiment.configure_traits()
+    experiment.doInteractions( number = 3 )
 
 #    plot = ExperimentPlot(experiment)
 #    plot.configure_traits()
@@ -156,6 +155,8 @@ def main(power_sys):
 #    writer.write_state_data()
     writer.write_action_data()
 #    writer.write_reward_data()
+
+    experiment.configure_traits()
 
     return experiment
 

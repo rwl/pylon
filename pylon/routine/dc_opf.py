@@ -905,6 +905,6 @@ if __name__ == "__main__":
 
     dc_opf = DCOPFRoutine(network=n)
     dc_opf.solve()
-#    dc_opf.configure_traits()
+    n.configure_traits()
 
 # EOF -------------------------------------------------------------------------

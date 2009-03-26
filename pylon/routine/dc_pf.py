@@ -32,8 +32,7 @@ import logging
 from os.path import join, dirname
 from math import pi
 
-from cvxopt.base import matrix, spmatrix, sparse
-from cvxopt.umfpack import linsolve
+from cvxopt import matrix, spmatrix, sparse, umfpack, cholmod
 
 from pylon.routine.y import make_susceptance_matrix
 from pylon.network import Network
@@ -60,6 +59,10 @@ class DCPFRoutine:
 
     # The network on which the routine is performed
     network = Network
+
+    # CVXOPT offers interfaces to two routines for solving sets of sparse
+    # linear equations. Valid values are 'UMFPACK' and 'CHOLMOD'.
+    routine = "UMFPACK"
 
     # Branch susceptance matrix
     B = spmatrix([], [], [])
@@ -157,8 +160,15 @@ class DCPFRoutine:
         # or 'z') as A. On exit B contains the solution.
         A = B_pvpq
         b = p_pvpq-p_slack*v_phase_slack
-        linsolve(A, b)
-        logger.debug("UMFPACK linsolve solution:\n%s" % b)
+
+	if self.routine == "UMFPACK":
+            umfpack.linsolve(A, b)
+	elif self.routine == "CHOLMOD":
+	    cholmod.splinsolve(A, b)
+	else:
+	    raise ValueError, "'routine' must be either 'UMFPACK' of 'CHOLMOD'"
+
+        logger.debug("Solution to linear equations:\n%s" % b)
 
 #        v_phase = matrix([b[:slack_idx], [v_phase_slack], b[slack_idx:]])
         import numpy # FIXME: remove numpy dependency

@@ -74,7 +74,7 @@ class MATPOWERReader:
     #  Parse a MATPOWER data file and return a network object
     #--------------------------------------------------------------------------
 
-    def parse_file(self, file_or_filename):
+    def parse_file(self, file_or_filename=None):
         """ Parse a MATPOWER data file and return a network object
 
         file_or_filename: File name of file object with MATPOWER data
