@@ -10,7 +10,7 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath('../sphinxext'))
+sys.path.append(os.path.abspath('../source/sphinxext'))
 
 execfile('../source/conf.py')
 

@@ -1,25 +1,30 @@
-#####
+=====
 PYLON
-#####
+=====
 
-**Release 0.1.1 -- April 1, 2009**
+.. htmlonly::
 
-**Richard W. Lincoln**
+	:Release: |version|
+	:Date: April 1, 2009
 
-Contents:
+	**Richard W. Lincoln**
+
+	Download `PDF <http://pylon.eee.strath.ac.uk/site/doc/manual/pylon.pdf>`_
+
+	Contents:
 
 .. toctree::
+	:maxdepth: 2
 
-    intro.rst
-    install.rst
-    usage.rst
-    model.rst
-    parser.rst
-    routine.rst
+	intro.rst
+	install.rst
+	model.rst
+	parser.rst
+	routine.rst
 
-Indices and tables
-==================
+.. htmlonly::
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+	* :ref:`genindex`
+	* :ref:`modindex`
+	* :ref:`search`
+

@@ -1,6 +1,8 @@
 # Makefile for Sphinx documentation
 #
 
+WWW=rwl@isap43.eee.strath.ac.uk:public_html
+
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
@@ -11,7 +13,7 @@ PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
-.PHONY: help clean html web pickle htmlhelp latex changes linkcheck
+.PHONY: help clean html all dist public_html web web_public pickle htmlhelp latex changes linkcheck
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -24,13 +26,28 @@ help:
 	@echo "  linkcheck to check all external links for integrity"
 
 clean:
-	-rm -rf build/*
+	-rm -rf build/* dist/*
 
-all: html pdf
+pdf: latex
+	cd build/latex && make all-pdf
+
+all: html
 
 web: html
 	cd www && make html
 	@echo "Build web finished."
+
+dist: clean all
+	mkdir -p dist
+#	ln build/latex/pylon*.pdf dist/
+	cp -al build/html dist/
+	@echo "Build finished.  Final docs are in dist/"
+
+public_html: dist
+	rsync -avH --delete dist/ $(WWW)/doc/manual/
+
+public_web: public_html
+	cd www && make public_html
 
 html:
 	mkdir -p build/html build/doctrees

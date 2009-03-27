@@ -1,6 +1,8 @@
 # Makefile for Sphinx-generated website
 #
 
+WWW=rwl@isap43.eee.strath.ac.uk:public_html
+
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
@@ -33,6 +35,10 @@ html: clean
 	-cd build && ln -s ../.. doc && cd html && ln -s ../doc doc
 	@echo
 	@echo "Build finished. The HTML pages are in build/html."
+	
+public_html: clean html
+#	rsync -avH --delete index_redirect.html $(WWW)/index.html
+	rsync -avH --delete build/html/ $(WWW)/site
 
 pickle:
 	mkdir -p build/pickle build/doctrees
