@@ -27,8 +27,8 @@ Table editor for Load lists
 from os import path
 
 from enthought.traits.ui.api import TableEditor
-
 from enthought.traits.ui.table_column import ObjectColumn
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
 
 from enthought.traits.ui.table_filter import \
     EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
@@ -38,6 +38,8 @@ from enthought.naming.unique_name import make_unique_name
 from pylon.load import Load
 
 from pylon.ui.load_view import load_view
+
+from common import OnlineColumn, OnlineFloatColumn
 
 #------------------------------------------------------------------------------
 #  load factory function:
@@ -65,36 +67,33 @@ def load_factory(**row_factory_kw):
 
 loads_table_editor = TableEditor(
     columns = [
-        ObjectColumn(name="name"),
-        ObjectColumn(name="online"),
-#        ObjectColumn(
-#            name="bus",
-#            editor=InstanceEditor(name="buses", editable=False)
-#        ),
-#        ObjectColumn(name="rating_s"),
-#        ObjectColumn(name="rating_v"),
-        ObjectColumn(name="p"),
-        ObjectColumn(name="q"),
-#        ObjectColumn(name="v_max"),
-#        ObjectColumn(name="v_min"),
-#        ObjectColumn(name="p_max_bid"),
-#        ObjectColumn(name="p_min_bid"),
-#        ObjectColumn(name="p_bid"),
-#        ObjectColumn(name="p_cost_fixed"),
-#        ObjectColumn(name="p_cost_proportional"),
-#        ObjectColumn(name="p_cost_quadratic"),
-#        ObjectColumn(name="q_cost_fixed"),
-#        ObjectColumn(name="q_cost_proportional"),
-#        ObjectColumn(name="q_cost_quadratic"),
-#        ObjectColumn(name="rate_up"),
-#        ObjectColumn(name="rate_down"),
-#        ObjectColumn(name="min_period_up"),
-#        ObjectColumn(name="min_period_down"),
+        OnlineColumn(name="name"),
+        CheckboxColumn(name="online", label="Online", width=0.12),
+#        OnlineFloatColumn(name="rating_s"),
+#        OnlineFloatColumn(name="rating_v"),
+        OnlineFloatColumn(name="p"),
+        OnlineFloatColumn(name="q"),
+#        OnlineFloatColumn(name="v_max"),
+#        OnlineFloatColumn(name="v_min"),
+        OnlineFloatColumn(name="p_max"),
+        OnlineFloatColumn(name="p_min"),
+        ObjectColumn(name="p_profile"),
+#        OnlineFloatColumn(name="p_bid"),
+#        OnlineFloatColumn(name="p_cost_fixed"),
+#        OnlineFloatColumn(name="p_cost_proportional"),
+#        OnlineFloatColumn(name="p_cost_quadratic"),
+#        OnlineFloatColumn(name="q_cost_fixed"),
+#        OnlineFloatColumn(name="q_cost_proportional"),
+#        OnlineFloatColumn(name="q_cost_quadratic"),
+#        OnlineFloatColumn(name="rate_up"),
+#        OnlineFloatColumn(name="rate_down"),
+#        OnlineFloatColumn(name="min_period_up"),
+#        OnlineFloatColumn(name="min_period_down"),
     ],
     show_toolbar=True,
     deletable=True,
     orientation="vertical",
-    edit_view=load_view,
+#    edit_view=load_view,
 #    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter(),
     row_factory=load_factory,
@@ -107,12 +106,15 @@ loads_table_editor = TableEditor(
 
 all_loads_table_editor = TableEditor(
     columns = [
-        ObjectColumn(name="name"),
-        ObjectColumn(name="online"),
-        ObjectColumn(name="p"),
-        ObjectColumn(name="q")
+        OnlineColumn(name="name"),
+        CheckboxColumn(name="online", label="Online", width=0.12),
+        OnlineFloatColumn(name="p"),
+        OnlineFloatColumn(name="q"),
+        OnlineFloatColumn(name="p_min"),
+        OnlineFloatColumn(name="p_max"),
+        ObjectColumn(name="p_profile")
     ],
-    deletable=False, orientation="horizontal", edit_view=load_view,
+    deletable=False, orientation="horizontal",# edit_view=load_view,
 #    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter()
 )

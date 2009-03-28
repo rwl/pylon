@@ -22,28 +22,59 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from enthought.traits.api import Font, Color
+
 from enthought.traits.ui.table_column import ObjectColumn
+
+from enthought.traits.ui.menu import Menu, Action
+
+#------------------------------------------------------------------------------
+#  "ContextMenuColumn" class:
+#------------------------------------------------------------------------------
+
+class ContextMenuColumn(ObjectColumn):
+    """ Defines a column with a context menu that appears when the column is
+        right-clicked.
+    """
+
+    # Column context menu.
+    menu = Menu( Action( name   = 'Edit Properties',
+                         action = 'column.configure( object )' ))
+
+    # Text font for this column:
+    text_font = Font
+
+    # Cell background color for this column:
+    cell_color = Color( 'white' )
+
+    # Cell graph color:
+    graph_color = Color( 0xA4D3EE )
+
+    def configure ( self, object ):
+        """ Edit properties of the selected object.
+        """
+        object.edit_traits(kind='livemodal')
 
 #------------------------------------------------------------------------------
 #  "FloatColumn" class:
 #------------------------------------------------------------------------------
 
-class FloatColumn(ObjectColumn):
+class FloatColumn(ContextMenuColumn):
     """ Defines a column that formats floating point numbers.
     """
 
     format = "%.3f"
 
 #------------------------------------------------------------------------------
-#  "InServiceColumn" class:
+#  "OnlineColumn" class:
 #------------------------------------------------------------------------------
 
-class InServiceColumn(ObjectColumn):
+class OnlineColumn(ContextMenuColumn):
     """ A specialised column to set the text color differently based upon the
         state of the 'online' trait of the object.
     """
 
-    width = 0.08
+#    width = 0.08
 
     horizontal_alignment = "center"
 
@@ -51,15 +82,14 @@ class InServiceColumn(ObjectColumn):
         return ["light grey", "black"][object.online]
 
 #------------------------------------------------------------------------------
-#  "InServiceFloatColumn" class:
+#  "OnlineFloatColumn" class:
 #------------------------------------------------------------------------------
 
-class InServiceFloatColumn(InServiceColumn):
+class OnlineFloatColumn(OnlineColumn):
     """ Defines a column that formats floating point numbers and sets the text
         color differently based upon the state of the 'online' trait of the
         object.
     """
-
     format = "%.3f"
 
 # EOF -------------------------------------------------------------------------

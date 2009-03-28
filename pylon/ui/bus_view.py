@@ -69,7 +69,7 @@ minimal_view = View(
 bus_view = View(
     VGroup(
         HGroup(
-        VGroup(
+        HGroup(
             Group(
                 Item(name="name"),
                 Item(
