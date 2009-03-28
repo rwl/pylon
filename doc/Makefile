@@ -13,7 +13,7 @@ PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
-.PHONY: help clean html all dist public_html web web_public pickle htmlhelp latex changes linkcheck
+.PHONY: help clean clean_web html all dist public_html web public_web pickle htmlhelp latex changes linkcheck
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -27,6 +27,9 @@ help:
 
 clean:
 	-rm -rf build/* dist/*
+
+clean_web: clean
+	cd www && make clean
 
 pdf: latex
 	cd build/latex && make all-pdf
