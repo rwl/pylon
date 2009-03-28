@@ -25,7 +25,7 @@ Subpackages of :mod:`pylon <pylon>` define further functionality.
 :mod:`pylon.readwrite <pylon.readwrite>`
   Parsers for a selection of power system data file formats including
   MATPOWER_, PSS/E, and PSAT_.
-  Export of data in MATPOWER_ CSV, and Excel file formats.
+  Export of data in MATPOWER_, CSV and Excel file formats.
   Reports in ReStructuredText_ format.
 
 :mod:`pylon.test <pylon.test>`
@@ -33,9 +33,9 @@ Subpackages of :mod:`pylon <pylon>` define further functionality.
 
 :mod:`pylon.ui` <pylon.ui>`
   Cross-platform, toolkit independent user interfaces via the TraitsGUI_
-package.
+  package.
   Interactive, publication quality data plots using Chaco_.
-  Graphviz powered interactive 2D graph visualisation using Godot_.
+  Graphviz_ powered interactive 2D graph visualisation using Godot_.
   Plug-ins for the Envisage_ application framework.
 
 This manual describes how :class:`Network <pylon.network.Network>` models may
@@ -44,12 +44,4 @@ The routines in Pylon are translated from MATPOWER_, the `user manual
 <http://www.pserc.cornell.edu/matpower/manual.pdf>`_ for which will likely
 provide a more useful reference.
 
-.. _CVXOPT: http://abel.ee.ucla.edu/cvxopt/
-.. _PyBrain: http://www.pybrain.org
-.. _MATPOWER: http://www.pserc.cornell.edu/matpower/
-.. _PSAT: http://www.power.uwaterloo.ca/~fmilano/psat.htm
-.. _ReStructuredText: http://docutils.sf.net/rst.html
-.. _TraitsGUI: http://code.enthought.com/projects/traits_gui/
-.. _Chaco: http://code.enthought.com/projects/chaco/
-.. _Godot: http://www.github.com/rwl/godot/
-.. _Envisage: http://code.enthought.com/projects/envisage/
+.. include:: ../links_names.txt

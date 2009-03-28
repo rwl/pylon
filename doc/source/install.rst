@@ -15,7 +15,7 @@ Dependencies
   2.5 <= Python_ < 3.0
 
   Traits_ 3.0 or later
-    Provide Python object attributes with additional characteristics.
+    Provides Python object attributes with additional characteristics.
 
   CVXOPT_ 1.0 or later
     CVXOPT is a free software package for convex optimization based on the
@@ -88,10 +88,10 @@ Change in to the source directory and run IPython_::
   $ cd ~/path/to/pylon-X.X
   $ ipython
 
-Access the ``pylon`` package
+Access the ``pylon`` application programming inteface.
 
 .. sourcecode:: ipython
 
-  In [1]: from pylon import Generator, DCOPFRoutine
+  In [1]: from pylon.api import Generator, DCOPFRoutine
 
 .. include:: ../links_names.txt

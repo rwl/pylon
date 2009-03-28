@@ -104,7 +104,7 @@ which the generator is willing to operate and this must be within the rated
 capacity of the unit as defined by ``p_max`` and ``p_min``.  The cost of the
 generator with respect to active power is defined using the ``cost_coeffs``
 attribute.  This is a triple of floating point values, restricting the
-definition of cost curves to quadratic functions::
+definition of cost curves to quadratic functions.
 
 .. sourcecode:: ipython
 
