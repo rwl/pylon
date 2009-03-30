@@ -102,7 +102,7 @@ class BusPlot(HasTraits):
         """ Trait initialiser """
 
         if self.network is not None:
-            x = self.network.n_buses
+            x = len(self.network.buses)
             v = [bus.v_amplitude for bus in self.network.buses]
         else:
             x = v = [0]
@@ -145,7 +145,7 @@ class BusPlot(HasTraits):
     def _refresh_voltage_data(self):
         """ Refreshes the plotted voltage data """
 
-        indexes = range(self.network.n_buses)
+        indexes = range( len(self.network.buses) )
         print self.data.list_data()
 #        self.plot.datasources["x"].set_data(indexes)
         self.data.set_data("x", indexes)
