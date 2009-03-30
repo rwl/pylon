@@ -3,9 +3,9 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Search &mdash; Pylon v0.2 documentation</title>
-    <link rel="stylesheet" href="static/pylon.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <title>Copyright and License &mdash; Pylon v0.2 documentation</title>
+    <link rel="stylesheet" href="_static/pylon.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -15,12 +15,11 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
-    <script type="text/javascript" src="static/searchtools.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="" />
-    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="copyright" title="Copyright" href="" />
     <link rel="top" title="Pylon v0.2 documentation" href="index.html" /> 
   </head>
   <body>
@@ -41,28 +40,31 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <h1 id="search-documentation">Search</h1>
-  <p>
-    From here you can search these documents. Enter your search
-    words into the box below and click "search". Note that the search
-    function will automatically search for all of the words. Pages
-    containing fewer words won't appear in the result list.
-  </p>
-  <form action="" method="get">
-    <input type="text" name="q" value="" />
-    <input type="submit" value="search" />
-    <span id="search-progress" style="padding-left: 10px"></span>
-  </form>
   
-  <div id="search-results">
-  
-  </div>
+  <div class="section" id="copyright-and-license">
+<span id="copyright"></span><h1>Copyright and License<a class="headerlink" href="#copyright-and-license" title="Permalink to this headline">¶</a></h1>
+<p>Copyright (C) 2007-2009 Richard W. Lincoln.</p>
+<p>This program is free software; you can redistribute it and/or modify it under
+the terms of the <a class="reference external" href="http://www.gnu.org/licenses/gpl.html">GNU General Public License</a> as published by the Free
+Software Foundation; version 2 dated June, 1991.</p>
+</div>
+
 
           </div>
         </div>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/copyright.txt">Show Source</a></li>
+            </ul>
+          <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
         </div>
       </div>
       <div class="clearer"></div>
@@ -79,11 +81,8 @@
  
       </ul>
     </div>
-  
     <div class="footer">
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
     </div>
-  <script type="text/javascript" src="searchindex.js"></script>
-
   </body>
 </html>
