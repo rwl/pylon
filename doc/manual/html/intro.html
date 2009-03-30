@@ -1,0 +1,134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>INTRODUCTION &mdash; Pylon v0.2 documentation</title>
+    <link rel="stylesheet" href="_static/pylon.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Pylon v0.2 documentation" href="index.html" />
+    <link rel="next" title="Installation" href="install.html" />
+    <link rel="prev" title="PYLON" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="PYLON"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="index.html">Pylon v0.2 documentation</a> </li>
+ 
+      </ul>
+    </div>  
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  
+  <div class="section" id="introduction">
+<span id="intro"></span><h1>INTRODUCTION<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>Pylon is a software package for simulation and analysis of electric power
+systems and energy markets.  It provides <tt class="xref docutils literal"><span class="pre">Bus</span></tt>
+and <tt class="xref docutils literal"><span class="pre">Branch</span></tt> Python objects for representing
+power systems in graph form.  <tt class="xref docutils literal"><span class="pre">Generator</span></tt>
+and <tt class="xref docutils literal"><span class="pre">Load</span></tt> objects may be added to a <tt class="xref docutils literal"><span class="pre">Bus</span></tt> objects and define levels of active supply and passive demand.</p>
+<p>Subpackages of <tt class="xref docutils literal"><span class="pre">pylon</span></tt> define further functionality.</p>
+<dl class="docutils">
+<dt><tt class="xref docutils literal"><span class="pre">pylon.routine</span></tt></dt>
+<dd>Routines for solving power flow and optimal power flow problems.  The
+routines are translated from <a class="reference external" href="http://www.pserc.cornell.edu/matpower/">MATPOWER</a> and use the sparse matrix types and
+optimisation routines from <a class="reference external" href="http://abel.ee.ucla.edu/cvxopt/">CVXOPT</a>.</dd>
+<dt><tt class="xref docutils literal"><span class="pre">pylon.pyreto</span></tt></dt>
+<dd>Modules for simulating competitive energy trade using reinforcement learning
+algorithms and artificial neural networks from <a class="reference external" href="http://www.pybrain.org">PyBrain</a>.</dd>
+<dt><tt class="xref docutils literal"><span class="pre">pylon.readwrite</span></tt></dt>
+<dd>Parsers for a selection of power system data file formats including
+<a class="reference external" href="http://www.pserc.cornell.edu/matpower/">MATPOWER</a>, PSS/E, and <a class="reference external" href="http://www.power.uwaterloo.ca/~fmilano/psat.htm">PSAT</a>.
+Export of data in <a class="reference external" href="http://www.pserc.cornell.edu/matpower/">MATPOWER</a>, CSV and Excel file formats.
+Reports in <a class="reference external" href="http://docutils.sf.net/rst.html">ReStructuredText</a> format.</dd>
+<dt><tt class="xref docutils literal"><span class="pre">pylon.test</span></tt></dt>
+<dd>A comprehensive suite of unit tests.</dd>
+<dt><tt class="xref docutils literal"><span class="pre">pylon.ui</span></tt> &lt;pylon.ui&gt;`</dt>
+<dd>Cross-platform, toolkit independent user interfaces via the <a class="reference external" href="http://code.enthought.com/projects/traits_gui/">TraitsGUI</a>
+package.
+Interactive, publication quality data plots using <a class="reference external" href="http://code.enthought.com/projects/chaco/">Chaco</a>.
+<a class="reference external" href="http://www.graphviz.org/">Graphviz</a> powered interactive 2D graph visualisation using <a class="reference external" href="http://www.github.com/rwl/godot/">Godot</a>.
+Plug-ins for the <a class="reference external" href="http://code.enthought.com/projects/envisage/">Envisage</a> application framework.</dd>
+</dl>
+<p>This manual describes how <tt class="xref docutils literal"><span class="pre">Network</span></tt> models may
+be constructed and the subpackages used in their simulation and analysis.
+The routines in Pylon are translated from <a class="reference external" href="http://www.pserc.cornell.edu/matpower/">MATPOWER</a>, the <a class="reference external" href="http://www.pserc.cornell.edu/matpower/manual.pdf">user manual</a> for which will likely
+provide a more useful reference.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="index.html" title="previous chapter">PYLON</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="install.html" title="next chapter">Installation</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/intro.txt">Show Source</a></li>
+            </ul>
+          <h3>Quick search</h3>
+            <form class="search" action="search.html" method="get">
+              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
+              <input type="hidden" name="check_keywords" value="yes" />
+              <input type="hidden" name="area" value="default" />
+            </form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="PYLON"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="index.html">Pylon v0.2 documentation</a> </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
+    </div>
+  </body>
+</html>
