@@ -27,6 +27,8 @@ from enthought.traits.ui.api import TableEditor, InstanceEditor
 
 from enthought.traits.ui.table_column import ObjectColumn, ExpressionColumn
 
+from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
+
 from enthought.traits.ui.table_filter import \
     EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
 
@@ -35,6 +37,8 @@ from enthought.naming.unique_name import make_unique_name
 from pylon.branch import Branch
 
 from pylon.ui.branch_view import branch_view
+
+from common import OnlineColumn, OnlineFloatColumn
 
 #------------------------------------------------------------------------------
 #  Branch factory function:
@@ -66,58 +70,42 @@ def branch_factory(**row_factory_kw):
 
 branches_table_editor = TableEditor(
     columns = [
-        ObjectColumn(name="name"),
-        ObjectColumn(name="online", label="On"),
-        ObjectColumn(name="mode", editable=False),
-        ObjectColumn(
+        OnlineColumn(name="name"),
+        CheckboxColumn(name="online", label="On", width=0.06),
+        OnlineColumn(name="mode", editable=False),
+        OnlineColumn(
             name="source_bus",
             editor=InstanceEditor(name="buses", editable=False),
             label="Source", format_func=lambda obj: obj.name
         ),
-        ObjectColumn(
+        OnlineColumn(
             name="target_bus",
             editor=InstanceEditor(name="buses", editable=False),
             label="Target", format_func=lambda obj: obj.name
         ),
-        ObjectColumn(name="r", label="R"),
-        ObjectColumn(name="x", label="X"),
-        ObjectColumn(name="b", label="B"),
-#        ObjectColumn(name="r_zero", label="R0"),
-#        ObjectColumn(name="x_zero", label="X0"),
-        ObjectColumn(name="ratio", label="Tap"),
-        ObjectColumn(name="phase_shift", label="Shift"),
-#        ObjectColumn(name="rating_s", label="S"),
-#        ObjectColumn(name="rating_v", label="V"),
-#        ObjectColumn(name="rating_f", label="f"),
-#        ObjectColumn(name="s_max", label="Smax"),
-#        ObjectColumn(name="i_max", label="Imax"),
-#        ObjectColumn(name="p_max", label="Pmax"),
+        OnlineFloatColumn(name="r", label="R"),
+        OnlineFloatColumn(name="x", label="X"),
+        OnlineFloatColumn(name="b", label="B"),
+#        OnlineFloatColumn(name="r_zero", label="R0"),
+#        OnlineFloatColumn(name="x_zero", label="X0"),
+        OnlineFloatColumn(name="ratio", label="Tap"),
+        OnlineFloatColumn(name="phase_shift", label="Shift"),
+#        OnlineFloatColumn(name="rating_s", label="S"),
+#        OnlineFloatColumn(name="rating_v", label="V"),
+#        OnlineFloatColumn(name="rating_f", label="f"),
+#        OnlineFloatColumn(name="s_max", label="Smax"),
+#        OnlineFloatColumn(name="i_max", label="Imax"),
+#        OnlineFloatColumn(name="p_max", label="Pmax"),
 
-#        ObjectColumn(
-#            name="p_source",
-#            label="Psrc",
-#            editable=False
-#        ),
-#        ObjectColumn(
-#            name="p_target",
-#            label="Pdst",
-#            editable=False
-#        ),
-#        ObjectColumn(
-#            name="q_source",
-#            label="Qsrc",
-#            editable=False
-#        ),
-#        ObjectColumn(
-#            name="q_target",
-#            label="Qtar",
-#            editable=False
-#        )
+        OnlineFloatColumn(name="p_source", label="Psrc", editable=False),
+        OnlineFloatColumn(name="q_source", label="Qsrc", editable=False),
+        OnlineFloatColumn(name="mu_s_source", label="|S_source| mu",
+                          editable=False)
     ],
     show_toolbar=True,
     deletable=True,
     orientation="horizontal",
-    edit_view=branch_view,
+#    edit_view=branch_view,
 #    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter(),
     row_factory=branch_factory,

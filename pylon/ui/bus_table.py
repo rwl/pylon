@@ -36,7 +36,7 @@ from enthought.traits.ui.table_filter import \
 from pylon.bus import Bus
 
 from bus_view import bus_view
-from common import FloatColumn
+from common import ContextMenuColumn, FloatColumn
 
 #------------------------------------------------------------------------------
 #  Bus factory function:
@@ -57,8 +57,8 @@ def bus_factory(**row_factory_kw):
 
 buses_table_editor = TableEditor(
     columns = [
-        ObjectColumn(name="name"),
-        ObjectColumn(name="mode", editable=False),
+        ContextMenuColumn(name="name"),
+        ContextMenuColumn(name="mode", editable=False),
         FloatColumn( name     = "p_supply",
                      label    = "Ps",
                      editable = False ),
@@ -75,15 +75,15 @@ buses_table_editor = TableEditor(
 #        ObjectColumn(name="v_amplitude", label="Vnom"),
         FloatColumn(name="v_amplitude_guess", label="Vm0"),
         FloatColumn(name="v_phase_guess", label="Va0"),
-    #    ObjectColumn(name="v_max", label="Vmax"),
-    #    ObjectColumn(name="v_min", label="Vmin"),
+        FloatColumn(name="g_shunt", label="Gshunt"),
+        FloatColumn(name="b_shunt", label="Bshunt"),
         FloatColumn(name="v_amplitude", editable=False, label="Va"),
-    #    ObjectColumn(name="v_phase", editable=False, label="Vp")
+        FloatColumn(name="p_lambda", editable=False, label="Lambda ($/MWh)")
     ],
     show_toolbar=True,
     deletable=True,
     orientation="horizontal",
-    edit_view=bus_view,
+#    edit_view=bus_view,
 #    filters=[EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate],
     search=RuleTableFilter(),
     row_factory=bus_factory,
