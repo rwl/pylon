@@ -11,8 +11,8 @@ Pylon's features currently include:
 
 * DC and AC power flow,
 * DC and AC optimal power flow,
-* PSS/E, `MATPOWER <http://www.pserc.cornell.edu/matpower/>`_ and `PSAT
-<http://www.power.uwaterloo.ca/~fmilano/psat.htm>`_ data file parsers, and
+* PSS/E, `MATPOWER <http://www.pserc.cornell.edu/matpower/>`_ and `PSAT 
+  <http://www.power.uwaterloo.ca/~fmilano/psat.htm>`_ data file parsers, and
 * Competitive agents using reinforcement learning.
 
 -----------
