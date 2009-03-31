@@ -1,5 +1,5 @@
 =====
-PYLON
+Pylon
 =====
 
 Pylon is a software package for simulation and analysis of electric power
@@ -11,8 +11,7 @@ Pylon's features currently include:
 
 * DC and AC power flow,
 * DC and AC optimal power flow,
-* PSS/E, `MATPOWER <http://www.pserc.cornell.edu/matpower/>`_ and `PSAT 
-  <http://www.power.uwaterloo.ca/~fmilano/psat.htm>`_ data file parsers, and
+* PSS/E, MATPOWER_ and PSAT_ data file parsers, and
 * Competitive agents using reinforcement learning.
 
 -----------
@@ -24,10 +23,13 @@ With Python_ and setuptools_ installed, run::
   $ easy_install pylon
 
 Pylon will attempt to recognise the format of a data file, solve the AC power
-flow problem and output a `ReStructuredText <http://docutils.sf.net/rst.html>`_
-report by default::
+flow problem and output a ReStructuredText_ report by default::
 
   $ pylon ehv3.raw
+
+Full details of the command line options are available::
+
+  $ pylon --help
 
 Refer to the documentation for detailed usage information.
 
@@ -38,11 +40,12 @@ Credits
 Pylon is developed by Richard W. Lincoln (r.w.lincoln@gmail.com).
 
 The power flow and optimal power flow routines provided with Pylon are
-translated from `MATPOWER <http://www.pserc.cornell.edu/matpower/>`_ by R. D.
-Zimmerman, C. E. Murillo-Sanchez & D. Gan.
+translated from MATPOWER_ by R. D. Zimmerman, C. E. Murillo-Sanchez & D. Gan.
 
 Pylon is funded by the `Engineering and Physical Sciences Research Council
 <http://www.epsrc.ac.uk/default.htm>`_ through `Grant GR/T28836/01
 <http://gow.epsrc.ac.uk/ViewGrant.aspx?GrantRef=GR/T28836/01>`_ for the
 `SUPERGEN <http://www.supergen-hdps.org>`_ Highly Distributed Power Systems
 Consortium.
+
+.. include:: ./doc/links_names.txt
