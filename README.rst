@@ -25,11 +25,7 @@ With Python_ and setuptools_ installed, run::
 Pylon will attempt to recognise the format of a data file, solve the AC power
 flow problem and output a ReStructuredText_ report by default::
 
-  $ pylon ehv3.raw
-
-Full details of the command line options are available::
-
-  $ pylon --help
+  $ pylon data_file.raw
 
 Refer to the documentation for detailed usage information.
 
@@ -48,4 +44,7 @@ Pylon is funded by the `Engineering and Physical Sciences Research Council
 `SUPERGEN <http://www.supergen-hdps.org>`_ Highly Distributed Power Systems
 Consortium.
 
-.. include:: ./doc/links_names.txt
+.. _MATPOWER: http://www.pserc.cornell.edu/matpower/
+.. _PSAT: http://www.power.uwaterloo.ca/~fmilano/psat.htm
+.. _ReStructuredText: http://docutils.sf.net/rst.html
+
