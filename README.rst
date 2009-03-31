@@ -44,6 +44,8 @@ Pylon is funded by the `Engineering and Physical Sciences Research Council
 `SUPERGEN <http://www.supergen-hdps.org>`_ Highly Distributed Power Systems
 Consortium.
 
+.. _Python: http://www.python.org
+.. _Setuptools: http://peak.telecommunity.com/DevCenter/setuptools
 .. _MATPOWER: http://www.pserc.cornell.edu/matpower/
 .. _PSAT: http://www.power.uwaterloo.ca/~fmilano/psat.htm
 .. _ReStructuredText: http://docutils.sf.net/rst.html
