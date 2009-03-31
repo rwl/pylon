@@ -47,6 +47,7 @@ dist: clean all
 	@echo "Build finished.  Final docs are in dist/"
 
 public_html: dist
+#    grep -R --files-with-matches '_static' . | sort | uniq | xargs perl -pi~ -e 's/_static/static/'
 	rsync -avH --delete dist/ $(WWW)/doc/manual/
 
 public_web: public_html

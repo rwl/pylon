@@ -4,7 +4,7 @@
  */
 
 body {
-    font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', sans-serif;
+    font-family: 'Verdana', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', sans-serif;
     font-size: 14px;
     letter-spacing: -0.01em;
     line-height: 150%;
@@ -35,7 +35,7 @@ pre {
     font-size: 0.95em;
     letter-spacing: 0.015em;
     padding: 0.5em;
-    border: 1px solid #ccc;
+    border: 1px dashed #ccc;
     background-color: #f8f8f8;
 }
 
@@ -197,7 +197,7 @@ div.related ul li a {
     margin: 0;
     padding: 0 5px 0 5px;
     line-height: 1.75em;
-    color: #528B8B;
+    color: #11557C;
 }
 
 div.related ul li a:hover {
@@ -210,7 +210,7 @@ div.body {
 }
 
 div.bodywrapper {
-    margin: 0 0 0 240px;
+    margin: 0 0 0 200px;
     border-left: 1px solid #ccc;
 }
 
@@ -221,7 +221,7 @@ div.body a {
 div.sphinxsidebar {
     margin: 0;
     padding: 0.5em 15px 15px 0;
-    width: 210px;
+    width: 180px;
     float: left;
     text-align: left;
     margin-left: -100%;
@@ -231,9 +231,9 @@ div.sphinxsidebar h4, div.sphinxsidebar h3 {
     margin: 1em 0 0.5em 0;
     font-size: 0.9em;
     padding: 0.1em 0 0.1em 0.5em;
-    color: white;
+    color: #11557C;
     border: 1px solid #668B8B;
-    background-color: #96CDCD;
+    background-color: #E3EFF1;
 }
 
 div.sphinxsidebar ul {
@@ -246,6 +246,7 @@ div.sphinxsidebar ul {
 
 div.sphinxsidebar ul ul {
     list-style: disc;
+    color: #11557C;
     margin-left: 20px;
 }
 
@@ -301,15 +302,22 @@ h2 {
     margin: 1.3em 0 0.2em 0;
     font-size: 1.35em;
     padding: 0;
+    color: #11557C;
 }
 
 h3 {
     margin: 1em 0 -0.3em 0;
     font-size: 1.2em;
+    color: #11557C;
+}
+
+h4 {
+    margin: 1em 0 -0.1em 0;
+    color: #11557C;
 }
 
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
-    color: black!important;
+    color: #11557C!important;
 }
 
 h1 a.anchor, h2 a.anchor, h3 a.anchor, h4 a.anchor, h5 a.anchor, h6 a.anchor {
