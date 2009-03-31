@@ -16,7 +16,7 @@ Source code repository
 ----------------------
 
 The latest source code for Pylon is available from `Github
-<http://www.github.com/rwl/pylon.git>`_::
+<http://www.github.com/rwl/pylon>`_::
 
     $ git clone git://github.com/rwl/pylon.git
 
