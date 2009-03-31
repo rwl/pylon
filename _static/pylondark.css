@@ -4,13 +4,13 @@
  */
 
 body {
-    font-family: 'Verdana', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', sans-serif;
+    font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', sans-serif;
     font-size: 14px;
     letter-spacing: -0.01em;
     line-height: 150%;
     text-align: center;
-    /*background-color: #AFC1C4; */
-    color: black;
+    background-color: black;
+    color: white;
 /*    border: 1px solid #aaa; */
 
     margin: 0px 10px 0px 10px;
@@ -18,12 +18,12 @@ body {
 }
 
 a {
-    color: #000080;
+    color: #7AA6A6;
     text-decoration: none;
 }
 
 a:hover {
-    color: #008B8B;
+    color: #009ACD;
 }
 
 li[class="toctree-l1"] ul {
@@ -35,8 +35,8 @@ pre {
     font-size: 0.95em;
     letter-spacing: 0.015em;
     padding: 0.5em;
-    border: 1px dashed #ccc;
-    background-color: #f8f8f8;
+    border: 1px dashed #2C2C2C;
+    background-color: #171717;
 }
 
 td.linenos pre {
@@ -155,7 +155,7 @@ pre a {
 }
 
 div.document {
-    background-color: white;
+    background-color: #1D1D1D;
     text-align: left;
 }
 
@@ -197,7 +197,7 @@ div.related ul li a {
     margin: 0;
     padding: 0 5px 0 5px;
     line-height: 1.75em;
-    color: #11557C;
+    color: #9B9B9B;
 }
 
 div.related ul li a:hover {
@@ -210,8 +210,9 @@ div.body {
 }
 
 div.bodywrapper {
-    margin: 0 0 0 200px;
+    margin: 0 0 0 240px;
     border-left: 1px solid #ccc;
+    background-color: black;
 }
 
 div.body a {
@@ -221,7 +222,7 @@ div.body a {
 div.sphinxsidebar {
     margin: 0;
     padding: 0.5em 15px 15px 0;
-    width: 180px;
+    width: 210px;
     float: left;
     text-align: left;
     margin-left: -100%;
@@ -231,9 +232,9 @@ div.sphinxsidebar h4, div.sphinxsidebar h3 {
     margin: 1em 0 0.5em 0;
     font-size: 0.9em;
     padding: 0.1em 0 0.1em 0.5em;
-    color: #11557C;
-    border: 1px solid #668B8B;
-    background-color: #E3EFF1;
+    color: white;
+    border: 1px solid #4B6666;
+    background-color: #171717;
 }
 
 div.sphinxsidebar ul {
@@ -246,7 +247,6 @@ div.sphinxsidebar ul {
 
 div.sphinxsidebar ul ul {
     list-style: disc;
-    color: #11557C;
     margin-left: 20px;
 }
 
@@ -295,29 +295,23 @@ h1 {
     margin: 0;
     padding: 0.7em 0 0.3em 0;
     font-size: 1.5em;
-    color: #11557C;
+    color: #366A6A;
 }
 
 h2 {
     margin: 1.3em 0 0.2em 0;
     font-size: 1.35em;
     padding: 0;
-    color: #11557C;
+    color: #366A6A;
 }
 
 h3 {
     margin: 1em 0 -0.3em 0;
     font-size: 1.2em;
-    color: #11557C;
-}
-
-h4 {
-    margin: 1em 0 -0.1em 0;
-    color: #11557C;
 }
 
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
-    color: #11557C!important;
+    color: white!important;
 }
 
 h1 a.anchor, h2 a.anchor, h3 a.anchor, h4 a.anchor, h5 a.anchor, h6 a.anchor {
@@ -348,7 +342,7 @@ table td, table th {
 }
 
 div.footer {
-    background-color: #E3EFF1;
+    background-color: black;
     color: #86989B;
     padding: 3px 8px 3px 0;
     clear: both;

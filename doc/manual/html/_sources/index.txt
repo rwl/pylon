@@ -9,7 +9,7 @@ PYLON
 
 	**Richard W. Lincoln**
 
-	Download `PDF <http://pylon.eee.strath.ac.uk/site/doc/manual/pylon.pdf>`_
+	Download `PDF <http://rwl.github.com/pylon/pylon.pdf>`_
 
 	Contents:
 

@@ -4,8 +4,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Power System Model &mdash; Pylon v0.2 documentation</title>
-    <link rel="stylesheet" href="_static/pylon.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="static/pylon.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -15,8 +15,8 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="copyright" title="Copyright" href="copyright.html" />
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="install.html" title="Installation"
              accesskey="P">previous</a> |</li>
-    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    <li><a href="http://rwl.github.com/pylon/">PYLON Home</a> |</li>
     
         <li><a href="index.html">Pylon v0.2 documentation</a> </li>
  
@@ -67,7 +67,7 @@ of the graph and a list of <tt class="xref docutils literal"><span class="pre">B
 define the edges.</p>
 <p>For convenience, a <tt class="docutils literal"><span class="pre">Network</span></tt> provides certain read-only properties, such as
 <tt class="docutils literal"><span class="pre">all_generators</span></tt>, that are used regularly by other modules.</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">pylon</span> <span class="kn">import</span> <span class="n">Network</span>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="k">from</span> <span class="nn">pylon</span> <span class="k">import</span> <span class="n">Network</span>
 <span class="gp">In [2]: </span><span class="n">network</span> <span class="o">=</span> <span class="n">Network</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;net1&quot;</span><span class="p">,</span> <span class="n">mva_base</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -78,7 +78,7 @@ define the edges.</p>
 
 <p>A <tt class="docutils literal"><span class="pre">Bus</span></tt> is a node in the power system graph to which <tt class="docutils literal"><span class="pre">Generator</span></tt> and
 <tt class="docutils literal"><span class="pre">Load</span></tt> objects may be added.</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">pylon</span> <span class="kn">import</span> <span class="n">Network</span><span class="p">,</span> <span class="n">Bus</span>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="k">from</span> <span class="nn">pylon</span> <span class="k">import</span> <span class="n">Network</span><span class="p">,</span> <span class="n">Bus</span>
 <span class="gp">In [2]: </span><span class="n">network</span> <span class="o">=</span> <span class="n">Network</span><span class="p">()</span>
 <span class="gp">In [3]: </span><span class="n">bus</span> <span class="o">=</span> <span class="n">Bus</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;bus1&quot;</span><span class="p">,</span> <span class="n">v_amplitude_guess</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
 <span class="gp">In [4]: </span><span class="n">network</span><span class="o">.</span><span class="n">buses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bus</span><span class="p">)</span>
@@ -222,7 +222,7 @@ profile sequence each time it is called.</p>
         <li class="right" >
           <a href="install.html" title="Installation"
              accesskey="P">previous</a> |</li>
-    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    <li><a href="http://rwl.github.com/pylon/">PYLON Home</a> |</li>
     
         <li><a href="index.html">Pylon v0.2 documentation</a> </li>
  
