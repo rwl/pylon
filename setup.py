@@ -29,7 +29,7 @@ setup(
     },
 #    extras_require={},
 #    ext_modules=[],
-    install_requires=["ETS >= 3.2.0", "Traits >= 3.0.3"],# "Godot"],
+    install_requires=["ETS>=3.2.0", "Traits>=3.0.3"],# "Godot"],
     license="GPLv2",
     name="Pylon",
     include_package_data=True,
