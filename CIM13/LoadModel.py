@@ -59,7 +59,7 @@ class LoadArea(EnergyArea):
     """
 
     # The SubLoadAreas in the LoadArea.
-    SubLoadAreas = List(Instance("SubLoadArea"))#, minlen=1)
+    SubLoadAreas = List(Instance("SubLoadArea"), opposite="LoadArea")
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -72,18 +72,18 @@ class LoadArea(EnergyArea):
 #        super(LoadArea, self).__init__(**traits)
 
 
-    @on_trait_change("SubLoadAreas,SubLoadAreas_items")
-    def _on_subload_areas(self, obj, name, old, new):
-        """ Handles the bidirectional relationship.
-        """
-        if isinstance(new, TraitListEvent):
-            old = new.removed
-            new = new.added
-
-        for each_old in old:
-            each_old.LoadArea = None
-        for each_new in new:
-            each_new.LoadArea = self
+#    @on_trait_change("SubLoadAreas,SubLoadAreas_items")
+#    def _on_subload_areas(self, obj, name, old, new):
+#        """ Handles the bidirectional relationship.
+#        """
+#        if isinstance(new, TraitListEvent):
+#            old = new.removed
+#            new = new.added
+#
+#        for each_old in old:
+#            each_old.LoadArea = None
+#        for each_new in new:
+#            each_new.LoadArea = self
 
 #------------------------------------------------------------------------------
 #  "SubLoadArea" class:
@@ -95,11 +95,11 @@ class SubLoadArea(EnergyArea):
     """
 
     # The LoadArea where the SubLoadArea belongs.
-    LoadArea = Instance(LoadArea, allow_none=False)
+    LoadArea = Instance(LoadArea, allow_none=False, opposite="SubLoadAreas")
 
     # The Loadgroups in the SubLoadArea.
     LoadGroups = List(Instance("LoadGroup"),# minlen=1,
-        desc="load groups in the SubLoadArea")
+        desc="load groups in the SubLoadArea", opposite="SubLoadArea")
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -112,29 +112,29 @@ class SubLoadArea(EnergyArea):
 #        super(SubLoadArea, self).__init__(**traits)
 
 
-    @on_trait_change("LoadArea")
-    def _on_load_area(self, obj, name, old, new):
-        """ Handles the bidirectional relationship.
-        """
-        if (old is not None) and (self in old.SubLoadAreas):
-            old.SubLoadAreas.remove(self)
-
-        if (old is not None) and (self not in new.SubLoadAreas):
-            new.SubLoadAreas.append(self)
-
-
-    @on_trait_change("LoadGroups,LoadGroups_items")
-    def _on_load_groups(self, obj, name, old, new):
-        """ Handles the bidirectional relationship.
-        """
-        if isinstance(new, TraitListEvent):
-            old = new.removed
-            new = new.added
-
-        for each_old in old:
-            each_old.SubLoadArea = None
-        for each_new in new:
-            each_new.SubLoadArea = self
+#    @on_trait_change("LoadArea")
+#    def _on_load_area(self, obj, name, old, new):
+#        """ Handles the bidirectional relationship.
+#        """
+#        if (old is not None) and (self in old.SubLoadAreas):
+#            old.SubLoadAreas.remove(self)
+#
+#        if (old is not None) and (self not in new.SubLoadAreas):
+#            new.SubLoadAreas.append(self)
+#
+#
+#    @on_trait_change("LoadGroups,LoadGroups_items")
+#    def _on_load_groups(self, obj, name, old, new):
+#        """ Handles the bidirectional relationship.
+#        """
+#        if isinstance(new, TraitListEvent):
+#            old = new.removed
+#            new = new.added
+#
+#        for each_old in old:
+#            each_old.SubLoadArea = None
+#        for each_new in new:
+#            each_new.SubLoadArea = self
 
 #------------------------------------------------------------------------------
 #  "SeasonDayTypeSchedule" class:
@@ -167,8 +167,9 @@ class ConformLoadSchedule(SeasonDayTypeSchedule):
 #    LoadDataSets = List(Instance(LoadDataSet))
 
     # The ConformLoadGroup where the ConformLoadSchedule belongs.
-    ConformLoadGroup = Instance("ConformLoadGroup", allow_none=False,
-        desc="where the ConformLoadSchedule belongs")
+    ConformLoadGroup = Instance("ConformLoadGroup",# allow_none=False,
+        desc="where the ConformLoadSchedule belongs",
+        opposite="ConformLoadSchedules")
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -191,26 +192,26 @@ class ConformLoadSchedule(SeasonDayTypeSchedule):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, conform_load_group, **traits):
+    def __init__(self, **traits):
         """ Initialises a new ConformLoadSchedule instance.
         """
-        self.ConformLoadGroup = conform_load_group
+        super(ConformLoadSchedule, self).__init__(**traits)
+
         self.value1Multiplier = "k"
         self.value1Unit = "W"
         self.value2Multiplier = "k"
         self.value2Unit = "VAr"
-        super(ConformLoadSchedule, self).__init__(**traits)
 
 
-    @on_trait_change("ConformLoadGroup")
-    def _on_conform_load_group(self, obj, name, old, new):
-        """ Handles the bidirectional relationship.
-        """
-        if (old is not None) and (self in old.ConformLoadSchedules):
-            old.ConformLoadSchedules.remove(self)
-
-        if (old is not None) and (self not in new.ConformLoadSchedules):
-            new.ConformLoadSchedules.append(self)
+#    @on_trait_change("ConformLoadGroup")
+#    def _on_conform_load_group(self, obj, name, old, new):
+#        """ Handles the bidirectional relationship.
+#        """
+#        if (old is not None) and (self in old.ConformLoadSchedules):
+#            old.ConformLoadSchedules.remove(self)
+#
+#        if (old is not None) and (self not in new.ConformLoadSchedules):
+#            new.ConformLoadSchedules.append(self)
 
 #------------------------------------------------------------------------------
 #  "LoadGroup" class:
@@ -223,7 +224,7 @@ class LoadGroup(IdentifiedObject):
 
     # The SubLoadArea where the load group belongs.
     SubLoadArea = Instance(SubLoadArea,# allow_none=False,
-        desc="where the load group belongs")
+        desc="where the load group belongs", opposite="LoadGroups")
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -236,15 +237,15 @@ class LoadGroup(IdentifiedObject):
 #        super(LoadGroup, self).__init__(**traits)
 
 
-    @on_trait_change("SubLoadArea")
-    def _on_subload_area(self, obj, name, old, new):
-        """ Handles the bidirectional relationship.
-        """
-        if (old is not None) and (self in old.LoadGroups):
-            old.LoadGroups.remove(self)
-
-        if (old is not None) and (self not in new.LoadGroups):
-            new.LoadGroups.append(self)
+#    @on_trait_change("SubLoadArea")
+#    def _on_subload_area(self, obj, name, old, new):
+#        """ Handles the bidirectional relationship.
+#        """
+#        if (old is not None) and (self in old.LoadGroups):
+#            old.LoadGroups.remove(self)
+#
+#        if (old is not None) and (self not in new.LoadGroups):
+#            new.LoadGroups.append(self)
 
 #------------------------------------------------------------------------------
 #  "ConformLoadGroup" class:
@@ -256,10 +257,11 @@ class ConformLoadGroup(LoadGroup):
 
     # Consumers may be assigned to a load area.
     EnergyConsumers = List(Instance("ConformLoad"), desc="consumers may be "
-        "assigned to a load area")
+        "assigned to a load area", opposite="LoadGroup")
 
     # The ConformLoadSchedules in the ConformLoadGroup.
-    ConformLoadSchedules = List(Instance(ConformLoadSchedule))#, minlen=1)
+    ConformLoadSchedules = List(Instance(ConformLoadSchedule),
+        opposite="ConformLoadGroup")
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -287,32 +289,32 @@ class ConformLoadGroup(LoadGroup):
 #        super(ConformLoadGroup, self).__init__(sub_load_area, **traits)
 
 
-    @on_trait_change("EnergyConsumers,EnergyConsumers_items")
-    def _on_energy_consumers(self, obj, name, old, new):
-        """ Handles the bidirectional relationship.
-        """
-        if isinstance(new, TraitListEvent):
-            old = new.removed
-            new = new.added
-
-        for each_old in old:
-            each_old.LoadGroup = None
-        for each_new in new:
-            each_new.LoadGroup = self
-
-
-    @on_trait_change("ConformLoadSchedules,ConformLoadSchedules_items")
-    def _on_conform_load_schedules(self, obj, name, old, new):
-        """ Handles the bidirectional relationship.
-        """
-        if isinstance(new, TraitListEvent):
-            old = new.removed
-            new = new.added
-
-        for each_old in old:
-            each_old.ConformLoadGroup = None
-        for each_new in new:
-            each_new.ConformLoadGroup = self
+#    @on_trait_change("EnergyConsumers,EnergyConsumers_items")
+#    def _on_energy_consumers(self, obj, name, old, new):
+#        """ Handles the bidirectional relationship.
+#        """
+#        if isinstance(new, TraitListEvent):
+#            old = new.removed
+#            new = new.added
+#
+#        for each_old in old:
+#            each_old.LoadGroup = None
+#        for each_new in new:
+#            each_new.LoadGroup = self
+#
+#
+#    @on_trait_change("ConformLoadSchedules,ConformLoadSchedules_items")
+#    def _on_conform_load_schedules(self, obj, name, old, new):
+#        """ Handles the bidirectional relationship.
+#        """
+#        if isinstance(new, TraitListEvent):
+#            old = new.removed
+#            new = new.added
+#
+#        for each_old in old:
+#            each_old.ConformLoadGroup = None
+#        for each_new in new:
+#            each_new.ConformLoadGroup = self
 
 #------------------------------------------------------------------------------
 #  "ConformLoad" class:
@@ -324,20 +326,21 @@ class ConformLoad(EnergyConsumer):
     """
 
     # Consumers may be assigned to a load area.
-    LoadGroup = Instance(ConformLoadGroup, desc="load area for consumers")
+    LoadGroup = Instance(ConformLoadGroup, desc="load area for consumers",
+        opposite="EnergyConsumers")
 
     _LoadGroups = List(Instance(ConformLoadGroup))
 
 
-    @on_trait_change("LoadGroup")
-    def _on_load_group(self, obj, name, old, new):
-        """ Handles the bidirectional relationship.
-        """
-        if (old is not None) and (self in old.EnergyConsumers):
-            old.EnergyConsumers.remove(self)
-
-        if (old is not None) and (self not in new.EnergyConsumers):
-            new.EnergyConsumers.append(self)
+#    @on_trait_change("LoadGroup")
+#    def _on_load_group(self, obj, name, old, new):
+#        """ Handles the bidirectional relationship.
+#        """
+#        if (old is not None) and (self in old.EnergyConsumers):
+#            old.EnergyConsumers.remove(self)
+#
+#        if (old is not None) and (self not in new.EnergyConsumers):
+#            new.EnergyConsumers.append(self)
 
 #------------------------------------------------------------------------------
 #  "Load" class:

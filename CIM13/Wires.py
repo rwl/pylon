@@ -32,6 +32,10 @@ from enthought.traits.api import \
 
 from CIM13.Core import Curve, Equipment, ConductingEquipment, PhaseCode
 
+#------------------------------------------------------------------------------
+#  Trait definitions:
+#------------------------------------------------------------------------------
+
 SynchronousMachineOperatingMode = Enum("generator", "condenser")
 
 SynchronousMachineType = Enum("generatorcondenser", "condenser", "generator")
@@ -79,12 +83,15 @@ class SynchronousMachine(RegulatingCondEq):
 
     # A synchronous machine may operate as a generator and as such becomes a
     # member of a generating unit
-    MemberOf_GeneratingUnit = Instance("GeneratingUnit")
+    MemberOf_GeneratingUnit = Instance("GeneratingUnit",
+        opposite="Contains_SynchronousMachines")
 
-    ReactiveCapabilityCurves = List(Instance("ReactiveCapabilityCurve"))
+    ReactiveCapabilityCurves = List(Instance("ReactiveCapabilityCurve"),
+        opposite="SynchronousMachines")
 
     # Defines the default MVArCapabilityCurve for use by a SynchronousMachine.
-    InitialReactiveCapabilityCurve = Instance("ReactiveCapabilityCurve")
+    InitialReactiveCapabilityCurve = Instance("ReactiveCapabilityCurve",
+        opposite="InitiallyUsedBySynchronousMachine")
 
 #    DrivenBy_PrimeMover = Instance("PrimeMover")
 
@@ -158,10 +165,12 @@ class ReactiveCapabilityCurve(Curve):
         reactive minimum and the Y2 axis values represent reactive maximum.
     """
 
-    SynchronousMachines = List(Instance(SynchronousMachine))
+    SynchronousMachines = List(Instance(SynchronousMachine),
+        opposite="ReactiveCapabilityCurves")
 
     # Defines the default MVArCapabilityCurve for use by a SynchronousMachine.
-    InitiallyUsedBySynchronousMachine = List(Instance(SynchronousMachine))
+    InitiallyUsedBySynchronousMachine = List(Instance(SynchronousMachine),
+        opposite="InitialReactiveCapabilityCurve")
 
 #------------------------------------------------------------------------------
 #  "Conductor" class:
@@ -254,7 +263,8 @@ class PowerTransformer(Equipment):
     """
 
     # A transformer has windings.
-    Contains_TransformerWindings = List(Instance("TransformerWinding"))
+    Contains_TransformerWindings = List(Instance("TransformerWinding"),
+        opposite="MemeberOf_PowerTransformer")
 
     # The reference voltage at which the magnetizing saturation measurements
     # were made.
@@ -278,7 +288,8 @@ class TransformerWinding(ConductingEquipment):
 #    TapChangers = List(Instance(TapChanger))
 
     # A transformer has windings
-    MemeberOf_PowerTransformer = Instance(PowerTransformer)
+    MemeberOf_PowerTransformer = Instance(PowerTransformer,
+        opposite="Contains_TransformerWindings")
 
     # The rated voltage (phase-to-phase) of the winding, usually the same as
     # the neutral voltage.

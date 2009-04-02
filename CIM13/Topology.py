@@ -48,7 +48,8 @@ class TopologicalIsland(IdentifiedObject):
     AngleRef_TopologicalNode = Instance("TopologicalNode")
 
     # A topological node belongs to a topological island.
-    TopologicalNodes = List(Instance("TopologicalNode"))
+    TopologicalNodes = List(Instance("TopologicalNode"),
+        opposite="TopologicalIsland")
 
 #------------------------------------------------------------------------------
 #  "TopologicalNode" class:
@@ -63,11 +64,13 @@ class TopologicalNode(IdentifiedObject):
 
     # Several ConnectivityNode(s) may combine together to form a single
     # TopologicalNode, depending on the current state of the network.
-    ConnectivityNodes = List(Instance("ConnectivityNode"), desc="connectivity "
-        "nodes that form the topological node")
+    ConnectivityNodes = List(Instance("ConnectivityNode"),
+        desc="connectivity nodes that form the topological node",
+        opposite="TopologicalNode")
 
     # A topological node belongs to a topological island.
-    TopologicalIsland = Instance("TopologicalIsland")
+    TopologicalIsland = Instance("TopologicalIsland",
+        opposite="TopologicalNodes")
 
     # True if node energized.
 #    energized = Bool(True)
@@ -98,10 +101,10 @@ class ConnectivityNode(IdentifiedObject):
 
     # Terminals interconnect with zero impedance at a node.  Measurements on a
     # node apply to all of its terminals.
-    Terminals = List(Instance(Terminal))
+    Terminals = List(Instance(Terminal), opposite="ConductingEquipment")
 
     # Several ConnectivityNode(s) may combine together to form a single
     # TopologicalNode, depending on the current state of the network.
-    TopologicalNode = Instance(TopologicalNode)
+    TopologicalNode = Instance(TopologicalNode, opposite="ConnectivityNodes")
 
 # EOF -------------------------------------------------------------------------

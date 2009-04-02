@@ -48,25 +48,27 @@ class GeneratingUnit(Equipment):
     # operation of the unit
     GenUnitOpSchedule = Instance("GenUnitOpSchedule",
         desc="operating schedule, indicating the planned operation of the "
-        "unit")
+        "unit", opposite="GeneratingUnit")
 
 #    ControlAreaGeneratingUnit = List(Instance("ControlAreaGeneratingUnit"))
 
     # A generating unit may have a gross active power to net active power
     # curve, describing the losses and auxiliary power requirements of the unit
     GrossToNetActivePowerCurves = List(Instance(HasTraits),
-        desc="gross active power to net active power curve")
+        desc="gross active power to net active power curve",
+        opposite="GeneratingUnit")
 
     # A synchronous machine may operate as a generator and as such becomes a
     # member of a generating unit
     Contains_SynchronousMachines = List(Instance("SynchronousMachine"),
-        desc="synchronous machines operating as generators")
+        desc="synchronous machines operating as generators",
+        opposite="MemberOf_GeneratingUnit")
 
     # A generating unit may have one or more cost curves, depending upon fuel
     # mixture and fuel cost.
     GenUnitOpCostCurves = List(Instance("GenUnitOpCostCurve"),
         desc="one or more cost curves, depending upon fuel mixture and fuel "
-        "cost")
+        "cost", opposite="GeneratingUnit")
 
     # Default Initial active power which is used to store a powerflow result
     # for the initial active power for this unit in this network configuration
@@ -210,7 +212,8 @@ class GrossToNetActivePowerCurve(Curve):
     # curve, describing the losses and auxiliary power requirements of the
     # unit.
     GeneratingUnit = Instance(GeneratingUnit, desc="a generating unit may "
-        "have a gross active power to net active power curve")
+        "have a gross active power to net active power curve",
+        opposite="GrossToNetActivePowerCurves")
 
 #------------------------------------------------------------------------------
 #  "GenUnitOpCostCurve" class:
@@ -224,12 +227,13 @@ class GenUnitOpCostCurve(Curve):
         costs.
     """
 
-    # Flag is set to true when output is expressed in net active power.
-    isNetGrossP = Bool
-
     # A generating unit may have one or more cost curves, depending upon fuel
     # mixture and fuel cost.
-    GeneratingUnit = Instance(GeneratingUnit, desc="parent unit")
+    GeneratingUnit = Instance(GeneratingUnit, desc="parent unit",
+        opposite="GenUnitOpCostCurves")
+
+    # Flag is set to true when output is expressed in net active power.
+    isNetGrossP = Bool
 
 #------------------------------------------------------------------------------
 #  "GenUnitOpSchedule" class:
@@ -246,7 +250,8 @@ class GenUnitOpSchedule(RegularIntervalSchedule):
 
     # A generating unit may have an operating schedule, indicating the planned
     # operation of the unit.
-    GeneratingUnit = Instance(GeneratingUnit, desc="parent unit")
+    GeneratingUnit = Instance(GeneratingUnit, desc="parent unit",
+        opposite="GenUnitOpSchedule")
 
     #--------------------------------------------------------------------------
     #  Views:
