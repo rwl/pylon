@@ -29,7 +29,7 @@ setup(
     },
 #    extras_require={},
 #    ext_modules=[],
-    install_requires=["ETS>=3.2.0"],
+    install_requires=["ETS>=3.2.0", "Traits>=3.0.3"],# "Godot"],
     license="GPLv2",
     name="Pylon",
     include_package_data=True,
@@ -37,7 +37,7 @@ setup(
 #    package_data={"": ["*.txt", "*.rst", "*.png", "*.jpg", "*.ini"]},
 #    package_dir={"": "src"},
     packages=find_packages(),#"src"),#exclude=["docs", "docs.*"]),
-    namespace_packages=[],
+#    namespace_packages=[],
     test_suite = "pylon.test",
     platforms = ["Windows", "Linux", "Mac OS-X", "Unix", "Solaris"],
     zip_safe=False
