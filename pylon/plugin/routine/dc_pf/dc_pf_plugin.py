@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" DC Power Flow plug-in for Pylon """
+""" DC Power Flow plug-in for Pylon.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
 from enthought.envisage.api import Plugin
-
 from enthought.traits.api import Instance, List
 
 #------------------------------------------------------------------------------
@@ -30,7 +30,8 @@ from enthought.traits.api import Instance, List
 #------------------------------------------------------------------------------
 
 class DCPFPlugin(Plugin):
-    """ DC Power Flow plug-in """
+    """ DC Power Flow plug-in.
+    """
 
     # Extension point IDs
     ACTION_SETS = "enthought.envisage.ui.workbench.action_sets"
@@ -53,8 +54,8 @@ class DCPFPlugin(Plugin):
     #--------------------------------------------------------------------------
 
     def _action_sets_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pylon.plugin.routine.dc_pf.dc_pf_action_set import DCPFActionSet
 
         return [DCPFActionSet]

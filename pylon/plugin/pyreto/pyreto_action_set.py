@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines action sets for the Pyreto plug-in """
+""" Defines action sets for the Pyreto plug-in.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
 from enthought.envisage.ui.action.api import Action, Group, Menu, ToolBar
-
 from enthought.envisage.ui.workbench.api import WorkbenchActionSet
 
 #------------------------------------------------------------------------------
@@ -30,7 +30,8 @@ from enthought.envisage.ui.workbench.api import WorkbenchActionSet
 #------------------------------------------------------------------------------
 
 class PyretoWorkbenchActionSet(WorkbenchActionSet):
-    """ An action set for the Pyreto plug-in """
+    """ An action set for the Pyreto plug-in.
+    """
 
     #--------------------------------------------------------------------------
     #  "ActionSet" interface:
@@ -40,27 +41,20 @@ class PyretoWorkbenchActionSet(WorkbenchActionSet):
     id = "pylon.plugin.pyreto.workbench_action_set"
 
     # The menus in this set
-    menus = [
-        Menu(
-            name="&New", path="MenuBar/File", group="OpenGroup",
-            groups=["ContainerGroup", "ComponentGroup", "OtherGroup"]
-        ),
-    ]
+    menus = [ Menu(name="&New", path="MenuBar/File", group="OpenGroup",
+        groups=["ContainerGroup", "ComponentGroup", "OtherGroup"]) ]
 
-    # The actions in this set
-    actions = [
-        Action(
-            path="MenuBar/File/New", group="ComponentGroup",
-            class_name="pylon.plugin.pyreto.pyreto_action:NewSwarmAction"
-        )
-    ]
+    # The actions in this set.
+    actions = [ Action(path="MenuBar/File/New", group="ComponentGroup",
+        class_name="pylon.plugin.pyreto.pyreto_action:NewSwarmAction") ]
 
 #------------------------------------------------------------------------------
 #  "PyretoWorkspaceActionSet" class:
 #------------------------------------------------------------------------------
 
 class PyretoWorkspaceActionSet(WorkbenchActionSet):
-    """ Actions contributed to the Workspace plug-in """
+    """ Actions contributed to the Workspace plug-in.
+    """
 
     #--------------------------------------------------------------------------
     #  "ActionSet" interface:
@@ -70,11 +64,7 @@ class PyretoWorkspaceActionSet(WorkbenchActionSet):
     id = "pylon.plugin.pyreto.workspace_action_set"
 
     # The actions in this set
-    actions = [
-        Action(
-            path="Workspace/New", group="ComponentGroup",
-            class_name="pylon.plugin.pyreto.pyreto_action:NewSwarmAction"
-        )
-    ]
+    actions = [ Action(path="Workspace/New", group="ComponentGroup",
+        class_name="pylon.plugin.pyreto.pyreto_action:NewSwarmAction") ]
 
 # EOF -------------------------------------------------------------------------

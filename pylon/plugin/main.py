@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Run the Pylon application """
+""" Run the Pylon application.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -25,48 +26,30 @@ import logging
 
 from enthought.envisage.core_plugin import CorePlugin
 
-from enthought.envisage.developer.developer_plugin import DeveloperPlugin
+from envisage.workbench.workbench_plugin import WorkbenchPlugin
+from envisage.workbench.workbench_application import WorkbenchApplication
 
-from enthought.envisage.developer.ui.developer_ui_plugin import \
-    DeveloperUIPlugin
-
-#try:
-#    from enthought.plugins.ipython_shell.ipython_shell_plugin import \
-#        IPythonShellPlugin as PythonShellPlugin
-#except ImportError:
-from enthought.plugins.python_shell.python_shell_plugin import \
-    PythonShellPlugin
-
-from enthought.plugins.text_editor.text_editor_plugin import TextEditorPlugin
-
-#from enthought.plugins.python_editor.python_editor_plugin import \
-#    PythonEditorPlugin
-
-from pylon.plugin.resource.resource_plugin import ResourcePlugin
-
-#from enthought.plugins.property_view.property_view_plugin import \
-#    PropertyViewPlugin
-#
-#from enthought.plugins.image_editor.image_editor_plugin import \
-#    ImageEditorPlugin
+from enthought.plugins.ipython_shell.ipython_shell_plugin \
+    import IPythonShellPlugin
 
 from enthought.logger.plugin.logger_plugin import LoggerPlugin
+
+from envisage.plugin import EnvisagePlugin
+from envisage.resource.resource_plugin import ResourcePlugin
+from envisage.python_editor.python_editor_plugin import PythonEditorPlugin
+from envisage.property_view.property_view_plugin import PropertyViewPlugin
 
 #------------------------------------------------------------------------------
 #  Pylon imports:
 #------------------------------------------------------------------------------
 
-from pylon.plugin.workbench.pylon_workbench_application import \
-    PylonWorkbenchApplication
-
-from pylon.plugin.workbench.pylon_workbench_plugin import PylonWorkbenchPlugin
-
 from pylon.plugin.pylon_plugin import PylonPlugin
+from pylon.plugin.pylon_workbench_application import PylonWorkbenchApplication
 
-from pylon.plugin.filter.matpower.matpower_plugin import MATPOWERPlugin
-from pylon.plugin.filter.psat.psat_plugin import PSATPlugin
-from pylon.plugin.filter.psse.psse_plugin import PSSEPlugin
-from pylon.plugin.filter.m3.m3_plugin import M3Plugin
+from pylon.plugin.readwrite.matpower.matpower_plugin import MATPOWERPlugin
+from pylon.plugin.readwrite.psat.psat_plugin import PSATPlugin
+from pylon.plugin.readwrite.psse.psse_plugin import PSSEPlugin
+from pylon.plugin.readwrite.m3.m3_plugin import M3Plugin
 
 from pylon.plugin.routine.dc_opf.dc_opf_plugin import DCOPFPlugin
 from pylon.plugin.routine.dc_pf.dc_pf_plugin import DCPFPlugin
@@ -78,6 +61,8 @@ from pylon.plugin.graph.graph_plugin import GraphPlugin
 from pylon.plugin.graph_image.graph_image_plugin import GraphImagePlugin
 
 from pylon.plugin.pyreto.pyreto_plugin import PyretoPlugin
+
+from CIM.Plugin.CIMPlugin import CIMPlugin
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -94,43 +79,41 @@ logger.setLevel(logging.DEBUG)
 #------------------------------------------------------------------------------
 
 def main():
-    """ Runs the application """
+    """ Runs the application.
+    """
 
     # Create an Envisage application.
     application = PylonWorkbenchApplication(
         id = "pylon",
         plugins = [
             CorePlugin(),
-            DeveloperPlugin(),
-            DeveloperUIPlugin(),
-            PythonShellPlugin(),
-#            TextEditorPlugin(),
-#            PythonEditorPlugin(),
-#            ResourcePlugin(),
-#            PropertyViewPlugin(),
-#            ImageEditorPlugin(),
+            EnvisagePlugin(),
+            WorkbenchPlugin(),
+            ResourcePlugin(),
             LoggerPlugin(),
+            IPythonShellPlugin(),
+            PropertyViewPlugin(),
+            PythonEditorPlugin(),
             # Pylon plug-ins:
-            PylonWorkbenchPlugin(),
             PylonPlugin(),
             MATPOWERPlugin(),
             PSATPlugin(),
             PSSEPlugin(),
             M3Plugin(),
             DCPFPlugin(),
-#            DCOPFPlugin(),
-#            ACPFPlugin(),
-#            ACOPFPlugin(),
+            DCOPFPlugin(),
+            ACPFPlugin(),
+            ACOPFPlugin(),
             GraphImagePlugin(),
             GraphPlugin(),
-#            PyretoPlugin()
+#            PyretoPlugin(),
+            # Other plug-ins
+            CIMPlugin(),
         ]
     )
 
     # Run it!
     application.run()
-
-    return
 
 
 if __name__ == "__main__":

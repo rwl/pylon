@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2008 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,31 +15,58 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pylon editor extensions """
+""" Pylon editor extensions.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os.path import dirname
+from os.path import dirname, join
 
 from enthought.pyface.api import ImageResource
-from enthought.plugins.workspace.editor import Editor
-
-import pylon.ui.api
+from envisage.resource.editor import Editor
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_LOCATION = dirname(pylon.ui.api.__file__)
+IMAGE_LOCATION = join(dirname(__file__), "..", "ui", "images")
+
+#------------------------------------------------------------------------------
+#  "PylonTreeEditorExtension" class:
+#------------------------------------------------------------------------------
+
+class PylonTreeEditorExtension(Editor):
+    """ Associates a tree editor with *.pyl files.
+    """
+
+    # The object contribution's globally unique identifier.
+    id = "pylon.plugins.pylon_tree_editor"
+
+    # A name that will be used in the UI for this editor
+    name = "Tree Editor"
+
+    # An icon that will be used for all resources that match the
+    # specified extensions
+    image = ImageResource("tree", search_path=[IMAGE_LOCATION])
+
+    # The contributed editor class
+    editor_class = "pylon.plugin.pylon_tree_editor:PylonTreeEditor"
+
+    # The list of file types understood by the editor
+    extensions = [".pkl"]
+
+    # If true, this editor will be used as the default editor for the type
+    default = True
 
 #------------------------------------------------------------------------------
 #  "PylonTableEditorExtension" class:
 #------------------------------------------------------------------------------
 
 class PylonTableEditorExtension(Editor):
-    """ Associates a table editor with *.pyl files """
+    """ Associates a table editor with *.pkl files.
+    """
 
     # The object contribution's globally unique identifier.
     id = "pylon.plugins.pylon_table_editor"
@@ -55,43 +82,18 @@ class PylonTableEditorExtension(Editor):
     editor_class = "pylon.plugin.pylon_table_editor:PylonTableEditor"
 
     # The list of file types understood by the editor
-    extensions = [".pyl"]
+    extensions = [".pkl"]
 
     # If true, this editor will be used as the default editor for the type
     default = False
-
-#------------------------------------------------------------------------------
-#  "PylonTreeEditorExtension" class:
-#------------------------------------------------------------------------------
-
-class PylonTreeEditorExtension(Editor):
-    """ Associates a tree editor with *.pyl files """
-
-    # The object contribution's globally unique identifier.
-    id = "pylon.plugins.pylon_table_editor"
-
-    # A name that will be used in the UI for this editor
-    name = "Tree Editor"
-
-    # An icon that will be used for all resources that match the
-    # specified extensions
-    image = ImageResource("tree", search_path=[IMAGE_LOCATION])
-
-    # The contributed editor class
-    editor_class = "pylon.plugin.pylon_tree_editor:PylonTreeEditor"
-
-    # The list of file types understood by the editor
-    extensions = [".pyl"]
-
-    # If true, this editor will be used as the default editor for the type
-    default = True
 
 #------------------------------------------------------------------------------
 #  "PylonPlotEditorExtension" class:
 #------------------------------------------------------------------------------
 
 class PylonPlotEditorExtension(Editor):
-    """ Associates a plot editor with *.pyl files """
+    """ Associates a plot editor with *.pkl files.
+    """
 
     # The object contribution's globally unique identifier.
     id = "pylon.plugins.pylon_plot_editor"
@@ -107,7 +109,7 @@ class PylonPlotEditorExtension(Editor):
     editor_class = "pylon.plugin.pylon_plot_editor:PylonPlotEditor"
 
     # The list of file types understood by the editor
-    extensions = [".pyl"]
+    extensions = [".pll"]
 
     # If true, this editor will be used as the default editor for the type
     default = False

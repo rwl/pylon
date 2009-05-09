@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Graph editor """
+""" Graph editor.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -24,25 +25,23 @@
 from os.path import join, dirname
 
 from enthought.pyface.image_resource import ImageResource
-
-from enthought.plugins.workspace.resource_editor import ResourceEditor
+from envisage.resource.resource_editor import ResourceEditor
 
 from pylon.ui.graph.graph import Graph
-
-import pylon.ui.api
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_LOCATION = dirname(pylon.ui.api.__file__)
+IMAGE_LOCATION = join(dirname(__file__), "..", "ui", "images")
 
 #------------------------------------------------------------------------------
 #  "GraphEditor" class:
 #------------------------------------------------------------------------------
 
 class GraphEditor(ResourceEditor):
-    """ A graph editor for the current network """
+    """ A graph editor for the current network.
+    """
 
     image = ImageResource("dot", search_path=[IMAGE_LOCATION])
 
@@ -51,7 +50,8 @@ class GraphEditor(ResourceEditor):
     #--------------------------------------------------------------------------
 
     def create_ui(self, parent):
-        """ Creates the traits UI that represents the editor """
+        """ Creates the traits UI that represents the editor.
+        """
 
         self.document = document = self.provider.create_document(self.obj)
 

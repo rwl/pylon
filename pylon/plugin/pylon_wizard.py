@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,32 +15,31 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pylon workspace wizard extensions """
+""" Pylon workspace wizard extensions.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os.path import dirname
+from os.path import dirname, join
 
 from enthought.pyface.api import ImageResource
-from enthought.plugins.workspace.wizard_extension import WizardExtension
-
-import pylon.ui.api
+from envisage.resource.wizard_extension import WizardExtension
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_LOCATION = dirname(pylon.ui.api.__file__)
+IMAGE_LOCATION = join(dirname(__file__), "..", "ui", "images")
 
 #------------------------------------------------------------------------------
 #  "NetworkWizardExtension" class:
 #------------------------------------------------------------------------------
 
 class NetworkWizardExtension(WizardExtension):
-    """ Contributes a new network wizard """
-
+    """ Contributes a new network wizard.
+    """
     # The wizard contribution's globally unique identifier.
     id = "pylon.plugin.new_network_wizard"
 

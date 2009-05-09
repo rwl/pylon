@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a wizard for network resource creation """
+""" Defines a wizard for network resource creation
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -38,13 +39,13 @@ from enthought.traits.ui.menu import OKCancelButtons
 from enthought.pyface.wizard.api import SimpleWizard, WizardPage
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
-from pylon.plugin.resource.i_workspace import IWorkspace
-from pylon.plugin.resource.action.open_action import OpenAction
+from envisage.resource.i_workspace import IWorkspace
+from envisage.resource.action.open_action import OpenAction
 
-from pylon.plugin.resource.wizard.container_selection_page import \
+from envisage.resource.wizard.container_selection_page import \
     ContainerSelectionPage
 
-from pylon.plugin.resource.resource_editor import PickledProvider
+from envisage.resource.resource_editor import PickledProvider
 
 from pylon.api import Network
 
@@ -52,14 +53,15 @@ from pylon.api import Network
 #  Constants:
 #------------------------------------------------------------------------------
 
-WORKSPACE_VIEW = "enthought.plugins.workspace.workspace_view"
+WORKSPACE_VIEW = "envisage.resource.resource_view"
 
 #------------------------------------------------------------------------------
 #  "NetworkWizardPage" class:
 #------------------------------------------------------------------------------
 
 class NetworkWizardPage(WizardPage):
-    """ Wizard page for Network creation """
+    """ Wizard page for Network creation.
+    """
 
     network_name = Str
 
@@ -71,35 +73,31 @@ class NetworkWizardPage(WizardPage):
     abs_path = Property(Str, depends_on=["network_name"])
 
     # A label with advice
-    _label = Property(
-        Str("Create a new network model resource."),
-        depends_on=["network_name"]
-    )
+    _label = Property(Str("Create a new network model resource."),
+        depends_on=["network_name"])
 
     # Has the network's name been changed
     _named = Bool(False)
 
     # The default view
     traits_view = View(
-        Group(
-            Heading("Network"),
+        Group(Heading("Network"),
             Item("_label", style="readonly", show_label=False),
-            "_",
-        ),
-        Item("network_name")
-    )
+            "_"),
+        Item("network_name"))
+
 
     @cached_property
     def _get_abs_path(self):
-        """ Property getter """
-
+        """ Property getter.
+        """
         return join(self.csp.directory, self.network_name)
 
 
     @cached_property
     def _get__label(self):
-        """ Property getter """
-
+        """ Property getter.
+        """
         if (exists(self.abs_path)) and (len(self.network_name) != 0):
             l = "A network with that name already exists."
             self.complete = False
@@ -115,13 +113,12 @@ class NetworkWizardPage(WizardPage):
         else:
             l = "Create a new network model resource."
             self.complete = True
-
         return l
 
 
     def _network_name_changed(self):
-        """ Sets a flag when the name is changed """
-
+        """ Sets a flag when the name is changed.
+        """
         self._named = True
 
     #--------------------------------------------------------------------------
@@ -129,8 +126,8 @@ class NetworkWizardPage(WizardPage):
     #--------------------------------------------------------------------------
 
     def create_page(self, parent):
-        """ Creates the wizard page """
-
+        """ Creates the wizard page.
+        """
         ui = self.edit_traits(parent=parent, kind="subpanel")
 
         return ui.control
@@ -140,7 +137,8 @@ class NetworkWizardPage(WizardPage):
 #------------------------------------------------------------------------------
 
 class NetworkWizard(SimpleWizard):
-    """ A wizard for network resource creation """
+    """ A wizard for network resource creation.
+    """
 
     # The dialog title
     title = Str("New Network")
@@ -158,8 +156,8 @@ class NetworkWizard(SimpleWizard):
     #--------------------------------------------------------------------------
 
     def __init__(self, window, **traits):
-        """ Returns a NetworkWizard """
-
+        """ Returns a NetworkWizard.
+        """
         self.window = window
         workspace = window.application.get_service(IWorkspace)
 
@@ -176,10 +174,8 @@ class NetworkWizard(SimpleWizard):
 
     def _finished_fired(self):
         """ Performs the network resource creation if the wizard is
-        finished successfully.
-
+            finished successfully.
         """
-
         workspace = self.window.application.get_service(IWorkspace)
 
         csp = self.pages[0]
@@ -198,15 +194,15 @@ class NetworkWizard(SimpleWizard):
 
 
     def _open_resource(self, file):
-        """ Makes the file the current selection and opens it """
-
+        """ Makes the file the current selection and opens it.
+        """
         self.window.selection = [file]
         OpenAction(window=self.window).perform(event=None)
 
 
     def _refresh_container(self, container):
-        """ Refreshes the workspace tree view """
-
+        """ Refreshes the workspace tree view.
+        """
         view = self.window.get_view_by_id(WORKSPACE_VIEW)
         if view is not None:
             view.tree_viewer.refresh(container)

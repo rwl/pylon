@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" AC Power Flow plug-in for Pylon """
+""" AC Power Flow plug-in for Pylon.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
 from enthought.envisage.api import Plugin
-
 from enthought.traits.api import Instance, List
 
 #------------------------------------------------------------------------------
@@ -30,8 +30,8 @@ from enthought.traits.api import Instance, List
 #------------------------------------------------------------------------------
 
 class ACPFPlugin(Plugin):
-    """ AC Power Flow plug-in """
-
+    """ AC Power Flow plug-in.
+    """
     # Extension point IDs
     ACTION_SETS = "enthought.envisage.ui.workbench.action_sets"
 
@@ -53,8 +53,8 @@ class ACPFPlugin(Plugin):
     #--------------------------------------------------------------------------
 
     def _action_sets_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pylon.plugin.routine.ac_pf.ac_pf_action_set import ACPFActionSet
 
         return [ACPFActionSet]

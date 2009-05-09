@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2008 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,13 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a plot editor for Pylon resources """
+""" Defines a plot editor for Pylon resources.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from enthought.plugins.workspace.resource_editor import ResourceEditor
+from envisage.resource.resource_editor import ResourceEditor
 
 from pylon.ui.plot.bus_bar_plot import BusBarPlot
 
@@ -30,15 +31,16 @@ from pylon.ui.plot.bus_bar_plot import BusBarPlot
 #------------------------------------------------------------------------------
 
 class PylonPlotEditor(ResourceEditor):
-    """ Defines a plot editor for Pylon resources """
+    """ Defines a plot editor for Pylon resources.
+    """
 
     #--------------------------------------------------------------------------
     #  "ResourceEditor" interface
     #--------------------------------------------------------------------------
 
     def create_ui(self, parent):
-        """ Creates the traits UI that represents the editor """
-
+        """ Creates the traits UI that represents the editor.
+        """
         self.document = document = self.provider.create_document(self.obj)
         plot = BusBarPlot(network=document)
 

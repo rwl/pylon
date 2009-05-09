@@ -15,13 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines Pylon plug-in actions """
+""" Defines Pylon plug-in actions.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os.path import dirname
+from os.path import dirname, join
 
 from enthought.traits.api import Bool
 from enthought.pyface.action.api import Action
@@ -30,13 +31,11 @@ from enthought.pyface.api import ImageResource, OK
 
 from pylon.plugin.pylon_network_wizard import NetworkWizard
 
-import pylon.ui.api
-
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_PATH = dirname(pylon.ui.api.__file__)
+IMAGE_PATH = join(dirname(__file__), "..", "ui", "images")
 
 #------------------------------------------------------------------------------
 #  "NewNetworkAction" class:
@@ -44,8 +43,7 @@ IMAGE_PATH = dirname(pylon.ui.api.__file__)
 
 class NewNetworkAction(Action):
     """ An action for instantiating a new Pylon network and adding it
-    to the project.
-
+        to the project.
     """
 
     #--------------------------------------------------------------------------
@@ -69,11 +67,10 @@ class NewNetworkAction(Action):
     #--------------------------------------------------------------------------
 
     def perform(self, event):
-        """ Performs the action """
-
-        wizard = NetworkWizard(
-            parent=self.window.control, window=self.window, title="New Network"
-        )
+        """ Performs the action.
+        """
+        wizard = NetworkWizard(parent=self.window.control, window=self.window,
+            title="New Network")
 
         # Open the wizard
         if wizard.open() == OK:

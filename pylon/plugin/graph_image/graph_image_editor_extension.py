@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2008 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,32 +15,31 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pylon graph image editor extensions """
+""" Pylon graph image editor extensions.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os.path import dirname
+from os.path import dirname, join
 
 from enthought.pyface.api import ImageResource
-
-from enthought.plugins.workspace.editor import Editor
-
-import pylon.ui.api
+from envisage.resource.editor import Editor
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_LOCATION = dirname(pylon.ui.api.__file__)
+IMAGE_LOCATION = join(dirname(__file__), "..", "..", "ui", "images")
 
 #------------------------------------------------------------------------------
 #  "GraphImageEditorExtension" class:
 #------------------------------------------------------------------------------
 
 class GraphImageEditorExtension(Editor):
-    """ Associates a graph editor with *.pyl files """
+    """ Associates a graph editor with *.pkl files.
+    """
 
     # The object contribution's globally unique identifier.
     id = "pylon.plugins.graph.graph_editor"
@@ -54,10 +53,10 @@ class GraphImageEditorExtension(Editor):
 
     # The contributed editor class
     editor_class = "pylon.plugin.graph_image.graph_image_editor:" \
-    "GraphImageEditor"
+        "GraphImageEditor"
 
     # The list of file types understood by the editor
-    extensions = [".pyl"]
+    extensions = [".pkl"]
 
     # If true, this editor will be used as the default editor for the type
     default = False

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" An action set for the DC OPF plug-in """
+""" An action set for the DC OPF plug-in.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
 from enthought.envisage.ui.action.api import Action, Group, Menu, ToolBar
-
 from enthought.envisage.ui.workbench.api import WorkbenchActionSet
 
 #------------------------------------------------------------------------------
@@ -30,7 +30,8 @@ from enthought.envisage.ui.workbench.api import WorkbenchActionSet
 #------------------------------------------------------------------------------
 
 class DCOPFActionSet(WorkbenchActionSet):
-    """ An action set for the DC OPF routine """
+    """ An action set for the DC OPF routine.
+    """
 
     #--------------------------------------------------------------------------
     #  "ActionSet" interface:
@@ -41,8 +42,8 @@ class DCOPFActionSet(WorkbenchActionSet):
 
     menus = [
         Menu(
-            name="&Run", path="MenuBar", after="Edit",
-            groups=["ShortcutGroup", "RunAsGroup"]
+            name="&Tools", path="MenuBar", before="Help",
+            groups=["RunGroup", "IPythonShellGroup"]
         ),
         Menu(
             name="&Run As", path="Workspace", group="SubMenuGroup",
@@ -54,13 +55,13 @@ class DCOPFActionSet(WorkbenchActionSet):
         ToolBar(
             id="pylon.plugin.pylon_action_set.pylon_tool_bar",
             name="Routine", groups=["RunGroup"],
-            after="enthought.plugins.workspace.workspace_tool_bar"
+            after="envisage.resource.resource_tool_bar"
         )
     ]
 
     actions = [
         Action(
-            path="MenuBar/Run", group="RunAsGroup",
+            path="MenuBar/Tools", group="RunGroup",
             class_name="pylon.plugin.routine.dc_opf.dc_opf_action:DCOPFAction"
         ),
 #        Action(

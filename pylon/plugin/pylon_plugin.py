@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pylon plug-in """
+""" Defines the core Pylon plug-in.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -30,7 +31,8 @@ from enthought.traits.api import Instance, List
 #------------------------------------------------------------------------------
 
 class PylonPlugin(Plugin):
-    """ Pylon plugin """
+    """ Pylon plug-in.
+    """
 
     # Extension point IDs
     PERSPECTIVES = "enthought.envisage.ui.workbench.perspectives"
@@ -40,8 +42,8 @@ class PylonPlugin(Plugin):
 #    COMMANDS = "enthought.plugins.python_shell.commands"
     COMMANDS = "enthought.plugins.ipython_shell.commands"
 
-    NEW_WIZARDS = "enthought.plugins.workspace.new_wizards"
-    EDITORS = "enthought.plugins.workspace.editors"
+    NEW_WIZARDS = "envisage.resource.new_wizards"
+    EDITORS = "envisage.resource.editors"
 
     # Unique plugin identifier
     id = "pylon.plugin.pylon_plugin"
@@ -79,30 +81,30 @@ class PylonPlugin(Plugin):
     #--------------------------------------------------------------------------
 
     def _perspectives_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pylon_perspective import PylonEditPerspective
 
         return [PylonEditPerspective]
 
 
     def _preferences_pages_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pylon_preference_page import PylonRootPreferencePage
 
         return [PylonRootPreferencePage]
 
 
     def _preferences_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         return ["pkgfile://pylon/plugin/preferences.ini"]
 
 
     def _action_sets_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pylon_action_set import \
             PylonWorkbenchActionSet, PylonWorkspaceActionSet
 
@@ -110,36 +112,32 @@ class PylonPlugin(Plugin):
 
 
     def _commands_extensions_default(self):
-        """ Trait initialiser """
-
-        commands = [
-            "from pylon.api import *",
+        """ Trait initialiser.
+        """
+        commands = ["from pylon.api import *",
             "from pylon.readwrite.api import *",
-            "from pylon.routine.api import *"
-        ]
+            "from pylon.routine.api import *"]
 
         return commands
 
 
     def _new_wizards_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pylon_wizard import NetworkWizardExtension
 
         return [NetworkWizardExtension]
 
 
     def _editors_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pylon_editor_extension import \
             PylonTreeEditorExtension, PylonTableEditorExtension, \
             PylonPlotEditorExtension
 
-        editors = [
-            PylonTreeEditorExtension, PylonTableEditorExtension,
-            PylonPlotEditorExtension
-        ]
+        editors = [PylonTreeEditorExtension, PylonTableEditorExtension,
+            PylonPlotEditorExtension]
 
         return editors
 

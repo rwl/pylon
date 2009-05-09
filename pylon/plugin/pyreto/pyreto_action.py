@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" File menu actions for a Pyreto Swarm """
+""" File menu actions for a Pyreto Swarm.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -30,13 +31,11 @@ from enthought.pyface.api import ImageResource, FileDialog, OK
 
 from pylon.plugin.pyreto.swarm_wizard import SwarmWizard
 
-import pylon.ui.api
-
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_PATH = dirname(pylon.ui.api.__file__)
+IMAGE_PATH = join(dirname(__file__), "..", "..", "ui", "images")
 
 SELECTORS = "pylon.plugin.pyreto.selectors"
 
@@ -46,8 +45,7 @@ SELECTORS = "pylon.plugin.pyreto.selectors"
 
 class NewSwarmAction(Action):
     """ An action for instantiating a new Pyreto swarm and adding it
-    to the project.
-
+        to the project.
     """
 
     #--------------------------------------------------------------------------
@@ -71,11 +69,10 @@ class NewSwarmAction(Action):
     #--------------------------------------------------------------------------
 
     def perform(self, event):
-        """ Perform the action. """
-
-        wizard = SwarmWizard(
-            parent=self.window.control, window=self.window, title="New Swarm"
-        )
+        """ Perform the action.
+        """
+        wizard = SwarmWizard(parent=self.window.control, window=self.window,
+            title="New Swarm")
 
         # Open the wizard
         if wizard.open() == OK:

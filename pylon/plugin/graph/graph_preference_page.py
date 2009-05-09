@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-The preferences for the Pylon graph image
-
+""" Defines the preferences page for the Pylon graph image.
 """
 
 #------------------------------------------------------------------------------
@@ -25,7 +23,6 @@ The preferences for the Pylon graph image
 #------------------------------------------------------------------------------
 
 from tempfile import gettempdir
-
 from os.path import join, dirname, exists
 
 from enthought.traits.api import \
@@ -35,16 +32,12 @@ from enthought.traits.ui.api import View, Group, HGroup, VGroup, Item, Label
 
 from enthought.preferences.ui.api import PreferencesPage
 
-from enthought.traits.ui.api import View
-
 #------------------------------------------------------------------------------
 #  "GraphPreferencesPage" class:
 #------------------------------------------------------------------------------
 
 class GraphPreferencesPage(PreferencesPage):
-    """
-    The preferences page for the Pylon graph
-
+    """ Preferences page for the Pylon graph.
     """
 
     #--------------------------------------------------------------------------
@@ -72,10 +65,8 @@ class GraphPreferencesPage(PreferencesPage):
     # Graphviz layout engine
     program = Enum("dot", "circo", "neato", "twopi", "fdp")
 
-    traits_view = View(
-        Label("Graph"),
+    traits_view = View( Label("Graph"),
         "_",
-        Group(Item(name="program"))
-    )
+        Group(Item(name="program")) )
 
 # EOF -------------------------------------------------------------------------

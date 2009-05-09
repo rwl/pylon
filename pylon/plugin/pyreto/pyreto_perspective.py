@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Pyreto perspectives
-
+""" Pyreto perspectives
 """
 
 #------------------------------------------------------------------------------
@@ -31,7 +29,8 @@ from enthought.pyface.workbench.api import Perspective, PerspectiveItem
 #------------------------------------------------------------------------------
 
 class PyretoPerspective(Perspective):
-    """ The Pyreto editing perspective. """
+    """ The Pyreto editing perspective.
+    """
 
     # The perspective's name.
     name = "Pyreto"
@@ -41,15 +40,14 @@ class PyretoPerspective(Perspective):
 
     # The contents of the perspective:
     contents = [
-        PerspectiveItem(
-            id="pylon.plugin.pyreto.pyreto_tree_view", position="left"
-        ),
-        PerspectiveItem(
-            id="pylon.plugin.project_tree_view", position="with",
+        PerspectiveItem(id="pylon.plugin.pyreto.pyreto_tree_view",
+            position="left"),
+        PerspectiveItem(id="pylon.plugin.project_tree_view",
+            position="with",
             relative_to="pylon.plugin.pyreto.pyreto_tree_view"
         ),
-        PerspectiveItem(
-            id="enthought.plugins.ipython_shell_view", position="bottom"
+        PerspectiveItem(id="enthought.plugins.ipython_shell_view",
+            position="bottom"
         )
     ]
 

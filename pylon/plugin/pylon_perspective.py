@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pylon perspectives """
+""" Pylon workbench perspectives.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -28,8 +29,8 @@ from enthought.pyface.workbench.api import Perspective, PerspectiveItem
 #------------------------------------------------------------------------------
 
 class PylonEditPerspective(Perspective):
-    """ The Pylon editing perspective. """
-
+    """ The Pylon editing perspective.
+    """
     # The perspective's unique identifier (unique within a workbench window).
     id = "pylon.plugin.pylon_edit_perspective"
 
@@ -42,26 +43,22 @@ class PylonEditPerspective(Perspective):
     # The contents of the perspective:
     contents = [
         PerspectiveItem(
-            id="enthought.plugins.workspace.workspace_view",
-            position="left", width=0.3
-        ),
-#        PerspectiveItem(
-#            id="enthought.plugins.python_shell_view", position="bottom",
-#            height=0.05
-#        ),
+            id="envisage.resource.resource_view",
+            position="left", width=0.2),
         PerspectiveItem(
-            id="enthought.plugins.ipython_shell_view",
-            position="bottom", height=0.3
-        ),
+            id="enthought.plugins.python_shell_view",
+            position="bottom", height=0.2),
         PerspectiveItem(
             id="enthought.logger.plugin.view.logger_view.LoggerView",
-#            position="with", height=0.3,
-#            relative_to="enthought.plugins.ipython_shell_view"
-        ),
+            position="with", height=0.2,
+            relative_to="enthought.plugins.python_shell_view"),
         PerspectiveItem(
-            id="enthought.plugins.property_view.property_view",
-            position="right", width=0.3
-        )
+            id="envisage.property_view.property_view",
+            position="right", width=0.2),
+        PerspectiveItem(
+            id="enthought.plugins.ipython_shell.namespace_view",
+            position="with", width=0.2,
+            relative_to="envisage.property_view.property_view")
     ]
 
 # EOF -------------------------------------------------------------------------

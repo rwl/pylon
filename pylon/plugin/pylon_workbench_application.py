@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pylon specific workbench application """
+""" Pylon specific workbench application.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -32,25 +33,26 @@ from enthought.pyface.api import ImageResource, SplashScreen
 from enthought.etsconfig.api import ETSConfig
 
 if ETSConfig.toolkit == "wx":
-    from wx_about_dialog import AboutPylonDialog
+    from envisage.workbench.wx_about_dialog import AboutDialog
 elif ETSConfig.toolkit == "qt4":
-    from qt_about_dialog import AboutPylonDialog
+    from envisage.workbench.qt_about_dialog import AboutDialog
 else:
-    from enthought.pyface.api import AboutDialog as AboutPylonDialog
+    from enthought.pyface.api import AboutDialog
 
 #------------------------------------------------------------------------------
 #  "PylonWorkbenchApplication" class:
 #------------------------------------------------------------------------------
 
 class PylonWorkbenchApplication(WorkbenchApplication):
-    """ The Pylon application """
+    """ The Pylon application.
+    """
 
     #--------------------------------------------------------------------------
     #  IApplication interface:
     #--------------------------------------------------------------------------
 
     # The application's globally unique Id.
-    id = "uk.ac.strath.eee.pylon"
+    id = "com.github.pylon"
 
     #--------------------------------------------------------------------------
     #  WorkbenchApplication interface:
@@ -73,11 +75,13 @@ class PylonWorkbenchApplication(WorkbenchApplication):
     def _about_dialog_default(self):
         """ Trait initialiser """
 
-        about_dialog = AboutPylonDialog(
+        about_dialog = AboutDialog(
             parent=self.workbench.active_window.control,
             image=ImageResource("pylon"),
             additions=[
-                "Routines from PSAT & MATPOWER"
+                """ Routines from MATPOWER<br>
+                    Copyright &copy; 2009 Richard W. Lincoln
+                """
             ],
         )
 

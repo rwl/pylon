@@ -24,8 +24,8 @@ setup(
     url="http://rwl.github.com/pylon",
     version="0.2",
     entry_points={
-        "gui_scripts": ["envisage = pylon.plugin.main:main",
-                        "pylon = pylon.main:main"]
+        "gui_scripts": ["pylon = pylon.plugin.main:main",
+                        "pylon_vm = pylon.main:main"]
     },
 #    extras_require={},
 #    ext_modules=[],

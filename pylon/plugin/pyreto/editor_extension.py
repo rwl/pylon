@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2008 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pyreto editor extensions """
+""" Pyreto editor extensions.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -24,22 +25,21 @@
 from os.path import dirname
 
 from enthought.pyface.api import ImageResource
-from enthought.plugins.workspace.editor import Editor
-
-import pylon.ui.api
+from envisage.resource.editor import Editor
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_LOCATION = dirname(pylon.ui.api.__file__)
+IMAGE_PATH = join(dirname(__file__), "..", "..", "ui", "images")
 
 #------------------------------------------------------------------------------
 #  "SwarmTableEditor" class:
 #------------------------------------------------------------------------------
 
 class SwarmTableEditor(Editor):
-    """ Associates a table editor with *.pyr files """
+    """ Associates a table editor with *.pkl files.
+    """
 
     # The object contribution's globally unique identifier.
     id = "pylon.plugins.pyreto.swarm_table_editor"
@@ -55,7 +55,7 @@ class SwarmTableEditor(Editor):
     editor_class = "pylon.plugin.pyreto.pyreto_editor:SwarmTableEditor"
 
     # The list of file types understood by the editor
-    extensions = [".pyr"]
+    extensions = [".pkl"]
 
     # If true, this editor will be used as the default editor for the type
     default = True

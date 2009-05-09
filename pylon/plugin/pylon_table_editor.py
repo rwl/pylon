@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2008 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a table editor for Pylon resources """
+""" Defines a table editor for Pylon resources.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -24,7 +25,7 @@
 from enthought.traits.api import Instance
 from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup, Tabbed
 
-from enthought.plugins.workspace.resource_editor import ResourceEditor
+from envisage.resource.resource_editor import ResourceEditor
 
 from pylon.ui.bus_table import buses_table_editor
 from pylon.ui.branch_table import branches_table_editor
@@ -39,8 +40,7 @@ from pylon.api import Network
 
 class PylonTableEditor(ResourceEditor):
     """ Defines a workbench editor for editing network resources with
-    tabular views.
-
+        tabular views.
     """
 
     #--------------------------------------------------------------------------
@@ -48,8 +48,8 @@ class PylonTableEditor(ResourceEditor):
     #--------------------------------------------------------------------------
 
     def _create_view(self):
-        """ Create a view with a tree editor """
-
+        """ Create a view with a tree editor.
+        """
         buses_table_editor.on_select = self._on_select
 
         branches_table_editor.on_select = self._on_select
@@ -110,15 +110,15 @@ class PylonTableEditor(ResourceEditor):
 
 
 #    def _view_default(self):
-#        """ Trait initialiser """
-#
+#        """ Trait initialiser.
+#        """
 #        return View(Item(name="name"))
 
 
     def _on_select(self, object):
-        """ Handle tree node selection """
-
-        # No properties view for the whole network
+        """ Handle tree node selection.
+        """
+        # No properties view for the whole network.
         if isinstance(object, Network):
             self.selected = None
         else:

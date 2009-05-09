@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Action for solving the DC Power Flow problem """
+""" Action for solving the DC Power Flow problem.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -25,8 +26,9 @@ from enthought.io.api import File
 from enthought.traits.api import Instance, Callable
 from enthought.traits.ui.menu import Action
 from enthought.pyface.api import ImageResource
-from pylon.plugin.resource.resource_editor import PickledProvider
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
+
+from envisage.resource.resource_editor import PickledProvider
 
 from pylon.api import Network
 from pylon.ui.routine.dc_pf_view_model import DCPFViewModel
@@ -36,7 +38,8 @@ from pylon.ui.routine.dc_pf_view_model import DCPFViewModel
 #------------------------------------------------------------------------------
 
 class DCPFAction(Action):
-    """ Action for solving the DC Power Flow problem """
+    """ Action for solving the DC Power Flow problem.
+    """
 
     #--------------------------------------------------------------------------
     #  "Action" interface:
@@ -68,11 +71,11 @@ class DCPFAction(Action):
     #--------------------------------------------------------------------------
 
     def _selection_changed_for_window(self, new):
-        """ Enables the action when a File object is selected """
-
+        """ Enables the action when a File object is selected.
+        """
         if len(new) == 1:
             selection = new[0]
-            if isinstance(selection, File) and (selection.ext == ".pyl"):
+            if isinstance(selection, File) and (selection.ext == ".pkl"):
                 self.enabled = True
             else:
                 self.enabled = False
@@ -84,11 +87,11 @@ class DCPFAction(Action):
     #--------------------------------------------------------------------------
 
     def _enabled_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         if self.window.selection:
             sel = self.window.selection[0]
-            if isinstance(sel, File) and (sel.ext == ".pyl"):
+            if isinstance(sel, File) and (sel.ext == ".pkl"):
                 return True
             else:
                 return False
@@ -97,8 +100,8 @@ class DCPFAction(Action):
 
 
     def perform(self, event):
-        """ Perform the action. """
-
+        """ Perform the action.
+        """
         selected = self.window.selection[0]
         provider = PickledProvider()
         network = provider.create_document(selected)

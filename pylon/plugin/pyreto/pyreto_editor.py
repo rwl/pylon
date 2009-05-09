@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2008 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pyreto editors """
+""" Pyreto editors.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -23,29 +24,25 @@
 
 from enthought.traits.api import on_trait_change
 from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup, Tabbed
-from enthought.plugins.workspace.resource_editor import ResourceEditor
 
-from pylon.pyreto.participant_environment import ParticipantEnvironment
-
-from pyqle.agent.swarm import elementary_agents_table_editor
-from pyqle.agent.elementary_agent import ElementaryAgent
+from envisage.resource.resource_editor import ResourceEditor
 
 #-------------------------------------------------------------------------------
 #  Participant factory function:
 #-------------------------------------------------------------------------------
 
 def participant_factory(**row_factory_kw):
-    """ A factory that provides a ParticipantEnvironment association """
-
+    """ A factory that provides a ParticipantEnvironment association.
+    """
     if "__table_editor__" in row_factory_kw:
 #        swarm = row_factory_kw["__table_editor__"].object
 
-        env = ParticipantEnvironment()
-        agent = ElementaryAgent(environment=env)
+#        env = ParticipantEnvironment()
+#        agent = ElementaryAgent(environment=env)
 
         del row_factory_kw["__table_editor__"]
 
-        return agent
+        return None
 
 #------------------------------------------------------------------------------
 #  "SwarmTableEditor" class:
@@ -53,8 +50,7 @@ def participant_factory(**row_factory_kw):
 
 class SwarmTableEditor(ResourceEditor):
     """ Defines a workbench editor for editing swarm resources with
-    tabular views.
-
+        tabular views.
     """
 
     #--------------------------------------------------------------------------
@@ -62,8 +58,8 @@ class SwarmTableEditor(ResourceEditor):
     #--------------------------------------------------------------------------
 
     def _create_view(self):
-        """ Create a view with a tree editor """
-
+        """ Create a view with a tree editor.
+        """
         elementary_agents_table_editor.on_select = self._on_select
         elementary_agents_table_editor.row_factory = participant_factory
         elementary_agents_table_editor.row_factory_kw = {"__table_editor__":""}
@@ -93,8 +89,8 @@ class SwarmTableEditor(ResourceEditor):
 
 
     def _on_select(self, object):
-        """ Handle tree node selection """
-
+        """ Handle tree node selection.
+        """
         self.selected = object
 
 
@@ -104,8 +100,8 @@ class SwarmTableEditor(ResourceEditor):
         "document.environment.+"
     )
     def on_swarm_modified(self):
-        """ Handle modification to the swarm """
-
+        """ Handle modification to the swarm.
+        """
         self.dirty = True
 
 # EOF -------------------------------------------------------------------------

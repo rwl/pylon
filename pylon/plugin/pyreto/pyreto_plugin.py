@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +15,14 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pyreto plug-in """
+""" Pyreto plug-in.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
 from enthought.envisage.api import Plugin, ExtensionPoint
-
 from enthought.traits.api import Instance, List, Callable
 
 #------------------------------------------------------------------------------
@@ -30,7 +30,8 @@ from enthought.traits.api import Instance, List, Callable
 #------------------------------------------------------------------------------
 
 class PyretoPlugin(Plugin):
-    """ Pyreto plugin """
+    """ Pyreto plugin.
+    """
 
     # Extension point IDs
     PERSPECTIVES = "enthought.envisage.ui.workbench.perspectives"
@@ -40,8 +41,8 @@ class PyretoPlugin(Plugin):
 #    COMMANDS = "enthought.plugins.python_shell.commands"
     COMMANDS = "enthought.plugins.ipython_shell.commands"
 
-    NEW_WIZARDS = "enthought.plugins.workspace.new_wizards"
-    EDITORS = "enthought.plugins.workspace.editors"
+    NEW_WIZARDS = "envisage.resource.new_wizards"
+    EDITORS = "envisage.resource.editors"
 
     SELECTORS = "pylon.plugin.pyreto.selectors"
 
@@ -85,16 +86,16 @@ class PyretoPlugin(Plugin):
     #--------------------------------------------------------------------------
 
     def _perspectives_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pyreto_perspective import PyretoPerspective
 
         return [PyretoPerspective]
 
 
     def _action_sets_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pyreto_action_set import \
             PyretoWorkbenchActionSet, PyretoWorkspaceActionSet
 
@@ -102,30 +103,30 @@ class PyretoPlugin(Plugin):
 
 
     def _contributed_commands_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         return ["from pylon.pyreto.api import *"]
 
 
     def _new_wizards_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from wizard_extension import SwarmWizardExtension
 
         return [SwarmWizardExtension]
 
 
     def _editors_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from editor_extension import SwarmTableEditor#, SwarmTreeEditor
 
         return [SwarmTableEditor]
 
 
     def _bundled_selectors_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pyqle.selector.profile_selector import ProfileSelector
 
         return [ProfileSelector]

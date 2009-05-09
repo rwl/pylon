@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" The preferences for the Pylon graph image """
+""" The preferences for the Pylon graph image.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -38,7 +39,8 @@ from pylon.ui.graph.dot_attributes import shape_trait
 #------------------------------------------------------------------------------
 
 class GraphImagePreferencesPage(PreferencesPage):
-    """ The preferences page for the Pylon graph image """
+    """ The preferences page for the Pylon graph image.
+    """
 
     #--------------------------------------------------------------------------
     #  "PreferencesPage" interface:
@@ -79,14 +81,12 @@ class GraphImagePreferencesPage(PreferencesPage):
     v_shape = shape_trait
 
     # Bus node fill colour
-    v_fill_colour = Colour(
-        "green", desc="bus node fill colour", label="Bus fill colour"
-    )
+    v_fill_colour = Colour("green", desc="bus node fill colour",
+        label="Bus fill colour")
 
     # Bus node stroke colour
-    v_stroke_colour = Colour(
-        "blue", desc="bus node stroke colour", label="Bus stroke colour"
-    )
+    v_stroke_colour = Colour("blue", desc="bus node stroke colour",
+        label="Bus stroke colour")
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -123,8 +123,7 @@ class GraphImagePreferencesPage(PreferencesPage):
 
     # Recognised style names for nodes and edges
     _node_and_edge_styles = ListStr(
-        ["dashed", "dotted", "solid", "invis" "bold"]
-    )
+        ["dashed", "dotted", "solid", "invis" "bold"])
 
     # Recognised style names for nodes only
     _node_styles = ListStr
@@ -134,9 +133,10 @@ class GraphImagePreferencesPage(PreferencesPage):
     #--------------------------------------------------------------------------
 
     def __node_styles_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         node_styles = ["rounded", "filled", "diagonals"]
+
         return self._node_and_edge_styles + node_styles
 
 # EOF -------------------------------------------------------------------------

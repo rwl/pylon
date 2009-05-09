@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-The preference pages for Pylon
+""" Defines the preference pages for Pylon.
 
 """
 
@@ -27,11 +26,8 @@ The preference pages for Pylon
 from os.path import join
 
 from enthought.etsconfig.api import ETSConfig
-
 from enthought.traits.api import Float, File, Bool
-
 from enthought.traits.ui.api import View, Group, HGroup, VGroup, Item, Label
-
 from enthought.preferences.ui.api import PreferencesPage
 
 #------------------------------------------------------------------------------
@@ -39,18 +35,19 @@ from enthought.preferences.ui.api import PreferencesPage
 #------------------------------------------------------------------------------
 
 class PylonRootPreferencePage(PreferencesPage):
-    """ Root preferences page for Pylon """
+    """ Root preferences page for Pylon.
+    """
 
     #--------------------------------------------------------------------------
     #  "PreferencesPage" interface:
     #--------------------------------------------------------------------------
 
-    # The page's category (e.g. 'General/Appearance'). The empty string means
-    # that this is a top-level page.
+    # The page's category (e.g. 'General/Appearance'). The empty string
+    # means that this is a top-level page.
     category = ""
 
-    # The page's help identifier (optional). If a help Id *is* provided then
-    # there will be a 'Help' button shown on the preference page.
+    # The page's help identifier (optional). If a help Id *is* provided
+    # then there will be a 'Help' button shown on the preference page.
     help_id = ""
 
     # The page name (this is what is shown in the preferences dialog.

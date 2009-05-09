@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pylon interactive graph plug-in """
+""" Pylon interactive graph plug-in.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -30,11 +31,12 @@ from enthought.traits.api import Instance, List
 #------------------------------------------------------------------------------
 
 class GraphPlugin(Plugin):
-    """ Interactive graph plug-in """
+    """ Interactive graph plug-in.
+    """
 
     # Extension point IDs
     PREFERENCES_PAGES = "enthought.envisage.ui.workbench.preferences_pages"
-    EDITORS = "enthought.plugins.workspace.editors"
+    EDITORS = "envisage.resource.editors"
 
     # Unique plugin identifier
     id = "pylon.plugin.graph"
@@ -57,8 +59,8 @@ class GraphPlugin(Plugin):
     #--------------------------------------------------------------------------
 
     def _preferences_pages_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pylon.plugin.graph.graph_preference_page import \
             GraphPreferencesPage
 
@@ -66,8 +68,8 @@ class GraphPlugin(Plugin):
 
 
     def _editors_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         from pylon.plugin.graph.graph_editor_extension import \
             GraphEditorExtension
 

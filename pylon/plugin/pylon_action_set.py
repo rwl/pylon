@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Action sets for the Pylon plug-in """
+""" Action sets for the Pylon plug-in.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -30,7 +31,8 @@ from enthought.envisage.ui.workbench.api import WorkbenchActionSet
 #------------------------------------------------------------------------------
 
 class PylonWorkbenchActionSet(WorkbenchActionSet):
-    """ A set of workbench related actions for the Pylon plug-in """
+    """ A set of workbench related actions for the Pylon plug-in.
+    """
 
     #--------------------------------------------------------------------------
     #  "ActionSet" interface:
@@ -39,26 +41,19 @@ class PylonWorkbenchActionSet(WorkbenchActionSet):
     # The action set"s globally unique identifier.
     id = "pylon.plugin.workbench_action_set"
 
-    menus = [
-        Menu(
-            name="&New", path="MenuBar/File", group="OpenGroup",
-            groups=["ContainerGroup", "ComponentGroup", "OtherGroup"]
-        ),
-    ]
+    menus = [ Menu(name="&New", path="MenuBar/File", group="OpenGroup",
+        groups=["ContainerGroup", "ComponentGroup", "OtherGroup"]) ]
 
-    actions = [
-        Action(
-            path="MenuBar/File/New", group="ComponentGroup",
-            class_name="pylon.plugin.pylon_action:NewNetworkAction"
-        )
-    ]
+    actions = [ Action(path="MenuBar/File/New", group="ComponentGroup",
+        class_name="pylon.plugin.pylon_action:NewNetworkAction") ]
 
 #------------------------------------------------------------------------------
 #  "PylonWorkspaceActionSet" class:
 #------------------------------------------------------------------------------
 
 class PylonWorkspaceActionSet(WorkbenchActionSet):
-    """ Defines a set of actions for use with the workspace plug-in """
+    """ Defines a set of actions for use with the workspace plug-in.
+    """
 
     #--------------------------------------------------------------------------
     #  "ActionSet" interface:
@@ -68,11 +63,7 @@ class PylonWorkspaceActionSet(WorkbenchActionSet):
     id = "pylon.plugin.workspace_action_set"
 
     # The actions in this set
-    actions = [
-        Action(
-            path="Workspace/New", group="ComponentGroup",
-            class_name="pylon.plugin.pylon_action:NewNetworkAction"
-        )
-    ]
+    actions = [ Action(path="Workspace/New", group="ComponentGroup",
+        class_name="pylon.plugin.pylon_action:NewNetworkAction") ]
 
 # EOF -------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Graph image editor """
+""" Graph image editor.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -24,25 +25,24 @@
 from os.path import join, dirname
 
 from enthought.pyface.image_resource import ImageResource
-from enthought.plugins.workspace.resource_editor import ResourceEditor
+from envisage.resource.resource_editor import ResourceEditor
 from enthought.preferences.api import bind_preference
 
 from pylon.ui.graph.graph_image import GraphImage
-
-import pylon.ui.api
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_LOCATION = dirname(pylon.ui.api.__file__)
+IMAGE_PATH = join(dirname(__file__), "..", "ui", "images")
 
 #------------------------------------------------------------------------------
 #  "GraphImageEditor" class:
 #------------------------------------------------------------------------------
 
 class GraphImageEditor(ResourceEditor):
-    """ A graph editor for network resources """
+    """ A graph editor for network resources.
+    """
 
     image = ImageResource("graph", search_path=[IMAGE_LOCATION])
 
@@ -51,8 +51,8 @@ class GraphImageEditor(ResourceEditor):
     #--------------------------------------------------------------------------
 
     def create_ui(self, parent):
-        """ Creates the traits UI that represents the editor """
-
+        """ Creates the traits UI that represents the editor.
+        """
         self.document = document = self.provider.create_document(self.obj)
 
         g = GraphImage(network=document)
@@ -67,11 +67,9 @@ class GraphImageEditor(ResourceEditor):
         return ui
 
     def _bind_preferences(self, graph_image):
-        """ Binds the graph traits to the preferences """
-
-        bind_preference(
-            obj=graph_image, trait_name="program",
-            preference_path="pylon.graph_image.program"
-        )
+        """ Binds the graph traits to the preferences.
+        """
+        bind_preference(obj=graph_image, trait_name="program",
+            preference_path="pylon.graph_image.program")
 
 # EOF -------------------------------------------------------------------------
