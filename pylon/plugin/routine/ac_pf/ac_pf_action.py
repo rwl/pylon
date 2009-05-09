@@ -55,7 +55,7 @@ class ACPFAction(Action):
     tooltip = "AC Power Flow"
 
     # The action's image (displayed on tool bar tools etc):
-#    image = ImageResource("blank.png", search_path=[IMAGE_PATH])
+    image = ImageResource("ac")
 
     # Keyboard accelerator:
     accelerator = "Alt+A"
