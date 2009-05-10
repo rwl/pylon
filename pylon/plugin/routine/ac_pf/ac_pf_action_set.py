@@ -69,7 +69,7 @@ class ACPFActionSet(WorkbenchActionSet):
 #            class_name="pylon.plugin.routine.ac_pf.ac_pf_action:ACPFAction"
 #        )
         Action(
-            path="Workspace/Run As", group="RoutineGroup",
+            path="Resource/Run As", group="RoutineGroup",
             class_name="pylon.plugin.routine.ac_pf.ac_pf_action:ACPFAction"
         )
     ]

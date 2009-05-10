@@ -56,8 +56,7 @@ class ACOPFPlugin(Plugin):
     def _action_sets_default(self):
         """ Trait initialiser.
         """
-        from pylon.plugin.routine.ac_opf.ac_opf_action_set import \
-            ACOPFActionSet
+        from ac_opf_action_set import ACOPFActionSet
 
         return [ACOPFActionSet]
 

@@ -26,6 +26,7 @@ from enthought.traits.api import Instance
 from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup, Tabbed
 
 from envisage.resource.resource_editor import ResourceEditor
+from envisage.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.api import Network
 from pylon.ui.network_tree import network_tree_editor
@@ -53,7 +54,8 @@ class PylonTreeEditor(ResourceEditor):
     def create_ui(self, parent):
         """ Creates the traits UI that represents the editor.
         """
-        self.document = document = self.provider.create_document(self.obj)
+        resource = PickleFileIResourceAdapter(self.obj)
+        self.document = document = resource.load()
 
         ui = self.edit_traits(view=self._create_view(), parent=parent,
             kind="subpanel")

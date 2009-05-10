@@ -34,7 +34,7 @@ from pylon.ui.graph.graph_image import GraphImage
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_PATH = join(dirname(__file__), "..", "ui", "images")
+IMAGE_LOCATION = join(dirname(__file__), "..", "ui", "images")
 
 #------------------------------------------------------------------------------
 #  "GraphImageEditor" class:
@@ -53,7 +53,7 @@ class GraphImageEditor(ResourceEditor):
     def create_ui(self, parent):
         """ Creates the traits UI that represents the editor.
         """
-        self.document = document = self.provider.create_document(self.obj)
+        self.document = document = self.editor_input.load()
 
         g = GraphImage(network=document)
 

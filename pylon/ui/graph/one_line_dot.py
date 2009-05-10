@@ -74,8 +74,8 @@ class GeneratorNodeEdge(HasTraits):
 
         g = self.generator
         if g is not None:
-            node = Node(g.id)
-            node.set_name(g.id)
+            node = Node( id(g) )
+            node.set_name( id(g) )
             node.set_label(g.name)
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
@@ -101,7 +101,7 @@ class GeneratorNodeEdge(HasTraits):
 
         g = self.generator
         if g is not None:
-            edge = Edge(g.id, self.bus.id)
+            edge = Edge( id(g), id(self.bus) )
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
                 edge.set_arrowhead("none")
@@ -147,8 +147,8 @@ class LoadNodeEdge(HasTraits):
 
         l = self.load
         if l is not None:
-            node = Node(l.id)
-            node.set_name(l.id)
+            node = Node( id(l) )
+            node.set_name( id(l) )
             node.set_label(l.name)
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
@@ -174,7 +174,7 @@ class LoadNodeEdge(HasTraits):
 
         l = self.load
         if l is not None:
-            edge = Edge(l.id, self.bus.id)
+            edge = Edge( id(l), id(self.bus) )
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
                 edge.set_arrowhead("none")
@@ -222,8 +222,8 @@ class TransformerEdgeNodeEdge(BranchEdge):
 
         t = self.branch
         if t is not None:
-            node = Node(self.id)
-            node.set_name(self.id)
+            node = Node( id(self) )
+            node.set_name( id(self) )
             node.set_label(" ")#t.name)
             if self.dot_attrs is not None:
                 prefs = self.dot_attrs
@@ -247,13 +247,13 @@ class TransformerEdgeNodeEdge(BranchEdge):
     def _primary_edge_default(self):
         """ Trait initialiser """
 
-        return self._get_winding_edge(self.branch.source_bus.id, self.id)
+        return self._get_winding_edge( id(self.branch.source_bus), id(self) )
 
 
     def _secondary_edge_default(self):
         """ Trait initialiser """
 
-        return self._get_winding_edge(self.id, self.branch.target_bus.id)
+        return self._get_winding_edge( id(self), id(self.branch.target_bus) )
 
 
     def _get_winding_edge(self, source_bus_id, target_bus_id):

@@ -26,6 +26,7 @@ from enthought.traits.api import Instance
 from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup, Tabbed
 
 from envisage.resource.resource_editor import ResourceEditor
+from envisage.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.ui.bus_table import buses_table_editor
 from pylon.ui.branch_table import branches_table_editor
@@ -42,6 +43,24 @@ class PylonTableEditor(ResourceEditor):
     """ Defines a workbench editor for editing network resources with
         tabular views.
     """
+
+    #--------------------------------------------------------------------------
+    #  "TraitsUIEditor" interface
+    #--------------------------------------------------------------------------
+
+#    def create_ui(self, parent):
+#        """ Creates the traits UI that represents the editor.
+#        """
+#        resource = PickleFileIResourceAdapter(self.obj)
+#        self.document = document = resource.load()
+#
+#        ui = self.edit_traits(view=self._create_view(), parent=parent,
+#            kind="subpanel")
+#
+#        # Dynamic notification of document object modification
+#        document.on_trait_change(self.on_document_modified)
+#
+#        return ui
 
     #--------------------------------------------------------------------------
     #  "ResourceEditor" interface

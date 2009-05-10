@@ -28,7 +28,7 @@ from enthought.traits.ui.menu import Action
 from enthought.pyface.api import ImageResource
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
-from envisage.resource.resource_editor import PickledProvider
+from envisage.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.api import Network
 from pylon.ui.routine.ac_opf_view_model import ACOPFViewModel
@@ -75,7 +75,7 @@ class ACOPFAction(Action):
         """
         if len(new) == 1:
             selection = new[0]
-            if isinstance(selection, File) and (selection.ext == ".pyl"):
+            if isinstance(selection, File) and (selection.ext == ".pkl"):
                 self.enabled = True
             else:
                 self.enabled = False
@@ -91,7 +91,7 @@ class ACOPFAction(Action):
         """
         if self.window.selection:
             sel = self.window.selection[0]
-            if isinstance(sel, File) and (sel.ext == ".pyl"):
+            if isinstance(sel, File) and (sel.ext == ".pkl"):
                 return True
             else:
                 return False
@@ -103,8 +103,7 @@ class ACOPFAction(Action):
         """ Perform the action.
         """
         selected = self.window.selection[0]
-        provider = PickledProvider()
-        network = provider.create_document(selected)
+        network = PickleFileIResourceAdapter(selected)
 
         if isinstance(network, Network):
             vm = ACOPFViewModel(network=network)

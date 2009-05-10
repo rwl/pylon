@@ -69,7 +69,7 @@ class ACOPFActionSet(WorkbenchActionSet):
 #            class_name="pylon.plugin.routine.ac_opf.ac_opf_action:ACOPFAction"
 #        )
         Action(
-            path="Workspace/Run As", group="RoutineGroup",
+            path="Resource/Run As", group="RoutineGroup",
             class_name="pylon.plugin.routine.ac_opf.ac_opf_action:ACOPFAction"
         )
     ]

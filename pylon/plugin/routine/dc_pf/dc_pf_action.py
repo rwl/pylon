@@ -28,7 +28,7 @@ from enthought.traits.ui.menu import Action
 from enthought.pyface.api import ImageResource
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
-from envisage.resource.resource_editor import PickledProvider
+from envisage.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.api import Network
 from pylon.ui.routine.dc_pf_view_model import DCPFViewModel
@@ -103,8 +103,7 @@ class DCPFAction(Action):
         """ Perform the action.
         """
         selected = self.window.selection[0]
-        provider = PickledProvider()
-        network = provider.create_document(selected)
+        network = PickleFileIResourceAdapter(selected)
 
         if isinstance(network, Network):
             vm = DCPFViewModel(network=network)

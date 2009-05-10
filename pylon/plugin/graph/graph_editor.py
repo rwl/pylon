@@ -53,7 +53,7 @@ class GraphEditor(ResourceEditor):
         """ Creates the traits UI that represents the editor.
         """
 
-        self.document = document = self.provider.create_document(self.obj)
+        self.document = document = self.editor_input.load()
 
         g = Graph(network=document)
         ui = g.edit_traits(parent=parent, kind="subpanel")

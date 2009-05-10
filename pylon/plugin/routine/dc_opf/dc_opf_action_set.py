@@ -69,7 +69,7 @@ class DCOPFActionSet(WorkbenchActionSet):
 #            class_name="pylon.plugin.routine.dc_opf.dc_opf_action:DCOPFAction"
 #        )
         Action(
-            path="Workspace/Run As", group="RoutineGroup",
+            path="Resource/Run As", group="RoutineGroup",
             class_name="pylon.plugin.routine.dc_opf.dc_opf_action:DCOPFAction"
         )
     ]

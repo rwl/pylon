@@ -55,7 +55,7 @@ class ACPFPlugin(Plugin):
     def _action_sets_default(self):
         """ Trait initialiser.
         """
-        from pylon.plugin.routine.ac_pf.ac_pf_action_set import ACPFActionSet
+        from ac_pf_action_set import ACPFActionSet
 
         return [ACPFActionSet]
 

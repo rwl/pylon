@@ -56,8 +56,7 @@ class DCOPFPlugin(Plugin):
     def _action_sets_default(self):
         """ Trait initialiser.
         """
-        from pylon.plugin.routine.dc_opf.dc_opf_action_set import \
-            DCOPFActionSet
+        from dc_opf_action_set import DCOPFActionSet
 
         return [DCOPFActionSet]
 

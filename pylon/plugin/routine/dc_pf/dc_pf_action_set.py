@@ -46,7 +46,7 @@ class DCPFActionSet(WorkbenchActionSet):
             groups=["IPythonShellGroup", "RunGroup"]
         ),
         Menu(
-            name="&Run As", path="Workspace", group="SubMenuGroup",
+            name="&Run As", path="Resource", group="SubMenuGroup",
             groups=["RoutineGroup"]
         )
     ]
@@ -69,7 +69,7 @@ class DCPFActionSet(WorkbenchActionSet):
 #            class_name="pylon.plugin.routine.dc_pf.dc_pf_action:DCPFAction"
 #        )
         Action(
-            path="Workspace/Run As", group="RoutineGroup",
+            path="Resource/Run As", group="RoutineGroup",
             class_name="pylon.plugin.routine.dc_pf.dc_pf_action:DCPFAction"
         )
     ]

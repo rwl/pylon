@@ -45,7 +45,7 @@ from envisage.resource.action.open_action import OpenAction
 from envisage.resource.wizard.container_selection_page import \
     ContainerSelectionPage
 
-from envisage.resource.resource_editor import PickledProvider
+from envisage.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.api import Network
 
@@ -182,11 +182,14 @@ class NetworkWizard(SimpleWizard):
         nwp = self.pages[1]
 
         file = IOFile(join(csp.directory, nwp.network_name))
+
         if not file.exists:
             name, ext = splitext(nwp.network_name)
-            n = Network(name=name, base_mva=nwp.base_mva)
-#            file.create_file(contents=pickle.dumps(n))
-            PickledProvider().do_save(file, n)
+
+            default = Network(name=name, base_mva=nwp.base_mva)
+
+            resource = PickleFileIResourceAdapter(file)
+            resource.save(default)
 
         self._open_resource(file)
 
