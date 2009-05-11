@@ -46,6 +46,7 @@ from envisage.resource.wizard.container_selection_page import \
     ContainerSelectionPage
 
 from envisage.resource.resource_adapter import PickleFileIResourceAdapter
+from envisage.resource.wizard.new_resource_wizard import NewResourceWizard
 
 from pylon.api import Network
 
@@ -59,155 +60,168 @@ WORKSPACE_VIEW = "envisage.resource.resource_view"
 #  "NetworkWizardPage" class:
 #------------------------------------------------------------------------------
 
-class NetworkWizardPage(WizardPage):
-    """ Wizard page for Network creation.
-    """
-
-    network_name = Str
-
-    base_mva = Float(100.0, desc="the base apparent power (MVA)")
-
-    csp = Instance(ContainerSelectionPage)
-
-    # Absolute path for the project
-    abs_path = Property(Str, depends_on=["network_name"])
-
-    # A label with advice
-    _label = Property(Str("Create a new network model resource."),
-        depends_on=["network_name"])
-
-    # Has the network's name been changed
-    _named = Bool(False)
-
-    # The default view
-    traits_view = View(
-        Group(Heading("Network"),
-            Item("_label", style="readonly", show_label=False),
-            "_"),
-        Item("network_name"))
-
-
-    @cached_property
-    def _get_abs_path(self):
-        """ Property getter.
-        """
-        return join(self.csp.directory, self.network_name)
-
-
-    @cached_property
-    def _get__label(self):
-        """ Property getter.
-        """
-        if (exists(self.abs_path)) and (len(self.network_name) != 0):
-            l = "A network with that name already exists."
-            self.complete = False
-        elif len(self.network_name) == 0 and self._named:
-            l = "Network name must be specified."
-            self.complete = False
-        elif self.network_name[-4:] != ".pyl":
-            l = "The network file name must end in '.pyl'."
-            self.complete = False
-        elif len(self.network_name) == 0:
-            l = "Create a new network model resource."
-            self.complete = False
-        else:
-            l = "Create a new network model resource."
-            self.complete = True
-        return l
-
-
-    def _network_name_changed(self):
-        """ Sets a flag when the name is changed.
-        """
-        self._named = True
-
-    #--------------------------------------------------------------------------
-    #  "WizardPage" interface:
-    #--------------------------------------------------------------------------
-
-    def create_page(self, parent):
-        """ Creates the wizard page.
-        """
-        ui = self.edit_traits(parent=parent, kind="subpanel")
-
-        return ui.control
+#class NetworkWizardPage(WizardPage):
+#    """ Wizard page for Network creation.
+#    """
+#
+#    network_name = Str
+#
+#    base_mva = Float(100.0, desc="the base apparent power (MVA)")
+#
+#    csp = Instance(ContainerSelectionPage)
+#
+#    # Absolute path for the project
+#    abs_path = Property(Str, depends_on=["network_name"])
+#
+#    # A label with advice
+#    _label = Property(Str("Create a new network model resource."),
+#        depends_on=["network_name"])
+#
+#    # Has the network's name been changed
+#    _named = Bool(False)
+#
+#    # The default view
+#    traits_view = View(
+#        Group(Heading("Network"),
+#            Item("_label", style="readonly", show_label=False),
+#            "_"),
+#        Item("network_name"))
+#
+#
+#    @cached_property
+#    def _get_abs_path(self):
+#        """ Property getter.
+#        """
+#        return join(self.csp.directory, self.network_name)
+#
+#
+#    @cached_property
+#    def _get__label(self):
+#        """ Property getter.
+#        """
+#        if (exists(self.abs_path)) and (len(self.network_name) != 0):
+#            l = "A network with that name already exists."
+#            self.complete = False
+#        elif len(self.network_name) == 0 and self._named:
+#            l = "Network name must be specified."
+#            self.complete = False
+#        elif self.network_name[-4:] != ".pyl":
+#            l = "The network file name must end in '.pyl'."
+#            self.complete = False
+#        elif len(self.network_name) == 0:
+#            l = "Create a new network model resource."
+#            self.complete = False
+#        else:
+#            l = "Create a new network model resource."
+#            self.complete = True
+#        return l
+#
+#
+#    def _network_name_changed(self):
+#        """ Sets a flag when the name is changed.
+#        """
+#        self._named = True
+#
+#    #--------------------------------------------------------------------------
+#    #  "WizardPage" interface:
+#    #--------------------------------------------------------------------------
+#
+#    def create_page(self, parent):
+#        """ Creates the wizard page.
+#        """
+#        ui = self.edit_traits(parent=parent, kind="subpanel")
+#
+#        return ui.control
 
 #------------------------------------------------------------------------------
 #  "NetworkWizard" class:
 #------------------------------------------------------------------------------
 
-class NetworkWizard(SimpleWizard):
+class NetworkWizard(NewResourceWizard):
     """ A wizard for network resource creation.
     """
 
     # The dialog title
     title = Str("New Network")
 
-    #--------------------------------------------------------------------------
-    #  "NetworkWizard" interface:
-    #--------------------------------------------------------------------------
+    extensions = [".pkl"]
 
-    window = Instance(WorkbenchWindow)
-
-    finished = Event
-
-    #--------------------------------------------------------------------------
-    #  "object" interface:
-    #--------------------------------------------------------------------------
-
-    def __init__(self, window, **traits):
-        """ Returns a NetworkWizard.
+    def get_resource(self, file):
+        """ Returns the new adapted resource. Override in subclasses.
         """
-        self.window = window
-        workspace = window.application.get_service(IWorkspace)
+        return PickleFileIResourceAdapter(file)
 
-        csp = ContainerSelectionPage(id="container_page", workspace=workspace)
-        nwp = NetworkWizardPage(id="network_page", csp=csp)
 
-        self.pages = [csp, nwp]
-
-        super(NetworkWizard, self).__init__(**traits)
+    def get_content(self, name):
+        """ Returns the content for the new resource. Override in subclasses.
+        """
+        return Network(name=name)
 
     #--------------------------------------------------------------------------
     #  "NetworkWizard" interface:
     #--------------------------------------------------------------------------
 
-    def _finished_fired(self):
-        """ Performs the network resource creation if the wizard is
-            finished successfully.
-        """
-        workspace = self.window.application.get_service(IWorkspace)
-
-        csp = self.pages[0]
-        nwp = self.pages[1]
-
-        file = IOFile(join(csp.directory, nwp.network_name))
-
-        if not file.exists:
-            name, ext = splitext(nwp.network_name)
-
-            default = Network(name=name, base_mva=nwp.base_mva)
-
-            resource = PickleFileIResourceAdapter(file)
-            resource.save(default)
-
-        self._open_resource(file)
-
-        self._refresh_container(workspace)
-
-
-    def _open_resource(self, file):
-        """ Makes the file the current selection and opens it.
-        """
-        self.window.selection = [file]
-        OpenAction(window=self.window).perform(event=None)
-
-
-    def _refresh_container(self, container):
-        """ Refreshes the workspace tree view.
-        """
-        view = self.window.get_view_by_id(WORKSPACE_VIEW)
-        if view is not None:
-            view.tree_viewer.refresh(container)
+#    window = Instance(WorkbenchWindow)
+#
+#    finished = Event
+#
+#    #--------------------------------------------------------------------------
+#    #  "object" interface:
+#    #--------------------------------------------------------------------------
+#
+#    def __init__(self, window, **traits):
+#        """ Returns a NetworkWizard.
+#        """
+#        self.window = window
+#        workspace = window.application.get_service(IWorkspace)
+#
+#        csp = ContainerSelectionPage(id="container_page", workspace=workspace)
+#        nwp = NetworkWizardPage(id="network_page", csp=csp)
+#
+#        self.pages = [csp, nwp]
+#
+#        super(NetworkWizard, self).__init__(**traits)
+#
+#    #--------------------------------------------------------------------------
+#    #  "NetworkWizard" interface:
+#    #--------------------------------------------------------------------------
+#
+#    def _finished_fired(self):
+#        """ Performs the network resource creation if the wizard is
+#            finished successfully.
+#        """
+#        workspace = self.window.application.get_service(IWorkspace)
+#
+#        csp = self.pages[0]
+#        nwp = self.pages[1]
+#
+#        file = IOFile(join(csp.directory, nwp.network_name))
+#
+#        if not file.exists:
+#            name, ext = splitext(nwp.network_name)
+#
+#            default = Network(name=name, base_mva=nwp.base_mva)
+#
+#            resource = PickleFileIResourceAdapter(file)
+#            resource.save(default)
+#
+#        self._open_resource(file)
+#
+#        self._refresh_container(workspace)
+#
+#
+#    def _open_resource(self, file):
+#        """ Makes the file the current selection and opens it.
+#        """
+#        self.window.selection = [file]
+#        OpenAction(window=self.window).perform(event=None)
+#
+#
+#    def _refresh_container(self, container):
+#        """ Refreshes the workspace tree view.
+#        """
+#        view = self.window.get_view_by_id(WORKSPACE_VIEW)
+#        if view is not None:
+#            view.tree_viewer.refresh(container)
 
 # EOF -------------------------------------------------------------------------
