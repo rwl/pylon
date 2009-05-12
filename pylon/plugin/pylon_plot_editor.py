@@ -23,6 +23,7 @@
 #------------------------------------------------------------------------------
 
 from envisage.resource.resource_editor import ResourceEditor
+from envisage.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.ui.plot.bus_bar_plot import BusBarPlot
 
@@ -41,8 +42,8 @@ class PylonPlotEditor(ResourceEditor):
     def create_ui(self, parent):
         """ Creates the traits UI that represents the editor.
         """
-        self.document = document = self.provider.create_document(self.obj)
-        plot = BusBarPlot(network=document)
+        self.document = input = self.editor_input.load()
+        plot = BusBarPlot(network=input)
 
         ui = plot.edit_traits(parent=parent, kind="subpanel")
 

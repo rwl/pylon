@@ -110,7 +110,7 @@ def main():
             ACOPFPlugin(),
             GraphImagePlugin(),
             GraphPlugin(),
-#            PyretoPlugin(),
+            PyretoPlugin(),
             # Other plug-ins
             CIMPlugin(),
 #            GodotPlugin()

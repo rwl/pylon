@@ -33,44 +33,29 @@ class PyretoPlugin(Plugin):
     """ Pyreto plugin.
     """
 
-    # Extension point IDs
-    PERSPECTIVES = "enthought.envisage.ui.workbench.perspectives"
-    PREFERENCES_PAGES = "enthought.envisage.ui.workbench.preferences_pages"
-    PREFERENCES = "enthought.envisage.preferences"
+    # Extension point IDs.
     ACTION_SETS = "enthought.envisage.ui.workbench.action_sets"
-#    COMMANDS = "enthought.plugins.python_shell.commands"
-    COMMANDS = "enthought.plugins.ipython_shell.commands"
+    COMMANDS = "enthought.plugins.python_shell.commands"
 
     NEW_WIZARDS = "envisage.resource.new_wizards"
     EDITORS = "envisage.resource.editors"
 
-    SELECTORS = "pylon.plugin.pyreto.selectors"
-
-    # Unique plugin identifier
+    # Unique plug-in identifier.
     id = "pylon.plugin.pyreto_plugin"
 
-    # Human readable plugin name
+    # Human readable plug-in name.
     name = "Pyreto"
-
-    #--------------------------------------------------------------------------
-    #  Extension Points:
-    #--------------------------------------------------------------------------
-
-    selectors = ExtensionPoint(List(Callable), id=SELECTORS)
 
     #--------------------------------------------------------------------------
     #  Extensions (Contributions):
     #--------------------------------------------------------------------------
-
-    # Contributed perspectives:
-    perspectives = List(contributes_to=PERSPECTIVES)
 
     # Contributed action sets:
     action_sets = List(contributes_to=ACTION_SETS)
 
     # Contributed commands that are executed in the interactive
     # Python shell on startup
-#    contributed_commands = List(contributes_to=COMMANDS)
+    commands = List(contributes_to=COMMANDS)
 
     # Contributed new resource wizards:
     new_wizards = List(contributes_to=NEW_WIZARDS)
@@ -78,57 +63,37 @@ class PyretoPlugin(Plugin):
     # Contributed Pylon editors:
     editors = List(contributes_to=EDITORS)
 
-    # Selectors bundled with the pyreto plug-in:
-    bundled_selectors = List(contributes_to=SELECTORS)
-
     #--------------------------------------------------------------------------
     #  "PyretoPlugin" interface:
     #--------------------------------------------------------------------------
 
-    def _perspectives_default(self):
-        """ Trait initialiser.
-        """
-        from pyreto_perspective import PyretoPerspective
-
-        return [PyretoPerspective]
-
-
     def _action_sets_default(self):
         """ Trait initialiser.
         """
-        from pyreto_action_set import \
-            PyretoWorkbenchActionSet, PyretoWorkspaceActionSet
+        from pyreto_action import PyretoActionSet
 
-        return [PyretoWorkbenchActionSet, PyretoWorkspaceActionSet]
+        return [PyretoActionSet]
 
 
-    def _contributed_commands_default(self):
+    def _commands_default(self):
         """ Trait initialiser.
         """
-        return ["from pylon.pyreto.api import *"]
+        return []#"from pylon.pyreto.api import *"]
 
 
     def _new_wizards_default(self):
         """ Trait initialiser.
         """
-        from wizard_extension import SwarmWizardExtension
+        from experiment_wizard import ExperimentWizardExtension
 
-        return [SwarmWizardExtension]
+        return [ExperimentWizardExtension]
 
 
     def _editors_default(self):
         """ Trait initialiser.
         """
-        from editor_extension import SwarmTableEditor#, SwarmTreeEditor
+        from pyreto_editor import PyretoPlotEditorExtension
 
-        return [SwarmTableEditor]
-
-
-    def _bundled_selectors_default(self):
-        """ Trait initialiser.
-        """
-        from pyqle.selector.profile_selector import ProfileSelector
-
-        return [ProfileSelector]
+        return [PyretoPlotEditorExtension]
 
 # EOF -------------------------------------------------------------------------

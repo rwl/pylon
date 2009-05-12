@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" File menu actions for a Pyreto Swarm.
+""" Workbench actions for the Pyreto plug-in.
 """
 
 #------------------------------------------------------------------------------
@@ -25,11 +25,13 @@
 from os.path import join, dirname
 
 from enthought.traits.api import Instance, Callable
-from enthought.traits.ui.menu import Action
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
+from enthought.envisage.ui.action.api import Action, Group, Menu, ToolBar
+from enthought.envisage.ui.workbench.api import WorkbenchActionSet
 from enthought.pyface.api import ImageResource, FileDialog, OK
+from enthought.pyface.action.api import Action as PyFaceAction
 
-from pylon.plugin.pyreto.swarm_wizard import SwarmWizard
+from pylon.plugin.pyreto.experiment_wizard import ExperimentWizard
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -37,15 +39,12 @@ from pylon.plugin.pyreto.swarm_wizard import SwarmWizard
 
 IMAGE_PATH = join(dirname(__file__), "..", "..", "ui", "images")
 
-SELECTORS = "pylon.plugin.pyreto.selectors"
-
 #------------------------------------------------------------------------------
-#  "NewSwarmAction" class:
+#  "NewExperimentAction" class:
 #------------------------------------------------------------------------------
 
-class NewSwarmAction(Action):
-    """ An action for instantiating a new Pyreto swarm and adding it
-        to the project.
+class NewExperimentAction(PyFaceAction):
+    """ An action for creating a new Pyreto experiment resource.
     """
 
     #--------------------------------------------------------------------------
@@ -53,29 +52,56 @@ class NewSwarmAction(Action):
     #--------------------------------------------------------------------------
 
     # A longer description of the action:
-    description = "Add a new swarm to the project"
+    description = "Create a new experiment"
 
     # The action"s name (displayed on menus/tool bar tools etc):
-    name = "&Swarm"
+    name = "&Experiment"
 
     # A short description of the action used for tooltip text etc:
-    tooltip = "New Swarm"
+    tooltip = "New Experiment"
 
     # The action's image (displayed on tool bar tools etc):
-    image = ImageResource("new", search_path=[IMAGE_PATH])
+    image = ImageResource("psse", search_path=[IMAGE_PATH])
 
     #--------------------------------------------------------------------------
-    #  "NewSwarmAction" interface:
+    #  "NewExperimentAction" interface:
     #--------------------------------------------------------------------------
 
     def perform(self, event):
         """ Perform the action.
         """
-        wizard = SwarmWizard(parent=self.window.control, window=self.window,
-            title="New Swarm")
+        wizard = ExperimentWizard(parent=self.window.control,
+            window=self.window, title="New Experiment")
 
         # Open the wizard
         if wizard.open() == OK:
             wizard.finished = True
+
+#------------------------------------------------------------------------------
+#  "PyretoActionSet" class:
+#------------------------------------------------------------------------------
+
+class PyretoActionSet(WorkbenchActionSet):
+    """ An action set for the Pyreto plug-in.
+    """
+
+    #--------------------------------------------------------------------------
+    #  "ActionSet" interface:
+    #--------------------------------------------------------------------------
+
+    # The action set"s globally unique identifier.
+    id = "pylon.plugin.pyreto.workbench_action_set"
+
+    # The menus in this set
+    menus = [ Menu(name="&New", path="MenuBar/File", group="OpenGroup",
+        groups=["ContainerGroup", "ComponentGroup", "OtherGroup"]) ]
+
+    # The actions in this set.
+    actions = [
+        Action(path="MenuBar/File/New", group="ComponentGroup",
+            class_name="pylon.plugin.pyreto.pyreto_action:NewExperimentAction"),
+        Action(path="Resource/New", group="ComponentGroup",
+            class_name="pylon.plugin.pyreto.pyreto_action:NewExperimentAction")
+    ]
 
 # EOF -------------------------------------------------------------------------

@@ -109,7 +109,7 @@ class PylonPlotEditorExtension(Editor):
     editor_class = "pylon.plugin.pylon_plot_editor:PylonPlotEditor"
 
     # The list of file types understood by the editor
-    extensions = [".pll"]
+    extensions = [".pkl"]
 
     # If true, this editor will be used as the default editor for the type
     default = False

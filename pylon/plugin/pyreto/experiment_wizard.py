@@ -15,45 +15,78 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pyreto workspace wizard extensions.
+""" Defines a wizard for swarm resource creation.
 """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os.path import dirname, join
+from os.path import join, dirname
+
+from enthought.io.api import File as IOFile
+
+from enthought.traits.api import \
+    HasTraits, Directory, Bool, Str, Float, Property, Instance
 
 from enthought.pyface.api import ImageResource
-from enthought.plugins.workspace.wizard_extension import WizardExtension
+
+from envisage.resource.wizard.new_resource_wizard import NewResourceWizard
+from envisage.resource.resource_adapter import PickleFileIResourceAdapter
+from envisage.resource.wizard_extension import WizardExtension
+
+from pylon.pyreto.experiment import MarketExperiment
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-IMAGE_LOCATION = join(dirname(__file__), "..", "ui", "images")
+IMAGE_LOCATION = join(dirname(__file__), "..", "..", "ui", "images")
 
 #------------------------------------------------------------------------------
-#  "SwarmWizardExtension" class:
+#  "ExperimentWizard" class:
 #------------------------------------------------------------------------------
 
-class SwarmWizardExtension(WizardExtension):
-    """ Contributes a new swarm wizard.
+class ExperimentWizard(NewResourceWizard):
+    """ A wizard for experiment resource creation.
+    """
+    # The dialog title
+    title = Str("New Experiment")
+
+    extensions = [".pkl"]
+
+    def get_resource(self, file):
+        """ Returns the new adapted resource. Override in subclasses.
+        """
+        return PickleFileIResourceAdapter(file)
+
+
+    def get_content(self, name):
+        """ Returns the content for the new resource. Override in subclasses.
+        """
+        return MarketExperiment(name=name)
+
+#------------------------------------------------------------------------------
+#  "ExperimentWizardExtension" class:
+#------------------------------------------------------------------------------
+
+class ExperimentWizardExtension(WizardExtension):
+    """ Contributes a new experiment wizard.
     """
 
     # The wizard contribution's globally unique identifier.
-    id = "pylon.plugin.pyreto.new_swarm_wizard"
+    id = "pylon.plugin.pyreto.new_experiment_wizard"
 
     # Human readable identifier
-    name = "Swarm"
+    name = "Experiment"
 
     # The wizards's image (displayed on selection etc)
-    image = ImageResource("new", search_path=[IMAGE_LOCATION])
+    image = ImageResource("psse", search_path=[IMAGE_LOCATION])
 
     # The class of contributed wizard
-    wizard_class = "pylon.plugin.pyreto.swarm_wizard:SwarmWizard"
+    wizard_class = "pylon.plugin.pyreto.experiment_wizard:ExperimentWizard"
 
     # A longer description of the wizard's function
-    description = "Create a new swarm resource"
+    description = "Create a new Pyreto experiment resource"
 
 # EOF -------------------------------------------------------------------------

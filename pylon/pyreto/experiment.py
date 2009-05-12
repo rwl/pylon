@@ -28,7 +28,7 @@ import logging
 from numpy import array, zeros
 
 from enthought.traits.api \
-    import HasTraits, Int, List, Instance, Button, Range, on_trait_change
+    import HasTraits, Int, List, Instance, Button, Range, Str, on_trait_change
 
 from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup, spring
 
@@ -50,6 +50,8 @@ class MarketExperiment ( HasTraits ):
     """ Defines an experiment that matches up agents with tasks and handles
         their interaction.
     """
+
+    name = Str
 
     stepid = 0
 
