@@ -91,8 +91,8 @@ class BusNode(HasTraits):
 
         bus = self.bus
         if bus is not None:
-            node = Node( id(bus) )
-            node.set_name( id(bus) )
+            node = Node( str( id(bus) ) )
+            node.set_name( str( id(bus) ) )
             node.set_label(bus.name)
 
             if self.dot_attrs is not None:
@@ -202,7 +202,7 @@ class BranchEdge(HasTraits):
 
         br = self.branch
         if br is not None:
-            edge = Edge( id(br.source_bus), id(br.target_bus) )
+            edge = Edge( str( id(br.source_bus) ), str( id(br.target_bus) ) )
 #            node.set_name(br.id)
             edge.set_label(br.name)
             if self.dot_attrs is not None:

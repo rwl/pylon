@@ -38,6 +38,9 @@ from envisage.plugin import EnvisagePlugin
 from envisage.resource.resource_plugin import ResourcePlugin
 from envisage.python_editor.python_editor_plugin import PythonEditorPlugin
 from envisage.property_view.property_view_plugin import PropertyViewPlugin
+from envisage.image_editor.image_editor_plugin import ImageEditorPlugin
+
+from godot.plugin.godot_plugin import GodotPlugin
 
 #------------------------------------------------------------------------------
 #  Pylon imports:
@@ -94,6 +97,7 @@ def main():
             IPythonShellPlugin(),
             PropertyViewPlugin(),
             PythonEditorPlugin(),
+            ImageEditorPlugin(),
             # Pylon plug-ins:
             PylonPlugin(),
             MATPOWERPlugin(),
@@ -109,6 +113,7 @@ def main():
 #            PyretoPlugin(),
             # Other plug-ins
             CIMPlugin(),
+#            GodotPlugin()
         ]
     )
 
