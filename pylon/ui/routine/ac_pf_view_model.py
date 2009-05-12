@@ -22,14 +22,16 @@
 #------------------------------------------------------------------------------
 
 from enthought.traits.api import \
-    HasTraits, Instance, Array, Trait, Bool, Int, Float, Button
+    HasTraits, Instance, Bool, Int, Float, Button, on_trait_change
 
 from enthought.traits.ui.api import \
-    Item, Group, View, InstanceEditor, HGroup, DropEditor
+    Item, Group, View, InstanceEditor, HGroup, DropEditor, HGroup
 
-from pylon.api import Network
+from pylon.network import Network, NetworkReport
 from pylon.routine.api import NewtonPFRoutine
 from pylon.traits import Matrix, SparseMatrix
+
+from pylon.ui.report_view import pf_report_view
 
 #------------------------------------------------------------------------------
 #  "ACPFViewModel" class:
@@ -58,19 +60,16 @@ class ACPFViewModel(HasTraits):
     tolerance = Float(1e-08)
 
     # Maximum number of iterations:
-    maximum_iterations = Int(10)
+    iter_max = Int(10)
 
     # The initial bus voltages:
-    initial_voltage = Matrix
+    v = Matrix
 
     # Sparse admittance matrix:
-    admittance = SparseMatrix
+    Y = SparseMatrix
 
     # Apparent power supply at each node:
-    apparent_supply = Matrix
-
-    # Apparent power demand at each node:
-    apparent_demand = Matrix
+    s_surplus = Matrix
 
     #--------------------------------------------------------------------------
     #  Views:
@@ -82,17 +81,18 @@ class ACPFViewModel(HasTraits):
             editor=DropEditor(klass=Network)
         ),
         Item(name="run", style="simple", show_label=False),
-        Item(name="converged", style="readonly"),
-        Item(name="tolerance", style="simple"),
+        HGroup(
+            Item(name="converged", style="readonly"),
+            Item(name="tolerance", style="simple")
+        ),
         Item(
             name="maximum_iterations",
             label="Max iterations",
             style="simple"
         ),
-        Item(name="initial_voltage"),
-        Item(name="admittance"),
-        Item(name="apparent_supply"),
-        Item(name="apparent_demand"),
+        Item(name="v"),
+        Item(name="Y"),
+        Item(name="s_surplus"),
         id="pylon.ui.routine.ac_pf_view_model",
 #        title="AC Power Flow",
 #        icon=ImageResource("frame.ico"),
@@ -112,22 +112,26 @@ class ACPFViewModel(HasTraits):
         self.routine.tolerance = new
 
 
-    def _maximum_iterations_changed(self, new):
+    def _iter_max_changed(self, new):
         """ Delegates the maximum number of iterations to the routine """
 
-        self.routine.maximum_iterations = new
+        self.routine.iter_max = new
 
 
-    def _run_fired(self):
+    @on_trait_change("run")
+    def solve(self):
         """ Solves the routine and gets the resulting matrices """
 
         self.routine.solve()
 
         self.converged = self.routine.converged
-        self.initial_voltage = self.routine.initial_voltage
-        self.admittance = self.routine.admittance
-        self.apparent_supply = self.routine.apparent_supply
-        self.apparent_demand = self.routine.apparent_demand
+        self.v = self.routine.v
+        self.Y = self.routine.Y
+        self.s_surplus = self.routine.s_surplus
+
+        report = NetworkReport(self.network)
+        report.edit_traits(view=pf_report_view, kind="livemodal")
+        del report
 
 #------------------------------------------------------------------------------
 #  Imports:

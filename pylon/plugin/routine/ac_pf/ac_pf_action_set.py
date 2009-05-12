@@ -64,10 +64,10 @@ class ACPFActionSet(WorkbenchActionSet):
             path="MenuBar/Tools", group="RunGroup",
             class_name="pylon.plugin.routine.ac_pf.ac_pf_action:ACPFAction"
         ),
-#        Action(
-#            path="ToolBar/Routine",
-#            class_name="pylon.plugin.routine.ac_pf.ac_pf_action:ACPFAction"
-#        )
+        Action(
+            path="ToolBar/ResourceToolBar",
+            class_name="pylon.plugin.routine.ac_pf.ac_pf_action:ACPFAction"
+        ),
         Action(
             path="Resource/Run As", group="RoutineGroup",
             class_name="pylon.plugin.routine.ac_pf.ac_pf_action:ACPFAction"

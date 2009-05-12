@@ -28,9 +28,11 @@ from enthought.traits.ui.api import \
 
 from cvxopt.base import matrix, spmatrix
 
-from pylon.network import Network
+from pylon.network import Network, NetworkReport
 from pylon.routine.api import DCPFRoutine
 from pylon.traits import Matrix, SparseMatrix
+
+from pylon.ui.report_view import pf_report_view
 
 #------------------------------------------------------------------------------
 #  "DCPFViewModel" class:
@@ -44,7 +46,7 @@ class DCPFViewModel(HasTraits):
     #--------------------------------------------------------------------------
 
     # The routine providing the matrices
-    routine = Instance(DCPFRoutine, ())
+    routine = Instance(DCPFRoutine)
 
     # The network on which the routine is performed
     network = Instance(Network)
@@ -68,7 +70,7 @@ class DCPFViewModel(HasTraits):
         Item(name="B"),
         Item(name="B_source"),
         id="pylon.routine.dc_pf.view",
-#        title="DC Engine",
+        title="DC Power Flow",
 #        icon=ImageResource("frame.ico", search_path=[IMAGE_LOCATION]),
         resizable=True,
         style="custom",
@@ -79,6 +81,12 @@ class DCPFViewModel(HasTraits):
     #--------------------------------------------------------------------------
     #  "DCPFViewModel" interface:
     #--------------------------------------------------------------------------
+
+    def _routine_default(self):
+        """ Trait initialiser.
+        """
+        return DCPFRoutine(self.network)
+
 
     def _network_changed(self, new):
         """ Sets the network attribute of the routine """
@@ -92,6 +100,10 @@ class DCPFViewModel(HasTraits):
         self.routine.solve()
         self.B = self.routine.B
         self.B_source = self.routine.B_source
+
+        report = NetworkReport(self.network)
+        report.edit_traits(view=pf_report_view, kind="livemodal")
+        del report
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

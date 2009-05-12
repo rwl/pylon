@@ -28,9 +28,11 @@ from enthought.traits.api import \
 from enthought.traits.ui.api import \
     Item, Group, View, InstanceEditor, HGroup, DropEditor, VGroup
 
-from pylon.api import Network
+from pylon.network import Network, NetworkReport
 from pylon.routine.api import DCOPFRoutine
 from pylon.traits import Matrix, SparseMatrix
+
+from pylon.ui.report_view import opf_report_view
 
 #------------------------------------------------------------------------------
 #  "DCOPFViewModel" class:
@@ -171,7 +173,6 @@ class DCOPFViewModel(HasTraits):
     def _solver_changed(self, new):
         """ Sets the solver attribute of the routine """
 
-        print "SOLVER:", self.solver_
         self.routine.solver = self.solver_ # N.B. Mapped trait.
 
 
@@ -185,7 +186,7 @@ class DCOPFViewModel(HasTraits):
             raise ValueError("%s" % name)
 
 
-    on_trait_change("run")
+    @on_trait_change("run")
     def solve(self):
         """ Solves the routine and gets the resulting matrices """
 
@@ -199,6 +200,10 @@ class DCOPFViewModel(HasTraits):
         self.H = self.routine._hh
         self.c = self.routine._cc
         self.x = self.routine.x
+
+        report = NetworkReport(self.network)
+        report.edit_traits(view=opf_report_view, kind="livemodal")
+        del report
 
         return solution
 

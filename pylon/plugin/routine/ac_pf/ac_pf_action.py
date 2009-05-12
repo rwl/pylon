@@ -103,14 +103,15 @@ class ACPFAction(Action):
         """ Perform the action.
         """
         selected = self.window.selection[0]
-        network = PickleFileIResourceAdapter(selected)
+        resource = PickleFileIResourceAdapter(selected)
+        network = resource.load()
 
         if isinstance(network, Network):
             vm = ACPFViewModel(network=network)
             vm.run = True
             vm.edit_traits(parent=self.window.control, kind="livemodal")
 
-            provider.do_save(selected, network)
+            resource.save(network)
 
         return
 

@@ -64,10 +64,10 @@ class DCPFActionSet(WorkbenchActionSet):
             path="MenuBar/Tools", group="RunGroup",
             class_name="pylon.plugin.routine.dc_pf.dc_pf_action:DCPFAction"
         ),
-#        Action(
-#            path="ToolBar/Routine",
-#            class_name="pylon.plugin.routine.dc_pf.dc_pf_action:DCPFAction"
-#        )
+        Action(
+            path="ToolBar/ResourceToolBar",
+            class_name="pylon.plugin.routine.dc_pf.dc_pf_action:DCPFAction"
+        ),
         Action(
             path="Resource/Run As", group="RoutineGroup",
             class_name="pylon.plugin.routine.dc_pf.dc_pf_action:DCPFAction"

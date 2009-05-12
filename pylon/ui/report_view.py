@@ -47,8 +47,10 @@ bus_pf_data_table = TableEditor(columns=bus_pf_data_columns, editable=False)
 branch_data_table = TableEditor(
     columns=[
         ObjectColumn(name="name"),
-        ObjectColumn(name="source_bus"),
-        ObjectColumn(name="target_bus"),
+        ObjectColumn(name="source_bus", label="Source",
+            format_func=lambda obj: obj.name),
+        ObjectColumn(name="target_bus", label="Target",
+            format_func=lambda obj: obj.name),
         ObjectColumn(name="p_source"),
         ObjectColumn(name="q_source"),
         ObjectColumn(name="p_target"),
@@ -61,7 +63,6 @@ branch_data_table = TableEditor(
 
 gen_pf_data_columns = [
     ObjectColumn(name="name"),
-#    ObjectColumn(name="bus"),
     ObjectColumn(name="online"),
     ObjectColumn(name="name"),
     ObjectColumn(name="p"),
@@ -114,12 +115,13 @@ pf_report_view = View(
             label="Branch Data"
         ),
         Group(
-            Item(name="generators", editor=gen_pf_data_table, show_label=False),
+            Item(name="all_generators", editor=gen_pf_data_table,
+                show_label=False),
             label="Generator Data"
         ),
         dock="tab"
     ),
-    style="readonly", title="Power flow report",
+    style="readonly", title="Power Flow Report",
     buttons=["OK", "Help"]
 )
 
@@ -145,7 +147,7 @@ opf_report_view = View(
             Item(name="branches", editor=branch_data_table, show_label=False)
         )
     ),
-    style="readonly", title="Optimal power flow",
+    style="readonly", title="Optimal Power Flow",
     buttons=["OK", "Help"]
 )
 
