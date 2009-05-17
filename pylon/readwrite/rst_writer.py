@@ -25,7 +25,7 @@
 from pylon.network \
     import Network, NetworkReport
 
-#from pylon.pybrain.experiment \
+#from pylon.pyreto.experiment \
 #    import MarketExperiment
 
 #------------------------------------------------------------------------------

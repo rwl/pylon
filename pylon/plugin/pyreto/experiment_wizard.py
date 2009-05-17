@@ -22,7 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os.path import join, dirname
+from os.path import join, dirname, splitext
 
 from enthought.io.api import File as IOFile
 
@@ -31,11 +31,22 @@ from enthought.traits.api import \
 
 from enthought.pyface.api import ImageResource
 
+from envisage.resource.i_workspace import IWorkspace
 from envisage.resource.wizard.new_resource_wizard import NewResourceWizard
 from envisage.resource.resource_adapter import PickleFileIResourceAdapter
 from envisage.resource.wizard_extension import WizardExtension
 
-from pylon.pyreto.experiment import MarketExperiment
+from envisage.resource.wizard.resource_selection_page \
+    import ResourceSelectionPage
+
+from envisage.resource.wizard.container_selection_page \
+    import ContainerSelectionPage
+
+from envisage.resource.wizard.new_resource_wizard \
+    import NewResourceWizardPage
+
+#from pylon.pyreto.experiment import MarketExperiment
+from pylon.pyreto import simulate_trade
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -55,16 +66,67 @@ class ExperimentWizard(NewResourceWizard):
 
     extensions = [".pkl"]
 
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __init__(self, window, **traits):
+        """ Initialises the wizard.
+        """
+        self.window = window
+        workspace = window.application.get_service(IWorkspace)
+
+        rsp = ResourceSelectionPage(id="selection_page", workspace=workspace)
+        csp = ContainerSelectionPage(id="container_page", workspace=workspace)
+        nwp = NewResourceWizardPage(id="resource_page",
+            extensions=self.extensions, csp=csp)
+
+        self.pages = [rsp, csp, nwp]
+
+        super(NewResourceWizard, self).__init__(**traits)
+
+    #--------------------------------------------------------------------------
+    #  "NewResourceWizard" interface:
+    #--------------------------------------------------------------------------
+
     def get_resource(self, file):
         """ Returns the new adapted resource. Override in subclasses.
         """
         return PickleFileIResourceAdapter(file)
 
 
-    def get_content(self, name):
-        """ Returns the content for the new resource. Override in subclasses.
+#    def get_content(self, name):
+#        """ Returns the content for the new resource. Override in subclasses.
+#        """
+#        return MarketExperiment(name=name)
+
+
+    def _finished_fired(self):
+        """ Performs the resource creation if the wizard is
+            finished successfully.
         """
-        return MarketExperiment(name=name)
+        workspace = self.window.application.get_service(IWorkspace)
+
+        rsp = self.pages[0]
+        csp = self.pages[1]
+        nrp = self.pages[2]
+
+        file = IOFile(join(csp.directory, nrp.resource_name))
+
+        if not file.exists:
+            name, ext = splitext( nrp.resource_name )
+
+            network_resource = PickleFileIResourceAdapter(rsp.resource)
+            power_sys = network_resource.load()
+
+            experiment = simulate_trade.main(power_sys)
+            resource = self.get_resource(file)
+
+            resource.save( experiment )
+
+        self._open_resource(file)
+
+        self._refresh_container(workspace)
 
 #------------------------------------------------------------------------------
 #  "ExperimentWizardExtension" class:

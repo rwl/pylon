@@ -44,7 +44,7 @@ from enthought.enable.component_editor import ComponentEditor
 
 from pybrain.rl.agents.history import HistoryAgent
 
-from pylon.pybrain.experiment import MarketExperiment
+from pylon.pyreto.experiment import MarketExperiment
 from colours import dark, color_blind
 
 logger = logging.getLogger(__name__)

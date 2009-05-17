@@ -40,7 +40,7 @@ from enthought.traits.ui.menu \
 from enthought.pyface.image_resource \
     import ImageResource
 
-from pylon.pybrain.experiment \
+from pylon.pyreto.experiment \
     import MarketExperiment
 
 from pylon.ui.plot.experiment_plot \
@@ -59,8 +59,6 @@ from network_menu \
 IMAGE_LOCATION = join(dirname(__file__), "../images")
 
 frame_icon = ImageResource("frame.ico", search_path=[IMAGE_LOCATION])
-
-LOG_LEVEL = DEBUG
 
 #------------------------------------------------------------------------------
 #  "ExperimentViewModel" class:
@@ -82,13 +80,13 @@ class ExperimentViewModel(NetworkViewModel):
 
     # The default view
     traits_view = View(
-        Item(name="experiment_plot", sytle="custom", show_label=False,
+        Item(name="experiment_plot", style="custom", show_label=False,
              id=".experiment_plot"),
         id="pylon.experiment_vm.view", title="Pyreto", icon=frame_icon,
         resizable=True, style="custom",
         width=.81, height=.81, kind="live",
         buttons=NoButtons,
-        menubar=network_menu, toolbar=toolbar,
+        menubar=network_menubar, toolbar=network_toolbar,
 #        statusbar=[StatusItem(name="status"),
 #                   StatusItem(name="versions", width=200)],
         dock="vertical"
@@ -129,6 +127,7 @@ class ExperimentViewModel(NetworkViewModel):
 
 if __name__ == "__main__":
     import sys
+    from pylon.network import Network
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)

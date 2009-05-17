@@ -137,9 +137,9 @@ class Generator(HasTraits):
 
     # The output power that the Generator is despatched to generate
     # as a result of solving the OPF problem:
-#    p_despatch = Float(desc="a result of the OPF (p.u.)")
-    p_despatch = Range(low="p_min_bid", high="p_max_bid",
-                       desc="OPF result (p.u.)")
+    p_despatch = Float(desc="a result of the OPF (p.u.)")
+#    p_despatch = Range(low="p_min_bid", high="p_max_bid",
+#                       desc="OPF result (p.u.)")
 
     # Maximum active power output bid.  Used in OPF routines.  Should be less
     # than or equal to p_max.  Defaults to p_max.

@@ -201,9 +201,9 @@ class DCOPFViewModel(HasTraits):
         self.c = self.routine._cc
         self.x = self.routine.x
 
-        report = NetworkReport(self.network)
-        report.edit_traits(view=opf_report_view, kind="livemodal")
-        del report
+#        report = NetworkReport(self.network)
+#        report.edit_traits(view=opf_report_view, kind="livemodal")
+#        del report
 
         return solution
 

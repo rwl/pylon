@@ -30,8 +30,9 @@ from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
 from envisage.resource.resource_adapter import PickleFileIResourceAdapter
 
-from pylon.api import Network
+from pylon.network import Network, NetworkReport
 from pylon.ui.routine.dc_opf_view_model import DCOPFViewModel
+from pylon.ui.report_view import opf_report_view
 
 #------------------------------------------------------------------------------
 #  "DCOPFAction" class:
@@ -109,6 +110,11 @@ class DCOPFAction(Action):
         if isinstance(network, Network):
             vm = DCOPFViewModel(network=network)
             vm.run = True
+
+            report = NetworkReport(network)
+            report.edit_traits(view=opf_report_view, kind="livemodal")
+            del report
+
             vm.edit_traits(parent=self.window.control, kind="livemodal")
 
             resource.save(network)

@@ -85,22 +85,22 @@ class MarketExperiment ( HasTraits ):
     #--------------------------------------------------------------------------
 
     # Plot of environment state.
-    state_plot = Instance(RewardsPlot)
+    state_plot = Instance(RewardsPlot, transient=True)
 
     # Plot of agent actions.
-    actions_plot = Instance(RewardsPlot)
+    actions_plot = Instance(RewardsPlot, transient=True)
 
     # Plot of agent rewards.
-    rewards_plot = Instance(RewardsPlot)
+    rewards_plot = Instance(RewardsPlot, transient=True)
 
     #--------------------------------------------------------------------------
     #  View definitions:
     #--------------------------------------------------------------------------
 
     traits_view = View(
-        VGroup(VGroup(#Item("state_plot", show_label=False, style="custom"),
+        VGroup(VGroup(Item("state_plot", show_label=False, style="custom"),
                       Item("actions_plot", show_label=False, style="custom"),
-                      #Item("rewards_plot", show_label=False, style="custom")
+                      Item("rewards_plot", show_label=False, style="custom")
                       ),
                HGroup(Item("power_system", show_label=False, style="simple",
                            width=200),
@@ -109,7 +109,7 @@ class MarketExperiment ( HasTraits ):
                       Item("steps", width=100),
                       Item("step", show_label=False, width=150),
                       Item("reset_experiment", show_label=False, width=100))),
-        id        = "pylon.pybrain.experiment",
+        id        = "pylon.pyreto.experiment",
         title     = "Market Experiment",
         resizable = True,
         buttons   = ["OK"]

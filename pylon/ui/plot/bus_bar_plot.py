@@ -157,7 +157,7 @@ class BusBarPlot(HasTraits):
         """ Get the plot data points """
 
         buses = self.network.buses
-        n_buses = self.network.n_buses
+        n_buses = len(self.network.buses)
 #        buses = self.buses
 #        n_buses = len(buses)
 

@@ -146,7 +146,7 @@ def main(power_sys):
         agents.append( agent )
 
     experiment = MarketExperiment( tasks, agents, power_sys )
-    experiment.doInteractions( number = 3 )
+#    experiment.doInteractions( number = 3 )
 
 #    plot = ExperimentPlot(experiment)
 #    plot.configure_traits()

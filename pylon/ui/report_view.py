@@ -122,7 +122,8 @@ pf_report_view = View(
         dock="tab"
     ),
     style="readonly", title="Power Flow Report",
-    buttons=["OK", "Help"]
+    buttons=["OK", "Help"], resizable=True,
+    id="pylon.ui.pf_report_view"
 )
 
 #------------------------------------------------------------------------------
@@ -148,7 +149,8 @@ opf_report_view = View(
         )
     ),
     style="readonly", title="Optimal Power Flow",
-    buttons=["OK", "Help"]
+    buttons=["OK", "Help"], resizable=True,
+    id="pylon.ui.opf_report_view"
 )
 
 if __name__ == "__main__":
