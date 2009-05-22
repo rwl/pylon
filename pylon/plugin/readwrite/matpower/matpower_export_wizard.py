@@ -32,13 +32,13 @@ from enthought.traits.api import \
 from enthought.pyface.wizard.api import SimpleWizard
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
-from envisage.resource.i_workspace import IWorkspace
-from envisage.resource.wizard.file_export_page import FileExportPage
+from puddle.resource.i_workspace import IWorkspace
+from puddle.resource.wizard.file_export_page import FileExportPage
 
-from envisage.resource.wizard.resource_selection_page import \
+from puddle.resource.wizard.resource_selection_page import \
     ResourceSelectionPage
 
-from envisage.resource.resource_adapter import PickleFileIResourceAdapter
+from puddle.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.readwrite.api import write_matpower
 
@@ -46,7 +46,7 @@ from pylon.readwrite.api import write_matpower
 #  Constants:
 #------------------------------------------------------------------------------
 
-WORKSPACE_VIEW = "envisage.resource.resource_view"
+WORKSPACE_VIEW = "puddle.resource.resource_view"
 
 #------------------------------------------------------------------------------
 #  "MATPOWERExportPage" class:

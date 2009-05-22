@@ -26,19 +26,19 @@ import logging
 
 from enthought.envisage.core_plugin import CorePlugin
 
-from envisage.workbench.workbench_plugin import WorkbenchPlugin
-from envisage.workbench.workbench_application import WorkbenchApplication
+from puddle.workbench.workbench_plugin import WorkbenchPlugin
+from puddle.workbench.workbench_application import WorkbenchApplication
 
 from enthought.plugins.ipython_shell.ipython_shell_plugin \
     import IPythonShellPlugin
 
 from enthought.logger.plugin.logger_plugin import LoggerPlugin
 
-from envisage.plugin import EnvisagePlugin
-from envisage.resource.resource_plugin import ResourcePlugin
-from envisage.python_editor.python_editor_plugin import PythonEditorPlugin
-from envisage.property_view.property_view_plugin import PropertyViewPlugin
-from envisage.image_editor.image_editor_plugin import ImageEditorPlugin
+from puddle.plugin import PuddlePlugin
+from puddle.resource.resource_plugin import ResourcePlugin
+from puddle.python_editor.python_editor_plugin import PythonEditorPlugin
+from puddle.property_view.property_view_plugin import PropertyViewPlugin
+from puddle.image_editor.image_editor_plugin import ImageEditorPlugin
 
 from godot.plugin.godot_plugin import GodotPlugin
 
@@ -90,7 +90,7 @@ def main():
         id = "pylon",
         plugins = [
             CorePlugin(),
-            EnvisagePlugin(),
+            PuddlePlugin(),
             WorkbenchPlugin(),
             ResourcePlugin(),
             LoggerPlugin(),

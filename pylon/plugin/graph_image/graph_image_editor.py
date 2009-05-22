@@ -25,7 +25,7 @@
 from os.path import join, dirname
 
 from enthought.pyface.image_resource import ImageResource
-from envisage.resource.resource_editor import ResourceEditor
+from puddle.resource.resource_editor import ResourceEditor
 from enthought.preferences.api import bind_preference
 
 from pylon.ui.graph.graph_image import GraphImage

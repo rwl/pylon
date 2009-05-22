@@ -43,7 +43,7 @@ class PylonEditPerspective(Perspective):
     # The contents of the perspective:
     contents = [
         PerspectiveItem(
-            id="envisage.resource.resource_view",
+            id="puddle.resource.resource_view",
             position="left", width=0.2),
         PerspectiveItem(
             id="enthought.plugins.python_shell_view",
@@ -53,12 +53,12 @@ class PylonEditPerspective(Perspective):
             position="with", height=0.2,
             relative_to="enthought.plugins.python_shell_view"),
         PerspectiveItem(
-            id="envisage.property_view.property_view",
+            id="puddle.property_view.property_view",
             position="right", width=0.2),
         PerspectiveItem(
             id="enthought.plugins.ipython_shell.namespace_view",
             position="with", width=0.2,
-            relative_to="envisage.property_view.property_view")
+            relative_to="puddle.property_view.property_view")
     ]
 
 # EOF -------------------------------------------------------------------------

@@ -42,8 +42,8 @@ class PylonPlugin(Plugin):
 #    COMMANDS = "enthought.plugins.python_shell.commands"
     COMMANDS = "enthought.plugins.ipython_shell.commands"
 
-    NEW_WIZARDS = "envisage.resource.new_wizards"
-    EDITORS = "envisage.resource.editors"
+    NEW_WIZARDS = "puddle.resource.new_wizards"
+    EDITORS = "puddle.resource.editors"
 
     # Unique plugin identifier
     id = "pylon.plugin.pylon_plugin"

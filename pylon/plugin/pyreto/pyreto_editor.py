@@ -28,8 +28,8 @@ from enthought.traits.api import on_trait_change
 from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup, Tabbed
 from enthought.pyface.api import ImageResource
 
-from envisage.resource.editor import Editor
-from envisage.resource.resource_editor import ResourceEditor
+from puddle.resource.editor import Editor
+from puddle.resource.resource_editor import ResourceEditor
 
 #------------------------------------------------------------------------------
 #  Constants:

@@ -31,18 +31,18 @@ from enthought.traits.api import \
 
 from enthought.pyface.api import ImageResource
 
-from envisage.resource.i_workspace import IWorkspace
-from envisage.resource.wizard.new_resource_wizard import NewResourceWizard
-from envisage.resource.resource_adapter import PickleFileIResourceAdapter
-from envisage.resource.wizard_extension import WizardExtension
+from puddle.resource.i_workspace import IWorkspace
+from puddle.resource.wizard.new_resource_wizard import NewResourceWizard
+from puddle.resource.resource_adapter import PickleFileIResourceAdapter
+from puddle.resource.wizard_extension import WizardExtension
 
-from envisage.resource.wizard.resource_selection_page \
+from puddle.resource.wizard.resource_selection_page \
     import ResourceSelectionPage
 
-from envisage.resource.wizard.container_selection_page \
+from puddle.resource.wizard.container_selection_page \
     import ContainerSelectionPage
 
-from envisage.resource.wizard.new_resource_wizard \
+from puddle.resource.wizard.new_resource_wizard \
     import NewResourceWizardPage
 
 #from pylon.pyreto.experiment import MarketExperiment

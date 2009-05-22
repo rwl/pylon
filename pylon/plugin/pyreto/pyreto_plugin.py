@@ -37,8 +37,8 @@ class PyretoPlugin(Plugin):
     ACTION_SETS = "enthought.envisage.ui.workbench.action_sets"
     COMMANDS = "enthought.plugins.python_shell.commands"
 
-    NEW_WIZARDS = "envisage.resource.new_wizards"
-    EDITORS = "envisage.resource.editors"
+    NEW_WIZARDS = "puddle.resource.new_wizards"
+    EDITORS = "puddle.resource.editors"
 
     # Unique plug-in identifier.
     id = "pylon.plugin.pyreto_plugin"

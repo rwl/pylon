@@ -33,9 +33,9 @@ from enthought.pyface.api import ImageResource, SplashScreen
 from enthought.etsconfig.api import ETSConfig
 
 if ETSConfig.toolkit == "wx":
-    from envisage.workbench.wx_about_dialog import AboutDialog
+    from puddle.workbench.wx_about_dialog import AboutDialog
 elif ETSConfig.toolkit == "qt4":
-    from envisage.workbench.qt_about_dialog import AboutDialog
+    from puddle.workbench.qt_about_dialog import AboutDialog
 else:
     from enthought.pyface.api import AboutDialog
 
@@ -73,28 +73,22 @@ class PylonWorkbenchApplication(WorkbenchApplication):
 
 
     def _about_dialog_default(self):
-        """ Trait initialiser """
-
+        """ Trait initialiser.
+        """
         about_dialog = AboutDialog(
             parent=self.workbench.active_window.control,
             image=ImageResource("pylon"),
-            additions=[
-                """ Routines from MATPOWER<br>
-                    Copyright &copy; 2009 Richard W. Lincoln
-                """
-            ],
-        )
+            additions=["Routines from MATPOWER<br>" \
+                "Richard W. Lincoln &copy; 2009"])
 
         return about_dialog
 
 
     def _splash_screen_default(self):
-        """ Trait initialiser """
-
-        splash_screen = SplashScreen(
-            image=ImageResource("pylon"), show_log_messages=False,
-            text_color="black"#, text_font="10 point Monospace"
-        )
+        """ Trait initialiser.
+        """
+        splash_screen = SplashScreen(image=ImageResource("pylon"),
+            show_log_messages=False)
 
         return splash_screen
 

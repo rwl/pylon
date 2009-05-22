@@ -25,8 +25,8 @@
 from enthought.traits.api import Instance
 from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup, Tabbed
 
-from envisage.resource.resource_editor import ResourceEditor
-from envisage.resource.resource_adapter import PickleFileIResourceAdapter
+from puddle.resource.resource_editor import ResourceEditor
+from puddle.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.ui.bus_table import buses_table_editor
 from pylon.ui.branch_table import branches_table_editor
