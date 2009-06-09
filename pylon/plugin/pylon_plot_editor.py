@@ -22,8 +22,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from envisage.resource.resource_editor import ResourceEditor
-from envisage.resource.resource_adapter import PickleFileIResourceAdapter
+from puddle.resource.resource_editor import ResourceEditor
+from puddle.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.ui.plot.bus_bar_plot import BusBarPlot
 

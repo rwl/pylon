@@ -28,7 +28,7 @@ from enthought.traits.ui.menu import Action
 from enthought.pyface.api import ImageResource
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
-from envisage.resource.resource_adapter import PickleFileIResourceAdapter
+from puddle.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.api import Network
 from pylon.ui.routine.ac_opf_view_model import ACOPFViewModel

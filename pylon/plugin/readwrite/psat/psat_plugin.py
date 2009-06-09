@@ -34,7 +34,7 @@ class PSATPlugin(Plugin):
     """
 
     # Extension point IDs
-    IMPORT_WIZARDS = "envisage.resource.import_wizards"
+    IMPORT_WIZARDS = "puddle.resource.import_wizards"
 
     # Unique plugin identifier
     id = "pylon.plugin.readwrite.psat.psat_plugin"

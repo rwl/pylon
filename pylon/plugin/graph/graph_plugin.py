@@ -36,7 +36,7 @@ class GraphPlugin(Plugin):
 
     # Extension point IDs
     PREFERENCES_PAGES = "enthought.envisage.ui.workbench.preferences_pages"
-    EDITORS = "envisage.resource.editors"
+    EDITORS = "puddle.resource.editors"
 
     # Unique plugin identifier
     id = "pylon.plugin.graph"

@@ -35,8 +35,8 @@ class MATPOWERPlugin(Plugin):
 
     # Extension point IDs
     PREFERENCES_PAGES = "enthought.envisage.ui.workbench.preferences_pages"
-    IMPORT_WIZARDS = "envisage.resource.import_wizards"
-    EXPORT_WIZARDS = "envisage.resource.export_wizards"
+    IMPORT_WIZARDS = "puddle.resource.import_wizards"
+    EXPORT_WIZARDS = "puddle.resource.export_wizards"
 
     # Unique plugin identifier
     id = "pylon.plugin.readwrite.matpower_plugin"

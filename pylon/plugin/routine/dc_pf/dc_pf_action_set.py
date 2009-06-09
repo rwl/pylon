@@ -55,7 +55,7 @@ class DCPFActionSet(WorkbenchActionSet):
         ToolBar(
             id="pylon.plugin.pylon_action_set.pylon_tool_bar",
             name="Routine", groups=["RunGroup"],
-            after="envisage.resource.resource_tool_bar"
+            after="puddle.resource.resource_tool_bar"
         )
     ]
 

@@ -25,7 +25,7 @@
 from os.path import dirname
 
 from enthought.pyface.api import ImageResource
-from envisage.resource.wizard_extension import WizardExtension
+from puddle.resource.wizard_extension import WizardExtension
 
 #------------------------------------------------------------------------------
 #  "PSATImportWizardExtension" class:

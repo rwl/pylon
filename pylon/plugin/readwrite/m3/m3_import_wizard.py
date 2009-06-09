@@ -31,13 +31,13 @@ from enthought.traits.api import Str, File, Instance, Event
 from enthought.pyface.wizard.api import SimpleWizard
 from enthought.envisage.ui.workbench.workbench_window import WorkbenchWindow
 
-from envisage.resource.i_workspace import IWorkspace
-from envisage.resource.wizard.file_import_page import FileImportPage
-from envisage.resource.action.open_action import OpenAction
-from envisage.resource.wizard.container_selection_page import \
+from puddle.resource.i_workspace import IWorkspace
+from puddle.resource.wizard.file_import_page import FileImportPage
+from puddle.resource.action.open_action import OpenAction
+from puddle.resource.wizard.container_selection_page import \
     ContainerSelectionPage
 
-from envisage.resource.resource_adapter import PickleFileIResourceAdapter
+from puddle.resource.resource_adapter import PickleFileIResourceAdapter
 
 from pylon.readwrite.api import read_m3
 
@@ -45,7 +45,7 @@ from pylon.readwrite.api import read_m3
 #  Constants:
 #------------------------------------------------------------------------------
 
-WORKSPACE_VIEW = "envisage.resource.resource_view"
+WORKSPACE_VIEW = "puddle.resource.resource_view"
 
 #------------------------------------------------------------------------------
 #  "M3ImportPage" class:
