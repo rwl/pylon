@@ -159,14 +159,14 @@ class DCPFRoutine:
         # sparse matrix and B is a dense matrix of the same type ('d'
         # or 'z') as A. On exit B contains the solution.
         A = B_pvpq
-        b = p_pvpq-p_slack*v_phase_slack
+        b = p_pvpq - p_slack * v_phase_slack
 
-	if self.routine == "UMFPACK":
+        if self.routine == "UMFPACK":
             umfpack.linsolve(A, b)
-	elif self.routine == "CHOLMOD":
-	    cholmod.splinsolve(A, b)
-	else:
-	    raise ValueError, "'routine' must be either 'UMFPACK' of 'CHOLMOD'"
+        elif self.routine == "CHOLMOD":
+            cholmod.splinsolve(A, b)
+        else:
+            raise ValueError, "'routine' must be either 'UMFPACK' of 'CHOLMOD'"
 
         logger.debug("Solution to linear equations:\n%s" % b)
 
