@@ -16,12 +16,11 @@
 #------------------------------------------------------------------------------
 
 """ Defines a routine for solving the power flow problem using fast decoupled
-method.
+    method.
 
-References:
-    D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, "fdpf.m", MATPOWER,
-    version 3.2, http://www.pserc.cornell.edu/matpower/
-
+    References:
+        Ray Zimmerman, "fdpf.m", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
 """
 
 #------------------------------------------------------------------------------

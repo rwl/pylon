@@ -148,9 +148,8 @@ class AdmittanceMatrix:
     """ Build sparse Y matrix.
 
         References:
-            D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, "makeYbus.m",
-            MATPOWER, version 1.8, http://www.pserc.cornell.edu/matpower/,
-            June 26, 2007
+            Ray Zimmerman, "makeYbus.m", MATPOWER, PSERC Cornell,
+            http://www.pserc.cornell.edu/matpower/, version 1.8, June 2007
     """
 
     # Network represented by the matrix

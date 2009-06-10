@@ -18,8 +18,8 @@
 """ DC Optimal Power Flow for routine.
 
     References:
-        D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan,
-        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+        Ray Zimmerman, "dcopf.m", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
 """
 
 #------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ class DCOPFRoutine:
     """ A method class for solving the DC optimal power flow problem
 
         References:
-            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan,
+            R. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan,
             MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
     """
 

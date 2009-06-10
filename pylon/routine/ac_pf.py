@@ -17,10 +17,9 @@
 
 """ Defines a base class for many AC power flow routines.
 
-References:
-    D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan,
-    MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-
+    References:
+        Ray Zimmerman, "acpf.m", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
 """
 
 #------------------------------------------------------------------------------
@@ -61,9 +60,8 @@ class ACPFRoutine:
         fast_decoupled_pf.py
 
     References:
-        D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan,
-        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-
+        Ray Zimmerman, "acpf.m", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
     """
 
     #--------------------------------------------------------------------------

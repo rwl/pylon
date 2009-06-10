@@ -17,9 +17,9 @@
 
 """ Optimal power flow routine, translated from MATPOWER.
 
-References:
-    D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "runopf.m", MATPOWER,
-    version 3.2, http://www.pserc.cornell.edu/matpower/
+    References:
+        Ray Zimmerman, "runopf.m", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
 
 """
 

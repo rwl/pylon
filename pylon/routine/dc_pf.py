@@ -17,9 +17,9 @@
 
 """ Solves DC power flow.
 
-References:
-    D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan,
-    MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+    References:
+        Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
 
 """
 
@@ -51,9 +51,9 @@ logger = logging.getLogger(__name__)
 class DCPFRoutine:
     """ Solves DC power flow.
 
-    References:
-        D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan,
-        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+        References:
+            Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell,
+            http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
 
     """
 
