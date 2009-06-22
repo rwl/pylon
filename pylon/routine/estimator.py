@@ -18,8 +18,8 @@
 """ State estimation (under construction) based on code from James S. Thorp.
 
     References:
-        R. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "state_est.m",
-        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+        Ray Zimmerman, "state_est.m", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
 """
 
 #------------------------------------------------------------------------------
@@ -102,6 +102,40 @@ class StateEsimationRoutine(object):
         dSbus_dVm, dSbus_dVa = dSbus_dV(Y, v)
         dSbr_dVm, dSbr_dVa = dSbr_dV(branches, Ysource, Ytarget, v)
 
+        H = spmatrix([
+            dSf_dVa.real(),   dSf_dVm.real(),
+            dSt_dVa.real(),   dSt_dVm.real(),
+            dSbus_dVa.real(), dSbus_dVm.real(),
+            spdiag(1.0, range(nb)), spmatrix(0.0, (nb,nb)),
+            dSf_dVa.imag(),   dSf_dVm.imag(),
+            dSt_dVa.imag(),   dSt_dVm.imag(),
+            dSbus_dVa.imag(), dSbus_dVm.imag(),
+            spmatrix(0.0, (nb,nb)), spdiag(1.0, range(nb))
+        ])
 
+        # True measurement.
+        z = matrix([
+            Sf.real(),
+            St.real(),
+            Sbus.real(),
+            angle(V0),
+            Sf.imag(),
+            St.imag(),
+            Sbus.imag(),
+            abs(V0)
+        ])
+
+        # Create inverse of covariance matrix with all measurements.
+        full_scale = 30
+#        sigma = [
+#            0.02 * abs(Sf)      + 0.0052 * full_scale * ones(nbr,1),
+#            0.02 * abs(St)      + 0.0052 * full_scale * ones(nbr,1),
+#            0.02 * abs(Sbus)    + 0.0052 * full_scale * ones(nb,1),
+#            0.2 * pi/180 * 3*ones(nb,1),
+#            0.02 * abs(Sf)      + 0.0052 * full_scale * ones(nbr,1),
+#            0.02 * abs(St)      + 0.0052 * full_scale * ones(nbr,1),
+#            0.02 * abs(Sbus)    + 0.0052 * full_scale * ones(nb,1),
+#            0.02 * abs(V0)      + 0.0052 * 1.1 * ones(nb,1),
+#        ] ./ 3
 
 # EOF -------------------------------------------------------------------------
