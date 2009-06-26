@@ -32,7 +32,6 @@ from enthought.traits.ui.api import \
 
 from enthought.traits.ui.menu import NoButtons, OKCancelButtons
 from enthought.pyface.image_resource import ImageResource
-from enthought.naming.unique_name import make_unique_name
 
 #from enthought.chaco.chaco_plot_editor import ChacoPlotItem
 

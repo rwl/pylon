@@ -26,7 +26,6 @@ Table editor for Bus lists
 
 from os import path
 
-from enthought.naming.unique_name import make_unique_name
 from enthought.traits.ui.api import TableEditor
 from enthought.traits.ui.table_column import ObjectColumn
 
@@ -36,7 +35,7 @@ from enthought.traits.ui.table_filter import \
 from pylon.bus import Bus
 
 from bus_view import bus_view
-from common import ContextMenuColumn, FloatColumn
+from common import ContextMenuColumn, FloatColumn, make_unique_name
 
 #------------------------------------------------------------------------------
 #  Bus factory function:

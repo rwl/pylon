@@ -26,7 +26,6 @@ Table editor for Generator lists
 
 from os import path
 
-from enthought.naming.unique_name import make_unique_name
 from enthought.traits.ui.api import TableEditor, InstanceEditor
 from enthought.traits.ui.table_column import ObjectColumn
 from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
@@ -35,10 +34,9 @@ from enthought.traits.ui.table_filter import \
     EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
 
 from pylon.generator import Generator
-
 from pylon.ui.generator_view import generator_view
 
-from common import OnlineColumn, OnlineFloatColumn
+from common import OnlineColumn, OnlineFloatColumn, make_unique_name
 
 #------------------------------------------------------------------------------
 #  Generator factory function:

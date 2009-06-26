@@ -36,7 +36,6 @@ from enthought.traits.ui.api import \
 from enthought.traits.ui.menu import NoButtons, OKCancelButtons, Separator
 from enthought.pyface.api import error, confirm, YES, FileDialog, OK
 from enthought.pyface.image_resource import ImageResource
-from enthought.naming.unique_name import make_unique_name
 from enthought.logger.api import add_log_queue_handler
 from enthought.logger.log_queue_handler import LogQueueHandler
 
@@ -65,6 +64,9 @@ from pylon.ui.routine.ac_pf_view_model \
 
 from pylon.ui.routine.ac_opf_view_model \
     import ACOPFViewModel
+    
+from pylon.ui.common \
+    import make_unique_name
 
 from network_menu import \
     network_menubar, network_toolbar

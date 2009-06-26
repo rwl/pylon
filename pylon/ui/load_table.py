@@ -33,13 +33,11 @@ from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
 from enthought.traits.ui.table_filter import \
     EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, RuleTableFilter
 
-from enthought.naming.unique_name import make_unique_name
-
 from pylon.load import Load
 
 from pylon.ui.load_view import load_view
 
-from common import OnlineColumn, OnlineFloatColumn
+from common import OnlineColumn, OnlineFloatColumn, make_unique_name
 
 #------------------------------------------------------------------------------
 #  load factory function:

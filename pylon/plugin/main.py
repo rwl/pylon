@@ -40,7 +40,7 @@ from puddle.python_editor.python_editor_plugin import PythonEditorPlugin
 from puddle.property_view.property_view_plugin import PropertyViewPlugin
 from puddle.image_editor.image_editor_plugin import ImageEditorPlugin
 
-from godot.plugin.godot_plugin import GodotPlugin
+#from godot.plugin.godot_plugin import GodotPlugin
 
 #------------------------------------------------------------------------------
 #  Pylon imports:
@@ -65,7 +65,7 @@ from pylon.plugin.graph_image.graph_image_plugin import GraphImagePlugin
 
 from pylon.plugin.pyreto.pyreto_plugin import PyretoPlugin
 
-from CIM.Plugin.CIMPlugin import CIMPlugin
+#from CIM.Plugin.CIMPlugin import CIMPlugin
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -112,7 +112,7 @@ def main():
             GraphPlugin(),
             PyretoPlugin(),
             # Other plug-ins
-            CIMPlugin(),
+#            CIMPlugin(),
 #            GodotPlugin()
         ]
     )
