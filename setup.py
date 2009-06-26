@@ -17,30 +17,23 @@
 
 from setuptools import setup, find_packages
 
-setup(
-    author="Richard W. Lincoln",
-    author_email="r.w.lincoln@gmail.com",
-    description="Power system and energy market simulator.",
-    url="http://rwl.github.com/pylon",
-    version="0.2",
-    entry_points={
-        "gui_scripts": ["pylon = pylon.plugin.main:main",
-                        "pylon_vm = pylon.main:main"]
-    },
-#    extras_require={},
-#    ext_modules=[],
-    install_requires=["ETS>=3.2.0", "Traits>=3.0.3"],# "Godot"],
-    license="GPLv2",
-    name="Pylon",
-    include_package_data=True,
-#    exclude_package_data={"": ["*.ecore"]},
-#    package_data={"": ["*.txt", "*.rst", "*.png", "*.jpg", "*.ini"]},
-#    package_dir={"": "src"},
-    packages=find_packages(),#"src"),#exclude=["docs", "docs.*"]),
-#    namespace_packages=[],
-    test_suite = "pylon.test",
-    platforms = ["Windows", "Linux", "Mac OS-X", "Unix", "Solaris"],
-    zip_safe=False
-)
+setup(author="Richard W. Lincoln",
+      author_email="r.w.lincoln@gmail.com",
+      description="Power system and energy market simulator.",
+      url="http://rwl.github.com/pylon",
+      version="0.2.2",
+      entry_points={"console_scripts": ["pylon = pylon.main:main"],
+          "gui_scripts": ["pylon_workbench = pylon.plugin.main:main [GUI]"]},
+      install_requires=["Traits", "TraitsGUI", "PyBrain", "PyParsing",
+          "PyExcelerator"],
+      extras_require={"GUI": ["EnvisageCore", "EnvisagePlugins", "Chaco",
+          "ConfigObj", "IPython", "TraitsBackendWX", "Puddle", "Godot"]},
+      license="GPLv2",
+      name="Pylon",
+      include_package_data=True,
+      exclude_package_data={"": ["*.ecore"]},
+      packages=find_packages(),
+      test_suite="pylon.test",
+      zip_safe=False)
 
 # EOF -------------------------------------------------------------------------
