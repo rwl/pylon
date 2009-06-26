@@ -312,8 +312,6 @@ def main():
         filename = args[0]
         infile   = open(filename)
 
-    print "OPTIONS:", options
-
     app = PylonApplication(file_name   = filename,
                            type        = options.type,
                            routine     = options.routine,

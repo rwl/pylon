@@ -150,6 +150,8 @@ semi   = Literal(";")
 at     = Literal("@")
 minus  = Literal("-")
 
+comma_sep = Optional(comma).suppress()
+
 #------------------------------------------------------------------------------
 #  A convenient function for calculating a unique name given a list of
 #  existing names.

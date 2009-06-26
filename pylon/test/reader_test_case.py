@@ -33,9 +33,11 @@ from pylon.readwrite.api import PSSEReader
 #  Constants:
 #------------------------------------------------------------------------------
 
-MATPOWER_DATA_FILE = "data/case6ww.m"
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
-PSSE_DATA_FILE = "data/ehv3.raw"
+MATPOWER_DATA_FILE = os.path.join(DATA_DIR, "case6ww.m")
+UKGDS_DATA_FILE    = os.path.join(DATA_DIR, "ehv3.raw")
+IPSA_DATA_FILE     = os.path.join(DATA_DIR, "ipsa.raw")
 
 #------------------------------------------------------------------------------
 #  "ReaderTest" class:
@@ -134,6 +136,8 @@ class ReaderTest(TestCase):
 #------------------------------------------------------------------------------
 
 class MatpowerReaderTest(ReaderTest):
+    """ Defines a test case for the MATPOWER reader.
+    """
 
     def test_case6ww(self):
         """ Validate parsing of the case6ww.m file """
@@ -161,8 +165,14 @@ class MatpowerReaderTest(ReaderTest):
 #  "PSSEReaderTest" class:
 #------------------------------------------------------------------------------
 
-#class PSSEReaderTest(FilterTestCase):
-#
+class PSSEReaderTest(ReaderTest):
+    """ Defines a test case for the PSS/E data file reader.
+    """
+    
+    def test_ipsa(self):
+        """ Test parsing of a data file exported from IPSA.
+        """
+
 #    def test_ehv3(self):
 #        """
 #        Validate parsing of the ehv3.raw file translated from the UKGDS

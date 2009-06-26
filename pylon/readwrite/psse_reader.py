@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,51 +15,51 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a class for reading PSS/E data files """
+""" Defines a reader for PSS/E data files.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from parsing_util import integer, boolean, real, scolon, psse_comment
+from parsing_util \
+    import integer, boolean, real, scolon, psse_comment, comma_sep
 
-from pyparsing import \
-    Literal, Word, restOfLine, alphanums, printables, quotedString, White, \
-    OneOrMore, ZeroOrMore
+from pyparsing \
+    import Literal, Word, restOfLine, alphanums, printables, quotedString, \
+    White, OneOrMore, ZeroOrMore
 
-from pylon.network import Network
-from pylon.bus import Bus
-from pylon.branch import Branch
-from pylon.generator import Generator
-from pylon.load import Load
+#from pylon.network import Network
+#from pylon.bus import Bus
+#from pylon.branch import Branch
+#from pylon.generator import Generator
+#from pylon.load import Load
 
+from pylon.api import Network, Bus, Branch, Generator, Load
 #from pylon.pypylon import Network, Bus, Branch, Generator, Load
 
 #-------------------------------------------------------------------------------
 #  "PSSEReader" class:
 #-------------------------------------------------------------------------------
 
-class PSSEReader:
-    """ Defines a reader of PSS/E data files that returns networks """
-
+class PSSEReader(object):
+    """ Defines a reader of PSS/E data files that returns a network object.
+    """
+    # Path to the data file or file object.
+    file_or_filename = None
+    
     # The resulting network
     network = None
 
     def __init__(self, file_or_filename):
-        """ Returns a new PSSEReader instance """
-
-        self.network = self.parse_file(file_or_filename)
+        """ Initialises a new PSSEReader instance.
+        """
+        self.file_or_filename = file_or_filename
 
 
     def parse_file(self, file_or_filename):
-        """ Defines a method class for importing PSS/E data files and
-        returning a Network object.
-
-        file_or_filename: File name of file object with PSS/E data
-        return: Network object
-
+        """ Parses a PSS/E data file and returns a network object.
         """
-
         self.network = Network()
 
         header = self._get_header_construct()
@@ -73,7 +73,7 @@ class PSSEReader:
 
         # Parse case
         case = ZeroOrMore(psse_comment) + header + \
-               ZeroOrMore(psse_comment) + title + \
+               ZeroOrMore(psse_comment) + Optional(title) + \
                ZeroOrMore(psse_comment) + ZeroOrMore(bus_data) + \
                ZeroOrMore(psse_comment) + separator + \
                ZeroOrMore(psse_comment) + ZeroOrMore(load_data) + \
@@ -94,28 +94,27 @@ class PSSEReader:
     #--------------------------------------------------------------------------
 
     def _get_separator_construct(self):
-        """ Returns a construct for a PSS/E separator """
-
+        """ Returns a construct for a PSS/E separator.
+        """
         # Tables are separated by a single 0
-        separator = Literal('0') + White('\n')# + LineEnd()
+        separator = Literal('0') +  + Optional(restOfLine)#White('\n')
         separator.setParseAction(self._push_separator)
 
         return separator
 
 
     def _get_header_construct(self):
-        """ Returns a construct for the header of a PSS/E file """
-
+        """ Returns a construct for the header of a PSS/E file.
+        """
         first_line = Word('0', exact=1).suppress() + real + \
-                     restOfLine.suppress()
+            restOfLine.suppress()
         first_line.setParseAction(self._push_system_base)
-
         return first_line
 
 
     def _get_title_construct(self):
-        """ Returns a construct for the subtitle of a PSS/E file """
-
+        """ Returns a construct for the subtitle of a PSS/E file.
+        """
         title = Word(alphanums).suppress() + restOfLine.suppress()
         sub_title = Word(printables) + restOfLine.suppress()
 #        sub_title = Combine(Word(alphanums) + restOfLine)
@@ -126,8 +125,8 @@ class PSSEReader:
 
 
     def _get_bus_data_construct(self):
-        """ Returns a construct for a line of bus data """
-
+        """ Returns a construct for a line of bus data.
+        """
         # [I, IDE, PL, QL, GL, BL, IA, VM, VA, 'NAME', BASKL, ZONE]
 #        i = integer
 #        ide = Word('1234', exact=1)
@@ -147,47 +146,45 @@ class PSSEReader:
 #                   bus_name + base_kv + loss_zone
 
         # Bus, Name, Base_kV, Type, Y_re, Y_im, Area, Zone, PU_Volt, Angle
-        i = integer.setResultsName("Bus")
-        bus_name = quotedString.setResultsName("Name")
-        base_kv = real.setResultsName("Base_kV")
-        ide = Word("1234", exact=1).setResultsName("Type")
-        sh_conductance = real.setResultsName("Y_re")
-        sh_susceptance = real.setResultsName("Y_im")
-        area = integer.setResultsName("Area")
-        zone = integer.setResultsName("Zone")
-        v_magnitude = real.setResultsName("PU_Volt")
-        v_angle = real.setResultsName("Angle")
+        i = integer.setResultsName("Bus") + comma_sep
+        bus_name = quotedString.setResultsName("Name") + comma_sep
+        base_kv = real.setResultsName("Base_kV") + comma_sep
+        ide = Word("1234", exact=1).setResultsName("Type") + comma_sep
+        sh_conductance = real.setResultsName("Y_re") + comma_sep
+        sh_susceptance = real.setResultsName("Y_im") + comma_sep
+        area = integer.setResultsName("Area") + comma_sep
+        zone = integer.setResultsName("Zone") + comma_sep
+        v_magnitude = real.setResultsName("PU_Volt") + comma_sep
+        v_angle = real.setResultsName("Angle") + comma_sep
 
         bus_data = i + bus_name + base_kv + ide + sh_conductance + \
-                   sh_susceptance + area + zone + v_magnitude + v_angle
+            sh_susceptance + area + zone + v_magnitude + v_angle
 
         bus_data.setParseAction(self._push_bus_data)
-
         return bus_data
 
 
     def _get_load_data_construct(self):
-        """ Returns a construct of a line of load data """
-
+        """ Returns a construct for a line of load data.
+        """
         # [Bus, LoadID, Status, Area, Zone, LP, LQ]
-        bus_id = integer.setResultsName("Bus")
-        load_id = integer.setResultsName("LoadID")
-        status = boolean.setResultsName("Status")
-        area = integer.setResultsName("Area")
-        zone = integer.setResultsName("Zone")
-        p_load = real.setResultsName("LP")
-        q_load = real.setResultsName("LQ")
+        bus_id = integer.setResultsName("Bus") + comma_sep
+        load_id = integer.setResultsName("LoadID") + comma_sep
+        status = boolean.setResultsName("Status") + comma_sep
+        area = integer.setResultsName("Area") + comma_sep
+        zone = integer.setResultsName("Zone") + comma_sep
+        p_load = real.setResultsName("LP") + comma_sep
+        q_load = real.setResultsName("LQ") + comma_sep
 
         load_data = bus_id + load_id + status + area + zone + p_load + q_load
 
         load_data.setParseAction(self._push_load_data)
-
         return load_data
 
 
     def _get_generator_data_construct(self):
-        """ Returns a construct for a line of generator data """
-
+        """ Returns a construct for a line of generator data.
+        """
         # [I,ID,PG,QG,QT,QB,VS,IREG,MBASE,ZR,ZX,RT,XT,GTAP,STAT,RMPCT,PT,PB]
 #        bus_idx = integer
 #        machine_id = Word(alphanums, exact=1)
@@ -216,37 +213,36 @@ class PSSEReader:
         # Bus, ID, P, Q, Qmax, Qmin, SchedV, RegBs, MVAbase, ZR, ZX, RTr,
         # XTr, GTAP, Stat, Percent, Pmax, Pmin
 
-        bus_id = integer.setResultsName("Bus")
-        generator_id = integer.setResultsName("ID")
-        p = real.setResultsName("P")
-        q = real.setResultsName("Q")
-        q_max = real.setResultsName("Qmax")
-        q_min = real.setResultsName("Qmin")
-        v_sched = real.setResultsName("SchedV")
-        reg_bus = integer.setResultsName("RegBs")
-        base_mva = real.setResultsName("MVAbase")
-        r_zero = real.setResultsName("ZR")
-        x_zero = real.setResultsName("ZX")
-        r_tr = real.setResultsName("RTr")
-        x_tr = real.setResultsName("XTr")
-        gtap = integer.setResultsName("GTAP")
-        status = boolean.setResultsName("Stat")
-        percent = integer.setResultsName("Percent")
-        p_max = real.setResultsName("Pmax")
-        p_min = real.setResultsName("Pmin")
+        bus_id = integer.setResultsName("Bus") + comma_sep
+        generator_id = integer.setResultsName("ID") + comma_sep
+        p = real.setResultsName("P") + comma_sep
+        q = real.setResultsName("Q") + comma_sep
+        q_max = real.setResultsName("Qmax") + comma_sep
+        q_min = real.setResultsName("Qmin") + comma_sep
+        v_sched = real.setResultsName("SchedV") + comma_sep
+        reg_bus = integer.setResultsName("RegBs") + comma_sep
+        base_mva = real.setResultsName("MVAbase") + comma_sep
+        r_zero = real.setResultsName("ZR") + comma_sep
+        x_zero = real.setResultsName("ZX") + comma_sep
+        r_tr = real.setResultsName("RTr") + comma_sep
+        x_tr = real.setResultsName("XTr") + comma_sep
+        gtap = integer.setResultsName("GTAP") + comma_sep
+        status = boolean.setResultsName("Stat") + comma_sep
+        percent = integer.setResultsName("Percent") + comma_sep
+        p_max = real.setResultsName("Pmax") + comma_sep
+        p_min = real.setResultsName("Pmin") + comma_sep
 
         generator_data = bus_id + generator_id + p + q + q_max + q_min + \
             v_sched + reg_bus + base_mva + r_zero + x_zero + r_tr + x_tr + \
             gtap + status + percent + p_max + p_min
 
         generator_data.setParseAction(self._push_generator)
-
         return generator_data
 
 
     def _get_branch_data_construct(self):
-        """ Returns a construct for a line of branch data """
-
+        """ Returns a construct for a line of branch data.
+        """
         # From, To, ID, R, X, B, RateA, RateB, RateC, G_busI, B_busI,
         # G_busJ, B_busJ, Stat, Len
         from_bus_id = integer.setResultsName("From")
@@ -270,13 +266,12 @@ class PSSEReader:
             b_bus_j + status + length
 
         branch_data.setParseAction(self._push_branch)
-
         return branch_data
 
 
     def _get_transformer_data_construct(self):
-        """ Returns a construct for a line of transformer data """
-
+        """ Returns a construct for a line of transformer data.
+        """
         # From, To, K, ID, CW, CZ, CM, MAG1, MAG2, NMETR, NAME, STAT, O1, F1
         # R1-2, X1-2, SBASE1-2
         # WINDV1, NOMV1, ANG1, RATA1, RATB1, RATC1, COD, CONT, RMA, RMI, VMA, VMI, NTP, TAB, CR, CX
@@ -285,54 +280,54 @@ class PSSEReader:
         # Unused column of data
         unused = Literal("/").suppress()
 
-        from_bus_id = integer.setResultsName("From")
-        to_bus_id = integer.setResultsName("To")
-        k = integer.setResultsName("K")
-        id = integer.setResultsName("ID")
-        cw = integer.setResultsName("CW")
-        cz = integer.setResultsName("CZ")
-        cm = integer.setResultsName("CM")
-        mag1 = real.setResultsName("MAG1")
-        mag2 = real.setResultsName("MAG2")
-        nmetr = integer.setResultsName("NMETR")
-        name = quotedString.setResultsName("NAME")
-        status = boolean.setResultsName("STAT")
-        o1 = integer.setResultsName("o1")
-        f1 = integer.setResultsName("f1")
+        from_bus_id = integer.setResultsName("From") + comma_sep
+        to_bus_id = integer.setResultsName("To") + comma_sep
+        k = integer.setResultsName("K") + comma_sep
+        id = integer.setResultsName("ID") + comma_sep
+        cw = integer.setResultsName("CW") + comma_sep
+        cz = integer.setResultsName("CZ") + comma_sep
+        cm = integer.setResultsName("CM") + comma_sep
+        mag1 = real.setResultsName("MAG1") + comma_sep
+        mag2 = real.setResultsName("MAG2") + comma_sep
+        nmetr = integer.setResultsName("NMETR") + comma_sep
+        name = quotedString.setResultsName("NAME") + comma_sep
+        status = boolean.setResultsName("STAT") + comma_sep
+        o1 = integer.setResultsName("o1") + comma_sep
+        f1 = integer.setResultsName("f1") + comma_sep
 
         transformer_general = from_bus_id + to_bus_id + k + id + \
             cw + cz + cm + mag1 + mag2 + nmetr + name + status + \
             o1 + f1 + OneOrMore(unused)
 
-        r12 = real.setResultsName("R1-2")
-        x12 = real.setResultsName("X1-2")
-        s_base12 = real.setResultsName("SBASE1-2")
+        r12 = real.setResultsName("R1-2") + comma_sep
+        x12 = real.setResultsName("X1-2") + comma_sep
+        s_base12 = real.setResultsName("SBASE1-2") + comma_sep
 
         transformer_impedance = r12 + x12 + s_base12 + OneOrMore(unused)
 
-        v1_wind = real.setResultsName("WINDV1")
-        v1_nom = real.setResultsName("NOMV1")
-        angle1 = real.setResultsName("ANG1")
-        rate_a1 = real.setResultsName("RATA1")
-        rate_b1 = real.setResultsName("RATB1")
-        rate_c1 = real.setResultsName("RATC1")
-        cod = integer.setResultsName("COD")
-        cont = real.setResultsName("CONT")
-        rma = real.setResultsName("RMA")
-        rmi = real.setResultsName("RMI")
-        vma = real.setResultsName("VMA")
-        vmi = real.setResultsName("VMI")
-        ntp = real.setResultsName("NTP")
-        tab = real.setResultsName("TAB")
-        cr = real.setResultsName("CR")
-        cx = real.setResultsName("CX")
+        v1_wind = real.setResultsName("WINDV1") + comma_sep
+        v1_nom = real.setResultsName("NOMV1") + comma_sep
+        angle1 = real.setResultsName("ANG1") + comma_sep
+        rate_a1 = real.setResultsName("RATA1") + comma_sep
+        rate_b1 = real.setResultsName("RATB1") + comma_sep
+        rate_c1 = real.setResultsName("RATC1") + comma_sep
+        cod = integer.setResultsName("COD") + comma_sep
+        cont = real.setResultsName("CONT") + comma_sep
+        rma = real.setResultsName("RMA") + comma_sep
+        rmi = real.setResultsName("RMI") + comma_sep
+        vma = real.setResultsName("VMA") + comma_sep
+        vmi = real.setResultsName("VMI") + comma_sep
+        ntp = real.setResultsName("NTP") + comma_sep
+        tab = real.setResultsName("TAB") + comma_sep
+        cr = real.setResultsName("CR") + comma_sep
+        cx = real.setResultsName("CX") + comma_sep
 
         transformer_winding_1 = v1_wind + v1_nom + angle1 + rate_a1 + \
             rate_b1 + rate_c1 + cod + cont + rma + rmi + vma + vmi + \
             ntp + tab + cr + cx
 
-        v2_wind = real.setResultsName("WINDV2")
-        v2_nom = real.setResultsName("NOMV2")
+        v2_wind = real.setResultsName("WINDV2") + comma_sep
+        v2_nom = real.setResultsName("NOMV2") + comma_sep
 
         transformer_winding_2 = v2_wind + v2_nom + OneOrMore(unused)
 
@@ -348,141 +343,120 @@ class PSSEReader:
     #--------------------------------------------------------------------------
 
     def _push_system_base(self, tokens):
-        """ Set the system base """
-
-        print 'System base:', tokens
-        self.network.base_mva = float(tokens[0])
+        """ Set the system base.
+        """
+        logger.debug("MVA Base: %.3f" % tokens[0])
+        self.network.base_mva = tokens[0]
 
 
     def _push_title(self, tokens):
-        """ Handles the network title """
-
-        print "Title:", tokens
+        """ Handles the network title.
+        """
+        logger.debug("Title: %s" % tokens[0])
 
 
     def _push_sub_title(self, tokens):
-        """ Sets the entwork name """
-
-        print 'Subtitle:', tokens
+        """ Sets the network name.
+        """
+        logger.debug("Sub-Title: %s" % tokens[0])
         self.network.name = tokens[0]
 
 
     def _push_separator(self):
-        """ Handles separators """
-
-        print 'parsed separator'
+        """ Handles separators.
+        """
+        logger.debug("Parsed separator.")
 
 
     def _push_bus_data(self, tokens):
-        """ Adds a bus to the network """
-
+        """ Adds a bus to the network.
+        """
         # [I, IDE, PL, QL, GL, BL, IA, VM, VA, 'NAME', BASKL, ZONE]
         # Bus, Name, Base_kV, Type, Y_re, Y_im, Area, Zone, PU_Volt, Angle
-        print 'Bus:', tokens
+        logger.debug("Parsing bus data: %s" % tokens)
 
-        bus = Bus(network=self.network)
-
+        bus = Bus()
         bus.name = tokens["Name"].strip("'")
-        bus.id = tokens["Bus"]
+        bus._bus = tokens["Bus"]
 
-        bus.v_amplitude_default=tokens["PU_Volt"]
-        bus.v_phase_default=tokens["Angle"]
-        bus.v_amplitude=tokens["PU_Volt"]
-        bus.v_phase=tokens["Angle"]
-
-        # Bus type 3 denotes a slack bus in MATPOWER
-#        if int(tokens[1]) == 3: v.slack = True
+        bus.v_amplitude_guess = tokens["PU_Volt"]
+        bus.v_amplitude       = tokens["PU_Volt"]
+        
+        bus.v_phase_guess = tokens["Angle"]
+        bus.v_phase       = tokens["Angle"]
 
         self.network.buses.append(bus)
 
 
     def _push_load_data(self, tokens):
-        """ Adds a load to a bus """
-
+        """ Adds a load to a bus.
+        """
         #[Bus, Load, ID, Status, Area, Zone, LP, LQ]
-        print "Load:", tokens
+        logger.debug("Parsing load data: %s" % tokens)
 
-        buses = [bus for bus in self.network.buses if
-                 bus.id == str(tokens["Bus"])]
-
-        if len(buses) == 0:
-            print "Parent bus [%s] for load not found" % tokens["Bus"]
-            return
-        elif len(buses) == 1:
-            bus = buses[0]
+        for bus in self.network.buses:
+            if bus._bus == tokens["Bus"]:
+                break
         else:
-            print "More than on parent bus for load found", buses
-            return
+            logger.error("Bus [%d] for load not found." % tokens["Bus"])
 
-        load = Load()
-
-        load.p = tokens["LP"]
-        load.q = tokens["LQ"]
-
+        load = Load(p=tokens["LP"], q=tokens["LQ"])
         bus.loads.append(load)
 
 
     def _push_generator(self, tokens):
-        """ Adds a generator to a bus """
-
+        """ Adds a generator to a bus.
+        """
         # [I,ID,PG,QG,QT,QB,VS,IREG,MBASE,ZR,ZX,RT,XT,GTAP,STAT,RMPCT,PT,PB]
         # Bus, ID, P, Q, Qmax, Qmin, SchedV, RegBs, MVAbase, ZR, ZX, RTr, XTr,
         # GTAP, Stat, Percent, Pmax, Pmin
 
-        print 'Generator:', tokens
+        logger.debug("Parsing generator data: %s" % tokens)
 
-        buses = [bus for bus in self.network.buses if
-                 bus.id == str(tokens["Bus"])]
-
-        if len(buses) == 0:
-            print "Parent bus [%s] for generator not found" % tokens["Bus"]
-            return
-        elif len(buses) == 1:
-            bus = buses[0]
+        for bus in self.network.buses:
+            if bus._bus == tokens["Bus"]:
+                break
         else:
-            print "More than one parent bus for generator found", buses
+            logger.error("Bus [%d] for generator not found." % tokens["Bus"])
             return
 
-        g = Generator()
-
-        g.p = tokens["P"]
-        g.q_max = tokens["Qmax"]
-        g.q_min = tokens["Qmin"]
+        g = Generator(p=tokens["P"], q_max=tokens["Qmax"],
+            q_min=tokens["Qmin"])
 
         bus.generators.append(g)
 
 
     def _push_branch(self, tokens):
-        """ Adds a branch to the network """
-
+        """ Adds a branch to the network.
+        """
         # From, To, ID, R, X, B, RateA, RateB, RateC, G_busI, B_busI,
         # G_busJ, B_busJ, Stat, Len
+        logger.debug("Parsing branch data:", tokens)
 
-        print "Branch:", tokens
-
-        fr_bus = None
+        from_bus = None
         to_bus = None
         for v in self.network.buses:
-            if v.id == str(tokens["From"]):
-                fr_bus = v
-            if v.id == str(tokens["To"]):
-                to_bus = v
-            if fr_bus is not None and to_bus is not None:
+            if from_bus is None:
+                if v.id == tokens["From"]:
+                    from_bus = v
+            if to_bus is None:
+                if v.id == str(tokens["To"]):
+                    to_bus = v
+            if (from_bus is not None) and (to_bus is not None):
                 break
+        else:
+            logger.error("A bus for branch from %s to %s not found" % \
+            (tokens["From"], tokens["To"]))
 
-        if (fr_bus is None) or (to_bus is None):
-            print "A bus for branch from %s to %s not found" % \
-            (tokens["From"], tokens["To"])
-
-#        fr_buses = [
+#        from_buses = [
 #            bus for bus in self.network.buses if bus.id == tokens["From"]
 #        ]
 #
-#        if len(fr_buses) == 0:
+#        if len(from_buses) == 0:
 #            print "From bus [%s] for branch not found" % tokens["From"]
 #            return
-#        elif len(fr_buses) == 1:
-#            fr_bus = fr_buses[0]
+#        elif len(from_buses) == 1:
+#            from_bus = from_buses[0]
 #        else:
 #            print "More than on from bus for branch found", buses
 #            return
@@ -500,11 +474,7 @@ class PSSEReader:
 #            print "More than on to bus for branch found", buses
 #            return
 
-        branch = Branch(
-            network=self.network,
-            source_bus=fr_bus,
-            target_bus=to_bus
-        )
+        branch = Branch(source_bus=from_bus, target_bus=to_bus)
 
         branch.r = tokens["R"]
         branch.x = tokens["X"]
@@ -522,15 +492,15 @@ class PSSEReader:
 
         print "Transformer:", tokens
 
-        fr_buses = [
+        from_buses = [
             bus for bus in self.network.buses if bus.id == tokens["From"]
         ]
 
-        if len(fr_buses) == 0:
+        if len(from_buses) == 0:
             print "From bus [%s] for transformer not found" % tokens["From"]
             return
-        elif len(fr_buses) == 1:
-            fr_bus = fr_buses[0]
+        elif len(from_buses) == 1:
+            from_bus = from_buses[0]
         else:
             print "More than on from bus for transformer found", buses
             return
@@ -550,7 +520,7 @@ class PSSEReader:
 
         branch = Branch(
             network=self.network,
-            source_bus=fr_bus,
+            source_bus=from_bus,
             target_bus=to_bus
         )
 
