@@ -100,10 +100,20 @@ negative_integer = ToInteger(
 
 real = ToFloat(
     Combine(
-        Optional(sign) + Word(nums) + Optional(decimal_sep + Word(nums)) +
-        Optional(oneOf("E e") + Word(nums))
+        Optional(sign) +
+        Word(nums) +
+        Optional(decimal_sep + Word(nums)) +
+        Optional(oneOf("E e") + Optional(sign) + Word(nums))
     )
 ).setName("real")
+
+#real = ToFloat(
+#       Combine(Optional(sign) +
+#               Word(nums) +
+#               decimal_sep +
+#               Optional(Word(nums)) +
+#               Optional(oneOf("E e") +
+#                        Word(nums)))).setName("real")
 
 positive_real = ToFloat(
     Combine(

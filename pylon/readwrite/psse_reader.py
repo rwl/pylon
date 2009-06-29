@@ -22,12 +22,14 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import logging
+
 from parsing_util \
     import integer, boolean, real, scolon, psse_comment, comma_sep
 
 from pyparsing \
     import Literal, Word, restOfLine, alphanums, printables, quotedString, \
-    White, OneOrMore, ZeroOrMore
+    White, OneOrMore, ZeroOrMore, Optional
 
 #from pylon.network import Network
 #from pylon.bus import Bus
@@ -38,6 +40,8 @@ from pyparsing \
 from pylon.api import Network, Bus, Branch, Generator, Load
 #from pylon.pypylon import Network, Bus, Branch, Generator, Load
 
+logger = logging.getLogger(__name__)
+
 #-------------------------------------------------------------------------------
 #  "PSSEReader" class:
 #-------------------------------------------------------------------------------
@@ -47,7 +51,7 @@ class PSSEReader(object):
     """
     # Path to the data file or file object.
     file_or_filename = None
-    
+
     # The resulting network
     network = None
 
@@ -57,9 +61,12 @@ class PSSEReader(object):
         self.file_or_filename = file_or_filename
 
 
-    def parse_file(self, file_or_filename):
+    def parse_file(self, file_or_filename=None):
         """ Parses a PSS/E data file and returns a network object.
         """
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
+
         self.network = Network()
 
         header = self._get_header_construct()
@@ -97,7 +104,7 @@ class PSSEReader(object):
         """ Returns a construct for a PSS/E separator.
         """
         # Tables are separated by a single 0
-        separator = Literal('0') +  + Optional(restOfLine)#White('\n')
+        separator = Literal('0') + Optional(restOfLine)#White('\n')
         separator.setParseAction(self._push_separator)
 
         return separator
@@ -106,7 +113,7 @@ class PSSEReader(object):
     def _get_header_construct(self):
         """ Returns a construct for the header of a PSS/E file.
         """
-        first_line = Word('0', exact=1).suppress() + real + \
+        first_line = Word('0', exact=1).suppress() + comma_sep + real + \
             restOfLine.suppress()
         first_line.setParseAction(self._push_system_base)
         return first_line
@@ -155,10 +162,11 @@ class PSSEReader(object):
         area = integer.setResultsName("Area") + comma_sep
         zone = integer.setResultsName("Zone") + comma_sep
         v_magnitude = real.setResultsName("PU_Volt") + comma_sep
-        v_angle = real.setResultsName("Angle") + comma_sep
+        v_angle = real.setResultsName("Angle")
 
         bus_data = i + bus_name + base_kv + ide + sh_conductance + \
-            sh_susceptance + area + zone + v_magnitude + v_angle
+            sh_susceptance + area + zone + v_magnitude + v_angle + \
+            restOfLine.suppress()
 
         bus_data.setParseAction(self._push_bus_data)
         return bus_data
@@ -174,9 +182,10 @@ class PSSEReader(object):
         area = integer.setResultsName("Area") + comma_sep
         zone = integer.setResultsName("Zone") + comma_sep
         p_load = real.setResultsName("LP") + comma_sep
-        q_load = real.setResultsName("LQ") + comma_sep
+        q_load = real.setResultsName("LQ")
 
-        load_data = bus_id + load_id + status + area + zone + p_load + q_load
+        load_data = bus_id + load_id + status + area + zone + p_load + \
+                    q_load + restOfLine.suppress()
 
         load_data.setParseAction(self._push_load_data)
         return load_data
@@ -230,11 +239,11 @@ class PSSEReader(object):
         status = boolean.setResultsName("Stat") + comma_sep
         percent = integer.setResultsName("Percent") + comma_sep
         p_max = real.setResultsName("Pmax") + comma_sep
-        p_min = real.setResultsName("Pmin") + comma_sep
+        p_min = real.setResultsName("Pmin")
 
         generator_data = bus_id + generator_id + p + q + q_max + q_min + \
             v_sched + reg_bus + base_mva + r_zero + x_zero + r_tr + x_tr + \
-            gtap + status + percent + p_max + p_min
+            gtap + status + percent + p_max + p_min + restOfLine.suppress()
 
         generator_data.setParseAction(self._push_generator)
         return generator_data
@@ -245,25 +254,25 @@ class PSSEReader(object):
         """
         # From, To, ID, R, X, B, RateA, RateB, RateC, G_busI, B_busI,
         # G_busJ, B_busJ, Stat, Len
-        from_bus_id = integer.setResultsName("From")
-        to_bus_id = integer.setResultsName("To")
-        id = integer.setResultsName("ID")
-        r = real.setResultsName("R")
-        x = real.setResultsName("X")
-        b = real.setResultsName("B")
-        rate_a = real.setResultsName("RateA")
-        rate_b = real.setResultsName("RateB")
-        rate_c = real.setResultsName("RateC")
-        g_bus_i = real.setResultsName("G_busI")
-        b_bus_i = real.setResultsName("B_busI")
-        g_bus_j = real.setResultsName("G_busJ")
-        b_bus_j = real.setResultsName("B_busJ")
-        status = boolean.setResultsName("Stat")
+        from_bus_id = integer.setResultsName("From") + comma_sep
+        to_bus_id = integer.setResultsName("To") + comma_sep
+        id = integer.setResultsName("ID") + comma_sep
+        r = real.setResultsName("R") + comma_sep
+        x = real.setResultsName("X") + comma_sep
+        b = real.setResultsName("B") + comma_sep
+        rate_a = real.setResultsName("RateA") + comma_sep
+        rate_b = real.setResultsName("RateB") + comma_sep
+        rate_c = real.setResultsName("RateC") + comma_sep
+        g_bus_i = real.setResultsName("G_busI") + comma_sep
+        b_bus_i = real.setResultsName("B_busI") + comma_sep
+        g_bus_j = real.setResultsName("G_busJ") + comma_sep
+        b_bus_j = real.setResultsName("B_busJ") + comma_sep
+        status = boolean.setResultsName("Stat") + comma_sep
         length = real.setResultsName("Len")
 
         branch_data = from_bus_id + to_bus_id + id + r + x + b + \
             rate_a + rate_b + rate_c + g_bus_i + b_bus_i + g_bus_j + \
-            b_bus_j + status + length
+            b_bus_j + status + length + restOfLine.suppress()
 
         branch_data.setParseAction(self._push_branch)
         return branch_data
@@ -381,7 +390,7 @@ class PSSEReader(object):
 
         bus.v_amplitude_guess = tokens["PU_Volt"]
         bus.v_amplitude       = tokens["PU_Volt"]
-        
+
         bus.v_phase_guess = tokens["Angle"]
         bus.v_phase       = tokens["Angle"]
 
@@ -398,6 +407,7 @@ class PSSEReader(object):
             if bus._bus == tokens["Bus"]:
                 break
         else:
+            pass
             logger.error("Bus [%d] for load not found." % tokens["Bus"])
 
         load = Load(p=tokens["LP"], q=tokens["LQ"])
@@ -420,8 +430,19 @@ class PSSEReader(object):
             logger.error("Bus [%d] for generator not found." % tokens["Bus"])
             return
 
-        g = Generator(p=tokens["P"], q_max=tokens["Qmax"],
-            q_min=tokens["Qmin"])
+        base = tokens["MVAbase"]
+
+        g = Generator()
+        g.base_mva = base
+        g.p_max = tokens["Pmax"] / base
+        g.p_min = tokens["Pmin"] / base
+        g.p     = tokens["P"] / base
+
+        g.q_max = tokens["Qmax"] / base
+        g.q_min = tokens["Qmin"] / base
+        g.q     = tokens["Q"] / base
+
+        g.status = tokens["Stat"]
 
         bus.generators.append(g)
 
@@ -431,22 +452,23 @@ class PSSEReader(object):
         """
         # From, To, ID, R, X, B, RateA, RateB, RateC, G_busI, B_busI,
         # G_busJ, B_busJ, Stat, Len
-        logger.debug("Parsing branch data:", tokens)
+        logger.debug("Parsing branch data: %s", tokens)
 
         from_bus = None
         to_bus = None
         for v in self.network.buses:
             if from_bus is None:
-                if v.id == tokens["From"]:
+                if v._bus == tokens["From"]:
                     from_bus = v
             if to_bus is None:
-                if v.id == str(tokens["To"]):
+                if v._bus == tokens["To"]:
                     to_bus = v
             if (from_bus is not None) and (to_bus is not None):
                 break
         else:
-            logger.error("A bus for branch from %s to %s not found" % \
+            logger.error("A bus for branch from %d to %d not found" %
             (tokens["From"], tokens["To"]))
+            return
 
 #        from_buses = [
 #            bus for bus in self.network.buses if bus.id == tokens["From"]
@@ -534,11 +556,10 @@ class PSSEReader(object):
 
 def read_psse(file_or_filename):
     """ Convenience function for reading a PSS/E data file given a
-    file name or object.
-
+        file name or object.
     """
-
-    return PSSEReader(file_or_filename).network
+    reader = PSSEReader(file_or_filename)
+    return reader.parse_file()
 
 #------------------------------------------------------------------------------
 #  Standalone call:
