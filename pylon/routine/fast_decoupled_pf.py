@@ -38,8 +38,6 @@ from pylon.routine.ac_pf import ACPFRoutine
 from pylon.routine.y import AdmittanceMatrix
 from pylon.routine.util import conj
 
-from pylon.api import Network
-
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------

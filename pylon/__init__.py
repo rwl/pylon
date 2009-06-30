@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,9 +14,3 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #-------------------------------------------------------------------------------
-
-#try:
-#    # if the code is ran from an egg, the namespace must be declared
-#    __import__('pkg_resources').declare_namespace(__name__)
-#except:
-#    pass

@@ -17,9 +17,8 @@
 
 """ Defines a class for creating Network objects from M3 data files
 
-Reference:
-    http://www.openm3.org/
-
+    Reference:
+        http://www.openm3.org/
 """
 
 #------------------------------------------------------------------------------
@@ -33,13 +32,7 @@ try:
 except ImportError:
     import elementtree.ElementTree as etree
 
-from pylon.network import Network
-from pylon.bus import Bus
-from pylon.branch import Branch
-from pylon.generator import Generator
-from pylon.load import Load
-
-#from pylon.pypylon import Network, Bus, Branch, Generator, Load
+from pylon.api import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  Logging:

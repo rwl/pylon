@@ -36,7 +36,6 @@ from cvxopt.umfpack import linsolve
 from cvxopt import solvers
 from cvxopt.solvers import qp
 
-from pylon.api import Network
 from pylon.routine.y import make_susceptance_matrix
 
 #------------------------------------------------------------------------------
@@ -63,7 +62,7 @@ class DCOPFRoutine:
     #--------------------------------------------------------------------------
 
     # The network whose power flow is to be optimised:
-    network = Network
+    network = None
 
     # Choice of solver (May be None or "mosek")
     solver = None

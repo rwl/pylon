@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,27 +15,20 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a class for reading PSAT data files """
+""" Defines a class for reading PSAT data files.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
 import logging
-
 from os.path import basename, splitext
 
 from parsing_util import integer, boolean, real, scolon, matlab_comment
-
 from pyparsing import Optional, Literal, ZeroOrMore
 
-from pylon.network import Network
-from pylon.bus import Bus
-from pylon.branch import Branch
-from pylon.generator import Generator
-from pylon.load import Load
-
-#from pylon.pypylon import Network, Bus, Branch, Generator, Load
+from pylon.api import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -43,37 +36,38 @@ from pylon.load import Load
 
 logger = logging.getLogger(__name__)
 
-logger.setLevel(logging.INFO)
-
 #------------------------------------------------------------------------------
 #  "PSATReader" class:
 #------------------------------------------------------------------------------
 
 class PSATReader:
     """ Defines a method class for reading PSAT data files and
-    returning a Network object.
-
+        returning a Network object.
     """
+    # Path to the data file or file object.
+    file_or_filename = None
 
-    # The resulting network object
+    # The resulting network object.
     network = Network
 
     def __init__(self, file_or_filename):
-        """ Returns a new PSATReader instance """
-
+        """ Initialises a new PSATReader instance.
+        """
+        self.file_or_filename = file_or_filename
         self.network = self.parse_file(file_or_filename)
 
     #--------------------------------------------------------------------------
     #  Parse a PSAT data file and return a network object
     #--------------------------------------------------------------------------
 
-    def parse_file(self, file_or_filename):
+    def parse_file(self, file_or_filename=None):
         """ Parses a PSAT data file and returns a network object
 
-        file: File object or path to data file with PSAT format data
-        return: Network object
-
+            file: File object or path to data file with PSAT format data
+            return: Network object
         """
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
 
         self.network = Network()
 
@@ -114,8 +108,8 @@ class PSATReader:
     #--------------------------------------------------------------------------
 
     def _get_bus_array_construct(self):
-        """ Returns a construct for an array of bus data """
-
+        """ Returns a construct for an array of bus data.
+        """
         bus_no = integer.setResultsName("bus_no")
         v_base = real.setResultsName("v_base") # kV
         v_amplitude_guess = Optional(real).setResultsName("v_amplitude_guess")
@@ -138,8 +132,8 @@ class PSATReader:
 
 
     def _get_line_array_construct(self):
-        """ Returns a construct for an array of line data """
-
+        """ Returns a construct for an array of line data.
+        """
         source_bus = integer.setResultsName("fbus")
         target_bus = integer.setResultsName("tbus")
         s_rating = real.setResultsName("s_rating") # MVA
@@ -170,8 +164,8 @@ class PSATReader:
 
 
     def _get_slack_array_construct(self):
-        """ Returns a construct for an array of slack bus data """
-
+        """ Returns a construct for an array of slack bus data.
+        """
         bus_no = integer.setResultsName("bus_no")
         s_rating = real.setResultsName("s_rating") # MVA
         v_rating = real.setResultsName("v_rating") # kV
@@ -200,8 +194,8 @@ class PSATReader:
 
 
     def _get_pv_array_construct(self):
-        """ Returns a construct for an array of PV generator data """
-
+        """ Returns a construct for an array of PV generator data.
+        """
         bus_no = integer.setResultsName("bus_no")
         s_rating = real.setResultsName("s_rating") # MVA
         v_rating = real.setResultsName("v_rating") # kV
@@ -227,8 +221,8 @@ class PSATReader:
 
 
     def _get_pq_array_construct(self):
-        """ Returns a construct for an array of PQ load data """
-
+        """ Returns a construct for an array of PQ load data.
+        """
         bus_no = integer.setResultsName("bus_no")
         s_rating = real.setResultsName("s_rating") # MVA
         v_rating = real.setResultsName("v_rating") # kV
@@ -252,8 +246,8 @@ class PSATReader:
 
 
     def _get_demand_array_construct(self):
-        """ Returns a construct for an array of power demand data """
-
+        """ Returns a construct for an array of power demand data.
+        """
         bus_no = integer.setResultsName("bus_no")
         s_rating = real.setResultsName("s_rating") # MVA
         p_direction = real.setResultsName("p_direction") # p.u.
@@ -288,8 +282,8 @@ class PSATReader:
 
 
     def _get_supply_array_construct(self):
-        """ Returns a construct for an array of power supply data """
-
+        """ Returns a construct for an array of power supply data.
+        """
         bus_no = integer.setResultsName("bus_no")
         s_rating = real.setResultsName("s_rating") # MVA
         p_direction = real.setResultsName("p_direction") # CPF
@@ -326,8 +320,8 @@ class PSATReader:
 
 
     def _get_generator_ramping_construct(self):
-        """ Returns a construct for an array of generator ramping data """
-
+        """ Returns a construct for an array of generator ramping data.
+        """
         supply_no = integer.setResultsName("supply_no")
         s_rating = real.setResultsName("s_rating") # MVA
         up_rate = real.setResultsName("up_rate") # p.u./h
@@ -350,8 +344,8 @@ class PSATReader:
 
 
     def _get_load_ramping_construct(self):
-        """ Returns a construct for an array of load ramping data """
-
+        """ Returns a construct for an array of load ramping data.
+        """
         bus_no = integer.setResultsName("bus_no")
         s_rating = real.setResultsName("s_rating") # MVA
         up_rate = real.setResultsName("up_rate") # p.u./h
@@ -376,8 +370,8 @@ class PSATReader:
     #--------------------------------------------------------------------------
 
     def push_bus(self, tokens):
-        """ Adds a Bus object to the network """
-
+        """ Adds a Bus object to the network.
+        """
         logger.debug("Pushing bus data: %s" % tokens)
 
         bus = Bus()
@@ -391,23 +385,20 @@ class PSATReader:
 
 
     def sort_buses(self, tokens):
-        """ Sorts bus list according to name (bus_no) """
-
+        """ Sorts bus list according to name (bus_no).
+        """
         self.network.buses.sort(key=lambda obj: obj.name)
 
 
     def push_line(self, tokens):
-        """ Adds a Branch object to the network """
-
+        """ Adds a Branch object to the network.
+        """
         logger.debug("Pushing line data: %s" % tokens)
 
         source_bus = self.network.buses[tokens["fbus"]-1]
         target_bus = self.network.buses[tokens["tbus"]-1]
 
-        e = Branch(
-            source_bus=source_bus, target_bus=target_bus,
-            network=self.network
-        )
+        e = Branch(source_bus=source_bus, target_bus=target_bus)
         e.r = tokens["r"]
         e.x = tokens["x"]
         e.b = tokens["b"]
@@ -427,10 +418,8 @@ class PSATReader:
 
     def push_slack(self, tokens):
         """ Finds the slack bus, adds a Generator with the appropriate data
-        and sets the bus type to slack.
-
+            and sets the bus type to slack.
         """
-
         logger.debug("Pushing slack data: %s" % tokens)
 
         bus = self.network.buses[tokens["bus_no"]-1]
@@ -449,10 +438,8 @@ class PSATReader:
 
     def push_pv(self, tokens):
         """ Creates and Generator object, populates it with data,
-        finds its Bus and adds it.
-
+            finds its Bus and adds it.
         """
-
         logger.debug("Pushing PV data: %s" % tokens)
 
         g = Generator()
@@ -469,10 +456,8 @@ class PSATReader:
 
     def push_pq(self, tokens):
         """ Creates and Load object, populates it with data,
-        finds its Bus and adds it.
-
+            finds its Bus and adds it.
         """
-
         logger.debug("Pushing PQ data: %s" % tokens)
 
         l = Load()
@@ -487,10 +472,8 @@ class PSATReader:
 
 
     def push_demand(self, tokens):
-        """ Added OPF and CPF data to an appropriate Load
-
+        """ Added OPF and CPF data to an appropriate Load.
         """
-
         logger.debug("Pushing demand data: %s" % tokens)
 
         bus = self.network.buses[tokens["bus_no"]-1]
@@ -514,8 +497,8 @@ class PSATReader:
 
 
     def push_supply(self, tokens):
-        """ Adds OPF and CPF data to a Generator """
-
+        """ Adds OPF and CPF data to a Generator.
+        """
         logger.debug("Pushing supply data: %s" % tokens)
 
         bus = self.network.buses[tokens["bus_no"]-1]
@@ -549,10 +532,8 @@ class PSATReader:
 
 def read_psat(file_or_filename):
     """ Convenience function for import of a PSAT data file given a
-    file name or object.
-
+        file name or object.
     """
-
     return PSATReader(file_or_filename).network
 
 #------------------------------------------------------------------------------
@@ -568,7 +549,7 @@ if __name__ == "__main__":
 
     data_file = "/home/rwl/python/aes/model/psat/rwl_003_opf_mdl.m"
     #data_file = "/home/rwl/python/aes/model/matpower/case30.m"
-    filter = PSATReader()
-    print filter.parse_file(data_file)
+    filter = PSATReader(data_file)
+    print filter.network
 
 # EOF -------------------------------------------------------------------------

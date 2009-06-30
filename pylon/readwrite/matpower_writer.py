@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines classes for writing MATPOWER data files """
+""" Defines classes for writing MATPOWER data files.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -28,8 +29,8 @@ from os.path import basename, splitext
 #------------------------------------------------------------------------------
 
 class MATPOWERWriter:
-    """ Write network data to a file in MATPOWER format """
-
+    """ Write network data to a file in MATPOWER format.
+    """
     network = None
 
     file_or_filename = ""
@@ -40,8 +41,8 @@ class MATPOWERWriter:
 
 
     def write(self):
-        """ Writes network data to file in MATPOWER format """
-
+        """ Writes network data to file in MATPOWER format.
+        """
         network = self.network
         file_or_filename = self.file_or_filename
 
@@ -82,12 +83,10 @@ class MATPOWERWriter:
 
 
     def _export_buses(self, buses, file, base_mva):
-        """ Writes bus data to file """
-
-        labels = [
-            "bus_id", "type", "Pd", "Qd", "Gs", "Bs", "area", "Vm", "Va",
-            "baseKV", "zone", "Vmax", "Vmin"
-        ]
+        """ Writes bus data to file.
+        """
+        labels = ["bus_id", "type", "Pd", "Qd", "Gs", "Bs", "area", "Vm", "Va",
+            "baseKV", "zone", "Vmax", "Vmin"]
 
         buses_data = []
         for i, v in enumerate(buses):
@@ -143,12 +142,10 @@ class MATPOWERWriter:
 
 
     def _export_generators(self, generators, file, buses):
-        """ Write generator data to file """
-
-        labels = [
-            "bus", "Pg", "Qg", "Qmax", "Qmin", "Vg", "mBase", "status",
-            "Pmax", "Pmin"
-        ]
+        """ Write generator data to file.
+        """
+        labels = ["bus", "Pg", "Qg", "Qmax", "Qmin", "Vg", "mBase", "status",
+            "Pmax", "Pmin"]
 
         generators_data = []
         for g in generators:
@@ -202,12 +199,10 @@ class MATPOWERWriter:
 
 
     def _export_branches(self, branches, file, base_mva, buses):
-        """ Writes branch data to file """
-
-        labels = [
-            "fbus", "tbus", "r", "x", "b", "rateA", "rateB", "rateC",
-            "ratio", "angle", "status"
-        ]
+        """ Writes branch data to file.
+        """
+        labels = ["fbus", "tbus", "r", "x", "b", "rateA", "rateB", "rateC",
+            "ratio", "angle", "status"]
 
         branches_data = []
         for e in branches:
@@ -257,8 +252,8 @@ class MATPOWERWriter:
 
 
     def _export_areas(self, areas, file):
-        """ Writes area data to file """
-
+        """ Writes area data to file.
+        """
         file.write("%% area data" + "\n")
         file.write("%\tno.\tprice_ref_bus" + "\n")
         file.write("areas = [" + "\n")
@@ -269,8 +264,8 @@ class MATPOWERWriter:
 
 
     def _export_gencost(self, file):
-        """ Writes generator cost data to file """
-
+        """ Writes generator cost data to file.
+        """
         file.write("%% generator cost data" + "\n")
         file.write("%\n")
         file.write("% Piecewise linear:" + "\n")
@@ -287,8 +282,8 @@ class MATPOWERWriter:
 #------------------------------------------------------------------------------
 
 def write_matpower(network, file_or_filename):
-    """ Convenience function for network export to a MATPOWER data file """
-
+    """ Convenience function for network export to a MATPOWER data file.
+    """
     return MATPOWERWriter().write(network, file_or_filename)
 
 #------------------------------------------------------------------------------

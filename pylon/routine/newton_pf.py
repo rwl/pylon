@@ -16,12 +16,11 @@
 #------------------------------------------------------------------------------
 
 """ Defines a routine for solving the power flow problem using full Newton's
-method.
+    method.
 
-References:
-    D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan,
-    MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-
+    References:
+        D. Zimmerman, Carlos E. Murillo-Sanchez and Deqiang (David) Gan,
+        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
 """
 
 #------------------------------------------------------------------------------

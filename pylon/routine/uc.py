@@ -26,8 +26,6 @@ import logging
 from cvxopt.base import matrix
 from cvxopt.modeling import variable, op, dot, sum
 
-from pylon.api import Network
-
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -47,7 +45,7 @@ class UnitCommitmentRoutine:
     #--------------------------------------------------------------------------
 
     # The network passed to the routine
-    network = Network
+    network = None
 
     # Selects one of three available LP solvers: the default solver written in
     # Python, the GLPK solver or the MOSEK LP solver.
@@ -273,7 +271,7 @@ class UnitCommitmentRoutine:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    from pylon.api import Bus, Generator
+    from pylon.api import Network, Bus, Generator
 
     network = Network(name="net1")
     bus1 = Bus(name="bus1")

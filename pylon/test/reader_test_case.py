@@ -27,10 +27,12 @@ import logging, sys
 
 from unittest import TestCase, main
 
-from pylon.network import Network
-from pylon.readwrite.matpower_reader import read_matpower
-from pylon.readwrite.api import read_psse
+from pylon.api import Network
+from pylon.readwrite.api import read_matpower, read_psse, read_psat
 
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
     format="%(levelname)s: %(message)s")
@@ -46,13 +48,14 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 MATPOWER_DATA_FILE = os.path.join(DATA_DIR, "case6ww.m")
 UKGDS_DATA_FILE    = os.path.join(DATA_DIR, "ehv3.raw")
 IPSA_DATA_FILE     = os.path.join(DATA_DIR, "ipsa.raw")
+PSAT_DATA_FILE     = os.path.join(DATA_DIR, "d_006_mdl.m")
 
 #------------------------------------------------------------------------------
 #  "ReaderTest" class:
 #------------------------------------------------------------------------------
 
 class ReaderTest(TestCase):
-    """ Base class for many reader test cases.
+    """ Defines a base class for many reader test cases.
     """
     filter = None
 
@@ -170,30 +173,25 @@ class PSSEReaderTest(ReaderTest):
 
         self._validate_base(100.0)
 
-        self._validate_object_numbers(n_buses=56, n_branches=18, n_gen=3,
-            n_loads=3)
+        self._validate_object_numbers(n_buses=56, n_branches=67, n_gen=24,
+            n_loads=30)
 
-#    def test_ehv3(self):
-#        """
-#        Validate parsing of the ehv3.raw file translated from the UKGDS
-#
-#        """
-#
-#        filter = PSSEReader()
-#
-#        # Parse the file
-#        self.network = filter.parse_file(PSSE_DATA_FILE)
-#
-#        # Network structure validation
-#        self._validate_base(base_mva=100)
-#
-#        self._validate_object_numbers(
-#            n_buses=102,
-#            n_branches=142, # 75 lines + 67 transformers = 142 branches
-#            n_gen=3,
-#            n_loads=26
-#        )
-#
+
+    def test_ukgds(self):
+        """ Test parsing of PSS/E data file exported from the UKGDS.
+        """
+        # Parse the file
+        self.network = read_psse(UKGDS_DATA_FILE)
+
+        # Network structure validation
+        self._validate_base(100.0)
+
+        self._validate_object_numbers(n_buses=102,
+                                       # 75 lines + 67 transformers = 142
+                                      n_branches=142,
+                                      n_gen=3,
+                                      n_loads=26)
+
 #        self._validate_slack_bus(slack_idx=0)
 #
 #        self._validate_generator_connections(gbus_idxs=[0, 1])
@@ -202,6 +200,19 @@ class PSSEReaderTest(ReaderTest):
 #            source_idxs=[0, 0, 1],
 #            target_idxs=[1, 2, 2]
 #        )
+
+#------------------------------------------------------------------------------
+#  "PSATReaderTest" class:
+#------------------------------------------------------------------------------
+
+class PSATReaderTest(ReaderTest):
+    """ Defines a test case for the PSAT data file reader.
+    """
+
+    def test_ipsa(self):
+        """ Test parsing of a PSAT data file.
+        """
+        self.network = read_psat(PSAT_DATA_FILE)
 
 #------------------------------------------------------------------------------
 #  Standalone call:

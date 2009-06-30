@@ -27,14 +27,12 @@ For example:
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pylon.network import Network
-
+from pylon.network import Network, NetworkReport
 from pylon.bus import Bus
-
 from pylon.branch import Branch
-
 from pylon.generator import Generator
-
 from pylon.load import Load
+
+#from pylon.pypylon import Network, Bus, Branch, Generator, Load, NetworkReport
 
 # EOF -------------------------------------------------------------------------

@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" For writing network data to file as Comma Separated Values (CSV). """
+""" For writing network data to file as Comma Separated Values (CSV).
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -30,22 +31,22 @@ from common import bus_attrs, branch_attrs, generator_attrs, load_attrs
 #------------------------------------------------------------------------------
 
 class CSVWriter:
-    """ Writes network data to file as CSV. """
-
+    """ Writes network data to file as CSV.
+    """
     network = None
 
     file_or_filename = ""
 
     def __init__(self, network, file_or_filename):
-        """ Initialises a new CSVWriter instance. """
-
+        """ Initialises a new CSVWriter instance.
+        """
         self.network = network
         self.file_or_filename = file_or_filename
 
 
     def write(self):
-        """ Writes network data to file as CSV. """
-
+        """ Writes network data to file as CSV.
+        """
         network = self.network
         file_or_filename = self.file_or_filename
 

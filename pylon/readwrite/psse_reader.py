@@ -29,16 +29,13 @@ from parsing_util \
 
 from pyparsing \
     import Literal, Word, restOfLine, alphanums, printables, quotedString, \
-    White, OneOrMore, ZeroOrMore, Optional
-
-#from pylon.network import Network
-#from pylon.bus import Bus
-#from pylon.branch import Branch
-#from pylon.generator import Generator
-#from pylon.load import Load
+    White, OneOrMore, ZeroOrMore, Optional, alphas
 
 from pylon.api import Network, Bus, Branch, Generator, Load
-#from pylon.pypylon import Network, Bus, Branch, Generator, Load
+
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +119,7 @@ class PSSEReader(object):
     def _get_title_construct(self):
         """ Returns a construct for the subtitle of a PSS/E file.
         """
-        title = Word(alphanums).suppress() + restOfLine.suppress()
+        title = Word(alphas).suppress() + restOfLine.suppress()
         sub_title = Word(printables) + restOfLine.suppress()
 #        sub_title = Combine(Word(alphanums) + restOfLine)
         sub_title.setParseAction(self._push_sub_title)
@@ -510,42 +507,27 @@ class PSSEReader(object):
 
 
     def _push_transformer_data(self, tokens):
-        """ Adds a branch to the network with transformer data """
+        """ Adds a branch to the network with transformer data.
+        """
+        logger.debug("Parsing transformer data: %s" % tokens)
 
-        print "Transformer:", tokens
-
-        from_buses = [
-            bus for bus in self.network.buses if bus.id == tokens["From"]
-        ]
-
-        if len(from_buses) == 0:
-            print "From bus [%s] for transformer not found" % tokens["From"]
-            return
-        elif len(from_buses) == 1:
-            from_bus = from_buses[0]
+        from_bus = None
+        to_bus = None
+        for v in self.network.buses:
+            if from_bus is None:
+                if v._bus == tokens["From"]:
+                    from_bus = v
+            if to_bus is None:
+                if v._bus == tokens["To"]:
+                    to_bus = v
+            if (from_bus is not None) and (to_bus is not None):
+                break
         else:
-            print "More than on from bus for transformer found", buses
+            logger.error("A bus for branch from %d to %d not found" %
+            (tokens["From"], tokens["To"]))
             return
 
-        to_buses = [
-            bus for bus in self.network.buses if bus.id == tokens["To"]
-        ]
-
-        if len(to_buses) == 0:
-            print "To bus [%s] for transformer not found" % tokens["To"]
-            return
-        elif len(to_buses) == 1:
-            to_bus = to_buses[0]
-        else:
-            print "More than on to bus for transformer found", buses
-            return
-
-        branch = Branch(
-            network=self.network,
-            source_bus=from_bus,
-            target_bus=to_bus
-        )
-
+        branch = Branch(source_bus=from_bus, target_bus=to_bus)
         branch.online = tokens["STAT"]
 
         self.network.branches.append(branch)

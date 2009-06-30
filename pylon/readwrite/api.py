@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,12 +15,10 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-"""
-Use this module for importing Pylon names into your namespace.
+""" Use this module for importing Pylon names into your namespace.
 
-For example:
-    from pylon.readwrite.api import MATPOWERReader
-
+    For example:
+        from pylon.readwrite.api import MATPOWERReader
 """
 
 #------------------------------------------------------------------------------
@@ -31,15 +29,13 @@ from matpower_reader import MATPOWERReader, read_matpower
 from matpower_writer import MATPOWERWriter, write_matpower
 
 from psse_reader import PSSEReader, read_psse
-
 from psat_reader import PSATReader, read_psat
-
 from m3_reader import M3Reader, read_m3
+from pickle_reader import PickleReader
 
 from rst_writer import ReSTWriter
-
 from csv_writer import CSVWriter
-
 from excel_writer import ExcelWriter
+from pickle_writer import PickleWriter
 
 # EOF -------------------------------------------------------------------------

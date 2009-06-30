@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2008 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Pylon test suite. """
+""" Pylon test suite.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -35,15 +36,15 @@ from dcpf_test_case import DCPFTest
 from dcopf_test_case import DCOPFTest
 from uc_test_case import UnitCommitmentTest
 
-from reader_test_case import MatpowerReaderTest
+from reader_test_case import MatpowerReaderTest, PSSEReaderTest, PSATReaderTest
 
 #------------------------------------------------------------------------------
 #  "suite" function:
 #------------------------------------------------------------------------------
 
 def suite():
-    """ Returns the pylon test suite. """
-
+    """ Returns the Pylon test suite.
+    """
     suite = unittest.TestSuite()
 
     suite.addTest(unittest.makeSuite(NetworkTest))
@@ -52,6 +53,7 @@ def suite():
     suite.addTest(unittest.makeSuite(GeneratorTest))
     suite.addTest(unittest.makeSuite(LoadTest))
 
+    # Routine test cases.
     suite.addTest(unittest.makeSuite(MatrixTest))
     suite.addTest(unittest.makeSuite(SparseMatrixTest))
     suite.addTest(unittest.makeSuite(BTest))
@@ -59,9 +61,13 @@ def suite():
     suite.addTest(unittest.makeSuite(DCOPFTest))
     suite.addTest(unittest.makeSuite(UnitCommitmentTest))
 
+    # Read/write test cases.
     suite.addTest(unittest.makeSuite(MatpowerReaderTest))
+    suite.addTest(unittest.makeSuite(PSSEReaderTest))
+    suite.addTest(unittest.makeSuite(PSATReaderTest))
 
     return suite
+
 
 if __name__ == '__main__':
 

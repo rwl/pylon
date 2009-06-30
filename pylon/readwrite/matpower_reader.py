@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a class for reading MATPOWER data files """
+""" Defines a class for reading MATPOWER data files.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -29,13 +30,7 @@ from pyparsing import \
     Literal, Word, ZeroOrMore, Optional, OneOrMore, alphanums, delimitedList, \
     alphas, Combine, Or, Group
 
-from pylon.network import Network
-from pylon.bus import Bus
-from pylon.branch import Branch
-from pylon.generator import Generator
-from pylon.load import Load
-
-#from pylon.pypylon import Network, Bus, Branch, Generator, Load
+from pylon.api import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  "MATPOWERReader" class:
@@ -43,9 +38,10 @@ from pylon.load import Load
 
 class MATPOWERReader:
     """ Defines a method class for reading MATPOWER data files and
-    returning a Network object.
-
+        returning a Network object.
     """
+    # Path to the data file or file object.
+    file_or_filename = None
 
     # The resulting network object
     network = Network
@@ -66,8 +62,9 @@ class MATPOWERReader:
     generators = []
 
     def __init__(self, file_or_filename):
-        """ Returns a new MATPOWERReader instance """
-
+        """ Returns a new MATPOWERReader instance.
+        """
+        self.file_or_filename = file_or_filename
         self.network = self.parse_file(file_or_filename)
 
     #--------------------------------------------------------------------------
@@ -77,10 +74,11 @@ class MATPOWERReader:
     def parse_file(self, file_or_filename=None):
         """ Parse a MATPOWER data file and return a network object
 
-        file_or_filename: File name of file object with MATPOWER data
-        return: Network object
-
+            file_or_filename: File name of file object with MATPOWER data
+            return: Network object
         """
+        if file_or_filename is None:
+            file_or_filename = self.file_or_filename
 
         # Initialise:
         self.network = Network()
@@ -124,8 +122,8 @@ class MATPOWERReader:
     #--------------------------------------------------------------------------
 
     def _get_header_construct(self):
-        """ Returns a construct for the header of a MATPOWER data file """
-
+        """ Returns a construct for the header of a MATPOWER data file.
+        """
         # Use the function name for the Network title
         title = Word(alphanums).setResultsName("title")
         title.setParseAction(self._push_title)
@@ -137,8 +135,8 @@ class MATPOWERReader:
 
 
     def _get_base_mva_construct(self):
-        """ Returns a construct for the base MVA expression """
-
+        """ Returns a construct for the base MVA expression.
+        """
         base_mva = integer.setResultsName("baseMVA")
         base_mva.setParseAction(self._push_base_mva)
         base_mva_expr = Literal("baseMVA") + Literal("=") + base_mva + scolon
@@ -147,8 +145,8 @@ class MATPOWERReader:
 
 
     def _get_bus_array_construct(self):
-        """ Returns a construct for an array of bus data """
-
+        """ Returns a construct for an array of bus data.
+        """
         bus_id = integer.setResultsName("bus_id")
         bus_type = ToInteger(Word('123', exact=1)).setResultsName("bus_type")
         appr_demand = real.setResultsName("Pd") + real.setResultsName("Qd")
@@ -173,8 +171,8 @@ class MATPOWERReader:
 
 
     def _get_generator_array_construct(self):
-        """ Returns an construct for an array of generator data """
-
+        """ Returns an construct for an array of generator data.
+        """
         bus_id = integer.setResultsName("bus_id")
         active = real.setResultsName("Pg")
         reactive = real.setResultsName("Qg")
@@ -199,8 +197,8 @@ class MATPOWERReader:
 
 
     def _get_branch_array_construct(self):
-        """ Returns a construct for an array of branch data """
-
+        """ Returns a construct for an array of branch data.
+        """
         source_bus = integer.setResultsName("fbus")
         target_bus = integer.setResultsName("tbus")
         resistance = real.setResultsName("r")
@@ -226,8 +224,8 @@ class MATPOWERReader:
 
 
     def _get_area_array_construct(self):
-        """ Returns a construct for an array of area data """
-
+        """ Returns a construct for an array of area data.
+        """
         area = integer.setResultsName("area_id")
         price_ref_bus = integer.setResultsName("price_ref_bus")
 
@@ -240,8 +238,8 @@ class MATPOWERReader:
 
 
     def _get_generator_cost_array_construct(self):
-        """ Returns a construct for an array of generator cost data """
-
+        """ Returns a construct for an array of generator cost data.
+        """
         # [model, startup, shutdown, n, x0, y0, x1, y1]
         # 1 - piecewise linear, 2 - polynomial
         model = integer.setResultsName("model")
@@ -278,21 +276,21 @@ class MATPOWERReader:
     #--------------------------------------------------------------------------
 
     def _push_title(self, tokens):
-        """ Sets the network's name """
-
+        """ Sets the network's name.
+        """
         self.network.name = tokens["title"]
 
 
     def _push_base_mva(self, tokens):
-        """ Set the MVA base for the network """
-
+        """ Set the MVA base for the network.
+        """
         self.base_mva = base_mva = tokens["baseMVA"]
         self.network.base_mva = base_mva
 
 
     def _push_bus(self, tokens):
-        """ Adds a bus to the network and a load (if any) """
-
+        """ Adds a bus to the network and a load (if any).
+        """
 #        bus_names = [v.name for v in self.network.buses]
 #        bus = Bus(name=make_unique_name("v", bus_names))
         name = str(tokens["bus_id"])
@@ -329,8 +327,8 @@ class MATPOWERReader:
 
 
     def _push_generator(self, tokens):
-        """ Adds a generator to the respective bus """
-
+        """ Adds a generator to the respective bus.
+        """
         buses = self.network.buses
 
         base_mva = tokens["mBase"]
@@ -366,8 +364,8 @@ class MATPOWERReader:
 
 
     def _push_branch(self, tokens):
-        """ Adds a branch to the network """
-
+        """ Adds a branch to the network.
+        """
         buses = self.network.buses
 
         bus_names      = [ v.name for v in buses ]
@@ -396,8 +394,8 @@ class MATPOWERReader:
 
 
     def _push_generator_cost(self, string, location, tokens):
-        """ Adds cost data to generators """
-
+        """ Adds cost data to generators.
+        """
         # There should be one or more generators in our list
         if not len(self.generators):
             print "More cost data than there are generators"
@@ -471,10 +469,8 @@ class MATPOWERReader:
 
 def read_matpower(file_or_filename):
     """ Convenience function for import of a MATPOWER data file given a
-    file name or object.
-
+        file name or object.
     """
-
     return MATPOWERReader(file_or_filename).network
 
 #------------------------------------------------------------------------------

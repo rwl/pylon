@@ -35,8 +35,6 @@ from math import pi
 from cvxopt import matrix, spmatrix, sparse, umfpack, cholmod
 
 from pylon.routine.y import make_susceptance_matrix
-from pylon.network import Network
-#from pylon.pypylon import Network
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -54,11 +52,9 @@ class DCPFRoutine:
         References:
             Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell,
             http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
-
     """
-
     # The network on which the routine is performed
-    network = Network
+    network = None
 
     # CVXOPT offers interfaces to two routines for solving sets of sparse
     # linear equations. Valid values are 'UMFPACK' and 'CHOLMOD'.
