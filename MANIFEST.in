@@ -1,2 +1,0 @@
-recursive-include pylon *.png *.ico *.m *.raw *.ini
-recursive-include doc *
