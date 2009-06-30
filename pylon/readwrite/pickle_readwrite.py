@@ -38,26 +38,10 @@ logger = logging.getLogger(__name__)
 class PickleReader(object):
     """ Defines a reader for pickled networks.
     """
-    # Path to the data file or file object.
-    file_or_filename = None
 
-    # The resulting network object.
-    network = Network
-
-    def __init__(self, file_or_filename):
-        """ Initialises a new PSATReader instance.
-        """
-        self.file_or_filename = file_or_filename
-        self.network = self.parse_file(file_or_filename)
-
-
-    def parse_file(self, file_or_filename=None):
+    def __call__(self, file_or_filename):
         """ Loads a pickled network.
         """
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
-
-
         if isinstance(file_or_filename, basestring):
             file = None
             try:
@@ -82,23 +66,10 @@ class PickleReader(object):
 class PickleWriter(object):
     """ Writes a network to file using pickle.
     """
-    network = None
 
-    file_or_filename = ""
-
-    def __init__(self, network, file_or_filename):
-        """ Initialises a new PickleWriter instance.
-        """
-        self.network = network
-        self.file_or_filename = file_or_filename
-
-
-    def write(self):
+    def __call__(self, network, file_or_filename):
         """ Writes the network to file using pickle.
         """
-        network = self.network
-        file_or_filename = self.file_or_filename
-
         if isinstance(file_or_filename, basestring):
             file = None
             try:

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,9 +17,8 @@
 
 """ Defines convenience pyparsing constructs and token converters.
 
-References:
-    sparser.py by Tim Cera timcera@earthlink.net
-
+    References:
+        sparser.py by Tim Cera timcera@earthlink.net
 """
 
 #------------------------------------------------------------------------------
@@ -168,15 +167,12 @@ comma_sep = Optional(comma).suppress()
 #------------------------------------------------------------------------------
 
 def make_unique_name(base, existing=[], format="%s_%s"):
+    """ Return a name, unique within a context, based on the specified name.
+
+        base: the desired base name of the generated unique name.
+        existing: a sequence of the existing names to avoid returning.
+        format: a formatting specification for how the name is made unique.
     """
-    Return a name, unique within a context, based on the specified name.
-
-    base: the desired base name of the generated unique name.
-    existing: a sequence of the existing names to avoid returning.
-    format: a formatting specification for how the name is made unique.
-
-    """
-
     count = 2
     name = base
     while name in existing:

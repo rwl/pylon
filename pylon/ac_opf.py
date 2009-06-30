@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2007 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
     References:
         Ray Zimmerman, "runopf.m", MATPOWER, PSERC Cornell,
         http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
-
 """
 
 #------------------------------------------------------------------------------
@@ -33,7 +32,7 @@ import numpy
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, exp, div
 from cvxopt import solvers
 
-from pylon.routine.util import conj
+from pylon.util import conj
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -46,16 +45,13 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 def dSbus_dV(Y, v):
+    """ Computes the partial derivative of power injection w.r.t. voltage.
+
+        References:
+            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbus_dV.m",
+            MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
     """
-    Computes the partial derivative of power injection w.r.t. voltage.
-
-    References:
-        D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbus_dV.m",
-        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-
-    """
-
-    j = 0+1j
+    j = 0 + 1j
     n = len(v)
     i = Y * v
 
@@ -74,15 +70,13 @@ def dSbus_dV(Y, v):
 
 def dSbr_dV(branches, Y_source, Y_target, v):
     """ Computes the branch power flow vector and the partial derivative of
-    branch power flow w.r.t voltage.
+        branch power flow w.r.t voltage.
 
-    References:
-        D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbr_dV.m",
-        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-
+        References:
+            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbr_dV.m",
+            MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
     """
-
-    j = 0+1j
+    j = 0 + 1j
     n_branches = len(branches)
     n_buses = len(v)
 
@@ -138,12 +132,10 @@ def dSbr_dV(branches, Y_source, Y_target, v):
 def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
     """ Computes the partial derivatives of apparent power flow w.r.t voltage.
 
-    References:
-        D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dAbr_dV.m",
-        MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
-
+        References:
+            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dAbr_dV.m",
+            MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
     """
-
     n_branches = len(s_source)
 
     # Compute apparent powers.
@@ -183,13 +175,10 @@ def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
 class ACOPFRoutine:
     """ Optimal power flow routine, translated from MATPOWER.
 
-    References:
-        D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, MATPOWER,
-        version 3.2, http://www.pserc.cornell.edu/matpower/
-
+        References:
+            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, MATPOWER,
+            version 3.2, http://www.pserc.cornell.edu/matpower/
     """
-
-    # Network instance to be optimised.
     network = None
 
     #--------------------------------------------------------------------------
@@ -218,12 +207,13 @@ class ACOPFRoutine:
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, network, show_progress=True, max_iterations=100,
-            absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
-            refinement=1):
-        """ Initialises a new ACOPFRoutine instance. """
-
-        self.network = network
+    def __init__(self, show_progress=True, max_iterations=100,
+                                           absolute_tol=1e-7,
+                                           relative_tol=1e-6,
+                                           feasibility_tol=1e-7,
+                                           refinement=1):
+        """ Initialises a new ACOPFRoutine instance.
+        """
         self.show_progress = show_progress
         self.max_iterations = max_iterations
         self.absolute_tol = absolute_tol
@@ -231,13 +221,10 @@ class ACOPFRoutine:
         self.feasibility_tol = feasibility_tol
         self.refinement = refinement
 
-    #--------------------------------------------------------------------------
-    #  Solve AC Optimal Power Flow problem:
-    #--------------------------------------------------------------------------
 
-    def solve(self):
-        """ Solves AC OPF. """
-
+    def __call__(self, network):
+        """ Solves AC OPF for the given network.
+        """
         # Turn off output to screen.
         solvers.options["show_progress"] = self.show_progress
         solvers.options["maxiters"] = self.max_iterations
@@ -438,25 +425,5 @@ class ACOPFRoutine:
         A = sparse([Au, A_pqh, A_pql, A_vl, A_ang])
         l = matrix([l_bu, l_bpqh, l_bpql, l_vl, l_ang])
         u = matrix([u_bu, u_bpqh, u_bpql, u_vl, l_ang])
-
-#------------------------------------------------------------------------------
-#  Stand-alone call:
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    import sys
-    from os.path import join, dirname
-    from pylon.readwrite.api import read_matpower
-
-    import logging
-    logger = logging.getLogger()
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
-
-    data_file = join(dirname(__file__), "../test/data/case6ww.m")
-    n = read_matpower(data_file)
-
-    ac_opf = ACOPFRoutine(network=n)
-    ac_opf.solve()
 
 # EOF -------------------------------------------------------------------------

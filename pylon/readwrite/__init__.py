@@ -23,16 +23,15 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from matpower_reader import MATPOWERReader, read_matpower
-from matpower_writer import MATPOWERWriter, write_matpower
-
-from psse_reader import PSSEReader, read_psse
-from psat_reader import PSATReader, read_psat
-from m3_reader import M3Reader, read_m3
 from pickle_readwrite import PickleReader, PickleWriter
+
+from matpower_reader import MATPOWERReader
+from matpower_writer import MATPOWERWriter
+
+from psse_reader import PSSEReader
+from psat_reader import PSATReader
 
 from rst_writer import ReSTWriter
 from csv_writer import CSVWriter
-from excel_writer import ExcelWriter
 
 # EOF -------------------------------------------------------------------------

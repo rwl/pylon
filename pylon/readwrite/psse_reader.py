@@ -52,17 +52,10 @@ class PSSEReader(object):
     # The resulting network
     network = None
 
-    def __init__(self, file_or_filename):
-        """ Initialises a new PSSEReader instance.
-        """
-        self.file_or_filename = file_or_filename
-
-
-    def parse_file(self, file_or_filename=None):
+    def __call__(self, file_or_filename):
         """ Parses a PSS/E data file and returns a network object.
         """
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
+        self.file_or_filename = file_or_filename
 
         self.network = Network()
 
@@ -531,33 +524,5 @@ class PSSEReader(object):
         branch.online = tokens["STAT"]
 
         self.network.branches.append(branch)
-
-#------------------------------------------------------------------------------
-#  Convenience function for reading PSS/E data files
-#------------------------------------------------------------------------------
-
-def read_psse(file_or_filename):
-    """ Convenience function for reading a PSS/E data file given a
-        file name or object.
-    """
-    reader = PSSEReader(file_or_filename)
-    return reader.parse_file()
-
-#------------------------------------------------------------------------------
-#  Standalone call:
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    import sys
-    import logging
-    logger = logging.getLogger()
-    handler = logging.StreamHandler(sys.stdout)
-#    handler = logging.StreamHandler(file("/tmp/psse.log", "w"))
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
-
-    DATA_FILE = "/home/rwl/python/aes/model/psse/ukgds/HV_OHb.raw"
-
-    n = PSSEReader().parse_file(DATA_FILE)
 
 # EOF -------------------------------------------------------------------------

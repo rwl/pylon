@@ -28,23 +28,18 @@ from os.path import basename, splitext
 #  "MATPOWERWriter" class:
 #------------------------------------------------------------------------------
 
-class MATPOWERWriter:
+class MATPOWERWriter(object):
     """ Write network data to a file in MATPOWER format.
     """
     network = None
 
     file_or_filename = ""
 
-    def __init__(self, network, file_or_filename):
-        self.network = network
-        self.file_or_filename = file_or_filename
-
-
-    def write(self):
+    def __call__(self, network, file_or_filename):
         """ Writes network data to file in MATPOWER format.
         """
-        network = self.network
-        file_or_filename = self.file_or_filename
+        self.network = network
+        self.file_or_filename = file_or_filename
 
         if isinstance(file_or_filename, basestring):
             file = open(file_or_filename, "wb")
@@ -276,34 +271,5 @@ class MATPOWERWriter:
 
         file.write("gencost = [" + "\n")
         file.write("];" + "\n")
-
-#------------------------------------------------------------------------------
-#  Convenience function for MATPOWER export
-#------------------------------------------------------------------------------
-
-def write_matpower(network, file_or_filename):
-    """ Convenience function for network export to a MATPOWER data file.
-    """
-    return MATPOWERWriter().write(network, file_or_filename)
-
-#------------------------------------------------------------------------------
-#  Standalone call:
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    import sys
-    import logging
-    logger = logging.getLogger()
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
-
-    data_file = "/home/rwl/python/aes/matpower_3.2/rwl_003.m"
-    #data_file = "/home/rwl/python/aes/model/matpower/case30.m"
-
-    from matpower_reader import read_matpower
-
-    n = read_matpower(data_file)
-
-    MATPOWERWriter().write(n, "/tmp/test.m")
 
 # EOF -------------------------------------------------------------------------

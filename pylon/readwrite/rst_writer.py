@@ -28,7 +28,7 @@ from pylon.api import Network, NetworkReport
 #  "ReSTWriter" class:
 #------------------------------------------------------------------------------
 
-class ReSTWriter:
+class ReSTWriter(object):
     """ Write network data to a file in ReStructuredText format.
     """
     network = None
@@ -43,15 +43,12 @@ class ReSTWriter:
     include_branch_data = True
     include_generator_data = True
 
-    def __init__(self, network, file_or_filename, include_title=True,
-            include_summary=True, include_bus_data=True,
-            include_branch_data=True, include_generator_data=True):
-        assert isinstance(network, Network)
-
-        self.network = network
-        self.file_or_filename = file_or_filename
-        self._report = NetworkReport(network)
-
+    def __init__(self, include_title=True, include_summary=True,
+                                           include_bus_data=True,
+                                           include_branch_data=True,
+                                           include_generator_data=True):
+        """ Initialises new ReSTWriter instance.
+        """
         self.include_title = include_title
         self.include_summary = include_summary
         self.include_bus_data = include_bus_data
@@ -59,14 +56,13 @@ class ReSTWriter:
         self.include_generator_data = include_generator_data
 
 
-    def write(self, network=None, file_or_filename=None):
+    def __call__(self, network, file_or_filename):
         """ Writes network data to file in ReStructuredText format.
         """
-        if network is None:
-            network = self.network
+        self.network = network
+        self.file_or_filename = file_or_filename
 
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
+        self._report = NetworkReport(network)
 
         file = self._get_file(file_or_filename)
 
@@ -569,7 +565,7 @@ class ReSTWriter:
 #  "ReSTExperimentWriter" class:
 #------------------------------------------------------------------------------
 
-class ReSTExperimentWriter:
+class ReSTExperimentWriter(object):
     """ Writes market experiment data to file in ReStructuredText format.
     """
     # Market experiment whose data is to be written.
@@ -583,31 +579,20 @@ class ReSTExperimentWriter:
     include_action = True
     include_reward = True
 
-    def __init__(self, experiment, file_or_filename, include_state=True,
-                 include_action=True, include_reward=True):
-#        assert isinstance(experiment, MarketExperiment)
-
-        self.experiment = experiment
-        self.file_or_filename = file_or_filename
-
+    def __init__(self, include_state=True, include_action=True,
+                                           include_reward=True):
+        """ Initialises a new ReSTExperimentWriter instance.
+        """
         self.include_state  = include_state
         self.include_action = include_action
         self.include_reward = include_reward
 
 
-    def write(self, experiment=None, file_or_filename=None):
+    def __call__(self, experiment, file_or_filename):
         """ Writes market experiment data to file in ReStructuredText format.
         """
-        if experiment is None:
-            experiment = self.experiment
-        else:
-#            assert isinstance(experiment, MarketExperiment)
-            self.experiment = experiment
-
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
-        else:
-            self.file_or_filename = file_or_filename
+        self.experiment = experiment
+        self.file_or_filename = file_or_filename
 
         if isinstance(file_or_filename, basestring):
             file = open(file_or_filename, "wb")
@@ -689,22 +674,5 @@ class ReSTExperimentWriter:
             file.write("\n")
 
         file.write(sep)
-
-#------------------------------------------------------------------------------
-#  Standalone call:
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    import sys, logging
-    logger = logging.getLogger()
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
-
-    from matpower_reader import read_matpower
-    data_file = "/home/rwl/python/aes/matpower_3.2/case9.m"
-
-    n = read_matpower(data_file)
-
-    ReSTWriter(n, "/tmp/test.rst").write()
 
 # EOF -------------------------------------------------------------------------

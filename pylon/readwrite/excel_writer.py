@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2008 Richard W. Lincoln
+# Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" For writing network data to file as Comma Separated Values (CSV).
+""" For writing network data to an Excel file.
 """
 
 #------------------------------------------------------------------------------
@@ -30,31 +30,13 @@ from common import bus_attrs, branch_attrs, generator_attrs, load_attrs
 #  "ExcelWriter" class:
 #------------------------------------------------------------------------------
 
-class ExcelWriter:
+class ExcelWriter(object):
     """ Writes network data to file in Excel format.
     """
-    network = None
 
-    file_or_filename = ""
-
-    def __init__(self, network, file_or_filename):
-        """ Initialises a new ExcelWriter instance.
-        """
-        self.network = network
-        self.file_or_filename = file_or_filename
-
-
-    def write(self):
+    def __call__(self, network, file_or_filename):
         """ Writes network data to file in Excel format.
         """
-        network = self.network
-        file_or_filename = self.file_or_filename
-
-#        if isinstance(file_or_filename, basestring):
-#            file = open(file_or_filename, "wb")
-#        else:
-#            file = file_or_filename
-
         book = Workbook()
 
         # Bus -----------------------------------------------------------------
@@ -97,24 +79,5 @@ class ExcelWriter:
                     load_sheet.write(j+1, k+1, getattr(load, attr))
 
         book.save(file_or_filename)
-
-#        file.close()
-
-#------------------------------------------------------------------------------
-#  Stand-alone call:
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    from pylon.api import Network, Bus, Branch, Generator, Load
-    n = Network(name="network", base_mva=100.0)
-    bus1 = Bus(name="Bus 1")
-    bus2 = Bus(name="Bus 2")
-    bus1.generators.append(Generator(name="G"))
-    bus2.loads.append(Load(name="L"))
-    branch1 = Branch(bus1, bus2, name="Branch 1")
-    n.buses.extend([bus1, bus2])
-    n.branches.append(branch1)
-    writer = ExcelWriter(n, "/tmp/network.xls")
-    writer.write()
 
 # EOF -------------------------------------------------------------------------

@@ -36,7 +36,7 @@ from pylon.api import Network, Bus, Branch, Generator, Load
 #  "MATPOWERReader" class:
 #------------------------------------------------------------------------------
 
-class MATPOWERReader:
+class MATPOWERReader(object):
     """ Defines a method class for reading MATPOWER data files and
         returning a Network object.
     """
@@ -61,24 +61,17 @@ class MATPOWERReader:
     # is checked at the end of the parsing operation.
     generators = []
 
-    def __init__(self, file_or_filename):
-        """ Returns a new MATPOWERReader instance.
-        """
-        self.file_or_filename = file_or_filename
-        self.network = self.parse_file(file_or_filename)
-
     #--------------------------------------------------------------------------
     #  Parse a MATPOWER data file and return a network object
     #--------------------------------------------------------------------------
 
-    def parse_file(self, file_or_filename=None):
+    def __call__(self, file_or_filename):
         """ Parse a MATPOWER data file and return a network object
 
             file_or_filename: File name of file object with MATPOWER data
             return: Network object
         """
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
+        self.file_or_filename = file_or_filename
 
         # Initialise:
         self.network = Network()
@@ -462,34 +455,5 @@ class MATPOWERReader:
 
         # Remove the processed generator
         self.generators.pop(0)
-
-#------------------------------------------------------------------------------
-#  Convenience function for reading MATPOWER files
-#------------------------------------------------------------------------------
-
-def read_matpower(file_or_filename):
-    """ Convenience function for import of a MATPOWER data file given a
-        file name or object.
-    """
-    return MATPOWERReader(file_or_filename).network
-
-#------------------------------------------------------------------------------
-#  Standalone call:
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    import sys
-    import logging
-    logger = logging.getLogger()
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
-
-    data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
-#    data_file = "/home/rwl/python/aes/matpower_3.2/case30.m"
-    reader = MATPOWERReader(data_file)
-
-    print "V:", [g.v_amplitude for g in reader.network.all_generators]
-    print "n branches:", len(reader.network.branches)
-#    filter.network.configure_traits()
 
 # EOF -------------------------------------------------------------------------

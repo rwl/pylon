@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 #  "PSATReader" class:
 #------------------------------------------------------------------------------
 
-class PSATReader:
+class PSATReader(object):
     """ Defines a method class for reading PSAT data files and
         returning a Network object.
     """
@@ -50,24 +50,17 @@ class PSATReader:
     # The resulting network object.
     network = Network
 
-    def __init__(self, file_or_filename):
-        """ Initialises a new PSATReader instance.
-        """
-        self.file_or_filename = file_or_filename
-        self.network = self.parse_file(file_or_filename)
-
     #--------------------------------------------------------------------------
     #  Parse a PSAT data file and return a network object
     #--------------------------------------------------------------------------
 
-    def parse_file(self, file_or_filename=None):
+    def __call__(self, file_or_filename):
         """ Parses a PSAT data file and returns a network object
 
             file: File object or path to data file with PSAT format data
             return: Network object
         """
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
+        self.file_or_filename = file_or_filename
 
         self.network = Network()
 
@@ -525,31 +518,5 @@ class PSATReader:
         # Optional parameter
 #        if tokens.has_key("status"):
 #            g.online = tokens["status"]
-
-#------------------------------------------------------------------------------
-#  Convenience function for reading PSAT files
-#------------------------------------------------------------------------------
-
-def read_psat(file_or_filename):
-    """ Convenience function for import of a PSAT data file given a
-        file name or object.
-    """
-    return PSATReader(file_or_filename).network
-
-#------------------------------------------------------------------------------
-#  Standalone call:
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    import sys
-    import logging
-    logger = logging.getLogger()
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
-
-    data_file = "/home/rwl/python/aes/model/psat/rwl_003_opf_mdl.m"
-    #data_file = "/home/rwl/python/aes/model/matpower/case30.m"
-    filter = PSATReader(data_file)
-    print filter.network
 
 # EOF -------------------------------------------------------------------------

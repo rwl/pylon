@@ -7,3 +7,4 @@ dist/
 *.egg-info
 
 pylon/test/data/ipsa.raw
+pylon/test/data/ipsa.seq
