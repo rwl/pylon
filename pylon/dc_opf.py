@@ -36,7 +36,7 @@ from cvxopt.umfpack import linsolve
 from cvxopt import solvers
 from cvxopt.solvers import qp
 
-from pylon.y import make_susceptance_matrix
+from pylon.y import SusceptanceMatrix
 
 #------------------------------------------------------------------------------
 #  Logging:

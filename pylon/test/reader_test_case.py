@@ -23,11 +23,14 @@
 #------------------------------------------------------------------------------
 
 import os.path
+import logging
 
 from unittest import TestCase, main
 
 from pylon import Network
 from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader
+
+#logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -126,64 +129,62 @@ class MatpowerReaderTest(ReaderTest):
     """ Defines a test case for the MATPOWER reader.
     """
 
-#    def test_case6ww(self):
-#        """ Validate parsing of the case6ww.m file.
-#        """
-#        # Parse the file
-#        reader = MATPOWERReader()
-#        self.network = reader(MATPOWER_DATA_FILE)
-#
-#        self._validate_base(base_mva=100)
-#
-#        # Network structure validation
-#        self._validate_object_numbers(
-#            n_buses=6, n_branches=11, n_gen=3, n_loads=3
-#        )
-#
-#        self._validate_slack_bus(slack_idx=0)
-#
-#        self._validate_generator_connections(gbus_idxs=[0, 1, 2])
-#
-#        self._validate_branch_connections(
-#            source_idxs=[0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4],
-#            target_idxs=[1, 3, 4, 2, 3, 4, 5, 4, 5, 4, 5]
-#        )
+    def test_case6ww(self):
+        """ Validate parsing of the case6ww.m file.
+        """
+        # Parse the file
+        reader = MATPOWERReader()
+        self.network = reader(MATPOWER_DATA_FILE)
+
+        self._validate_base(base_mva=100)
+
+        # Network structure validation
+        self._validate_object_numbers(n_buses=6, n_branches=11, n_gen=3,
+            n_loads=3)
+
+        self._validate_slack_bus(slack_idx=0)
+
+        self._validate_generator_connections(gbus_idxs=[0, 1, 2])
+
+        self._validate_branch_connections(
+            source_idxs=[0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4],
+            target_idxs=[1, 3, 4, 2, 3, 4, 5, 4, 5, 4, 5])
 
 #------------------------------------------------------------------------------
 #  "PSSEReaderTest" class:
 #------------------------------------------------------------------------------
 
-class PSSEReaderTest(ReaderTest):
-    """ Defines a test case for the PSS/E data file reader.
-    """
-
-    def test_ipsa(self):
-        """ Test parsing of a data file exported from IPSA.
-        """
-        reader = PSSEReader()
-        self.network = reader(IPSA_DATA_FILE)
-
-        self._validate_base(100.0)
-
-        self._validate_object_numbers(n_buses=56, n_branches=67, n_gen=24,
-            n_loads=30)
-
-
-    def test_ukgds(self):
-        """ Test parsing of PSS/E data file exported from the UKGDS.
-        """
-        # Parse the file.
-        reader = PSSEReader()
-        self.network = reader(UKGDS_DATA_FILE)
-
-        # Network structure validation
-        self._validate_base(100.0)
-
-        self._validate_object_numbers(n_buses=102,
-                                       # 75 lines + 67 transformers = 142
-                                      n_branches=142,
-                                      n_gen=3,
-                                      n_loads=26)
+#class PSSEReaderTest(ReaderTest):
+#    """ Defines a test case for the PSS/E data file reader.
+#    """
+#
+#    def test_ipsa(self):
+#        """ Test parsing of a data file exported from IPSA.
+#        """
+#        reader = PSSEReader()
+#        self.network = reader(IPSA_DATA_FILE)
+#
+#        self._validate_base(100.0)
+#
+#        self._validate_object_numbers(n_buses=56, n_branches=67, n_gen=24,
+#            n_loads=30)
+#
+#
+#    def test_ukgds(self):
+#        """ Test parsing of PSS/E data file exported from the UKGDS.
+#        """
+#        # Parse the file.
+#        reader = PSSEReader()
+#        self.network = reader(UKGDS_DATA_FILE)
+#
+#        # Network structure validation
+#        self._validate_base(100.0)
+#
+#        self._validate_object_numbers(n_buses=102,
+#                                       # 75 lines + 67 transformers = 142
+#                                      n_branches=142,
+#                                      n_gen=3,
+#                                      n_loads=26)
 
 #        self._validate_slack_bus(slack_idx=0)
 #
@@ -198,15 +199,15 @@ class PSSEReaderTest(ReaderTest):
 #  "PSATReaderTest" class:
 #------------------------------------------------------------------------------
 
-class PSATReaderTest(ReaderTest):
-    """ Defines a test case for the PSAT data file reader.
-    """
-
-    def test_ipsa(self):
-        """ Test parsing of a PSAT data file.
-        """
-        reader = PSATReader()
-        self.network = reader(PSAT_DATA_FILE)
+#class PSATReaderTest(ReaderTest):
+#    """ Defines a test case for the PSAT data file reader.
+#    """
+#
+#    def test_psat(self):
+#        """ Test parsing of a PSAT data file.
+#        """
+#        reader = PSATReader()
+#        self.network = reader(PSAT_DATA_FILE)
 
 #------------------------------------------------------------------------------
 #  Standalone call:
@@ -214,7 +215,8 @@ class PSATReaderTest(ReaderTest):
 
 if __name__ == "__main__":
     import logging, sys
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
+        format="%(levelname)s: %(message)s")
     main()
 
 # EOF -------------------------------------------------------------------------

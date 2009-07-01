@@ -22,6 +22,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import logging
+
 from parsing_util import \
     integer, boolean, real, scolon, matlab_comment, make_unique_name, \
     ToInteger, lbrack, rbrack
@@ -31,6 +33,8 @@ from pyparsing import \
     alphas, Combine, Or, Group
 
 from pylon.network import Network, Bus, Branch, Generator, Load
+
+logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  "MATPOWERReader" class:
@@ -44,7 +48,7 @@ class MATPOWERReader(object):
     file_or_filename = None
 
     # The resulting network object
-    network = Network
+    network = None
 
     # The system MVA base to which machines default
     base_mva = 100.0
@@ -74,7 +78,7 @@ class MATPOWERReader(object):
         self.file_or_filename = file_or_filename
 
         # Initialise:
-        self.network = Network()
+        self.network = network = Network()
         self.slack_idx = -1
         self.generators = []
 
@@ -100,15 +104,16 @@ class MATPOWERReader(object):
         data = case.parseFile(file_or_filename)
 
         # Set the slack bus.
-        # FIXME: This is a bit smelly
-        self.network.buses[self.slack_idx].slack = True
+        network.buses[self.slack_idx].slack = True
 
         # Reset the list of instantiated generators if necessary
         if len(self.generators):
-            print "No cost data for %d generators" % len(self.generators)
-            self.generators = []
+            logger.warning("No cost data for %d generators" %
+                len(self.generators))
 
-        return self.network
+        self.generators = []
+
+        return network
 
     #--------------------------------------------------------------------------
     #  Construct getters:
@@ -284,10 +289,9 @@ class MATPOWERReader(object):
     def _push_bus(self, tokens):
         """ Adds a bus to the network and a load (if any).
         """
-#        bus_names = [v.name for v in self.network.buses]
-#        bus = Bus(name=make_unique_name("v", bus_names))
+        logger.debug("Parsing bus data: %s" % tokens)
+
         name = str(tokens["bus_id"])
-#        name = "v_" + str(tokens["bus_id"])
         bus  = Bus(name=name)
 
         base_kv    = tokens["baseKV"]
@@ -322,6 +326,8 @@ class MATPOWERReader(object):
     def _push_generator(self, tokens):
         """ Adds a generator to the respective bus.
         """
+        logger.debug("Parsing generator data: %s" % tokens)
+
         buses = self.network.buses
 
         base_mva = tokens["mBase"]
@@ -336,29 +342,31 @@ class MATPOWERReader(object):
 #        bus = self.network.buses[tokens["bus_id"]-1]
 
         # Set unique name to ease identification.
-        g_names = [ gen.name for gen in self.generators ]
+        g_names = [g.name for g in self.generators]
 
-        g = Generator( name = make_unique_name("g", g_names) )
+        generator = Generator(name=make_unique_name("g", g_names))
 
-        g.p           = tokens["Pg"] / base_mva
-        g.q_max       = tokens["Qmax"] / base_mva
-        g.q_min       = tokens["Qmin"] / base_mva
-        g.v_magnitude = tokens["Vg"]
-        g.base_mva    = tokens["mBase"]
-        g.online      = tokens["status"]
-        g.p_max       = tokens["Pmax"] / base_mva
-        g.p_min       = tokens["Pmin"] / base_mva
+        generator.p           = tokens["Pg"] / base_mva
+        generator.q_max       = tokens["Qmax"] / base_mva
+        generator.q_min       = tokens["Qmin"] / base_mva
+        generator.v_magnitude = tokens["Vg"]
+        generator.base_mva    = tokens["mBase"]
+        generator.online      = tokens["status"]
+        generator.p_max       = tokens["Pmax"] / base_mva
+        generator.p_min       = tokens["Pmin"] / base_mva
 
-        bus.generators.append(g)
+        bus.generators.append(generator)
 
         # Maintain the list of instantiated generators for
         # gen cost evaluation
-        self.generators.append(g)
+        self.generators.append(generator)
 
 
     def _push_branch(self, tokens):
         """ Adds a branch to the network.
         """
+        logger.debug("Parsing branch data: %s" % tokens)
+
         buses = self.network.buses
 
         bus_names      = [ v.name for v in buses ]
@@ -388,9 +396,11 @@ class MATPOWERReader(object):
     def _push_generator_cost(self, string, location, tokens):
         """ Adds cost data to generators.
         """
+        logger.debug("Parsing generator cost data: %s" % tokens)
+
         # There should be one or more generators in our list
         if not len(self.generators):
-            print "More cost data than there are generators"
+            logger.error("More cost data than there are generators")
             return
 
         # Apply cost data to first generator in list and then remove it

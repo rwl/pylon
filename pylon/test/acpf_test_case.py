@@ -56,7 +56,7 @@ class NewtonPFTest(TestCase):
         del reader
 
         self.routine = NewtonPFRoutine()
-        success = self.routine(network)
+#        success = self.routine(self.network)
 
 
     def test_voltage_vector(self):
@@ -71,7 +71,10 @@ class NewtonPFTest(TestCase):
                 1.0000
                 1.0000
         """
-        v_initial = self.routine.v
+        self.routine.network = self.network
+        v_initial = self.routine._get_initial_voltage_vector()
+
+#        print v_initial
 
         self.assertEqual(v_initial.typecode, "z")
         self.assertEqual(v_initial.size, (6, 1))

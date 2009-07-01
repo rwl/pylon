@@ -40,7 +40,7 @@ from cvxopt.lapack import getrf
 from cvxopt.umfpack import symbolic, numeric, linsolve
 import cvxopt.blas
 
-from pylon.y import make_admittance_matrix, AdmittanceMatrix
+from pylon.y import AdmittanceMatrix
 from pylon.util import conj
 
 #------------------------------------------------------------------------------
@@ -126,20 +126,16 @@ class _ACPFRoutine(object):
         # Initial bus voltage angles in radians.
         v_angle = matrix([bus.v_angle_guess * pi / 180.0 for bus in buses])
 
-        v_guess = mul(v_magnitude, math.exp(j * v_angle)) #element-wise product
+        v_guess = mul(v_magnitude, exp(j * v_angle)) #element-wise product
 
         # Get generator set points.
         for i, bus in enumerate(buses):
             if bus.generators:
-                # FIXME: Handle more than one generator at a bus
                 g = bus.generators[0]
-                # MATPOWER:
                 #   V0(gbus) = gen(on, VG) ./ abs(V0(gbus)).* V0(gbus);
-                #
                 #            Vg
                 #   V0 = ---------
                 #        |V0| . V0
-                #
 #                v = mul(abs(v_guess[i]), v_guess[i])
 #                v_guess[i] = div(g.v_magnitude, v)
 #                v = abs(v_guess[i]) * v_guess[i]
@@ -179,7 +175,7 @@ class _ACPFRoutine(object):
             slack_idx = slack_idxs[0]
         else:
             logger.error("No reference/swing/slack bus specified.")
-            slack_idx = 0
+            slack_idx = pv_idxs[0]
 
         self.slack_idx = slack_idx
         self.pv_idxs = pv_idxs
@@ -215,19 +211,19 @@ class NewtonPFRoutine(_ACPFRoutine):
         admittance_matrix = AdmittanceMatrix()
         self.Y = admittance_matrix(network)
 
-        self.v = self.get_initial_voltage_vector()
+        self.v = self._get_initial_voltage_vector()
         self.s_surplus = self._get_power_injection_vector()
 
         self._index_buses()
 
-        # Initial evaluation of f(x0) and convergency check
+        # Initial evaluation of f(x0) and convergency check.
         self.converged = False
         self._evaluate_function()
         self._check_convergence()
 
         iter = 0
         while (not self.converged) and (iter < self.iter_max):
-            self.iterate()
+            self._iterate()
             self._evaluate_function()
             self._check_convergence()
             iter += 1
@@ -241,27 +237,23 @@ class NewtonPFRoutine(_ACPFRoutine):
     #  Newton iterations:
     #--------------------------------------------------------------------------
 
-    def iterate(self):
+    def _iterate(self):
         """ Performs Newton iterations.
         """
-        j = cmath.sqrt(-1)
-
-        J = self._make_jacobian()
+        J = self._get_jacobian()
         F = self.f
 
-        Va = matrix(numpy_angle(self.v))
-        Vm = abs(self.v)
+        v_angle = matrix(numpy_angle(self.v))
+        v_magnitude = abs(self.v)
 
         pv_idxs = self.pv_idxs
         pq_idxs = self.pq_idxs
         npv = len(pv_idxs)
         npq = len(pq_idxs)
 
-        # Compute update step.
-        #
-        # Solves the sparse set of linear equations AX=B where A is a sparse
-        # matrix and B is a dense matrix of the same type ("d" or "z") as A. On
-        # exit B contains the solution.
+        # Compute update step. Solves the sparse set of linear equations AX=B
+        # where A is a sparse matrix and B is a dense matrix of the same type
+        # ("d" or "z") as A. On exit B contains the solution.
         linsolve(J, F)
 
         dx = -1 * F # Update step.
@@ -270,18 +262,18 @@ class NewtonPFRoutine(_ACPFRoutine):
         # Update voltage vector
         if pv_idxs:
             # Va(pv) = Va(pv) + dx(j1:j2);
-            Va[pv_idxs] = Va[pv_idxs] + dx[range(npv)]
+            v_angle[pv_idxs] = v_angle[pv_idxs] + dx[range(npv)]
 
         if pq_idxs:
-            Va[pq_idxs] = Va[pq_idxs] + dx[range(npv, npv+npq)]
-            Vm[pq_idxs] = Vm[pq_idxs] + dx[range(npv+npq, npv+npq+npq)]
+            v_angle[pq_idxs] = v_angle[pq_idxs] + dx[range(npv, npv+npq)]
+
+            v_magnitude[pq_idxs] = v_magnitude[pq_idxs] + \
+                dx[range(npv+npq, npv+npq+npq)]
 
         # V = Vm .* exp(j * Va);
-#        v = j * Va
-        self.v = v = mul(Vm, exp(j * Va))
+        self.v = v = mul(v_magnitude, exp(j * v_angle))
 
         # Avoid wrapped round negative Vm
-        # TODO: check necessity
 #        Vm = abs(voltage)
 #        Va = angle(voltage)
 
@@ -293,7 +285,7 @@ class NewtonPFRoutine(_ACPFRoutine):
     #  Evaluate Jacobian:
     #--------------------------------------------------------------------------
 
-    def _make_jacobian(self):
+    def _get_jacobian(self):
         """ Computes partial derivatives of power injection w.r.t. voltage.
             The following explains the expressions used to form the matrices:
 
@@ -324,8 +316,8 @@ class NewtonPFRoutine(_ACPFRoutine):
                 D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, MATPOWER,
                 dSbus_dV.m, version 3.2, http://www.pserc.cornell.edu/matpower/
         """
-        j = cmath.sqrt(-1)
-        Y = self.Y
+        j = 0 + 1j
+        y = self.Y
         v = self.v
         n = len(self.network.buses)
 
@@ -334,35 +326,35 @@ class NewtonPFRoutine(_ACPFRoutine):
         pvpq_idxs = self.pvpq_idxs
 
 #        Ibus = cvxopt.blas.dot(matrix(self.Y), v)
-        Ibus = Y * v
+        i_bus = y * v
 #        Ibus = self.Y.trans() * v
-        logger.debug("Ibus =\n%s" % Ibus)
+        logger.debug("i_bus =\n%s" % i_bus)
 
-        diagV = spmatrix(v, range(n), range(n), tc="z")
-        logger.debug("diagV =\n%s" % diagV)
+        diag_v = spmatrix(v, range(n), range(n), tc="z")
+        logger.debug("diag_v =\n%s" % diag_v)
 
-        diagIbus = spmatrix(Ibus, range(n), range(n), tc="z")
-        logger.debug("diagIbus =\n%s" % diagIbus)
+        diag_ibus = spmatrix(i_bus, range(n), range(n), tc="z")
+        logger.debug("diag_ibus =\n%s" % diag_ibus)
 
         # diagVnorm = spdiags(V./abs(V), 0, n, n);
-        diagVnorm = spmatrix(div(v, abs(v)), range(n), range(n), tc="z")
-        logger.debug("diagVnorm =\n%s" % diagVnorm)
+        diag_vnorm = spmatrix(div(v, abs(v)), range(n), range(n), tc="z")
+        logger.debug("diag_vnorm =\n%s" % diag_vnorm)
 
         # From MATPOWER v3.2:
         # dSbus_dVm = diagV * conj(Y * diagVnorm) + conj(diagIbus) * diagVnorm;
         # dSbus_dVa = j * diagV * conj(diagIbus - Y * diagV);
 
-        dS_dVm = diagV * conj(Y * diagVnorm) + conj(diagIbus) * diagVnorm
+        s_vm = diag_v * conj(y * diag_vnorm) + conj(diag_ibus) * diag_vnorm
 #        dS_dVm = dot(
 #            dot(diagV, conj(dot(Y, diagVnorm))) + conj(diagIbus), diagVnorm
 #        )
         #dS_dVm = dot(diagV, conj(dot(Y, diagVnorm))) + dot(conj(diagIbus), diagVnorm)
-        logger.debug("dS_dVm =\n%s" % dS_dVm)
+        logger.debug("dS/dVm =\n%s" % s_vm)
 
-        dS_dVa = j * diagV * conj(diagIbus - Y * diagV)
+        s_va = j * diag_v * conj(diag_ibus - y * diag_v)
 #        dS_dVa = dot(dot(j, diagV), conj(dot(diagIbus - Y, diagV)))
         #dS_dVa = dot(dot(j, diagV), conj(diagIbus - dot(Y, diagV)))
-        logger.debug("dS_dVa =\n%s" % dS_dVa)
+        logger.debug("dS/dVa =\n%s" % s_va)
 
 
 #        dP_dVm = spmatrix(map(lambda x: x.real, dS_dVm), dS_dVm.I, dS_dVa.J, tc="d")
@@ -390,13 +382,13 @@ class NewtonPFRoutine(_ACPFRoutine):
 #            J21 = dQ_dVa[pq_idxs, pvpq_idxs]
 #            J22 = dQ_dVm[pq_idxs, pq_idxs]
 
-        J11 = dS_dVa[pvpq_idxs, pvpq_idxs].real()
-        J12 = dS_dVm[pvpq_idxs, pq_idxs].real()
-        J21 = dS_dVa[pq_idxs, pvpq_idxs].imag()
-        J22 = dS_dVm[pq_idxs, pq_idxs].imag()
+        j11 = s_va[pvpq_idxs, pvpq_idxs].real()
+        j12 = s_vm[pvpq_idxs, pq_idxs].real()
+        j21 = s_va[pq_idxs, pvpq_idxs].imag()
+        j22 = s_vm[pq_idxs, pq_idxs].imag()
 
-        logger.debug("J12 =\n%s" % J12)
-        logger.debug("J22 =\n%s" % J22)
+        logger.debug("J12 =\n%s" % j12)
+        logger.debug("J22 =\n%s" % j22)
 
         # The width and height of one quadrant of the Jacobian.
 #        w, h = J11.size
@@ -419,9 +411,10 @@ class NewtonPFRoutine(_ACPFRoutine):
         # A deep copy of "values" is required for contiguity.
 #        J = spmatrix(values.copy(), row_idxs, col_idxs)
 
-        JX1 = sparse([J11, J21])
-        JX2 = sparse([J12, J22])
-        J = sparse([JX1.T, JX2.T]).T
+        j1 = sparse([j11, j21])
+        j2 = sparse([j12, j22])
+
+        self.J = J = sparse([j1.T, j2.T]).T
         logger.debug("J =\n%s" % J)
 
         return J
@@ -433,10 +426,8 @@ class NewtonPFRoutine(_ACPFRoutine):
     def _evaluate_function(self):
         """ Evaluates F(x).
         """
-        # MATPOWER:
-        #   mis = V .* conj(Ybus * V) - Sbus;
-        v = self.v
-        mismatch = mul(v, conj(self.Y * v)) - self.s_surplus
+        # mis = V .* conj(Ybus * V) - Sbus;
+        mismatch = mul(self.v, conj(self.Y * self.v)) - self.s_surplus
 
         real = mismatch[self.pvpq_idxs].real()
         imag = mismatch[self.pq_idxs].imag()
@@ -453,11 +444,11 @@ class NewtonPFRoutine(_ACPFRoutine):
         """ Checks if the solution has converged to within the specified
             tolerance.
         """
-        F = self.f
+        f = self.f
 
-        normF = max(abs(F))
+        normf = max(abs(f))
 
-        if normF < self.tolerance:
+        if normf < self.tolerance:
             self.converged = converged = True
         else:
             self.converged = converged = False

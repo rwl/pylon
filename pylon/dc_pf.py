@@ -31,7 +31,7 @@ import logging
 from math import pi
 from cvxopt import matrix, spmatrix, sparse, umfpack, cholmod
 
-from pylon.y import make_susceptance_matrix
+from pylon.y import SusceptanceMatrix
 
 #------------------------------------------------------------------------------
 #  Logging:
