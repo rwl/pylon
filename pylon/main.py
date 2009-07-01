@@ -27,7 +27,7 @@ import logging
 import optparse
 
 from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader, \
-    MATPOWERWriter, ReSTWriter, CSVWriter
+    MATPOWERWriter, ReSTWriter, CSVWriter, PickleReader, PickleWriter
 
 from pylon import DCPFRoutine, DCOPFRoutine, NewtonPFRoutine, ACOPFRoutine, \
     FastDecoupledPFRoutine
@@ -94,7 +94,7 @@ class PylonApplication(object):
         if network is not None:
             if self.routine != "none":
                 # Get the routine and pass the network to it.
-                routine = self._get_routine(self.routine, network)
+                routine = self._get_routine(self.routine)
 
                 if routine is None:
                     logger.critical("Unrecognised routine type [%s]." %
@@ -114,6 +114,8 @@ class PylonApplication(object):
             elif self.output_type == "excel":
                 from pylon.readwrite.excel_writer import ExcelWriter
                 writer = ExcelWriter()
+            elif self.output_type == "pickle":
+                writer = PickleWriter()
             else:
                 logger.critical("Unrecognised output type")
                 return False

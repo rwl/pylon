@@ -28,7 +28,7 @@ from os.path import basename, splitext
 from parsing_util import integer, boolean, real, scolon, matlab_comment
 from pyparsing import Optional, Literal, ZeroOrMore
 
-from pylon.api import Network, Bus, Branch, Generator, Load
+from pylon import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  Logging:

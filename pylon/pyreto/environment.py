@@ -25,7 +25,7 @@
 from scipy import array
 from pybrain.rl.environments import Environment
 
-from pylon.api import Network, Generator
+from pylon import Network, Generator
 
 #------------------------------------------------------------------------------
 #  "ParticipantEnvironment" class:

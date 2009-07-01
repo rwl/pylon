@@ -32,12 +32,9 @@ from pybrain.rl.agents import LearningAgent, PolicyGradientAgent
 from pybrain.rl.learners import SPLA, ENAC
 from pybrain.structure.modules import SigmoidLayer
 
-from pylon.readwrite.api import read_matpower, ReSTWriter
-from pylon.network import Network
-from pylon.bus import Bus
-from pylon.generator import Generator
-from pylon.load import Load
-from pylon.routine.api import DCOPFRoutine
+from pylon.readwrite import read_matpower, ReSTWriter
+from pylon import Network, Bus, Generator, Load
+from pylon import DCOPFRoutine
 
 from environment import ParticipantEnvironment
 from experiment import MarketExperiment

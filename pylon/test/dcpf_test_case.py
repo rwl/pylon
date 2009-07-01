@@ -24,8 +24,8 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.readwrite.api import read_matpower
-from pylon.routine.dc_pf import DCPFRoutine
+from pylon.readwrite import read_matpower
+from pylon import DCPFRoutine
 
 #-------------------------------------------------------------------------------
 #  Constants:

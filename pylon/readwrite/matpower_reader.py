@@ -30,7 +30,7 @@ from pyparsing import \
     Literal, Word, ZeroOrMore, Optional, OneOrMore, alphanums, delimitedList, \
     alphas, Combine, Or, Group
 
-from pylon.api import Network, Bus, Branch, Generator, Load
+from pylon.network import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  "MATPOWERReader" class:

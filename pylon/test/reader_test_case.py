@@ -27,8 +27,8 @@ import logging, sys
 
 from unittest import TestCase, main
 
-from pylon.api import Network
-from pylon.readwrite.api import read_matpower, read_psse, read_psat
+from pylon import Network
+from pylon.readwrite import read_matpower, read_psse, read_psat
 
 #------------------------------------------------------------------------------
 #  Logging:

@@ -22,7 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pylon.api import Network, NetworkReport
+from pylon import Network, NetworkReport
 
 #------------------------------------------------------------------------------
 #  "ReSTWriter" class:

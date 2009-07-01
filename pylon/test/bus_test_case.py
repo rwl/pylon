@@ -23,7 +23,7 @@
 
 from unittest import TestCase, main
 
-from pylon.api import Bus, Generator, Load
+from pylon import Bus, Generator, Load
 
 #------------------------------------------------------------------------------
 #  "BusTest" class:

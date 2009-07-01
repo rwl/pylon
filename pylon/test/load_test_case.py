@@ -24,7 +24,7 @@
 
 import unittest
 
-from pylon.api import Load
+from pylon import Load
 
 #------------------------------------------------------------------------------
 #  "LoadTest" class:

@@ -24,9 +24,9 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.readwrite.api import read_matpower
+from pylon.readwrite import read_matpower
 
-from pylon.routine.y import \
+from pylon.y import \
     make_susceptance_matrix, make_admittance_matrix, AdmittanceMatrix
 
 #------------------------------------------------------------------------------

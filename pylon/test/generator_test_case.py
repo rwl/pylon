@@ -23,7 +23,7 @@
 
 from unittest import TestCase, main
 
-from pylon.api import Generator
+from pylon import Generator
 
 #------------------------------------------------------------------------------
 #  "GeneratorTest" class:

@@ -25,8 +25,8 @@
 from os.path import join, dirname
 import unittest
 
-from pylon.api import Network, Bus, Branch, Generator, Load
-from pylon.readwrite.api import read_matpower
+from pylon import Network, Bus, Branch, Generator, Load
+from pylon.readwrite import read_matpower
 
 #-------------------------------------------------------------------------------
 #  Constants:

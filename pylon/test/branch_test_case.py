@@ -23,7 +23,7 @@
 
 import unittest
 
-from pylon.api import Network, Bus, Branch
+from pylon import Network, Bus, Branch
 
 #------------------------------------------------------------------------------
 #  "BranchTest" class:

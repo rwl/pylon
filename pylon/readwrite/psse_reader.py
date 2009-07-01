@@ -31,7 +31,7 @@ from pyparsing \
     import Literal, Word, restOfLine, alphanums, printables, quotedString, \
     White, OneOrMore, ZeroOrMore, Optional, alphas
 
-from pylon.api import Network, Bus, Branch, Generator, Load
+from pylon import Network, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  Logging:

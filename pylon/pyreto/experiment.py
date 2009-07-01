@@ -34,8 +34,8 @@ from enthought.traits.ui.api import View, Group, Item, HGroup, VGroup, spring
 
 from pybrain.rl.experiments import Experiment, EpisodicExperiment
 
-from pylon.api import Network
-from pylon.routine.api import DCOPFRoutine
+from pylon import Network
+from pylon import DCOPFRoutine
 from pylon.ui.routine.dc_opf_view_model import DCOPFViewModel
 from pylon.ui.plot.rewards_plot import RewardsPlot
 from pylon.readwrite.rst_writer import ReSTWriter

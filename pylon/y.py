@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines functions returning admittance and susceptance matrices. """
+""" Defines functions returning admittance and susceptance matrices.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -26,7 +27,7 @@ import logging
 
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
 
-from pylon.routine.util import conj
+from pylon.util import conj
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -41,8 +42,7 @@ logger.setLevel(logging.INFO)
 
 def make_susceptance_matrix(network):
     """ Returns the susceptance and source bus susceptance matrices for the
-    given network.
-
+        given network.
     """
 
     buses      = network.connected_buses
@@ -102,8 +102,8 @@ def make_susceptance_matrix(network):
 #------------------------------------------------------------------------------
 
 def make_admittance_matrix(network):
-    """ Returns an admittance matrix for the supplied network. """
-
+    """ Returns an admittance matrix for the supplied network.
+    """
     buses    = network.connected_buses
     n_buses  = len(buses)
     branches = network.online_branches
@@ -144,7 +144,7 @@ def make_admittance_matrix(network):
 #  "AdmittanceMatrix" class:
 #------------------------------------------------------------------------------
 
-class AdmittanceMatrix:
+class AdmittanceMatrix(object):
     """ Build sparse Y matrix.
 
         References:
@@ -176,8 +176,8 @@ class AdmittanceMatrix:
 
     def __init__(self, network, bus_shunts=True, line_shunts=True,
             taps=True, line_resistance=True, phase_shift=True):
-        """ Returns a new AdmittanceMatrix instance. """
-
+        """ Returns a new AdmittanceMatrix instance.
+        """
         self.network = network
         self.bus_shunts = bus_shunts
         self.line_shunts = line_shunts
@@ -189,8 +189,8 @@ class AdmittanceMatrix:
 
 
     def build(self):
-        """ Builds the admittance matrix. """
-
+        """ Builds the admittance matrix.
+        """
         j = 0+1j
         network = self.network
         base_mva = network.base_mva
@@ -290,7 +290,7 @@ class AdmittanceMatrix:
 #  "SusceptanceMatrix" class:
 #------------------------------------------------------------------------------
 
-class SusceptanceMatrix:
+class SusceptanceMatrix(object):
     """ Build sparse B matrices
 
         The bus real power injections are related to bus voltage angles by
@@ -302,7 +302,6 @@ class SusceptanceMatrix:
 
         TODO: Speed up by using spdiag(x)
     """
-
     # Network represented by the matrix
     network = None
 
@@ -313,15 +312,15 @@ class SusceptanceMatrix:
     B_source = spmatrix
 
     def __init__(self, network):
-        """ Returns a new SusceptanceMatrix instance """
-
+        """ Returns a new SusceptanceMatrix instance.
+        """
         self.network
         self.B, self.B_source = self.build()
 
 
     def build(self):
-        """ Build the matrices """
-
+        """ Build the matrices.
+        """
         if self.network is None:
             logger.error("network unspecified")
             return
@@ -384,7 +383,7 @@ class SusceptanceMatrix:
 #  "AdmittanceMatrix" class:
 #------------------------------------------------------------------------------
 
-class PSATAdmittanceMatrix:
+class PSATAdmittanceMatrix(object):
 
     def build(self, network):
         j = 0 + 1j
@@ -445,7 +444,7 @@ class PSATAdmittanceMatrix:
 if __name__ == "__main__":
     import time
     from os.path import join, dirname
-    from pylon.readwrite.api import read_matpower
+    from pylon.readwrite import read_matpower
 
 #    data_file = join(dirname(__file__), "../test/data/case6ww.m")
     data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
