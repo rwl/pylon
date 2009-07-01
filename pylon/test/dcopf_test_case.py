@@ -25,7 +25,7 @@
 from os.path import join, dirname
 import unittest
 
-from pylon.readwrite import read_matpower
+from pylon.readwrite import MATPOWERReader
 from pylon import DCOPFRoutine
 
 #-------------------------------------------------------------------------------
@@ -50,9 +50,10 @@ class DCOPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        network = read_matpower(DATA_FILE)
-        self.routine = DCOPFRoutine(network, show_progress=False)
-        self.routine.solve()
+        reader = MATPOWERReader()
+        network = reader(DATA_FILE)
+        self.routine = DCOPFRoutine(show_progress=False)
+        success = self.routine(network)
 
 
     def test_theta_injection_source(self):
@@ -484,6 +485,9 @@ class DCOPFTest(unittest.TestCase):
         pass
 
 if __name__ == "__main__":
+    import logging, sys
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
     unittest.main()
 
 # EOF -------------------------------------------------------------------------

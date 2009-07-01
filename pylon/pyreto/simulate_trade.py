@@ -32,7 +32,7 @@ from pybrain.rl.agents import LearningAgent, PolicyGradientAgent
 from pybrain.rl.learners import SPLA, ENAC
 from pybrain.structure.modules import SigmoidLayer
 
-from pylon.readwrite import read_matpower, ReSTWriter
+from pylon.readwrite import MATPOWERReader, ReSTWriter
 from pylon import Network, Bus, Generator, Load
 from pylon import DCOPFRoutine
 
@@ -57,7 +57,8 @@ DATA_FILE = join( dirname(__file__), "..", "test", "data", "case6ww.m" )
 
 def get_power_sys():
     # Read network data.
-#    power_sys = read_matpower( DATA_FILE )
+    reader = MATPOWERReader()
+#    power_sys = reader( DATA_FILE )
 
     # One bus test network.
     power_sys = Network( name = "1 Bus", base_mva = 100.0 )

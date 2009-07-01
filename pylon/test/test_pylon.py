@@ -24,13 +24,9 @@
 
 import unittest
 
-from network_test_case import NetworkTest
-from bus_test_case import BusTest
-from branch_test_case import BranchTest
-from generator_test_case import GeneratorTest
-from load_test_case import LoadTest
+from network_test_case \
+    import NetworkTest, BusTest, BranchTest, GeneratorTest, LoadTest
 
-from matrix_test_case import MatrixTest, SparseMatrixTest
 from y_test_case import BTest
 from dcpf_test_case import DCPFTest
 from dcopf_test_case import DCOPFTest
@@ -54,8 +50,6 @@ def suite():
     suite.addTest(unittest.makeSuite(LoadTest))
 
     # Routine test cases.
-    suite.addTest(unittest.makeSuite(MatrixTest))
-    suite.addTest(unittest.makeSuite(SparseMatrixTest))
     suite.addTest(unittest.makeSuite(BTest))
     suite.addTest(unittest.makeSuite(DCPFTest))
     suite.addTest(unittest.makeSuite(DCOPFTest))
@@ -70,13 +64,8 @@ def suite():
 
 
 if __name__ == '__main__':
-
-#    unittest.main()
-
-#    suiteFew = unittest.TestSuite()
-#    suiteFew.addTest(testBlogger("testPostNewEntry"))
-#    suiteFew.addTest(testBlogger("testDeleteAllEntries"))
-#    unittest.TextTestRunner(verbosity=2).run(suiteFew)
+    import logging, sys
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
     unittest.TextTestRunner(verbosity = 2).run(suite())
 

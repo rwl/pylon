@@ -15,7 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Test case for the AC Power Flow routine. """
+""" Test case for the AC Power Flow routine.
+"""
 
 #------------------------------------------------------------------------------
 #  Imports:
@@ -24,7 +25,7 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.readwrite import read_matpower
+from pylon.readwrite import MATPOWERReader
 from pylon import FastDecoupledPFRoutine
 
 #------------------------------------------------------------------------------
@@ -39,19 +40,20 @@ DATA_FILE = join(dirname(__file__), "data/case6ww.m")
 
 class FDPFTest(TestCase):
     """ We use a MATPOWER data file and validate the results against those
-    obtained from running the MATPOWER runpf.m script with the same data
-    file and PF_ALG set to 2 and 3 in mpoption.m. See reader_test_case.py for
-    validation of MATPOWER data file parsing.
-
+        obtained from running the MATPOWER runpf.m script with the same data
+        file and PF_ALG set to 2 and 3 in mpoption.m. See reader_test_case.py
+        for validation of MATPOWER data file parsing.
     """
 
     routine = FastDecoupledPFRoutine
 
     def setUp(self):
-        """ The test runner will execute this method prior to each test. """
-
-        network = read_matpower(DATA_FILE)
-        self.routine = FastDecoupledPFRoutine(network)
+        """ The test runner will execute this method prior to each test.
+        """
+        reader = MATPOWERReader()
+        network = reader(DATA_FILE)
+        self.routine = FastDecoupledPFRoutine()
+        success = self.routine(network)
 
 
     def test_mismatch(self):
@@ -200,9 +202,7 @@ class FDPFTest(TestCase):
 
 if __name__ == "__main__":
     import logging, sys
-    logger = logging.getLogger()
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
     main()
 

@@ -23,21 +23,11 @@
 #------------------------------------------------------------------------------
 
 import os.path
-import logging, sys
 
 from unittest import TestCase, main
 
 from pylon import Network
-from pylon.readwrite import read_matpower, read_psse, read_psat
-
-#------------------------------------------------------------------------------
-#  Logging:
-#------------------------------------------------------------------------------
-
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
-    format="%(levelname)s: %(message)s")
-
-logger = logging.getLogger(__name__)
+from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -140,7 +130,8 @@ class MatpowerReaderTest(ReaderTest):
 #        """ Validate parsing of the case6ww.m file.
 #        """
 #        # Parse the file
-#        self.network = read_matpower(MATPOWER_DATA_FILE)
+#        reader = MATPOWERReader()
+#        self.network = reader(MATPOWER_DATA_FILE)
 #
 #        self._validate_base(base_mva=100)
 #
@@ -169,7 +160,8 @@ class PSSEReaderTest(ReaderTest):
     def test_ipsa(self):
         """ Test parsing of a data file exported from IPSA.
         """
-        self.network = read_psse(IPSA_DATA_FILE)
+        reader = PSSEReader()
+        self.network = reader(IPSA_DATA_FILE)
 
         self._validate_base(100.0)
 
@@ -180,8 +172,9 @@ class PSSEReaderTest(ReaderTest):
     def test_ukgds(self):
         """ Test parsing of PSS/E data file exported from the UKGDS.
         """
-        # Parse the file
-        self.network = read_psse(UKGDS_DATA_FILE)
+        # Parse the file.
+        reader = PSSEReader()
+        self.network = reader(UKGDS_DATA_FILE)
 
         # Network structure validation
         self._validate_base(100.0)
@@ -212,13 +205,16 @@ class PSATReaderTest(ReaderTest):
     def test_ipsa(self):
         """ Test parsing of a PSAT data file.
         """
-        self.network = read_psat(PSAT_DATA_FILE)
+        reader = PSATReader()
+        self.network = reader(PSAT_DATA_FILE)
 
 #------------------------------------------------------------------------------
 #  Standalone call:
 #------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    import logging, sys
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     main()
 
 # EOF -------------------------------------------------------------------------

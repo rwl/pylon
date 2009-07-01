@@ -23,4 +23,6 @@ from ac_pf import NewtonPFRoutine, FastDecoupledPFRoutine
 from dc_opf import DCOPFRoutine
 from ac_opf import ACOPFRoutine
 
+from uc import UnitCommitmentRoutine
+
 # EOF -------------------------------------------------------------------------

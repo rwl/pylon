@@ -437,36 +437,4 @@ class PSATAdmittanceMatrix(object):
 
         return y
 
-#------------------------------------------------------------------------------
-#  Stand-alone call:
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    import time
-    from os.path import join, dirname
-    from pylon.readwrite import read_matpower
-
-#    data_file = join(dirname(__file__), "../test/data/case6ww.m")
-    data_file = "/home/rwl/python/aes/matpower_3.2/case6ww.m"
-    n = read_matpower(data_file)
-
-    tests = 10
-
-    times = []
-    for test in range(tests):
-        am = AdmittanceMatrix(n)
-        t0 = time.time()
-        Y = am.build()
-        times.append(time.time() - t0)
-
-    print "AdmittanceMatrix:", max(times), min(times)
-
-    times = []
-    for test in range(tests):
-        t0 = time.time()
-        Y = make_admittance_matrix(n)
-        times.append(time.time() - t0)
-
-    print "make_admittance_matrix():", max(times), min(times)
-
 # EOF -------------------------------------------------------------------------
