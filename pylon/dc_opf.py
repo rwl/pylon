@@ -325,14 +325,14 @@ class DCOPFRoutine(object):
         """
         buses = self.network.connected_buses
 
-        v_phase = matrix([v.v_phase_guess*pi/180 for v in buses])
+        v_angle = matrix([v.v_angle_guess*pi/180 for v in buses])
 
-#        _g_buses = [v for v in buses if v.type == "PV" or v.type == "Slack"]
+#        _g_buses = [v for v in buses if v.type == "pv" or v.type == "slack"]
         _g_buses = [v for v in buses if len(v.generators) > 0]
 
         p_supply = matrix([v.p_supply for v in _g_buses])
 
-        x = matrix([v_phase, p_supply])
+        x = matrix([v_angle, p_supply])
 
         if self._solver_type == "linear":
             p_cost = []
@@ -448,7 +448,7 @@ class DCOPFRoutine(object):
         a_ref = spmatrix([], [], [], size=(1, n_buses+n_generators+n_cost))
         a_ref[0, ref_idx] = 1
 
-        b_ref = matrix([buses[ref_idx].v_phase_guess])
+        b_ref = matrix([buses[ref_idx].v_angle_guess])
 
         logger.debug("Built reference constraint matrix Aref:\n%s" % a_ref)
         logger.debug("Built reference constraint vector bref:\n%s" % b_ref)
@@ -818,11 +818,11 @@ class DCOPFRoutine(object):
         print "Solution z:\n", solution["z"]
 
         # Bus voltage angles.
-        v_phase = solution["x"][:n_buses]
-#        print "Vphase:", v_phase
+        v_angle = solution["x"][:n_buses]
+#        print "Vphase:", v_angle
         for i, bus in enumerate(buses):
-            bus.v_amplitude = 1.0
-            bus.v_phase = v_phase[i]
+            bus.v_magnitude = 1.0
+            bus.v_angle = v_angle[i]
 
         # Generator real power output.
         p = solution["x"][n_buses:n_buses+n_generators]
@@ -832,7 +832,7 @@ class DCOPFRoutine(object):
             generator.p_despatch = p[i]
 
         # Branch power flows.
-        p_source = self._B_source * v_phase * base_mva
+        p_source = self._B_source * v_angle * base_mva
         p_target = -p_source
         for j, branch in enumerate(branches):
             branch.p_source = p_source[j]

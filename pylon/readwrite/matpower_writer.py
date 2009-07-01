@@ -87,11 +87,11 @@ class MATPOWERWriter(object):
         for i, v in enumerate(buses):
             v_data = {}
             v_data["bus_id"] = i+1
-            if v.mode == "PQ":
+            if v.mode == "pq":
                 type = 1
-            elif v.mode == "PV":
+            elif v.mode == "pv":
                 type = 2
-            elif v.mode == "Slack":
+            elif v.mode == "slack":
                 type = 3
             else:
                 raise ValueError
@@ -102,8 +102,8 @@ class MATPOWERWriter(object):
             v_data["Bs"] = v.b_shunt
             # TODO: Implement areas
             v_data["area"] = 1
-            v_data["Vm"] = v.v_amplitude_guess
-            v_data["Va"] = v.v_phase_guess
+            v_data["Vm"] = v.v_magnitude_guess
+            v_data["Va"] = v.v_angle_guess
             v_data["baseKV"] = v.v_base
             v_data["zone"] = v.zone
             v_data["Vmax"] = v.v_max
@@ -156,7 +156,7 @@ class MATPOWERWriter(object):
             g_data["Qg"] = g.q * g_base
             g_data["Qmax"] = g.q_max * g_base
             g_data["Qmin"] = g.q_min * g_base
-            g_data["Vg"] = g.v_amplitude
+            g_data["Vg"] = g.v_magnitude
             g_data["mBase"] = g.base_mva
             if g.online:
                 online = 1

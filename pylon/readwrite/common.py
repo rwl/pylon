@@ -15,15 +15,15 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-bus_attrs = ["name", "mode", "slack", "v_base", "v_amplitude_guess",
-    "v_phase_guess", "v_max", "v_min", "v_amplitude", "v_phase", "g_shunt",
+bus_attrs = ["name", "mode", "slack", "v_base", "v_magnitude_guess",
+    "v_angle_guess", "v_max", "v_min", "v_magnitude", "v_angle", "g_shunt",
     "b_shunt", "zone"]
 
 branch_attrs = ["source_bus_idx", "target_bus_idx", "name", "mode",
     "online", "r", "x", "b", "s_max", "phase_shift", "phase_shift_max",
     "phase_shift_min", "online"]
 
-generator_attrs = ["name", "base_mva", "v_amplitude", "p", "p_max", "p_min",
+generator_attrs = ["name", "base_mva", "v_magnitude", "p", "p_max", "p_min",
     "q", "q_max", "q_min", "c_startup", "c_shutdown", "cost_model",
     "cost_coeffs", "pwl_points", "p_cost", "u", "rate_up", "rate_down",
     "min_up", "min_down", "initial_up", "initial_down", "online"]

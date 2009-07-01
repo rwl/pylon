@@ -242,7 +242,7 @@ class MATPOWERReader(object):
         shutdown = real.setResultsName("shutdown")
         # number of cost coefficients to follow for polynomial
         # cost function, or number of data points for pw linear
-        n = integer.setResultsName("n")
+        n  = integer.setResultsName("n")
         x0 = real.setResultsName("x0")
         y0 = real.setResultsName("y0")
         x1 = real.setResultsName("x1")
@@ -293,12 +293,12 @@ class MATPOWERReader(object):
         base_kv    = tokens["baseKV"]
         bus.v_base = base_kv
 
-        bus.g_shunt           = tokens["Gs"]/self.base_mva
-        bus.b_shunt           = tokens["Bs"]/self.base_mva
-        bus.v_amplitude_guess = tokens["Vm"]
-        bus.v_phase_guess     = tokens["Va"]
-        bus.v_amplitude       = tokens["Vm"]
-        bus.v_phase           = tokens["Va"]
+        bus.g_shunt     = tokens["Gs"] / self.base_mva
+        bus.b_shunt     = tokens["Bs"] / self.base_mva
+        bus.v_magnitude_guess = tokens["Vm"]
+        bus.v_angle_guess = tokens["Va"]
+        bus.v_magnitude = tokens["Vm"]
+        bus.v_angle     = tokens["Va"]
 
         # Bus type 3 denotes a slack bus in MATPOWER
         if tokens["bus_type"] == 3:
@@ -309,8 +309,8 @@ class MATPOWERReader(object):
         # Loads are included in bus data with MATPOWER
         if (tokens["Pd"] > 0) or (tokens["Qd"] > 0):
             l   = Load()
-            l.p = tokens["Pd"]/self.base_mva
-            l.q = tokens["Qd"]/self.base_mva
+            l.p = tokens["Pd"] / self.base_mva
+            l.q = tokens["Qd"] / self.base_mva
             bus.loads.append(l)
 
         bus.zone = tokens["zone"]
@@ -340,14 +340,14 @@ class MATPOWERReader(object):
 
         g = Generator( name = make_unique_name("g", g_names) )
 
-        g.p           = tokens["Pg"]/base_mva
-        g.q_max       = tokens["Qmax"]/base_mva
-        g.q_min       = tokens["Qmin"]/base_mva
-        g.v_amplitude = tokens["Vg"]
+        g.p           = tokens["Pg"] / base_mva
+        g.q_max       = tokens["Qmax"] / base_mva
+        g.q_min       = tokens["Qmin"] / base_mva
+        g.v_magnitude = tokens["Vg"]
         g.base_mva    = tokens["mBase"]
         g.online      = tokens["status"]
-        g.p_max       = tokens["Pmax"]/base_mva
-        g.p_min       = tokens["Pmin"]/base_mva
+        g.p_max       = tokens["Pmax"] / base_mva
+        g.p_min       = tokens["Pmin"] / base_mva
 
         bus.generators.append(g)
 
@@ -371,10 +371,9 @@ class MATPOWERReader(object):
 #        target_bus = self.network.buses[tokens["tbus"]-1]
 
         branch_names = [e.name for e in self.network.branches]
-        e = Branch(name       = make_unique_name("e", branch_names),
-                   source_bus = source_bus,
-                   target_bus = target_bus)
+        e = Branch(source_bus=source_bus, target_bus=target_bus)
 
+        e.name        = make_unique_name("e", branch_names)
         e.r           = tokens["r"]
         e.x           = tokens["x"]
         e.b           = tokens["b"]

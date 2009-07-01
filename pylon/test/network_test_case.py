@@ -111,17 +111,17 @@ class BusTest(unittest.TestCase):
         v = Bus()
 
         # Should a bus be PQ by default?
-        self.assertEqual(v.mode, "PQ")
+        self.assertEqual(v.mode, "pq")
 
         g = Generator(q=1.0, q_max=10.0, q_min=-10.0)
         v.generators.append(g)
-        self.assertEqual(v.mode, "PV")
+        self.assertEqual(v.mode, "pv")
 
         g.q = 11.0
-        self.assertEqual(v.mode, "PQ")
+        self.assertEqual(v.mode, "pq")
 
         v.slack = True
-        self.assertEqual(v.mode, "Slack")
+        self.assertEqual(v.mode, "slack")
 
 
     def test_surplus(self):
@@ -184,8 +184,8 @@ class BranchTest(unittest.TestCase):
     def test_v_ratio(self):
         """ Test the voltage ratio property. """
 
-        sb = Bus(v_amplitude=0.9)
-        tb = Bus(v_amplitude=1.1)
+        sb = Bus(v_magnitude=0.9)
+        tb = Bus(v_magnitude=1.1)
         e = Branch(sb, tb)
 
         self.assertAlmostEqual(e.v_ratio, 0.81818, places=5)
@@ -194,16 +194,16 @@ class BranchTest(unittest.TestCase):
     def test_mode(self):
         """ Test the mode property. """
 
-        sb = Bus(v_amplitude=1.0)
-        tb = Bus(v_amplitude=1.0)
+        sb = Bus(v_magnitude=1.0)
+        tb = Bus(v_magnitude=1.0)
         e = Branch(sb, tb)
 
-        self.assertEqual(e.mode, "Line")
+        self.assertEqual(e.mode, "line")
 
-        sb.v_amplitude = 2.0
-        tb.v_amplitude = 0.5
+        sb.v_magnitude = 2.0
+        tb.v_magnitude = 0.5
 
-        self.assertEqual(e.mode, "Transformer")
+        self.assertEqual(e.mode, "transformer")
 
 
     def test_losses(self):

@@ -55,17 +55,17 @@ class DCPFTest(TestCase):
         self.routine(network)
 
 
-    def test_v_phase_guess_vector(self):
+    def test_v_angle_guess_vector(self):
         """ Test the voltage phase guess trait of a bus """
 
-        guesses = self.routine.v_phase_guess
+        guesses = self.routine.v_angle_guess
 
         self.assertEqual(guesses.size, (6, 1))
         self.assertEqual(guesses[1], 0.0)
         self.assertEqual(guesses[5], 0.0)
 
 
-    def test_v_phase_vector(self):
+    def test_v_angle_vector(self):
         """ Test the resulting voltage phase angles
 
         Va =
@@ -85,17 +85,17 @@ class DCPFTest(TestCase):
         vp_2 = -0.0553
         vp_5 = -0.1002
 
-        v_phase = self.routine.v_phase
+        v_angle = self.routine.v_angle
 
-        self.assertAlmostEqual(vp_0, v_phase[0], places)
-        self.assertAlmostEqual(vp_2, v_phase[2], places)
-        self.assertAlmostEqual(vp_5, v_phase[5], places)
+        self.assertAlmostEqual(vp_0, v_angle[0], places)
+        self.assertAlmostEqual(vp_2, v_angle[2], places)
+        self.assertAlmostEqual(vp_5, v_angle[5], places)
 
 
     def test_model_results(self):
         """ Test update of the model with results.
 
-        v_amplitude =
+        v_magnitude =
 
                  0
            -2.9024
@@ -132,10 +132,10 @@ class DCPFTest(TestCase):
         v_5 = -5.7418
 
         for each_bus in buses:
-            self.assertEqual(each_bus.v_amplitude, 1.0)
-        self.assertAlmostEqual(v_0, buses[0].v_phase, places)
-        self.assertAlmostEqual(v_3, buses[3].v_phase, places)
-        self.assertAlmostEqual(v_5, buses[5].v_phase, places)
+            self.assertEqual(each_bus.v_magnitude, 1.0)
+        self.assertAlmostEqual(v_0, buses[0].v_angle, places)
+        self.assertAlmostEqual(v_3, buses[3].v_angle, places)
+        self.assertAlmostEqual(v_5, buses[5].v_angle, places)
 
         # Branches
         p_2 = 33.1045

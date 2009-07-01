@@ -265,9 +265,9 @@ class ACOPFRoutine:
 
             if x is None:
                 # Compute initial vector.
-                x_ph = matrix([bus.v_phase_guess for bus in buses])
+                x_ph = matrix([bus.v_angle_guess for bus in buses])
                 # TODO: Initialise V from any present generators.
-                x_v = matrix([bus.v_amplitude_guess for bus in buses])
+                x_v = matrix([bus.v_magnitude_guess for bus in buses])
                 x_pg = matrix([g.p for g in generators])
                 x_qg = matrix([g.q for g in generators])
 
@@ -302,10 +302,10 @@ class ACOPFRoutine:
             s = matrix([complex(b.p_surplus, b.q_surplus) for b in buses])
 
             # Bus voltage vector.
-            v_phase = x[ph_base:ph_end+1]
-            v_amplitude = x[v_base:v_end]
+            v_angle = x[ph_base:ph_end+1]
+            v_magnitude = x[v_base:v_end]
 #            Va0r = Va0 * pi / 180 #convert to radians
-            v = mul(v_amplitude, exp(j * v_phase)) #element-wise product
+            v = mul(v_magnitude, exp(j * v_angle)) #element-wise product
 
             # Evaluate the power flow equations.
             Y = make_admittance_matrix(network)

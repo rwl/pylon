@@ -350,8 +350,8 @@ class ReSTWriter(object):
         # Bus rows
         for bus in buses:
             file.write(bus.name[:col1_width].ljust(col1_width) + " ")
-            file.write("%8.3f" % bus.v_amplitude + " ")
-            file.write("%8.3f" % bus.v_phase + " ")
+            file.write("%8.3f" % bus.v_magnitude + " ")
+            file.write("%8.3f" % bus.v_angle + " ")
             file.write("%8.2f" % bus.p_supply + " ")
             file.write("%8.2f" % bus.q_supply + " ")
             file.write("%8.2f" % bus.p_demand + " ")
@@ -524,7 +524,7 @@ class ReSTWriter(object):
                 file.write("1".center(col_width_bool) + " ")
             else:
                 file.write("0".center(col_width_bool) + " ")
-            file.write("%8.2f" % each.v_amplitude + " ")
+            file.write("%8.2f" % each.v_magnitude + " ")
             file.write("%8.2f" % each.p + " ")
             file.write("%8.2f" % each.q + " ")
 #            file.write("..".ljust(col_width) + " ")

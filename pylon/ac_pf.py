@@ -50,6 +50,13 @@ from pylon.util import conj
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+j  = 0 + 1j
+pi = math.pi
+
+#------------------------------------------------------------------------------
 #  "_ACPFRoutine" class:
 #------------------------------------------------------------------------------
 
@@ -102,36 +109,28 @@ class _ACPFRoutine(object):
         """
         raise NotImplementedError
 
-
-    def _make_admittance_matrix(self):
-        """ Forms the admittance matrix for the referenced network.
-        """
-        self.Y = make_admittance_matrix(self.network)
-
     #--------------------------------------------------------------------------
-    #  Form array of initial voltages at each node:
+    #  Make vector of initial node voltages:
     #--------------------------------------------------------------------------
 
-    def _initialise_voltage_vector(self):
+    def _get_initial_voltage_vector(self):
         """ Makes the initial vector of complex bus voltages.  The bus voltage
             vector contains the set point for generator (including ref bus)
             buses, and the reference angle of the swing bus, as well as an
             initial guess for remaining magnitudes and angles.
         """
-        j = 0+1j #cmath.sqrt(-1)
-        pi = math.pi
         buses = self.network.connected_buses
 
-        Vm0 = matrix([bus.v_amplitude_guess for bus in buses], tc='z')
-        Va0 = matrix([bus.v_phase_guess for bus in buses]) #degrees
+        v_magnitude = matrix([bus.v_magnitude_guess for bus in buses])
 
-        Va0r = Va0 * pi / 180 #convert to radians
+        # Initial bus voltage angles in radians.
+        v_angle = matrix([bus.v_angle_guess * pi / 180.0 for bus in buses])
 
-        v_initial = mul(Vm0, exp(j * Va0r)) #element-wise product
+        v_guess = mul(v_magnitude, math.exp(j * v_angle)) #element-wise product
 
-        # Incorporate generator set points.
+        # Get generator set points.
         for i, bus in enumerate(buses):
-            if len(bus.generators) > 0:
+            if bus.generators:
                 # FIXME: Handle more than one generator at a bus
                 g = bus.generators[0]
                 # MATPOWER:
@@ -141,25 +140,25 @@ class _ACPFRoutine(object):
                 #   V0 = ---------
                 #        |V0| . V0
                 #
-#                v = mul(abs(v_initial[i]), v_initial[i])
-#                v_initial[i] = div(g.v_amplitude, v)
-#                v = abs(v_initial[i]) * v_initial[i]
-#                v_initial[i] = g.v_amplitude / v
-                v_initial[i] = g.v_amplitude
+#                v = mul(abs(v_guess[i]), v_guess[i])
+#                v_guess[i] = div(g.v_magnitude, v)
+#                v = abs(v_guess[i]) * v_guess[i]
+#                v_guess[i] = g.v_magnitude / v
+                v_guess[i] = g.v_magnitude
 
-        self.v = v_initial
+        return v_guess
 
     #--------------------------------------------------------------------------
-    #  Vector of apparent power injected at each bus:
+    #  Make vector of apparent power injected at each bus:
     #--------------------------------------------------------------------------
 
-    def _make_power_injection_vector(self):
+    def _get_power_injection_vector(self):
         """ Makes the vector of complex bus power injections (gen - load).
         """
         buses = self.network.connected_buses
 
-        self.s_surplus = matrix(
-            [complex(v.p_surplus, v.q_surplus) for v in buses], tc="z")
+        return matrix(
+            [complex(bus.p_surplus, bus.q_surplus) for bus in buses], tc="z")
 
     #--------------------------------------------------------------------------
     #  Index buses for updating v:
@@ -171,15 +170,15 @@ class _ACPFRoutine(object):
         buses = self.network.connected_buses
 
         # Indexing for updating v
-        pv_idxs = [i for i, v in enumerate(buses) if v.mode is "PV"]
-        pq_idxs = [i for i, v in enumerate(buses) if v.mode is "PQ"]
+        pv_idxs = [i for i, v in enumerate(buses) if v.mode is "pv"]
+        pq_idxs = [i for i, v in enumerate(buses) if v.mode is "pq"]
         pvpq_idxs = pv_idxs + pq_idxs
 
-        slack_idxs = [i for i, v in enumerate(buses) if v.mode is "Slack"]
+        slack_idxs = [i for i, v in enumerate(buses) if v.mode is "slack"]
         if len(slack_idxs) > 0:
             slack_idx = slack_idxs[0]
         else:
-            logger.error    ("No reference/swing/slack bus specified.")
+            logger.error("No reference/swing/slack bus specified.")
             slack_idx = 0
 
         self.slack_idx = slack_idx
@@ -213,9 +212,12 @@ class NewtonPFRoutine(_ACPFRoutine):
         """
         self.network = network
 
-        self._make_admittance_matrix()
-        self._initialise_voltage_vector()
-        self._make_power_injection_vector()
+        admittance_matrix = AdmittanceMatrix()
+        self.Y = admittance_matrix(network)
+
+        self.v = self.get_initial_voltage_vector()
+        self.s_surplus = self._get_power_injection_vector()
+
         self._index_buses()
 
         # Initial evaluation of f(x0) and convergency check

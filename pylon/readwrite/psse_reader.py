@@ -378,11 +378,11 @@ class PSSEReader(object):
         bus.name = tokens["Name"].strip("'")
         bus._bus = tokens["Bus"]
 
-        bus.v_amplitude_guess = tokens["PU_Volt"]
-        bus.v_amplitude       = tokens["PU_Volt"]
+        bus.v_magnitude_guess = tokens["PU_Volt"]
+        bus.v_magnitude = tokens["PU_Volt"]
 
-        bus.v_phase_guess = tokens["Angle"]
-        bus.v_phase       = tokens["Angle"]
+        bus.v_angle_guess = tokens["Angle"]
+        bus.v_angle     = tokens["Angle"]
 
         self.network.buses.append(bus)
 

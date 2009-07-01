@@ -105,12 +105,12 @@ class PSATReader(object):
         """
         bus_no = integer.setResultsName("bus_no")
         v_base = real.setResultsName("v_base") # kV
-        v_amplitude_guess = Optional(real).setResultsName("v_amplitude_guess")
-        v_phase_guess = Optional(real).setResultsName("v_phase_guess")#radians
+        v_magnitude_guess = Optional(real).setResultsName("v_magnitude_guess")
+        v_angle_guess = Optional(real).setResultsName("v_angle_guess") # radians
         area = Optional(integer).setResultsName("area") # not used yet
         region = Optional(integer).setResultsName("region") # not used yet
 
-        bus_data = bus_no + v_base + v_amplitude_guess + v_phase_guess + \
+        bus_data = bus_no + v_base + v_magnitude_guess + v_angle_guess + \
             area + region + scolon
 
         bus_data.setParseAction(self.push_bus)
@@ -162,7 +162,7 @@ class PSATReader(object):
         bus_no = integer.setResultsName("bus_no")
         s_rating = real.setResultsName("s_rating") # MVA
         v_rating = real.setResultsName("v_rating") # kV
-        v_amplitude = real.setResultsName("v_amplitude") # p.u.
+        v_magnitude = real.setResultsName("v_magnitude") # p.u.
         ref_angle = real.setResultsName("ref_angle") # p.u.
         q_max = Optional(real).setResultsName("q_max") # p.u.
         q_min = Optional(real).setResultsName("q_min") # p.u.
@@ -174,7 +174,7 @@ class PSATReader(object):
         ref_bus = Optional(boolean).setResultsName("ref_bus")
         status = Optional(boolean).setResultsName("status")
 
-        slack_data = bus_no + s_rating + v_rating + v_amplitude + \
+        slack_data = bus_no + s_rating + v_rating + v_magnitude + \
             ref_angle + q_max + q_min + v_max + v_min + p_guess + \
             lp_coeff + ref_bus + status + scolon
 
@@ -369,10 +369,10 @@ class PSATReader(object):
 
         bus = Bus()
         bus.name = tokens["bus_no"]
-        bus.v_amplitude_guess=float(tokens["v_amplitude_guess"])
-        bus.v_phase_guess=float(tokens["v_phase_guess"])
-        bus.v_amplitude=float(tokens["v_amplitude_guess"])
-        bus.v_phase=float(tokens["v_phase_guess"])
+        bus.v_magnitude_guess = tokens["v_magnitude_guess"]
+        bus.v_angle_guess = tokens["v_angle_guess"]
+        bus.v_magnitude = tokens["v_magnitude_guess"]
+        bus.v_angle = tokens["v_angle_guess"]
 
         self.network.buses.append(bus)
 

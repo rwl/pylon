@@ -64,10 +64,10 @@ class DCPFRoutine(object):
     B_source = None
 
     # Vector of voltage angle guesses
-    v_phase_guess = None
+    v_angle_guess = None
 
     # Vector of voltage phase angles
-    v_phase = None
+    v_angle = None
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -89,10 +89,10 @@ class DCPFRoutine(object):
             return False
         else:
             self.B, self.B_source = make_susceptance_matrix(self.network)
-            self._make_v_phase_guess_vector()
+            self._make_v_angle_guess_vector()
 
             # Calculate the voltage phase angles.
-            self._make_v_phase_vector()
+            self._make_v_angle_vector()
 
             self._update_model()
             return True
@@ -101,20 +101,20 @@ class DCPFRoutine(object):
     #  Build voltage phase angle guess vector:
     #--------------------------------------------------------------------------
 
-    def _make_v_phase_guess_vector(self):
+    def _make_v_angle_guess_vector(self):
         """ Make the vector of voltage phase guesses """
 
         if self.network is not None:
             buses = self.network.connected_buses
-            guesses = [v.v_phase_guess for v in buses]
-            self.v_phase_guess = matrix(guesses)
+            guesses = [v.v_angle_guess for v in buses]
+            self.v_angle_guess = matrix(guesses)
             logger.debug("Vector of voltage phase guesses:\n%s" % guesses)
 
     #--------------------------------------------------------------------------
     #  Calculate voltage angles:
     #--------------------------------------------------------------------------
 
-    def _make_v_phase_vector(self):
+    def _make_v_angle_vector(self):
         """ Caluclates the voltage phase angles.
         """
         buses = self.network.connected_buses
@@ -124,8 +124,8 @@ class DCPFRoutine(object):
         slack_idxs = [buses.index(v) for v in buses if v.slack]
         slack_idx = slack_idxs[0]
 
-        pv_idxs = [buses.index(v) for v in buses if v.mode == "PV"]
-        pq_idxs = [buses.index(v) for v in buses if v.mode == "PQ"]
+        pv_idxs = [buses.index(v) for v in buses if v.mode == "pv"]
+        pq_idxs = [buses.index(v) for v in buses if v.mode == "pq"]
         pvpq_idxs = pv_idxs + pq_idxs
 
         B_pvpq = self.B[pvpq_idxs, pvpq_idxs]
@@ -143,14 +143,14 @@ class DCPFRoutine(object):
         p_pvpq = p[pvpq_idxs]
         logger.debug("Active power injections:\n%s" % p_pvpq)
 
-        v_phase_slack = self.v_phase_guess[slack_idx]
-        logger.debug("Slack bus voltage angle:\n%s" % v_phase_slack)
+        v_angle_slack = self.v_angle_guess[slack_idx]
+        logger.debug("Slack bus voltage angle:\n%s" % v_angle_slack)
 
         # Solves the sparse set of linear equations Ax=b where A is a
         # sparse matrix and B is a dense matrix of the same type ('d'
         # or 'z') as A. On exit B contains the solution.
         A = B_pvpq
-        b = p_pvpq - p_slack * v_phase_slack
+        b = p_pvpq - p_slack * v_angle_slack
 
         if self.library == "UMFPACK":
             umfpack.linsolve(A, b)
@@ -161,15 +161,15 @@ class DCPFRoutine(object):
 
         logger.debug("Solution to linear equations:\n%s" % b)
 
-#        v_phase = matrix([b[:slack_idx], [v_phase_slack], b[slack_idx:]])
+#        v_angle = matrix([b[:slack_idx], [v_angle_slack], b[slack_idx:]])
         import numpy # FIXME: remove numpy dependency
         # Insert the reference voltage angle of the slack bus
-        v_phase = matrix(numpy.insert(b, slack_idx, v_phase_slack))
-        logger.debug("Bus voltage phase angles:\n%s" % v_phase)
+        v_angle = matrix(numpy.insert(b, slack_idx, v_angle_slack))
+        logger.debug("Bus voltage phase angles:\n%s" % v_angle)
 
-        self.v_phase = v_phase
+        self.v_angle = v_angle
 
-        return v_phase
+        return v_angle
 
     #--------------------------------------------------------------------------
     #  Update model with solution:
@@ -183,7 +183,7 @@ class DCPFRoutine(object):
         buses    = self.network.connected_buses
         branches = self.network.online_branches
 
-        p_source = self.B_source * self.v_phase * base_mva
+        p_source = self.B_source * self.v_angle * base_mva
         p_target = -p_source
 
         for i in range(len(branches)):
@@ -193,8 +193,8 @@ class DCPFRoutine(object):
             branches[i].q_target = 0.0
 
         for i in range(len(buses)):
-            v_phase = self.v_phase[i]
-            buses[i].v_phase = v_phase*(180/pi)
-            buses[i].v_amplitude = 1.0
+            v_angle = self.v_angle[i]
+            buses[i].v_angle = v_angle*(180/pi)
+            buses[i].v_magnitude = 1.0
 
 # EOF -------------------------------------------------------------------------

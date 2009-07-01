@@ -113,26 +113,26 @@ class Bus(object):
 
     @property
     def mode(self):
-        """ Bus mode may be PV, PQ or Slack.
+        """ Bus mode may be 'pv', 'pq' or 'slack'.
         """
         if self.slack:
-            return "Slack"
+            return "slack"
         elif self.generators:
             for g in self.generators:
                 if g.q_limited:
-                    return "PQ"
-            return "PV"
+                    return "pq"
+            return "pv"
         else:
-            return "PQ"
+            return "pq"
 
     # Base voltage
     v_base = 100.0
 
     # Voltage amplitude initial guess.
-    v_amplitude_guess = 1.0
+    v_magnitude_guess = 1.0
 
-    # Voltage phase angle initial guess.
-    v_phase_guess = 1.0
+    # Voltage angle initial guess.
+    v_angle_guess = 1.0
 
     # Maximum voltage amplitude (pu).
     v_max = 1.1
@@ -184,8 +184,8 @@ class Bus(object):
 
     def __init__(self, name="bus", generators=[], loads=[], slack=False,
                                                          v_base=100.0,
-                                                         v_amplitude_guess=1.0,
-                                                         v_phase_guess=1.0,
+                                                         v_magnitude_guess=1.0,
+                                                         v_angle_guess=1.0,
                                                          v_max=1.1,
                                                          v_min=0.9,
                                                          g_shunt=0.0,
@@ -197,8 +197,8 @@ class Bus(object):
         self.loads = loads
         self.slack = slack
         self.v_base = v_base
-        self.v_amplitude_guess = v_amplitude_guess
-        self.v_phase_guess = v_phase_guess
+        self.v_magnitude_guess = v_magnitude_guess
+        self.v_angle_guess = v_angle_guess
         self.v_max = v_max
         self.v_min = v_min
         self.g_shunt = g_shunt
@@ -234,12 +234,12 @@ class Branch(object):
 
     @property
     def mode(self):
-        """ Branch mode may be 'Line' or 'Transformer'.
+        """ Branch mode may be 'line' or 'transformer'.
         """
-        if self.source_bus.v_amplitude == self.target_bus.v_amplitude:
-            return "Line"
+        if self.source_bus.v_magnitude == self.target_bus.v_magnitude:
+            return "line"
         else:
-            return "Transformer"
+            return "transformer"
 
     # Positive sequence resistance (pu).
     r = 0.001
@@ -343,7 +343,7 @@ class Generator(object):
     p_min = 0.0
 
     # Voltage amplitude setpoint (pu).
-    v_amplitude = 1.0
+    v_magnitude = 1.0
 
     # Reactive power output.
     q = 0.0
@@ -424,7 +424,7 @@ class Generator(object):
                                          p=1.0,
                                          p_max=2.0,
                                          p_min=0.0,
-                                         v_amplitude=1.0,
+                                         v_magnitude=1.0,
                                          q=0.0,
                                          q_max=3.0,
                                          q_min=-3.0,
@@ -448,7 +448,7 @@ class Generator(object):
         self.p = p
         self.p_max = p_max
         self.p_min = p_min
-        self.v_amplitude = v_amplitude
+        self.v_magnitude = v_magnitude
         self.q = q
         self.q_max = q_max
         self.q_min = q_min
@@ -639,7 +639,7 @@ class NetworkReport(object):
     def transformers(self):
         """ Branches operating as transformers.
         """
-        return [e for e in self.network.branches if e.mode == "Transformer"]
+        return [e for e in self.network.branches if e.mode == "transformer"]
 
 
     @property
@@ -748,7 +748,7 @@ class NetworkReport(object):
         """
         if self.network.buses:
 #            l.index(min(l))
-            return min([bus.v_amplitude for bus in self.network.buses])
+            return min([bus.v_magnitude for bus in self.network.buses])
         else:
             return 0.0
 
@@ -758,7 +758,7 @@ class NetworkReport(object):
         """ Maximum bus voltage amplitude.
         """
         if self.network.buses:
-            return max([bus.v_amplitude for bus in self.network.buses])
+            return max([bus.v_magnitude for bus in self.network.buses])
         else:
             return 0.0
 
@@ -768,7 +768,7 @@ class NetworkReport(object):
         """ Minimum bus voltage phase angle.
         """
         if self.network.buses:
-            return min([bus.v_phase for bus in self.network.buses])
+            return min([bus.v_angle for bus in self.network.buses])
         else:
             return 0.0
 
@@ -778,7 +778,7 @@ class NetworkReport(object):
         """ Maximum bus voltage phase angle.
         """
         if self.network.buses:
-            return max([bus.v_phase for bus in self.network.buses])
+            return max([bus.v_angle for bus in self.network.buses])
         else:
             return 0.0
 

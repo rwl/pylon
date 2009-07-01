@@ -27,12 +27,15 @@ import unittest
 from network_test_case \
     import NetworkTest, BusTest, BranchTest, GeneratorTest, LoadTest
 
-from y_test_case import BTest
+from y_test_case import BTest, YTest
 from dcpf_test_case import DCPFTest
+from acpf_test_case import NewtonPFTest
 from dcopf_test_case import DCOPFTest
+from acopf_test_case import ACOPFTest
 from uc_test_case import UnitCommitmentTest
 
-from reader_test_case import MatpowerReaderTest, PSSEReaderTest, PSATReaderTest
+from reader_test_case \
+    import MatpowerReaderTest, PSSEReaderTest, PSATReaderTest
 
 #------------------------------------------------------------------------------
 #  "suite" function:
@@ -51,8 +54,11 @@ def suite():
 
     # Routine test cases.
     suite.addTest(unittest.makeSuite(BTest))
+    suite.addTest(unittest.makeSuite(YTest))
     suite.addTest(unittest.makeSuite(DCPFTest))
+    suite.addTest(unittest.makeSuite(ACPFTest))
     suite.addTest(unittest.makeSuite(DCOPFTest))
+    suite.addTest(unittest.makeSuite(ACOPFTest))
     suite.addTest(unittest.makeSuite(UnitCommitmentTest))
 
     # Read/write test cases.
@@ -67,6 +73,6 @@ if __name__ == '__main__':
     import logging, sys
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())
 
 # EOF -------------------------------------------------------------------------
