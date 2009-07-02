@@ -26,6 +26,7 @@ from os.path import join, dirname
 from unittest import TestCase, main
 
 from pylon.readwrite import MATPOWERReader
+from pylon.y import AdmittanceMatrix
 from pylon import NewtonPFRoutine
 
 #------------------------------------------------------------------------------
@@ -44,19 +45,16 @@ class NewtonPFTest(TestCase):
         file. See reader_test_case.py for validation of MATPOWER data file
         parsing.
     """
-    network = None
-
-    routine = None
 
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
+        # See 'reader_test_case.py' for MATPOWER reader tests.
         reader = MATPOWERReader()
         self.network = reader(DATA_FILE)
         del reader
 
         self.routine = NewtonPFRoutine()
-#        success = self.routine(self.network)
 
 
     def test_voltage_vector(self):
@@ -92,72 +90,77 @@ class NewtonPFTest(TestCase):
         self.assertAlmostEqual(abs(v_initial[5]), v0_5, places)
 
 
-#    def test_apparent_power_vector(self):
-#        """ Test the vector of complex bus power injections.
-#
-#            Sbus =
-#
-#                    0
-#               0.5000
-#               0.6000
-#              -0.7000 - 0.7000i
-#              -0.7000 - 0.7000i
-#              -0.7000 - 0.7000i
-#        """
-##        self.routine(self.network)
-#        s_surplus = self.routine.s_surplus
-#
-#        self.assertEqual(s_surplus.typecode, "z")
-#        self.assertEqual(s_surplus.size, (6, 1))
-#
-#        places = 4
-#
-#        s_0 = 0.0000
-#        s_2 = 0.6000
-#        s_35 = -0.7000
-#
-#        self.assertAlmostEqual(abs(s_surplus[0]), s_0, places)
-#        self.assertAlmostEqual(abs(s_surplus[2]), s_2, places)
-#        self.assertAlmostEqual(s_surplus[3].real, s_35, places)
-#        self.assertAlmostEqual(s_surplus[3].imag, s_35, places)
-#        self.assertAlmostEqual(s_surplus[5].real, s_35, places)
-#        self.assertAlmostEqual(s_surplus[5].imag, s_35, places)
-#
-#
-#    def test_function_evaluation(self):
-#        """ Test function evaluation without iteration.
-#
-#            F =
-#
-#               -0.1718
-#               -0.3299
-#                0.4412
-#                0.5061
-#                0.4874
-#               -0.0053
-#                0.0274
-#               -0.2608
-#        """
-#        # Perform preliminary steps
-#        self.routine._make_admittance_matrix()
-#        self.routine._initialise_voltage_vector()
-#        self.routine._make_power_injection_vector()
-#        self.routine._index_buses()
-#
-#        self.routine._evaluate_function()
-#        f = self.routine.f
-#
-#        self.assertEqual(f.size, (8, 1))
-#
-#        places = 4
-#
-#        f_0 = -0.1718
-#        f_6 = 0.0274
-#
-#        self.assertAlmostEqual(f[0], f_0, places)
-#        self.assertAlmostEqual(f[6], f_6, places)
-#
-#
+    def test_apparent_power_vector(self):
+        """ Test the vector of complex bus power injections.
+
+            Sbus =
+
+                    0
+               0.5000
+               0.6000
+              -0.7000 - 0.7000i
+              -0.7000 - 0.7000i
+              -0.7000 - 0.7000i
+        """
+        self.routine.network = self.network
+        s_surplus = self.routine._get_power_injection_vector()
+
+        self.assertEqual(s_surplus.typecode, "z")
+        self.assertEqual(s_surplus.size, (6, 1))
+
+        places = 4
+
+        s_0 = 0.0000
+        s_2 = 0.6000
+        s_35 = -0.7000
+
+        self.assertAlmostEqual(abs(s_surplus[0]), s_0, places)
+        self.assertAlmostEqual(abs(s_surplus[2]), s_2, places)
+        self.assertAlmostEqual(s_surplus[3].real, s_35, places)
+        self.assertAlmostEqual(s_surplus[3].imag, s_35, places)
+        self.assertAlmostEqual(s_surplus[5].real, s_35, places)
+        self.assertAlmostEqual(s_surplus[5].imag, s_35, places)
+
+
+    def test_function_evaluation(self):
+        """ Test function evaluation without iteration.
+
+            F =
+
+               -0.1718
+               -0.3299
+                0.4412
+                0.5061
+                0.4874
+               -0.0053
+                0.0274
+               -0.2608
+        """
+        places = 4
+        routine = self.routine
+
+        # Perform preliminary steps.
+        routine.network = self.network
+
+        # See 'y_test_case.py' for admittance matrix tests.
+        admittance_matrix = AdmittanceMatrix()
+        routine.Y = admittance_matrix(self.network)
+
+        routine.v = self.routine._get_initial_voltage_vector()
+        routine.s_surplus = self.routine._get_power_injection_vector()
+        self.routine._index_buses()
+
+        f = routine._evaluate_function()
+
+        self.assertEqual(f.size, (8, 1))
+
+        f_0 = -0.1718
+        f_6 = 0.0274
+
+        self.assertAlmostEqual(f[0], f_0, places)
+        self.assertAlmostEqual(f[6], f_6, places)
+
+
 #    def test_convergence_check(self):
 #        """ Test convergence satisfaction check.
 #
@@ -432,7 +435,8 @@ class NewtonPFTest(TestCase):
 
 if __name__ == "__main__":
     import logging, sys
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
+                        format="%(levelname)s: %(message)s")
 
     main()
 

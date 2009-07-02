@@ -294,9 +294,13 @@ class MATPOWERReader(object):
         name = str(tokens["bus_id"])
         bus  = Bus(name=name)
 
-        base_kv    = tokens["baseKV"]
-        bus.v_base = base_kv
+        # Assign a private id attribute for use when pushing generators and
+        # branches.
+        bus._bus_id = tokens["bus_id"]
 
+        base_kv = tokens["baseKV"]
+
+        bus.v_base      = base_kv
         bus.g_shunt     = tokens["Gs"] / self.base_mva
         bus.b_shunt     = tokens["Bs"] / self.base_mva
         bus.v_magnitude_guess = tokens["Vm"]
@@ -307,8 +311,6 @@ class MATPOWERReader(object):
         # Bus type 3 denotes a slack bus in MATPOWER
         if tokens["bus_type"] == 3:
             self.slack_idx = tokens["bus_id"]-1
-
-        self.network.buses.append(bus)
 
         # Loads are included in bus data with MATPOWER
         if (tokens["Pd"] > 0) or (tokens["Qd"] > 0):
@@ -322,13 +324,13 @@ class MATPOWERReader(object):
         bus.v_max = tokens["Vmax"]
         bus.v_min = tokens["Vmin"]
 
+        self.network.buses.append(bus)
+
 
     def _push_generator(self, tokens):
         """ Adds a generator to the respective bus.
         """
         logger.debug("Parsing generator data: %s" % tokens)
-
-        buses = self.network.buses
 
         base_mva = tokens["mBase"]
         # Default to system base
@@ -336,10 +338,17 @@ class MATPOWERReader(object):
             base_mva = self.base_mva
 
         # Locate the associated bus in the network
-        bus_names = [v.name for v in buses]
-        bus_idx = bus_names.index(str(tokens["bus_id"]))
-        bus = buses[bus_idx]
+#        bus_names = [v.name for v in buses]
+#        bus_idx = bus_names.index(str(tokens["bus_id"]))
+#        bus = buses[bus_idx]
 #        bus = self.network.buses[tokens["bus_id"]-1]
+
+        for i, bus in enumerate(self.network.buses):
+            if bus._bus_id == tokens["bus_id"]:
+                break
+        else:
+            logger.error("Bus [%d] not found." % tokens["bus_id"])
+            return
 
         # Set unique name to ease identification.
         g_names = [g.name for g in self.generators]
@@ -355,7 +364,8 @@ class MATPOWERReader(object):
         generator.p_max       = tokens["Pmax"] / base_mva
         generator.p_min       = tokens["Pmin"] / base_mva
 
-        bus.generators.append(generator)
+#        bus.generators.append(generator)
+        self.network.buses[i].generators.append(generator)
 
         # Maintain the list of instantiated generators for
         # gen cost evaluation

@@ -27,8 +27,7 @@ from unittest import TestCase, main
 
 from pylon.readwrite import MATPOWERReader
 
-from pylon.y import make_susceptance_matrix, make_admittance_matrix, \
-    AdmittanceMatrix
+from pylon.y import AdmittanceMatrix, SusceptanceMatrix
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -46,7 +45,6 @@ class YTest(TestCase):
         same data file. See reader_test_case.py for validation of MATPOWER data
         file parsing.
     """
-    network = None
 
     def setUp(self):
         """ The test runner will execute this method prior to each test.
@@ -67,10 +65,8 @@ class YTest(TestCase):
                 0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i   4.4821 -17.0047i
 
         """
-
-#        Y = make_admittance_matrix(self.network)
-        m = AdmittanceMatrix(self.network)
-        Y = m.build()
+        am = AdmittanceMatrix()
+        Y = am(self.network)
 
         self.assertEqual(Y.size, (6, 6))
 
@@ -130,7 +126,6 @@ class BTest(TestCase):
         same data file. See filter_test_case.py for validation of MATPOWER
         data file parsing.
     """
-    network = None
 
     def setUp(self):
         """ The test runner will execute this method prior to each test.
@@ -153,8 +148,9 @@ class BTest(TestCase):
                      0   -5.0000  -10.0000         0   -3.3333   18.3333
 
         """
+        sm = SusceptanceMatrix()
+        B, B_source = sm(self.network)
 
-        B, B_source = make_susceptance_matrix(self.network)
         self._validate_susceptance_diagonal_values(B)
         self._validate_suseptance_off_diagonal_equality(B)
 
@@ -169,20 +165,14 @@ class BTest(TestCase):
         B_2_2 = 17.8462
         B_4_4 = 16.3462
 
-        self.assertAlmostEqual(
-            B_0_0, B[0, 0], places,
-            "B element [0, 0] expected %d, %d found)" % (B_0_0, B[0, 0])
-        )
+        self.assertAlmostEqual(B_0_0, B[0, 0], places,
+            "B element [0, 0] expected %d, %d found)" % (B_0_0, B[0, 0]))
 
-        self.assertAlmostEqual(
-            B_2_2, B[2, 2], places,
-            "B element [1, 1] expected %d, %d found)" % (B_2_2, B[2, 2])
-        )
+        self.assertAlmostEqual(B_2_2, B[2, 2], places,
+            "B element [1, 1] expected %d, %d found)" % (B_2_2, B[2, 2]))
 
-        self.assertAlmostEqual(
-            B_4_4, B[4, 4], places,
-            "B element [2, 2] expected %d, %d found)" % (B_4_4, B[4, 4])
-        )
+        self.assertAlmostEqual(B_4_4, B[4, 4], places,
+            "B element [2, 2] expected %d, %d found)" % (B_4_4, B[4, 4]))
 
 
     def _validate_susceptance_off_diagonal_values(self, B):
@@ -223,7 +213,8 @@ class BTest(TestCase):
 
 if __name__ == "__main__":
     import logging, sys
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
+                        format="%(levelname)s: %(message)s")
 
     main()
 

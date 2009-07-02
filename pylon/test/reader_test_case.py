@@ -27,10 +27,7 @@ import logging
 
 from unittest import TestCase, main
 
-from pylon import Network
 from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader
-
-#logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -52,7 +49,7 @@ class ReaderTest(TestCase):
     """
     filter = None
 
-    network = Network
+    network = None
 
     def _validate_base(self, base_mva):
         """ Validate the Network objects properties.

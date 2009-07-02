@@ -84,7 +84,7 @@ class DCPFRoutine(object):
         """
         self.network = network
 
-        if not self.network.slack_model == "Single":
+        if not self.network.slack_model == "single":
             logger.error("DC power flow requires a single slack bus")
             return False
         else:

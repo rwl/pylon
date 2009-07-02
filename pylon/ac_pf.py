@@ -67,31 +67,31 @@ class _ACPFRoutine(object):
             Ray Zimmerman, "acpf.m", MATPOWER, PSERC Cornell,
             http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
     """
-    network = None
+#    network = None
 
     # Convergence tolerance
-    tolerance = 1e-08
+#    tolerance = 1e-08
 
     # Maximum number of iterations:
-    iter_max = 10
+#    iter_max = 10
 
     # Vector of bus voltages:
-    v = None
+#    v = None
 
     # Sparse admittance matrix:
-    Y = None
+#    Y = None
 
     # Complex bus power injections.
-    s_surplus = matrix
+#    s_surplus = matrix
 
     # Flag indicating if the solution converged:
-    converged = False
+#    converged = False
 
     # Bus indexes for updating v.
-    pv_idxs = []
-    pq_idxs = []
-    pvpq_idxs = []
-    slack_idx = 0
+#    pv_idxs = []
+#    pq_idxs = []
+#    pvpq_idxs = []
+#    slack_idx = 0
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -190,13 +190,13 @@ class NewtonPFRoutine(_ACPFRoutine):
     """ Solves the power flow using full Newton's method.
     """
     # Sparse Jacobian matrix (updated each iteration).
-    J = None
+#    J = None
 
     # Vector of bus voltages.
-    v = None
+#    v = None
 
     # Function of non-linear differential algebraic equations.
-    f = None
+#    f = None
 
     #--------------------------------------------------------------------------
     #  Solve power flow using full Newton's method:
@@ -218,14 +218,14 @@ class NewtonPFRoutine(_ACPFRoutine):
 
         # Initial evaluation of f(x0) and convergency check.
         self.converged = False
-        self._evaluate_function()
-        self._check_convergence()
+        self.f = self._evaluate_function()
+        self.converged = self._check_convergence()
 
         iter = 0
         while (not self.converged) and (iter < self.iter_max):
             self._iterate()
-            self._evaluate_function()
-            self._check_convergence()
+            self.f = self._evaluate_function()
+            self.converged = self._check_convergence()
             iter += 1
 
         if self.converged:
@@ -432,9 +432,7 @@ class NewtonPFRoutine(_ACPFRoutine):
         real = mismatch[self.pvpq_idxs].real()
         imag = mismatch[self.pq_idxs].imag()
 
-        self.f = f = matrix([real, imag])
-
-        return f
+        return matrix([real, imag])
 
     #--------------------------------------------------------------------------
     #  Check convergence:
@@ -449,9 +447,9 @@ class NewtonPFRoutine(_ACPFRoutine):
         normf = max(abs(f))
 
         if normf < self.tolerance:
-            self.converged = converged = True
+            converged = True
         else:
-            self.converged = converged = False
+            converged = False
 #            logger.info("Difference: %.3f" % normF-self.tolerance)
 
         return converged

@@ -150,37 +150,24 @@ class AdmittanceMatrix(object):
             Ray Zimmerman, "makeYbus.m", MATPOWER, PSERC Cornell,
             http://www.pserc.cornell.edu/matpower/, version 1.8, June 2007
     """
-    # Network represented by the matrix.
-    network = None
-
-    # Sparse admittance matrix.
-    Y = spmatrix
-
-    # Should shunts at buses be considered?
-    bus_shunts = True
-
-    # Should line charging shunts be considered?
-    line_shunts = True
-
-    # Should tap positions be considered?
-    taps = True
-
-    # Should line resistance be considered?
-    line_resistance = True
-
-    # Should phase shifters be considered?
-    phase_shift = True
-
 
     def __init__(self, bus_shunts=True, line_shunts=True, taps=True,
                  line_resistance=True, phase_shift=True):
         """ Initialises a new AdmittanceMatrix instance.
         """
+        # Should shunts at buses be considered?
         self.bus_shunts = bus_shunts
+        # Should line charging shunts be considered?
         self.line_shunts = line_shunts
+        # Should tap positions be considered?
         self.taps = taps
+        # Should line resistance be considered?
         self.line_resistance = line_resistance
+        # Should phase shifters be considered?
         self.phase_shift = phase_shift
+
+        # Sparse admittance matrix.
+        self.Y = None
 
 
     def __call__(self, network):
@@ -298,29 +285,18 @@ class SusceptanceMatrix(object):
         TODO: Speed up by using spdiag(x)
     """
     # Network represented by the matrix
-    network = None
+#    network = None
 
     # Suceptance matrix
-    B = spmatrix
+#    B = spmatrix
 
     # Source bus susceptance matrix
-    B_source = spmatrix
+#    B_source = spmatrix
 
-    def __init__(self, network):
-        """ Returns a new SusceptanceMatrix instance.
-        """
-        self.network
-        self.B, self.B_source = self.build()
-
-
-    def build(self):
+    def __call__(self, network):
         """ Build the matrices.
         """
-        if self.network is None:
-            logger.error("network unspecified")
-            return
-        else:
-            network = self.network
+        self.network = network
 
         buses      = network.buses
         branches   = network.branches
@@ -329,10 +305,10 @@ class SusceptanceMatrix(object):
 
         # Create an empty sparse susceptance matrix.
         # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node32.html
-        b = spmatrix([], [], [], (n_buses, n_buses))
+        self.b = b = spmatrix([], [], [], (n_buses, n_buses))
 
         # Make an empty sparse source bus susceptance matrix
-        b_source = spmatrix([], [], [], (n_branches, n_buses))
+        self.b_source = b_source = spmatrix([], [], [], (n_branches, n_buses))
 
         # Filter out branches that are out of service
 #        active_branches = [e for e in branches if e.online]
@@ -379,8 +355,10 @@ class SusceptanceMatrix(object):
 #------------------------------------------------------------------------------
 
 class PSATAdmittanceMatrix(object):
+    """ Defines an admittance matrix as translated from PSAT.
+    """
 
-    def build(self, network):
+    def __call__(self, network):
         j = 0 + 1j
         buses = network.connected_buses
         n_buses = len(buses)

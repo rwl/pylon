@@ -25,14 +25,15 @@ class Network(object):
     """ Defines representation of an electric power system as a graph
         of Bus objects connected by Branches.
     """
-    # Human-readable identifier.
-    name = "network"
 
-    # Base apparent power (MVA).
-    base_mva = 100.0
-
-    # Nodes of the network graph.
-    buses = []
+    def __init__(self, name="network", base_mva=100.0, buses=[], branches=[]):
+        """ Initialises a new Network instance.
+        """
+        self.name = name
+        # Base apparent power (MVA).
+        self.base_mva = base_mva
+        self.buses = buses
+        self.branches = branches
 
     @property
     def connected_buses(self):
@@ -50,9 +51,9 @@ class Network(object):
         """
         slackers = [v for v in self.buses if v.slack]
         if slackers:
-            return "Single"
+            return "single"
         else:
-            return "Distributed"
+            return "distributed"
 
     @property
     def all_generators(self):
@@ -78,9 +79,6 @@ class Network(object):
         """
         return [l for l in self.all_loads if l.online]
 
-    # Arcs of the network graph.
-    branches = []
-
     @property
     def online_branches(self):
         """ Property getter for in-service branches.
@@ -88,28 +86,37 @@ class Network(object):
         return [branch for branch in self.branches if branch.online]
 
 
-    def __init__(self, base_mva=100.0, buses=[], branches=[]):
-        """ Initialises a new Network instance.
-        """
-        self.base_mva = base_mva
-        self.buses = buses
-        self.branches = branches
-
-
 class Bus(object):
     """ Defines a power system bus node.
     """
-    # Human readable identifier.
-    name = "bus"
 
-    # Generators defined by their active power and voltage.
-    generators = []
+    def __init__(self, name="bus", slack=False, v_base=100.0,
+            v_magnitude_guess=1.0, v_angle_guess=1.0, v_max=1.1, v_min=0.9,
+            g_shunt=0.0, b_shunt=0.0):
+        """ Initialises a new Bus instance.
+        """
+        self.name = name
+        # Is the bus a reference/slack/swing bus?
+        self.slack = slack
+        # Base voltage
+        self.v_base = v_base
+        # Voltage magnitude initial guess.
+        self.v_magnitude_guess = v_magnitude_guess
+        # Voltage angle initial guess.
+        self.v_angle_guess = v_angle_guess
+        # Maximum voltage amplitude (pu).
+        self.v_max = v_max
+        # Minimum voltage amplitude (pu).
+        self.v_min = v_min
+        # Shunt conductance.
+        self.g_shunt = g_shunt
+        # Shunt susceptance.
+        self.b_shunt = b_shunt
 
-    # Loads that specify real and reactive power demand.
-    loads = []
-
-    # Is the bus a reference/slack/swing bus?
-    slack = False
+        # Generators defined by their active power and voltage.
+        self.generators = []
+        # Loads that specify real and reactive power demand.
+        self.loads = []
 
     @property
     def mode(self):
@@ -124,27 +131,6 @@ class Bus(object):
             return "pv"
         else:
             return "pq"
-
-    # Base voltage
-    v_base = 100.0
-
-    # Voltage amplitude initial guess.
-    v_magnitude_guess = 1.0
-
-    # Voltage angle initial guess.
-    v_angle_guess = 1.0
-
-    # Maximum voltage amplitude (pu).
-    v_max = 1.1
-
-    # Minimum voltage amplitude (pu).
-    v_min = 0.9
-
-    # Shunt conductance.
-    g_shunt = 0.0
-
-    # Shunt susceptance.
-    b_shunt = 0.0
 
     @property
     def p_supply(self):
@@ -182,55 +168,53 @@ class Bus(object):
         """
         return self.q_supply - self.q_demand
 
-    def __init__(self, name="bus", generators=[], loads=[], slack=False,
-                                                         v_base=100.0,
-                                                         v_magnitude_guess=1.0,
-                                                         v_angle_guess=1.0,
-                                                         v_max=1.1,
-                                                         v_min=0.9,
-                                                         g_shunt=0.0,
-                                                         b_shunt=0.0):
-        """ Initialises a new Bus instance.
-        """
-        self.name = name
-        self.generators = generators
-        self.loads = loads
-        self.slack = slack
-        self.v_base = v_base
-        self.v_magnitude_guess = v_magnitude_guess
-        self.v_angle_guess = v_angle_guess
-        self.v_max = v_max
-        self.v_min = v_min
-        self.g_shunt = g_shunt
-        self.b_shunt = b_shunt
-
 
 class Branch(object):
     """ Defines a network edge that links two Bus objects.
     """
-    # Human readable identifier
-    name = "branch"
 
-    # Is the branch in service?
-    online = True
+    def __init__(self, source_bus, target_bus, name="branch", online=True,
+            r=0.001, x=0.001, b=0.001, s_max=2.0, ratio=1.0, phase_shift=0.0):
+        """ Initialises a new Branch instance.
+        """
+        # Source/from/start bus.
+        self.source_bus = source_bus
+#        self.source_bus_idx = 0
+        # Target/to/end bus.
+        self.target_bus = target_bus
+#        self.target_bus_idx = 0
 
-    # Source/from/start bus.
-    source_bus = None
+        self.name = name
+        # Is the branch in service?
+        self.online = online
+        # Positive sequence resistance (pu).
+        self.r = r
+        # Positive sequence reactance (pu).
+        self.x = x
+        # Total positive sequence line charging susceptance (pu).
+        self.b = b
+        # General purpose maximum MVA rating (pu).
+        self.s_max = s_max
+        # Transformer off nominal turns ratio.
+        self.ratio = ratio
+        # Phase shift angle (degrees).
+        self.phase_shift = phase_shift
 
-#    @property
-#    def source_bus_idx(self):
-#        """ Index of the source bus in the list of all buses.
-#        """
-#        return self.buses.index(self.source_bus)
+        # Power flow results --------------------------------------------------
 
-    # Target/to/end bus.
-    target_bus = None
+        # Active power injected at the source bus.
+        self.p_source = 0.0
+        # Active power injected at the target bus.
+        self.p_target = 0.0
+        # Reactive power injected at the source bus.
+        self.q_source = 0.0
+        # Reactive power injected at the target bus.
+        self.q_target = 0.0
 
-#    @property
-#    def target_bus_idx(self):
-#        """ Index of the target bus in the list of all buses.
-#        """
-#        return self.buses.index(self.source_bus)
+        # |S_source| mu.
+        self.mu_s_source = 0.0
+        # |S_target| mu.
+        self.mu_s_target = 0.0
 
     @property
     def mode(self):
@@ -240,38 +224,6 @@ class Branch(object):
             return "line"
         else:
             return "transformer"
-
-    # Positive sequence resistance (pu).
-    r = 0.001
-
-    # Positive sequence reactance (pu).
-    x = 0.001
-
-    # Total positive sequence line charging susceptance (pu).
-    b = 0.001
-
-    # General purpose maximum MVA rating (pu).
-    s_max = 2.0
-
-    # Transformer off nominal turns ratio.
-    ratio = 1.0
-
-    # Phase shift angle (degrees).
-    phase_shift = 0.0
-
-    # Power flow results ------------------------------------------------------
-
-    # Active power injected at the source bus.
-    p_source = 0.0
-
-    # Active power injected at the target bus.
-    p_target = 0.0
-
-    # Reactive power injected at the source bus.
-    q_source = 0.0
-
-    # Reactive power injected at the target bus.
-    q_target = 0.0
 
     @property
     def p_losses(self):
@@ -285,36 +237,6 @@ class Branch(object):
         """
         return self.q_source - self.q_target
 
-    # |S_source| mu
-    mu_s_source = 0.0
-
-    # |S_target| mu
-    mu_s_target = 0.0
-
-    def __init__(self, source_bus, target_bus, name="branch",
-                                               online=True,
-                                               r=0.001,
-                                               x=0.001,
-                                               b=0.001,
-                                               s_max=2.0,
-                                               ratio=1.0,
-                                               phase_shift=0.0):
-        """ Initialises a new Branch instance.
-        """
-        assert isinstance(source_bus, Bus)
-        assert isinstance(target_bus, Bus)
-
-        self.source_bus = source_bus
-        self.target_bus = target_bus
-        self.name = name
-        self.online = online
-        self.r = r
-        self.x = x
-        self.b = b
-        self.s_max = s_max
-        self.ratio = ratio
-        self.phase_shift = phase_shift
-
 #------------------------------------------------------------------------------
 #  "Generator" class:
 #------------------------------------------------------------------------------
@@ -324,35 +246,67 @@ class Generator(object):
         and active power injected at parent bus. Or when at it's reactive
         power limit fixes active and reactive power injected at parent bus.
     """
-    # Human readable identifier.
-    name = "generator"
 
-    # Is the generator in service.
-    online = True
+    def __init__(self, name="generator", online=True, base_mva=100.0, p=1.0,
+            p_max=2.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=3.0,
+            q_min=-3.0, p_max_bid=2.0, p_min_bid=0.0, c_startup=0.0,
+            c_shutdown=0.0, cost_model="polynomial",
+            cost_coeffs=(1.0, 0.1, 0.01), rate_up=1.0, rate_down=1.0, min_up=0,
+            min_down=0, initial_up=1, initial_down=0):
+        """ Initialises a new Generator instance.
+        """
+        self.name = name
+        # Is the generator in service?
+        self.online = online
+        # Machine MVA base.
+        self.base_mva = base_mva
+        # Active power output (pu).
+        self.p = p
+        # Maximum active power output (pu).
+        self.p_max = p_max
+        # Minimum active power output (pu).
+        self.p_min = p_min
+        # Voltage amplitude setpoint (pu).
+        self.v_magnitude = v_magnitude
+        # Reactive power output.
+        self.q = q
+        # Maximum reactive power (pu).
+        self.q_max = q_max
+        # Minimum reactive power (pu).
+        self.q_min = q_min
 
-    # Machine MVA base.
-    base_mva = 100.0
+        # Maximum active power output bid. Used in OPF routines. Should be less
+        # than or equal to p_max.
+        self.p_max_bid = p_max_bid
+        # Minimum active power bid. Used in OPF routines. Should be greater
+        # than or equal to p_min.
+        self.p_min_bid = p_min_bid
+        # Start up cost.
+        self.c_startup = c_startup
+        # Shut down cost.
+        self.c_shutdown = c_shutdown
+        # Valid values are 'Polynomial' and 'Piecewise Linear'.
+        self.cost_model = cost_model
+        # Polynomial cost curve coefficients.
+        self.cost_coeffs = cost_coeffs
+        # Piecewise linear cost segment points
+#        pwl_points = [(0.0, 0.0), (1.0, 1.0)]
+        # Ramp up rate (p.u./h).
+        self.rate_up = rate_up
+        # Ramp down rate (p.u./h).
+        self.rate_down = rate_down
+        # Minimum running time (h).
+        self.min_up = min_up
+        # Minimum shut down time (h).
+        self.min_down = min_down
+        # Initial number of periods up.
+        self.initial_up = initial_up
+        # Initial number of periods down.
+        self.initial_down = initial_down
 
-    # Active power output (pu).
-    p = 1.0
-
-    # Maximum active power output (pu).
-    p_max = 2.0
-
-    # Minimum active power output (pu).
-    p_min = 0.0
-
-    # Voltage amplitude setpoint (pu).
-    v_magnitude = 1.0
-
-    # Reactive power output.
-    q = 0.0
-
-    # Maximum reactive power (pu).
-    q_max = 3.0
-
-    # Minimum reactive power (pu).
-    q_min = -3.0
+        # The output power that the Generator is despatched to generate
+        # as a result of solving the OPF problem.
+        self.p_despatch = 0.0
 
     @property
     def q_limited(self):
@@ -362,33 +316,6 @@ class Generator(object):
             return True
         else:
             return False
-
-    # The output power that the Generator is despatched to generate
-    # as a result of solving the OPF problem.
-    p_despatch = 0.0
-
-    # Maximum active power output bid. Used in OPF routines. Should be less
-    # than or equal to p_max.
-    p_max_bid = 2.0
-
-    # Minimum active power bid. Used in OPF routines. Should be greater than
-    # or equal to p_min.
-    p_min_bid = 0.0
-
-    # Start up cost.
-    c_startup = 0.0
-
-    # Shut down cost.
-    c_shutdown = 0.0
-
-    # Valid values are 'Polynomial' and 'Piecewise Linear'.
-    cost_model = 'polynomial'
-
-    # Polynomial cost curve coefficients.
-    cost_coeffs = (1.0, 0.1, 0.01)
-
-    # Piecewise linear cost segment points
-    pwl_points = [(0.0, 0.0), (1.0, 1.0)]
 
     @property
     def p_cost(self):
@@ -401,96 +328,30 @@ class Generator(object):
         else:
             raise NotImplementedError
 
-    # Ramp up rate (p.u./h).
-    rate_up = 1.0
-
-    # Ramp down rate (p.u./h).
-    rate_down = 1.0
-
-    # Minimum running time (h).
-    min_up = 0
-
-    # Minimum shut down time (h).
-    min_down = 0
-
-    # Initial number of periods up.
-    initial_up = 1
-
-    # Initial number of periods down.
-    initial_down = 0
-
-    def __init__(self, name="generator", online=True,
-                                         base_mva=100.0,
-                                         p=1.0,
-                                         p_max=2.0,
-                                         p_min=0.0,
-                                         v_magnitude=1.0,
-                                         q=0.0,
-                                         q_max=3.0,
-                                         q_min=-3.0,
-                                         p_max_bid=2.0,
-                                         p_min_bid=0.0,
-                                         c_startup=0.0,
-                                         c_shutdown=0.0,
-                                         cost_model="polynomial",
-                                         cost_coeffs=(1.0, 0.1, 0.01),
-                                         rate_up=1.0,
-                                         rate_down=1.0,
-                                         min_up=0,
-                                         min_down=0,
-                                         initial_up=1,
-                                         initial_down=0):
-        """ Initialises a new Generator instance.
-        """
-        self.name = name
-        self.online = online
-        self.base_mva = base_mva
-        self.p = p
-        self.p_max = p_max
-        self.p_min = p_min
-        self.v_magnitude = v_magnitude
-        self.q = q
-        self.q_max = q_max
-        self.q_min = q_min
-        self.p_max_bid = p_max_bid
-        self.p_min_bid = p_min_bid
-        self.c_startup = c_startup
-        self.c_shutdown = c_shutdown
-        self.cost_model = cost_model
-        self.cost_coeffs = cost_coeffs
-        self.rate_up = rate_up
-        self.rate_down = rate_down
-        self.min_up = min_up
-        self.min_down = min_down
-        self.initial_up = initial_up
-        self.initial_down = initial_down
-
 
 class Load(object):
     """ Defines a PQ load component.
     """
-    # Human readable identifier.
-    name = "load"
 
-    # Is the load in service?
-    online = True
+    def __init__(self, name="load", online=True, p=1.0, q=0.1, p_max=1.0,
+            p_min=0.0, p_profile=[100.0]):
+        """ Initialises a new Load instance.
+        """
+        self.name = name
+        # Is the load in service?
+        self.online = online
+        # Active power demand (pu).
+        self.p = p
+        # Reactive power demand (pu).
+        self.q = q
+        # Maximum active power (p.u.).
+        self.p_max = p_max
+        # Minimum active power (p.u.).
+        self.p_min = p_min
+        # Active power profile (%).
+        self.p_profile = p_profile
 
-    # Active power demand (pu).
-    p = 1.0
-
-    # Reactive power demand (pu).
-    q = 0.1
-
-    # Maximum active power (p.u.).
-    p_max = 1.0
-
-    # Minimum active power (p.u.).
-    p_min = 0.0
-
-    # Active power profile (%).
-    p_profile = [100.0]
-
-    _p_cycle = cycle
+        self._p_cycle = cycle(p_profile)
 
     @property
     def p_profiled(self):
@@ -500,30 +361,12 @@ class Load(object):
         percent = self._p_cycle.next()
         return (percent / 100) * (self.p_max - self.p_min)
 
-    def __init__(self):
-        self._p_cycle = cycle(self.p_profile)
-
 
     def set_p_profile(self, profile):
         """ Sets the active power profile, updating the cycle iterator.
         """
         self._p_cycle = cycle(profile)
         self.p_profile = profile
-
-    def __init__(self, name="load", online=True, p=1.0,
-                                                 q=0.1,
-                                                 p_max=1.0,
-                                                 p_min=0.0,
-                                                 p_profile=[100.0]):
-        """ Initialises a new Load instance.
-        """
-        self.name = name
-        self.online = online
-        self.p = p
-        self.q = q
-        self.p_max = p_max
-        self.p_min = p_min
-        self.p_profile = p_profile
 
 
 class NetworkReport(object):

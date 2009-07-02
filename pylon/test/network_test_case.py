@@ -63,12 +63,12 @@ class NetworkTest(unittest.TestCase):
         for bus in network.buses:
             bus.slack = False
         self.assertEqual(len(get_slackers(network)), 0)
-        self.assertEqual(network.slack_model, "Distributed")
+        self.assertEqual(network.slack_model, "distributed")
 
         # Single slack bus model.
         network.buses[0].slack = True
         self.assertEqual(len(get_slackers(network)), 1)
-        self.assertEqual(network.slack_model, "Single")
+        self.assertEqual(network.slack_model, "single")
 
         # No more than one slack bus.
         network.buses[1].slack = True
