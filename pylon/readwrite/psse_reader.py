@@ -380,7 +380,7 @@ class PSSEReader(object):
 
         bus = Bus()
         bus.name = tokens["Name"].strip("'")
-        bus._bus = tokens["Bus"]
+        bus._bus_id = tokens["Bus"]
 
         bus.v_magnitude_guess = tokens["PU_Volt"]
         bus.v_magnitude = tokens["PU_Volt"]
@@ -398,7 +398,7 @@ class PSSEReader(object):
         logger.debug("Parsing load data: %s" % tokens)
 
         for bus in self.network.buses:
-            if bus._bus == tokens["Bus"]:
+            if bus._bus_id == tokens["Bus"]:
                 break
         else:
             pass
@@ -418,7 +418,7 @@ class PSSEReader(object):
         logger.debug("Parsing generator data: %s" % tokens)
 
         for bus in self.network.buses:
-            if bus._bus == tokens["Bus"]:
+            if bus._bus_id == tokens["Bus"]:
                 break
         else:
             logger.error("Bus [%d] for generator not found." % tokens["Bus"])
@@ -452,10 +452,10 @@ class PSSEReader(object):
         to_bus = None
         for v in self.network.buses:
             if from_bus is None:
-                if v._bus == tokens["From"]:
+                if v._bus_id == tokens["From"]:
                     from_bus = v
             if to_bus is None:
-                if v._bus == tokens["To"]:
+                if v._bus_id == tokens["To"]:
                     to_bus = v
             if (from_bus is not None) and (to_bus is not None):
                 break
@@ -512,10 +512,10 @@ class PSSEReader(object):
         to_bus = None
         for v in self.network.buses:
             if from_bus is None:
-                if v._bus == tokens["From"]:
-                    from_bus = v
+                if v._bus_id == tokens["From"]:
+                    from_bus_id = v
             if to_bus is None:
-                if v._bus == tokens["To"]:
+                if v._bus_id == tokens["To"]:
                     to_bus = v
             if (from_bus is not None) and (to_bus is not None):
                 break

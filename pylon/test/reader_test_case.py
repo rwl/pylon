@@ -123,13 +123,17 @@ class MatpowerReaderTest(ReaderTest):
     """ Defines a test case for the MATPOWER reader.
     """
 
-    def test_case6ww(self):
-        """ Validate parsing of the case6ww.m file.
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
         """
-        # Parse the file
+        # Parse the file.
         reader = MATPOWERReader()
         self.network = reader(MATPOWER_DATA_FILE)
 
+
+    def test_case6ww(self):
+        """ Validate parsing of the case6ww.m file.
+        """
         self._validate_base(base_mva=100)
 
         # Network structure validation
@@ -148,22 +152,26 @@ class MatpowerReaderTest(ReaderTest):
 #  "PSSEReaderTest" class:
 #------------------------------------------------------------------------------
 
-#class PSSEReaderTest(ReaderTest):
-#    """ Defines a test case for the PSS/E data file reader.
-#    """
-#
-#    def test_ipsa(self):
-#        """ Test parsing of a data file exported from IPSA.
-#        """
-#        reader = PSSEReader()
-#        self.network = reader(IPSA_DATA_FILE)
-#
-#        self._validate_base(100.0)
-#
-#        self._validate_object_numbers(n_buses=56, n_branches=67, n_gen=24,
-#            n_loads=30)
-#
-#
+class PSSEReaderTest(ReaderTest):
+    """ Defines a test case for the PSS/E data file reader.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        reader = PSSEReader()
+        self.network = reader(IPSA_DATA_FILE)
+
+
+    def test_ipsa(self):
+        """ Test parsing of a data file exported from IPSA.
+        """
+        self._validate_base(100.0)
+
+        self._validate_object_numbers(n_buses=56, n_branches=67, n_gen=24,
+            n_loads=30)
+
+
 #    def test_ukgds(self):
 #        """ Test parsing of PSS/E data file exported from the UKGDS.
 #        """

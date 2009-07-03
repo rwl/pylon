@@ -33,7 +33,7 @@ from pylon import NewtonPFRoutine
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data/case6ww.m")
+DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
 
 #------------------------------------------------------------------------------
 #  "NewtonPFTest" class:

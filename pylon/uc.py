@@ -41,13 +41,16 @@ logger.setLevel(logging.DEBUG)
 class UnitCommitmentRoutine(object):
     """ Defines an implementation of the unit commitment problem.
     """
-    def __init__(self, n_periods=1, demand=[0.0]):
+    def __init__(self, n_periods=1, demand=None):
         """ Initialises a new UnitCommitmentRoutine instance.
         """
         # Time horizon
         self.n_periods = 1
         # Total demand vector
-        self.demand = [0.0]
+        if demand is None:
+            self.demand = [0.0]
+        else:
+            self.demand = demand
 
         # The network passed to the routine.
         self.network = None

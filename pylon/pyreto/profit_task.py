@@ -36,10 +36,6 @@ class ProfitTask(Task):
     """ Defines the task of maximising profit.
     """
 
-    #--------------------------------------------------------------------------
-    #  "Task" interface:
-    #--------------------------------------------------------------------------
-
     def __init__(self, environment):
         """ Initialises the task.
         """

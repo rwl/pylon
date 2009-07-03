@@ -26,14 +26,23 @@ class Network(object):
         of Bus objects connected by Branches.
     """
 
-    def __init__(self, name="network", base_mva=100.0, buses=[], branches=[]):
+    def __init__(self, name="network", base_mva=100.0, buses=None,
+            branches=None):
         """ Initialises a new Network instance.
         """
         self.name = name
         # Base apparent power (MVA).
         self.base_mva = base_mva
-        self.buses = buses
-        self.branches = branches
+
+        if buses == None:
+            self.buses = []
+        else:
+            self.buses = buses
+
+        if branches == None:
+            self.branches = []
+        else:
+            self.branches = branches
 
     @property
     def connected_buses(self):
@@ -92,7 +101,7 @@ class Bus(object):
 
     def __init__(self, name="bus", slack=False, v_base=100.0,
             v_magnitude_guess=1.0, v_angle_guess=1.0, v_max=1.1, v_min=0.9,
-            g_shunt=0.0, b_shunt=0.0):
+            g_shunt=0.0, b_shunt=0.0, generators=None, loads=None):
         """ Initialises a new Bus instance.
         """
         self.name = name
@@ -114,9 +123,16 @@ class Bus(object):
         self.b_shunt = b_shunt
 
         # Generators defined by their active power and voltage.
-        self.generators = []
+        if generators == None:
+            self.generators = []
+        else:
+            self.generators = generators
+
         # Loads that specify real and reactive power demand.
-        self.loads = []
+        if loads == None:
+            self.loads = []
+        else:
+            self.loads = loads
 
     @property
     def mode(self):
@@ -251,7 +267,7 @@ class Generator(object):
             p_max=2.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=3.0,
             q_min=-3.0, p_max_bid=2.0, p_min_bid=0.0, c_startup=0.0,
             c_shutdown=0.0, cost_model="polynomial",
-            cost_coeffs=(1.0, 0.1, 0.01), rate_up=1.0, rate_down=1.0, min_up=0,
+            cost_coeffs=None, rate_up=1.0, rate_down=1.0, min_up=0,
             min_down=0, initial_up=1, initial_down=0):
         """ Initialises a new Generator instance.
         """
@@ -288,9 +304,15 @@ class Generator(object):
         # Valid values are 'Polynomial' and 'Piecewise Linear'.
         self.cost_model = cost_model
         # Polynomial cost curve coefficients.
-        self.cost_coeffs = cost_coeffs
+        if cost_coeffs == None:
+            self.cost_coeffs = (1.0, 0.1, 0.01)
+        else:
+            self.cost_coeffs = cost_coeffs
         # Piecewise linear cost segment points
-#        pwl_points = [(0.0, 0.0), (1.0, 1.0)]
+#        if pwl_points == None:
+#            self.pwl_points = [(0.0, 0.0), (1.0, 1.0)]
+#        else:
+#            self.pwl_points = pwl_points
         # Ramp up rate (p.u./h).
         self.rate_up = rate_up
         # Ramp down rate (p.u./h).
@@ -334,7 +356,7 @@ class Load(object):
     """
 
     def __init__(self, name="load", online=True, p=1.0, q=0.1, p_max=1.0,
-            p_min=0.0, p_profile=[100.0]):
+            p_min=0.0, p_profile=None):
         """ Initialises a new Load instance.
         """
         self.name = name
@@ -349,7 +371,10 @@ class Load(object):
         # Minimum active power (p.u.).
         self.p_min = p_min
         # Active power profile (%).
-        self.p_profile = p_profile
+        if p_profile is None:
+            self.p_profile = [100.0]
+        else:
+            self.p_profile = p_profile
 
         self._p_cycle = cycle(p_profile)
 
