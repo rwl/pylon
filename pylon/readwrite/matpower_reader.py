@@ -44,26 +44,30 @@ class MATPOWERReader(object):
     """ Defines a method class for reading MATPOWER data files and
         returning a Network object.
     """
-    # Path to the data file or file object.
-    file_or_filename = None
 
-    # The resulting network object
-    network = None
+    def __init__(self):
+        """ Initialises a new PSSEReader instance.
+        """
+        # Path to the data file or file object.
+        self.file_or_filename = None
+        # The resulting network.
+        self.network = None
 
-    # The system MVA base to which machines default
-    base_mva = 100.0
+        # The system MVA base to which machines default
+        self.base_mva = 100.0
 
-    # Index of the slack bus. Bus objects can not be made slack until
-    # at least one generator is attached.
-    slack_idx = -1
+        # Index of the slack bus. Bus objects can not be made slack until
+        # at least one generator is attached so the attribute is set at the end
+        # of the parsing operation.
+        self.slack_idx = -1
 
-    # Maintain an ordered list of instantiated generators that may be
-    # used in processing generator cost data since the structure gives
-    # no reference to the generator to which the cost data applies.
-    # These are added when the generator is instantiated and removed
-    # when the cost data is processed. The presence of any left overs
-    # is checked at the end of the parsing operation.
-    generators = []
+        # Maintain an ordered list of instantiated generators that may be
+        # used in processing generator cost data since the structure gives
+        # no reference to the generator to which the cost data applies.
+        # These are added when the generator is instantiated and removed
+        # when the cost data is processed. The presence of any left overs
+        # is checked at the end of the parsing operation.
+        self.generators = []
 
     #--------------------------------------------------------------------------
     #  Parse a MATPOWER data file and return a network object

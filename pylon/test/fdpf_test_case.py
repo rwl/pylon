@@ -45,8 +45,6 @@ class FDPFTest(TestCase):
         for validation of MATPOWER data file parsing.
     """
 
-    routine = FastDecoupledPFRoutine
-
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """

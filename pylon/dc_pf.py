@@ -18,8 +18,8 @@
 """ Solves DC power flow.
 
     References:
-        Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell,
-        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
+        Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell, version 3.2,
+        http://www.pserc.cornell.edu/matpower/, June 2007
 """
 
 #------------------------------------------------------------------------------
@@ -47,27 +47,9 @@ class DCPFRoutine(object):
     """ Solves DC power flow.
 
         References:
-            Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell,
-            http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
+            Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell, version 3.2,
+            http://www.pserc.cornell.edu/matpower/, June 2007
     """
-    # The network on which the routine is performed
-    network = None
-
-    # CVXOPT offers interfaces to two routines for solving sets of sparse
-    # linear equations.  Possible values are 'UMFPACK' and 'CHOLMOD'.
-    library = "UMFPACK"
-
-    # Branch susceptance matrix
-    B = None
-
-    # Branch source bus susceptance matrix
-    B_source = None
-
-    # Vector of voltage angle guesses
-    v_angle_guess = None
-
-    # Vector of voltage phase angles
-    v_angle = None
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -76,7 +58,19 @@ class DCPFRoutine(object):
     def __init__(self, library="UMFPACK"):
         """ Initialises a DCPFRoutine instance.
         """
+        # CVXOPT offers interfaces to two routines for solving sets of sparse
+        # linear equations.  Possible values are 'UMFPACK' and 'CHOLMOD'.
         self.library = library
+        # The network on which the routine is performed
+        self.network = None
+        # Branch susceptance matrix
+        self.B = None
+        # Branch source bus susceptance matrix
+        self.B_source = None
+        # Vector of voltage angle guesses
+        self.v_angle_guess = None
+        # Vector of voltage phase angles
+        self.v_angle = None
 
 
     def __call__(self, network):

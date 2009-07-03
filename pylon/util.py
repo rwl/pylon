@@ -82,7 +82,9 @@ def angle(z, deg=0):
     else:
         zimag = 0
         zreal = z
+
     matrix([math.arctan2(z[i].imag(), z[i].real()) for x in z])
+
     return atan2(zimag, zreal) * fact
 
 # EOF -------------------------------------------------------------------------

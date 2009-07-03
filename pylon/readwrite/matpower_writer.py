@@ -31,9 +31,15 @@ from os.path import basename, splitext
 class MATPOWERWriter(object):
     """ Write network data to a file in MATPOWER format.
     """
-    network = None
 
-    file_or_filename = ""
+    def __init__(self):
+        """ Initialises a new MATPOWERWriter instance.
+        """
+        # Path to the data file or file object.
+        self.file_or_filename = None
+        # It is written.
+        self.network = None
+
 
     def __call__(self, network, file_or_filename):
         """ Writes network data to file in MATPOWER format.

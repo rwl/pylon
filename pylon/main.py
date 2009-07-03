@@ -48,43 +48,35 @@ logger = logging.getLogger(__name__)
 class PylonApplication(object):
     """ Simulates power systems.
     """
-    # Name of the input file.
-    file_name = ""
-
-    # Format in which the network is stored.  Possible values are: 'any',
-    # 'matpower', 'psat', 'matlab' and 'psse'.
-    type = "any"
-
-    # Routine type used to solve the network. Possible values are: 'acpf',
-    # 'dcpf', 'acopf' and 'dcopf'.
-    routine = "acpf"
-
-    # Algorithm to be used in the routine. Possible values are: 'newton'
-    algorithm = "newton"
-
-    # Output format type. Possible values are: 'rst', 'matpower', 'excel' and
-    # 'csv'.
-    output_type = "rst"
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
     def __init__(self, file_name="", type="any", routine="acpf",
-                                                 algorithm="newton",
-                                                 output_type="rst"):
+            algorithm="newton", output_type="rst"):
         """ Initialises a new PylonApplication instance.
         """
-        self.file_name   = file_name
-        self.routine     = routine
-        self.algorithm   = algorithm
+        # Name of the input file.
+        self.file_name = file_name
+        # Format in which the network is stored.  Possible values are: 'any',
+        # 'matpower', 'psat', 'matlab' and 'psse'.
+        self.type = type
+        # Routine type used to solve the network. Possible values are: 'acpf',
+        # 'dcpf', 'acopf' and 'dcopf'.
+        self.routine = routine
+        # Algorithm to be used in the routine. Possible values are: 'newton'
+        # and decoupled
+        self.algorithm = algorithm
+        # Output format type. Possible values are: 'rst', 'matpower', 'excel'
+        # and 'csv'.
         self.output_type = output_type
 
     #--------------------------------------------------------------------------
     #  Runs the application:
     #--------------------------------------------------------------------------
 
-    def run(self, input, output):
+    def __call__(self, input, output):
         """ Forms a network from the input text, obtains a solution using the
             specified routine and writes a report to the output.
         """
@@ -318,7 +310,7 @@ def main():
                            algorithm   = options.algorithm,
                            output_type = options.otype)
 
-    app.run(input=infile, output=outfile)
+    app(input=infile, output=outfile)
 
     try:
         infile.close() # Clean-up

@@ -31,22 +31,10 @@ from pylon import Network, NetworkReport
 class ReSTWriter(object):
     """ Write network data to a file in ReStructuredText format.
     """
-    network = None
-
-    file_or_filename = ""
-
-    _report = None
-
-    include_title = True
-    include_summary = True
-    include_bus_data = True
-    include_branch_data = True
-    include_generator_data = True
 
     def __init__(self, include_title=True, include_summary=True,
-                                           include_bus_data=True,
-                                           include_branch_data=True,
-                                           include_generator_data=True):
+            include_bus_data=True, include_branch_data=True,
+            include_generator_data=True):
         """ Initialises new ReSTWriter instance.
         """
         self.include_title = include_title
@@ -54,6 +42,10 @@ class ReSTWriter(object):
         self.include_bus_data = include_bus_data
         self.include_branch_data = include_branch_data
         self.include_generator_data = include_generator_data
+
+        self.network = None
+        self.file_or_filename = ""
+        self._report = None
 
 
     def __call__(self, network, file_or_filename):

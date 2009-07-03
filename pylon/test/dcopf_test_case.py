@@ -45,8 +45,6 @@ class DCOPFTest(unittest.TestCase):
         parsing.
     """
 
-    routine = DCOPFRoutine
-
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """

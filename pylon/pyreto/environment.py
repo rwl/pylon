@@ -49,16 +49,6 @@ class ParticipantEnvironment(Environment):
     # The number of sensor values the environment produces.
     outdim = 1
 
-    #--------------------------------------------------------------------------
-    #  "ParticipantEnvironment" interface:
-    #--------------------------------------------------------------------------
-
-    # Energy network in which the asset operates.
-    power_system = None
-
-    # Generator instance that the agent controls.
-    asset = None
-
     @property
     def demand(self):
         """ Total system demand.
@@ -76,7 +66,9 @@ class ParticipantEnvironment(Environment):
         assert isinstance( power_system, Network )
         assert isinstance( asset, Generator )
 
+        # Energy network in which the asset operates.
         self.power_system = power_system
+        # Generator instance that the agent controls.
         self.asset = asset
 
     #--------------------------------------------------------------------------

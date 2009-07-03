@@ -44,7 +44,6 @@ class DCPFTest(TestCase):
         data file. See filter_test_case.py for validation of MATPOWER data
         file parsing.
     """
-    routine = DCPFRoutine
 
     def setUp(self):
         """ The test runner will execute this method prior to each test.

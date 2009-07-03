@@ -46,11 +46,15 @@ logger = logging.getLogger(__name__)
 class PSSEReader(object):
     """ Defines a reader of PSS/E data files that returns a network object.
     """
-    # Path to the data file or file object.
-    file_or_filename = None
 
-    # The resulting network
-    network = None
+    def __init__(self):
+        """ Initialises a new PSSEReader instance.
+        """
+        # Path to the data file or file object.
+        self.file_or_filename = None
+        # The resulting network.
+        self.network = None
+
 
     def __call__(self, file_or_filename):
         """ Parses a PSS/E data file and returns a network object.

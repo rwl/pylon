@@ -41,49 +41,40 @@ logger.setLevel(logging.DEBUG)
 class UnitCommitmentRoutine(object):
     """ Defines an implementation of the unit commitment problem.
     """
+    def __init__(self, n_periods=1, demand=[0.0]):
+        """ Initialises a new UnitCommitmentRoutine instance.
+        """
+        # Time horizon
+        self.n_periods = 1
+        # Total demand vector
+        self.demand = [0.0]
 
-    # The network passed to the routine
-    network = None
+        # The network passed to the routine.
+        self.network = None
+        # Selects one of three available LP solvers: the default solver written
+        # in Python, the GLPK solver or the MOSEK LP solver.
+        self.solver = None # "glpk" "mosek"
 
-    # Selects one of three available LP solvers: the default solver written in
-    # Python, the GLPK solver or the MOSEK LP solver.
-    solver = None # "glpk" "mosek"
-
-    # Time horizon
-    n_periods = 1
-
-    # Total demand vector
-    demand = [0.0]
-
-    # Total reserve for each period
-    reserve = None
-
-    # Maximum generation output limits.
-    p_max = None
-
-    # Minimum generation output limits.
-    p_min = None
-
-    # fixed generator costs.
-    cost = None
-
-    # Minimum up time limits.
-    min_up = None
-
-    # Minimum down time limits.
-    min_down = None
-
-    # Ramp up rate limits.
-    rate_up = None
-
-    # Ramp down limits.
-    rate_down = None
-
-    # Vector of the Market Clearing Prices for each period:
-#    mcps = Array
-
-    # A Result instance changes to which GenCos listen for:
-#    result = None
+        # Total reserve for each period
+        self.reserve = None
+        # Maximum generation output limits.
+        self.p_max = None
+        # Minimum generation output limits.
+        self.p_min = None
+        # fixed generator costs.
+        self.cost = None
+        # Minimum up time limits.
+        self.min_up = None
+        # Minimum down time limits.
+        self.min_down = None
+        # Ramp up rate limits.
+        self.rate_up = None
+        # Ramp down limits.
+        self.rate_down = None
+        # Vector of the Market Clearing Prices for each period.
+#        self.mcps = Array
+        # A Result instance changes to which GenCos listen for.
+#        self.result = None
 
     def __call__(self, network):
         """ Solves the unit commitment problem for the given network.
@@ -252,26 +243,5 @@ class UnitCommitmentRoutine(object):
 #                                     mcp=mcp)
 #
 #            self.status = "Closed"
-
-#------------------------------------------------------------------------------
-#  Stand-alone call:
-#------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    from pylon import Network, Bus, Generator
-
-    network = Network(name="net1")
-    bus1 = Bus(name="bus1")
-    network.buses.append(bus1)
-
-    gen1 = Generator(p_min=0.1, p_max=0.8, cost_coefs=(1.0, 0.0, 0.0))
-    gen2 = Generator(p_min=0.2, p_max=0.6, cost_coefs=(2.0, 0.0, 0.0))
-    bus1.generators.append(gen1)
-    bus1.generators.append(gen2)
-
-    routine = UnitCommitmentRoutine( network )
-    routine.n_periods = 2
-    routine.demand = matrix([1.0, 0.8])
-    routine.solve()
 
 # EOF -------------------------------------------------------------------------

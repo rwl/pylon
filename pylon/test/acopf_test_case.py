@@ -45,7 +45,6 @@ class ACOPFTest(unittest.TestCase):
 
         See reader_test_case.py for validation of MATPOWER data file parsing.
     """
-    routine = ACOPFRoutine
 
     def setUp(self):
         """ The test runner will execute this method prior to each test.
@@ -57,7 +56,8 @@ class ACOPFTest(unittest.TestCase):
 
 
     def test_mismatch(self):
-        """ Test AC OPF. """
+        """ Test AC OPF.
+        """
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

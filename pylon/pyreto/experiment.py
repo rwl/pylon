@@ -50,15 +50,14 @@ class MarketExperiment ( HasTraits ):
     """ Defines an experiment that matches up agents with tasks and handles
         their interaction.
     """
-
     name = Str
 
-    stepid = 0
+    stepid = Int
 
-    tasks = list
+    tasks = List
 
     # Agents capable of producing actions based on previous observations.
-    agents = list
+    agents = List
 
     #--------------------------------------------------------------------------
     #  Trait definitions:

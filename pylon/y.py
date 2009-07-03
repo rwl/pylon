@@ -284,14 +284,6 @@ class SusceptanceMatrix(object):
 
         TODO: Speed up by using spdiag(x)
     """
-    # Network represented by the matrix
-#    network = None
-
-    # Suceptance matrix
-#    B = spmatrix
-
-    # Source bus susceptance matrix
-#    B_source = spmatrix
 
     def __call__(self, network):
         """ Build the matrices.

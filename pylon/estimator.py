@@ -42,47 +42,39 @@ j = 0.0+1.0j
 class StateEsimationRoutine(object):
     """ State estimation based on code from James S. Thorp.
     """
-    # Bus-branch network linking loads and generators.
-    network = None
-
-    pf_routine = None
-
-    # Use DC power flow formulation?
-    dc = False
-
-    # Maximum number of iterations.
-    max_iter = 100
-
-    # Absolute accuracy.
-    tolerance = 1e-7
-
-    converged = False
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, network, dc=False, max_iter=100, tolerance=1e-7):
+    def __init__(self, dc=False, max_iter=100, tolerance=1e-7):
         """ Initialises a new StateEstimationRoutine instance.
         """
-        self.network = network
+        # Maximum number of iterations.
+        self.max_iter = max_iter
+        # Convergence tolerance.
+        self.tolerance = tolerance
+
+        # Use DC power flow formulation?
+        self.dc = dc
 
         if dc:
             self.pf_routine = DCPFRoutine()
         else:
             self.pf_routine = ACPFRoutine()
 
-        self.max_iter = max_iter
-        self.tolerance = tolerance
+        self.network = None
+        # Has the routine converged?
+        self.converged = False
 
     #--------------------------------------------------------------------------
     #  Solves a state estimation problem:
     #--------------------------------------------------------------------------
 
-    def solve(self, network=None):
+    def __call__(self, network):
         """ Solves a state estimation problem.
         """
-        network = self.network
+        self.network = network
         branches = network.online_branches
 
         # Run the power flow.

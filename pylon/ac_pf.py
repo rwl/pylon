@@ -67,31 +67,6 @@ class _ACPFRoutine(object):
             Ray Zimmerman, "acpf.m", MATPOWER, PSERC Cornell,
             http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
     """
-#    network = None
-
-    # Convergence tolerance
-#    tolerance = 1e-08
-
-    # Maximum number of iterations:
-#    iter_max = 10
-
-    # Vector of bus voltages:
-#    v = None
-
-    # Sparse admittance matrix:
-#    Y = None
-
-    # Complex bus power injections.
-#    s_surplus = matrix
-
-    # Flag indicating if the solution converged:
-#    converged = False
-
-    # Bus indexes for updating v.
-#    pv_idxs = []
-#    pq_idxs = []
-#    pvpq_idxs = []
-#    slack_idx = 0
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -100,8 +75,26 @@ class _ACPFRoutine(object):
     def __init__(self, tolerance=1e-08, iter_max=10):
         """ Initialises a new ACPFRoutine instance.
         """
+        self.network = None
+        # Convergence tolerance.
         self.tolerance = tolerance
+        # Maximum number of iterations.
         self.iter_max  = iter_max
+
+        # Vector of bus voltages.
+        self.v = None
+        # Sparse admittance matrix.
+        self.Y = None
+        # Complex bus power injections.
+        self.s_surplus = matrix
+        # Flag indicating if the solution converged:
+        self.converged = False
+
+        # Bus indexes for updating v.
+        self.pv_idxs = []
+        self.pq_idxs = []
+        self.pvpq_idxs = []
+        self.slack_idx = 0
 
 
     def __call__(self):
@@ -188,15 +181,24 @@ class _ACPFRoutine(object):
 
 class NewtonPFRoutine(_ACPFRoutine):
     """ Solves the power flow using full Newton's method.
+
+        References:
+            Ray Zimmerman, "newton.m", MATPOWER, PSERC Cornell,
+            http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
     """
-    # Sparse Jacobian matrix (updated each iteration).
-#    J = None
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
 
-    # Vector of bus voltages.
-#    v = None
+    def __init__(self, tolerance=1e-08, iter_max=10):
+        """ Initialises a new ACPFRoutine instance.
+        """
+        # Sparse Jacobian matrix (updated each iteration).
+        self.J = None
+        # Function of non-linear differential algebraic equations.
+        self.f = None
 
-    # Function of non-linear differential algebraic equations.
-#    f = None
+        super(_ACPFRoutine, self).__init__(tolerance, iter_max)
 
     #--------------------------------------------------------------------------
     #  Solve power flow using full Newton's method:
@@ -460,19 +462,29 @@ class NewtonPFRoutine(_ACPFRoutine):
 
 class FastDecoupledPFRoutine(_ACPFRoutine):
     """ Solves the power flow using fast decoupled method.
+
+        References:
+            Ray Zimmerman, "fdpf.m", MATPOWER, PSERC Cornell, version 3.2,
+            http://www.pserc.cornell.edu/matpower/, June 2007
     """
-    # Sparse FDPF matrix B prime.
-    Bp = None
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
 
-    # Sparse FDPF matrix B double prime.
-    Bpp = None
+    def __init__(self, tolerance=1e-08, iter_max=10, method="XB"):
+        """ Initialises a new ACPFRoutine instance.
+        """
+        # Use XB or BX method?
+        self.method = method
+        # Sparse FDPF matrix B prime.
+        self.Bp = None
+        # Sparse FDPF matrix B double prime.
+        self.Bpp = None
 
-    # Use XB or BX method?
-    method = "XB"
+        self.p = None
+        self.q = None
 
-    p = None
-
-    q = None
+        super(_ACPFRoutine, self).__init__(tolerance, iter_max)
 
     #--------------------------------------------------------------------------
     #  Solve power flow using Fast Decoupled method:

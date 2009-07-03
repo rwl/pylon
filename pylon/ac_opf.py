@@ -169,56 +169,37 @@ def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
     return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
 
 #------------------------------------------------------------------------------
-#  "OptimalPowerFlow" class:
+#  "ACOPFRoutine" class:
 #------------------------------------------------------------------------------
 
-class ACOPFRoutine:
+class ACOPFRoutine(object):
     """ Optimal power flow routine, translated from MATPOWER.
 
         References:
-            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, MATPOWER,
+            R. Zimmerman, 'runopf.m', MATPOWER, PSERC (Cornell),
             version 3.2, http://www.pserc.cornell.edu/matpower/
     """
-    network = None
-
-    #--------------------------------------------------------------------------
-    #  Algorithm parameters:
-    #--------------------------------------------------------------------------
-
-    # Turns the output to the screen on or off.
-    show_progress = True
-
-    # Maximum number of iterations.
-    max_iterations = 100
-
-    # Absolute accuracy.
-    absolute_tol = 1e-7
-
-    # Relative accuracy.
-    relative_tol = 1e-6
-
-    # Tolerance for feasibility conditions.
-    feasibility_tol = 1e-7
-
-    # Number of iterative refinement steps when solving KKT equations.
-    refinement = 1
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
     def __init__(self, show_progress=True, max_iterations=100,
-                                           absolute_tol=1e-7,
-                                           relative_tol=1e-6,
-                                           feasibility_tol=1e-7,
-                                           refinement=1):
+            absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
+            refinement=1):
         """ Initialises a new ACOPFRoutine instance.
         """
+        # Turns the output to the screen on or off.
         self.show_progress = show_progress
+        # Maximum number of iterations.
         self.max_iterations = max_iterations
+        # Absolute accuracy.
         self.absolute_tol = absolute_tol
+        # Relative accuracy.
         self.relative_tol = relative_tol
+        # Tolerance for feasibility conditions.
         self.feasibility_tol = feasibility_tol
+        # Number of iterative refinement steps when solving KKT equations.
         self.refinement = refinement
 
 
@@ -261,8 +242,8 @@ class ACOPFRoutine:
         # TODO: Definition of indexes for the constraint vector.
 
         def F(x=None, z=None):
-            """ Evaluates the objective and nonlinear constraint functions. """
-
+            """ Evaluates the objective and nonlinear constraint functions.
+            """
             if x is None:
                 # Compute initial vector.
                 x_ph = matrix([bus.v_angle_guess for bus in buses])
@@ -389,8 +370,8 @@ class ACOPFRoutine:
 
     def _build_additional_linear_constraints(self):
         """ A, l, u represent additional linear constraints on the
-        optimization variables. """
-
+            optimization variables.
+        """
         if Au is None:
             Au = sparse([], [], [], (0, 0))
             l_bu = matrix([0])

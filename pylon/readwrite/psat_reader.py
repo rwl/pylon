@@ -44,11 +44,14 @@ class PSATReader(object):
     """ Defines a method class for reading PSAT data files and
         returning a Network object.
     """
-    # Path to the data file or file object.
-    file_or_filename = None
 
-    # The resulting network object.
-    network = Network
+    def __init__(self):
+        """ Initialises a new PSATReader instance.
+        """
+        # Path to the data file or file object.
+        self.file_or_filename = None
+        # The resulting network.
+        self.network = None
 
     #--------------------------------------------------------------------------
     #  Parse a PSAT data file and return a network object

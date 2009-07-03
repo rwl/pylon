@@ -47,9 +47,6 @@ PSAT_DATA_FILE     = os.path.join(DATA_DIR, "d_006_mdl.m")
 class ReaderTest(TestCase):
     """ Defines a base class for many reader test cases.
     """
-    filter = None
-
-    network = None
 
     def _validate_base(self, base_mva):
         """ Validate the Network objects properties.

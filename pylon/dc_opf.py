@@ -18,8 +18,8 @@
 """ DC Optimal Power Flow for routine.
 
     References:
-        Ray Zimmerman, "dcopf.m", MATPOWER, PSERC Cornell,
-        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
+        Ray Zimmerman, "dcopf.m", MATPOWER, PSERC Cornell, version 3.2,
+        http://www.pserc.cornell.edu/matpower/, June 2007
 """
 
 #------------------------------------------------------------------------------
@@ -52,116 +52,93 @@ class DCOPFRoutine(object):
     """ A method class for solving the DC optimal power flow problem
 
         References:
-            R. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan,
-            MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+            Ray Zimmerman, "dcopf.m", MATPOWER, PSERC Cornell, version 3.2,
+            http://www.pserc.cornell.edu/matpower/, June 2007
     """
-    # Network to be optimised.
-    network = None
-
-    # Choice of solver (May be None or "mosek")
-    solver = None
-
-    #--------------------------------------------------------------------------
-    #  Algorithm parameters:
-    #--------------------------------------------------------------------------
-
-    # Turns the output to the screen on or off.
-    show_progress = True
-
-    # Maximum number of iterations.
-    max_iterations = 100
-
-    # Absolute accuracy.
-    absolute_tol = 1e-7
-
-    # Relative accuracy.
-    relative_tol = 1e-6
-
-    # Tolerance for feasibility conditions.
-    feasibility_tol = 1e-7
-
-    # Number of iterative refinement steps when solving KKT equations.
-    refinement = 1
-
-    #--------------------------------------------------------------------------
-    #  Private interface:
-    #--------------------------------------------------------------------------
-
-    # Sparse branch susceptance matrix.  The bus real power injections are
-    # related to bus voltage angles by P = Bbus * Va + Pbusinj
-    _B = None
-
-    # Sparse branch source bus susceptance matrix. The real power flows at the
-    # from end the lines are related to the bus voltage angles by
-    # Pf = Bf * Va + Pfinj
-    _B_source = None
-
-    # The real power flows at the from end the lines are related to the bus
-    # voltage angles by Pf = Bf * Va + Pfinj
-    _theta_inj_source = None
-
-    # The bus real power injections are related to bus voltage angles by
-    # P = Bbus * Va + Pbusinj
-    _theta_inj_bus = None
-
-    # For polynomial cost models we use a quadratic solver.
-    _solver_type = "linear" # or "quadratic"
-
-    # Initial values for x.
-    _x = None
-
-    # Cost constraints.
-    _aa_cost = None # sparse
-    _bb_cost = None
-
-    # Reference bus phase angle constraint.
-    _aa_ref = None # sparse
-    _bb_ref = None
-
-    # Active power flow equations.
-    _aa_mismatch = None # sparse
-    _bb_mismatch = None
-
-    # Generator limit constraints.
-    _aa_generation = None # sparse
-    _bb_generation = None
-
-    # Branch flow limit constraints.
-    _aa_flow = None # sparse
-    _bb_flow = None
-
-    # The equality and inequality problem constraints combined.
-    _AA_eq = None # sparse
-    _AA_ieq = None # sparse
-    _bb_eq = None
-    _bb_ieq = None
-
-    # Objective function of the form 0.5 * x'*H*x + c'*x.
-    _hh = None # sparse
-    _cc = None
-
-    # Solution.
-    x = None
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, solver=None, show_progress   = True,
-                                    max_iterations  = 100,
-                                    absolute_tol    = 1e-7,
-                                    relative_tol    = 1e-6,
-                                    feasibility_tol = 1e-7,
-                                    refinement      = 1):
+    def __init__(self, solver=None, show_progress=True, max_iterations=100,
+            absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
+            refinement=1):
         """ Initialises the new DCOPFRoutine instance.
         """
+        # Choice of solver (May be None or "mosek"). Specify None to use the
+        # native Python solver from CVXOPT.
         self.solver = solver
+        # Turns the output to the screen on or off.
         self.show_progress = show_progress
+        # Maximum number of iterations.
         self.max_iterations = max_iterations
+        # Absolute accuracy.
         self.absolute_tol = absolute_tol
+        # Relative accuracy.
         self.relative_tol = relative_tol
+        # Tolerance for feasibility conditions.
         self.feasibility_tol = feasibility_tol
+        # Number of iterative refinement steps when solving KKT equations.
         self.refinement = refinement
+
+        # Network object to be optimised.
+        self.network = None
+
+        # Sparse branch susceptance matrix.  The bus real power injections are
+        # related to bus voltage angles by P = Bbus * Va + Pbusinj
+        self._B = None
+
+        # Sparse branch source bus susceptance matrix. The real power flows at the
+        # from end the lines are related to the bus voltage angles by
+        # Pf = Bf * Va + Pfinj
+        self._B_source = None
+
+        # The real power flows at the from end the lines are related to the bus
+        # voltage angles by Pf = Bf * Va + Pfinj
+        self._theta_inj_source = None
+
+        # The bus real power injections are related to bus voltage angles by
+        # P = Bbus * Va + Pbusinj
+        self._theta_inj_bus = None
+
+        # For polynomial cost models we use a quadratic solver.
+        self._solver_type = "linear" # or "quadratic"
+
+        # Initial values for x.
+        self._x = None
+
+        # Cost constraints.
+        self._aa_cost = None # sparse
+        self._bb_cost = None
+
+        # Reference bus phase angle constraint.
+        self._aa_ref = None # sparse
+        self._bb_ref = None
+
+        # Active power flow equations.
+        self._aa_mismatch = None # sparse
+        self._bb_mismatch = None
+
+        # Generator limit constraints.
+        self._aa_generation = None # sparse
+        self._bb_generation = None
+
+        # Branch flow limit constraints.
+        self._aa_flow = None # sparse
+        self._bb_flow = None
+
+        # The equality and inequality problem constraints combined.
+        self._AA_eq = None # sparse
+        self._AA_ieq = None # sparse
+        self._bb_eq = None
+        self._bb_ieq = None
+
+        # Objective function of the form 0.5 * x'*H*x + c'*x.
+        self._hh = None # sparse
+        self._cc = None
+
+        # Solution.
+        self.x = None
 
 
     def __call__(self, network):

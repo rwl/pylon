@@ -42,8 +42,6 @@ class NetworkTest(unittest.TestCase):
     """ Defines a test case for the Pylon network.
     """
 
-    network = None
-
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
