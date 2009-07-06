@@ -48,8 +48,8 @@ def dSbus_dV(Y, v):
     """ Computes the partial derivative of power injection w.r.t. voltage.
 
         References:
-            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbus_dV.m",
-            MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+            Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
+            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
     """
     j = 0 + 1j
     n = len(v)
@@ -73,8 +73,8 @@ def dSbr_dV(branches, Y_source, Y_target, v):
         branch power flow w.r.t voltage.
 
         References:
-            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dSbr_dV.m",
-            MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+            Ray Zimmerman, "dSbr_dV.m", MATPOWER, version 3.2,
+            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
     """
     j = 0 + 1j
     n_branches = len(branches)
@@ -133,8 +133,8 @@ def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
     """ Computes the partial derivatives of apparent power flow w.r.t voltage.
 
         References:
-            D. Zimmerman, Carlos E. Murillo-Sanchez and D. Gan, "dAbr_dV.m",
-            MATPOWER, version 3.2, http://www.pserc.cornell.edu/matpower/
+            Ray Zimmerman, "dAbr_dV.m", MATPOWER, version 3.2,
+            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
     """
     n_branches = len(s_source)
 

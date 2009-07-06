@@ -315,8 +315,8 @@ class NewtonPFRoutine(_ACPFRoutine):
                       = j * diag(V) * conj(diag(Ibus) - Ybus * diag(V))
 
             References:
-                D. Zimmerman, C. E. Murillo-Sanchez and D. Gan, MATPOWER,
-                dSbus_dV.m, version 3.2, http://www.pserc.cornell.edu/matpower/
+                Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
+                PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
         """
         j = 0 + 1j
         y = self.Y
