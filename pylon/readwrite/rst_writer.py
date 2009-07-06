@@ -45,7 +45,6 @@ class ReSTWriter(object):
 
         self.network = None
         self.file_or_filename = ""
-        self._report = None
 
 
     def __call__(self, network, file_or_filename):
@@ -53,8 +52,6 @@ class ReSTWriter(object):
         """
         self.network = network
         self.file_or_filename = file_or_filename
-
-        self._report = NetworkReport(network)
 
         file = self._get_file(file_or_filename)
 
@@ -116,11 +113,9 @@ class ReSTWriter(object):
     def write_how_many(self, network=None, file_or_filename=None):
         """ Writes component numbers to a table.
         """
-        if network is None:
-            network = self.network
-            report  = NetworkReport(network)
-        else:
-            report = self._report
+        network = network if network is not None else self.network
+
+        report = NetworkReport(network)
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
@@ -164,16 +159,16 @@ class ReSTWriter(object):
         else:
             file.write(sep)
             file.write("\n")
+            
+        del report
 
 
     def write_how_much(self, network=None, file_or_filename=None):
         """ Write component quantities to a table.
         """
-        if network is None:
-            network = self.network
-            report  = NetworkReport(network)
-        else:
-            report = self._report
+        network = network if network is not None else self.network
+        
+        report = NetworkReport(network)
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
@@ -243,16 +238,16 @@ class ReSTWriter(object):
 
         file.write(sep)
         file.write("\n")
+        
+        del report
 
 
     def write_min_max(self, network=None, file_or_filename=None):
         """ Writes minimum and maximum values to a table.
         """
-        if network is None:
-            network = self.network
-            report  = NetworkReport(network)
-        else:
-            report = self._report
+        network = network if network is not None else self.network
+        
+        report = NetworkReport(network)
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
@@ -292,16 +287,16 @@ class ReSTWriter(object):
 
         file.write(sep)
         file.write("\n")
+        
+        del report
 
 
     def write_bus_data(self, network=None, file_or_filename=None):
         """ Writes bus data to a ReST table.
         """
-        if network is None:
-            network = self.network
-            report  = NetworkReport(network)
-        else:
-            report = self._report
+        network = network if network is not None else self.network
+        
+        report = NetworkReport(network)
 
         buses = network.buses
 
@@ -365,16 +360,16 @@ class ReSTWriter(object):
         file.write("\n")
 
         file.write(sep)
+        
+        del report
 
 
     def write_branch_data(self, network=None, file_or_filename=None):
         """ Writes branch data to a ReST table.
         """
-        if network is None:
-            network = self.network
-            report  = NetworkReport(network)
-        else:
-            report = self._report
+        network = network if network is not None else self.network
+        
+        report = NetworkReport(network)
 
         branches = network.branches
 
@@ -443,16 +438,16 @@ class ReSTWriter(object):
         file.write("\n")
 
         file.write(sep)
+        
+        del report
 
 
     def write_generator_data(self, network=None, file_or_filename=None):
         """ Writes generator data to a ReST table.
         """
-        if network is None:
-            network = self.network
-            report  = NetworkReport(network)
-        else:
-            report = self._report
+        network = network if network is not None else self.network
+        
+        report = NetworkReport(network)
 
         generators = network.all_generators
 
@@ -541,6 +536,8 @@ class ReSTWriter(object):
         file.write("\n")
 
         file.write(sep)
+        
+        del report
 
 
     def _get_file(self, file_or_filename):

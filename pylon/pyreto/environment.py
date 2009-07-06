@@ -63,8 +63,8 @@ class ParticipantEnvironment(Environment):
     def __init__(self, power_system, asset):
         """ Initialises the environment.
         """
-        assert isinstance( power_system, Network )
-        assert isinstance( asset, Generator )
+        assert isinstance(power_system, Network)
+        assert isinstance(asset, Generator)
 
         # Energy network in which the asset operates.
         self.power_system = power_system
@@ -81,7 +81,7 @@ class ParticipantEnvironment(Environment):
             The state consists of 'total demand', 'market clearing price' and
             'forecast demand'.
         """
-        return array( [self.demand] )
+        return array([self.demand])
 
 
     def performAction(self, action):

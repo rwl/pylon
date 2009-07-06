@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Simulates energy trade in a test power system.
+""" Simulates energy trade in a power system.
 """
 
 #------------------------------------------------------------------------------
@@ -32,92 +32,93 @@ from pybrain.rl.agents import LearningAgent, PolicyGradientAgent
 from pybrain.rl.learners import SPLA, ENAC
 from pybrain.structure.modules import SigmoidLayer
 
-from pylon.readwrite import MATPOWERReader, ReSTWriter
 from pylon import Network, Bus, Generator, Load
 from pylon import DCOPFRoutine
+
+from pylon.readwrite import MATPOWERReader, ReSTWriter
+from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
 from environment import ParticipantEnvironment
 from experiment import MarketExperiment
 from profit_task import ProfitTask
 
-from pylon.ui.plot.experiment_plot import ExperimentPlot
-
-from pylon.readwrite.rst_writer import ReSTExperimentWriter
-
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-# FIXME: Relative path.
-DATA_FILE = join( dirname(__file__), "..", "test", "data", "case6ww.m" )
+DATA_FILE = join(dirname(__file__), "..", "test", "data", "case6ww.m")
 
 #------------------------------------------------------------------------------
 #  Simulate trade:
 #------------------------------------------------------------------------------
 
 def get_power_sys():
-    # Read network data.
-    reader = MATPOWERReader()
+    """ Returns a test power system.
+    """
+    # Read network from data file.
+#    reader = MATPOWERReader()
 #    power_sys = reader( DATA_FILE )
 
-    # One bus test network.
-    power_sys = Network( name = "1 Bus", base_mva = 100.0 )
+    # Build one bus test network.
+    power_sys = Network(name="1 Bus")
 
-    bus1 = Bus( name = "Bus 1" )
+    bus1 = Bus(name="Bus 1")
 
-    generator = Generator( name        = "G1",
-                           p_max       = 2.0,
+    generator = Generator(name        = "G1",
+                          p_max       = 2.0,
+                          p_min       = 0.0,
+                          cost_model  = "polynomial",
+                          cost_coeffs = (0.0, 6.0, 0.0))
+
+    generator2 = Generator(name        = "G2",
+                           p_max       = 6.0,
                            p_min       = 0.0,
                            cost_model  = "polynomial",
-                           cost_coeffs = ( 0.0, 6.0, 0.0 ) )
+                           cost_coeffs = (0.0, 10.0, 0.0))
 
-    generator2 = Generator( name        = "G2",
-                            p_max       = 6.0,
-                            p_min       = 0.0,
-                            cost_model  = "polynomial",
-                            cost_coeffs = ( 0.0, 10.0, 0.0 ) )
+    load = Load(name="L1", p=1.0, q=0.0)
 
-    load = Load( name = "L1", p = 1.0, q = 0.0 )
+    bus1.generators.append(generator)
+    bus1.generators.append(generator2)
+    bus1.loads.append(load)
+    power_sys.buses.append(bus1)
 
-    bus1.generators.append( generator )
-    bus1.generators.append( generator2 )
-    bus1.loads.append( load )
-    power_sys.buses = [ bus1 ]
-
+    # Examine the DC OPF routine output.
 #    solution = DCOPFRoutine(power_sys).solve()
-#    writer = ReSTWriter(power_sys, sys.stdout)
-#    writer.write_generator_data()
+#    writer = ReSTWriter()
+#    writer.write_generator_data(power_sys, sys.stdout)
 
     return power_sys
 
 
 def main(power_sys):
-    # Create tasks.
+    """ Associates an agent and a task with each generator in the network.
+    """
     tasks = []
     agents = []
+    
     for generator in power_sys.online_generators:
         # Create the world in which the trading agent acts.
-        env = ParticipantEnvironment( power_system = power_sys,
-                                      asset        = generator )
+        env = ParticipantEnvironment(power_system=power_sys, asset=generator)
 
         # Create a task that connects each agent to it's environment. The task
         # defines what the goal is for an agent and how the agent is rewarded
         # for it's actions.
-        task = ProfitTask( env )
+        task = ProfitTask(env)
 
         # Create a linear controller network. Each agent needs a controller
         # that maps the current state to an action.
 #        net = buildNetwork( 3, 6, 1, bias = False, outclass = SigmoidLayer )
-        net = buildNetwork( 1, 1, bias = False )
+        net = buildNetwork(1, 1, bias=False)
 
-        net._setParameters( array([0.5]) )
+        net._setParameters(array([0.5]))
 
         # Create agent. The agent is where the learning happens. For continuous
         # problems a policy gradient agent is required.  Each agent has a
         # module (network) and a learner, that modifies the module.
 #        agent = LearningAgent( module = net, learner = ENAC() )
 #        agent.name = "LearningAgent-%s" % generator.name
-        agent = PolicyGradientAgent( module = net, learner = ENAC() )
+        agent = PolicyGradientAgent(module=net, learner=ENAC())
         agent.name = "PolicyGradientAgent-%s" % generator.name
 
         # Backpropagation parameters.
@@ -140,21 +141,16 @@ def main(power_sys):
 #        gradient_descent.deltamin = 0.01
 
         # Collect tasks and agents.
-        tasks.append( task )
-        agents.append( agent )
+        tasks.append(task)
+        agents.append(agent)
 
-    experiment = MarketExperiment( tasks, agents, power_sys )
-#    experiment.doInteractions( number = 3 )
-
-#    plot = ExperimentPlot(experiment)
-#    plot.configure_traits()
+    experiment = MarketExperiment(tasks, agents, power_sys)
+    experiment.doInteractions(number=3)
 
     writer = ReSTExperimentWriter(experiment, sys.stdout)
 #    writer.write_state_data()
     writer.write_action_data()
 #    writer.write_reward_data()
-
-    experiment.configure_traits()
 
     return experiment
 
@@ -162,12 +158,15 @@ def main(power_sys):
 if __name__ == "__main__":
     import logging
     logger = logging.getLogger()
+    
+    # Remove PyBrain handlers.
     for handler in logger.handlers:
-        logger.removeHandler( handler )
-    logger.addHandler( logging.StreamHandler(sys.stdout) )
+        logger.removeHandler(handler)
+        
+    logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
     power_sys = get_power_sys()
-    main( power_sys )
+    main(power_sys)
 
 # EOF -------------------------------------------------------------------------
