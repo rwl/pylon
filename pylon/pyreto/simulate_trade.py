@@ -68,13 +68,13 @@ def get_power_sys():
     generator = Generator( name        = "G1",
                            p_max       = 2.0,
                            p_min       = 0.0,
-                           cost_model  = "Polynomial",
+                           cost_model  = "polynomial",
                            cost_coeffs = ( 0.0, 6.0, 0.0 ) )
 
     generator2 = Generator( name        = "G2",
                             p_max       = 6.0,
                             p_min       = 0.0,
-                            cost_model  = "Polynomial",
+                            cost_model  = "polynomial",
                             cost_coeffs = ( 0.0, 10.0, 0.0 ) )
 
     load = Load( name = "L1", p = 1.0, q = 0.0 )

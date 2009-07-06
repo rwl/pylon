@@ -65,8 +65,8 @@ class YTest(TestCase):
                 0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i   4.4821 -17.0047i
 
         """
-        am = AdmittanceMatrix()
-        Y = am(self.network)
+        admittance_matrix = AdmittanceMatrix()
+        Y = admittance_matrix(self.network)
 
         self.assertEqual(Y.size, (6, 6))
 
@@ -148,8 +148,8 @@ class BTest(TestCase):
                      0   -5.0000  -10.0000         0   -3.3333   18.3333
 
         """
-        sm = SusceptanceMatrix()
-        B, B_source = sm(self.network)
+        susceptance_matrix = SusceptanceMatrix()
+        B, B_source = susceptance_matrix(self.network)
 
         self._validate_susceptance_diagonal_values(B)
         self._validate_suseptance_off_diagonal_equality(B)

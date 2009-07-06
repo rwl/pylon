@@ -341,12 +341,7 @@ class MATPOWERReader(object):
         if base_mva == 0.0:
             base_mva = self.base_mva
 
-        # Locate the associated bus in the network
-#        bus_names = [v.name for v in buses]
-#        bus_idx = bus_names.index(str(tokens["bus_id"]))
-#        bus = buses[bus_idx]
-#        bus = self.network.buses[tokens["bus_id"]-1]
-
+        # Locate the generator's bus.
         for i, bus in enumerate(self.network.buses):
             if bus._bus_id == tokens["bus_id"]:
                 break
@@ -367,6 +362,9 @@ class MATPOWERReader(object):
         generator.online      = tokens["status"]
         generator.p_max       = tokens["Pmax"] / base_mva
         generator.p_min       = tokens["Pmin"] / base_mva
+        
+        generator.p_max_bid   = tokens["Pmax"] / base_mva
+        generator.p_min_bid   = tokens["Pmin"] / base_mva
 
 #        bus.generators.append(generator)
         self.network.buses[i].generators.append(generator)
@@ -447,7 +445,7 @@ class MATPOWERReader(object):
 #            print "Points:", points
 
             g.pwl_points = points
-            g.cost_model = "Piecewise Linear"
+            g.cost_model = "piecewise linear"
 
         # Polynomial cost data
         elif tokens["model"] == 2:
@@ -469,7 +467,7 @@ class MATPOWERReader(object):
                     coeffs.append(0)
 
             g.cost_coeffs = tuple(coeffs)
-            g.cost_model  = "Polynomial"
+            g.cost_model  = "polynomial"
 
         else:
             raise ValueError, "Invalid cost model number"

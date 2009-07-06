@@ -88,8 +88,8 @@ class DCOPFRoutine(object):
         # related to bus voltage angles by P = Bbus * Va + Pbusinj
         self._B = None
 
-        # Sparse branch source bus susceptance matrix. The real power flows at the
-        # from end the lines are related to the bus voltage angles by
+        # Sparse branch source bus susceptance matrix. The real power flows at
+        # the from end the lines are related to the bus voltage angles by
         # Pf = Bf * Va + Pfinj
         self._B_source = None
 
@@ -148,7 +148,7 @@ class DCOPFRoutine(object):
 
         logger.debug("Solving DC OPF [%s]" % network.name)
 
-        # Turn output to screen on or off.
+        # Algorithm parameters.
         solvers.options["show_progress"] = self.show_progress
         solvers.options["maxiters"] = self.max_iterations
         solvers.options["abstol"] = self.absolute_tol
@@ -156,31 +156,45 @@ class DCOPFRoutine(object):
         solvers.options["feastol"] = self.feasibility_tol
         solvers.options["refinement"] = self.refinement
 
-        solution = None
-
-        self._B, self._B_source = make_susceptance_matrix( network )
-        self._build_theta_inj_source()
-        self._build_theta_inj_bus()
+        susceptance_matrix = SusceptanceMatrix()
+        self._B, self._B_source = susceptance_matrix(network)
+        
+        self._theta_inj_source = self._get_theta_inj_source()
+        self._theta_inj_bus = self._get_theta_inj_bus()
+        
+        # Use the same cost model for all generators.
         self._check_cost_model_consistency()
-        self._build_x()
-        # Problem constraints
-        self._build_cost_constraint()
-        self._build_reference_angle_constraint()
-        self._build_active_power_flow_equations()
-        self._build_generation_limit_constraint()
-        self._build_branch_flow_limit_constraint()
+        
+        # Get the vector x where, AA * x <= bb.
+        self._x = self._get_x()
+        
+        # Problem constraints.
+        self._aa_cost, self._bb_cost = self._get_cost_constraint()
+        self._aa_ref, self._bb_ref = self._get_reference_angle_constraint()
+        
+        self._aa_mismatch, self._bb_mismatch = \
+            self._get_active_power_flow_equations()
+            
+        self._aa_generation, self._bb_generation = \
+            self._get_generation_limit_constraint()
+            
+        self._aa_flow, self._bb_flow = self._get_branch_flow_limit_constraint()
 
-        self._build_AA_equality()
-        self._build_AA_inequality()
-        self._build_bb_equality()
-        self._build_bb_inequality()
+        # Combine the equality constraints.
+        self._AA_eq = self._get_AA_equality()
+        self._bb_eq = self._get_bb_equality()
 
-        # Objective function:
-        self._build_h()
-        self._build_c()
+        # Combine the inequality constraints.        
+        self._AA_ieq = self._get_AA_inequality()
+        self._bb_ieq = self._get_bb_inequality()
 
-        # Solve the problem:
+        # The objective function has the form 0.5 * x'*H*x + c'*x.
+        self._hh = self._get_h()
+        self._cc = self._get_c()
+
+        # Solve the problem.
         solution = self._solve_qp()
+        self.x = solution["x"]
 
         if solution["status"] == "optimal":
             self._update_solution_data(solution)
@@ -191,8 +205,8 @@ class DCOPFRoutine(object):
     #  Phase shift injection vectors:
     #--------------------------------------------------------------------------
 
-    def _build_theta_inj_source(self):
-        """ Builds the phase shift "quiescent" injections
+    def _get_theta_inj_source(self):
+        """ Returns the phase shift "quiescent" injections.
 
             | Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
             |    | = |          | * |     | + |       |
@@ -208,22 +222,19 @@ class DCOPFRoutine(object):
             else:
                 susc.append(1e12)
         b = matrix(susc)
-        angle = matrix([-e.phase_shift*pi/180 for e in branches])
+        angle = matrix([-e.phase_shift * pi / 180 for e in branches])
 
         # Element-wise multiply
         # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node9.html
         source_inj = mul(b, angle)
 
-        logger.debug(
-            "Built source bus phase shift injection vector:\n%s" % source_inj
-        )
-
-        self._theta_inj_source = source_inj
-
-        return
+        logger.debug("Built source bus phase shift injection vector:\n%s" % 
+            source_inj)
+        
+        return source_inj
 
 
-    def _build_theta_inj_bus(self):
+    def _get_theta_inj_bus(self):
         """ Pbusinj = dot(Cf, Pfinj) + dot(Ct, Ptinj)
         """
         buses = self.network.connected_buses
@@ -248,9 +259,7 @@ class DCOPFRoutine(object):
 
         logger.debug("Bus phase shift injection vector:\n%s" % bus_inj)
 
-        self._theta_inj_bus = bus_inj
-
-        return
+        return bus_inj
 
     #--------------------------------------------------------------------------
     #  Cost models:
@@ -259,44 +268,42 @@ class DCOPFRoutine(object):
     def _check_cost_model_consistency(self):
         """ Checks the generator cost models. If they are not all polynomial
             then those that are get converted to piecewise linear models. The
-            algorithm trait is then set accordingly.
+            algorithm attribute is then set accordingly.
         """
         buses = self.network.connected_buses
         generators = self.network.online_generators
 
         models = [g.cost_model for g in generators]
 
-        if "Polynomial" in models and "Piecewise Linear" in models:
-            logger.info(
-                "Not all generators use the same cost model, all will "
-                "be converted to piece-wise linear"
-            )
+        if "polynomial" in models and "piecewise linear" in models:
+            logger.info("Not all generators use the same cost model, all will "
+                "be converted to piece-wise linear.")
 
             # TODO: Implemented conversion of polynomial cost models
-            # to piecewise linear models
+            # to piecewise linear models.
             raise NotImplementedError, "Yet to implement polynomial to " \
-                "piecewise linear conversion"
+                "piecewise linear conversion."
 
-            logger.debug("Using linear solver for DC OPF")
+            logger.debug("Using linear solver for DC OPF.")
             self._solver_type = "linear"
 
-        elif "Polynomial" not in models:
-            logger.debug("Using linear solver for DC OPF")
+        elif "polynomial" not in models:
+            logger.debug("Using linear solver for DC OPF.")
             self._solver_type = "linear"
 
-        elif "Piecewise Linear" not in models:
-            logger.debug("Using quadratic solver for DC OPF")
+        elif "piecewise linear" not in models:
+            logger.debug("Using quadratic solver for DC OPF.")
             self._solver_type = "quadratic"
 
         else:
-            logger.info("No valid cost models specified")
+            logger.info("No valid cost models specified.")
 
     #--------------------------------------------------------------------------
     #  Form vector x:
     #--------------------------------------------------------------------------
 
-    def _build_x(self):
-        """ Builds the vector x where, AA * x <= bb.  Stack the initial voltage
+    def _get_x(self):
+        """ Returns the vector x where, AA * x <= bb.  Stack the initial voltage
             phases for each generator bus, the generator real power output and
             if using pw linear costs, the output cost.
         """
@@ -321,15 +328,13 @@ class DCOPFRoutine(object):
 
         logger.debug("Built DC OPF x vector:\n%s" % x)
 
-        self._x = x
-
         return x
 
     #--------------------------------------------------------------------------
     #  Build cost constraint matrices:
     #--------------------------------------------------------------------------
 
-    def _build_cost_constraint(self):
+    def _get_cost_constraint(self):
         """ Set up constraint matrix AA where, AA * x <= bb
 
             For pw linear cost models we must include a constraint for each
@@ -382,8 +387,8 @@ class DCOPFRoutine(object):
             # The total number of cost variables
             n_cost = len([g.p_cost for g in generators])
 
-            a_cost = spmatrix([], [], [], size=(0, n_buses+n_generators))
-            b_cost = matrix([], size=(0,1))
+            a_cost = spmatrix([], [], [], size=(0, n_buses + n_generators))
+            b_cost = matrix([], size=(0, 1))
 
         else:
             raise ValueError, "Invalid solver trait"
@@ -391,14 +396,13 @@ class DCOPFRoutine(object):
         logger.debug("Built cost constraint matrix Acc:\n%s" % a_cost)
         logger.debug("Built cost constraint vector bcc:\n%s" % b_cost)
 
-        self._aa_cost = a_cost
-        self._bb_cost = b_cost
+        return a_cost, b_cost
 
     #--------------------------------------------------------------------------
     #  Reference bus constraint matrices:
     #--------------------------------------------------------------------------
 
-    def _build_reference_angle_constraint(self):
+    def _get_reference_angle_constraint(self):
         """ Use the slack bus angle for reference or buses[0].
         """
         buses        = self.network.connected_buses
@@ -430,14 +434,13 @@ class DCOPFRoutine(object):
         logger.debug("Built reference constraint matrix Aref:\n%s" % a_ref)
         logger.debug("Built reference constraint vector bref:\n%s" % b_ref)
 
-        self._aa_ref = a_ref
-        self._bb_ref = b_ref
+        return a_ref, b_ref
 
     #--------------------------------------------------------------------------
     #  Active power flow equations:
     #--------------------------------------------------------------------------
 
-    def _build_active_power_flow_equations(self):
+    def _get_active_power_flow_equations(self):
         """ P mismatch (B*Va + Pg = Pd).
         """
         buses        = self.network.connected_buses
@@ -476,8 +479,6 @@ class DCOPFRoutine(object):
         logger.debug("Built power balance constraint matrix Aflow:\n%s" %
                      a_mismatch)
 
-        self._aa_mismatch = a_mismatch
-
         p_demand = matrix([v.p_demand for v in buses])
         g_shunt = matrix([v.g_shunt for v in buses])
 
@@ -486,14 +487,17 @@ class DCOPFRoutine(object):
         logger.debug("Built power balance constraint vector bflow:\n%s" %
                      b_mismatch)
 
-        self._bb_mismatch = b_mismatch
+        return a_mismatch, b_mismatch
 
     #--------------------------------------------------------------------------
     #  Active power generation limit constraints:
     #--------------------------------------------------------------------------
 
-    def _build_generation_limit_constraint(self):
-
+    def _get_generation_limit_constraint(self):
+        """ Returns the lower and upper limits on generator output. Note that
+            bid values are used and represent the volume each generator is
+            willing to produce and not the rated capacity of the machine.
+        """
         buses        = self.network.connected_buses
         generators   = self.network.online_generators
         n_buses      = len(buses)
@@ -504,7 +508,7 @@ class DCOPFRoutine(object):
         limit_zeros = spmatrix([], [], [], size=(n_generators, n_buses))
 
         # An identity matrix
-        limit_eye = spdiag([1.0]*n_generators)
+        limit_eye = spdiag([1.0] * n_generators)
 
         if self._solver_type == "linear":
             # The total number of cost variables
@@ -523,8 +527,6 @@ class DCOPFRoutine(object):
 
         logger.debug("Built generator limit constraint matrix:\n%s" % a_limit)
 
-        self._aa_generation = a_limit
-
 
         b_lower = matrix([-g.p_min_bid for g in generators])
 
@@ -534,13 +536,13 @@ class DCOPFRoutine(object):
 
         logger.debug("Built generator limit constraint vector:\n%s" % b_limit)
 
-        self._bb_generation = b_limit
+        return a_limit, b_limit
 
     #--------------------------------------------------------------------------
     #  Active power flow limits:
     #--------------------------------------------------------------------------
 
-    def _build_branch_flow_limit_constraint(self):
+    def _get_branch_flow_limit_constraint(self):
         """ The real power flows at the from end the lines are related to the
             bus voltage angles by Pf = Bf * Va + Pfinj
 
@@ -577,8 +579,6 @@ class DCOPFRoutine(object):
 
         logger.debug("Built flow limit constraint matrix:\n%s" % a_flow)
 
-        self._aa_flow = a_flow
-
 
         flow_s_max = matrix([e.s_max for e in branches])
         # Source and target limits are both the same
@@ -589,68 +589,62 @@ class DCOPFRoutine(object):
 
         logger.debug("Built flow limit constraint vector:\n%s" % b_flow)
 
-        self._bb_flow = b_flow
+        return a_flow, b_flow
 
     #--------------------------------------------------------------------------
     #  Constraints combined:
     #--------------------------------------------------------------------------
 
-    def _build_AA_equality(self):
-
-        AA_eq = sparse([
-            self._aa_cost,
-            self._aa_ref,
-            self._aa_mismatch
-        ])
+    def _get_AA_equality(self):
+        """ Combines the equality constraints.
+        """
+        AA_eq = sparse([self._aa_cost, self._aa_ref, self._aa_mismatch])
 
         logger.debug("Built equality constraint matrix AA:\n%s" % AA_eq)
 
-        self._AA_eq = AA_eq
+        return AA_eq
 
 
-    def _build_bb_equality(self):
-
-        bb_eq = matrix([
-            self._bb_cost,
-            self._bb_ref,
-            self._bb_mismatch
-        ])
+    def _get_bb_equality(self):
+        """ Combines the equality constraints.
+        """
+        bb_eq = matrix([self._bb_cost, self._bb_ref, self._bb_mismatch])
 
         logger.debug("Build equality constraint vector bb:\n%s" % bb_eq)
 
-        self._bb_eq = bb_eq
+        return bb_eq
 
 
-    def _build_AA_inequality(self):
-
-        AA_ieq = sparse([
-            self._aa_generation,
+    def _get_AA_inequality(self):
+        """ Combines the inequality constraints.
+        """
+        AA_ieq = sparse([self._aa_generation,
             # FIXME: Branch flow limit constraint
 #            self._aa_flow,
         ])
 
         logger.debug("Built inequality constraint matrix AAieq:\n%s" % AA_ieq)
 
-        self._AA_ieq = AA_ieq
+        return AA_ieq
 
 
-    def _build_bb_inequality(self):
-
-        bb_ieq = matrix([
-            self._bb_generation,
+    def _get_bb_inequality(self):
+        """ Combines the inequality constraints.
+        """
+        bb_ieq = matrix([self._bb_generation,
             # FIXME: Branch flow limit constraint
 #            self._bb_flow
         ])
 
         logger.debug("Build inequality constraint vector bb:\n%s" % bb_ieq)
 
-        self._bb_ieq = bb_ieq
+        return bb_ieq
 
     #--------------------------------------------------------------------------
     #  Objective function:
     #--------------------------------------------------------------------------
 
-    def _build_h(self):
+    def _get_h(self):
         """ H is a sparse square matrix.
 
             The objective function has the form 0.5 * x'*H*x + c'*x
@@ -677,19 +671,17 @@ class DCOPFRoutine(object):
 #            c_coeffs *= base_mva**2
 
             # TODO: Find explanation for multiplying by the pu coefficients by 2
-            h = spmatrix(
-                2*c0_coeffs,
-                matrix(range(n_generators))+n_buses,
-                matrix(range(n_generators))+n_buses,
-                size=(n_buses+n_generators, n_buses+n_generators)
-            )
+            h = spmatrix(2 * c0_coeffs,
+                         matrix(range(n_generators))+n_buses,
+                         matrix(range(n_generators))+n_buses,
+                         size=(n_buses+n_generators, n_buses+n_generators))
 
         logger.debug("Built objective function matrix:\n%s" % h)
 
-        self._hh = h
+        return h
 
 
-    def _build_c(self):
+    def _get_c(self):
         """ Build c in the objective function of the form 0.5 * x'*H*x + c'*x
 
             Quadratic cost function coefficients: c0*x^2 + c1*x + c2
@@ -703,18 +695,18 @@ class DCOPFRoutine(object):
         if self._solver_type == "linear":
             raise NotImplementedError
         else:
-            v_zeros = matrix([0]*n_buses)
+            v_zeros = matrix([0] * n_buses)
 
             cost_coeffs = [g.cost_coeffs for g in generators]
 
             # Linear cost coefficients in p.u.
-            c1_coeffs = matrix([c1*base_mva for c0, c1, c2 in cost_coeffs])
+            c1_coeffs = matrix([c1 * base_mva for c0, c1, c2 in cost_coeffs])
 
             c = matrix([v_zeros, c1_coeffs])
 
         logger.debug("Built objective function vector:\n%s" % c)
 
-        self._cc = c
+        return c
 
 
     def _solve_qp(self):
@@ -733,13 +725,11 @@ class DCOPFRoutine(object):
         #- initvals['z'] is a dense 'd' matrix of size (K,1), representing
         #  a vector that is strictly positive with respect to the cone C.
 
-        solution = qp(
-            P=self._hh, q=self._cc,
-            G=self._AA_ieq, h=self._bb_ieq,
-            A=self._AA_eq, b=self._bb_eq,
-            solver=self.solver,
-            initvals={"x": self._x}
-        )
+        solution = qp(P=self._hh, q=self._cc,
+                      G=self._AA_ieq, h=self._bb_ieq,
+                      A=self._AA_eq, b=self._bb_eq,
+                      solver=self.solver,
+                      initvals={"x": self._x})
 
         #Returns a dictionary with keys 'status', 'x', 's', 'y', 'z'.
         #
@@ -768,8 +758,6 @@ class DCOPFRoutine(object):
 #        print "Y:", solution["y"]
 #        print "Z:", solution["z"]
 
-        self.x = solution["x"]
-
         return solution
 
 
@@ -784,15 +772,15 @@ class DCOPFRoutine(object):
         n_buses      = len(buses)
         n_generators = len(generators)
 
-        offline_branches = [e for e in self.network.branches \
-                            if e not in branches]
-        offline_generators = [g for g in self.network.all_generators \
-                              if g not in generators]
+        offline_branches = [
+            e for e in self.network.branches if e not in branches]
+        offline_generators = [
+            g for g in self.network.all_generators if g not in generators]
 
-        print "Solution x:\n", solution["x"]
-        print "Solution s:\n", solution["s"]
-        print "Solution y:\n", solution["y"]
-        print "Solution z:\n", solution["z"]
+#        print "Solution x:\n", solution["x"]
+#        print "Solution s:\n", solution["s"]
+#        print "Solution y:\n", solution["y"]
+#        print "Solution z:\n", solution["z"]
 
         # Bus voltage angles.
         v_angle = solution["x"][:n_buses]

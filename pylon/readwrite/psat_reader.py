@@ -512,7 +512,7 @@ class PSATReader(object):
         else:
             g = bus.generators[0]
 
-        g.cost_model = "Polynomial"
+        g.cost_model = "polynomial"
         g.poly_coeffs = (
             tokens["p_fixed"],
             tokens["p_proportional"],

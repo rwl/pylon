@@ -229,7 +229,7 @@ class GeneratorTest(unittest.TestCase):
     def test_polynomial_cost(self):
         """ Test cost arrays for polynomial cost curve coefficients.
         """
-        g = Generator(cost_model="Polynomial")
+        g = Generator(cost_model="polynomial")
 
         p_max = 10
         p_min = 2
@@ -275,7 +275,7 @@ class GeneratorTest(unittest.TestCase):
     def test_piecewise_linear_cost(self):
         """ Test cost arrays for piecewise linear cost curve coordinates.
         """
-        g = Generator(cost_model="Piecewise Linear")
+        g = Generator(cost_model="piecewise linear")
 
         p_max = 10
         p_min = 2

@@ -58,8 +58,8 @@ class Network(object):
     def slack_model(self):
         """ Slack/swing/reference bus model.
         """
-        slackers = [v for v in self.buses if v.slack]
-        if slackers:
+        slack_buses = [v for v in self.buses if v.slack]
+        if slack_buses:
             return "single"
         else:
             return "distributed"
@@ -265,7 +265,7 @@ class Generator(object):
 
     def __init__(self, name="generator", online=True, base_mva=100.0, p=1.0,
             p_max=2.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=3.0,
-            q_min=-3.0, p_max_bid=2.0, p_min_bid=0.0, c_startup=0.0,
+            q_min=-3.0, p_max_bid=None, p_min_bid=None, c_startup=0.0,
             c_shutdown=0.0, cost_model="polynomial",
             cost_coeffs=None, rate_up=1.0, rate_down=1.0, min_up=0,
             min_down=0, initial_up=1, initial_down=0):
@@ -293,10 +293,16 @@ class Generator(object):
 
         # Maximum active power output bid. Used in OPF routines. Should be less
         # than or equal to p_max.
-        self.p_max_bid = p_max_bid
+        if p_max_bid is None:
+            self.p_max_bid = p_max
+        else:
+            self.p_max_bid = 0.0
         # Minimum active power bid. Used in OPF routines. Should be greater
         # than or equal to p_min.
-        self.p_min_bid = p_min_bid
+        if p_min_bid is None:
+            self.p_min_bid = p_min
+        else:
+            self.p_min_bid = 0.0
         # Start up cost.
         self.c_startup = c_startup
         # Shut down cost.
@@ -343,7 +349,7 @@ class Generator(object):
     def p_cost(self):
         """ Active power cost at the current output.
         """
-        if self.cost_model == "Polynomial":
+        if self.cost_model == "polynomial":
             x = self.p
             c0, c1, c2 = self.cost_coeffs
             return c0 + c1*x + c2*x**2
@@ -376,7 +382,7 @@ class Load(object):
         else:
             self.p_profile = p_profile
 
-        self._p_cycle = cycle(p_profile)
+        self._p_cycle = cycle(self.p_profile)
 
     @property
     def p_profiled(self):

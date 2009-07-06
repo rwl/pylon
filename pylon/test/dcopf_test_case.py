@@ -41,8 +41,10 @@ DATA_FILE = join(dirname(__file__), "data/case6ww.m")
 class DCOPFTest(unittest.TestCase):
     """ We use a MATPOWER data file and validate the results against those
         obtained from running the MATPOWER rundcopf.m script with the same data
-        file. See reader_test_case.py for validation of MATPOWER data file
-        parsing.
+        file.
+        
+        See reader_test_case.py for MATPOWER data file parsing tests.
+        See y_test_case.py for testing the susceptance matrix.
     """
 
     def setUp(self):
@@ -50,6 +52,7 @@ class DCOPFTest(unittest.TestCase):
         """
         reader = MATPOWERReader()
         network = reader(DATA_FILE)
+        
         self.routine = DCOPFRoutine(show_progress=False)
         success = self.routine(network)
 
@@ -60,17 +63,7 @@ class DCOPFTest(unittest.TestCase):
 
             Pfinj =
 
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
+                 0  0  0  0  0  0  0  0  0  0  0
         """
         theta_inj = self.routine._theta_inj_source
 
@@ -86,12 +79,7 @@ class DCOPFTest(unittest.TestCase):
 
             Pbusinj =
 
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
+                 0  0  0  0  0  0
         """
         theta_inj = self.routine._theta_inj_bus
 
@@ -112,15 +100,7 @@ class DCOPFTest(unittest.TestCase):
 
             x =
 
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
-                 0
-            0.5000
-            0.6000
+                 0  0  0  0  0  0  0  0.5000  0.6000
         """
         x = self.routine._x
 
