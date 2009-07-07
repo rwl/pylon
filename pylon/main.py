@@ -81,7 +81,7 @@ class PylonApplication(object):
             specified routine and writes a report to the output.
         """
         # Get the network from the input.
-        network = self._get_network(input)
+        network = read_network(input, self.type, self.file_name)
 
         if network is not None:
             if self.routine != "none":
@@ -122,41 +122,6 @@ class PylonApplication(object):
             return False
 
 
-    def _get_network(self, input):
-        """ Returns a network object from the given input.
-        """
-        type    = self.type
-        network = None
-
-        if type == "any":
-            type = detect_data_file(input, self.file_name)
-
-        readers = {"matpower": MATPOWERReader,
-                   "psat": PSATReader,
-                   "psse": PSSEReader,
-                   "pickle": PickleReader}
-
-        # Read network data.
-        if readers.has_key(type):
-            reader_klass = readers[type]
-            reader = reader_klass()
-            network = reader(input)
-        else:
-            for reader_klass in readers.values():
-                reader = reader_klass()
-                try:
-                    network = reader(input)
-                    if network is not None:
-                        break
-                except:
-                    pass
-            else:
-                network = input.read()
-                network = None
-
-        return network
-
-
     def _get_routine(self, routine):
         """ Returns the routine to which to pass the network.
         """
@@ -177,6 +142,40 @@ class PylonApplication(object):
             r = None
 
         return r
+
+
+def read_network(input, type, file_name):
+    """ Returns a network object from the given input and file name.
+    """
+    network = None
+
+    if type == "any":
+        type = detect_data_file(input, file_name)
+
+    readers = {"matpower": MATPOWERReader,
+               "psat": PSATReader,
+               "psse": PSSEReader,
+               "pickle": PickleReader}
+
+    # Read network data.
+    if readers.has_key(type):
+        reader_klass = readers[type]
+        reader = reader_klass()
+        network = reader(input)
+    else:
+        for reader_klass in readers.values():
+            reader = reader_klass()
+            try:
+                network = reader(input)
+                if network is not None:
+                    break
+            except:
+                pass
+        else:
+            network = input.read()
+            network = None
+
+    return network
 
 #------------------------------------------------------------------------------
 #  Format detection:
@@ -222,7 +221,7 @@ def detect_data_file(input, file_name=""):
 #------------------------------------------------------------------------------
 
 def main():
-    """ Parse command line and call Pylon with the correct data.
+    """ Parses the command line and call Pylon with the correct data.
     """
     parser = optparse.OptionParser("usage: pylon [options] input_file")
 
@@ -232,8 +231,8 @@ def main():
     parser.add_option("-q", "--quiet", action="store_true", dest="quiet",
         default=False, help="Print less information.")
 
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
-        default=False, help="Print debug information.")
+#    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+#        default=False, help="Print debug information.")
 
     parser.add_option("-n", "--no-report", action="store_true",
         dest="no_report", default=False, help="Suppress report output.")

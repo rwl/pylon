@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Copyright (C) 2009 Richard W. Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
@@ -13,14 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 """ Test case for the DC Optimal Power Flow routine.
 """
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Imports:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 from os.path import join, dirname
 import unittest
@@ -28,19 +28,19 @@ import unittest
 from pylon.readwrite import MATPOWERReader
 from pylon import DCOPFRoutine
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Constants:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  "DCOPFTest" class:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 class DCOPFTest(unittest.TestCase):
-    """ We use a MATPOWER data file and validate the results against those
-        obtained from running the MATPOWER rundcopf.m script with the same data
+    """ Uses a MATPOWER data file and validates the results against those
+        obtained from running the MATPOWER rundcopf.m script with the same
         file.
         
         See reader_test_case.py for MATPOWER data file parsing tests.

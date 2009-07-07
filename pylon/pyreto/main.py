@@ -23,6 +23,8 @@
 #------------------------------------------------------------------------------
 
 import sys
+import optparse
+
 from os.path import dirname, join
 
 from numpy import array
@@ -35,6 +37,8 @@ from pybrain.structure.modules import SigmoidLayer
 from pylon import Network, Bus, Generator, Load
 from pylon import DCOPFRoutine
 
+from pylon.main import read_network
+
 from pylon.readwrite import MATPOWERReader, ReSTWriter
 from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
@@ -43,56 +47,50 @@ from experiment import MarketExperiment
 from profit_task import ProfitTask
 
 #------------------------------------------------------------------------------
-#  Constants:
+#  "PyretoApplication" class:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "..", "test", "data", "case6ww.m")
-
-#------------------------------------------------------------------------------
-#  Simulate trade:
-#------------------------------------------------------------------------------
-
-def get_power_sys():
-    """ Returns a test power system.
+class PyretoApplication(object):
+    """ Simulates energy trade in a power system.
     """
-    # Read network from data file.
-#    reader = MATPOWERReader()
-#    power_sys = reader(DATA_FILE)
+    
+    def __init__(self, file_name="", type="any", interactions=24, ac=False):
+        """ Initialises a new PyretoApplication instance.
+        """
+        # Name of the input file.
+        self.file_name = file_name
+        # Format in which the network is stored.  Possible values are: 'any',
+        # 'matpower', 'psat', 'matlab' and 'psse'.
+        self.type = type
+        # Number of interactions to perform.
+        self.interactions = interactions
+        # Use AC OPF routine?
+        self.ac = ac
 
-    # Build one bus test network.
-    power_sys = Network(name="1 Bus")
+    #--------------------------------------------------------------------------
+    #  Runs the application:
+    #--------------------------------------------------------------------------
 
-    bus1 = Bus(name="Bus 1")
+    def __call__(self, input, output):
+        """ Forms a network from the input, associates an agent with each
+            generator, performs the specified number of interactions and
+            writes a report to the output.
+        """
+        # Get the network from the input.
+        power_sys = read_network(input, self.type, self.file_name)
+    
+        experiment = one_for_one(power_sys)
+        
+        experiment.doInteractions(self.interactions)
+    
+        writer = ReSTExperimentWriter()
+        writer(experiment, output)
 
-    generator = Generator(name        = "G1",
-                          p_max       = 2.0,
-                          p_min       = 0.0,
-                          cost_model  = "polynomial",
-                          cost_coeffs = (0.0, 6.0, 0.0))
+#------------------------------------------------------------------------------
+#  Associate one agent with each generator in the network:
+#------------------------------------------------------------------------------
 
-    generator2 = Generator(name        = "G2",
-                           p_max       = 6.0,
-                           p_min       = 0.0,
-                           cost_model  = "polynomial",
-                           cost_coeffs = (0.0, 10.0, 0.0))
-
-    load = Load(name="L1", p=1.0, q=0.0)
-
-    bus1.generators.append(generator)
-    bus1.generators.append(generator2)
-    bus1.loads.append(load)
-    power_sys.buses.append(bus1)
-
-    # Examine the DC OPF routine output.
-#    routine = DCOPFRoutine()
-#    routine(power_sys)
-#    writer = ReSTWriter()
-#    writer.write_generator_data(power_sys, sys.stdout)
-
-    return power_sys
-
-
-def main(power_sys):
+def one_for_one(power_sys):
     """ Associates an agent and a task with each generator in the network.
     """
     tasks = []
@@ -146,14 +144,91 @@ def main(power_sys):
         agents.append(agent)
 
     experiment = MarketExperiment(tasks, agents, power_sys)
-    experiment.doInteractions(number=1)
-
-    writer = ReSTExperimentWriter()
-#    writer.write_state_data(experiment, sys.stdout)
-    writer.write_action_data(experiment, sys.stdout)
-#    writer.write_reward_data(experiment, sys.stdout)
 
     return experiment
+
+#------------------------------------------------------------------------------
+#  Pyreto entry point:
+#------------------------------------------------------------------------------
+
+def main():
+    """ Defines the entry point for Pyreto.
+    """
+    parser = optparse.OptionParser("usage: pyreto [options] input_file")
+
+    parser.add_option("-o", "--output", dest="output", metavar="FILE",
+        help="Write report to FILE.")
+
+    parser.add_option("-t", "--input-type", dest="type", metavar="TYPE",
+        default="any", help="The argument following the -t is used to "
+        "indicate the format type of the input data file. The types which are "
+        "currently supported include: matpower, psat, psse.  If not "
+        "specified Pyreto will attempt to determine the type according to the "
+        "file name extension and the file header.")
+
+    parser.add_option("-n", "--interactions", dest="interactions",
+        metavar="INTERACTIONS", default=24, help="The argument following the "
+        "-n is used to set the number of interactions between agents that "
+        "will be performed before returning the report.")
+
+    parser.add_option("--ac", dest="ac", default=False,
+        help="Use AC OPF routine.")
+
+    parser.add_option("-q", "--quiet", action="store_true", dest="quiet",
+        default=False, help="Print less information.")
+
+    parser.add_option("-d", "--debug", action="store_true", dest="debug",
+        default=False, help="Print debug information.")
+    
+    (options, args) = parser.parse_args()
+
+    if options.quiet:
+        logger.setLevel(logging.CRITICAL)
+    elif options.debug:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+
+    # Output.
+    if options.output:
+        outfile = options.output
+        if outfile == "-":
+            outfile = sys.stdout
+            logger.setLevel(logging.CRITICAL) # we must stay quiet
+
+    else:
+        outfile = sys.stdout
+
+    # Input.
+    if len(args) > 1:
+        parser.print_help()
+        sys.exit(1)
+
+    elif len(args) == 0 or args[0] == "-":
+        filename = ""
+        if sys.stdin.isatty():
+            # True if the file is connected to a tty device, and False
+            # otherwise (pipeline or file redirection).
+            parser.print_help()
+            sys.exit(1)
+        else:
+            # Handle piped input ($ cat ehv3.raw | pylon | rst2pdf -o ans.pdf).
+            infile = sys.stdin
+
+    else:
+        filename = args[0]
+        infile   = open(filename)
+
+    pyreto = PyretoApplication(file_name=filename, type=options.type,
+        interactions=options.interactions, ac=options.ac)
+
+    # Call the Pyreto application.
+    pyreto(infile, outfile)
+
+    try:
+        infile.close() # Clean-up
+    except:
+        pass
 
 
 if __name__ == "__main__":
@@ -166,8 +241,7 @@ if __name__ == "__main__":
         
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
-
-    power_sys = get_power_sys()
-    main(power_sys)
+    
+    main()
 
 # EOF -------------------------------------------------------------------------
