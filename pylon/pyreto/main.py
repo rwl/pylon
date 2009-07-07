@@ -57,7 +57,7 @@ def get_power_sys():
     """
     # Read network from data file.
 #    reader = MATPOWERReader()
-#    power_sys = reader( DATA_FILE )
+#    power_sys = reader(DATA_FILE)
 
     # Build one bus test network.
     power_sys = Network(name="1 Bus")
@@ -84,7 +84,8 @@ def get_power_sys():
     power_sys.buses.append(bus1)
 
     # Examine the DC OPF routine output.
-#    solution = DCOPFRoutine(power_sys).solve()
+#    routine = DCOPFRoutine()
+#    routine(power_sys)
 #    writer = ReSTWriter()
 #    writer.write_generator_data(power_sys, sys.stdout)
 
@@ -145,12 +146,12 @@ def main(power_sys):
         agents.append(agent)
 
     experiment = MarketExperiment(tasks, agents, power_sys)
-    experiment.doInteractions(number=3)
+    experiment.doInteractions(number=1)
 
-    writer = ReSTExperimentWriter(experiment, sys.stdout)
-#    writer.write_state_data()
-    writer.write_action_data()
-#    writer.write_reward_data()
+    writer = ReSTExperimentWriter()
+#    writer.write_state_data(experiment, sys.stdout)
+    writer.write_action_data(experiment, sys.stdout)
+#    writer.write_reward_data(experiment, sys.stdout)
 
     return experiment
 

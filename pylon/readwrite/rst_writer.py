@@ -53,7 +53,7 @@ class ReSTWriter(object):
         self.network = network
         self.file_or_filename = file_or_filename
 
-        file = self._get_file(file_or_filename)
+        file = _get_file(file_or_filename)
 
         # Document title.
         if self.include_title:
@@ -120,7 +120,7 @@ class ReSTWriter(object):
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
 
-        file = self._get_file(file_or_filename)
+        file = _get_file(file_or_filename)
 
         # Map component labels to attribute names
         components = [("Bus", "n_buses"), ("Generator", "n_generators"),
@@ -159,6 +159,9 @@ class ReSTWriter(object):
         else:
             file.write(sep)
             file.write("\n")
+        
+        if isinstance(file_or_filename, basestring):
+            file.close()
             
         del report
 
@@ -173,7 +176,7 @@ class ReSTWriter(object):
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
 
-        file = self._get_file(file_or_filename)
+        file = _get_file(file_or_filename)
 
         col1_header = "Attribute"
         col1_width  = 24
@@ -239,6 +242,9 @@ class ReSTWriter(object):
         file.write(sep)
         file.write("\n")
         
+        if isinstance(file_or_filename, basestring):
+            file.close()
+        
         del report
 
 
@@ -252,7 +258,7 @@ class ReSTWriter(object):
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
 
-        file = self._get_file(file_or_filename)
+        file = _get_file(file_or_filename)
 
         col1_header = "Attribute"
         col1_width  = 19
@@ -288,6 +294,9 @@ class ReSTWriter(object):
         file.write(sep)
         file.write("\n")
         
+        if isinstance(file_or_filename, basestring):
+            file.close()
+        
         del report
 
 
@@ -303,7 +312,7 @@ class ReSTWriter(object):
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
 
-        file = self._get_file(file_or_filename)
+        file = _get_file(file_or_filename)
 
         col_width = 8
         col_width_2 = col_width*2+1
@@ -361,6 +370,9 @@ class ReSTWriter(object):
 
         file.write(sep)
         
+        if isinstance(file_or_filename, basestring):
+            file.close()
+        
         del report
 
 
@@ -376,7 +388,7 @@ class ReSTWriter(object):
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
 
-        file = self._get_file(file_or_filename)
+        file = _get_file(file_or_filename)
 
         col_width   = 8
         col_width_2 = col_width*2+1
@@ -439,6 +451,9 @@ class ReSTWriter(object):
 
         file.write(sep)
         
+        if isinstance(file_or_filename, basestring):
+            file.close()
+        
         del report
 
 
@@ -454,7 +469,7 @@ class ReSTWriter(object):
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
 
-        file = self._get_file(file_or_filename)
+        file = _get_file(file_or_filename)
 
         col_width   = 8
         col_width_2 = col_width*2+1
@@ -537,18 +552,10 @@ class ReSTWriter(object):
 
         file.write(sep)
         
-        del report
-
-
-    def _get_file(self, file_or_filename):
-        """ Returns a file from a file or a filename.
-        """
         if isinstance(file_or_filename, basestring):
-            file = open(file_or_filename, "wb")
-        else:
-            file = file_or_filename
-
-        return file
+            file.close()
+        
+        del report
 
 #------------------------------------------------------------------------------
 #  "ReSTExperimentWriter" class:
@@ -557,24 +564,21 @@ class ReSTWriter(object):
 class ReSTExperimentWriter(object):
     """ Writes market experiment data to file in ReStructuredText format.
     """
-    # Market experiment whose data is to be written.
-    experiment = None
-
-    # File object or name of a file to be written to.
-    file_or_filename = ""
-
-    # Sections to include.
-    include_state  = True
-    include_action = True
-    include_reward = True
 
     def __init__(self, include_state=True, include_action=True,
                                            include_reward=True):
         """ Initialises a new ReSTExperimentWriter instance.
         """
+        # Sections to include.
         self.include_state  = include_state
         self.include_action = include_action
         self.include_reward = include_reward
+        
+        # Market experiment whose data is to be written.
+        self.experiment = None
+    
+        # File object or name of a file to be written to.
+        self.file_or_filename = None
 
 
     def __call__(self, experiment, file_or_filename):
@@ -582,52 +586,78 @@ class ReSTExperimentWriter(object):
         """
         self.experiment = experiment
         self.file_or_filename = file_or_filename
-
-        if isinstance(file_or_filename, basestring):
-            file = open(file_or_filename, "wb")
-        else:
-            file = file_or_filename
+        
+        file = _get_file(file_or_filename)
 
         # Write environment state data.
         if self.include_state:
             file.write("State\n")
             file.write( ("-" * 5) + "\n")
 
-            self.write_state_data()
+            self.write_state_data(experiment, file)
+            
+        # Write action data.
+        if self.include_action:
+            file.write("Action\n")
+            file.write( ("-" * 6) + "\n")
+
+            self.write_action_data(experiment, file)
+
+        # Write reward data.
+        if self.include_reward:
+            file.write("Reward\n")
+            file.write( ("-" * 6) + "\n")
+
+            self.write_reward_data(experiment, file)
+        
+        if isinstance(file_or_filename, basestring):
+            file.close()
 
 
-    def write_state_data(self):
+    def write_state_data(self, experiment, file_or_filename):
         """ Writes the state history for each agent in a market experiment
             to a ReST table.
         """
-        self._write_data_table(type="state")
+        file = _get_file(file_or_filename)
+        
+        self._write_data_table(experiment, file, type="state")
+        
+        if isinstance(file_or_filename, basestring):
+            file.close()
 
 
-    def write_action_data(self):
+    def write_action_data(self, experiment, file_or_filename):
         """ Writes the action history for each agent in a market experiment
             to a ReST table.
         """
-        self._write_data_table(type="action")
+        file = _get_file(file_or_filename)
+        
+        self._write_data_table(experiment, file, type="action")
+        
+        if isinstance(file_or_filename, basestring):
+            file.close()
 
 
-    def write_reward_data(self):
+    def write_reward_data(self, experiment, file_or_filename):
         """ Writes the reward history for each agent in a market experiment
             to a ReST table.
         """
-        self._write_data_table(type="reward")
+        file = _get_file(file_or_filename)
+        
+        self._write_data_table(experiment, file, type="reward")
+        
+        if isinstance(file_or_filename, basestring):
+            file.close()
 
 
-    def _write_data_table(self, type):
+    def _write_data_table(self, experiment, file_or_filename, type):
         """ Writes agent data to an ReST table.  The 'type' argument may
             be 'state', 'action' or 'reward'.
         """
-        agents = self.experiment.agents
-        n_agents = len(self.experiment.agents)
+        agents = experiment.agents
+        n_agents = len(experiment.agents)
 
-        if isinstance(self.file_or_filename, basestring):
-            file = open(self.file_or_filename, "wb")
-        else:
-            file = self.file_or_filename
+        file = _get_file(file_or_filename)
 
         col_width = 8
         idx_col_width = 3
@@ -663,5 +693,16 @@ class ReSTExperimentWriter(object):
             file.write("\n")
 
         file.write(sep)
+
+
+def _get_file(file_or_filename):
+    """ Returns an open file from a file or a filename.
+    """
+    if isinstance(file_or_filename, basestring):
+        file = open(file_or_filename, "wb")
+    else:
+        file = file_or_filename
+
+    return file
 
 # EOF -------------------------------------------------------------------------

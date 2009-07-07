@@ -34,25 +34,28 @@ class Network(object):
         # Base apparent power (MVA).
         self.base_mva = base_mva
 
-        if buses == None:
+        if buses is None:
             self.buses = []
         else:
             self.buses = buses
 
-        if branches == None:
+        if branches is None:
             self.branches = []
         else:
             self.branches = branches
 
     @property
     def connected_buses(self):
-        """ Property getter. Returns a list of buses that are connected
-            to one or more branches.
+        """ Returns a list of buses that are connected to one or more branches
+            or the first bus in a branchless system.
         """
-        source_buses = [e.source_bus for e in self.branches]
-        target_buses = [e.target_bus for e in self.branches]
-
-        return [v for v in self.buses if v in source_buses + target_buses]
+        if self.branches:
+            source_buses = [e.source_bus for e in self.branches]
+            target_buses = [e.target_bus for e in self.branches]
+    
+            return [v for v in self.buses if v in source_buses + target_buses] 
+        else:
+            return self.buses[:1]
 
     @property
     def slack_model(self):
@@ -123,13 +126,13 @@ class Bus(object):
         self.b_shunt = b_shunt
 
         # Generators defined by their active power and voltage.
-        if generators == None:
+        if generators is None:
             self.generators = []
         else:
             self.generators = generators
 
         # Loads that specify real and reactive power demand.
-        if loads == None:
+        if loads is None:
             self.loads = []
         else:
             self.loads = loads
@@ -310,7 +313,7 @@ class Generator(object):
         # Valid values are 'Polynomial' and 'Piecewise Linear'.
         self.cost_model = cost_model
         # Polynomial cost curve coefficients.
-        if cost_coeffs == None:
+        if cost_coeffs is None:
             self.cost_coeffs = (1.0, 0.1, 0.01)
         else:
             self.cost_coeffs = cost_coeffs

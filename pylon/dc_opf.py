@@ -309,7 +309,7 @@ class DCOPFRoutine(object):
         """
         buses = self.network.connected_buses
 
-        v_angle = matrix([v.v_angle_guess*pi/180 for v in buses])
+        v_angle = matrix([v.v_angle_guess * pi / 180 for v in buses])
 
 #        _g_buses = [v for v in buses if v.type == "pv" or v.type == "slack"]
         _g_buses = [v for v in buses if len(v.generators) > 0]
