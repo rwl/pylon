@@ -36,6 +36,7 @@ from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 MATPOWER_DATA_FILE = os.path.join(DATA_DIR, "case6ww.m")
+PWL_MP_DATA_FILE   = os.path.join(DATA_DIR, "case30pwl.m")
 UKGDS_DATA_FILE    = os.path.join(DATA_DIR, "ehv3.raw")
 IPSA_DATA_FILE     = os.path.join(DATA_DIR, "ipsa.raw")
 PSAT_DATA_FILE     = os.path.join(DATA_DIR, "d_006_mdl.m")
@@ -93,7 +94,7 @@ class ReaderTest(TestCase):
         for idx in gbus_idxs:
             bus = n.buses[idx]
             self.assertTrue(len(bus.generators),
-                "No generators at bus: %s" % bus)
+                "No generators at bus: %s" % bus.name)
 
 
     def _validate_branch_connections(self, source_idxs, target_idxs):
@@ -126,19 +127,19 @@ class MatpowerReaderTest(ReaderTest):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        # Parse the file.
-        reader = MATPOWERReader()
-        self.network = reader(MATPOWER_DATA_FILE)
+        self.reader = MATPOWERReader()
 
 
     def test_case6ww(self):
-        """ Validate parsing of the case6ww.m file.
+        """ Test parsing case6ww.m file.
         """
-        self._validate_base(base_mva=100)
+        self.network = n = self.reader(MATPOWER_DATA_FILE)
 
-        # Network structure validation
+        self._validate_base(base_mva=100.0)
+
+        # Network structure validation.
         self._validate_object_numbers(n_buses=6, n_branches=11, n_gen=3,
-            n_loads=3)
+                                      n_loads=3)
 
         self._validate_slack_bus(slack_idx=0)
 
@@ -147,6 +148,52 @@ class MatpowerReaderTest(ReaderTest):
         self._validate_branch_connections(
             source_idxs=[0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4],
             target_idxs=[1, 3, 4, 2, 3, 4, 5, 4, 5, 4, 5])
+
+        # Generator costs.
+        for g in n.all_generators:
+            self.assertEqual(g.cost_model, "polynomial")
+            self.assertEqual(len(g.cost_coeffs), 3)
+
+        self.assertEqual(n.all_generators[0].cost_coeffs[0], 0.00533)
+        self.assertEqual(n.all_generators[1].cost_coeffs[1], 10.333)
+        self.assertEqual(n.all_generators[2].cost_coeffs[2], 240)
+
+
+
+    def test_case30pwl(self):
+        """ Test parsing case30pwl.m.
+        """
+        self.network = self.reader(PWL_MP_DATA_FILE)
+
+        self._validate_base(base_mva=100.0)
+
+        self._validate_object_numbers(n_buses=30, n_branches=41, n_gen=6,
+                                      n_loads=20)
+
+
+        self._validate_slack_bus(slack_idx=0)
+
+        self._validate_generator_connections(gbus_idxs=[0, 1, 21, 26, 22, 12])
+
+        self._validate_branch_connections(
+            source_idxs=[0, 0, 1, 2, 1, 1, 3, 4, 5, 5, 5, 5, 8, 8, 3, 11, 11,
+                         11, 11, 13, 15, 14, 17, 18, 9, 9, 9, 9, 20, 14, 21,
+                         22, 23, 24, 24, 27, 26, 26, 28, 7, 5],
+            target_idxs=[1, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 9, 11, 12, 13,
+                         14, 15, 14, 16, 17, 18, 19, 19, 16, 20, 21, 21, 22,
+                         23, 23, 24, 25, 26, 26, 28, 29, 29, 27, 27])
+
+        # Generator costs.
+        generators = self.network.all_generators
+
+        for g in generators:
+            self.assertEqual(g.cost_model, "piecewise linear")
+            self.assertEqual(len(g.pwl_points), 4)
+            self.assertEqual(g.pwl_points[0], (0.0, 0.0))
+
+        self.assertEqual(generators[0].pwl_points[1], (0.12, 144.0))
+        self.assertEqual(generators[4].pwl_points[2], (0.36, 1296.0))
+        self.assertEqual(generators[5].pwl_points[3], (0.60, 2832.0))
 
 #------------------------------------------------------------------------------
 #  "PSSEReaderTest" class:
@@ -172,30 +219,28 @@ class PSSEReaderTest(ReaderTest):
             n_loads=30)
 
 
-#    def test_ukgds(self):
-#        """ Test parsing of PSS/E data file exported from the UKGDS.
-#        """
-#        # Parse the file.
-#        reader = PSSEReader()
-#        self.network = reader(UKGDS_DATA_FILE)
-#
-#        # Network structure validation
-#        self._validate_base(100.0)
-#
-#        self._validate_object_numbers(n_buses=102,
-#                                       # 75 lines + 67 transformers = 142
-#                                      n_branches=142,
-#                                      n_gen=3,
-#                                      n_loads=26)
+    def test_ukgds(self):
+        """ Test parsing of PSS/E data file exported from the UKGDS.
+        """
+        # Parse the file.
+        reader = PSSEReader()
+        self.network = reader(UKGDS_DATA_FILE)
 
-#        self._validate_slack_bus(slack_idx=0)
-#
-#        self._validate_generator_connections(gbus_idxs=[0, 1])
-#
-#        self._validate_branch_connections(
-#            source_idxs=[0, 0, 1],
-#            target_idxs=[1, 2, 2]
-#        )
+        # Network structure validation
+        self._validate_base(100.0)
+
+        self._validate_object_numbers(n_buses=102,
+                                       # 75 lines + 67 transformers = 142
+                                      n_branches=142,
+                                      n_gen=3,
+                                      n_loads=26)
+
+        self._validate_slack_bus(slack_idx=0)
+
+        self._validate_generator_connections(gbus_idxs=[0, 1])
+
+        self._validate_branch_connections(source_idxs=[0, 0, 1],
+                                          target_idxs=[1, 2, 2])
 
 #------------------------------------------------------------------------------
 #  "PSATReaderTest" class:

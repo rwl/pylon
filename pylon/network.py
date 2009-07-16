@@ -52,8 +52,8 @@ class Network(object):
         if self.branches:
             source_buses = [e.source_bus for e in self.branches]
             target_buses = [e.target_bus for e in self.branches]
-    
-            return [v for v in self.buses if v in source_buses + target_buses] 
+
+            return [v for v in self.buses if v in source_buses + target_buses]
         else:
             return self.buses[:1]
 
@@ -269,7 +269,7 @@ class Generator(object):
     def __init__(self, name="generator", online=True, base_mva=100.0, p=1.0,
             p_max=2.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=3.0,
             q_min=-3.0, p_max_bid=None, p_min_bid=None, c_startup=0.0,
-            c_shutdown=0.0, cost_model="polynomial",
+            c_shutdown=0.0, cost_model="polynomial", pwl_points=None,
             cost_coeffs=None, rate_up=1.0, rate_down=1.0, min_up=0,
             min_down=0, initial_up=1, initial_down=0):
         """ Initialises a new Generator instance.
@@ -310,18 +310,18 @@ class Generator(object):
         self.c_startup = c_startup
         # Shut down cost.
         self.c_shutdown = c_shutdown
-        # Valid values are 'Polynomial' and 'Piecewise Linear'.
+        # Valid values are 'polynomial' and 'piecewise linear'.
         self.cost_model = cost_model
         # Polynomial cost curve coefficients.
         if cost_coeffs is None:
             self.cost_coeffs = (1.0, 0.1, 0.01)
         else:
             self.cost_coeffs = cost_coeffs
-        # Piecewise linear cost segment points
-#        if pwl_points == None:
-#            self.pwl_points = [(0.0, 0.0), (1.0, 1.0)]
-#        else:
-#            self.pwl_points = pwl_points
+        # Piecewise linear cost segment points.
+        if pwl_points == None:
+            self.pwl_points = [(0.0, 0.0), (1.0, 10.0)]
+        else:
+            self.pwl_points = pwl_points
         # Ramp up rate (p.u./h).
         self.rate_up = rate_up
         # Ramp down rate (p.u./h).
