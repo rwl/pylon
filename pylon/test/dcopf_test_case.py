@@ -64,153 +64,153 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         self.assertEqual(self.routine._solver_type, "linear")
 
 
-    def test_x_vector(self):
-        """ Test the the x vector where AA * x <= bb.
-
-            x =
-
-               1.0e+03 *
-
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                     0
-                0.0002
-                0.0006
-                0.0002
-                0.0003
-                0.0002
-                0.0004
-                0.5594
-                3.3935
-                0.6620
-                0.6808
-                0.5568
-                1.0840
-        """
-        x = self.routine._x
-
-        places = 4
-
-        x_0  = 0.0000
-        x_31 = 0.0006
-        x_37 = 3.3935
-        x_40 = 0.5568
-
-        self.assertEqual(len(x), 42)
-        self.assertAlmostEqual(x[0], x_0, places)
-        self.assertAlmostEqual(x[31], x_31, places)
-        self.assertAlmostEqual(x[37], x_37, places)
-        self.assertAlmostEqual(x[40], x_40, places)
-
-
-    def test_cost_constraints(self):
-        """ Test the piecewise linear DC OPF cost constaints.
-
-            Acc =
-
-               (1,31)          1200
-               (2,31)          3600
-               (3,31)          7600
-               (4,32)          2000
-               (5,32)          4400
-               (6,32)          8400
-               (7,33)          2000
-               (8,33)          4400
-               (9,33)          8400
-              (10,34)          1200
-              (11,34)          3600
-              (12,34)          7600
-              (13,35)          2000
-              (14,35)          4400
-              (15,35)          8400
-              (16,36)          1200
-              (17,36)          3600
-              (18,36)          7600
-               (1,37)            -1
-               (2,37)            -1
-               (3,37)            -1
-               (4,38)            -1
-               (5,38)            -1
-               (6,38)            -1
-               (7,39)            -1
-               (8,39)            -1
-               (9,39)            -1
-              (10,40)            -1
-              (11,40)            -1
-              (12,40)            -1
-              (13,41)            -1
-              (14,41)            -1
-              (15,41)            -1
-              (16,42)            -1
-              (17,42)            -1
-              (18,42)            -1
-
-
-            bcc =
-
-                       0
-                     288
-                    1728
-                       0
-                     288
-                    1728
-                       0
-                     288
-                    1728
-                       0
-                     288
-                    1728
-                       0
-                     288
-                    1728
-                       0
-                     288
-                    1728
-        """
-        Acc = self.routine._aa_cost
-        bcc = self.routine._bb_cost
-
-        self.assertEqual(Acc.size, (18, 42))
-        self.assertEqual(bcc.size, (1, 18))
-
-        places = 1
-
-        self.assertAlmostEqual(Acc[0, 30], 1200.0, places)
-        self.assertAlmostEqual(Acc[8, 32], 8400.0, places)
-        self.assertAlmostEqual(Acc[17, 35], 7600.0, places)
-        self.assertAlmostEqual(Acc[0, 36], -1.0, places)
-        self.assertAlmostEqual(Acc[17, 41], -1.0, places)
-
-        self.assertAlmostEqual(bcc[0], 0.0, places)
-        self.assertAlmostEqual(bcc[7], 288.0, places)
-        self.assertAlmostEqual(bcc[17], 1728.0, places)
+#    def test_x_vector(self):
+#        """ Test the the x vector where AA * x <= bb.
+#
+#            x =
+#
+#               1.0e+03 *
+#
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                     0
+#                0.0002
+#                0.0006
+#                0.0002
+#                0.0003
+#                0.0002
+#                0.0004
+#                0.5594
+#                3.3935
+#                0.6620
+#                0.6808
+#                0.5568
+#                1.0840
+#        """
+#        x = self.routine._x
+#
+#        places = 4
+#
+#        x_0  = 0.0000
+#        x_31 = 0.0006
+#        x_37 = 3.3935
+#        x_40 = 0.5568
+#
+#        self.assertEqual(len(x), 42)
+#        self.assertAlmostEqual(x[0], x_0, places)
+#        self.assertAlmostEqual(x[31], x_31, places)
+#        self.assertAlmostEqual(x[37], x_37, places)
+#        self.assertAlmostEqual(x[40], x_40, places)
+#
+#
+#    def test_cost_constraints(self):
+#        """ Test the piecewise linear DC OPF cost constaints.
+#
+#            Acc =
+#
+#               (1,31)          1200
+#               (2,31)          3600
+#               (3,31)          7600
+#               (4,32)          2000
+#               (5,32)          4400
+#               (6,32)          8400
+#               (7,33)          2000
+#               (8,33)          4400
+#               (9,33)          8400
+#              (10,34)          1200
+#              (11,34)          3600
+#              (12,34)          7600
+#              (13,35)          2000
+#              (14,35)          4400
+#              (15,35)          8400
+#              (16,36)          1200
+#              (17,36)          3600
+#              (18,36)          7600
+#               (1,37)            -1
+#               (2,37)            -1
+#               (3,37)            -1
+#               (4,38)            -1
+#               (5,38)            -1
+#               (6,38)            -1
+#               (7,39)            -1
+#               (8,39)            -1
+#               (9,39)            -1
+#              (10,40)            -1
+#              (11,40)            -1
+#              (12,40)            -1
+#              (13,41)            -1
+#              (14,41)            -1
+#              (15,41)            -1
+#              (16,42)            -1
+#              (17,42)            -1
+#              (18,42)            -1
+#
+#
+#            bcc =
+#
+#                       0
+#                     288
+#                    1728
+#                       0
+#                     288
+#                    1728
+#                       0
+#                     288
+#                    1728
+#                       0
+#                     288
+#                    1728
+#                       0
+#                     288
+#                    1728
+#                       0
+#                     288
+#                    1728
+#        """
+#        Acc = self.routine._aa_cost
+#        bcc = self.routine._bb_cost
+#
+#        self.assertEqual(Acc.size, (18, 42))
+#        self.assertEqual(bcc.size, (1, 18))
+#
+#        places = 1
+#
+#        self.assertAlmostEqual(Acc[0, 30], 1200.0, places)
+#        self.assertAlmostEqual(Acc[8, 32], 8400.0, places)
+#        self.assertAlmostEqual(Acc[17, 35], 7600.0, places)
+#        self.assertAlmostEqual(Acc[0, 36], -1.0, places)
+#        self.assertAlmostEqual(Acc[17, 41], -1.0, places)
+#
+#        self.assertAlmostEqual(bcc[0], 0.0, places)
+#        self.assertAlmostEqual(bcc[7], 288.0, places)
+#        self.assertAlmostEqual(bcc[17], 1728.0, places)
 
 #------------------------------------------------------------------------------
 #  "DCOPFTest" class:

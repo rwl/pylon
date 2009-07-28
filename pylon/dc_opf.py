@@ -158,33 +158,33 @@ class DCOPFRoutine(object):
 
         susceptance_matrix = SusceptanceMatrix()
         self._B, self._B_source = susceptance_matrix(network)
-        
+
         self._theta_inj_source = self._get_theta_inj_source()
         self._theta_inj_bus = self._get_theta_inj_bus()
-        
+
         # Use the same cost model for all generators.
         self._check_cost_model_consistency()
-        
+
         # Get the vector x where, AA * x <= bb.
         self._x = self._get_x()
-        
+
         # Problem constraints.
         self._aa_cost, self._bb_cost = self._get_cost_constraint()
         self._aa_ref, self._bb_ref = self._get_reference_angle_constraint()
-        
+
         self._aa_mismatch, self._bb_mismatch = \
             self._get_active_power_flow_equations()
-            
+
         self._aa_generation, self._bb_generation = \
             self._get_generation_limit_constraint()
-            
+
         self._aa_flow, self._bb_flow = self._get_branch_flow_limit_constraint()
 
         # Combine the equality constraints.
         self._AA_eq = self._get_AA_equality()
         self._bb_eq = self._get_bb_equality()
 
-        # Combine the inequality constraints.        
+        # Combine the inequality constraints.
         self._AA_ieq = self._get_AA_inequality()
         self._bb_ieq = self._get_bb_inequality()
 
@@ -228,9 +228,9 @@ class DCOPFRoutine(object):
         # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node9.html
         source_inj = mul(b, angle)
 
-        logger.debug("Built source bus phase shift injection vector:\n%s" % 
+        logger.debug("Built source bus phase shift injection vector:\n%s" %
             source_inj)
-        
+
         return source_inj
 
 
@@ -275,7 +275,7 @@ class DCOPFRoutine(object):
 
         models = [g.cost_model for g in generators]
 
-        if "polynomial" in models and "piecewise linear" in models:
+        if ("polynomial" in models) and ("piecewise linear" in models):
             logger.info("Not all generators use the same cost model, all will "
                 "be converted to piece-wise linear.")
 

@@ -352,12 +352,58 @@ class Generator(object):
     def p_cost(self):
         """ Active power cost at the current output.
         """
-        if self.cost_model == "polynomial":
-            x = self.p
-            c0, c1, c2 = self.cost_coeffs
-            return c0 + c1*x + c2*x**2
+        return self.total_cost(self.p)
+
+
+    def poly2pwl(self, n_points=10):
+        """ Sets the piece-wise linear cost attribute, converting the
+            polynomial cost variable by evaluating at zero and then at
+            n_points evenly spaced points between p_min and p_max.
+        """
+        p_min = self.p_min
+        p_max = self.p_max
+        self.pwl_points = []
+
+        step = (p_max - p_min) / n_points
+
+        x = 0.0
+        for i in range(n_points):
+            y = self.total_cost(p_gen)
+            self.pwl_points.append((x, y))
+            x += step
+
+        # Change the cost model.
+        self.cost_model = "piecewise linear"
+
+
+    def total_cost(self, p):
+        """ Computes total cost for the generator at the given output level.
+        """
+        if self.cost_model == "piecewise linear":
+            # Iterate backwards from the second last point.
+            i = 0
+            for x1, y1 in reversed(self.pwl_points[:-1]):
+                if p > x1:
+                    # Get the previous (higher) point.
+                    x2, y2 = self.pwl_points[-i + 1]
+
+                    m = pnt2[1] - pnt[1] / pnt2[0] - pnt[0]
+                    c = y1 - (y2 - y1)/(x2 - x1) * x1
+
+                    result = m * p + c
+                    break
+                else:
+                    i += 1
+
+        elif self.cost_model == "polynomial":
+            result = self.cost_coeffs[0]
+
+            for i in range(1, len(self.cost_coeffs)):
+                result += self.cost_coeffs[i] * p**i
         else:
-            raise NotImplementedError
+            raise ValueError
+
+        return result
 
 
 class Load(object):
