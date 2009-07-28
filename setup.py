@@ -15,6 +15,9 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
+import ez_setup
+ez_setup.use_setuptools()
+
 from setuptools import setup, find_packages
 
 setup(author="Richard W. Lincoln",
