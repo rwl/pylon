@@ -230,7 +230,7 @@ class PSSEReaderTest(ReaderTest):
         self._validate_base(100.0)
 
         self._validate_object_numbers(n_buses=102,
-                                       # 75 lines + 67 transformers = 142
+                                      # 75 lines + 67 transformers = 142
                                       n_branches=142,
                                       n_gen=3,
                                       n_loads=26)

@@ -54,18 +54,18 @@ class NetworkTest(unittest.TestCase):
         """
         network = self.network
 
-        def get_slackers(network):
+        def get_slack_buses(network):
             return [bus for bus in network.buses if bus.slack]
 
         # Distributed slack bus model.
         for bus in network.buses:
             bus.slack = False
-        self.assertEqual(len(get_slackers(network)), 0)
+        self.assertEqual(len(get_slack_buses(network)), 0)
         self.assertEqual(network.slack_model, "distributed")
 
         # Single slack bus model.
         network.buses[0].slack = True
-        self.assertEqual(len(get_slackers(network)), 1)
+        self.assertEqual(len(get_slack_buses(network)), 1)
         self.assertEqual(network.slack_model, "single")
 
 #------------------------------------------------------------------------------
@@ -99,22 +99,22 @@ class BusTest(unittest.TestCase):
         """ Test the power surplus properties.
         """
         v = Bus()
-        g1 = Generator(p=10.0, q=5.0)
-        g2 = Generator(p=3.0, q=1.0)
+        g1 = Generator(p=100.0, q=50.0)
+        g2 = Generator(p=30.0, q=10.0)
 
         # Supply
         v.generators.extend([g1, g2])
-        self.assertEqual(v.p_supply, 13.0)
-        self.assertEqual(v.q_supply, 6.0)
+        self.assertEqual(v.p_supply, 130.0)
+        self.assertEqual(v.q_supply, 60.0)
 
         # Demand
-        v.loads.extend([Load(p=6.0, q=3.0), Load(p=2.0, q=0.5)])
-        self.assertEqual(v.p_demand, 8.0)
-        self.assertEqual(v.q_demand, 3.5)
+        v.loads.extend([Load(p=60.0, q=30.0), Load(p=20.0, q=5.0)])
+        self.assertEqual(v.p_demand, 80.0)
+        self.assertEqual(v.q_demand, 35.0)
 
         # Surplus
-        self.assertEqual(v.p_surplus, 5.0)
-        self.assertEqual(v.q_surplus, 2.5)
+        self.assertEqual(v.p_surplus, 50.0)
+        self.assertEqual(v.q_surplus, 25.0)
 
 #------------------------------------------------------------------------------
 #  "BranchTest" class:
@@ -190,15 +190,15 @@ class BranchTest(unittest.TestCase):
         """ Test the power loss properties.
         """
         e = Branch(Bus(), Bus())
-        e.p_source = 1.0
-        e.p_target = 0.9
+        e.p_source = 100.0
+        e.p_target = 90.0
 
-        self.assertAlmostEqual(e.p_losses, 0.1, places=4)
+        self.assertAlmostEqual(e.p_losses, 10.0, places=4)
 
-        e.q_source = 0.3
-        e.q_target = 0.1
+        e.q_source = 30.0
+        e.q_target = 10.0
 
-        self.assertAlmostEqual(e.q_losses, 0.2, places=4)
+        self.assertAlmostEqual(e.q_losses, 20.0, places=4)
 
 #------------------------------------------------------------------------------
 #  "GeneratorTest" class:
@@ -213,15 +213,9 @@ class GeneratorTest(unittest.TestCase):
         """
         g = Generator(cost_model="polynomial")
 
-        p_max = 10
-        p_min = 2
-        c2 = 0.06
-        c1 = 0.6
-        c0 = 6.0
-
-        g.p_max = p_max
-        g.p_min = p_min
-        g.cost_coeffs = (c2, c1, c0)
+        g.p_max = 100.0
+        g.p_min = 20.0
+        g.cost_coeffs = (0.06, 0.6, 6.0)
 
         self.assertEqual(g.total_cost(5.0), 10.5)
         self.assertEqual(g.total_cost(6.0), 11.76)
@@ -232,50 +226,45 @@ class GeneratorTest(unittest.TestCase):
         """
         g = Generator(cost_model="piecewise linear")
 
-        p_max = 10.0
-        p_min = 2.0
         p0 = (0.0, 0.0)
-        p1 = (4.0, 0.6)
-        p2 = (10.0, 1.6)
+        p1 = (40.0, 100.0)
+        p2 = (100.0, 400.0)
 
-        g.p_max = p_max
-        g.p_min = p_min
+        g.p_max = 100.0
+        g.p_min = 20.0
         g.pwl_points = [p0, p1, p2]
 
-        self.assertAlmostEqual(g.total_cost(3.0), 0.4500, places=4)
-        self.assertAlmostEqual(g.total_cost(6.0), 0.9333, places=4)
+        self.assertAlmostEqual(g.total_cost(30.0), 75.0, places=4)
+        self.assertAlmostEqual(g.total_cost(60.0), 200.0, places=4)
 
 
     def test_poly_to_pwl(self):
         """ Test cost model conversion from polynomial to piece-wise linear.
-
-            0
-            0.2
-            0.38
-            0.55
-            0.73
-            0.9
-            1.08
-            1.26
-            1.44
-            1.61
-
         """
-        g = Generator(p_min=0.0, p_max=0.8, cost_model="polynomial",
-                      cost_coeffs=(0.02, 2.0, 0.0))
+        g = Generator(p_min=0.0, p_max=80.0, cost_model="polynomial")
+        g.cost_coeffs=(0.02, 2.0, 0.0)
 
         g.poly_to_pwl(n_points=10)
 
         self.assertEqual(g.cost_model, "piecewise linear")
         self.assertEqual(len(g.pwl_points), 10)
 
-        print [p[0] for p in g.pwl_points]
-        print [p[1] for p in g.pwl_points]
+        self.assertAlmostEqual(g.pwl_points[2][0], 17.78, places=2)
+        self.assertAlmostEqual(g.pwl_points[2][1], 41.88, places=2)
 
-        g.p_min = 0.1
+        self.assertAlmostEqual(g.pwl_points[6][0], 53.33, places=2)
+        self.assertAlmostEqual(g.pwl_points[6][1], 163.56, places=2)
+
+        g.p_min = 10.0
         g.poly_to_pwl(n_points=10)
 
         self.assertEqual(len(g.pwl_points), 10)
+
+        self.assertAlmostEqual(g.pwl_points[1][0], 10.0, places=2)
+        self.assertAlmostEqual(g.pwl_points[1][1], 22.0, places=2)
+
+        self.assertAlmostEqual(g.pwl_points[9][0], 80.0, places=2)
+        self.assertAlmostEqual(g.pwl_points[9][1], 288.0, places=2)
 
 #------------------------------------------------------------------------------
 #  "LoadTest" class:
@@ -290,23 +279,23 @@ class LoadTest(unittest.TestCase):
         """
         profile = [100.0, 50.0, 20.0, 90.0]
 
-        load = Load(p_min=0.1, p_max=0.9, p_profile=profile)
+        load = Load(p_min=10.0, p_max=90.0, p_profile=profile)
 
         places = 2
 
-        self.assertAlmostEqual(load.p_profiled, 0.80, places)
-        self.assertAlmostEqual(load.p_profiled, 0.40, places)
-        self.assertAlmostEqual(load.p_profiled, 0.16, places)
-        self.assertAlmostEqual(load.p_profiled, 0.72, places)
-        self.assertAlmostEqual(load.p_profiled, 0.80, places)
+        self.assertAlmostEqual(load.p_profiled, 80.0, places)
+        self.assertAlmostEqual(load.p_profiled, 40.0, places)
+        self.assertAlmostEqual(load.p_profiled, 16.0, places)
+        self.assertAlmostEqual(load.p_profiled, 72.0, places)
+        self.assertAlmostEqual(load.p_profiled, 80.0, places)
 
         # Set new profile.
         profile2 = [10.0, 20.0]
         load.p_profile = profile2
 
-        self.assertAlmostEqual(load.p_profiled, 0.08, places)
-        self.assertAlmostEqual(load.p_profiled, 0.16, places)
-        self.assertAlmostEqual(load.p_profiled, 0.08, places)
+        self.assertAlmostEqual(load.p_profiled, 8.0, places)
+        self.assertAlmostEqual(load.p_profiled, 16.0, places)
+        self.assertAlmostEqual(load.p_profiled, 8.0, places)
 
 
 if __name__ == "__main__":

@@ -103,7 +103,7 @@ class Bus(object):
     """
 
     def __init__(self, name="bus", slack=False, v_base=100.0,
-            v_magnitude_guess=1.0, v_angle_guess=1.0, v_max=1.1, v_min=0.9,
+            v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
             g_shunt=0.0, b_shunt=0.0, generators=None, loads=None):
         """ Initialises a new Bus instance.
         """
@@ -112,17 +112,17 @@ class Bus(object):
         self.slack = slack
         # Base voltage
         self.v_base = v_base
-        # Voltage magnitude initial guess.
+        # Voltage magnitude initial guess (pu).
         self.v_magnitude_guess = v_magnitude_guess
-        # Voltage angle initial guess.
+        # Voltage angle initial guess (degrees).
         self.v_angle_guess = v_angle_guess
-        # Maximum voltage amplitude (pu).
+        # Maximum voltage magnitude (pu).
         self.v_max = v_max
-        # Minimum voltage amplitude (pu).
+        # Minimum voltage magnitude (pu).
         self.v_min = v_min
-        # Shunt conductance.
+        # Shunt conductance (MW (demanded) at V = 1.0 p.u.).
         self.g_shunt = g_shunt
-        # Shunt susceptance.
+        # Shunt susceptance (MVAr (injected) at V = 1.0 p.u.).
         self.b_shunt = b_shunt
 
         # Generators defined by their active power and voltage.
@@ -212,7 +212,7 @@ class Branch(object):
         self.x = x
         # Total positive sequence line charging susceptance (pu).
         self.b = b
-        # General purpose maximum MVA rating (pu).
+        # General purpose maximum MVA rating (MVA).
         self.s_max = s_max
         # Transformer off nominal turns ratio.
         self.ratio = ratio
@@ -221,13 +221,13 @@ class Branch(object):
 
         # Power flow results --------------------------------------------------
 
-        # Active power injected at the source bus.
+        # Active power injected at the source bus (MW).
         self.p_source = 0.0
-        # Active power injected at the target bus.
+        # Active power injected at the target bus (MW).
         self.p_target = 0.0
-        # Reactive power injected at the source bus.
+        # Reactive power injected at the source bus (MVAr).
         self.q_source = 0.0
-        # Reactive power injected at the target bus.
+        # Reactive power injected at the target bus (MVAr).
         self.q_target = 0.0
 
         # |S_source| mu.
@@ -266,9 +266,9 @@ class Generator(object):
         power limit fixes active and reactive power injected at parent bus.
     """
 
-    def __init__(self, name="generator", online=True, base_mva=100.0, p=1.0,
-            p_max=2.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=3.0,
-            q_min=-3.0, p_max_bid=None, p_min_bid=None, c_startup=0.0,
+    def __init__(self, name="generator", online=True, base_mva=100.0, p=100.0,
+            p_max=200.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0,
+            q_min=-30.0, p_max_bid=None, p_min_bid=None, c_startup=0.0,
             c_shutdown=0.0, cost_model="polynomial", pwl_points=None,
             cost_coeffs=None, rate_up=1.0, rate_down=1.0, min_up=0,
             min_down=0, initial_up=1, initial_down=0):
@@ -279,19 +279,19 @@ class Generator(object):
         self.online = online
         # Machine MVA base.
         self.base_mva = base_mva
-        # Active power output (pu).
+        # Active power output (MW).
         self.p = p
-        # Maximum active power output (pu).
+        # Maximum active power output (MW).
         self.p_max = p_max
-        # Minimum active power output (pu).
+        # Minimum active power output (MW).
         self.p_min = p_min
-        # Voltage amplitude setpoint (pu).
+        # Voltage magnitude setpoint (pu).
         self.v_magnitude = v_magnitude
-        # Reactive power output.
+        # Reactive power output (MVAr).
         self.q = q
-        # Maximum reactive power (pu).
+        # Maximum reactive power (MVAr).
         self.q_max = q_max
-        # Minimum reactive power (pu).
+        # Minimum reactive power (MVAr).
         self.q_min = q_min
 
         # Maximum active power output bid. Used in OPF routines. Should be less
@@ -315,7 +315,7 @@ class Generator(object):
         # Polynomial cost curve coefficients.
         # (a, b, c) relates to: cost = c*p**3 + b*p**2 + a*p.
         if cost_coeffs is None:
-            self.cost_coeffs = (0.01, 0.1, 1.0)
+            self.cost_coeffs = (0.01, 0.1, 10.0)
         else:
             self.cost_coeffs = cost_coeffs
         # Piecewise linear cost segment points.
@@ -442,13 +442,13 @@ class Load(object):
         self.name = name
         # Is the load in service?
         self.online = online
-        # Active power demand (pu).
+        # Active power demand (MW).
         self.p = p
-        # Reactive power demand (pu).
+        # Reactive power demand (MVAr).
         self.q = q
-        # Maximum active power (p.u.).
+        # Maximum active power (MW).
         self.p_max = p_max
-        # Minimum active power (p.u.).
+        # Minimum active power (MW).
         self.p_min = p_min
 
         self._p_profile = []

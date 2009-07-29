@@ -305,8 +305,8 @@ class MATPOWERReader(object):
         base_kv = tokens["baseKV"]
 
         bus.v_base      = base_kv
-        bus.g_shunt     = tokens["Gs"] / self.base_mva
-        bus.b_shunt     = tokens["Bs"] / self.base_mva
+        bus.g_shunt     = tokens["Gs"]
+        bus.b_shunt     = tokens["Bs"]
         bus.v_magnitude_guess = tokens["Vm"]
         bus.v_angle_guess = tokens["Va"]
         bus.v_magnitude = tokens["Vm"]
@@ -319,8 +319,8 @@ class MATPOWERReader(object):
         # Loads are included in bus data with MATPOWER
         if (tokens["Pd"] > 0) or (tokens["Qd"] > 0):
             l   = Load()
-            l.p = tokens["Pd"] / self.base_mva
-            l.q = tokens["Qd"] / self.base_mva
+            l.p = tokens["Pd"]
+            l.q = tokens["Qd"]
             bus.loads.append(l)
 
         bus.zone = tokens["zone"]
@@ -354,17 +354,17 @@ class MATPOWERReader(object):
 
         generator = Generator(name=make_unique_name("g", g_names))
 
-        generator.p           = tokens["Pg"] / base_mva
-        generator.q_max       = tokens["Qmax"] / base_mva
-        generator.q_min       = tokens["Qmin"] / base_mva
+        generator.p           = tokens["Pg"]
+        generator.q_max       = tokens["Qmax"]
+        generator.q_min       = tokens["Qmin"]
         generator.v_magnitude = tokens["Vg"]
         generator.base_mva    = tokens["mBase"]
         generator.online      = tokens["status"]
-        generator.p_max       = tokens["Pmax"] / base_mva
-        generator.p_min       = tokens["Pmin"] / base_mva
-        
-        generator.p_max_bid   = tokens["Pmax"] / base_mva
-        generator.p_min_bid   = tokens["Pmin"] / base_mva
+        generator.p_max       = tokens["Pmax"]
+        generator.p_min       = tokens["Pmin"]
+
+#        generator.p_max_bid   = tokens["Pmax"]
+#        generator.p_min_bid   = tokens["Pmin"]
 
 #        bus.generators.append(generator)
         self.network.buses[i].generators.append(generator)
@@ -397,7 +397,7 @@ class MATPOWERReader(object):
         e.r           = tokens["r"]
         e.x           = tokens["x"]
         e.b           = tokens["b"]
-        e.s_max       = tokens["rateA"] / self.base_mva
+        e.s_max       = tokens["rateA"]
         e.ratio       = tokens["ratio"]
         e.phase_shift = tokens["angle"]
         e.online      = tokens["status"]

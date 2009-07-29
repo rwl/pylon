@@ -386,7 +386,7 @@ class PSSEReader(object):
         bus.v_magnitude = tokens["PU_Volt"]
 
         bus.v_angle_guess = tokens["Angle"]
-        bus.v_angle     = tokens["Angle"]
+        bus.v_angle = tokens["Angle"]
 
         self.network.buses.append(bus)
 
@@ -428,13 +428,13 @@ class PSSEReader(object):
 
         g = Generator()
         g.base_mva = base
-        g.p_max = tokens["Pmax"] / base
-        g.p_min = tokens["Pmin"] / base
-        g.p     = tokens["P"] / base
+        g.p_max = tokens["Pmax"]
+        g.p_min = tokens["Pmin"]
+        g.p     = tokens["P"]
 
-        g.q_max = tokens["Qmax"] / base
-        g.q_min = tokens["Qmin"] / base
-        g.q     = tokens["Q"] / base
+        g.q_max = tokens["Qmax"]
+        g.q_min = tokens["Qmin"]
+        g.q     = tokens["Q"]
 
         g.status = tokens["Stat"]
 

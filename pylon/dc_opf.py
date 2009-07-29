@@ -109,24 +109,24 @@ class DCOPFRoutine(object):
         self._x = None
 
         # Cost constraints.
-        self._aa_cost = None # sparse
-        self._bb_cost = None
+#        self._aa_cost = None # sparse
+#        self._bb_cost = None
 
         # Reference bus phase angle constraint.
-        self._aa_ref = None # sparse
-        self._bb_ref = None
+#        self._aa_ref = None # sparse
+#        self._bb_ref = None
 
         # Active power flow equations.
-        self._aa_mismatch = None # sparse
-        self._bb_mismatch = None
+#        self._aa_mismatch = None # sparse
+#        self._bb_mismatch = None
 
         # Generator limit constraints.
-        self._aa_generation = None # sparse
-        self._bb_generation = None
+#        self._aa_generation = None # sparse
+#        self._bb_generation = None
 
         # Branch flow limit constraints.
-        self._aa_flow = None # sparse
-        self._bb_flow = None
+#        self._aa_flow = None # sparse
+#        self._bb_flow = None
 
         # The equality and inequality problem constraints combined.
         self._AA_eq = None # sparse
@@ -171,24 +171,23 @@ class DCOPFRoutine(object):
         self._x = self._get_x()
 
         # Problem constraints.
-        self._aa_cost, self._bb_cost = self._get_cost_constraint()
-        self._aa_ref, self._bb_ref = self._get_reference_angle_constraint()
+        _aa_cost, _bb_cost = self._get_cost_constraint()
 
-        self._aa_mismatch, self._bb_mismatch = \
-            self._get_active_power_flow_equations()
+        _aa_ref, _bb_ref = self._get_reference_angle_constraint()
 
-        self._aa_generation, self._bb_generation = \
-            self._get_generation_limit_constraint()
+        _aa_mismatch, _bb_mismatch = self._get_active_power_flow_equations()
 
-        self._aa_flow, self._bb_flow = self._get_branch_flow_limit_constraint()
+        _aa_gen, _bb_gen = self._get_generation_limit_constraint()
+
+        _aa_flow, _bb_flow = self._get_branch_flow_limit_constraint()
 
         # Combine the equality constraints.
-        self._AA_eq = self._get_AA_equality()
-        self._bb_eq = self._get_bb_equality()
+        self.AA_eq = sparse([_aa_cost, _aa_ref, _aa_mismatch])
+        self.bb_eq = matrix([_bb_cost, _bb_ref, _bb_mismatch])
 
         # Combine the inequality constraints.
-        self._AA_ieq = self._get_AA_inequality()
-        self._bb_ieq = self._get_bb_inequality()
+        self.AA_ieq = sparse([_aa_gen, _aa_flow])
+        self.bb_ieq = matrix([_bb_gen, _bb_flow])
 
         # The objective function has the form 0.5 * x'*H*x + c'*x.
         self._hh = self._get_h()
@@ -364,9 +363,9 @@ class DCOPFRoutine(object):
             # The total number of cost variables
             n_cost = len([g.p_cost for g in generators])
 
-            a_cost_size = (n_cc, n_buses+n_generators+n_cost)
+            a_cost_size = (n_cc, n_buses + n_generators + n_cost)
             a_cost = spmatrix([], [] ,[], size=a_cost_size)
-            b_cost = matrix([0]*n_cost)
+            b_cost = matrix([0] * n_cost)
 
             i_segment = 0 # Counter of segments processed
 
@@ -376,14 +375,14 @@ class DCOPFRoutine(object):
 
                 for i in range(g_n_segments):
                     x1, y1 = g.pwl_points[i]
-                    x2, y2 = g.pwl_points[i+1]
+                    x2, y2 = g.pwl_points[i + 1]
 
                     m = (y2-y1)/(x2-x1) # segment gradient
                     c = y1 - m*x1 # segment y-intercept
 
-                    a_cost[i_segment+i, n_buses+g_idx] = m #* base_mva
-                    a_cost[i_segment+i, n_buses+n_generators+i]
-                    b_cost[i_segment+i] = -c
+                    a_cost[i_segment + i, n_buses + g_idx] = m #* base_mva
+                    a_cost[i_segment + i, n_buses + n_generators + i]
+                    b_cost[i_segment + i] = -c
 
                 i_segment += g_n_segments
 
@@ -397,7 +396,7 @@ class DCOPFRoutine(object):
             b_cost = matrix([], size=(0, 1))
 
         else:
-            raise ValueError, "Invalid solver trait"
+            raise ValueError
 
         logger.debug("Built cost constraint matrix Acc:\n%s" % a_cost)
         logger.debug("Built cost constraint vector bcc:\n%s" % b_cost)
@@ -432,7 +431,7 @@ class DCOPFRoutine(object):
         else:
             n_cost = 0
 
-        a_ref = spmatrix([], [], [], size=(1, n_buses+n_generators+n_cost))
+        a_ref = spmatrix([], [], [], size=(1, n_buses + n_generators + n_cost))
         a_ref[0, ref_idx] = 1
 
         b_ref = matrix([buses[ref_idx].v_angle_guess])
@@ -464,7 +463,7 @@ class DCOPFRoutine(object):
         for v in buses:
             i = buses.index(v)
             for g in v.generators:
-                i_bus_generator[i,j] = 1
+                i_bus_generator[i, j] = 1
                 j += 1
 
         logger.debug("Built bus generator incidence matrix:\n%s" %
@@ -478,9 +477,9 @@ class DCOPFRoutine(object):
             cost_mismatch = spmatrix([], [], [], size=(n_buses, 0))
 
         # sparse() does vstack, to hstack we transpose
-        a_mismatch = sparse(
-            [self._B.T, -i_bus_generator.T, cost_mismatch.T]
-        ).T
+        a_mismatch = sparse([self._B.T,
+                             -i_bus_generator.T,
+                             cost_mismatch.T]).T
 
         logger.debug("Built power balance constraint matrix Aflow:\n%s" %
                      a_mismatch)
@@ -572,14 +571,14 @@ class DCOPFRoutine(object):
             a_flow_cost = spmatrix([], [], [], (n_branches, 0))
 
         # Source flow limit
-        a_flow_source = sparse([
-            self._B_source.T, flow_zeros.T, a_flow_cost.T
-        ]).T
+        a_flow_source = sparse([self._B_source.T,
+                                flow_zeros.T,
+                                a_flow_cost.T]).T
 
         # Target flow limit
-        a_flow_target = sparse([
-            -self._B_source.T, flow_zeros.T, a_flow_cost.T
-        ]).T
+        a_flow_target = sparse([-self._B_source.T,
+                                flow_zeros.T,
+                                a_flow_cost.T]).T
 
         a_flow = sparse([a_flow_source, a_flow_target])
 
@@ -596,55 +595,6 @@ class DCOPFRoutine(object):
         logger.debug("Built flow limit constraint vector:\n%s" % b_flow)
 
         return a_flow, b_flow
-
-    #--------------------------------------------------------------------------
-    #  Constraints combined:
-    #--------------------------------------------------------------------------
-
-    def _get_AA_equality(self):
-        """ Combines the equality constraints.
-        """
-        AA_eq = sparse([self._aa_cost, self._aa_ref, self._aa_mismatch])
-
-        logger.debug("Built equality constraint matrix AA:\n%s" % AA_eq)
-
-        return AA_eq
-
-
-    def _get_bb_equality(self):
-        """ Combines the equality constraints.
-        """
-        bb_eq = matrix([self._bb_cost, self._bb_ref, self._bb_mismatch])
-
-        logger.debug("Build equality constraint vector bb:\n%s" % bb_eq)
-
-        return bb_eq
-
-
-    def _get_AA_inequality(self):
-        """ Combines the inequality constraints.
-        """
-        AA_ieq = sparse([self._aa_generation,
-            # FIXME: Branch flow limit constraint
-#            self._aa_flow,
-        ])
-
-        logger.debug("Built inequality constraint matrix AAieq:\n%s" % AA_ieq)
-
-        return AA_ieq
-
-
-    def _get_bb_inequality(self):
-        """ Combines the inequality constraints.
-        """
-        bb_ieq = matrix([self._bb_generation,
-            # FIXME: Branch flow limit constraint
-#            self._bb_flow
-        ])
-
-        logger.debug("Build inequality constraint vector bb:\n%s" % bb_ieq)
-
-        return bb_ieq
 
     #--------------------------------------------------------------------------
     #  Objective function:
