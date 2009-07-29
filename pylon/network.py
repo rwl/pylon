@@ -313,6 +313,7 @@ class Generator(object):
         # Valid values are 'polynomial' and 'piecewise linear'.
         self.cost_model = cost_model
         # Polynomial cost curve coefficients.
+        # (a, b, c) relates to: cost = a*p + b*p**2 + c*p**3.
         if cost_coeffs is None:
             self.cost_coeffs = (1.0, 0.1, 0.01)
         else:
@@ -347,6 +348,17 @@ class Generator(object):
             return True
         else:
             return False
+
+    @property
+    def mode(self):
+        """ Does the machine represent a generator or a despatchable load.
+        """
+        if 0 <= self.p_min < self.p_max:
+            return "generator"
+        elif self.p_min < self.p_max <= 0.0:
+            return "despatchable load"
+        else:
+            return "unknown"
 
     @property
     def p_cost(self):

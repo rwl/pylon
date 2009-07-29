@@ -81,11 +81,11 @@ class ProfitTask(Task):
         asset  = self.env.asset
         # Define the market clearing price as the maximum of the Lagrangian
         # multipliers (lambda, $/MWh) for all buses.
-        mcp = max( [bus.p_lambda for bus in self.env.power_system.buses] )
+        mcp = max([bus.p_lambda for bus in self.env.power_system.buses])
 #        profit = asset.p_despatch * asset.p_cost
         profit = (asset.p_despatch * base_mva) * mcp
 
         logger.debug("Profit task [%s] reward: %s" % (asset.name, profit))
-        return array( [ profit ] )
+        return array([profit])
 
 # EOF -------------------------------------------------------------------------

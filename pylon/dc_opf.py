@@ -26,6 +26,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import time
 import logging
 
 from os.path import join, dirname
@@ -144,6 +145,7 @@ class DCOPFRoutine(object):
     def __call__(self, network):
         """ Solves a DC OPF.
         """
+        t0 = time.time()
         self.network = network
 
         logger.debug("Solving DC OPF [%s]" % network.name)
@@ -163,7 +165,7 @@ class DCOPFRoutine(object):
         self._theta_inj_bus = self._get_theta_inj_bus()
 
         # Use the same cost model for all generators.
-        self._check_cost_model_consistency()
+        self._solver_type = self._get_solver_type()
 
         # Get the vector x where, AA * x <= bb.
         self._x = self._get_x()
@@ -265,7 +267,7 @@ class DCOPFRoutine(object):
     #  Cost models:
     #--------------------------------------------------------------------------
 
-    def _check_cost_model_consistency(self):
+    def _get_solver_type(self):
         """ Checks the generator cost models. If they are not all polynomial
             then those that are get converted to piecewise linear models. The
             algorithm attribute is then set accordingly.
@@ -279,13 +281,15 @@ class DCOPFRoutine(object):
             logger.info("Not all generators use the same cost model, all will "
                 "be converted to piece-wise linear.")
 
-            # TODO: Implemented conversion of polynomial cost models
-            # to piecewise linear models.
-            raise NotImplementedError, "Yet to implement polynomial to " \
-                "piecewise linear conversion."
+            for g in generators:
+                g.poly2pwl()
 
             logger.debug("Using linear solver for DC OPF.")
-            self._solver_type = "linear"
+            solver_type = "linear"
+
+        elif "piecewise linear" not in models:
+            logger.debug("Using linear solver for DC OPF.")
+            solver_type = "linear"
 
         elif "polynomial" not in models:
             logger.debug("Using linear solver for DC OPF.")
@@ -293,10 +297,12 @@ class DCOPFRoutine(object):
 
         elif "piecewise linear" not in models:
             logger.debug("Using quadratic solver for DC OPF.")
-            self._solver_type = "quadratic"
+            solver_type = "quadratic"
 
         else:
             logger.info("No valid cost models specified.")
+
+        return solver_type
 
     #--------------------------------------------------------------------------
     #  Form vector x:
@@ -528,9 +534,9 @@ class DCOPFRoutine(object):
         logger.debug("Built generator limit constraint matrix:\n%s" % a_limit)
 
 
-        b_lower = matrix([-g.p_min_bid for g in generators])
+        b_lower = matrix([-g.p_min for g in generators])
 
-        b_upper = matrix([g.p_max_bid for g in generators])
+        b_upper = matrix([g.p_max for g in generators])
 
         b_limit = matrix([b_lower, b_upper])
 

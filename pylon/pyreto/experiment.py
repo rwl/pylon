@@ -77,7 +77,7 @@ class MarketExperiment(object):
         writer = ReSTWriter()
 
         for interaction in range(number):
-            # Perform action for each agent.
+            # Get an action from each agent and perform it.
             for i, agent in enumerate(self.agents):
                 task = self.tasks[i]
 
@@ -85,12 +85,12 @@ class MarketExperiment(object):
                 observation = task.getObservation()
                 logger.debug("Agent [%s] integrating observation: %s" %
                              (agent.name, observation))
-                agent.integrateObservation( observation )
+                agent.integrateObservation(observation)
 
                 action = agent.getAction()
                 logger.debug("Agent [%s] performing action: %s" %
                              (agent.name, action))
-                task.performAction( action )
+                task.performAction(action)
 
 
             writer.write_generator_data(self.power_system, sys.stdout)
@@ -116,7 +116,7 @@ class MarketExperiment(object):
                 reward = task.getReward()
                 logger.debug("Agent [%s] receiving reward: %s" %
                              (agent.name, reward))
-                agent.giveReward( reward )
+                agent.giveReward(reward)
 
             # Instruct each agent to learn from it's actions.
             for agent in self.agents:

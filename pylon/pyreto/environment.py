@@ -49,13 +49,6 @@ class ParticipantEnvironment(Environment):
     # The number of sensor values the environment produces.
     outdim = 1
 
-    @property
-    def demand(self):
-        """ Total system demand.
-        """
-        base = self.power_system.base_mva
-        return sum([l.p for l in self.power_system.online_loads])
-
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
@@ -71,6 +64,20 @@ class ParticipantEnvironment(Environment):
         # Generator instance that the agent controls.
         self.asset = asset
 
+        # Store on initialisation as they are set in perfromAction().
+        self.p_max = asset.p_max
+        self.p_min = asset.p_min
+        self.cost_coeffs = asset.cost_coeffs
+#        self.pwl_points  = asset.pwl_points
+
+
+    @property
+    def demand(self):
+        """ Total system demand.
+        """
+        base = self.power_system.base_mva
+        return sum([l.p_profiled for l in self.power_system.online_loads])
+
     #--------------------------------------------------------------------------
     #  "Environment" interface:
     #--------------------------------------------------------------------------
@@ -78,8 +85,8 @@ class ParticipantEnvironment(Environment):
     def getSensors(self):
         """ Returns the currently visible state of the world as a numpy array
             of doubles.
-            The state consists of 'total demand', 'market clearing price' and
-            'forecast demand'.
+            The state can consist of: 'total demand', 'market clearing price'
+            and/or 'forecast demand'.
         """
         return array([self.demand])
 
@@ -100,10 +107,10 @@ class ParticipantEnvironment(Environment):
     def reset(self):
         """ Reinitialises the environment.
         """
-        if self.asset is not None:
-            self.asset.p_max_bid = self.asset.p_max
-        else:
-            raise ValueError, "Environment [%s] has no asset." % self
+        # Rest the asset parameters.
+        self.asset.p_max = self.p_max
+        self.asset.p_min = self.p_min
+        self.asset.cost_coeffs = self.cost_coeffs
 
         # Reset the load profile for each online load.
         for load in self.power_system.online_loads:
