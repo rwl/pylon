@@ -80,8 +80,8 @@ def dSbr_dV(branches, Y_source, Y_target, v):
     n_branches = len(branches)
     n_buses = len(v)
 
-    source_idxs = matrix([e.source_bus_idx for e in branches])
-    target_idxs = matrix([e.target_bus_idx for e in branches])
+    source_idxs = matrix([buses.index(e.source_bus) for e in branches])
+    target_idxs = matrix([buses.index(e.target_bus) for e in branches])
 
     # Compute currents.
     i_source = Y_source * v
@@ -296,8 +296,8 @@ class ACOPFRoutine(object):
             fk_eq = matrix([mismatch.real(), mismatch.imag()])
 
             # Branch power flow inequality constraint function values.
-            source_idxs = matrix([e.source_bus_idx for e in branches])
-            target_idxs = matrix([e.target_bus_idx for e in branches])
+            source_idxs = matrix([buses.index(e.source_bus) for e in branches])
+            target_idxs = matrix([buses.index(e.target_bus) for e in branches])
             # Complex power in p.u. injected at the source bus.
             s_source = mul(v[source_idxs], conj(Y_source, v))
             # Complex power in p.u. injected at the target bus.

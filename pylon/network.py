@@ -313,9 +313,9 @@ class Generator(object):
         # Valid values are 'polynomial' and 'piecewise linear'.
         self.cost_model = cost_model
         # Polynomial cost curve coefficients.
-        # (a, b, c) relates to: cost = a*p + b*p**2 + c*p**3.
+        # (a, b, c) relates to: cost = c*p**3 + b*p**2 + a*p.
         if cost_coeffs is None:
-            self.cost_coeffs = (1.0, 0.1, 0.01)
+            self.cost_coeffs = (0.01, 0.1, 1.0)
         else:
             self.cost_coeffs = cost_coeffs
         # Piecewise linear cost segment points.
@@ -367,7 +367,7 @@ class Generator(object):
         return self.total_cost(self.p)
 
 
-    def poly2pwl(self, n_points=10):
+    def poly_to_pwl(self, n_points=10):
         """ Sets the piece-wise linear cost attribute, converting the
             polynomial cost variable by evaluating at zero and then at
             n_points evenly spaced points between p_min and p_max.
@@ -375,12 +375,24 @@ class Generator(object):
         p_min = self.p_min
         p_max = self.p_max
         self.pwl_points = []
+        # Ensure that the cost model is polynomial for calling total_cost.
+        self.cost_model = "polynomial"
 
-        step = (p_max - p_min) / n_points
+        if p_min > 0.0:
+            # Make the first segment go from the origin to p_min.
+            step = (p_max - p_min) / (n_points - 2)
 
-        x = 0.0
+            y0 = self.total_cost(0.0)
+            self.pwl_points.append((0.0, y0))
+
+            x = p_min
+            n_points -= 1
+        else:
+            step = (p_max - p_min) / (n_points - 1)
+            x = 0.0
+
         for i in range(n_points):
-            y = self.total_cost(p_gen)
+            y = self.total_cost(x)
             self.pwl_points.append((x, y))
             x += step
 
@@ -392,26 +404,27 @@ class Generator(object):
         """ Computes total cost for the generator at the given output level.
         """
         if self.cost_model == "piecewise linear":
-            # Iterate backwards from the second last point.
-            i = 0
-            for x1, y1 in reversed(self.pwl_points[:-1]):
-                if p > x1:
-                    # Get the previous (higher) point.
-                    x2, y2 = self.pwl_points[-i + 1]
+            n_segments = len(self.pwl_points) - 1
+            # Iterate over the piece-wise linear segments.
+            for i in range(n_segments):
+                x1, y1 = self.pwl_points[i]
+                x2, y2 = self.pwl_points[(i + 1)]
 
-                    m = pnt2[1] - pnt[1] / pnt2[0] - pnt[0]
+                if x1 <= p <= x2:
+                    m = (y2 - y1) / (x2 - x1)
                     c = y1 - (y2 - y1)/(x2 - x1) * x1
 
-                    result = m * p + c
+                    result = m*p + c
                     break
-                else:
-                    i += 1
+            else:
+                raise ValueError
 
         elif self.cost_model == "polynomial":
-            result = self.cost_coeffs[0]
+            result = self.cost_coeffs[-1]
 
             for i in range(1, len(self.cost_coeffs)):
-                result += self.cost_coeffs[i] * p**i
+                result += self.cost_coeffs[-(i + 1)] * p**i
+
         else:
             raise ValueError
 
@@ -437,6 +450,8 @@ class Load(object):
         self.p_max = p_max
         # Minimum active power (p.u.).
         self.p_min = p_min
+
+        self._p_profile = []
         # Active power profile (%).
         if p_profile is None:
             self.p_profile = [100.0]
@@ -454,11 +469,20 @@ class Load(object):
         return (percent / 100) * (self.p_max - self.p_min)
 
 
+    def get_p_profile(self):
+        """ Returns the active power profile for the load.
+        """
+        return self._p_profile
+
+
     def set_p_profile(self, profile):
         """ Sets the active power profile, updating the cycle iterator.
         """
         self._p_cycle = cycle(profile)
-        self.p_profile = profile
+        self._p_profile = profile
+
+
+    p_profile = property(get_p_profile, set_p_profile)
 
 
 class NetworkReport(object):

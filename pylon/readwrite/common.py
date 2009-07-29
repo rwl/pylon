@@ -19,9 +19,8 @@ bus_attrs = ["name", "mode", "slack", "v_base", "v_magnitude_guess",
     "v_angle_guess", "v_max", "v_min", "v_magnitude", "v_angle", "g_shunt",
     "b_shunt", "zone"]
 
-branch_attrs = ["source_bus_idx", "target_bus_idx", "name", "mode",
-    "online", "r", "x", "b", "s_max", "phase_shift", "phase_shift_max",
-    "phase_shift_min", "online"]
+branch_attrs = ["name", "mode", "online", "r", "x", "b", "s_max",
+    "phase_shift", "phase_shift_max", "phase_shift_min", "online"]
 
 generator_attrs = ["name", "base_mva", "v_magnitude", "p", "p_max", "p_min",
     "q", "q_max", "q_min", "c_startup", "c_shutdown", "cost_model",

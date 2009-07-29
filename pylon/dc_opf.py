@@ -282,7 +282,7 @@ class DCOPFRoutine(object):
                 "be converted to piece-wise linear.")
 
             for g in generators:
-                g.poly2pwl()
+                g.poly_to_pwl()
 
             logger.debug("Using linear solver for DC OPF.")
             solver_type = "linear"
@@ -669,7 +669,7 @@ class DCOPFRoutine(object):
             cost_coeffs = [g.cost_coeffs for g in generators]
 
             # Quadratic cost coefficients in p.u.
-            c0_coeffs = matrix([c0*base_mva**2 for c0, c1, c2 in cost_coeffs])
+            c0_coeffs = matrix([c0*base_mva**2 for c2, c1, c0 in cost_coeffs])
 
     #        quad_coeffs = matrix([g.cost_function.c for g in generators])
             # TODO: Find explanation for multiplying by the square
@@ -706,7 +706,7 @@ class DCOPFRoutine(object):
             cost_coeffs = [g.cost_coeffs for g in generators]
 
             # Linear cost coefficients in p.u.
-            c1_coeffs = matrix([c1 * base_mva for c0, c1, c2 in cost_coeffs])
+            c1_coeffs = matrix([c1 * base_mva for c2, c1, c0 in cost_coeffs])
 
             c = matrix([v_zeros, c1_coeffs])
 
