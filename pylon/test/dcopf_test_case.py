@@ -55,7 +55,8 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         network = reader(DATA_FILE)
 
         self.routine = DCOPFRoutine(show_progress=False)
-        success = self.routine(network)
+#        success = self.routine(network)
+        self.routine.network = network
 
 
     def test_cost_model(self):
@@ -114,7 +115,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
                 0.5568
                 1.0840
         """
-        x = self.routine._x
+        x = self.routine._get_x()
 
         places = 4
 
@@ -132,6 +133,24 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
 
     def test_cost_constraints(self):
         """ Test the piecewise linear DC OPF cost constaints.
+           1200           0           0           0           0           0          -1           0           0
+           3600           0           0           0           0           0          -1           0           0
+           7600           0           0           0           0           0          -1           0           0
+              0        2000           0           0           0           0           0          -1           0
+              0        4400           0           0           0           0           0          -1           0
+              0        8400           0           0           0           0           0          -1           0
+              0           0        2000           0           0           0           0           0          -1
+              0           0        4400           0           0           0           0           0          -1
+              0           0        8400           0           0           0           0           0          -1
+              0           0           0        1200           0           0           0           0           0
+              0           0           0        3600           0           0           0           0           0
+              0           0           0        7600           0           0           0           0           0
+              0           0           0           0        2000           0           0           0           0
+              0           0           0           0        4400           0           0           0           0
+              0           0           0           0        8400           0           0           0           0
+              0           0           0           0           0        1200           0           0           0
+              0           0           0           0           0        3600           0           0           0
+              0           0           0           0           0        7600           0           0           0
 
             Acc =
 
@@ -194,8 +213,8 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
                      288
                     1728
         """
-        Acc = self.routine._aa_cost
-        bcc = self.routine._bb_cost
+        Acc, bcc = self.routine._get_cost_constraint()
+#        bcc = self.routine._bb_cost
 
         self.assertEqual(Acc.size, (18, 42))
         self.assertEqual(bcc.size, (1, 18))

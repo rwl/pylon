@@ -186,8 +186,8 @@ class DCOPFRoutine(object):
         self.bb_eq = matrix([_bb_cost, _bb_ref, _bb_mismatch])
 
         # Combine the inequality constraints.
-        self.AA_ieq = sparse([_aa_gen, _aa_flow])
-        self.bb_ieq = matrix([_bb_gen, _bb_flow])
+        self.AA_ieq = sparse([_aa_gen])#, _aa_flow])
+        self.bb_ieq = matrix([_bb_gen])#, _bb_flow])
 
         # The objective function has the form 0.5 * x'*H*x + c'*x.
         self._hh = self._get_h()
@@ -357,7 +357,7 @@ class DCOPFRoutine(object):
 
         if self._solver_type == "linear": # pw cost constraints
             # A list of the number of cost constraints for each generator
-            n_segments = [len(g.pwl_points)-1 for g in generators]
+            n_segments = [len(g.pwl_points) - 1 for g in generators]
             # The total number of cost constraints (for matrix sizing)
             n_cc = sum(n_segments)
             # The total number of cost variables
@@ -365,28 +365,27 @@ class DCOPFRoutine(object):
 
             a_cost_size = (n_cc, n_buses + n_generators + n_cost)
             a_cost = spmatrix([], [] ,[], size=a_cost_size)
-            b_cost = matrix([0] * n_cost)
+            b_cost = matrix([0.0] * n_cost)
 
             i_segment = 0 # Counter of segments processed
 
-            for g in generators:
+            for i, g in enumerate(generators):
                 g_idx = generators.index(g)
-                g_n_segments = len(g.pwl_points)-1
 
-                for i in range(g_n_segments):
+                for i in range(n_segments[i]):
                     x1, y1 = g.pwl_points[i]
                     x2, y2 = g.pwl_points[i + 1]
 
-                    m = (y2-y1)/(x2-x1) # segment gradient
-                    c = y1 - m*x1 # segment y-intercept
+                    m = (y2 - y1) / (x2 - x1) # segment gradient
+                    c = y1 - m * x1 # segment y-intercept
 
                     a_cost[i_segment + i, n_buses + g_idx] = m #* base_mva
                     a_cost[i_segment + i, n_buses + n_generators + i]
                     b_cost[i_segment + i] = -c
 
-                i_segment += g_n_segments
+                i_segment += n_segments[i]
 
-            a_cost[:, n_buses+n_generators:] = -1
+            a_cost[:, n_buses + n_generators:] = -1
 
         elif self._solver_type == "quadratic":
             # The total number of cost variables
@@ -398,8 +397,8 @@ class DCOPFRoutine(object):
         else:
             raise ValueError
 
-        logger.debug("Built cost constraint matrix Acc:\n%s" % a_cost)
-        logger.debug("Built cost constraint vector bcc:\n%s" % b_cost)
+        logger.debug("Cost constraint matrix (Acc):\n%s" % a_cost)
+        logger.debug("Cost constraint vector (bcc):\n%s" % b_cost)
 
         return a_cost, b_cost
 
@@ -472,7 +471,8 @@ class DCOPFRoutine(object):
         # Include zero matrix for pw linear cost constraints
         if self._solver_type == "linear":
             n_cost = len([g.p_cost for g in generators])
-            cost_mismatch = sparse([matrix(zeros((n_buses, n_cost)))])
+#            cost_mismatch = sparse([matrix(0.0, (n_buses, n_cost))])
+            cost_mismatch = spmatrix([], [], [], size=(n_buses, n_cost))
         else:
             cost_mismatch = spmatrix([], [], [], size=(n_buses, 0))
 
@@ -614,7 +614,8 @@ class DCOPFRoutine(object):
         n_generators = len(generators)
 
         if self._solver_type == "linear":
-            raise NotImplementedError
+            dim = n_buses + n_generators + n_generators
+            h = spmatrix([], [], [], (dim, dim))
         else:
             cost_coeffs = [g.cost_coeffs for g in generators]
 
@@ -647,9 +648,11 @@ class DCOPFRoutine(object):
         generators   = self.network.online_generators
         n_buses      = len(buses)
         n_generators = len(generators)
+        n_cost       = n_generators
 
         if self._solver_type == "linear":
-            raise NotImplementedError
+            c = matrix([matrix(0.0, (n_buses + n_generators, 1)),
+                        matrix(1.0, (n_cost, 1))])
         else:
             v_zeros = matrix([0] * n_buses)
 
