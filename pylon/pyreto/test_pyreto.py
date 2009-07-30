@@ -67,7 +67,7 @@ def get_test_network():
     bus1.generators.append(generator)
     bus1.generators.append(generator2)
     bus1.loads.append(load)
-    
+
     power_sys = Network(name="1bus")
     power_sys.buses.append(bus1)
 
@@ -83,8 +83,45 @@ class MarketExperimentTest(unittest.TestCase):
 
     def setUp(self):
         """ The test runner will execute this method prior to each test.
-        """        
+        """
         self.power_sys = get_test_network()
+
+
+    def test_contracts_market(self):
+        """ Test trading through a bilateral contracts market.
+        """
+        market = ContractsMarket()
+        buyer = Agent()
+        market.add_buyer(buyer)
+        seller = Agent()
+        market.add_seller(seller)
+
+        bids = market.get_bids(seller)
+        offers = market.get_quotes(buyer)
+
+        market.submit_bid(buyer, (100.0, 12.6, 48))
+        market.request_quote(buyer, (80.0, 9.0, 24))
+
+        market.submit_quote(seller, (80.0, 9.0, 24))
+
+
+    def test_over_the_counter_trading(self):
+        """ Test trading through shorter-term bilateral contracts.
+        """
+        otc = OTCMarket()
+
+
+    def test_power_exchange(self):
+        """ Test trading through exchange facilities constructed for the
+            purpose of trading.
+        """
+        px = PowerExchange()
+
+
+    def test_balancing_mechanism(self):
+        """ Test system balancing using a reserve market.
+        """
+        bm = BalancingMechanism()
 
 
 #    def test_opf(self):
@@ -105,5 +142,5 @@ class MarketExperimentTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-    
+
 # EOF -------------------------------------------------------------------------
