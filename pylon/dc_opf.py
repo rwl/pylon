@@ -108,26 +108,6 @@ class DCOPFRoutine(object):
         # Initial values for x.
         self._x = None
 
-        # Cost constraints.
-#        self._aa_cost = None # sparse
-#        self._bb_cost = None
-
-        # Reference bus phase angle constraint.
-#        self._aa_ref = None # sparse
-#        self._bb_ref = None
-
-        # Active power flow equations.
-#        self._aa_mismatch = None # sparse
-#        self._bb_mismatch = None
-
-        # Generator limit constraints.
-#        self._aa_generation = None # sparse
-#        self._bb_generation = None
-
-        # Branch flow limit constraints.
-#        self._aa_flow = None # sparse
-#        self._bb_flow = None
-
         # The equality and inequality problem constraints combined.
         self._AA_eq = None # sparse
         self._AA_ieq = None # sparse
@@ -286,10 +266,6 @@ class DCOPFRoutine(object):
             logger.debug("Using linear solver for DC OPF.")
             solver_type = "linear"
 
-        elif "piecewise linear" not in models:
-            logger.debug("Using linear solver for DC OPF.")
-            solver_type = "linear"
-
         elif "polynomial" not in models:
             logger.debug("Using linear solver for DC OPF.")
             self._solver_type = "linear"
@@ -299,7 +275,7 @@ class DCOPFRoutine(object):
             solver_type = "quadratic"
 
         else:
-            logger.info("No valid cost models specified.")
+            logger.info("Invalid cost models specified.")
 
         return solver_type
 
@@ -312,6 +288,7 @@ class DCOPFRoutine(object):
             phases for each generator bus, the generator real power output and
             if using pw linear costs, the output cost.
         """
+        base_mva = self.network.base_mva
         buses = self.network.connected_buses
 
         v_angle = matrix([v.v_angle_guess * pi / 180 for v in buses])
@@ -319,7 +296,7 @@ class DCOPFRoutine(object):
 #        _g_buses = [v for v in buses if v.type == "pv" or v.type == "slack"]
         _g_buses = [v for v in buses if len(v.generators) > 0]
 
-        p_supply = matrix([v.p_supply for v in _g_buses])
+        p_supply = matrix([v.p_supply / base_mva for v in _g_buses])
 
         x = matrix([v_angle, p_supply])
 
@@ -346,6 +323,7 @@ class DCOPFRoutine(object):
             segment of the function. For polynomial (quadratic) models we
             just add an appropriately sized empty matrix.
         """
+        base_mva     = self.network.base_mva
         buses        = self.network.connected_buses
         generators   = self.network.online_generators
         n_buses      = len(buses)
@@ -379,7 +357,7 @@ class DCOPFRoutine(object):
                     m = (y2 - y1) / (x2 - x1) # segment gradient
                     c = y1 - m * x1 # segment y-intercept
 
-                    a_cost[i_segment + i, n_buses + g_idx] = m #* base_mva
+                    a_cost[i_segment + i, n_buses + g_idx] = m * base_mva
                     a_cost[i_segment + i, n_buses + n_generators + i]
                     b_cost[i_segment + i] = -c
 
@@ -447,6 +425,7 @@ class DCOPFRoutine(object):
     def _get_active_power_flow_equations(self):
         """ P mismatch (B*Va + Pg = Pd).
         """
+        base_mva     = self.network.base_mva
         buses        = self.network.connected_buses
         generators   = self.network.online_generators
         n_buses      = len(buses)
@@ -457,7 +436,6 @@ class DCOPFRoutine(object):
 
         i_bus_generator = spmatrix([], [], [], size=(n_buses, n_generators))
 
-        # TODO: Beautify
         j = 0
         for v in buses:
             i = buses.index(v)
@@ -487,7 +465,7 @@ class DCOPFRoutine(object):
         p_demand = matrix([v.p_demand for v in buses])
         g_shunt = matrix([v.g_shunt for v in buses])
 
-        b_mismatch = -(p_demand+g_shunt)-self._theta_inj_bus
+        b_mismatch = -((p_demand + g_shunt) / base_mva) - self._theta_inj_bus
 
         logger.debug("Built power balance constraint vector bflow:\n%s" %
                      b_mismatch)
@@ -503,6 +481,7 @@ class DCOPFRoutine(object):
             bid values are used and represent the volume each generator is
             willing to produce and not the rated capacity of the machine.
         """
+        base_mva     = self.network.base_mva
         buses        = self.network.connected_buses
         generators   = self.network.online_generators
         n_buses      = len(buses)
@@ -533,9 +512,9 @@ class DCOPFRoutine(object):
         logger.debug("Built generator limit constraint matrix:\n%s" % a_limit)
 
 
-        b_lower = matrix([-g.p_min for g in generators])
+        b_lower = matrix([-g.p_min / base_mva for g in generators])
 
-        b_upper = matrix([g.p_max for g in generators])
+        b_upper = matrix([g.p_max / base_mva for g in generators])
 
         b_limit = matrix([b_lower, b_upper])
 
@@ -553,6 +532,7 @@ class DCOPFRoutine(object):
 
             FIXME: No solution when adding this constraint.
         """
+        base_mva     = self.network.base_mva
         branches     = self.network.online_branches
         generators   = self.network.online_generators
         n_branches   = len(branches)
@@ -564,18 +544,18 @@ class DCOPFRoutine(object):
         logger.debug("Built flow limit zeros:\n%s" % flow_zeros)
 
         if self._solver_type == "linear":
-            # The total number of cost variables
+            # The total number of cost variables.
             n_cost = n_generators
             a_flow_cost = spmatrix([], [], [], (n_branches, n_cost))
         else:
             a_flow_cost = spmatrix([], [], [], (n_branches, 0))
 
-        # Source flow limit
+        # Source flow limit.
         a_flow_source = sparse([self._B_source.T,
                                 flow_zeros.T,
                                 a_flow_cost.T]).T
 
-        # Target flow limit
+        # Target flow limit.
         a_flow_target = sparse([-self._B_source.T,
                                 flow_zeros.T,
                                 a_flow_cost.T]).T
@@ -586,9 +566,9 @@ class DCOPFRoutine(object):
 
 
         flow_s_max = matrix([e.s_max for e in branches])
-        # Source and target limits are both the same
-        source_s_max = flow_s_max - self._theta_inj_source
-        target_s_max = flow_s_max + self._theta_inj_source
+        # Source and target limits are both the same.
+        source_s_max = flow_s_max / base_mva - self._theta_inj_source
+        target_s_max = flow_s_max / base_mva + self._theta_inj_source
 
         b_flow = matrix([source_s_max, target_s_max])
 
@@ -616,11 +596,11 @@ class DCOPFRoutine(object):
         if self._solver_type == "linear":
             dim = n_buses + n_generators + n_generators
             h = spmatrix([], [], [], (dim, dim))
-        else:
-            cost_coeffs = [g.cost_coeffs for g in generators]
+        elif self._solver_type == "quadratic":
+            coeffs = [g.cost_coeffs for g in generators]
 
             # Quadratic cost coefficients in p.u.
-            c0_coeffs = matrix([c0*base_mva**2 for c2, c1, c0 in cost_coeffs])
+            c2_coeffs = matrix([c2 * base_mva**2 for c2, c1, c0 in coeffs])
 
     #        quad_coeffs = matrix([g.cost_function.c for g in generators])
             # TODO: Find explanation for multiplying by the square
@@ -628,10 +608,12 @@ class DCOPFRoutine(object):
 #            c_coeffs *= base_mva**2
 
             # TODO: Find explanation for multiplying by the pu coefficients by 2
-            h = spmatrix(2 * c0_coeffs,
-                         matrix(range(n_generators))+n_buses,
-                         matrix(range(n_generators))+n_buses,
-                         size=(n_buses+n_generators, n_buses+n_generators))
+            h = spmatrix(2 * c2_coeffs,
+                         matrix(range(n_generators)) + n_buses,
+                         matrix(range(n_generators)) + n_buses,
+                         size=(n_buses + n_generators, n_buses + n_generators))
+        else:
+            raise ValueError
 
         logger.debug("Built objective function matrix:\n%s" % h)
 
