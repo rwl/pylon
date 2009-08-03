@@ -99,7 +99,8 @@ class ParticipantEnvironment(GraphicalEnvironment):
         demand = self.demand
 
         if self.hasRenderer():
-            self.getRenderer().updateData((demand, 0.0, 0.0, 0.0))
+            data = (demand, None, None, None)
+            self.getRenderer().updateData(data, False)
 
         return array([demand])
 
@@ -115,6 +116,12 @@ class ParticipantEnvironment(GraphicalEnvironment):
             self.asset.cost_coeffs = (0.0, action[0], 0.0)
         else:
             raise ValueError, "Environment [%s] has no asset." % self
+
+        demand = self.demand
+
+        if self.hasRenderer():
+            data = (None, action[0], None, None)
+            self.getRenderer().updateData(data, False)
 
 
     def reset(self):

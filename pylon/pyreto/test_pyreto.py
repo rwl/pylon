@@ -113,7 +113,7 @@ class MarketExperimentTest(unittest.TestCase):
 
         agent = PolicyGradientAgent(module=net, learner=ENAC())
         # initialize parameters (variance)
-        agent.setSigma([-2.0])
+        agent.setSigma([-1.5])
         # learning options
         agent.learner.alpha = 2.0
         # agent.learner.rprop = True
@@ -138,9 +138,9 @@ class MarketExperimentTest(unittest.TestCase):
         #   task.getReward()
         #   agent.giveReward()
         #   agent.learn()
-        experiment.doInteractions(50)
+        experiment.doInteractions(250)
 
-#        env.getRenderer().stop()
+        env.getRenderer().stop()
 
         self.assertAlmostEqual(self.generator1.cost_coeffs[1], 20.0, places=2)
 

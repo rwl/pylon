@@ -116,6 +116,11 @@ class MarketExperiment(object):
                 reward = task.getReward()
                 logger.debug("Agent [%s] receiving reward: %s" %
                              (agent.name, reward))
+
+                if task.env.hasRenderer():
+                    data = (None, None, reward[0], None)
+                    task.env.getRenderer().updateData(data, False)
+
                 agent.giveReward(reward)
 
             # Instruct each agent to learn from it's actions.
@@ -126,6 +131,10 @@ class MarketExperiment(object):
 
                 logger.debug("Module [%s] parameters: %s" %
                              (agent.module.name, agent.module.params))
+
+                if task.env.hasRenderer():
+                    data = (None, None, None, agent.module.params[0])
+                    task.env.getRenderer().updateData(data)
 
             # Update each agent's environment state attributes.
 #            for task in self.tasks:
