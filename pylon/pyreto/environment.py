@@ -24,6 +24,7 @@
 
 from scipy import array
 from pybrain.rl.environments import Environment
+from pybrain.rl.environments.graphical import GraphicalEnvironment
 
 from pylon import Network, Generator
 
@@ -31,7 +32,7 @@ from pylon import Network, Generator
 #  "ParticipantEnvironment" class:
 #------------------------------------------------------------------------------
 
-class ParticipantEnvironment(Environment):
+class ParticipantEnvironment(GraphicalEnvironment):
     """ Defines the world in which an agent acts.  It receives an input with
         .performAction() and returns an output with .getSensors(). Each
         environment requires a reference to an asset (Generator) and the whole
@@ -53,16 +54,23 @@ class ParticipantEnvironment(Environment):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, power_system, asset):
+    def __init__(self, power_system, asset, render=True):
         """ Initialises the environment.
         """
         assert isinstance(power_system, Network)
         assert isinstance(asset, Generator)
 
+        super(ParticipantEnvironment, self).__init__()
+
         # Energy network in which the asset operates.
         self.power_system = power_system
         # Generator instance that the agent controls.
         self.asset = asset
+
+        self.render = render
+#        if self.render:
+#            self.updateDone = True
+#            self.updateLock=threading.Lock()
 
         # Store on initialisation as they are set in perfromAction().
         self.p_max = asset.p_max
@@ -88,7 +96,12 @@ class ParticipantEnvironment(Environment):
             The state can consist of: 'total demand', 'market clearing price'
             and/or 'forecast demand'.
         """
-        return array([self.demand])
+        demand = self.demand
+
+        if self.hasRenderer():
+            self.getRenderer().updateData((demand, 0.0, 0.0, 0.0))
+
+        return array([demand])
 
 
     def performAction(self, action):

@@ -34,6 +34,7 @@ from pylon import Network, Bus, Generator, Load
 from pylon.readwrite import MATPOWERReader
 
 from pylon.pyreto import MarketExperiment, ParticipantEnvironment, ProfitTask
+from pylon.pyreto.renderer import ParticipantRenderer
 from pylon.pyreto.main import one_for_one
 
 from pybrain.tools.shortcuts import buildNetwork
@@ -100,6 +101,9 @@ class MarketExperimentTest(unittest.TestCase):
         """
         # Create agent for generator 1.
         env = ParticipantEnvironment(self.power_sys, self.generator1)
+        env.setRenderer(ParticipantRenderer())
+        env.getRenderer().start()
+
         task = ProfitTask(env)
 
         net = buildNetwork(1, 1, bias=False)
@@ -135,6 +139,8 @@ class MarketExperimentTest(unittest.TestCase):
         #   agent.giveReward()
         #   agent.learn()
         experiment.doInteractions(50)
+
+#        env.getRenderer().stop()
 
         self.assertAlmostEqual(self.generator1.cost_coeffs[1], 20.0, places=2)
 
