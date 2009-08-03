@@ -44,6 +44,7 @@ from pylon.y import SusceptanceMatrix
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
 #  "DCOPFRoutine" class:
@@ -162,12 +163,12 @@ class DCOPFRoutine(object):
         _aa_flow, _bb_flow = self._get_branch_flow_limit_constraint()
 
         # Combine the equality constraints.
-        self.AA_eq = sparse([_aa_cost, _aa_ref, _aa_mismatch])
-        self.bb_eq = matrix([_bb_cost, _bb_ref, _bb_mismatch])
+        self._AA_eq = sparse([_aa_cost, _aa_ref, _aa_mismatch])
+        self._bb_eq = matrix([_bb_cost, _bb_ref, _bb_mismatch])
 
         # Combine the inequality constraints.
-        self.AA_ieq = sparse([_aa_gen])#, _aa_flow])
-        self.bb_ieq = matrix([_bb_gen])#, _bb_flow])
+        self._AA_ieq = sparse([_aa_gen])#, _aa_flow])
+        self._bb_ieq = matrix([_bb_gen])#, _bb_flow])
 
         # The objective function has the form 0.5 * x'*H*x + c'*x.
         self._hh = self._get_h()

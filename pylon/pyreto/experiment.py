@@ -55,16 +55,16 @@ class MarketExperiment(object):
         self.agents = agents
         # The power system model containing the agent's assets.
         self.power_system = power_system
-        
+
         # Routine for solving the OPF problem.
         if routine is None:
             self.routine = DCOPFRoutine(show_progress=False)
         else:
             self.routine = routine
-            
+
         # Number of interactions to perform.
         self.steps = steps
-                
+
         self.stepid = 0
 
     #--------------------------------------------------------------------------
@@ -93,7 +93,7 @@ class MarketExperiment(object):
                 task.performAction(action)
 
 
-            writer.write_generator_data(self.power_system, sys.stdout)
+#            writer.write_generator_data(self.power_system, sys.stdout)
 
             # Optimise the power system model.
             solution = self.routine(self.power_system)
@@ -102,7 +102,7 @@ class MarketExperiment(object):
 
             if solution["status"] != "optimal":
                 logger.debug("No solution for interaction: %d" % interaction)
-                
+
                 if logger.handlers:
                     stream = logger.handlers[0].stream
                 else:

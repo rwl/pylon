@@ -44,7 +44,7 @@ from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
 from environment import ParticipantEnvironment
 from experiment import MarketExperiment
-from profit_task import ProfitTask
+from task import ProfitTask
 
 #------------------------------------------------------------------------------
 #  "PyretoApplication" class:
@@ -53,7 +53,7 @@ from profit_task import ProfitTask
 class PyretoApplication(object):
     """ Simulates energy trade in a power system.
     """
-    
+
     def __init__(self, file_name="", type="any", interactions=24, ac=False):
         """ Initialises a new PyretoApplication instance.
         """
@@ -78,11 +78,11 @@ class PyretoApplication(object):
         """
         # Get the network from the input.
         power_sys = read_network(input, self.type, self.file_name)
-    
+
         experiment = one_for_one(power_sys)
-        
+
         experiment.doInteractions(self.interactions)
-    
+
         writer = ReSTExperimentWriter()
         writer(experiment, output)
 
@@ -95,7 +95,7 @@ def one_for_one(power_sys):
     """
     tasks = []
     agents = []
-    
+
     for generator in power_sys.online_generators:
         # Create the world in which the trading agent acts.
         env = ParticipantEnvironment(power_system=power_sys, asset=generator)
@@ -179,7 +179,7 @@ def main():
 
     parser.add_option("-d", "--debug", action="store_true", dest="debug",
         default=False, help="Print debug information.")
-    
+
     (options, args) = parser.parse_args()
 
     if options.quiet:
@@ -234,14 +234,14 @@ def main():
 if __name__ == "__main__":
     import logging
     logger = logging.getLogger()
-    
+
     # Remove PyBrain handlers.
     for handler in logger.handlers:
         logger.removeHandler(handler)
-        
+
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
-    
+
     main()
 
 # EOF -------------------------------------------------------------------------

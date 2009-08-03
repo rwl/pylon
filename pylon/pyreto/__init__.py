@@ -17,6 +17,6 @@
 
 from experiment import MarketExperiment
 from environment import ParticipantEnvironment
-from profit_task import ProfitTask
+from task import ProfitTask
 
 # EOF -------------------------------------------------------------------------

@@ -49,17 +49,17 @@ class ProfitTask(Task):
 
         # Limits for scaling of actors.
         asset = environment.asset
-        self.actor_limits = [(asset.p_min, asset.p_max)]
+        self.actor_limits = None#[(asset.p_min, asset.p_max)]
 
 
     def performAction(self, action):
         """ A filtered mapping of the .performAction() method of the underlying
             environment.
         """
-        logger.debug("Profit task [%s] filtering action: %s" %
-                     (self.env.asset.name, action))
-        logger.debug("Profit task [%s] denormalised action: %s" %
-                     (self.env.asset.name, self.denormalize(action)))
+#        logger.debug("Profit task [%s] filtering action: %s" %
+#                     (self.env.asset.name, action))
+#        logger.debug("Profit task [%s] denormalised action: %s" %
+#                     (self.env.asset.name, self.denormalize(action)))
         Task.performAction(self, action)
 
 
@@ -77,13 +77,14 @@ class ProfitTask(Task):
         """ Computes and returns the reward corresponding to the last action
             performed.
         """
-        base_mva = self.env.power_system.base_mva
+#        base_mva = self.env.power_system.base_mva
         asset  = self.env.asset
         # Define the market clearing price as the maximum of the Lagrangian
         # multipliers (lambda, $/MWh) for all buses.
-        mcp = max([bus.p_lambda for bus in self.env.power_system.buses])
-#        profit = asset.p_despatch * asset.p_cost
-        profit = (asset.p_despatch * base_mva) * mcp
+#        mcp = max([bus.p_lambda for bus in self.env.power_system.buses])
+
+        profit = asset.total_cost(asset.p_despatch)
+#        profit = (asset.p_despatch * base_mva) * mcp
 
         logger.debug("Profit task [%s] reward: %s" % (asset.name, profit))
         return array([profit])

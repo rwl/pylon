@@ -34,6 +34,7 @@ from pylon.util import conj
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
 #  "make_susceptance_matrix" function:

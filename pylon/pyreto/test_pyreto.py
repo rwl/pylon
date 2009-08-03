@@ -22,13 +22,24 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import sys
+import logging
 import unittest
+
 from os.path import dirname, join
+
+from scipy import array
 
 from pylon import Network, Bus, Generator, Load
 from pylon.readwrite import MATPOWERReader
 
+from pylon.pyreto import MarketExperiment, ParticipantEnvironment, ProfitTask
 from pylon.pyreto.main import one_for_one
+
+from pybrain.tools.shortcuts import buildNetwork
+from pybrain.rl.experiments import ContinuousExperiment
+from pybrain.rl.agents import LearningAgent, PolicyGradientAgent
+from pybrain.rl.learners import ENAC
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -44,32 +55,8 @@ def get_test_network():
     """ Returns a test power system network.
     """
     # Read network from data file.
-#    reader = MATPOWERReader()
-#    power_sys = reader(DATA_FILE)
-
-    # Build one bus test network.
-    bus1 = Bus(name="Bus 1")
-
-    generator = Generator(name        = "G1",
-                          p_max       = 2.0,
-                          p_min       = 0.0,
-                          cost_model  = "polynomial",
-                          cost_coeffs = (0.0, 6.0, 0.0))
-
-    generator2 = Generator(name        = "G2",
-                           p_max       = 6.0,
-                           p_min       = 0.0,
-                           cost_model  = "polynomial",
-                           cost_coeffs = (0.0, 10.0, 0.0))
-
-    load = Load(name="L1", p=1.0, q=0.0)
-
-    bus1.generators.append(generator)
-    bus1.generators.append(generator2)
-    bus1.loads.append(load)
-
-    power_sys = Network(name="1bus")
-    power_sys.buses.append(bus1)
+    reader = MATPOWERReader()
+    power_sys = reader(DATA_FILE)
 
     return power_sys
 
@@ -84,44 +71,109 @@ class MarketExperimentTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.power_sys = get_test_network()
+        # Build one bus test network.
+        self.generator1 = Generator(name        = "G1",
+                                    p_max       = 60.0,
+                                    p_min       = 0.0,
+                                    cost_model  = "polynomial",
+                                    cost_coeffs = (0.0, 10.0, 0.0))
+
+        self.generator2 = Generator(name        = "G2",
+                                    p_max       = 100.0,
+                                    p_min       = 0.0,
+                                    cost_model  = "polynomial",
+                                    cost_coeffs = (0.0, 20.0, 0.0))
+
+        load = Load(name="L1", p=100.0, q=0.0)
+
+        self.bus1 = Bus(name="Bus 1")
+        self.bus1.generators.append(self.generator1)
+        self.bus1.generators.append(self.generator2)
+        self.bus1.loads.append(load)
+
+        self.power_sys = Network(name="1bus")
+        self.power_sys.buses.append(self.bus1)
 
 
-    def test_contracts_market(self):
-        """ Test trading through a bilateral contracts market.
+    def test_learning(self):
+        """ Test maximisation of marginal generator offer.
         """
-        market = ContractsMarket()
-        buyer = Agent()
-        market.add_buyer(buyer)
-        seller = Agent()
-        market.add_seller(seller)
+        # Create agent for generator 1.
+        env = ParticipantEnvironment(self.power_sys, self.generator1)
+        task = ProfitTask(env)
 
-        bids = market.get_bids(seller)
-        offers = market.get_quotes(buyer)
+        net = buildNetwork(1, 1, bias=False)
+        net._setParameters(array([0.1]))
 
-        market.submit_bid(buyer, (100.0, 12.6, 48))
-        market.request_quote(buyer, (80.0, 9.0, 24))
+#        agent = LearningAgent(net, None)
 
-        market.submit_quote(seller, (80.0, 9.0, 24))
+        agent = PolicyGradientAgent(module=net, learner=ENAC())
+        # initialize parameters (variance)
+        agent.setSigma([-2.0])
+        # learning options
+        agent.learner.alpha = 2.0
+        # agent.learner.rprop = True
+        agent.actaspg = False
+#        agent.disableLearning()
+
+#        experiment = ContinuousExperiment(task1, agent1)
+        experiment = MarketExperiment([task], [agent], self.power_sys)
+
+        # Experiment event sequence:
+        #   task.getObservation()
+        #     env.getSensors()
+        #     task.normalize()
+        #   agent.integrateObservation()
+        #     Stores the observation received in a temporary variable until
+        #     action is called and reward is given.
+        #   agent.getAction()
+        #     module.activate(lastobs)
+        #   task.performAction()
+        #     task.denormalize(action)
+        #     env.performAction(action)
+        #   task.getReward()
+        #   agent.giveReward()
+        #   agent.learn()
+        experiment.doInteractions(50)
+
+        self.assertAlmostEqual(self.generator1.cost_coeffs[1], 20.0, places=2)
 
 
-    def test_over_the_counter_trading(self):
-        """ Test trading through shorter-term bilateral contracts.
-        """
-        otc = OTCMarket()
-
-
-    def test_power_exchange(self):
-        """ Test trading through exchange facilities constructed for the
-            purpose of trading.
-        """
-        px = PowerExchange()
-
-
-    def test_balancing_mechanism(self):
-        """ Test system balancing using a reserve market.
-        """
-        bm = BalancingMechanism()
+#    def test_contracts_market(self):
+#        """ Test trading through a bilateral contracts market.
+#        """
+#        market = ContractsMarket()
+#        buyer = Agent()
+#        market.add_buyer(buyer)
+#        seller = Agent()
+#        market.add_seller(seller)
+#
+#        bids = market.get_bids(seller)
+#        offers = market.get_quotes(buyer)
+#
+#        market.submit_bid(buyer, (100.0, 12.6, 48))
+#        market.request_quote(buyer, (80.0, 9.0, 24))
+#
+#        market.submit_quote(seller, (80.0, 9.0, 24))
+#
+#
+#    def test_over_the_counter_trading(self):
+#        """ Test trading through shorter-term bilateral contracts.
+#        """
+#        otc = OTCMarket()
+#
+#
+#    def test_power_exchange(self):
+#        """ Test trading through exchange facilities constructed for the
+#            purpose of trading.
+#        """
+#        px = PowerExchange()
+#
+#
+#    def test_balancing_mechanism(self):
+#        """ Test system balancing using a reserve market.
+#        """
+#        bm = BalancingMechanism()
 
 
 #    def test_opf(self):
@@ -133,14 +185,19 @@ class MarketExperimentTest(unittest.TestCase):
 #        writer.write_generator_data(power_sys, sys.stdout)
 
 
-    def test_experiment(self):
-        """ Test a market experiment.
-        """
-        experiment = one_for_one(self.power_sys)
-        experiment.doInteractions()
-
-
 if __name__ == "__main__":
+#    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
+#        format="%(levelname)s: %(message)s")
+
+    logger = logging.getLogger()
+
+    # Remove PyBrain handlers.
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
+
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
     unittest.main()
 
 # EOF -------------------------------------------------------------------------
