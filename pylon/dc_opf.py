@@ -44,7 +44,7 @@ from pylon.y import SusceptanceMatrix
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+#logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
 #  "DCOPFRoutine" class:
@@ -269,14 +269,14 @@ class DCOPFRoutine(object):
 
         elif "polynomial" not in models:
             logger.debug("Using linear solver for DC OPF.")
-            self._solver_type = "linear"
+            solver_type = "linear"
 
         elif "piecewise linear" not in models:
             logger.debug("Using quadratic solver for DC OPF.")
             solver_type = "quadratic"
 
         else:
-            logger.info("Invalid cost models specified.")
+            logger.error("Invalid cost models specified.")
 
         return solver_type
 
@@ -291,21 +291,26 @@ class DCOPFRoutine(object):
         """
         base_mva = self.network.base_mva
         buses = self.network.connected_buses
+        generators = self.network.online_generators
 
         v_angle = matrix([v.v_angle_guess * pi / 180 for v in buses])
 
 #        _g_buses = [v for v in buses if v.type == "pv" or v.type == "slack"]
-        _g_buses = [v for v in buses if len(v.generators) > 0]
+#        _g_buses = [v for v in buses if len(v.generators) > 0]
 
-        p_supply = matrix([v.p_supply / base_mva for v in _g_buses])
+#        p_supply = matrix([v.p_supply / base_mva for v in _g_buses])
+        p_supply = matrix([g.p / base_mva for g in generators])
 
         x = matrix([v_angle, p_supply])
 
         if self._solver_type == "linear":
             p_cost = []
-            for v in _g_buses:
-                for g in v.generators:
-                    p_cost.append(g.p_cost)
+#            for v in _g_buses:
+#                for g in v.generators:
+#                    p_cost.append(g.p_cost)
+            for g in generators:
+                p_cost.append(g.p_cost)
+
             pw_cost = matrix(p_cost)
             x = matrix([x, pw_cost])
 
@@ -339,28 +344,29 @@ class DCOPFRoutine(object):
             n_segments = [len(g.pwl_points) - 1 for g in generators]
             # The total number of cost constraints (for matrix sizing)
             n_cc = sum(n_segments)
-            # The total number of cost variables
-            n_cost = len([g.p_cost for g in generators])
+            # The total number of cost variables.
+            n_cost = len(generators)
 
             a_cost_size = (n_cc, n_buses + n_generators + n_cost)
-            a_cost = spmatrix([], [] ,[], size=a_cost_size)
-            b_cost = matrix([0.0] * n_cost)
+            a_cost = spmatrix([], [], [], size=a_cost_size, tc='d')
 
-            i_segment = 0 # Counter of segments processed
+            b_cost = matrix(0.0, size=(n_cc, 1))
+
+            i_segment = 0 # Counter of total segments processed.
 
             for i, g in enumerate(generators):
-                g_idx = generators.index(g)
+#                g_idx = generators.index(g)
 
-                for i in range(n_segments[i]):
-                    x1, y1 = g.pwl_points[i]
-                    x2, y2 = g.pwl_points[i + 1]
+                for j in range(n_segments[i]):
+                    x1, y1 = g.pwl_points[j]
+                    x2, y2 = g.pwl_points[j + 1]
 
                     m = (y2 - y1) / (x2 - x1) # segment gradient
                     c = y1 - m * x1 # segment y-intercept
 
-                    a_cost[i_segment + i, n_buses + g_idx] = m * base_mva
-                    a_cost[i_segment + i, n_buses + n_generators + i]
-                    b_cost[i_segment + i] = -c
+                    a_cost[i_segment + j, n_buses + i] = m * base_mva
+                    a_cost[i_segment + j, n_buses + n_generators + i] = -1
+                    b_cost[i_segment + j] = -c
 
                 i_segment += n_segments[i]
 
@@ -368,7 +374,7 @@ class DCOPFRoutine(object):
 
         elif self._solver_type == "quadratic":
             # The total number of cost variables
-            n_cost = len([g.p_cost for g in generators])
+#            n_cost = len([g.p_cost for g in generators])
 
             a_cost = spmatrix([], [], [], size=(0, n_buses + n_generators))
             b_cost = matrix([], size=(0, 1))

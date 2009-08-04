@@ -34,7 +34,12 @@ from pyparsing import \
 
 from pylon.network import Network, Bus, Branch, Generator, Load
 
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
 #  "MATPOWERReader" class:
@@ -439,7 +444,7 @@ class MATPOWERReader(object):
             for i, coord in enumerate( coords ):
                 if i % 2 == 0:
                     # FIXME: This should really use the machine MVA base
-                    x = float( coord ) / self.base_mva
+                    x = float( coord )
                     y = float( coords[i+1] )
                     points.append( (x, y) )
 #            print "Points:", points

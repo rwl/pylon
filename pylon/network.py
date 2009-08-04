@@ -410,14 +410,17 @@ class Generator(object):
                 x1, y1 = self.pwl_points[i]
                 x2, y2 = self.pwl_points[(i + 1)]
 
-                if x1 <= p <= x2:
-                    m = (y2 - y1) / (x2 - x1)
-                    c = y1 - (y2 - y1)/(x2 - x1) * x1
+                m = (y2 - y1) / (x2 - x1)
+                c = y1 - m * x1
 
-                    result = m*p + c
+                result = m*p + c
+
+                if x1 <= p <= x2:
                     break
-            else:
-                raise ValueError
+#            else:
+##                raise ValueError, "Value [%f] outwith pwl cost curve." % p
+#                # Use the last segment for values outwith the cost curve.
+#                result = m*p + c
 
         elif self.cost_model == "polynomial":
             result = self.cost_coeffs[-1]
