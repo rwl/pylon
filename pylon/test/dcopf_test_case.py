@@ -53,11 +53,11 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         reader = MATPOWERReader()
-        network = reader(PWL_FILE)
+        self.network = reader(PWL_FILE)
 
         self.routine = DCOPFRoutine(show_progress=False)
 #        success = self.routine(network)
-        self.routine.network = network
+        self.routine.network = self.network
 
 
     def test_cost_model(self):
@@ -257,6 +257,73 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
 
 #    def test_power_balance_constraint(self):
 #        pass
+
+
+    def test_solver_output(self):
+        """ Test the output from the solver.
+
+            x =
+
+            1.0e+03 *
+
+                0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+                0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0001
+               -0.0001
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+                0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+                0.0004
+                0.0003
+                0.0003
+                0.0004
+                0.0002
+                0.0004
+                1.0080
+                1.0948
+                1.0159
+                1.0080
+                0.5981
+                1.0080
+        """
+        self.routine(self.network)
+        x = self.routine.x
+
+        places = 4
+
+        x_0 = 0.0000 # Va_ref
+        x_30 = 0.0004
+        x_37 = 1.0948 # Pg[1]
+        x_41 = 1.0080
+
+        self.assertEqual(x.size, (42, 1))
+        self.assertAlmostEqual(x[0], x_0, places)
+        self.assertAlmostEqual(x[30], x_30, places)
+        self.assertAlmostEqual(x[37], x_37, places)
+        self.assertAlmostEqual(x[41], x_41, places)
 
 #------------------------------------------------------------------------------
 #  "DCOPFTest" class:

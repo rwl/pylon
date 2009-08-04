@@ -74,11 +74,17 @@ class MATPOWERReader(object):
         # is checked at the end of the parsing operation.
         self.generators = []
 
+
+    def __call__(self, file_or_filename):
+        """ Call the reader with something like reader(fd)
+        """
+        return self.parse(file_or_filename)
+
     #--------------------------------------------------------------------------
     #  Parse a MATPOWER data file and return a network object
     #--------------------------------------------------------------------------
 
-    def __call__(self, file_or_filename):
+    def parse(self, file_or_filename):
         """ Parse a MATPOWER data file and return a network object
 
             file_or_filename: File name of file object with MATPOWER data

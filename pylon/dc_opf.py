@@ -124,10 +124,17 @@ class DCOPFRoutine(object):
 
 
     def __call__(self, network):
+        """ Call the routine using routine(n).
+        """
+        return self.solve(network)
+
+
+    def solve(self, network=None):
         """ Solves a DC OPF.
         """
         t0 = time.time()
-        self.network = network
+        self.network = network if network is not None else self.network
+#        self.network = network
 
         logger.debug("Solving DC OPF [%s]" % network.name)
 
@@ -140,7 +147,7 @@ class DCOPFRoutine(object):
         solvers.options["refinement"] = self.refinement
 
         susceptance_matrix = SusceptanceMatrix()
-        self._B, self._B_source = susceptance_matrix(network)
+        self._B, self._B_source = susceptance_matrix(self.network)
 
         self._theta_inj_source = self._get_theta_inj_source()
         self._theta_inj_bus = self._get_theta_inj_bus()
@@ -285,9 +292,9 @@ class DCOPFRoutine(object):
     #--------------------------------------------------------------------------
 
     def _get_x(self):
-        """ Returns the vector x where, AA * x <= bb.  Stack the initial voltage
-            phases for each generator bus, the generator real power output and
-            if using pw linear costs, the output cost.
+        """ Returns the vector x where, AA * x <= bb.  Stack the initial
+            voltage phases for each generator bus, the generator real power
+            output and if using pw linear costs, the output cost.
         """
         base_mva = self.network.base_mva
         buses = self.network.connected_buses
@@ -614,7 +621,7 @@ class DCOPFRoutine(object):
             # of the system base (pu)
 #            c_coeffs *= base_mva**2
 
-            # TODO: Find explanation for multiplying by the pu coefficients by 2
+            # TODO: Explain multiplication of the pu coefficients by 2
             h = spmatrix(2 * c2_coeffs,
                          matrix(range(n_generators)) + n_buses,
                          matrix(range(n_generators)) + n_buses,
@@ -672,6 +679,9 @@ class DCOPFRoutine(object):
         #- initvals['y'] is a dense 'd' matrix of size (p,1).
         #- initvals['z'] is a dense 'd' matrix of size (K,1), representing
         #  a vector that is strictly positive with respect to the cone C.
+
+        print self._AA_ieq[:, -9:]
+        print self._AA_ieq.size
 
         solution = qp(P=self._hh, q=self._cc,
                       G=self._AA_ieq, h=self._bb_ieq,
