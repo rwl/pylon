@@ -356,7 +356,7 @@ class Generator(object):
         if 0 <= self.p_min < self.p_max:
             return "generator"
         elif self.p_min < self.p_max <= 0.0:
-            return "despatchable load"
+            return "dispatchable load"
         else:
             return "unknown"
 
@@ -432,6 +432,70 @@ class Generator(object):
             raise ValueError
 
         return result
+
+
+    def get_offers(self):
+        """ Returns a quantity and price offer created from the cost function.
+        """
+        from pylon.pyreto.market import Offer
+
+        if self.cost_model == "polynomial":
+            # Convert polynomials to piece-wise linear.
+            self.poly_to_pwl(n_points=6)
+
+        n_segments = len(self.pwl_points) - 1
+
+        offers = []
+
+        for i in range(n_segments):
+            x1, y1 = self.pwl_points[i]
+            x2, y2 = self.pwl_points[(i + 1)]
+
+            quantity = x2 - x1
+            price = (y2 - y1) / quantity
+
+            offers.append(Offer(quantity, price))
+
+        return offers
+
+
+    def offers_to_pwl(self, offers, is_bid=False, limits=None):
+        """ Sets the piecewise linear total cost function according to the
+            given bid/offer blocks.
+
+            @see: extras/smartmarket/off2case.m
+        """
+        from numpy import cumsum
+
+        if min([off.quantity for off in offers]) < 0.0:
+            logger.error("Offer/bid quantities must be non-negative.")
+
+        # Strip zero quantities and optionally strip prices beyond limits.
+        if limits is not None:
+            if is_bid:
+                offers = [off for off in offers if off.quantity >= limit]
+                offers = [off for off in offers if off.price >= limit]
+            else:
+                offers = [off for off in offers if off.quantity <= limit]
+                offers = [off for off in offers if off.price <= limit]
+
+        n_points = len(offers) + 1 # Number of points to define pwl function.
+
+        points = [(0.0, 0.0)]
+        # Form piece-wise linear total cost function.
+        for i, off in enumerate(offers):
+            x = points[i][0] + off.quantity
+            y = points[i][1] + off.price
+            points.append((x, y))
+
+        if is_bid:
+            x_end = points[-1][0]
+            y_end = points[-1][1]
+            points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
+
+        self.pwl_points = points
+
+        self.cost_model = "piecewise linear"
 
 
 class Load(object):

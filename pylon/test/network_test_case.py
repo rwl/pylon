@@ -266,6 +266,98 @@ class GeneratorTest(unittest.TestCase):
         self.assertAlmostEqual(g.pwl_points[9][0], 80.0, places=2)
         self.assertAlmostEqual(g.pwl_points[9][1], 288.0, places=2)
 
+
+    def test_offers(self):
+        """ Test conversion of cost function to price/quantity offers.
+
+        case6ww.m
+        q =
+
+           50.0000   37.5000   37.5000   37.5000   37.5000
+           37.5000   28.1250   28.1250   28.1250   28.1250
+           45.0000   33.7500   33.7500   33.7500   33.7500
+
+
+        p =
+
+           11.9355   12.4019   12.8016   13.2014   13.6011
+           10.6664   11.2498   11.7498   12.2499   12.7500
+           11.1665   11.7500   12.2502   12.7503   13.2505
+
+        case30pwl.m
+        q =
+
+            12    24    24
+            12    24    24
+            12    24    24
+            12    24    24
+            12    24    24
+            12    24    24
+
+
+        p =
+
+            12    36    76
+            20    44    84
+            20    44    84
+            12    36    76
+            20    44    84
+            12    36    76
+        """
+        places = 4
+
+        g = Generator(p_min=50.0, p_max=200.0)
+        g.cost_model="polynomial"
+        g.cost_coeffs=(0.00533, 11.669, 213.1)
+
+        poly_offers = g.get_offers()
+
+        self.assertEqual(len(poly_offers), 5)
+        self.assertAlmostEqual(poly_offers[0].quantity, 50.0, places)
+        self.assertAlmostEqual(poly_offers[0].price, 11.9355, places)
+        self.assertAlmostEqual(poly_offers[3].quantity, 37.5, places)
+        self.assertAlmostEqual(poly_offers[3].price, 13.2014, places)
+
+
+        g = Generator(p_min=0.0, p_max=80.0)
+        g.cost_model="piecewise linear"
+        g.pwl_points=[(0, 0), (12, 144), (36, 1008), (60, 2832)]
+
+        pwl_offers = g.get_offers()
+        self.assertEqual(len(pwl_offers), 3)
+        self.assertAlmostEqual(pwl_offers[0].quantity, 12.0, places)
+        self.assertAlmostEqual(pwl_offers[0].price, 12.0, places)
+        self.assertAlmostEqual(pwl_offers[2].quantity, 24.0, places)
+        self.assertAlmostEqual(pwl_offers[2].price, 76.0, places)
+
+
+    def test_offers_to_pwl(self):
+        """ Test conversion of bid/offer blocks to pwl cost function.
+
+            offers.P.qty = [
+                12 24 24;
+                12 24 24;
+                12 24 24;
+                12 24 24;
+                12 24 24;
+                12 24 24;
+            ];
+            offers.P.prc = [
+                20 50 60;
+                20 40 70;
+                20 42 80;
+                20 44 90;
+                20 46 75;
+                20 48 60;
+            ];
+        """
+        offers = [Offer(12.0, 20.0), Offer(24.0, 50.0), Offer(24.0, 60.0)]
+
+        g = Generator()
+        g.offers_to_pwl(offers)
+
+        raise NotImplementedError
+
 #------------------------------------------------------------------------------
 #  "LoadTest" class:
 #------------------------------------------------------------------------------
