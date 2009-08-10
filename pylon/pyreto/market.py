@@ -28,15 +28,48 @@ from cvxopt import matrix
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+BIG_NUMBER = 1e6
+
+#------------------------------------------------------------------------------
 #  "Bid" class:
 #------------------------------------------------------------------------------
 
 class Bid(object):
     """ Defines a bid to buy a quantity of power at a defined price.
     """
-    def __init__(self, qty, prc):
+    def __init__(self, generator, qty, prc):
+        # Generating unit to which the bid applies.
+        self.generator = generator
+        # Quantity of power bidding to be bought.
         self.quantity = qty
+        # Maximum price willing to be paid.
         self.price = prc
+        # Is the bid valid?
+        self.withheld = False
+        # Has the bid been partially or fully accepted?
+        self.accepted = False
+
+        # Quantity of bid cleared by the market.
+        self.cleared_quantity = 0.0
+        # Price at which the bid was cleared.
+        self.cleared_price = 0.0
+
+    @property
+    def total_quantity(self):
+        """ Output at which the generator has been dispatched.
+        """
+        self.generator.p_despatch
+
+
+    @property
+    def difference(self):
+        """ The gap between the marginal unit (setting lambda) and the
+            offer/bid price.
+        """
+        return self.price - self.p_lambda
 
 #------------------------------------------------------------------------------
 #  "Offer" class:
@@ -48,7 +81,14 @@ class Offer(object):
     def __init__(self, qty, prc):
         self.quantity = qty
         self.price = prc
+        # Is the offer valid?
+        self.withheld = False
+        # Has the offer been partially or fully accepted?
+        self.accepted = False
 
+#------------------------------------------------------------------------------
+#  "PriceLimit" class:
+#------------------------------------------------------------------------------
 
 class PriceLimit(object):
     """ Defines limits to offer/bid prices.
@@ -91,6 +131,7 @@ class SmartMarket(object):
         # Start the clock.
         t0 = time.time()
 
+        buses = self.network.connected_buses
         generators = self.network.all_generators
 
         limits = {"max_offer": self.price_cap,
@@ -149,19 +190,212 @@ class SmartMarket(object):
 
         # Compute quantities, prices and costs.
         if solution["status"] == "optimal":
+            # Get nodal marginal prices from OPF.
+            p_lambda = spdiag([bus.p_lambda for bus in buses])
+            q_lambda = spdiag([bus.q_lambda for bus in buses])
+
+            # Compute fudge factor for p_lambda to include price of bundled
+            # reactive power. For loads Q = pf * P.
             pass
+
+            # Guarantee that cleared offers are >= offers.
+            guarantee_offer_price = True
+
+            for offer in offers:
+                offer.p_lambda = bus.p_lambda
+                offer.total_quantity = generator.p
+
+            for bid in bids:
+                if self.have_q:
+                    # Use unbundled lambdas.
+                    bid.p_lambda = bus.p_lambda
+                    # Allow cleared bids to be above bid price.
+                    guarantee_bid_price = False
+                else:
+                    # Use bundled lambdas.
+                    bid.p_lambda = bus.p_lambda + spdiag(pf[l]) * bus.q_lambda
+                    # Guarantee that cleared bids are <= bids.
+                    guarantee_bid_price = True
+                bid.total_quantity = dispatchable_load.p
+
+            # Clear bids and offers.
+            cleared_offers, cleared_bids = self.auction(offers, bids)
+
         else:
             logger.error("Non-convergent OPF.")
+
+            quantity = 0.0
+            price = limits["max_offer"]
+
+            for offbid in offers + bids:
+                offbid.quantity = 0.0
+                offbid.price = 0.0
+
+            # Compute costs in $ (not $/hr).
+            for g in generators:
+                fixed_cost = market_time * g.total_cost(0.0)
+                variable_cost = g.total_cost(market_time * quantity)-fixed_cost
+#                if g.online:
+#                    startup_cost = g.total_cost(g.c_startup)
+#                else:
+#                    shutdown_cost = g.total_cost(g.c_shutdown)
 
         elapsed = time.time() - t0
 
 
-#    def _price_limit_default(self, limits=None, have_q=False):
-#        """ Returns a dictionary with default values for offer/bid limits.
-#        """
-#        if not limits:
-#            if have_q:
-#                p_limits = {}
+    def auction(self):
+        """ Clears a set of bids and offers, where the pricing is adjusted for
+            network losses and binding constraints.
+        """
+        limits = self.limits
+
+        # Enforce price limits.
+        if limits.has_key("max_offer"):
+            max_offer = limits["max_offer"]
+            for offer in offers:
+                if offer.price >= max_offer:
+                    offer.withheld = True
+        if limits.has_key("min_bid"):
+            min_bid = limits["min_bid"]
+            for bid in bids:
+                if bid.price <= min_bid:
+                    bid.withheld = True
+
+        for g in generators:
+            g_offers = [offer for offer in offers if offer.generator == g]
+            self.clear_quantities(g_offers)
+
+            g_bids   = [bid for bid in bids if bid.generator == g]
+            self.clear_quantities(g_bids)
+
+        # Initialise cleared prices.
+        for offbid in offers + bids:
+            offbid.cleared_price = 0.0
+
+        # Compute shift values to add to lam to get desired pricing.
+
+        # The locationally adjusted offer/bid price, when normalized to an
+        # arbitrary reference location where lambda is equal to ref_lam, is:
+        #     norm_prc = prc + (ref_lam - lam)
+        # Then we can define the difference between the normalized offer/bid
+        # prices and the ref_lam as:
+        #     diff = norm_prc - ref_lam = prc - lam
+        # This diff represents the gap between the marginal unit (setting
+        # lambda) and the offer/bid price in question.
+        accepted = []
+        rejected = []
+        for offer in offers:
+            if offer.withheld:
+                lao = offer.difference
+                fro = BIG_NUMBER
+            else:
+                lao = -BIG_NUMBER
+                fro = offer.difference
+            accepted.append(lao)
+            rejected.append(fro)
+
+        lao = max(accepted)
+        fro = min(rejected)
+
+        # lao + lambda is equal to the last accepted offer.
+        lao = max([offer.difference for offer in offers])
+        # fro + lambda is equal to the first rejected offer.
+        fro = min([offer.difference for offer in offers])
+
+        if bids:
+            # lab + lambda is equal to the last accepted bid.
+            lab = min([bid.difference for bid in bids])
+            # frb + lambda is equal to the first rejected bid.
+            frb = max([bid.difference for bid in bids])
+        else:
+            lab = frb = BIG_NUMBER
+
+        # Cleared offer/bid prices for different auction types.
+        for offbid in offers + bids:
+            if auction_type == "discriminative":
+                offbid.cleared_price = offbid.price
+            elif auction_type == "lao":
+                offbid.cleared_price = offbid.p_lambda + lao
+            elif auction_type == "fro":
+                offbid.cleared_price = offbid.p_lambda + fro
+            elif auction_type == "lab":
+                offbid.cleared_price = offbid.p_lambda + lab
+            elif auction_type == "frb":
+                offbid.cleared_price = offbid.p_lambda + frb
+            elif auction_type == "first price":
+                offbid.cleared_price = offbid.p_lambda
+            elif auction_type == "second price":
+                if abs(lao) < self.zero_tol:
+                    offbid.cleared_price = offbid.p_lambda + min(fro, lab)
+                else:
+                    offbid.cleared_price = offbid.p_lambda + max(lao, frb)
+            elif auction_type == "split":
+                offbid.cleared_price = offbid.p_lambda + (lao - lab) / 2.0
+            elif auction_type == "dual laob":
+                raise NotImplementedError
+
+        # Guarantee that cleared offer prices are >= offers.
+        if self.guarantee_offer_price:
+            for offer in offers:
+                if offer.price > offer.cleared_price:
+                    offer.cleared_price = offer.price
+
+        # Guarantee that cleared bid prices are <= bids.
+        if self.guarantee_bid_price:
+            for bid in bids:
+                if bid.price <= bid.cleared_price:
+                    bid.cleared_price = bid.price
+
+        # Clip cleared offer prices.
+        if limits.has_key("max_cleared_offer"):
+            max_cleared_offer = limits["max_cleared_offer"]
+
+            for offer in offers:
+                if offer.cleared_price > max_cleared_offer:
+                    offer.cleared_price = max_cleared_offer
+
+        # Clip cleared bid prices.
+        if limits.has_key("min_cleared_bid"):
+            min_cleared_bid = limits["min_cleared_bid"]
+
+            for bid in bids:
+                if bid.cleared_price < min_cleared_bid:
+                    bid.cleared_price = min_cleared_bid
+
+        # Make prices uniform after clipping (except for discrim auction)
+        # since clipping may only affect a single block of a multi-block
+        # generator.
+        if auction_type != "discriminatory":
+            raise NotImplementedError
+
+
+    def clear_quantity(self, offbids):
+        """ Computes the cleared bid quantity from total cleared quantity.
+        """
+        # Get the total output that the generator has been dispatched at by
+        # the OPF routine.
+        total_quantity = offbids[0].generator.p_despatch
+
+        ob_quantity = sum([ob.quantity for ob in offbids])
+
+        # TODO: Sort offers/bids according to ascending price.
+
+        for offbid in offbids:
+            # Compute the fraction of the block accepted.
+            accepted = (total_quantity - ob_quantity) / offbid.quantity
+            # Clip to the range 0-1.
+            if accepted > 1.0:
+                accepted = 1.0
+            elif accepted < 1.0e-05:
+                accepted = 0.0
+
+            offbid.cleared_quantity = accepted * offbid.quantity
+
+            if accepted > 0.0:
+                offbid.accepted = True
+            else:
+                offbid.accepted = False
+
 
 #------------------------------------------------------------------------------
 #  "ContractsMarket" class:

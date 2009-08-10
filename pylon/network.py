@@ -137,6 +137,14 @@ class Bus(object):
         else:
             self.loads = loads
 
+        # Lambda (GBP/MWh).
+        p_lambda = 0.0
+        # Lambda (GBP/MVAr-hr).
+        q_lambda = 0.0
+
+        mu_v_min = 0.0
+        mu_v_max = 0.0
+
     @property
     def mode(self):
         """ Bus mode may be 'pv', 'pq' or 'slack'.
