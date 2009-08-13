@@ -66,18 +66,37 @@ class ParticipantEnvironment(GraphicalEnvironment):
         self.power_system = power_system
         # Generator instance that the agent controls.
         self.asset = asset
+        # A nonnegative amount of money.
+#        money = 100
+
+        # Store on initialisation as they are set in perfromAction().
+        # Positive production capacity.
+        self.p_max = asset.p_max
+        self.p_min = asset.p_min
+        # Total cost function proportional to current capacity.
+        self.cost_coeffs = asset.cost_coeffs
+#        self.pwl_points  = asset.pwl_points
+        # Amortised fixed costs.
+#        self.c_startup = asset.c_startup
+#        self.c_shutdown = asset.c_shutdown
+        # Total number of agents.
+#        self.n_agents = n_agents
+
+#        if asset.mode == "":
+#            # Income received each periods.
+#            self.endowment_profile = 10
+#            # Needs and preferences for power consumption each period.
+#            self.utility_function = [1.0]
+#            # Savings from previous periods.
+#            self.savings = 100
+#            # Each participant is a shareholder who owns shares in generating
+#            # companies and receives an according dividend each period.
+#            self.shares = {}
 
         self.render = render
 #        if self.render:
 #            self.updateDone = True
 #            self.updateLock=threading.Lock()
-
-        # Store on initialisation as they are set in perfromAction().
-        self.p_max = asset.p_max
-        self.p_min = asset.p_min
-        self.cost_coeffs = asset.cost_coeffs
-#        self.pwl_points  = asset.pwl_points
-
 
     @property
     def demand(self):
