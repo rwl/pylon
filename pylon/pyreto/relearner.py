@@ -50,6 +50,65 @@ class REParameters:
             valid = False
         return valid
 
+class StatelessPolicy:
+    """ Interface for building a stateless reinforcement learning policy. This
+        type of policy simply maintains a distribution guiding action choice
+        irrespective of the current state of the world. That is, it simply
+        maintains a likelihood of selection for each action for all world
+        states.
+    """
+
+class Action:
+    """ For classes representing the operations that an agent can perform in a
+        particual simulation. This may simply indicate an operation or may
+        fully encapsulate data and methods actually used in performing the
+        operation.
+    """
+    def getID(self):
+        """ Retrieve the identifier for this Action.
+        """
+
+class ActionDomain:
+    """ Representation of the space of possible operations an agent can perform
+        in a particular environment.
+
+        The type of Action as well as action identifier may be paramertized.
+        These are similar to the Key/Value types that may be parameterized for
+        Hasthtable.
+    """
+
+    def getAction(self, ID):
+        """ Retrieves the Action indicated by the id object. Should return null
+            if the id does not match an existing Action.
+        """
+
+    def getIDList(self):
+        """ Retrieve a list of the identifiers for all Actions in this domain.
+        """
+
+    def size(self):
+        """ Reports the number of Actions in this domain.
+        """
+
+class SimpleEventGenerator:
+    """ Generate discrete random events from a given distribution.
+    """
+    def __init__(self):
+        # Probability distribution function.
+        distrib = []
+
+        engine = Random()
+
+    def nextEvent(self):
+        eventIndex = 0
+        randValue = self.engine.nextDouble()
+
+        while (randValue > 0.0) and (eventIndex < len(self.distrib)):
+            randValue -= self.distrib[eventIndex]
+            eventIndex += 1
+
+        return eventIndex - 1
+
 class SimpleStatelessPolicy(StatelessPolicy):
     """ This is essentially a discrete probability distribution governing the
         choice of Action from a given ActionDomain, irrespective of the state
@@ -59,7 +118,7 @@ class SimpleStatelessPolicy(StatelessPolicy):
         # Here a probability distribution function (pdf) is an array of
         # probability values. When used in conjuction with the eventGenerator,
         # a value indicates the likelihood that its index will be selected.
-
+        #
         # Each Action has an ID and each Action ID has an index in the list of
         # IDs kept by the ActionDomain. The corresponding index in this
         # probability distribution function contains a probability value for
@@ -67,7 +126,7 @@ class SimpleStatelessPolicy(StatelessPolicy):
         # from Action IDs to Actions. This allows the evenGenerator to use the
         # pdf to select Actions from the ActionDomain according to the
         # specified probability distribution.
-
+        #
         # The probability values are modified by a RLLearner according to the
         # implemented learning algorithm.
         self.probDistFunction = []
@@ -169,6 +228,50 @@ class REPolicy(SimpleStatelessPolicy):
         index = self.actionIDList.index(ID)
         self.propensities[index] = prop
 
+class RLLearner:
+    """ For classes that implement reinforcement learning algorithms. Classes
+        implementing this interface are responsible for driving the learning
+        process of specific algorithms.
+
+        Reinforcement learning algorithms make use of a policy to represent
+        learned knowledge. Policies themselves require access to the space of
+        possible actions, represented by ActionDomains. As such an
+        ReinforcementLearner will make use of with a StatelessPolicy and an
+        ActionDomain.
+    """
+    def update(self, reward):
+        """ Initiate the learning process using given feedback. Feedback is
+            associated with a the last Action chosen by this engine and is
+            interpreted as a reward for that Action. It is used to update the
+            probability for choosing the Action according to the specific
+            learning algorithm.
+
+            Feedback is parameterized since required input will vary depending
+            on the specific reinforcement learning algorithm and the particular
+            simulation environment.
+
+            Note: Most often feedback is for the last Action chosen, so given
+            ActionID will usually point to this Action. As such, many RLEnigine
+            implementations may also provide update() methods that simply
+            accept feedback and associate it with the last Action chosen.
+        """
+
+    def chooseAction(self):
+        """ Elicits a new choice of action. The action will be chosen according
+            to selection rule of the SimpleStatelessPolicy. Actions are chosen
+            from a DiscreteFiniteDomain.
+        """
+
+    def getParameters(self):
+        """ Retrieve the RLParameters that contain settings for this learning
+            algorithm.
+        """
+
+    def makeParameters(self):
+        """ Create a default set of parameters that can be used with this
+            learner.
+        """
+
 
 class RELearner(RLLearner):
     """ A. E. Roth, I. Erev, D. Fudenberg, J. Kagel, J. Emilie and R. X. Xing,
@@ -181,7 +284,7 @@ class RELearner(RLLearner):
         1998, 848-881.
     """
 
-    def __init__(self):
+    def __init__(self, parameters, actionDomain, policy):
         # Collects and manages parameter settings for the RLLearner.
         self.parameters = REParameters()
 
