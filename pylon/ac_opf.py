@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Optimal power flow routine, translated from MATPOWER.
+""" Solves an AC optimal power flow using cp from CVXOPT.
 
     References:
         Ray Zimmerman, "runopf.m", MATPOWER, PSERC Cornell,
@@ -41,139 +41,29 @@ from pylon.util import conj
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "dS_dV" function:
-#------------------------------------------------------------------------------
-
-def dSbus_dV(Y, v):
-    """ Computes the partial derivative of power injection w.r.t. voltage.
-
-        References:
-            Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
-            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
-    """
-    j = 0 + 1j
-    n = len(v)
-    i = Y * v
-
-    diag_v = spdiag(v)
-    diag_i = spdiag(i)
-    diag_vnorm = spdiag(div(v, abs(v))) # Element-wise division.
-
-    ds_dvm = diag_v * conj(Y * diag_vnorm) + conj(diag_i) * diag_vnorm
-    ds_dva = j * diag_v * conj(diag_i - Y * diag_v)
-
-    return ds_dvm, ds_dva
-
-#------------------------------------------------------------------------------
-#  "dSbr_dV" function:
-#------------------------------------------------------------------------------
-
-def dSbr_dV(branches, Y_source, Y_target, v):
-    """ Computes the branch power flow vector and the partial derivative of
-        branch power flow w.r.t voltage.
-
-        References:
-            Ray Zimmerman, "dSbr_dV.m", MATPOWER, version 3.2,
-            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
-    """
-    j = 0 + 1j
-    n_branches = len(branches)
-    n_buses = len(v)
-
-    source_idxs = matrix([buses.index(e.source_bus) for e in branches])
-    target_idxs = matrix([buses.index(e.target_bus) for e in branches])
-
-    # Compute currents.
-    i_source = Y_source * v
-    i_target = Y_target * v
-
-    # dV/dVm = diag(V./abs(V))
-    v_norm = div(v, abs(v))
-
-    diagVsource = spdiag(v[source_idxs])
-    diagIsource = spdiag(i_source)
-    diagVtarget = spdiag(v[target_idxs])
-    diagItarget = spdiag(i_target)
-    diagV = spdiag(v)
-    diagVnorm = spdiag(v_norm)
-
-    # Partial derivative of S w.r.t voltage phase angle.
-    dSf_dVa = j * (conj(diagIsource) * spmatrix(v[source_idx],
-                                                range(n_branches),
-                                                source_idxs,
-                                                (n_branches, n_buses)) - \
-        diagVsource * conj(Y_source * diagV))
-
-    dSt_dVa = j * (conj(diagItarget) * spmatrix(v[target_idx],
-                                                range(n_branches),
-                                                target_idxs,
-                                                (n_branches, n_buses)) - \
-        diagVtarget * conj(Y_target * diagV))
-
-    # Partial derivative of S w.r.t. voltage amplitude.
-    dSf_dVm = diagVsource * conj(Y_source * diagVnorm) + conj(diagIsource) * \
-        spmatrix(v_norm[source_idxs], range(n_branches),
-            source_idxs, (n_branches, n_buses))
-
-    dSt_dVm = diagVtarget * conj(Y_target * diagVnorm) + conj(diagItarget) * \
-        spmatrix(v_norm[target_idxs], range(n_branches),
-            target_idxs, (n_branches, n_buses))
-
-    # Compute power flow vectors.
-    s_source = mul(v[source_idxs], conj(i_source))
-    s_target = mul(v[target_idxs], conj(i_target))
-
-    return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target
-
-#------------------------------------------------------------------------------
-#  "dAbr_dV" function:
-#------------------------------------------------------------------------------
-
-def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
-    """ Computes the partial derivatives of apparent power flow w.r.t voltage.
-
-        References:
-            Ray Zimmerman, "dAbr_dV.m", MATPOWER, version 3.2,
-            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
-    """
-    n_branches = len(s_source)
-
-    # Compute apparent powers.
-    a_source = abs(s_source)
-    a_target = abs(s_target)
-
-    # Compute partial derivative of apparent power w.r.t active and
-    # reactive power flows.  Partial derivative must equal 1 for lines with
-    # zero flow to avoid division by zero errors (1 comes from L'Hopital).
-    def zero2one(x):
-        if x != 0: return x
-        else: return 1.0
-
-    p_source = div(s_source.real(), map(zero2one, a_source))
-    q_source = div(s_target.imag(), map(zero2one, a_source))
-    p_target = div(s_target.real(), map(zero2one, a_target))
-    q_target = div(s_target.imag(), map(zero2one, a_target))
-
-    dAf_dPf = spdiag(p_source)
-    dAf_dQf = spdiag(q_source)
-    dAt_dPt = spdiag(p_target)
-    dAt_dQt = spdiag(q_target)
-
-    # Partial derivative of apparent power magnitude w.r.t voltage phase angle.
-    dAf_dVa = dAf_dPf * dSf_dVa.real() + dAf_dQf * dSf_dVa.imag()
-    dAt_dVa = dAt_dPt * dSt_dVa.real() + dAt_dQt * dSt_dVa.imag()
-    # Partial derivative of apparent power magnitude w.r.t. voltage amplitude.
-    dAf_dVm = dAf_dPf * dSf_dVm.real() + dAf_dQf * dSf_dVm.imag()
-    dAt_dVm = dAf_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
-
-    return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
-
-#------------------------------------------------------------------------------
 #  "ACOPFRoutine" class:
 #------------------------------------------------------------------------------
 
 class ACOPFRoutine(object):
-    """ Optimal power flow routine, translated from MATPOWER.
+    """ Solves an AC optimal power flow using cp from CVXOPT.
+
+        When specified, A, l, u represent additional linear constraints on the
+        optimization variables, l <= A*[x; z] <= u. For an explanation of the
+        formulation used and instructions for forming the A matrix, type
+        'help genform'.
+
+        A generalized cost on all variables can be applied if input arguments
+        N, fparm, H and Cw are specified.  First, a linear transformation
+        of the optimization variables is defined by means of r = N * [x; z].
+        Then, to each element of r a function is applied as encoded in the
+        fparm matrix (see MATPOWER manual).  If the resulting vector is now
+        named w, then H and Cw define a quadratic cost on
+        w: (1/2)*w'*H*w + Cw * w . H and N should be sparse matrices and H
+        should also be symmetric.
+
+        Rules for A matrix: If the user specifies an A matrix that has more
+        columns than the number of "x" (OPF) variables, then there are extra
+        linearly constrained "z" variables.
 
         References:
             R. Zimmerman, 'runopf.m', MATPOWER, PSERC (Cornell),
@@ -204,6 +94,12 @@ class ACOPFRoutine(object):
 
 
     def __call__(self, network):
+        """ Calls the routine with the given network.
+        """
+        self.solve(network)
+
+
+    def solve(self, network=None):
         """ Solves AC OPF for the given network.
         """
         # Turn off output to screen.
@@ -214,8 +110,10 @@ class ACOPFRoutine(object):
         solvers.options["feastol"] = self.feasibility_tol
         solvers.options["refinement"] = self.refinement
 
-        network = self.network
+        network = self.network if network is None else network
         logger.debug("Solving AC OPF [%s]" % network.name)
+
+        j = 0 + 1j
 
         buses = network.connected_buses
         branches = network.online_branches
@@ -240,6 +138,67 @@ class ACOPFRoutine(object):
         qg_end  = qg_base + n_generators-1
 
         # TODO: Definition of indexes for the constraint vector.
+
+#        # Find "generators" that are actually dispatchable loads. Dispatchable
+#        # loads are modeled as generators with an added constant power factor
+#        # constraint. The power factor is derived from the original value of
+#        # Pmin and either Qmin (for inductive loads) or Qmax (for capacitive
+#        # loads). If both Qmin and Qmax are zero, this implies a unity power
+#        # factor without the need for an additional constraint.
+#        vloads = [g for g in generators if g.q_min != 0.0 or g.q_max != 0.0]
+#
+#        # At least one of the Q limits must be zero (corresponding to
+#        # Pmax == 0)
+#        if [vl for vl in vloads if vl.q_min != 0.0 and vl.q_max != 0.0]:
+#            logger.error("Either q_min or q_max must be equal to zero for "
+#                "each dispatchable load.")
+#
+#        # Initial values of PG and QG must be consistent with specified power
+#        # factor.
+#        q_lim = matrix(0.0, n_generators)
+#
+#        for i, g in enumerate(generators):
+#            if g in vload:
+#                if g.q_min == 0.0:
+#                    q_lim[i] = g.q_max
+#                if g.q_max == 0.0:
+#                    q_lim[i] = g.q_min
+#
+#        if [l for l in vloads if (abs(l.q) - l.p * q_lim / l.p_min) > 1e-4]:
+#            logger.error("For a dispatchable load, PG and QG must be "
+#                "consistent with the power factor defined by PMIN and the "
+#                "Q limits.")
+#
+#        # TODO: Implement P-Q capability curve constraints.
+#
+#        # Branch angle constraints.
+#        if OPF_IGNORE_ANG_LIM:
+#            n_angle = 0
+#        else:
+#            ang = [e for e in branches if \
+#                   e.angle_min > -360.0 or e.angle_max < 360.0]
+#            n_angle = len(ang)
+#
+#        n_ineq = 2 * n_buses
+#        n_control = 2 * n_buses + 2 * n_generators
+#
+#        if not Au:
+#            n_additional = 0
+#            Au = spmatrix([], [], [], (n_control, 1))
+#            if N:
+#                if n.size()[1] != n_control:
+#                    logger.error("N matrix must have %d columns." % n_control)
+#        else:
+#            # Additional linear variables.
+#            n_additional = Au.size()[1] - n_control
+#            if n_linear < 0:
+#                logger.error("A matrix must have at least %d columns." %
+#                             n_control)
+#
+#        n_pwl = len([e for e in branches if e.cost_model == "pwl"])
+#        # Total number of vars of all types.
+#        n_var = n_control + n_pwl + n_additional
+
 
         def F(x=None, z=None):
             """ Evaluates the objective and nonlinear constraint functions.
@@ -406,5 +365,133 @@ class ACOPFRoutine(object):
         A = sparse([Au, A_pqh, A_pql, A_vl, A_ang])
         l = matrix([l_bu, l_bpqh, l_bpql, l_vl, l_ang])
         u = matrix([u_bu, u_bpqh, u_bpql, u_vl, l_ang])
+
+#------------------------------------------------------------------------------
+#  "dS_dV" function:
+#------------------------------------------------------------------------------
+
+def dSbus_dV(Y, v):
+    """ Computes the partial derivative of power injection w.r.t. voltage.
+
+        References:
+            Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
+            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+    """
+    j = 0 + 1j
+    n = len(v)
+    i = Y * v
+
+    diag_v = spdiag(v)
+    diag_i = spdiag(i)
+    diag_vnorm = spdiag(div(v, abs(v))) # Element-wise division.
+
+    ds_dvm = diag_v * conj(Y * diag_vnorm) + conj(diag_i) * diag_vnorm
+    ds_dva = j * diag_v * conj(diag_i - Y * diag_v)
+
+    return ds_dvm, ds_dva
+
+#------------------------------------------------------------------------------
+#  "dSbr_dV" function:
+#------------------------------------------------------------------------------
+
+def dSbr_dV(branches, Y_source, Y_target, v):
+    """ Computes the branch power flow vector and the partial derivative of
+        branch power flow w.r.t voltage.
+
+        References:
+            Ray Zimmerman, "dSbr_dV.m", MATPOWER, version 3.2,
+            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+    """
+    j = 0 + 1j
+    n_branches = len(branches)
+    n_buses = len(v)
+
+    source_idxs = matrix([buses.index(e.source_bus) for e in branches])
+    target_idxs = matrix([buses.index(e.target_bus) for e in branches])
+
+    # Compute currents.
+    i_source = Y_source * v
+    i_target = Y_target * v
+
+    # dV/dVm = diag(V./abs(V))
+    v_norm = div(v, abs(v))
+
+    diagVsource = spdiag(v[source_idxs])
+    diagIsource = spdiag(i_source)
+    diagVtarget = spdiag(v[target_idxs])
+    diagItarget = spdiag(i_target)
+    diagV = spdiag(v)
+    diagVnorm = spdiag(v_norm)
+
+    # Partial derivative of S w.r.t voltage phase angle.
+    dSf_dVa = j * (conj(diagIsource) * spmatrix(v[source_idx],
+                                                range(n_branches),
+                                                source_idxs,
+                                                (n_branches, n_buses)) - \
+        diagVsource * conj(Y_source * diagV))
+
+    dSt_dVa = j * (conj(diagItarget) * spmatrix(v[target_idx],
+                                                range(n_branches),
+                                                target_idxs,
+                                                (n_branches, n_buses)) - \
+        diagVtarget * conj(Y_target * diagV))
+
+    # Partial derivative of S w.r.t. voltage amplitude.
+    dSf_dVm = diagVsource * conj(Y_source * diagVnorm) + conj(diagIsource) * \
+        spmatrix(v_norm[source_idxs], range(n_branches),
+            source_idxs, (n_branches, n_buses))
+
+    dSt_dVm = diagVtarget * conj(Y_target * diagVnorm) + conj(diagItarget) * \
+        spmatrix(v_norm[target_idxs], range(n_branches),
+            target_idxs, (n_branches, n_buses))
+
+    # Compute power flow vectors.
+    s_source = mul(v[source_idxs], conj(i_source))
+    s_target = mul(v[target_idxs], conj(i_target))
+
+    return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target
+
+#------------------------------------------------------------------------------
+#  "dAbr_dV" function:
+#------------------------------------------------------------------------------
+
+def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
+    """ Computes the partial derivatives of apparent power flow w.r.t voltage.
+
+        References:
+            Ray Zimmerman, "dAbr_dV.m", MATPOWER, version 3.2,
+            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+    """
+    n_branches = len(s_source)
+
+    # Compute apparent powers.
+    a_source = abs(s_source)
+    a_target = abs(s_target)
+
+    # Compute partial derivative of apparent power w.r.t active and
+    # reactive power flows.  Partial derivative must equal 1 for lines with
+    # zero flow to avoid division by zero errors (1 comes from L'Hopital).
+    def zero2one(x):
+        if x != 0: return x
+        else: return 1.0
+
+    p_source = div(s_source.real(), map(zero2one, a_source))
+    q_source = div(s_target.imag(), map(zero2one, a_source))
+    p_target = div(s_target.real(), map(zero2one, a_target))
+    q_target = div(s_target.imag(), map(zero2one, a_target))
+
+    dAf_dPf = spdiag(p_source)
+    dAf_dQf = spdiag(q_source)
+    dAt_dPt = spdiag(p_target)
+    dAt_dQt = spdiag(q_target)
+
+    # Partial derivative of apparent power magnitude w.r.t voltage phase angle.
+    dAf_dVa = dAf_dPf * dSf_dVa.real() + dAf_dQf * dSf_dVa.imag()
+    dAt_dVa = dAt_dPt * dSt_dVa.real() + dAt_dQt * dSt_dVa.imag()
+    # Partial derivative of apparent power magnitude w.r.t. voltage amplitude.
+    dAf_dVm = dAf_dPf * dSf_dVm.real() + dAf_dQf * dSf_dVm.imag()
+    dAt_dVm = dAf_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
+
+    return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
 
 # EOF -------------------------------------------------------------------------

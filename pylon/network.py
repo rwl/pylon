@@ -361,6 +361,8 @@ class Generator(object):
     def mode(self):
         """ Does the machine represent a generator or a despatchable load.
         """
+        raise DeprecationWarning, "Use is_load instead."
+
         if 0 <= self.p_min < self.p_max:
             return "generator"
         elif self.p_min < self.p_max <= 0.0:
@@ -373,6 +375,14 @@ class Generator(object):
         """ Active power cost at the current output.
         """
         return self.total_cost(self.p)
+
+    @property
+    def is_load(self):
+        """ Returns true if the generator if a dispatchable load. This may
+            need to be revised to allow sensible specification of both elastic
+            demand and pumped storage units.
+        """
+        return self.p_min < 0.0 and self.p_max == 0.0
 
 
     def poly_to_pwl(self, n_points=10):
