@@ -11,6 +11,7 @@ class AREParameters(REParameters):
             Alternative methods of reward spillover among similar actions
             Ability to specify similar measures for Action comparison
     """
+
     def __init__(self):
         # Which method of reward spillover to use.
         selectedSpillover = None
@@ -18,11 +19,13 @@ class AREParameters(REParameters):
         # List of available spillover methods.
         spilloverList = []
 
+
     def init(self):
         if self.spilloverList is None:
             self.spilloverList = []
 
         self.buildSpilloverSelector()
+
 
     def buildSpilloverSelector(self):
         # Add no-spillover option if not already present.
@@ -36,11 +39,13 @@ class AREParameters(REParameters):
                                          self.getNumberOfActions())
             self.spilloverList.append(standard)
 
+
 class ARELearner(RELearner):
     """ An extension of the VRELearner. This engine implements the same
         modified version of the Roth-Erev reinforcement learning algorithm with
         added features.
     """
+
     def __init__(self):
         # Flag to use relative propensities to generate action probabilities
         # from action propensities. This is used by default. The probability
@@ -85,9 +90,11 @@ class ARELearner(RELearner):
 
         NO_SPILLOVER = 29999
 
+
     def init(self):
         super(ARELearner, self).init()
         self.spillover = None
+
 
     def experience(self, actionIndex, reward):
         if self.spillover is None:
@@ -102,11 +109,13 @@ class ARELearner(RELearner):
 
         return responseValue
 
+
 class AdvancedRothErevLearner(RELearner):
     """ An extension of the MRELearner. This engine implements the same
         modified version of the Roth-Erev reinforcement learning algorithm with
         added features.
     """
+
     def experience(self, actionIndex, reward):
         if self.spillover is None:
             return super(ARELearner, self).experience(actionIndex, reward)
@@ -123,6 +132,7 @@ class AdvancedRothErevLearner(RELearner):
 
         return responseValue
 
+
     def updateProbabilities(self):
         """ pdates the probability for each action to be chosen in the policy.
         """
@@ -134,6 +144,7 @@ class AdvancedRothErevLearner(RELearner):
             self.generateBoltzmanProbs()
         else:
             self.generateBoltzmanProbs()
+
 
     def generateProportionalProbs(self):
         """ Generate action probabilities using a proportional distribution.

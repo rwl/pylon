@@ -58,6 +58,7 @@ from pybrain.structure.modules.module import Module
 #
 #        return eventIndex - 1
 
+
 def eventGenerator(distrib):
     eventIndex = 0
     randValue = random.random()
@@ -67,7 +68,6 @@ def eventGenerator(distrib):
         eventIndex += 1
 
     yield eventIndex - 1
-
 
 
 class PropensityTable(Module):
@@ -82,7 +82,7 @@ class PropensityTable(Module):
         of the world.
     """
 
-    def __init__(self, numActions, actionDomain, initProbs, name=None):
+    def __init__(self, numActions, actionDomain, initProbs=None, name=None):
         Module.__init__(self, 1, 1, name)
         self.numStates = numStates
         self.numActions = numActions
@@ -122,7 +122,7 @@ class PropensityTable(Module):
 
         # The collection of possible Actions an agent is allowed to perform.
 #        domain = [0, 1, 2, 3] # N S E W
-        domain = {'N': 0, 'S': 1, 'E': 2, 'W': 3}
+        self.domain = actionDomain
 
         # List of action ID's in the domain. Allows us to map from int values
         # chosen given by the event generator to actions in the domain.
@@ -137,7 +137,8 @@ class PropensityTable(Module):
     def _forwardImplementation(self, inbuf, outbuf):
         """ Actual forward transformation function.
         """
-        outbuf[0] = self.getMaxAction(inbuf[0])
+#        outbuf[0] = self.getMaxAction(inbuf[0])
+        outbuf[0] = self.generateAction()
 
 
     def init(self):
@@ -168,7 +169,7 @@ class PropensityTable(Module):
         # Pick the index of an action. Note: indexes start at 0.
         chosenIndex = self.eventGenerator.next(self.probDistFunction)
         chosenID = self.actionIDList.get(chosenIndex)
-        chosenAction = self.domain.getAction(chosenID)
+        chosenAction = self.domain[chosenID]
 
         self.lastAction = chosenAction
 
@@ -191,10 +192,6 @@ class PropensityTable(Module):
         """
         self.probDistFunction = distrib
 #        self.eventGenerator.setState(distrib)
-
-
-#    def getNumActions(self):
-#        return len(self.domain)
 
 
     def getProbability(self, actionID):
@@ -237,9 +234,8 @@ class RothErev(RLLearner):
         1998, 848-881.
     """
 
-    def __init__(self, actionDomain, policy, boltzmannTemp=10.0,
-                 useBoltz=False, experimentation=0.5, initialPropensity=100.0,
-                 recency=0.5):
+    def __init__(self, boltzmannTemp=10.0, useBoltz=False, experimentation=0.5,
+                 initialPropensity=100.0, recency=0.5):
         # Cooling parameter for Gibbs-Boltmann cooling.
         # For the Gibbs-Boltzmann probability method used in VRELearner.
         self.boltzmannTemp = boltzmannTemp
@@ -284,22 +280,22 @@ class RothErev(RLLearner):
         self.init()
 
 
-    def setPolicy(self, policy):
-        self.policy = policy
-        self.domainSize = len(policy.actionDomain)
-        self.actionIDList = policy.actionDomain.idList
+    def setModule(self, module):
+        super(RothErev, self).setModule(module)
+        self.domainSize = len(module.actionDomain)
+        self.actionIDList = module.actionDomain.keys()
 
 
     def init(self):
         """ Finishes initialising the learner.
         """
-        self.domainSize = len(self.policy.actionDomain)
-        self.actionIDList = self.policy.actionDomain.idList
+        self.domainSize = len(self.module.actionDomain)
+        self.actionIDList = self.module.actionDomain.keys()
 
-        initProp = self.parameters.initialPropensity
+        initProp = self.initialPropensity
 
         for ID in self.actionIDList:
-            self.policy.setPropensity(ID, initProp)
+            self.module.setPropensity(ID, initProp)
 
         self.lastSelectedAction = self.chooseAction()
 
@@ -316,12 +312,12 @@ class RothErev(RLLearner):
 
                     q_i = (1-phi) * q_i + E(i, r_j)
         """
-        phi = self.parameters.recency
+        phi = self.recency
 
         for i in range(self.domainSize):
-            carryOver = (1 - phi) * self.policy.getPropensity(i)
+            carryOver = (1 - phi) * self.module.getPropensity(i)
             experience = self.experience(i, reward)
-            self.policy.setPropensity(i, carryOver + experience)
+            self.module.setPropensity(i, carryOver + experience)
 #            propensities[i] = (1 - r) * propensities[i] + experience(i, reward)
 
 
@@ -343,7 +339,7 @@ class RothErev(RLLearner):
               E(i, r_j) = |
                           |_ r_j * (e /(n-1))    if i != j
         """
-        e = self.parameters.experimentation
+        e = self.experimentation
         rewardedIndex = self.actionIDList.index(self.lastSelectedAction)
 
         if actionIndex == rewardedIndex:
@@ -363,7 +359,7 @@ class RothErev(RLLearner):
             self.generateBoltzmanProbs()
         else:
             # Proportional probability method.
-            propensities = self.policy.getPropensities()
+            propensities = self.module.propensities
 
             summedProps = 0.0
             for prop in propensities:
@@ -371,15 +367,15 @@ class RothErev(RLLearner):
 
             for index, actionID in enumerate(self.actionIDList):
                 newProb = propensities[index] / summedProps
-                self.policy.setProbability(actionID, newProb)
+                self.module.setProbability(actionID, newProb)
 
 
     def generateBoltzmanProbs(self):
         """ Generate action probabilities using a Boltzmann distribution with a
             constant temperature.
         """
-        propensities = self.policy.getPropensities()
-        coolingParam = self.parameters.boltzmannTemp
+        propensities = self.module.propensities
+        coolingParam = self.boltzmannTemp
 
         summedExps = 0.0
         for prop in propensities:
@@ -389,11 +385,13 @@ class RothErev(RLLearner):
         #    p(i) = [ e ^(q(i)/T) ] / [ Sum_over_all_j(e ^ (q(j)/T)) ]
         for index, actionID in enumerate(self.actionIDList):
             newProb = math.exp(propensities[index] / coolingParam) / summedExps
-            self.policy.setProbability(actionID, newProb)
+            self.module.setProbability(actionID, newProb)
 
 
-    def update(self, feedback):
-        """ This activates the learning process according to the modified
+    def learn(self):
+        """ Learn on the current dataset, for a single epoch.
+
+            This activates the learning process according to the modified
             Roth-Erev learning algorithm. Feedback is interpreted as reward
             for the last action chosen by this engine. Entries in the policy
             associated with this Action are updated accordingly.
@@ -413,39 +411,40 @@ class RothErev(RLLearner):
             implementations may also provide update() methods that simply
             accept feedback and associate it with the last Action chosen.
         """
-        self.updatePropensities(feedback)
+#        reward = self.ds.getSequence(self.ds.getNumSequences())[2]
+        rewards = self.ds['reward']
+        self.updatePropensities(rewards[-1])
         self.updateProbabilities()
         self.period += 1
 
 
-    def chooseAction(self):
-        """ Elicits a new choice of action. The action will be chosen according
-            to selection rule of the SimpleStatelessPolicy. Actions are chosen
-            from a DiscreteFiniteDomain.
-        """
-        nextAction = self.policy.generateAction()
-        self.lastSelectedAction = nextAction
-        return nextAction
+#    def getAction(self):
+#        """ Activates the module with the last observation and stores the
+#            result as last action.
+#
+#            Elicits a new choice of action. The action will be chosen according
+#            to selection rule of the SimpleStatelessPolicy. Actions are chosen
+#            from a DiscreteFiniteDomain.
+#        """
+##        nextAction = self.policy.generateAction()
+#        nextAction = super(RothErev, self).getAction()
+##        self.lastSelectedAction = nextAction
+#        return nextAction
 
 
     def reset():
         """ Clear all learned knowledge. The Action propensities are set to the
             current initial value and the probability values in the policy.
         """
+        super(RothErev, self).reset()
         self.init()
 
 
-    def makeParameters(self):
-        """ Create a default set of parameters that can be used with this
-            learner.
-        """
-        raise NotImplementedError
-
-
-#    def learn(self):
-#        """ learn on the current dataset, for a single epoch.
+#    def makeParameters(self):
+#        """ Create a default set of parameters that can be used with this
+#            learner.
 #        """
-#        pass
+#        raise NotImplementedError
 
 
     def validateParameters(self):
