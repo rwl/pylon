@@ -346,7 +346,10 @@ class Generator(object):
 
         # The output power that the Generator is despatched to generate
         # as a result of solving the OPF problem.
-        self.p_despatch = 0.0
+#        self.p_despatch = 0.0
+
+        self.mu_p_min = None
+        self.mu_p_max = None
 
     @property
     def q_limited(self):
@@ -385,39 +388,6 @@ class Generator(object):
         return self.p_min < 0.0 and self.p_max == 0.0
 
 
-    def poly_to_pwl(self, n_points=10):
-        """ Sets the piece-wise linear cost attribute, converting the
-            polynomial cost variable by evaluating at zero and then at
-            n_points evenly spaced points between p_min and p_max.
-        """
-        p_min = self.p_min
-        p_max = self.p_max
-        self.pwl_points = []
-        # Ensure that the cost model is polynomial for calling total_cost.
-        self.cost_model = "polynomial"
-
-        if p_min > 0.0:
-            # Make the first segment go from the origin to p_min.
-            step = (p_max - p_min) / (n_points - 2)
-
-            y0 = self.total_cost(0.0)
-            self.pwl_points.append((0.0, y0))
-
-            x = p_min
-            n_points -= 1
-        else:
-            step = (p_max - p_min) / (n_points - 1)
-            x = 0.0
-
-        for i in range(n_points):
-            y = self.total_cost(x)
-            self.pwl_points.append((x, y))
-            x += step
-
-        # Change the cost model.
-        self.cost_model = "piecewise linear"
-
-
     def total_cost(self, p):
         """ Computes total cost for the generator at the given output level.
         """
@@ -450,6 +420,39 @@ class Generator(object):
             raise ValueError
 
         return result
+
+
+    def poly_to_pwl(self, n_points=10):
+        """ Sets the piece-wise linear cost attribute, converting the
+            polynomial cost variable by evaluating at zero and then at
+            n_points evenly spaced points between p_min and p_max.
+        """
+        p_min = self.p_min
+        p_max = self.p_max
+        self.pwl_points = []
+        # Ensure that the cost model is polynomial for calling total_cost.
+        self.cost_model = "polynomial"
+
+        if p_min > 0.0:
+            # Make the first segment go from the origin to p_min.
+            step = (p_max - p_min) / (n_points - 2)
+
+            y0 = self.total_cost(0.0)
+            self.pwl_points.append((0.0, y0))
+
+            x = p_min
+            n_points -= 1
+        else:
+            step = (p_max - p_min) / (n_points - 1)
+            x = 0.0
+
+        for i in range(n_points):
+            y = self.total_cost(x)
+            self.pwl_points.append((x, y))
+            x += step
+
+        # Change the cost model.
+        self.cost_model = "piecewise linear"
 
 
     def get_offers(self):
@@ -719,7 +722,7 @@ class NetworkReport(object):
     def generation_actual(self):
         """ Total despatched generation.
         """
-        p = sum([g.p_despatch for g in self.network.all_generators])
+        p = sum([g.p for g in self.network.all_generators])
         q = sum([g.q for g in self.network.all_generators])
 
         return complex(p, q)

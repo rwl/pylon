@@ -61,7 +61,7 @@ class Bid(object):
     def total_quantity(self):
         """ Output at which the generator has been dispatched.
         """
-        self.generator.p_despatch
+        self.generator.p
 
 
     @property
@@ -218,10 +218,10 @@ class SmartMarket(object):
                 g.p_max += 100 * self.violation
 
         # Solve the optimisation problem.
-        solution = DCOPFRoutine().solve(self.network)
+        success = DCOPFRoutine().solve(self.network)
 
         # Compute quantities, prices and costs.
-        if solution["status"] == "optimal":
+        if success:
             # Get nodal marginal prices from OPF.
             p_lambda = spdiag([bus.p_lambda for bus in buses])
             q_lambda = spdiag([bus.q_lambda for bus in buses])
@@ -406,7 +406,7 @@ class SmartMarket(object):
         """
         # Get the total output that the generator has been dispatched at by
         # the OPF routine.
-        total_quantity = offbids[0].generator.p_despatch
+        total_quantity = offbids[0].generator.p
 
         ob_quantity = sum([ob.quantity for ob in offbids])
 

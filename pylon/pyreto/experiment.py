@@ -96,11 +96,11 @@ class MarketExperiment(object):
 #            writer.write_generator_data(self.power_system, sys.stdout)
 
             # Optimise the power system model.
-            solution = self.routine(self.power_system)
+            success = self.routine(self.power_system)
 
             writer.write_generator_data(self.power_system, sys.stdout)
 
-            if solution["status"] != "optimal":
+            if not success:
                 logger.debug("No solution for interaction: %d" % interaction)
 
                 if logger.handlers:

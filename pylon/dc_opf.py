@@ -122,6 +122,12 @@ class DCOPFRoutine(object):
         # Solution.
         self.x = None
 
+        # Objective function value.
+        self.f = 0.0
+
+        # Time taken to solve.
+        self.t_elapsed = 0.0
+
 
     def __call__(self, network):
         """ Call the routine using routine(n).
@@ -134,7 +140,6 @@ class DCOPFRoutine(object):
         """
         t0 = time.time()
         self.network = network if network is not None else self.network
-#        self.network = network
 
         logger.debug("Solving DC OPF [%s]" % network.name)
 
@@ -185,10 +190,14 @@ class DCOPFRoutine(object):
         solution = self._solve_qp()
         self.x = solution["x"]
 
+        # Compute elapsed time.
+        self.t_elapsed = t0 = time.time()
+
         if solution["status"] == "optimal":
             self._update_solution_data(solution)
-
-        return solution
+            return True
+        else:
+            return False
 
     #--------------------------------------------------------------------------
     #  Phase shift injection vectors:
@@ -680,9 +689,6 @@ class DCOPFRoutine(object):
         #- initvals['z'] is a dense 'd' matrix of size (K,1), representing
         #  a vector that is strictly positive with respect to the cone C.
 
-        print self._AA_ieq[:, -9:]
-        print self._AA_ieq.size
-
         solution = qp(P=self._hh, q=self._cc,
                       G=self._AA_ieq, h=self._bb_ieq,
                       A=self._AA_eq, b=self._bb_eq,
@@ -712,10 +718,6 @@ class DCOPFRoutine(object):
 
         logger.debug("Quadratic solver returned:%s" % solution)
 
-#        print "S:", solution["s"]
-#        print "Y:", solution["y"]
-#        print "Z:", solution["z"]
-
         return solution
 
 
@@ -735,11 +737,6 @@ class DCOPFRoutine(object):
         offline_generators = [
             g for g in self.network.all_generators if g not in generators]
 
-#        print "Solution x:\n", solution["x"]
-#        print "Solution s:\n", solution["s"]
-#        print "Solution y:\n", solution["y"]
-#        print "Solution z:\n", solution["z"]
-
         # Bus voltage angles.
         v_angle = solution["x"][:n_buses]
 #        print "Vphase:", v_angle
@@ -749,10 +746,9 @@ class DCOPFRoutine(object):
 
         # Generator real power output.
         p = solution["x"][n_buses:n_buses+n_generators]
-#        print "Pg:", p
         for i, generator in enumerate(generators):
-            generator.p          = p[i]
-            generator.p_despatch = p[i]
+            generator.p          = p[i] * base_mva
+#            generator.p_despatch = p[i] * base_mva
 
         # Branch power flows.
         p_source = self._B_source * v_angle * base_mva
@@ -796,5 +792,8 @@ class DCOPFRoutine(object):
             generator.mu_p_max = 0.0
             generator.mu_q_min = 0.0
             generator.mu_q_max = 0.0
+
+        # Compute the objective function value.
+        self.f = sum([g.total_cost(g.p) for g in generators])
 
 # EOF -------------------------------------------------------------------------

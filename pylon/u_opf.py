@@ -87,67 +87,84 @@ class UOPFRoutine(object):
         generators = network.online_generators
         loads = network.online_loads
 
-        # Check for sum(Pmin) > total load, decommit as necessary.
-        on = [g for g in generators if g.mode == "generator"]
-        onld = [g for g in generators if g.mode == "despatchable load"]
-        load_capacity = sum([l.p for l in loads])
-        p_min_tot = sum([g.p_min for g in generators])
+        # Check for sum(p_min) > total load, decommit as necessary.
+        online       = [g for g in generators if not g.is_load]
+        online_vload = [g for g in generators if g.is_load]
+
+        # Total dispatchable load capacity.
+        vload_capacity = sum([g.p_min for g in online_vload])
+        # Total load capacity.
+        load_capacity = sum([l.p for l in loads]) - vload_capacity
+
+        # Minimum total online generation capacity.
+        p_min_tot = sum([g.p_min for g in on])
 
         while p_min_tot > load_capacity:
             # Shut down most expensive unit.
-            avg_cost = [g.total_cost(g.p_min) / g.p_min for g in generators]
-            # Pick one with max avg cost at Pmin.
-#            g_idx = avg_cost.index(max(avg_cost))
-            g_idx, value = fair_max(avg_cost)
-            generator = generators[g_idx]
+            avg_pmin_cost = [g.total_cost(g.p_min) / g.p_min for g in online]
 
-            logger.info("Shutting down generator [%s].", generator)
+            # Find generator with the maximum average cost at Pmin.
+            g_idx, value = fair_max(avg_pmin_cost)
+            generator = online[g_idx]
+
+            logger.info("Shutting down generator [%s] to satisfy all "
+                        "p_min limits." % generator.name)
 
             # Set generation to zero.
-            generator.p = 0.0
-            generator.q = 0.0
+#            generator.p = 0.0
+#            generator.q = 0.0
             generator.online = False
 
             # Update minimum gen capacity.
-            p_min_tot = sum([g.p_min for g in generators])
+            online = [g for g in network.online_generators if not g.is_load]
+            p_min_tot = sum([g.p_min for g in online])
 
-        # Run initial opf.
+        # Run initial OPF.
         if self.dc:
             routine = DCOPFRoutine()
         else:
             routine = ACOPFRoutine()
-
-        solution = routine(network)
+        success = routine(network)
 
         # Best case so far.
+        overall_online = [g.online for g in network.all_generators]
+        overall_cost   = routine.f
 
         # Best case for this stage (ie. with n gens shut down, n=0,1,2 ...).
+        stage_online = overall_online
+        stage_cost   = overall_cost
 
+        # Shutdown at most one generator per stage.
         while True:
+            # Activate generators according to the stage best.
+            for i, generator in enumerate(network.all_generators):
+                generator.online = stage_online[i]
             # Get candidates for shutdown.
-            candidates = [g for g in gen0 if g.p_min > 0.0]
+            candidates = [g for g in network.online_generators if \
+                          (g.mu_p_min > 0.0) and (g.p_min > 0.0)]
 
             if not candidates:
                 break
 
-            # Do not check for further decommitment unless we see something
-            # better during this stage.
+            # No improvement during this stage.
             done = True
 
             for candidate in candidates:
                 # Start with best for this stage.
                 gen = gen0
 
-                candidate.p = 0.0
-                candidate.q = 0.0
+                # Shutdown candidate generator.
+#                candidate.p = 0.0
+#                candidate.q = 0.0
                 candidate.online = False
 
                 # Run opf.
-                solution = routine(network)
+                success = routine(network)
 
                 # Something better?
-                if (solution['optimal'] == True) and (f < f1):
-
+                if success and (routine.f < overall_cost):
+                    overall_online = network.online_generators
+                    overall_cost   = routine.f
                     # Make sure we check for further decommitment.
                     done = False
 
@@ -158,8 +175,11 @@ class UOPFRoutine(object):
                 # Shutting something else down helps, so let's keep going.
                 logger.info("Shutting down generator [%s].", candidate)
 
+                stage_online = overall_online
+                stage_cost   = overall_cost
+
         # Compute elapsed time.
-        self.elapsed = t0 - time.time()
+        self.elapsed = time.time() - t0
 
 #------------------------------------------------------------------------------
 #  "fair_max" function:

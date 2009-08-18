@@ -83,8 +83,7 @@ class ProfitTask(Task):
         # multipliers (lambda, $/MWh) for all buses.
 #        mcp = max([bus.p_lambda for bus in self.env.power_system.buses])
 
-        profit = asset.total_cost(asset.p_despatch)
-#        profit = (asset.p_despatch * base_mva) * mcp
+        profit = asset.total_cost(asset.p)
 
         logger.debug("Profit task [%s] reward: %s" % (asset.name, profit))
         return array([profit])
