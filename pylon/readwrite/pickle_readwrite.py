@@ -40,6 +40,12 @@ class PickleReader(object):
     """
 
     def __call__(self, file_or_filename):
+        """ Calls the reader with the given file or file name.
+        """
+        self.read(file_or_filename)
+
+
+    def read(self, file_or_filename):
         """ Loads a pickled network.
         """
         if isinstance(file_or_filename, basestring):

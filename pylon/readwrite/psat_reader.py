@@ -53,11 +53,17 @@ class PSATReader(object):
         # The resulting network.
         self.network = None
 
+
+    def __call__(self, file_or_filename):
+        """ Calls the reader with the given file or file name.
+        """
+        self.read(file_or_filename)
+
     #--------------------------------------------------------------------------
     #  Parse a PSAT data file and return a network object
     #--------------------------------------------------------------------------
 
-    def __call__(self, file_or_filename):
+    def read(self, file_or_filename):
         """ Parses a PSAT data file and returns a network object
 
             file: File object or path to data file with PSAT format data

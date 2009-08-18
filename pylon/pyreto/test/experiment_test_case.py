@@ -46,7 +46,7 @@ from pybrain.rl.learners import ENAC
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "..", "test", "data", "case6ww.m")
+DATA_FILE = join(dirname(__file__), "data", "auction_case.m")
 
 #------------------------------------------------------------------------------
 #  Returns a test power system:

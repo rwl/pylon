@@ -109,17 +109,49 @@ class SmartMarket(object):
     """ Computes the new generation and price schedules based on the offers
         submitted.
     """
-    def __init__(self, network, bids, offers, price_cap=500):
+    def __init__(self, network, bids, offers, loc_adjust="dc",
+                 auction_type="first price", price_cap=500, g_online=None,
+                 period=1.0):
         """ Initialises a new SmartMarket instance. A price cap can be set
             with max_p.
         """
         self.network = network
+
         # Bids to by quantities of power at a price.
         self.bids = bids
         # Offers to sell power.
         self.offers = offers
+
+        # Compute locational adjustments ('ignore', 'ac', 'dc').
+        self.loc_adjust = loc_adjust
+
+        # 'discriminative' - discriminative pricing (price equal to offer/bid)
+        # 'lao'            - last accepted offer auction
+        # 'fro'            - first rejected offer auction
+        # 'lab'            - last accepted bid auction
+        # 'frb'            - first rejected bid auction
+        # 'first price'    - first price auction (marginal unit, offer or bid,
+        #                    sets the price)
+        # 'second price'   - second price auction (if offer is marginal, then
+        #                    price is set by min(FRO,LAB), if bid, then
+        #                    max(FRB,LAO)
+        # 'split'          - split the difference pricing (price set by last
+        #                    accepted offer & bid)
+        # 'dual laob'      - LAO sets seller price, LAB sets buyer price
+        self.auction_type = auction_type
+
         # Price cap. Offers greater than this are eliminated.
         self.price_cap = price_cap
+
+        # A vector containing the commitment status of each generator from the
+        # previous period (for computing startup/shutdown costs)
+        if g_online is None:
+            self.g_online = matrix(1, (len(network.all_generators), 1))
+        else:
+            self.g_online = g_online
+
+        # Time duration of the dispatch period in hours.
+        self.period = period
 
         # Constraint violation tolerance.
         self.violation = 5e-6

@@ -48,6 +48,12 @@ class ReSTWriter(object):
 
 
     def __call__(self, network, file_or_filename):
+        """ Calls the writer with the given network.
+        """
+        self.write(network, file_or_filename)
+
+
+    def write(self, network, file_or_filename):
         """ Writes network data to file in ReStructuredText format.
         """
         self.network = network
@@ -159,10 +165,10 @@ class ReSTWriter(object):
         else:
             file.write(sep)
             file.write("\n")
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
-            
+
         del report
 
 
@@ -170,7 +176,7 @@ class ReSTWriter(object):
         """ Write component quantities to a table.
         """
         network = network if network is not None else self.network
-        
+
         report = NetworkReport(network)
 
         if file_or_filename is None:
@@ -241,10 +247,10 @@ class ReSTWriter(object):
 
         file.write(sep)
         file.write("\n")
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
-        
+
         del report
 
 
@@ -252,7 +258,7 @@ class ReSTWriter(object):
         """ Writes minimum and maximum values to a table.
         """
         network = network if network is not None else self.network
-        
+
         report = NetworkReport(network)
 
         if file_or_filename is None:
@@ -293,10 +299,10 @@ class ReSTWriter(object):
 
         file.write(sep)
         file.write("\n")
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
-        
+
         del report
 
 
@@ -304,7 +310,7 @@ class ReSTWriter(object):
         """ Writes bus data to a ReST table.
         """
         network = network if network is not None else self.network
-        
+
         report = NetworkReport(network)
 
         buses = network.buses
@@ -369,10 +375,10 @@ class ReSTWriter(object):
         file.write("\n")
 
         file.write(sep)
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
-        
+
         del report
 
 
@@ -380,7 +386,7 @@ class ReSTWriter(object):
         """ Writes branch data to a ReST table.
         """
         network = network if network is not None else self.network
-        
+
         report = NetworkReport(network)
 
         branches = network.branches
@@ -450,10 +456,10 @@ class ReSTWriter(object):
         file.write("\n")
 
         file.write(sep)
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
-        
+
         del report
 
 
@@ -461,7 +467,7 @@ class ReSTWriter(object):
         """ Writes generator data to a ReST table.
         """
         network = network if network is not None else self.network
-        
+
         report = NetworkReport(network)
 
         generators = network.all_generators
@@ -551,10 +557,10 @@ class ReSTWriter(object):
         file.write("\n")
 
         file.write(sep)
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
-        
+
         del report
 
 #------------------------------------------------------------------------------
@@ -573,10 +579,10 @@ class ReSTExperimentWriter(object):
         self.include_state  = include_state
         self.include_action = include_action
         self.include_reward = include_reward
-        
+
         # Market experiment whose data is to be written.
         self.experiment = None
-    
+
         # File object or name of a file to be written to.
         self.file_or_filename = None
 
@@ -586,7 +592,7 @@ class ReSTExperimentWriter(object):
         """
         self.experiment = experiment
         self.file_or_filename = file_or_filename
-        
+
         file = _get_file(file_or_filename)
 
         # Write environment state data.
@@ -595,7 +601,7 @@ class ReSTExperimentWriter(object):
             file.write( ("-" * 5) + "\n")
 
             self.write_state_data(experiment, file)
-            
+
         # Write action data.
         if self.include_action:
             file.write("Action\n")
@@ -609,7 +615,7 @@ class ReSTExperimentWriter(object):
             file.write( ("-" * 6) + "\n")
 
             self.write_reward_data(experiment, file)
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
 
@@ -619,9 +625,9 @@ class ReSTExperimentWriter(object):
             to a ReST table.
         """
         file = _get_file(file_or_filename)
-        
+
         self._write_data_table(experiment, file, type="state")
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
 
@@ -631,9 +637,9 @@ class ReSTExperimentWriter(object):
             to a ReST table.
         """
         file = _get_file(file_or_filename)
-        
+
         self._write_data_table(experiment, file, type="action")
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
 
@@ -643,9 +649,9 @@ class ReSTExperimentWriter(object):
             to a ReST table.
         """
         file = _get_file(file_or_filename)
-        
+
         self._write_data_table(experiment, file, type="reward")
-        
+
         if isinstance(file_or_filename, basestring):
             file.close()
 

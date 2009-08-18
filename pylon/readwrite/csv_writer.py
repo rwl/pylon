@@ -35,6 +35,12 @@ class CSVWriter(object):
     """
 
     def __call__(self, network, file_or_filename):
+        """ Calls the writer with the given network.
+        """
+        self.write(network, file_or_filename)
+
+
+    def write(self, network, file_or_filename):
         """ Writes network data to file as CSV.
         """
         self.network = network

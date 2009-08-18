@@ -78,13 +78,13 @@ class MATPOWERReader(object):
     def __call__(self, file_or_filename):
         """ Call the reader with something like reader(fd)
         """
-        return self.parse(file_or_filename)
+        return self.read(file_or_filename)
 
     #--------------------------------------------------------------------------
     #  Parse a MATPOWER data file and return a network object
     #--------------------------------------------------------------------------
 
-    def parse(self, file_or_filename):
+    def read(self, file_or_filename):
         """ Parse a MATPOWER data file and return a network object
 
             file_or_filename: File name of file object with MATPOWER data

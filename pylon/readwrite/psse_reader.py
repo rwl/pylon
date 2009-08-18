@@ -57,6 +57,12 @@ class PSSEReader(object):
 
 
     def __call__(self, file_or_filename):
+        """ Calls the reader with the given file or file name.
+        """
+        self.read(file_or_filename)
+
+
+    def read(self, file_or_filename):
         """ Parses a PSS/E data file and returns a network object.
         """
         self.file_or_filename = file_or_filename
