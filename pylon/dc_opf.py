@@ -457,14 +457,15 @@ class DCOPFRoutine(object):
 #        g_buses = [v for v in buses if len(v.generators) > 0]
 #        n_g_buses = len(g_buses)
 
-        i_bus_generator = spmatrix([], [], [], size=(n_buses, n_generators))
+        # Bus-(online)generator incidence matrix.
+        i_bus_generator = spmatrix([],[],[], size=(n_buses, n_generators))
 
         j = 0
-        for v in buses:
-            i = buses.index(v)
+        for i, v in enumerate(buses):
             for g in v.generators:
-                i_bus_generator[i, j] = 1
-                j += 1
+                if g.online:
+                    i_bus_generator[i, j] = 1
+                    j += 1
 
         logger.debug("Built bus generator incidence matrix:\n%s" %
                      i_bus_generator)

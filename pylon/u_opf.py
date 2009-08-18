@@ -15,12 +15,16 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a routine for solving the combined unit decommitment and optimal
-    power flow problem.
+""" The standard OPF formulation has no mechanism for completely shutting down
+    generators which are very expensive to operate. Instead they are simply
+    dispatched at their minimum generation limits. PYLON includes the
+    capability to run an optimal power flow combined with a unit decommitment
+    for a single time period, which allows it to shut down these expensive
+    units and find a least cost commitment and dispatch.
 
     References:
-        Ray Zimmerman, "uopf.m", MATPOWER, PSERC Cornell, version 3.2,
-        http://www.pserc.cornell.edu/matpower/, March, 2006
+        Ray Zimmerman, "MATPOWER User's Manual", MATPOWER, PSERC Cornell,
+        version 3.2, http://www.pserc.cornell.edu/matpower/, September, 2007
 """
 
 #------------------------------------------------------------------------------
@@ -32,6 +36,8 @@ import logging
 import random
 
 from cvxopt import matrix
+
+from pylon import DCOPFRoutine, ACOPFRoutine
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -87,6 +93,10 @@ class UOPFRoutine(object):
         generators = network.online_generators
         loads = network.online_loads
 
+        # 1. Begin at stage zero (N = 0), assuming all generators are on-line
+        # with all limits in place.
+
+
         # Check for sum(p_min) > total load, decommit as necessary.
         online       = [g for g in generators if not g.is_load]
         online_vload = [g for g in generators if g.is_load]
@@ -97,7 +107,7 @@ class UOPFRoutine(object):
         load_capacity = sum([l.p for l in loads]) - vload_capacity
 
         # Minimum total online generation capacity.
-        p_min_tot = sum([g.p_min for g in on])
+        p_min_tot = sum([g.p_min for g in online])
 
         while p_min_tot > load_capacity:
             # Shut down most expensive unit.
@@ -119,12 +129,20 @@ class UOPFRoutine(object):
             online = [g for g in network.online_generators if not g.is_load]
             p_min_tot = sum([g.p_min for g in online])
 
-        # Run initial OPF.
+        # 2. Solve a normal OPF and save the solution as the current best.
+
         if self.dc:
             routine = DCOPFRoutine()
         else:
             routine = ACOPFRoutine()
         success = routine(network)
+
+        if not success:
+            logger.error("Non-convergent OPF [%s]." % routine)
+            return False
+
+        # 3. Go to the next stage, N = N + 1. Using the best solution from the
+        # previous stage as the base case for this stage, ...
 
         # Best case so far.
         overall_online = [g.online for g in network.all_generators]
@@ -136,6 +154,9 @@ class UOPFRoutine(object):
 
         # Shutdown at most one generator per stage.
         while True:
+            # 4. ...form a candidate list of generators with minimum
+            # generation limits binding.
+
             # Activate generators according to the stage best.
             for i, generator in enumerate(network.all_generators):
                 generator.online = stage_online[i]
@@ -150,19 +171,24 @@ class UOPFRoutine(object):
             done = True
 
             for candidate in candidates:
+                # 5. For each generator on the candidate list, solve an OPF to
+                # find the total system cost with this generator shut down.
+
                 # Start with best for this stage.
-                gen = gen0
+#                gen = gen0
 
                 # Shutdown candidate generator.
 #                candidate.p = 0.0
 #                candidate.q = 0.0
                 candidate.online = False
 
-                # Run opf.
+                # Run OPF.
                 success = routine(network)
 
                 # Something better?
                 if success and (routine.f < overall_cost):
+                    # 6. Replace the current best solution with this one if it
+                    # has a lower cost.
                     overall_online = network.online_generators
                     overall_cost   = routine.f
                     # Make sure we check for further decommitment.
@@ -172,6 +198,9 @@ class UOPFRoutine(object):
                 # Decommits at this stage did not help.
                 break
             else:
+                # 7. If any of the candidate solutions produced an improvement,
+                # return to step 3.
+
                 # Shutting something else down helps, so let's keep going.
                 logger.info("Shutting down generator [%s].", candidate)
 
@@ -180,6 +209,10 @@ class UOPFRoutine(object):
 
         # Compute elapsed time.
         self.elapsed = time.time() - t0
+
+        # 8. Return the current best solution as the final solution.
+        return network
+
 
 #------------------------------------------------------------------------------
 #  "fair_max" function:
