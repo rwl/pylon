@@ -33,5 +33,7 @@ from psat_reader import PSATReader
 
 from rst_writer import ReSTWriter
 from csv_writer import CSVWriter
+from excel_writer import ExcelWriter
+from dot_writer import DotWriter
 
 # EOF -------------------------------------------------------------------------

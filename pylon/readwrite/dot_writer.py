@@ -15,24 +15,30 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" For writing network data to file as Comma Separated Values (CSV).
+""" Defines a class for writing network data in Graphviz DOT language.
 """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-import csv
-
-from common import bus_attrs, branch_attrs, generator_attrs, load_attrs
 
 #------------------------------------------------------------------------------
-#  "CSVWriter" class:
+#  "DOTWriter" class:
 #------------------------------------------------------------------------------
 
-class CSVWriter(object):
-    """ Writes network data to file as CSV.
+class DotWriter(object):
+    """ Write network data to file in Graphviz DOT language.
     """
+
+    def __init__(self):
+        """ Initialises a new DOTWriter instance.
+        """
+        self.network = None
+        self.file_or_filename = ""
+
+        self.bus_attr = 'color="blue"'
+
 
     def __call__(self, network, file_or_filename):
         """ Calls the writer with the given network.
@@ -41,82 +47,71 @@ class CSVWriter(object):
 
 
     def write(self, network, file_or_filename):
-        """ Writes network data to file as CSV.
+        """ Writes network data to file in Graphviz DOT language.
         """
         self.network = network
         self.file_or_filename = file_or_filename
 
-        if isinstance(file_or_filename, basestring):
-            file = open(file_or_filename, "wb")
-        else:
-            file = file_or_filename
+        file = _get_file(file_or_filename)
 
-        self.writer = csv.writer(file)
-
-        self.write_generator_data(network, file)
+        self.write_header(network, file)
+        self.write_bus_data(network, file)
         self.write_branch_data(network, file)
         self.write_generator_data(network, file)
         self.write_load_data(network, file)
         self.write_generator_cost_data(network, file)
 
-        file.close()
+        # Close if passed the name of a file.
+        if isinstance(file_or_filename, basestring):
+            file.close()
 
 
     def write_header(self, network, file):
         """ Writes the header to file.
         """
-        pass
+        file.write("digraph %s {" % network.name)
+        file.write("\n")
 
 
     def write_bus_data(self, network, file):
         """ Writes bus data to file.
         """
-        self.writer.writerow(bus_attrs)
-
+        padding = "    "
         for bus in network.buses:
-            values = [getattr(bus, attr) for attr in bus_attrs]
-            writer.writerow(values)
-            del values
+            attr = 'label="%s", %s' % (bus.name, self.bus_attr)
+            file.write("%snode %s [%s];" % (padding, id(bus), attr))
+            file.write("\n")
 
 
     def write_branch_data(self, network, file):
         """ Writes branch data to file.
         """
-        self.writer.writerow(branch_attrs)
-
-        for branch in network.branches:
-            values = [getattr(branch, attr) for attr in branch_attrs]
-            writer.writerow(values)
-            del values
 
 
     def write_generator_data(self, network, file):
         """ Write generator data to file.
         """
-        self.writer.writerow(["bus"] + generator_attrs)
-
-        for i, bus in enumerate(network.buses):
-            for generator in bus.generators:
-                values = [getattr(generator, attr) for attr in generator_attrs]
-                writer.writerow([i] + values)
-                del values
 
 
     def write_load_data(self, network, file):
         """ Writes load data to file.
         """
-        writer.writerow(["bus"] + load_attrs)
-
-        for i, bus in enumerate(network.buses):
-            for load in bus.loads:
-                values = [getattr(load, attr) for attr in load_attrs]
-                writer.writerow([i] + values)
-                del values
 
 
     def write_generator_cost_data(self, network, file):
         """ Writes generator cost data to file.
         """
         pass
+
+
+def _get_file(file_or_filename):
+    """ Returns an open file from a file or a filename.
+    """
+    if isinstance(file_or_filename, basestring):
+        file = open(file_or_filename, "wb")
+    else:
+        file = file_or_filename
+
+    return file
 
 # EOF -------------------------------------------------------------------------

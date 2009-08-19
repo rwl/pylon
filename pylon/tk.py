@@ -6,10 +6,11 @@ import logging
 
 from Tkinter import *
 from tkFileDialog import askopenfilename, asksaveasfilename
+import tkSimpleDialog
 
 from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
-    CSVWriter
+    CSVWriter, ExcelWriter, DotWriter
 
 from pylon import \
     Network, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
@@ -20,7 +21,7 @@ CASE_6_WW = os.path.dirname(__file__) + "/test/data/case6ww.m"
 CASE_30   = os.path.dirname(__file__) + "/test/data/case30pwl.m"
 
 
-class PylonTk:
+class PylonTk(object):
     def __init__(self, master):
         self.root = master
 
@@ -71,6 +72,11 @@ class PylonTk:
                              accelerator="Alt-X")
         self.root.bind('<Alt-x>', self.on_exit)
 
+
+        viewmenu = Menu(menu, tearoff=False)
+        menu.add_cascade(label="View", menu=viewmenu)
+        viewmenu.add_command(label="Graph", command=self.on_graph)
+
         pfmenu = Menu(menu, tearoff=False)
         menu.add_cascade(label="Power Flow", menu=pfmenu)
         pfmenu.add_command(label="DC PF", command=self.on_dcpf)
@@ -84,13 +90,15 @@ class PylonTk:
         opfmenu.add_command(label="DC (UD) OPF", command=self.on_duopf)
         opfmenu.add_command(label="AC (UD) OPF", command=self.on_uopf)
 
+        helpmenu = Menu(menu, tearoff=False)
+        menu.add_cascade(label="Help", menu=helpmenu)
+        helpmenu.add_command(label="About", command=self.on_about)
+
 
     def _init_buttonbar(self):
         buttonbar = Frame(self.frame)
         buttonbar.pack(side=LEFT, fill=Y)
 
-        Button(buttonbar, text="Clear",
-               command=self.on_clear).pack(fill=X)
         Button(buttonbar, text="Summary",
                command=self.on_summary).pack(fill=X)
         Button(buttonbar, text="Bus",
@@ -102,13 +110,21 @@ class PylonTk:
 
         self.writer_map = {"ReST": ReSTWriter(),
                            "MATPOWER": MATPOWERWriter(),
-                           "CSV": CSVWriter()}
+                           "CSV": CSVWriter(),
+                           "DOT": DotWriter()}
 
         writer_type = self.writer_type = StringVar(buttonbar)
         writer_type.set("ReST") # default value
 
-        writer = OptionMenu(buttonbar, writer_type, "ReST", "MATPOWER", "CSV")
+        writer = OptionMenu(buttonbar, writer_type,
+                            "ReST", "MATPOWER", "CSV", "DOT")
         writer.pack(fill=X)
+
+        Button(buttonbar, text="Clear", activebackground="#CD0000",
+               command=self.on_clear).pack(fill=X, pady=5)
+
+        Button(buttonbar, text="Save Log",
+               command=self.on_save_log).pack(fill=X)
 
 
     def _init_logframe(self):
@@ -194,7 +210,12 @@ class PylonTk:
         if filename:
             ReSTWriter().write(self.n, filename)
 
-    # -------------------------------------------------------------------------
+    # View --------------------------------------------------------------------
+
+    def on_graph(self):
+        GraphView(self.root)
+
+    # UI Log ------------------------------------------------------------------
 
     def on_clear(self):
         self.ui_log.log.delete(1.0, END)
@@ -218,6 +239,26 @@ class PylonTk:
     def on_generator_info(self):
         ReSTWriter().write_generator_data(self.n, self.ui_log)
 
+
+    def on_save_log(self):
+        ftypes = [("Log file", ".log"),
+                  ("Text file", ".txt"),
+                  ("All files", "*")]
+        filename = asksaveasfilename(filetypes=ftypes)
+        if filename:
+            log = self.ui_log.log
+
+            file = None
+            try:
+                file = open(filename, "wb")
+                file.write(log.get(1.0, END))
+            except:
+                logger.error("Error writing to '%s'." % filename)
+            finally:
+                if file is not None:
+                    file.close()
+
+    # -------------------------------------------------------------------------
 
     def on_dcpf(self):
         DCPF().solve(self.n)
@@ -249,10 +290,73 @@ class PylonTk:
 
     def on_exit(self, event=None):
         self.root.destroy()
-#        sys.exit(0)
 
 
-class UILog:
+    def on_about(self):
+        AboutDialog(self.root)
+
+
+class GraphView(tkSimpleDialog.Dialog):
+    """ A dialog for graph viewing.
+    """
+
+    def __init__(self, parent, title="Graph"):
+        """ Initialises the font dialog.
+        """
+        tkSimpleDialog.Dialog.__init__(self, parent, title)
+
+
+
+    def body(self, frame):
+        """ Creates the dialog body. Returns the widget that should have
+            initial focus.
+        """
+        master = Frame(self)
+        master.pack(padx=5, pady=0, expand=1, fill=BOTH)
+
+        title = Label(master, text="Graph")
+        title.pack(side=TOP)
+
+        canvas = Canvas(master)
+        canvas.pack(expand=YES, fill=BOTH)
+
+        return canvas # Given initial focus.
+
+
+    def buttonbox(self):
+        ''' Adds a button box.
+        '''
+        box = Frame(self)
+
+        w = Button(box, text="Cancel", width=10, command=self.cancel)
+        w.pack(side=LEFT, padx=5, pady=5)
+
+        w = Button(box, text="Select", width=10, command=self.ok,
+                   default=ACTIVE)
+        w.pack(side=LEFT, padx=5, pady=5)
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+        box.pack(side=RIGHT, padx=5, pady=5, anchor=S)
+
+
+    def validate(self):
+        ''' Validate the data. This method is called automatically to validate
+            the data before the dialog is destroyed.
+        '''
+        return 1
+
+
+    def apply(self):
+        ''' Process the data. This method is called automatically to process
+            the data, *after* the dialog is destroyed.
+        '''
+        pass
+
+
+class UILog(object):
+
     def __init__(self, master):
         self.master = master
 
@@ -322,6 +426,20 @@ class UILog:
         logging.basicConfig(stream=self, level=self.level.get(),
                             format="%(levelname)s: %(message)s")
 #        print logging.getLogger(__name__).getEffectiveLevel(), self.level.get()
+
+
+class AboutDialog(object):
+    def __init__(self, parent):
+        top = self.top = Toplevel(parent)
+
+        l = self.l = Label(top, text="Pylon")
+        l.pack(padx=100, pady=15)
+
+        b = Button(top, text="OK", command=self.ok)
+        b.pack(pady=25)
+
+    def ok(self):
+        self.top.destroy()
 
 
 def main():
