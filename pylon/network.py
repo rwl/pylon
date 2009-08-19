@@ -705,7 +705,7 @@ class NetworkReport(object):
         p = sum([g.p for g in self.network.all_generators])
         q = sum([g.q for g in self.network.all_generators])
 
-        return complex(p * base_mva, q * base_mva)
+        return complex(p, q)
 
 
     @property

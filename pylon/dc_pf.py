@@ -74,6 +74,12 @@ class DCPF(object):
 
 
     def __call__(self, network):
+        """ Calls the routine with the given network.
+        """
+        self.solve(network)
+
+
+    def solve(self, network):
         """ Solves DC power flow for the network.
         """
         self.network = network

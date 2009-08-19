@@ -22,6 +22,7 @@ from ac_pf import NewtonRaphson, FastDecoupled
 
 from dc_opf import DCOPF
 from ac_opf import ACOPF
+from ud_opf import UDOPF
 
 from uc import UnitCommitmentRoutine
 

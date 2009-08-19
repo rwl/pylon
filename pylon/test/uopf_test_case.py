@@ -29,7 +29,7 @@ import unittest
 from os.path import dirname, join
 
 from pylon.readwrite import MATPOWERReader
-from pylon.u_opf import UOPFRoutine
+from pylon.u_opf import UDOPF
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -49,7 +49,7 @@ class UOPFTestCase(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         self.network = MATPOWERReader().read(DATA_FILE)
-        self.routine = UOPFRoutine(dc=True)
+        self.routine = UDOPF(dc=True)
 
     def test_dc(self):
         """ Test routine using DC formulation.

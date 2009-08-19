@@ -119,7 +119,7 @@ class ReSTWriter(object):
     def write_how_many(self, network=None, file_or_filename=None):
         """ Writes component numbers to a table.
         """
-        network = network if network is not None else self.network
+        network = self.network if network is None else network
 
         report = NetworkReport(network)
 
@@ -175,7 +175,7 @@ class ReSTWriter(object):
     def write_how_much(self, network=None, file_or_filename=None):
         """ Write component quantities to a table.
         """
-        network = network if network is not None else self.network
+        network = self.network if network is None else network
 
         report = NetworkReport(network)
 
@@ -257,7 +257,7 @@ class ReSTWriter(object):
     def write_min_max(self, network=None, file_or_filename=None):
         """ Writes minimum and maximum values to a table.
         """
-        network = network if network is not None else self.network
+        network = self.network if network is None else network
 
         report = NetworkReport(network)
 
@@ -309,7 +309,7 @@ class ReSTWriter(object):
     def write_bus_data(self, network=None, file_or_filename=None):
         """ Writes bus data to a ReST table.
         """
-        network = network if network is not None else self.network
+        network = self.network if network is None else network
 
         report = NetworkReport(network)
 
@@ -385,7 +385,7 @@ class ReSTWriter(object):
     def write_branch_data(self, network=None, file_or_filename=None):
         """ Writes branch data to a ReST table.
         """
-        network = network if network is not None else self.network
+        network = self.network if network is None else network
 
         report = NetworkReport(network)
 
@@ -466,7 +466,7 @@ class ReSTWriter(object):
     def write_generator_data(self, network=None, file_or_filename=None):
         """ Writes generator data to a ReST table.
         """
-        network = network if network is not None else self.network
+        network = self.network if network is None else network
 
         report = NetworkReport(network)
 

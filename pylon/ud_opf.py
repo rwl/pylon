@@ -46,10 +46,10 @@ from pylon import DCOPF, ACOPF
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "UOPFRoutine" class:
+#  "UDOPF" class:
 #------------------------------------------------------------------------------
 
-class UOPFRoutine(object):
+class UDOPF(object):
     """ Solves a combined unit decommitment and optimal power flow for a
         single time period. Uses an algorithm similar to dynamic programming.
         It proceeds through a sequence of stages, where stage N has N
@@ -70,7 +70,7 @@ class UOPFRoutine(object):
     #--------------------------------------------------------------------------
 
     def __init__(self, dc=True):
-        """ Initialises a new UOPFRoutine instance.
+        """ Initialises a new UDOPF instance.
         """
         # Use DC OPF routine?
         self.dc = dc

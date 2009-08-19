@@ -97,7 +97,13 @@ class _ACPF(object):
         self.slack_idx = 0
 
 
-    def __call__(self):
+    def __call__(self, network):
+        """ Calls the routine with the given network.
+        """
+        self.solve(network)
+
+
+    def solve(self):
         """ Override this method in subclasses.
         """
         raise NotImplementedError
@@ -204,7 +210,7 @@ class NewtonRaphson(_ACPF):
     #  Solve power flow using full Newton's method:
     #--------------------------------------------------------------------------
 
-    def __call__(self, network):
+    def solve(self, network):
         """ Solves the AC power flow for the referenced network using full
             Newton's method.
         """
@@ -490,7 +496,7 @@ class FastDecoupled(_ACPF):
     #  Solve power flow using Fast Decoupled method:
     #--------------------------------------------------------------------------
 
-    def __call__(self, network):
+    def solve(self, network):
         """ Solves the AC power flow for the referenced network using fast
             decoupled method.  Returns the final complex voltages, a flag which
             indicates whether it converged or not, and the number of iterations

@@ -39,7 +39,7 @@ from pylon.network import Network, Bus, Branch, Generator, Load
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+#logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
 #  "MATPOWERReader" class:
