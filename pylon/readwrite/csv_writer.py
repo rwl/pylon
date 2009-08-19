@@ -51,29 +51,48 @@ class CSVWriter(object):
         else:
             file = file_or_filename
 
-        writer = csv.writer(file)
+        self.writer = csv.writer(file)
 
-        # Bus -----------------------------------------------------------------
+        self.write_generator_data(network, file)
+        self.write_branch_data(network, file)
+        self.write_generator_data(network, file)
+        self.write_load_data(network, file)
 
-        writer.writerow(bus_attrs)
+        file.close()
+
+
+    def write_header(self, network, file):
+        """ Writes the header to file.
+        """
+        pass
+
+
+    def write_bus_data(self, network, file):
+        """ Writes bus data to file.
+        """
+        self.writer.writerow(bus_attrs)
 
         for bus in network.buses:
             values = [getattr(bus, attr) for attr in bus_attrs]
             writer.writerow(values)
             del values
 
-        # Branch --------------------------------------------------------------
 
-        writer.writerow(branch_attrs)
+    def write_branch_data(self, network, file):
+        """ Writes branch data to file.
+        """
+        self.writer.writerow(branch_attrs)
 
         for branch in network.branches:
             values = [getattr(branch, attr) for attr in branch_attrs]
             writer.writerow(values)
             del values
 
-        # Generator -----------------------------------------------------------
 
-        writer.writerow(["bus"] + generator_attrs)
+    def write_generator_data(self, network, file):
+        """ Write generator data to file.
+        """
+        self.writer.writerow(["bus"] + generator_attrs)
 
         for i, bus in enumerate(network.buses):
             for generator in bus.generators:
@@ -81,8 +100,10 @@ class CSVWriter(object):
                 writer.writerow([i] + values)
                 del values
 
-        # Load ----------------------------------------------------------------
 
+    def write_load_data(self, network, file):
+        """ Writes load data to file.
+        """
         writer.writerow(["bus"] + load_attrs)
 
         for i, bus in enumerate(network.buses):
@@ -91,6 +112,10 @@ class CSVWriter(object):
                 writer.writerow([i] + values)
                 del values
 
-        file.close()
+
+    def write_generator_cost_data(self, network, file):
+        """ Writes generator cost data to file.
+        """
+        pass
 
 # EOF -------------------------------------------------------------------------

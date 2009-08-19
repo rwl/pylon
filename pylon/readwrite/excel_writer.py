@@ -43,26 +43,48 @@ class ExcelWriter(object):
     def write(self, network, file_or_filename):
         """ Writes network data to file in Excel format.
         """
-        book = Workbook()
+        self.network = network
+        self.file_or_filename = file_or_filename
 
-        # Bus -----------------------------------------------------------------
+        self.book = Workbook()
 
+        self.write_generator_data(network, file)
+        self.write_branch_data(network, file)
+        self.write_generator_data(network, file)
+        self.write_load_data(network, file)
+
+        book.save(file_or_filename)
+
+
+    def write_header(self, network, file):
+        """ Writes the header to file.
+        """
+        pass
+
+
+    def write_bus_data(self, network, file):
+        """ Writes bus data to file.
+        """
         bus_sheet = book.add_sheet("Buses")
 
         for i, bus in enumerate(network.buses):
             for j, attr in enumerate(bus_attrs):
                 bus_sheet.write(i, j, getattr(bus, attr))
 
-        # Branch --------------------------------------------------------------
 
+    def write_branch_data(self, network, file):
+        """ Writes branch data to file.
+        """
         branch_sheet = book.add_sheet("Branches")
 
         for i, branch in enumerate(network.branches):
             for j, attr in enumerate(branch_attrs):
                 branch_sheet.write(i, j, getattr(branch, attr))
 
-        # Generator -----------------------------------------------------------
 
+    def write_generator_data(self, network, file):
+        """ Write generator data to file.
+        """
         generator_sheet = book.add_sheet("Generators")
 
         for i, bus, in enumerate(network.buses):
@@ -71,8 +93,10 @@ class ExcelWriter(object):
                     generator_sheet.write(j, 0, i)
 #                    generator_sheet.write(j, k+1, getattr(generator, attr))
 
-        # Load ----------------------------------------------------------------
 
+    def write_load_data(self, network, file):
+        """ Writes load data to file.
+        """
         load_sheet = book.add_sheet("Loads")
 
         for i, attr in enumerate(load_attrs):
@@ -84,6 +108,10 @@ class ExcelWriter(object):
                     load_sheet.write(j+1, 0, i)
                     load_sheet.write(j+1, k+1, getattr(load, attr))
 
-        book.save(file_or_filename)
+
+    def write_generator_cost_data(self, network, file):
+        """ Writes generator cost data to file.
+        """
+        pass
 
 # EOF -------------------------------------------------------------------------

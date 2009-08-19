@@ -60,7 +60,26 @@ class MATPOWERWriter(object):
             file = file_or_filename
             f_name, ext = splitext(file.name)
 
-        # Header
+        self.write_header(network, file)
+
+        self.write_bus_data(network, file)
+        file.write("\n")
+        self.write_generator_data(network, file)
+        file.write("\n")
+        self.write_branch_data(network, file)
+        file.write("\n")
+        file.write("%%-----  OPF Data  -----%%\n")
+        self.write_area_data(None, file)
+        file.write("\n")
+        self.write_generator_cost_data(network, file)
+
+        if isinstance(file_or_filename, basestring):
+            file.close()
+
+
+    def write_header(self, network, file):
+        """ Writes the header to the given file.
+        """
         file.write("function [baseMVA, bus, gen, branch, areas, gencost] = ")
         file.write(f_name + "\n")
 
@@ -72,28 +91,15 @@ class MATPOWERWriter(object):
 
         file.write("\n")
 
-        self._export_buses(network.buses, file, network.base_mva)
-        file.write("\n")
-        self._export_generators(network.all_generators, file, network.buses)
-        file.write("\n")
-        self._export_branches(
-            network.branches, file, network.base_mva, network.buses
-        )
-        file.write("\n")
-        file.write("%%-----  OPF Data  -----%%\n")
-        self._export_areas(None, file)
-        file.write("\n")
-        self._export_gencost(file)
 
-        if isinstance(file_or_filename, basestring):
-            file.close()
-
-
-    def _export_buses(self, buses, file, base_mva):
+    def write_bus_data(self, network, file):
         """ Writes bus data to file.
         """
         labels = ["bus_id", "type", "Pd", "Qd", "Gs", "Bs", "area", "Vm", "Va",
             "baseKV", "zone", "Vmax", "Vmin"]
+
+        buses = network.buses
+        base_mva = network.base_mva
 
         buses_data = []
         for i, v in enumerate(buses):
@@ -148,11 +154,14 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def _export_generators(self, generators, file, buses):
+    def write_generator_data(self, network, file):
         """ Write generator data to file.
         """
         labels = ["bus", "Pg", "Qg", "Qmax", "Qmin", "Vg", "mBase", "status",
             "Pmax", "Pmin"]
+
+        buses = network.buses
+        generators = network.all_generators
 
         generators_data = []
         for g in generators:
@@ -205,11 +214,15 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def _export_branches(self, branches, file, base_mva, buses):
+    def write_branch_data(self, network, file):
         """ Writes branch data to file.
         """
         labels = ["fbus", "tbus", "r", "x", "b", "rateA", "rateB", "rateC",
             "ratio", "angle", "status"]
+
+        base_mva = network.base_mva
+        branches = network.branches
+        buses    = network.buses
 
         branches_data = []
         for e in branches:
@@ -258,7 +271,7 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def _export_areas(self, areas, file):
+    def write_area_data(self, network, file):
         """ Writes area data to file.
         """
         file.write("%% area data" + "\n")
@@ -270,7 +283,7 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def _export_gencost(self, file):
+    def write_generator_cost_data(self, network, file):
         """ Writes generator cost data to file.
         """
         file.write("%% generator cost data" + "\n")

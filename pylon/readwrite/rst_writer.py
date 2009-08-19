@@ -61,6 +61,37 @@ class ReSTWriter(object):
 
         file = _get_file(file_or_filename)
 
+        self.write_header(network, file)
+
+        # Section II.
+        if self.include_bus_data:
+            file.write("Bus Data\n")
+            file.write("-" * 8 + "\n")
+            self.write_bus_data(network, file)
+            file.write("\n")
+
+        # Section III.
+        if self.include_branch_data:
+            file.write("Branch Data\n")
+            file.write("-" * 11 + "\n")
+            self.write_branch_data(network, file)
+            file.write("\n")
+
+        # Section IV
+        if self.include_generator_data:
+            file.write("Generator Data\n")
+            file.write("-" * 14 + "\n")
+            self.write_generator_data(network, file)
+            file.write("\n")
+
+        # Close if passed the name of a file.
+        if isinstance(file_or_filename, basestring):
+            file.close()
+
+
+    def write_header(self, network, file):
+        """ Writes the header to file.
+        """
         # Document title.
         if self.include_title:
             title = "Power Flow Solution"
@@ -89,31 +120,6 @@ class ReSTWriter(object):
             self.write_how_many(network, file)
             self.write_how_much(network, file)
             self.write_min_max(network, file)
-
-        # Section II.
-        if self.include_bus_data:
-            file.write("Bus Data\n")
-            file.write("-" * 8 + "\n")
-            self.write_bus_data(network, file)
-            file.write("\n")
-
-        # Section III.
-        if self.include_branch_data:
-            file.write("Branch Data\n")
-            file.write("-" * 11 + "\n")
-            self.write_branch_data(network, file)
-            file.write("\n")
-
-        # Section IV
-        if self.include_generator_data:
-            file.write("Generator Data\n")
-            file.write("-" * 14 + "\n")
-            self.write_generator_data(network, file)
-            file.write("\n")
-
-        # Close if passed the name of a file.
-        if isinstance(file_or_filename, basestring):
-            file.close()
 
 
     def write_how_many(self, network=None, file_or_filename=None):

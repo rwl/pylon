@@ -8,7 +8,8 @@ from Tkinter import *
 from tkFileDialog import askopenfilename, asksaveasfilename
 
 from pylon.readwrite import \
-    MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader
+    MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
+    CSVWriter
 
 from pylon import \
     Network, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
@@ -27,7 +28,7 @@ class PylonTk:
         self.frame.pack(expand=YES, fill=BOTH)
 
         self._init_menubar()
-        self._init_toolbar()
+        self._init_buttonbar()
         self._init_logframe()
 
         self.on_new()
@@ -84,17 +85,30 @@ class PylonTk:
         opfmenu.add_command(label="AC (UD) OPF", command=self.on_uopf)
 
 
-    def _init_toolbar(self):
-        toolbar = Frame(self.frame)
-        toolbar.pack(side=LEFT, fill=Y)
-        Button(toolbar, text="Summary",
+    def _init_buttonbar(self):
+        buttonbar = Frame(self.frame)
+        buttonbar.pack(side=LEFT, fill=Y)
+
+        Button(buttonbar, text="Clear",
+               command=self.on_clear).pack(fill=X)
+        Button(buttonbar, text="Summary",
                command=self.on_summary).pack(fill=X)
-        Button(toolbar, text="Bus",
+        Button(buttonbar, text="Bus",
                command=self.on_bus_info).pack(fill=X)
-        Button(toolbar, text="Branch",
+        Button(buttonbar, text="Branch",
                command=self.on_branch_info).pack(fill=X)
-        Button(toolbar, text="Generator",
+        Button(buttonbar, text="Generator",
                command=self.on_generator_info).pack(fill=X)
+
+        self.writer_map = {"ReST": ReSTWriter(),
+                           "MATPOWER": MATPOWERWriter(),
+                           "CSV": CSVWriter()}
+
+        writer_type = self.writer_type = StringVar(buttonbar)
+        writer_type.set("ReST") # default value
+
+        writer = OptionMenu(buttonbar, writer_type, "ReST", "MATPOWER", "CSV")
+        writer.pack(fill=X)
 
 
     def _init_logframe(self):
@@ -182,15 +196,19 @@ class PylonTk:
 
     # -------------------------------------------------------------------------
 
+    def on_clear(self):
+        self.ui_log.log.delete(1.0, END)
+
+
     def on_summary(self):
-        writer = ReSTWriter()
-        writer.write_how_many(self.n, self.ui_log)
-        writer.write_how_much(self.n, self.ui_log)
-        writer.write_min_max(self.n, self.ui_log)
+        writer = self.writer_map[self.writer_type.get()]
+        writer.write_header(self.n, self.ui_log)
         del writer
 
+
     def on_bus_info(self):
-        ReSTWriter().write_bus_data(self.n, self.ui_log)
+        writer = self.writer_map[self.writer_type.get()]
+        writer.write_bus_data(self.n, self.ui_log)
 
 
     def on_branch_info(self):
