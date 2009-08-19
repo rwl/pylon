@@ -29,7 +29,7 @@ import optparse
 from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader, \
     MATPOWERWriter, ReSTWriter, CSVWriter, PickleReader, PickleWriter
 
-from pylon import DCPFRoutine, DCOPFRoutine, NewtonPFRoutine, ACOPFRoutine, \
+from pylon import DCPF, DCOPF, NewtonPFRoutine, ACOPF, \
     FastDecoupledPFRoutine
 
 #------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ class PylonApplication(object):
         """ Returns the routine to which to pass the network.
         """
         if routine == "dcpf":
-            r = DCPFRoutine()
+            r = DCPF()
         elif routine == "acpf":
             if self.algorithm == "newton":
                 r = NewtonPFRoutine()
@@ -135,9 +135,9 @@ class PylonApplication(object):
             else:
                 r = None
         elif routine == "dcopf":
-            r = DCOPFRoutine()
+            r = DCOPF()
         elif routine == "acopf":
-            r = ACOPFRoutine()
+            r = ACOPF()
         else:
             r = None
 

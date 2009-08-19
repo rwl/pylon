@@ -92,6 +92,6 @@ Access the ``pylon`` application programming inteface.
 
 .. sourcecode:: ipython
 
-  In [1]: from pylon.api import Generator, DCOPFRoutine
+  In [1]: from pylon.api import Generator, DCOPF
 
 .. include:: ../links_names.txt

@@ -30,8 +30,8 @@ from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul
 from cvxopt.umfpack import linsolve
 
 from ac_opf import dSbus_dV, dSbr_dV
-from ac_pf import ACPFRoutine
-from dc_pf import DCPFRoutine
+from ac_pf import ACPF
+from dc_pf import DCPF
 
 j = 0.0+1.0j
 
@@ -59,9 +59,9 @@ class StateEsimationRoutine(object):
         self.dc = dc
 
         if dc:
-            self.pf_routine = DCPFRoutine()
+            self.pf_routine = DCPF()
         else:
-            self.pf_routine = ACPFRoutine()
+            self.pf_routine = ACPF()
 
         self.network = None
         # Has the routine converged?

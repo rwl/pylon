@@ -37,7 +37,7 @@ import random
 
 from cvxopt import matrix
 
-from pylon import DCOPFRoutine, ACOPFRoutine
+from pylon import DCOPF, ACOPF
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -132,9 +132,9 @@ class UOPFRoutine(object):
         # 2. Solve a normal OPF and save the solution as the current best.
 
         if self.dc:
-            routine = DCOPFRoutine()
+            routine = DCOPF()
         else:
-            routine = ACOPFRoutine()
+            routine = ACOPF()
         success = routine(network)
 
         if not success:

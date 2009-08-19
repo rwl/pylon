@@ -26,7 +26,7 @@ import unittest
 from os.path import join, dirname
 
 from pylon.readwrite import MATPOWERReader
-from pylon import ACOPFRoutine
+from pylon import ACOPF
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -51,7 +51,7 @@ class ACOPFTest(unittest.TestCase):
         """
         reader = MATPOWERReader()
         self.network = reader(DATA_FILE)
-        self.routine = ACOPFRoutine()
+        self.routine = ACOPF()
 
 
     def test_mismatch(self):

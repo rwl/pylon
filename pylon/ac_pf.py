@@ -57,10 +57,10 @@ j  = 0 + 1j
 pi = math.pi
 
 #------------------------------------------------------------------------------
-#  "_ACPFRoutine" class:
+#  "_ACPF" class:
 #------------------------------------------------------------------------------
 
-class _ACPFRoutine(object):
+class _ACPF(object):
     """ Base class for many AC power flow routines.
 
         References:
@@ -73,7 +73,7 @@ class _ACPFRoutine(object):
     #--------------------------------------------------------------------------
 
     def __init__(self, tolerance=1e-08, iter_max=10):
-        """ Initialises a new ACPFRoutine instance.
+        """ Initialises a new ACPF instance.
         """
         self.network = None
         # Convergence tolerance.
@@ -179,7 +179,7 @@ class _ACPFRoutine(object):
 #  "NewtonPFRoutine" class:
 #------------------------------------------------------------------------------
 
-class NewtonPFRoutine(_ACPFRoutine):
+class NewtonPFRoutine(_ACPF):
     """ Solves the power flow using full Newton's method.
 
         References:
@@ -191,14 +191,14 @@ class NewtonPFRoutine(_ACPFRoutine):
     #--------------------------------------------------------------------------
 
     def __init__(self, tolerance=1e-08, iter_max=10):
-        """ Initialises a new ACPFRoutine instance.
+        """ Initialises a new ACPF instance.
         """
         # Sparse Jacobian matrix (updated each iteration).
         self.J = None
         # Function of non-linear differential algebraic equations.
         self.f = None
 
-        super(_ACPFRoutine, self).__init__(tolerance, iter_max)
+        super(_ACPF, self).__init__(tolerance, iter_max)
 
     #--------------------------------------------------------------------------
     #  Solve power flow using full Newton's method:
@@ -460,7 +460,7 @@ class NewtonPFRoutine(_ACPFRoutine):
 #  "FastDecoupledPFRoutine" class:
 #------------------------------------------------------------------------------
 
-class FastDecoupledPFRoutine(_ACPFRoutine):
+class FastDecoupledPFRoutine(_ACPF):
     """ Solves the power flow using fast decoupled method.
 
         References:
@@ -472,7 +472,7 @@ class FastDecoupledPFRoutine(_ACPFRoutine):
     #--------------------------------------------------------------------------
 
     def __init__(self, tolerance=1e-08, iter_max=10, method="XB"):
-        """ Initialises a new ACPFRoutine instance.
+        """ Initialises a new ACPF instance.
         """
         # Use XB or BX method?
         self.method = method
@@ -484,7 +484,7 @@ class FastDecoupledPFRoutine(_ACPFRoutine):
         self.p = None
         self.q = None
 
-        super(_ACPFRoutine, self).__init__(tolerance, iter_max)
+        super(_ACPF, self).__init__(tolerance, iter_max)
 
     #--------------------------------------------------------------------------
     #  Solve power flow using Fast Decoupled method:

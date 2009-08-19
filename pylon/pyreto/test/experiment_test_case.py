@@ -185,7 +185,7 @@ class MarketExperimentTest(unittest.TestCase):
 #    def test_opf(self):
 #        """ Examine the DC OPF routine output.
 #        """
-#        routine = DCOPFRoutine()
+#        routine = DCOPF()
 #        routine(power_sys)
 #        writer = ReSTWriter()
 #        writer.write_generator_data(power_sys, sys.stdout)

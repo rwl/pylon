@@ -26,7 +26,7 @@ from os.path import join, dirname
 from unittest import TestCase, main
 
 from pylon.readwrite import MATPOWERReader
-from pylon import DCPFRoutine
+from pylon import DCPF
 
 #-------------------------------------------------------------------------------
 #  Constants:
@@ -50,7 +50,7 @@ class DCPFTest(TestCase):
         """
         reader = MATPOWERReader()
         network = reader(DATA_FILE)
-        self.routine = DCPFRoutine()
+        self.routine = DCPF()
         self.routine(network)
 
 

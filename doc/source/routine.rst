@@ -19,7 +19,7 @@ angles are small.
 
 CVXOPT_ provides interfaces to CHOLMOD_ and UMFPACK, both of which provide
 routines for solving sets of sparse linear equations.  The ``routine``
-attribute of ``DCPFRoutine`` specifies which library to use and defaults
+attribute of ``DCPF`` specifies which library to use and defaults
 to 'UMFPACK'.
 
 .. _acpf:
@@ -27,9 +27,9 @@ to 'UMFPACK'.
 Newton Power Flow
 =================
 
-``NewtonPFRoutine`` is a subclass of ``ACPFRoutine`` that solves the power flow
+``NewtonPFRoutine`` is a subclass of ``ACPF`` that solves the power flow
 problem using standard Newton's method with a full Jacobian updated each
-iteration and sparsity maintained throughout.  ``ACPFRoutine`` is a base class
+iteration and sparsity maintained throughout.  ``ACPF`` is a base class
 with methods common to all power flow routines using an AC formulation.
 
 DC Optimal Power Flow

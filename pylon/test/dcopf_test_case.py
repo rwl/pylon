@@ -26,7 +26,7 @@ from os.path import join, dirname
 import unittest
 
 from pylon.readwrite import MATPOWERReader
-from pylon import DCOPFRoutine
+from pylon import DCOPF
 from pylon.y import SusceptanceMatrix
 
 #------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ PWL_FILE  = join(dirname(__file__), "data", "case30pwl.m")
 #        reader = MATPOWERReader()
 #        self.network = reader(PWL_FILE)
 #
-#        self.routine = DCOPFRoutine(show_progress=False)
+#        self.routine = DCOPF(show_progress=False)
 ##        success = self.routine(network)
 #        self.routine.network = self.network
 #
@@ -344,7 +344,7 @@ class DCOPFTest(unittest.TestCase):
         reader = MATPOWERReader()
         self.network = reader(DATA_FILE)
 
-        self.routine = DCOPFRoutine(show_progress=False)
+        self.routine = DCOPF(show_progress=False)
         self.routine.network = self.network
 #        success = self.routine(self.network)
 

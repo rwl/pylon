@@ -40,10 +40,10 @@ from pylon.y import SusceptanceMatrix
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "DCPFRoutine" class:
+#  "DCPF" class:
 #------------------------------------------------------------------------------
 
-class DCPFRoutine(object):
+class DCPF(object):
     """ Solves DC power flow.
 
         References:
@@ -56,7 +56,7 @@ class DCPFRoutine(object):
     #--------------------------------------------------------------------------
 
     def __init__(self, library="UMFPACK"):
-        """ Initialises a DCPFRoutine instance.
+        """ Initialises a DCPF instance.
         """
         # CVXOPT offers interfaces to two routines for solving sets of sparse
         # linear equations.  Possible values are 'UMFPACK' and 'CHOLMOD'.

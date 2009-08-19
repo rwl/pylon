@@ -47,10 +47,10 @@ logger = logging.getLogger(__name__)
 #logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
-#  "DCOPFRoutine" class:
+#  "DCOPF" class:
 #------------------------------------------------------------------------------
 
-class DCOPFRoutine(object):
+class DCOPF(object):
     """ A method class for solving the DC optimal power flow problem
 
         References:
@@ -65,7 +65,7 @@ class DCOPFRoutine(object):
     def __init__(self, solver=None, show_progress=True, max_iterations=100,
             absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
             refinement=1):
-        """ Initialises the new DCOPFRoutine instance.
+        """ Initialises the new DCOPF instance.
         """
         # Choice of solver (May be None or "mosek"). Specify None to use the
         # native Python solver from CVXOPT.

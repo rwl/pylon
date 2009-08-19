@@ -35,7 +35,7 @@ from pybrain.rl.learners import SPLA, ENAC
 from pybrain.structure.modules import SigmoidLayer
 
 from pylon import Network, Bus, Generator, Load
-from pylon import DCOPFRoutine
+from pylon import DCOPF
 
 from pylon.main import read_network
 

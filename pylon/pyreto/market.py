@@ -218,7 +218,7 @@ class SmartMarket(object):
                 g.p_max += 100 * self.violation
 
         # Solve the optimisation problem.
-        success = DCOPFRoutine().solve(self.network)
+        success = DCOPF().solve(self.network)
 
         # Compute quantities, prices and costs.
         if success:

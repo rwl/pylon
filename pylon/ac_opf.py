@@ -41,10 +41,10 @@ from pylon.util import conj
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "ACOPFRoutine" class:
+#  "ACOPF" class:
 #------------------------------------------------------------------------------
 
-class ACOPFRoutine(object):
+class ACOPF(object):
     """ Solves an AC optimal power flow using cp from CVXOPT.
 
         When specified, A, l, u represent additional linear constraints on the
@@ -77,7 +77,7 @@ class ACOPFRoutine(object):
     def __init__(self, show_progress=True, max_iterations=100,
             absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
             refinement=1):
-        """ Initialises a new ACOPFRoutine instance.
+        """ Initialises a new ACOPF instance.
         """
         # Turns the output to the screen on or off.
         self.show_progress = show_progress

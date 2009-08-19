@@ -28,7 +28,7 @@ import logging
 
 from numpy import array, zeros
 
-from pylon import Network, DCOPFRoutine
+from pylon import Network, DCOPF
 from pylon.readwrite import ReSTWriter
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class MarketExperiment(object):
 
         # Routine for solving the OPF problem.
         if routine is None:
-            self.routine = DCOPFRoutine(show_progress=False)
+            self.routine = DCOPF(show_progress=False)
         else:
             self.routine = routine
 
