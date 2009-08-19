@@ -18,7 +18,7 @@
 from network import Network, Bus, Branch, Generator, Load, NetworkReport
 
 from dc_pf import DCPF
-from ac_pf import NewtonPFRoutine, FastDecoupledPFRoutine
+from ac_pf import NewtonRaphson, FastDecoupled
 
 from dc_opf import DCOPF
 from ac_opf import ACOPF

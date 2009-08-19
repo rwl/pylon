@@ -5,7 +5,7 @@ import logging
 from Tkinter import *
 
 from pylon.readwrite import MATPOWERReader
-from pylon import DCPF, NewtonPFRoutine, DCOPF, ACOPF
+from pylon import DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF
 
 CASE_6_WW = os.path.dirname(__file__) + "/test/data/case6ww.m"
 CASE_30   = os.path.dirname(__file__) + "/test/data/case30pwl.m"
@@ -30,8 +30,8 @@ class PylonTk:
         pfmenu = Menu(menu, tearoff=False)
         menu.add_cascade(label="PF", menu=pfmenu)
         pfmenu.add_command(label="DC", command=self.on_dcpf)
-        pfmenu.add_command(label="AC", command=self.on_acpf)
-#        pfmenu.add_command(label="Gauss", command=self.on_gauss)
+        pfmenu.add_command(label="Newton-Raphson", command=self.on_newton)
+        pfmenu.add_command(label="Fast Decoupled", command=self.on_fd)
 
         opfmenu = Menu(menu, tearoff=False)
         menu.add_cascade(label="OPF", menu=opfmenu)
@@ -63,8 +63,11 @@ class PylonTk:
     def on_dcpf(self):
         DCPF().solve(self.n)
 
-    def on_acpf(self):
-        ACPF().solve(self.n)
+    def on_newton(self):
+        NewtonRaphson().solve(self.n)
+
+    def on_fd(self):
+        FastDecoupled().solve(self.n)
 
     def on_dcopf(self):
         DCOPF().solve(self.n)
@@ -85,7 +88,7 @@ class PylonTk:
 
 class UILog:
     def __init__(self, master):
-        self.widget = Text(master)
+        self.widget = Text(master, background="white")
 
     def write(self, buf):
         self.widget.insert(END, buf)#"%s%s" % (buf, self.widget.text))
@@ -95,7 +98,6 @@ def main():
     root = Tk()
     root.title('PYLON')
     app = PylonTk(root)
-    print "PYLON"
     root.mainloop()
 
 if __name__ == "__main__":

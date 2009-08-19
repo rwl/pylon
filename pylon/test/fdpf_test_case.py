@@ -26,7 +26,7 @@ from os.path import join, dirname
 from unittest import TestCase, main
 
 from pylon.readwrite import MATPOWERReader
-from pylon import FastDecoupledPFRoutine
+from pylon import FastDecoupled
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -50,7 +50,7 @@ class FDPFTest(TestCase):
         """
         reader = MATPOWERReader()
         network = reader(DATA_FILE)
-        self.routine = FastDecoupledPFRoutine()
+        self.routine = FastDecoupled()
         success = self.routine(network)
 
 

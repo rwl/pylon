@@ -27,7 +27,7 @@ to 'UMFPACK'.
 Newton Power Flow
 =================
 
-``NewtonPFRoutine`` is a subclass of ``ACPF`` that solves the power flow
+``NewtonRaphson`` is a subclass of ``ACPF`` that solves the power flow
 problem using standard Newton's method with a full Jacobian updated each
 iteration and sparsity maintained throughout.  ``ACPF`` is a base class
 with methods common to all power flow routines using an AC formulation.

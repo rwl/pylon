@@ -27,7 +27,7 @@ from unittest import TestCase, main
 
 from pylon.readwrite import MATPOWERReader
 from pylon.y import AdmittanceMatrix
-from pylon import NewtonPFRoutine
+from pylon import NewtonRaphson
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -54,7 +54,7 @@ class NewtonPFTest(TestCase):
         self.network = reader(DATA_FILE)
         del reader
 
-        self.routine = NewtonPFRoutine()
+        self.routine = NewtonRaphson()
 
 
     def test_voltage_vector(self):

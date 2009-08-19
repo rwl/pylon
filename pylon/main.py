@@ -29,8 +29,7 @@ import optparse
 from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader, \
     MATPOWERWriter, ReSTWriter, CSVWriter, PickleReader, PickleWriter
 
-from pylon import DCPF, DCOPF, NewtonPFRoutine, ACOPF, \
-    FastDecoupledPFRoutine
+from pylon import DCPF, DCOPF, NewtonRaphson, ACOPF, FastDecoupled
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -129,9 +128,9 @@ class PylonApplication(object):
             r = DCPF()
         elif routine == "acpf":
             if self.algorithm == "newton":
-                r = NewtonPFRoutine()
+                r = NewtonRaphson()
             elif self.algorithm == "decoupled":
-                r = FastDecoupledPFRoutine()
+                r = FastDecoupled()
             else:
                 r = None
         elif routine == "dcopf":

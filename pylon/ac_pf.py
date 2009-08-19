@@ -176,10 +176,10 @@ class _ACPF(object):
         self.pvpq_idxs = pvpq_idxs
 
 #------------------------------------------------------------------------------
-#  "NewtonPFRoutine" class:
+#  "NewtonRaphson" class:
 #------------------------------------------------------------------------------
 
-class NewtonPFRoutine(_ACPF):
+class NewtonRaphson(_ACPF):
     """ Solves the power flow using full Newton's method.
 
         References:
@@ -457,10 +457,10 @@ class NewtonPFRoutine(_ACPF):
         return converged
 
 #------------------------------------------------------------------------------
-#  "FastDecoupledPFRoutine" class:
+#  "FastDecoupled" class:
 #------------------------------------------------------------------------------
 
-class FastDecoupledPFRoutine(_ACPF):
+class FastDecoupled(_ACPF):
     """ Solves the power flow using fast decoupled method.
 
         References:
