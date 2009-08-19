@@ -5,10 +5,10 @@ import logging
 from Tkinter import *
 
 from pylon.readwrite import MATPOWERReader
-from pylon import DCPF, ACPF, DCOPF, ACOPF
+from pylon import DCPF, NewtonPFRoutine, DCOPF, ACOPF
 
-CASE_6_WW = os.path.dirname(__file__) + "/../test/data/case6ww.m"
-CASE_30   = os.path.dirname(__file__) + "/../test/data/case30.m"
+CASE_6_WW = os.path.dirname(__file__) + "/test/data/case6ww.m"
+CASE_30   = os.path.dirname(__file__) + "/test/data/case30pwl.m"
 
 class PylonTk:
     def __init__(self, master):
