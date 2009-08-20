@@ -8,12 +8,16 @@ from Tkinter import *
 from tkFileDialog import askopenfilename, asksaveasfilename
 import tkSimpleDialog
 
+from pylon import \
+    Network, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
+
 from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
     CSVWriter, ExcelWriter, DotWriter
 
-from pylon import \
-    Network, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
+from pylon.readwrite.rst_writer import ReSTExperimentWriter
+
+from pylon.pyreto.main import one_for_one
 
 logger = logging.getLogger('pylon')
 
@@ -90,6 +94,10 @@ class PylonTk(object):
         opfmenu.add_command(label="DC (UD) OPF", command=self.on_duopf)
         opfmenu.add_command(label="AC (UD) OPF", command=self.on_uopf)
 
+        mktmenu = Menu(menu, tearoff=False)
+        menu.add_cascade(label="Market", menu=mktmenu)
+        mktmenu.add_command(label="Step", command=self.on_step)
+
 #        helpmenu = Menu(menu, tearoff=False)
 #        menu.add_cascade(label="Help", menu=helpmenu)
 #        helpmenu.add_command(label="About", command=self.on_about)
@@ -118,10 +126,15 @@ class PylonTk(object):
 
         writer = OptionMenu(buttonbar, writer_type,
                             "ReST", "MATPOWER", "CSV", "DOT")
-        writer.pack(fill=X)
+        writer.pack(fill=X, pady=2)
 
-#        Button(buttonbar, text="Clear", activebackground="#CD0000",
-#               command=self.on_clear).pack(fill=X, pady=5)
+
+        Button(buttonbar, text="State",
+               command=self.on_state_info).pack(fill=X)
+        Button(buttonbar, text="Action",
+               command=self.on_action_info).pack(fill=X)
+        Button(buttonbar, text="Reward",
+               command=self.on_reward_info).pack(fill=X)
 
         alwaysclear = self.alwaysclear = IntVar()
         alwaysclear.set(0)
@@ -141,8 +154,8 @@ class PylonTk(object):
 
         handler = logging.StreamHandler(self.ui_log)
         logger.addHandler(handler)
-        formatter = logging.Formatter("%(levelname)s: %(message)s")
-        handler.setFormatter(formatter)
+#        formatter = logging.Formatter("%(levelname)s: %(message)s")
+#        handler.setFormatter(formatter)
         logger.setLevel(logging.INFO)
 
         self.ui_log.level.set(logger.getEffectiveLevel())
@@ -150,11 +163,18 @@ class PylonTk(object):
 
     def set_network(self, n):
         self.n = n
+        e = one_for_one(n)
+        self.set_experiment(e)
         self.ui_log.n_name.set(n.name)
 
 
+    def set_experiment(self, e):
+        self.e = e
+
+
     def on_new(self):
-        self.set_network(Network())
+        n = Network()
+        self.set_network(n)
 
 
     def on_open(self):
@@ -269,6 +289,24 @@ class PylonTk(object):
         del writer
 
 
+    def on_state_info(self):
+        if self.alwaysclear.get():
+            self.ui_log.clear()
+        ReSTExperimentWriter().write_state_data(self.e, self.ui_log)
+
+
+    def on_action_info(self):
+        if self.alwaysclear.get():
+            self.ui_log.clear()
+        ReSTExperimentWriter().write_action_data(self.e, self.ui_log)
+
+
+    def on_reward_info(self):
+        if self.alwaysclear.get():
+            self.ui_log.clear()
+        ReSTExperimentWriter().write_reward_data(self.e, self.ui_log)
+
+
     def on_save_log(self):
         ftypes = [("Log file", ".log"),
                   ("Text file", ".txt"),
@@ -319,6 +357,11 @@ class PylonTk(object):
 
     def on_exit(self, event=None):
         self.root.destroy()
+
+    # -------------------------------------------------------------------------
+
+    def on_step(self):
+        self.e.doInteractions()
 
 
     def on_about(self):

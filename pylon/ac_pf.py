@@ -652,10 +652,11 @@ class FastDecoupled(_ACPF):
         else:
             r_line = True
 
-        am = AdmittanceMatrix(self.network, bus_shunts=False,
-            line_shunts=False, taps=False, line_resistance=r_line)
+        am = AdmittanceMatrix(bus_shunts=False, line_shunts=False,
+                              taps=False, line_resistance=r_line)
+        Y = am(self.network)
 
-        self.Bp = Bp = -am.Y.imag()
+        self.Bp = Bp = -Y.imag()
 
         return Bp
 
@@ -675,10 +676,11 @@ class FastDecoupled(_ACPF):
         else:
             r_line = True
 
-        am = AdmittanceMatrix(self.network, line_resistance=r_line,
-            phase_shift=False)
+        am = AdmittanceMatrix(line_resistance=r_line, phase_shift=False)
 
-        self.Bp = Bpp = -am.Y.imag()
+        Y = am(self.network)
+
+        self.Bp = Bpp = -Y.imag()
 
         return Bpp
 

@@ -191,7 +191,7 @@ class DCOPF(object):
         self.x = solution["x"]
 
         # Compute elapsed time.
-        self.t_elapsed = time.time() - t0
+        self.t_elapsed = t_elapsed = time.time() - t0
 
         if solution["status"] == "optimal":
             self._update_solution_data(solution)
