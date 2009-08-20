@@ -74,7 +74,7 @@ class PylonTk(object):
 
 
         viewmenu = Menu(menu, tearoff=False)
-        menu.add_cascade(label="View", menu=viewmenu)
+        menu.add_cascade(label="Graph", menu=viewmenu)
         viewmenu.add_command(label="Graph", command=self.on_graph)
 
         pfmenu = Menu(menu, tearoff=False)
@@ -90,9 +90,9 @@ class PylonTk(object):
         opfmenu.add_command(label="DC (UD) OPF", command=self.on_duopf)
         opfmenu.add_command(label="AC (UD) OPF", command=self.on_uopf)
 
-        helpmenu = Menu(menu, tearoff=False)
-        menu.add_cascade(label="Help", menu=helpmenu)
-        helpmenu.add_command(label="About", command=self.on_about)
+#        helpmenu = Menu(menu, tearoff=False)
+#        menu.add_cascade(label="Help", menu=helpmenu)
+#        helpmenu.add_command(label="About", command=self.on_about)
 
 
     def _init_buttonbar(self):
@@ -120,18 +120,23 @@ class PylonTk(object):
                             "ReST", "MATPOWER", "CSV", "DOT")
         writer.pack(fill=X)
 
-        Button(buttonbar, text="Clear", activebackground="#CD0000",
-               command=self.on_clear).pack(fill=X, pady=5)
+#        Button(buttonbar, text="Clear", activebackground="#CD0000",
+#               command=self.on_clear).pack(fill=X, pady=5)
+
+        alwaysclear = self.alwaysclear = IntVar()
+        alwaysclear.set(0)
+        c = Checkbutton(buttonbar, text="Clear", variable=alwaysclear,
+                        justify=LEFT, indicatoron=0, command=self.on_clear)
+        c.pack(fill=X, pady=5)
 
         Button(buttonbar, text="Save Log",
                command=self.on_save_log).pack(fill=X)
-
 
     def _init_logframe(self):
         self.ui_log = UILog(self.frame)
 
 #        sys.stdout = self.ui_log
-#        sys.stderr = self.ui_log
+        sys.stderr = self.ui_log
         logging.basicConfig(stream=self.ui_log, level=logging.DEBUG,
                             format="%(levelname)s: %(message)s")
 
@@ -218,7 +223,8 @@ class PylonTk(object):
     # UI Log ------------------------------------------------------------------
 
     def on_clear(self):
-        self.ui_log.log.delete(1.0, END)
+        if self.alwaysclear.get():
+            self.ui_log.log.delete(1.0, END)
 
 
     def on_summary(self):
@@ -228,6 +234,8 @@ class PylonTk(object):
 
 
     def on_bus_info(self):
+        if self.alwaysclear.get():
+            self.ui_log.log.delete(1.0, END)
         writer = self.writer_map[self.writer_type.get()]
         writer.write_bus_data(self.n, self.ui_log)
 
