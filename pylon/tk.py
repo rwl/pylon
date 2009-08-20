@@ -15,7 +15,7 @@ from pylon.readwrite import \
 from pylon import \
     Network, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('pylon')
 
 CASE_6_WW = os.path.dirname(__file__) + "/test/data/case6ww.m"
 CASE_30   = os.path.dirname(__file__) + "/test/data/case30pwl.m"
@@ -132,13 +132,15 @@ class PylonTk(object):
         Button(buttonbar, text="Save Log",
                command=self.on_save_log).pack(fill=X)
 
+
     def _init_logframe(self):
         self.ui_log = UILog(self.frame)
 
 #        sys.stdout = self.ui_log
-        sys.stderr = self.ui_log
-        logging.basicConfig(stream=self.ui_log, level=logging.DEBUG,
-                            format="%(levelname)s: %(message)s")
+#        sys.stderr = self.ui_log
+
+        logger.addHandler(logging.StreamHandler(self.ui_log))
+        logger.setLevel(logging.DEBUG)
 
         self.ui_log.level.set(logger.getEffectiveLevel())
 
@@ -428,15 +430,11 @@ class UILog(object):
 
 
     def on_level(self):
-#        logger.setLevel(self.level.get())
-
-#        print logging.getLogger(__name__).getEffectiveLevel(), self.level.get()
-        logging.basicConfig(stream=self, level=self.level.get(),
-                            format="%(levelname)s: %(message)s")
-#        print logging.getLogger(__name__).getEffectiveLevel(), self.level.get()
+        logger.setLevel(self.level.get())
 
 
 class AboutDialog(object):
+
     def __init__(self, parent):
         top = self.top = Toplevel(parent)
 
@@ -445,6 +443,7 @@ class AboutDialog(object):
 
         b = Button(top, text="OK", command=self.ok)
         b.pack(pady=25)
+
 
     def ok(self):
         self.top.destroy()
