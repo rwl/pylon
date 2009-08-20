@@ -93,6 +93,8 @@ class UDOPF(object):
         generators = network.online_generators
         loads = network.online_loads
 
+        logger.info("Solving OPF with unit decommitment [%s]." % network.name)
+
         # 1. Begin at stage zero (N = 0), assuming all generators are on-line
         # with all limits in place.
 
@@ -208,7 +210,9 @@ class UDOPF(object):
                 stage_cost   = overall_cost
 
         # Compute elapsed time.
-        self.elapsed = time.time() - t0
+        elapsed = self.elapsed = time.time() - t0
+
+        logger.info("OPF with unit decommitment solved in %.3f." % elapsed)
 
         # 8. Return the current best solution as the final solution.
         return network

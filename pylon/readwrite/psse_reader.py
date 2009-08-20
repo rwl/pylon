@@ -22,6 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import time
 import logging
 
 from parsing_util \
@@ -67,6 +68,10 @@ class PSSEReader(object):
         """
         self.file_or_filename = file_or_filename
 
+        logger.info("Parsing PSS/E case file [%s]." % file_or_filename)
+
+        t0 = time.time()
+
         self.network = Network()
 
         header = self._get_header_construct()
@@ -93,6 +98,9 @@ class PSSEReader(object):
                ZeroOrMore(psse_comment)
 
         data = case.parseFile(file_or_filename)
+
+        elapsed = time.time() - t0
+        logger.info("PSS/E case file parsed in %.3fs." % elapsed)
 
         return self.network
 

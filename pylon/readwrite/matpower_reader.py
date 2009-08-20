@@ -92,6 +92,8 @@ class MATPOWERReader(object):
         """
         self.file_or_filename = file_or_filename
 
+        logger.info("Parsing MATPOWER case file [%s]." % file_or_filename)
+
         # Initialise:
         self.network = network = Network()
         self.slack_idx = -1

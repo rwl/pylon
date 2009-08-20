@@ -26,10 +26,11 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os import path
+import time
 import math
 import cmath
 import logging
+from os import path
 
 import numpy
 from numpy import dot
@@ -79,7 +80,7 @@ class _ACPF(object):
         # Convergence tolerance.
         self.tolerance = tolerance
         # Maximum number of iterations.
-        self.iter_max  = iter_max
+        self.iter_max = iter_max
 
         # Vector of bus voltages.
         self.v = None
@@ -204,7 +205,7 @@ class NewtonRaphson(_ACPF):
         # Function of non-linear differential algebraic equations.
         self.f = None
 
-        super(_ACPF, self).__init__(tolerance, iter_max)
+        super(NewtonRaphson, self).__init__(tolerance, iter_max)
 
     #--------------------------------------------------------------------------
     #  Solve power flow using full Newton's method:
@@ -215,6 +216,10 @@ class NewtonRaphson(_ACPF):
             Newton's method.
         """
         self.network = network
+
+        logger.info("Performing AC power flow using Newton-Raphson method.")
+
+        t0 = time.time()
 
         admittance_matrix = AdmittanceMatrix()
         self.Y = admittance_matrix(network)
@@ -236,10 +241,14 @@ class NewtonRaphson(_ACPF):
             self.converged = self._check_convergence()
             iter += 1
 
+        t_elapsed = time.time() - t0
+
         if self.converged:
-            logger.info("Routine converged in %d iterations." % iter)
+            logger.info("AC power flow converged in %d iterations." % iter)
+            logger.info("AC power flow completed in %.3fs" % t_elapsed)
         else:
             logger.info("Routine failed to converge in %d iterations." % iter)
+
 
     #--------------------------------------------------------------------------
     #  Newton iterations:
@@ -504,6 +513,10 @@ class FastDecoupled(_ACPF):
         """
         self.network = network
 
+        logger.info("Performing AC power flow using Fast Decoupled method.")
+
+        t0 = time.time()
+
         self._make_B_prime()
         self._make_B_double_prime()
 
@@ -528,6 +541,9 @@ class FastDecoupled(_ACPF):
             logger.info("Routine converged in %d iterations." % iter)
         else:
             logger.info("Routine failed to converge in %d iterations." % iter)
+
+        t_elapsed = time.time() - t0
+        logger.info("AC power flow completed in %.3fs" % t_elapsed)
 
     #--------------------------------------------------------------------------
     #  P and Q iterations:

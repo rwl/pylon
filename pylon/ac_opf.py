@@ -326,6 +326,13 @@ class ACOPF(object):
         #                 A*x   =  b.
         solution = solvers.cp(F)
 
+        t_elapsed = time.time() - t0
+
+        if solution['status'] == 'optimal':
+            logger.info("DC power flow completed in %.3fs." % t_elapsed)
+        else:
+            logger.error("Non-convergent AC OPF.")
+
 
     def _build_additional_linear_constraints(self):
         """ A, l, u represent additional linear constraints on the

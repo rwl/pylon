@@ -191,12 +191,14 @@ class DCOPF(object):
         self.x = solution["x"]
 
         # Compute elapsed time.
-        self.t_elapsed = t0 = time.time()
+        self.t_elapsed = time.time() - t0
 
         if solution["status"] == "optimal":
             self._update_solution_data(solution)
+            logger.info("DC OPF completed in %.3fs." % t_elapsed)
             return True
         else:
+            logger.error("Non-convergent DC OPF.")
             return False
 
     #--------------------------------------------------------------------------

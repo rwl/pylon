@@ -22,6 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import time
 import logging
 from os.path import basename, splitext
 
@@ -71,6 +72,10 @@ class PSATReader(object):
         """
         self.file_or_filename = file_or_filename
 
+        logger.info("Parsing PSAT case file [%s]." % file_or_filename)
+
+        t0 = time.time()
+
         self.network = Network()
 
         # Name the network
@@ -102,6 +107,9 @@ class PSATReader(object):
             ZeroOrMore(matlab_comment) + supply_array
 
         data = case.parseFile(file_or_filename)
+
+        elapsed = time.time() - t0
+        logger.info("PSAT case file parsed in %.3fs." % elapsed)
 
         return self.network
 

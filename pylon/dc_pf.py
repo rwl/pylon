@@ -26,6 +26,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import time
 import logging
 
 from math import pi
@@ -84,18 +85,27 @@ class DCPF(object):
         """
         self.network = network
 
+        logger.info("Performing DC power flow [%s]." % network.name)
+
+        t0 = time.time()
+
         if not self.network.slack_model == "single":
             logger.error("DC power flow requires a single slack bus")
             return False
-        else:
-            self.B, self.B_source = make_susceptance_matrix(self.network)
-            self._make_v_angle_guess_vector()
 
-            # Calculate the voltage phase angles.
-            self._make_v_angle_vector()
+        susceptance = SusceptanceMatrix()
+        self.B, self.B_source = susceptance(network)
+        self._make_v_angle_guess_vector()
 
-            self._update_model()
-            return True
+        # Calculate the voltage phase angles.
+        self._make_v_angle_vector()
+
+        self._update_model()
+
+        t_elapsed = time.time() - t0
+        logger.info("DC power flow completed in %.3fs." % t_elapsed)
+
+        return True
 
     #--------------------------------------------------------------------------
     #  Build voltage phase angle guess vector:

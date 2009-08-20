@@ -139,33 +139,41 @@ class PylonTk(object):
 #        sys.stdout = self.ui_log
 #        sys.stderr = self.ui_log
 
-        logger.addHandler(logging.StreamHandler(self.ui_log))
-        logger.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler(self.ui_log)
+        logger.addHandler(handler)
+        formatter = logging.Formatter("%(levelname)s: %(message)s")
+        handler.setFormatter(formatter)
+        logger.setLevel(logging.INFO)
 
         self.ui_log.level.set(logger.getEffectiveLevel())
 
 
+    def set_network(self, n):
+        self.n = n
+        self.ui_log.n_name.set(n.name)
+
+
     def on_new(self):
-        self.n = Network()
+        self.set_network(Network())
 
 
     def on_open(self):
-        ftypes = [("MATLAB file", ".m"), ("All files", "*")]
+        ftypes = [("MATPOWER file", ".m"), ("All files", "*")]
         filename = askopenfilename(filetypes=ftypes, defaultextension='.m')
         if filename:
-            self.n = MATPOWERReader().read(filename)
+            self.set_network(MATPOWERReader().read(filename))
 
 
     def on_6_bus(self):
-        self.n = MATPOWERReader().read(CASE_6_WW)
+        self.set_network(MATPOWERReader().read(CASE_6_WW))
 
 
     def on_30_bus(self):
-        self.n = MATPOWERReader().read(CASE_30)
+        self.set_network(MATPOWERReader().read(CASE_30))
 
 
     def on_save_as(self):
-        filename = asksaveasfilename(filetypes=[("MATLAB file", ".m")])
+        filename = asksaveasfilename(filetypes=[("MATPOWER file", ".m")])
         if filename:
             MATPOWERWriter().write(self.n, filename)
 
@@ -175,21 +183,21 @@ class PylonTk(object):
         ftypes = [("Pickle file", ".pkl"), ("All files", "*")]
         filename = askopenfilename(filetypes=ftypes, defaultextension='.pkl')
         if filename:
-            self.n = PickleReader().read(filename)
+            self.set_network(PickleReader().read(filename))
 
 
     def on_psse(self):
         ftypes = [("PSS/E file", ".raw"), ("All files", "*")]
         filename = askopenfilename(filetypes=ftypes, defaultextension='.raw')
         if filename:
-            self.n = PSSEReader().read(filename)
+            self.set_network(PSSEReader().read(filename))
 
 
     def on_psat(self):
         ftypes = [("PSAT file", ".m"), ("All files", "*")]
         filename = askopenfilename(filetypes=ftypes, defaultextension='.m')
         if filename:
-            self.n = PSATReader().read(filename)
+            self.set_network(PSATReader().read(filename))
 
     # Export handlers ---------------------------------------------------------
 
@@ -226,10 +234,12 @@ class PylonTk(object):
 
     def on_clear(self):
         if self.alwaysclear.get():
-            self.ui_log.log.delete(1.0, END)
+            self.ui_log.clear()
 
 
     def on_summary(self):
+        if self.alwaysclear.get():
+            self.ui_log.clear()
         writer = self.writer_map[self.writer_type.get()]
         writer.write_header(self.n, self.ui_log)
         del writer
@@ -237,17 +247,26 @@ class PylonTk(object):
 
     def on_bus_info(self):
         if self.alwaysclear.get():
-            self.ui_log.log.delete(1.0, END)
+            self.ui_log.clear()
         writer = self.writer_map[self.writer_type.get()]
         writer.write_bus_data(self.n, self.ui_log)
+        del writer
 
 
     def on_branch_info(self):
-        ReSTWriter().write_branch_data(self.n, self.ui_log)
+        if self.alwaysclear.get():
+            self.ui_log.clear()
+        writer = self.writer_map[self.writer_type.get()]
+        writer.write_branch_data(self.n, self.ui_log)
+        del writer
 
 
     def on_generator_info(self):
-        ReSTWriter().write_generator_data(self.n, self.ui_log)
+        if self.alwaysclear.get():
+            self.ui_log.clear()
+        writer = self.writer_map[self.writer_type.get()]
+        writer.write_generator_data(self.n, self.ui_log)
+        del writer
 
 
     def on_save_log(self):
@@ -419,6 +438,9 @@ class UILog(object):
 
         level.set(logger.getEffectiveLevel())
 
+        n_name = self.n_name = StringVar()
+        Label(loglevels, textvariable=n_name).pack(side=RIGHT, padx=5)
+
 
     def write(self, buf):
         self.log.insert(END, buf)
@@ -427,6 +449,10 @@ class UILog(object):
 
     def flush(self):
         pass
+
+
+    def clear(self):
+        self.log.delete(1.0, END)
 
 
     def on_level(self):
