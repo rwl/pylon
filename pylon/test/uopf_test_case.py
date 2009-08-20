@@ -29,7 +29,7 @@ import unittest
 from os.path import dirname, join
 
 from pylon.readwrite import MATPOWERReader
-from pylon.u_opf import UDOPF
+from pylon.ud_opf import UDOPF
 
 #------------------------------------------------------------------------------
 #  Constants:
