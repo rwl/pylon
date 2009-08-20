@@ -72,6 +72,9 @@ class PylonTk(object):
         exportmenu.add_command(label="ReST", command=self.on_rest)
         filemenu.add_separator()
 
+        filemenu.add_command(label="Properties", command=self.on_properties)
+        filemenu.add_separator()
+
         filemenu.add_command(label="Exit", command=self.on_exit,
                              accelerator="Alt-X")
         self.root.bind('<Alt-x>', self.on_exit)
@@ -196,6 +199,10 @@ class PylonTk(object):
         filename = asksaveasfilename(filetypes=[("MATPOWER file", ".m")])
         if filename:
             MATPOWERWriter().write(self.n, filename)
+
+
+    def on_properties(self):
+        CaseProperties(self.root, self.n)
 
     # Import handlers ---------------------------------------------------------
 
@@ -368,6 +375,66 @@ class PylonTk(object):
         AboutDialog(self.root)
 
 
+class CaseProperties(tkSimpleDialog.Dialog):
+    """ A dialog for editing the properties of a network.
+    """
+
+    def __init__(self, parent, network, title="Case Properties"):
+        """ Initialises the font dialog.
+        """
+        self.n = network
+        tkSimpleDialog.Dialog.__init__(self, parent, title)
+
+
+    def body(self, frame):
+        """ Creates the dialog body. Returns the widget that should have
+            initial focus.
+        """
+        master = Frame(self)
+        master.pack(padx=5, pady=0, expand=1, fill=BOTH)
+
+        title = Label(master, text="Buses")
+        title.pack(side=TOP)
+
+        bus_lb = self.bus_lb = Listbox(master, selectmode=SINGLE, width=10)
+        bus_lb.pack(side=LEFT)
+
+        for bus in self.n.buses:
+            bus_lb.insert(END, bus.name)
+
+        bus_lb.bind("<<ListboxSelect>>", self.on_bus)
+
+        self.bus_props = BusProperties(master)
+
+        return bus_lb # Given initial focus.
+
+
+    def on_bus(self, event=None):
+        self.bus_props.name.set(self.bus_lb.curselection())
+
+
+class BusProperties(object):
+    def __init__(self, master):
+        self.master = master
+        frame = self.frame = Frame(master)
+        frame.pack(side=RIGHT)
+
+        name = self.name = StringVar()
+        Label(frame, text="Name:").grid(row=0, sticky=W)
+        nameentry = Entry(frame, textvariable=name)
+        nameentry.grid(row=0, column=1)
+
+        v_max = self.v_max = StringVar()
+        Label(frame, text="Vmax:").grid(row=1, sticky=W)
+        vmaxentry = Entry(frame, textvariable=v_max)
+        vmaxentry.grid(row=1, column=1)
+
+        v_min = self.v_min = StringVar()
+        Label(frame, text="Vmin:").grid(row=2, sticky=W)
+        vminentry = Entry(frame, textvariable=v_min)
+        vminentry.grid(row=2, column=1)
+
+
 class GraphView(tkSimpleDialog.Dialog):
     """ A dialog for graph viewing.
     """
@@ -376,7 +443,6 @@ class GraphView(tkSimpleDialog.Dialog):
         """ Initialises the font dialog.
         """
         tkSimpleDialog.Dialog.__init__(self, parent, title)
-
 
 
     def body(self, frame):
