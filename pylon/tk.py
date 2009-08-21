@@ -220,6 +220,8 @@ class PylonTk(object):
         self.n = n
         e = one_for_one(n)
         self.set_experiment(e)
+
+        self.root.title("PylonTk:  %s" % self.n.name)
         self.n_name.set("Current Network:  %s" % self.n.name)
 #        self.ui_log.n_name.set(n.name)
 
@@ -466,14 +468,14 @@ class CaseProperties(tkSimpleDialog.Dialog):
 
 
     def on_bus(self, event=None):
-        bus = self.n.buses[self.bus_lb.curselection()]
+        bus = self.n.buses[int(self.bus_lb.curselection()[0])]
 
         self.excluded = ["zone", "v_base", "v_magnitude_guess",
                          "v_angle_guess", "v_magnitude", "v_angle", "g_shunt",
                          "b_shunt", "zone"]
-        for attr in [a for a in bus_attrs if a not in excluded]:
+        for attr in [a for a in bus_attrs if a not in self.excluded]:
             value = getattr(bus, attr)
-            self.bus_params['attr'].set(value)
+            getattr(self.bus_params, attr).set(value)
 
 
     def validate(self):
@@ -487,11 +489,11 @@ class CaseProperties(tkSimpleDialog.Dialog):
         ''' Process the data. This method is called automatically to process
             the data, *after* the dialog is destroyed.
         '''
-        bus = self.n.buses[self.bus_lb.curselection()]
+        bus = self.n.buses[int(self.bus_lb.curselection()[0])]
 
-        for attr in [a for a in bus_attrs if a not in excluded]:
+        for attr in [a for a in bus_attrs if a not in self.excluded+['mode']]:
             value = getattr(self.bus_params, attr).get()
-            setattr(bus, value)
+            setattr(bus, attr, value)
 
 
 class BusProperties(object):
@@ -507,23 +509,24 @@ class BusProperties(object):
 
         mode = self.mode = StringVar()
         Label(frame, text="Type:").grid(row=1, sticky=W)
-        Label(frame, textvariable=mode).grid(row=1, sticky=W)
-        nameentry.grid(row=1, column=1)
+        Label(frame, textvariable=mode).grid(row=1, column=1, sticky=W)
+#        nameentry.grid(row=1, column=1)
+        mode.set("PV")
 
         slack = self.slack = IntVar()
         Checkbutton(frame, text="Slack", variable=slack, justify=LEFT,
-                    indicatoron=0,# command=self.on_clear
+                    # command=self.on_clear
                     ).grid(row=2, columnspan=2)
 
         v_max = self.v_max = StringVar()
-        Label(frame, text="Vmax:").grid(row=1, sticky=W)
+        Label(frame, text="Vmax:").grid(row=3, sticky=W)
         vmaxentry = Entry(frame, textvariable=v_max)
-        vmaxentry.grid(row=1, column=1)
+        vmaxentry.grid(row=3, column=1)
 
         v_min = self.v_min = StringVar()
-        Label(frame, text="Vmin:").grid(row=2, sticky=W)
+        Label(frame, text="Vmin:").grid(row=4, sticky=W)
         vminentry = Entry(frame, textvariable=v_min)
-        vminentry.grid(row=2, column=1)
+        vminentry.grid(row=4, column=1)
 
 
 class GraphView(tkSimpleDialog.Dialog):
@@ -590,18 +593,55 @@ class UILog(object):
         self.master = master
 
         self._init_text()
-        self._init_levels()
+#        self._init_levels()
 
 
     def _init_text(self):
         frame = Frame(self.master, bd=1, relief=SUNKEN)
         frame.pack(padx=2, pady=2)
 
+        orange = None#"#FFD700"
+        darker = "#D1B100"
+
         headframe = Frame(frame)
-        head = Label(headframe, text="Pylon Log:", bg="#FFD700",
+        head = Label(headframe, text="Pylon Log:", bg=orange,
                      justify=LEFT, anchor=W, padx=3, pady=1)
         head.pack(side=LEFT, fill=X, expand=YES)
         headframe.pack(side=TOP, fill=X, expand=YES)
+
+
+        radioframe = Frame(headframe, bg=orange)
+        radioframe.pack(side=RIGHT, padx=5)
+
+#        Label(radioframe, text="Log Level:", bg=orange).grid(row=0)
+
+        level = self.level = IntVar()
+
+        debug = Radiobutton(radioframe, text="Debug", variable=level,
+                            value=logging.DEBUG, command=self.on_level,
+                            bg=orange, relief=FLAT,
+                            offrelief=FLAT)
+#        debug.pack(side=RIGHT, anchor=E)
+        debug.grid(row=0, column=1)
+        info = Radiobutton(radioframe, text="Info", variable=level,
+                           value=logging.INFO, command=self.on_level,
+                            bg=orange, relief=FLAT, offrelief=FLAT)
+#        info.pack(side=RIGHT, anchor=E)
+        info.grid(row=0, column=2)
+        warn = Radiobutton(radioframe, text="Warning", variable=level,
+                           value=logging.WARNING, command=self.on_level,
+                            bg=orange, relief=FLAT, offrelief=FLAT)
+#        warn.pack(side=RIGHT, anchor=E)
+        warn.grid(row=0, column=3)
+        error = Radiobutton(radioframe, text="Error", variable=level,
+                            value=logging.ERROR, command=self.on_level,
+                            bg=orange, relief=FLAT, offrelief=FLAT)
+#        error.pack(side=RIGHT, anchor=E)
+        error.grid(row=0, column=4)
+
+        level.set(logger.getEffectiveLevel())
+
+
 
         logframe = Frame(frame)
 
@@ -691,7 +731,7 @@ def main():
     root = Tk()
     root.minsize(300, 300)
 #    root.geometry("666x666")
-    root.title('PYLON')
+    root.title('PylonTk')
     app = PylonTk(root)
     root.mainloop()
 
