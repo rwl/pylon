@@ -3,11 +3,15 @@ __author__ = 'Richard W. Lincoln, r.w.lincoln@gmail.com'
 import os
 import sys
 import logging
+import platform
 import webbrowser
 
 from Tkinter import *
 from tkFileDialog import askopenfilename, asksaveasfilename
 import tkSimpleDialog
+
+import pylon
+import cvxopt.info
 
 from pylon import \
     Network, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
@@ -38,10 +42,22 @@ class PylonTk(object):
         self._init_menubar()
 
         nameframe = Frame(frame)
+
         n_name = self.n_name = StringVar()
         n_name_label = Label(nameframe, textvariable=n_name, relief=SUNKEN,
             anchor=W, padx=3, pady=3, justify=LEFT)
         n_name_label.pack(side=LEFT, expand=YES, fill=X)
+
+        interactions = self.interactions = IntVar()
+        Spinbox(nameframe, from_=0, to=1000, width=5, bg="#40E0D0",
+                activebackground="#48D1CC",
+                textvariable=interactions).pack(fill=Y, side=RIGHT, anchor=E)
+        interactions.set(1)
+
+        go = self.go = Button(nameframe, text="Run",
+            bg="#FFD700", activebackground="#F4CE00",
+            anchor=E, command=self.on_run).pack(side=RIGHT, anchor=E, padx=1)
+
         nameframe.pack(side=TOP, fill=X)
 
         n_name_label.bind('<ButtonRelease>', self.on_properties)
@@ -51,10 +67,18 @@ class PylonTk(object):
 
         statusbar = Frame(master)
         status = self.status = StringVar()
-        Label(statusbar, textvariable=status, relief=SUNKEN, anchor=W,
-              padx=3, pady=3, justify=LEFT).pack(side=LEFT, expand=YES, fill=X)
+        status_label = Label(statusbar, textvariable=status, relief=SUNKEN,
+            anchor=W, padx=3, pady=3, justify=LEFT)
+        status_label.pack(side=LEFT, expand=YES, fill=X)
         status.set("Ready.")
         statusbar.pack(side=BOTTOM, fill=X)
+
+        self.status_status = True # Is the status displayed and not versions.
+        self._status = ""
+        status_label.bind('<Button>', self.on_status_down)
+        status_label.bind('<ButtonRelease>', self.on_status_leave)
+        status_label.bind('<Enter>', self.on_status_enter)
+        status_label.bind('<Leave>', self.on_status_leave)
 
         self.on_new()
 
@@ -119,7 +143,7 @@ class PylonTk(object):
 
         mktmenu = Menu(menubar, tearoff=True)
         menubar.add_cascade(label="RL", menu=mktmenu)
-        mktmenu.add_command(label="Step", command=self.on_step)
+        mktmenu.add_command(label="Run", command=self.on_run)
 
         help = Menu(menubar, tearoff=False, name="help")
         menubar.add_cascade(label="Help", menu=help)
@@ -228,6 +252,35 @@ class PylonTk(object):
 
     def set_experiment(self, e):
         self.e = e
+
+
+    def on_run(self):
+        number = self.interactions.get()
+        self.e.doInteractions(number)
+
+
+    def on_status_down(self, event=None):
+        self._status = self.status.get()
+
+        self.status_status = False
+
+        python_version = platform.python_version()
+        cvxopt_version = cvxopt.info.version
+        tk_version = TkVersion
+        pylon_version = pylon.__version__
+
+        self.status.set("Python %s, CVXOPT %s, Tk %s" % \
+            (python_version, cvxopt_version, tk_version))#, pylon_version))
+
+
+    def on_status_enter(self, event=None):
+        self._status = self.status.get()
+
+
+    def on_status_leave(self, event=None):
+        if not self.status_status:
+            self.status.set(self._status)
+            self.status_status = True
 
 
     def on_new(self):
@@ -421,10 +474,6 @@ class PylonTk(object):
         self.root.destroy()
 
     # -------------------------------------------------------------------------
-
-    def on_step(self):
-        self.e.doInteractions()
-
 
     def on_about(self):
         AboutDialog(self.root)
@@ -657,6 +706,8 @@ class UILog(object):
         log = self.log = Text(logframe, wrap=NONE, background="white",
                               xscrollcommand=xscrollbar.set,
                               yscrollcommand=yscrollbar.set)
+
+#        log.insert(END, "Pylon " + str(pylon.__version__))
 
         log.grid(row=0, column=0, sticky=N+S+E+W)
 

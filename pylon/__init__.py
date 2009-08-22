@@ -26,4 +26,6 @@ from ud_opf import UDOPF
 
 from uc import UnitCommitmentRoutine
 
+__version__ = "0.3.0"
+
 # EOF -------------------------------------------------------------------------
