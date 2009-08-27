@@ -104,16 +104,16 @@ class PylonTk(object):
 
         importmenu = Menu(filemenu, tearoff=False)
         filemenu.add_cascade(label='Import', menu=importmenu)
-        importmenu.add_command(label="Pickle", command=self.on_unpickle)
         importmenu.add_command(label="PSS/E", command=self.on_psse)
         importmenu.add_command(label="PSAT", command=self.on_psat)
+        importmenu.add_command(label="Pickle", command=self.on_unpickle)
 
         exportmenu = Menu(filemenu, tearoff=False)
         filemenu.add_cascade(label='Export', menu=exportmenu)
-        exportmenu.add_command(label="Pickle", command=self.on_pickle)
         exportmenu.add_command(label="Excel", command=self.on_excel)
         exportmenu.add_command(label="CSV", command=self.on_csv)
         exportmenu.add_command(label="ReST", command=self.on_rest)
+        exportmenu.add_command(label="Pickle", command=self.on_pickle)
         filemenu.add_separator()
 
         filemenu.add_command(label="Properties", command=self.on_properties)
