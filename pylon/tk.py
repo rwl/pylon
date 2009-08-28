@@ -6,6 +6,9 @@ import logging
 import platform
 import webbrowser
 
+import PIL
+from StringIO import StringIO
+
 from Tkinter import *
 from tkFileDialog import askopenfilename, asksaveasfilename
 import tkSimpleDialog
@@ -19,6 +22,8 @@ from pylon import \
 from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
     CSVWriter, ExcelWriter, DotWriter
+
+from pylon.readwrite.dot_writer import create_graph
 
 from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
@@ -363,7 +368,7 @@ class PylonTk(object):
     # View --------------------------------------------------------------------
 
     def on_graph(self):
-        GraphView(self.root)
+        GraphView(self.root, self.n, self.e)
 
     # UI Log ------------------------------------------------------------------
 
@@ -582,11 +587,38 @@ class GraphView(tkSimpleDialog.Dialog):
     """ A dialog for graph viewing.
     """
 
-    def __init__(self, parent, title="Graph"):
+    def __init__(self, parent, network, experiment):
         """ Initialises the font dialog.
         """
-        tkSimpleDialog.Dialog.__init__(self, parent, title)
+        self.n = network
+        self.e = experiment
 
+        tkSimpleDialog.Dialog.__init__(self, parent, title="Graph")
+
+
+    def draw_graph(self):
+        """ Creates a representation of the graph and draws it on the canvas.
+        """
+        network = self.n
+        prog    = self.prog.get()
+        format  = self.format.get()
+
+        dotdata = StringIO()
+        DotWriter().write(network, dotdata)
+        dotdata.seek(0) # rewind
+
+        imagedata = create_graph(dotdata.getvalue(), prog, format)
+
+        if imagedata is not None:
+            stream = StringIO()
+            stream.write(imagedata)
+
+            pil_image = PIL.Image.open(stream)
+            photo = PIL.ImageTk.PhotoImage(pil_image)
+
+            self.canvas.create_image(0, 0, image=photo)
+
+    # tkSimpleDialog.Dialog interface -----------------------------------------
 
     def body(self, frame):
         """ Creates the dialog body. Returns the widget that should have
@@ -595,11 +627,21 @@ class GraphView(tkSimpleDialog.Dialog):
         master = Frame(self)
         master.pack(padx=5, pady=0, expand=1, fill=BOTH)
 
-        title = Label(master, text="Graph")
-        title.pack(side=TOP)
+        # Graphviz layout program.
+        prog = self.prog = StringVar(master)
+        prog.set("dot") # default value
+        OptionMenu(master, prog, "dot", "circo", "neato", "twopi", "fdp").pack(
+            fill=X, pady=2)
 
-        canvas = Canvas(master)
+        # Image format.
+        format = self.format = StringVar(master)
+        format.set("png") # default value
+        OptionMenu(master, format, "png", "jpg", "gif").pack(fill=X, pady=2)
+
+        canvas = self.canvas = Canvas(master)
         canvas.pack(expand=YES, fill=BOTH)
+
+        self.draw_graph()
 
         return canvas # Given initial focus.
 

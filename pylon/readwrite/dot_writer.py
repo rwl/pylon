@@ -22,7 +22,11 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from dot2tex.dotparsing import find_graphviz
+import logging
+
+import subprocess
+
+logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -152,126 +156,168 @@ class DotWriter(object):
         pass
 
 #------------------------------------------------------------------------------
+#  Create and return a representation of the graph:
+#------------------------------------------------------------------------------
+
+def create_graph(dotdata, prog="dot", format="xdot"):
+    """ Creates and returns a representation of the graph using the
+        Graphviz layout program given by 'prog', according to the given
+        format.
+
+        Writes the graph to a temporary dot file and processes it with
+        the program given by 'prog' (which defaults to 'dot'), reading
+        the output and returning it as a string if the operation is
+        successful. On failure None is returned.
+
+        Valid 'prog' values may be: "dot", "circo", "neato", "twopi", "fdp"
+
+        Valid 'format' values may be: 'dot', 'canon', 'cmap', 'cmapx',
+        'cmapx_np', 'dia', 'fig', 'gd', 'gd2', 'gif', 'hpgl', 'imap',
+        'imap_np', 'ismap', 'jpe', 'jpeg', 'jpg', 'mif', 'mp', 'pcl', 'pdf',
+        'pic', 'plain', 'plain-ext', 'png', 'ps', 'ps2', 'svg', 'svgz', 'vml',
+        'vmlz', 'vrml', 'vtx', 'wbmp', 'xdot', 'xlib', 'bmp', 'eps', 'gtk',
+        'ico', 'tga', 'tiff'
+    """
+    import os, tempfile
+    from dot2tex.dotparsing import find_graphviz
+
+    # Map Graphviz executable names to their paths.
+    progs = find_graphviz()
+    if progs is None:
+        logger.warning("GraphViz executables not found.")
+        return None
+    if not progs.has_key(prog):
+        logger.warning('Invalid program [%s]. Available programs are: %s' % \
+                       (prog, progs.keys()))
+        return None
+
+    # Make a temporary file ...
+    tmp_fd, tmp_name = tempfile.mkstemp()
+    os.close(tmp_fd)
+    # ... and save the graph to it.
+    dot_fd = file(tmp_name, "w+b")
+    dot_fd.write(dotdata) # DOT language.
+    dot_fd.close()
+
+    # Get the temporary file directory name.
+    tmp_dir = os.path.dirname(tmp_name)
+
+    # Process the file using the layout program, specifying the format.
+    p = subprocess.Popen((progs[prog], '-T'+format, tmp_name),
+        cwd=tmp_dir, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+
+    stderr = p.stderr
+    stdout = p.stdout
+
+    # Make sense of the standard output form the process.
+    stdout_output = list()
+    while True:
+        data = stdout.read()
+        if not data:
+            break
+        stdout_output.append(data)
+    stdout.close()
+
+    if stdout_output:
+        stdout_output = ''.join(stdout_output)
+
+    # Similarly so for any standard error.
+    if not stderr.closed:
+        stderr_output = list()
+        while True:
+            data = stderr.read()
+            if not data:
+                break
+            stderr_output.append(data)
+        stderr.close()
+
+        if stderr_output:
+            stderr_output = ''.join(stderr_output)
+
+    status = p.wait()
+
+    if status != 0 :
+        logger.error("Program [%s] terminated with status: %d. stderr " \
+            "follows: %s" % ( prog, status, stderr_output ) )
+    elif stderr_output:
+        logger.error( "%s", stderr_output )
+
+    # Remove the temporary file.
+    os.unlink(tmp_name)
+
+    return stdout_output
+
+#------------------------------------------------------------------------------
 #  "XDOTWriter" class:
 #------------------------------------------------------------------------------
 
-class XDotWriter(DotWriter):
-    """ Write network data to file in Graphviz XDOT format.
-    """
-
-    def __init__(self, prog="dot", format="xdot"):
-        """ Initialises a new XDotWriter instance.
-        """
-        super(XDOTWriter, self).__init__(**kw_args)
-        self.prog = prog
-        self.format = format
-
-
-    def write(self, network, file_or_filename):
-        """ Writes network data to file in Graphviz XDOT language.
-        """
-
-
-    def write_header(self, network, file):
-        """ Writes the header to file.
-        """
-
-
-    def write_bus_data(self, network, file):
-        """ Writes bus data to file.
-        """
-
-
-    def write_branch_data(self, network, file):
-        """ Writes branch data to file.
-        """
-
-
-    def write_generator_data(self, network, file):
-        """ Write generator data to file.
-        """
-
-
-    def write_load_data(self, network, file):
-        """ Writes load data to file.
-        """
-
-
-    def create(self, prog=None, format=None):
-        """ Creates and returns a representation of the graph using the
-            Graphviz layout program given by 'prog', according to the given
-            format.
-
-            Writes the graph to a temporary dot file and processes it with
-            the program given by 'prog' (which defaults to 'xdot'), reading
-            the output and returning it as a string if the operation is
-            successful. On failure None is returned.
-        """
-        prog = self.program if prog is None else prog
-        format = self.format if format is None else format
-
-        # Make a temporary file ...
-        tmp_fd, tmp_name = tempfile.mkstemp()
-        os.close( tmp_fd )
-        # ... and save the graph to it.
-        dot_fd = file( tmp_name, "w+b" )
-        self.save_dot( dot_fd )
-        dot_fd.close()
-
-        # Get the temporary file directory name.
-        tmp_dir = os.path.dirname( tmp_name )
-
-        # TODO: Shape image files (See PyDot). Important.
-
-        # Process the file using the layout program, specifying the format.
-        p = subprocess.Popen(
-            ( self.programs[ prog ], '-T'+format, tmp_name ),
-            cwd=tmp_dir,
-            stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-
-        stderr = p.stderr
-        stdout = p.stdout
-
-        # Make sense of the standard output form the process.
-        stdout_output = list()
-        while True:
-            data = stdout.read()
-            if not data:
-                break
-            stdout_output.append(data)
-        stdout.close()
-
-        if stdout_output:
-            stdout_output = ''.join(stdout_output)
-
-        # Similarly so for any standard error.
-        if not stderr.closed:
-            stderr_output = list()
-            while True:
-                data = stderr.read()
-                if not data:
-                    break
-                stderr_output.append(data)
-            stderr.close()
-
-            if stderr_output:
-                stderr_output = ''.join(stderr_output)
-
-        #pid, status = os.waitpid(p.pid, 0)
-        status = p.wait()
-
-        if status != 0 :
-            logger.error("Program terminated with status: %d. stderr " \
-                "follows: %s" % ( status, stderr_output ) )
-        elif stderr_output:
-            logger.error( "%s", stderr_output )
-
-        # TODO: Remove shape image files from the temporary directory.
-
-        # Remove the temporary file.
-        os.unlink(tmp_name)
-
-        return stdout_output
+#class XDotWriter(DotWriter):
+#    """ Write network data to file in Graphviz XDOT format.
+#    """
+#
+#    def __init__(self, prog="dot", format="xdot"):
+#        """ Initialises a new XDotWriter instance.
+#        """
+#        super(XDOTWriter, self).__init__(**kw_args)
+#
+#        # Graphviz layout program ("dot", "circo", "neato", "twopi", "fdp").
+#        self.prog = "dot"
+#
+#        # Format for writing to file.
+#        self.format = "xdot"
+#
+#        # A dictionary containing the Graphviz executable names as keys and
+#        # their paths as values.
+#        progs = self.programs = find_graphviz()
+#        if progs is None:
+#            logger.warning("GraphViz executables not found.")
+#            self.programs = {}
+#
+#
+#    def write(self, network, file_or_filename):
+#        """ Writes network data to file in Graphviz XDOT language.
+#        """
+#        xdot_data = self.create(network)
+#
+#        file = _get_file(file_or_filename)
+#        file.write(xdot_data)
+#        file.close()
+#
+#
+#    def write_header(self, network, file):
+#        """ Writes the header to file.
+#        """
+#        raise NotImplementedError
+#
+#
+#    def write_bus_data(self, network, file):
+#        """ Writes bus data to file.
+#        """
+#        raise NotImplementedError
+#
+#
+#    def write_branch_data(self, network, file):
+#        """ Writes branch data to file.
+#        """
+#        raise NotImplementedError
+#
+#
+#    def write_generator_data(self, network, file):
+#        """ Write generator data to file.
+#        """
+#        raise NotImplementedError
+#
+#
+#    def write_load_data(self, network, file):
+#        """ Writes load data to file.
+#        """
+#        raise NotImplementedError
+#
+#
+#    def write_generator_cost_data(self, network, file):
+#        """ Writes generator cost data to file.
+#        """
+#        raise NotImplementedError
 
 
 #------------------------------------------------------------------------------
