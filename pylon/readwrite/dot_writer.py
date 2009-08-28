@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 DEFAULT_BUS_ATTR = {"color": "blue"}
+DEFAULT_BRANCH_ATTR = {"color": "green"}
+DEFAULT_GENERATOR_ATTR = {}
+DEFAULT_LOAD_ATTR = {}
 
 #------------------------------------------------------------------------------
 #  "DOTWriter" class:
@@ -53,6 +56,10 @@ class DotWriter(object):
         else:
             self.bus_attr = bus_attr
 
+        self.branch_attr = DEFAULT_BRANCH_ATTR
+        self.generator_attr = DEFAULT_GENERATOR_ATTR
+        self.load_attr = DEFAULT_LOAD_ATTR
+
 
     def __call__(self, network, file_or_filename):
         """ Calls the writer with the given network.
@@ -71,9 +78,11 @@ class DotWriter(object):
         self.write_header(network, file)
         self.write_bus_data(network, file)
         self.write_branch_data(network, file)
-        self.write_generator_data(network, file)
-        self.write_load_data(network, file)
-        self.write_generator_cost_data(network, file)
+#        self.write_generator_data(network, file)
+#        self.write_load_data(network, file)
+#        self.write_generator_cost_data(network, file)
+
+        file.write("}\n")
 
         # Close if passed the name of a file.
         if isinstance(file_or_filename, basestring):
@@ -98,11 +107,11 @@ class DotWriter(object):
             attrs.insert(0, 'label="%s"' % bus.name)
             attr_str = ", ".join(attrs)
 
-            file.write("%snode %s [%s];" % (padding, id(bus), attr_str))
+            file.write("%s%s [%s];" % (padding, id(bus), attr_str))
             file.write("\n")
 
 
-    def write_branch_data(self, network, file):
+    def write_branch_data(self, network, file, padding="    "):
         """ Writes branch data to file.
         """
         for branch in network.branches:
@@ -124,7 +133,7 @@ class DotWriter(object):
         for bus in network.buses:
             for generator in bus.generators:
                 # Generator node.
-                file.write("%snode %s [%s];" % \
+                file.write("%s%s [%s];" % \
                            (padding, id(generator), attr_str))
                 file.write("\n")
 
@@ -140,7 +149,7 @@ class DotWriter(object):
         for bus in network.buses:
             for load in bus.loads:
                 # Load node.
-                file.write("%snode %s [%s];" % \
+                file.write("%s%s [%s];" % \
                            (padding, id(load), attr_str))
                 file.write("\n")
 

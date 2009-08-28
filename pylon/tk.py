@@ -6,7 +6,7 @@ import logging
 import platform
 import webbrowser
 
-import PIL
+import PIL.Image, PIL.ImageTk
 from StringIO import StringIO
 
 from Tkinter import *
@@ -609,14 +609,25 @@ class GraphView(tkSimpleDialog.Dialog):
 
         imagedata = create_graph(dotdata.getvalue(), prog, format)
 
+        import base64
+        imagedata = base64.encodestring(imagedata)
+
         if imagedata is not None:
             stream = StringIO()
             stream.write(imagedata)
+            stream.seek(0) # rewind
 
-            pil_image = PIL.Image.open(stream)
-            photo = PIL.ImageTk.PhotoImage(pil_image)
+#            image = PIL.Image.open("/tmp/logo.png")
+#            photo = PIL.ImageTk.PhotoImage(image)
 
-            self.canvas.create_image(0, 0, image=photo)
+#            imagedata = PIL.ImageTk.PhotoImage(data=imagedata)
+
+#            pil_image = PIL.Image.open(stream)
+#            photo = PIL.ImageTk.PhotoImage(pil_image)
+
+            photo = self.photo = PhotoImage(data=imagedata)
+
+            self.canvas.create_image(50, 50, image=photo, anchor=NW)
 
     # tkSimpleDialog.Dialog interface -----------------------------------------
 
@@ -627,19 +638,56 @@ class GraphView(tkSimpleDialog.Dialog):
         master = Frame(self)
         master.pack(padx=5, pady=0, expand=1, fill=BOTH)
 
+        buttonbar = Frame(master, pady=1)
+        buttonbar.pack(side=LEFT, fill=Y, pady=1)
+
+        head = Label(buttonbar, text="Graphviz", bg="#FFA07A")
+        head.pack(fill=X, padx=1, pady=1)
+
+        refresh = Button(buttonbar, text="Refresh",
+                         command=self.draw_graph).pack(fill=X)
+
         # Graphviz layout program.
-        prog = self.prog = StringVar(master)
+        prog = self.prog = StringVar(buttonbar)
         prog.set("dot") # default value
-        OptionMenu(master, prog, "dot", "circo", "neato", "twopi", "fdp").pack(
-            fill=X, pady=2)
+        OptionMenu(buttonbar, prog, "dot", "circo", "neato", "twopi",
+                   "fdp").pack(fill=X, pady=2)
 
         # Image format.
-        format = self.format = StringVar(master)
-        format.set("png") # default value
-        OptionMenu(master, format, "png", "jpg", "gif").pack(fill=X, pady=2)
+        format = self.format = StringVar(buttonbar)
+        format.set("gif") # default value
+        OptionMenu(buttonbar, format, "png", "jpg", "gif").pack(fill=X, pady=2)
 
-        canvas = self.canvas = Canvas(master)
+        # Graph canvas frame.
+        drawframe = Frame(master)
+
+        drawframe.grid_rowconfigure(0, weight=1)
+        drawframe.grid_columnconfigure(0, weight=1)
+
+        xscrollbar = Scrollbar(drawframe, orient=HORIZONTAL)
+        xscrollbar.grid(row=1, column=0, sticky=E+W)
+
+        yscrollbar = Scrollbar(drawframe)
+        yscrollbar.grid(row=0, column=1, sticky=N+S)
+
+        canvas = self.canvas = Canvas(drawframe, width=600, height=400,
+            bg='white',
+            xscrollcommand=xscrollbar.set,
+            yscrollcommand=yscrollbar.set)
+#        canvas.config(scrollregion=canvas.bbox(ALL))
+        canvas.config(scrollregion=(-800, -600, 1600, 1200))
+
+        canvas.grid(row=0, column=0, sticky=N+S+E+W)
+
+        xscrollbar.config(command=canvas.xview)
+        yscrollbar.config(command=canvas.yview)
+
+
+        xscrollbar.pack(side=BOTTOM, fill=X)
+        yscrollbar.pack(side=RIGHT, fill=Y)
         canvas.pack(expand=YES, fill=BOTH)
+
+        drawframe.pack(expand=YES, fill=BOTH)
 
         self.draw_graph()
 
