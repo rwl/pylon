@@ -15,6 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
+__version__ = "0.3.0"
+
 from network import Network, Bus, Branch, Generator, Load, NetworkReport
 
 from dc_pf import DCPF
@@ -25,7 +27,5 @@ from ac_opf import ACOPF
 from ud_opf import UDOPF
 
 from uc import UnitCommitmentRoutine
-
-__version__ = "0.3.0"
 
 # EOF -------------------------------------------------------------------------

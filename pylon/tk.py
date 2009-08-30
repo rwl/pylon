@@ -5,9 +5,18 @@ import sys
 import logging
 import platform
 import webbrowser
+import tempfile
 
+import Image # PIL
 import PIL.Image, PIL.ImageTk
 from StringIO import StringIO
+
+from matplotlib.backends.backend_tkagg \
+    import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+
+import matplotlib.pyplot
+import matplotlib.image
+import matplotlib.figure
 
 from Tkinter import *
 from tkFileDialog import askopenfilename, asksaveasfilename
@@ -603,31 +612,77 @@ class GraphView(tkSimpleDialog.Dialog):
         prog    = self.prog.get()
         format  = self.format.get()
 
+        fig = self.fig
+
+        sbplt = fig.add_subplot(111)
+
         dotdata = StringIO()
         DotWriter().write(network, dotdata)
         dotdata.seek(0) # rewind
 
         imagedata = create_graph(dotdata.getvalue(), prog, format)
 
-        import base64
-        imagedata = base64.encodestring(imagedata)
+        # Write the image data to a temporary file.
+        suffix = ".%s" % self.format.get()
+        # Matplotlib features native PNG support with '.png' suffix.
+        tmp_fd, tmp_name = tempfile.mkstemp(suffix=suffix)
+        os.close(tmp_fd)
+        imagefd = file(tmp_name, "w+b")
+        imagefd.write(imagedata) # DOT language.
+        imagefd.close()
 
-        if imagedata is not None:
-            stream = StringIO()
-            stream.write(imagedata)
-            stream.seek(0) # rewind
+        im = matplotlib.pyplot.imread(tmp_name)
 
-#            image = PIL.Image.open("/tmp/logo.png")
-#            photo = PIL.ImageTk.PhotoImage(image)
+        fig = matplotlib.figure.Figure(figsize=(6, 6), dpi=100)
+        ax = matplotlib.pyplot.axes([0, 0, 1, 1], frameon=False)
+        ax.set_axis_off()
+        img = matplotlib.pyplot.imshow(im)
+        matplotlib.pyplot.show()
 
-#            imagedata = PIL.ImageTk.PhotoImage(data=imagedata)
+        # Remove the temporary file.
+        os.remove(tmp_name)
 
-#            pil_image = PIL.Image.open(stream)
-#            photo = PIL.ImageTk.PhotoImage(pil_image)
+#        stream = StringIO()
+#        stream.write(imagedata)
+#        stream.seek(0) # rewind
+#        pil_image = PIL.Image.open(stream) # Either a string or a file object.
 
-            photo = self.photo = PhotoImage(data=imagedata)
+#        f = Figure(figsize=figsize)#, dpi=100)
+#        figure(figsize=figsize)
 
-            self.canvas.create_image(50, 50, image=photo, anchor=NW)
+#        ax = axes([0, 0, 1, 1], frameon=False)
+#        ax.set_axis_off()
+
+#        im = imshow(graphimage, origin='lower')
+#        im = matplotlib.image.frombuffer(graph_io)
+
+#        im = matplotlib.image.pil_to_array(pil_image)
+
+#        dpi = rcParams['figure.dpi']
+#        figsize = im.size[0] / dpi, im.size[1] / dpi
+
+        fig.figimage(im, 10, 10)
+
+
+#        import base64
+#        imagedata = base64.encodestring(imagedata)
+#
+#        if imagedata is not None:
+#            stream = StringIO()
+#            stream.write(imagedata)
+#            stream.seek(0) # rewind
+#
+##            image = PIL.Image.open("/tmp/logo.png")
+##            photo = PIL.ImageTk.PhotoImage(image)
+#
+##            imagedata = PIL.ImageTk.PhotoImage(data=imagedata)
+#
+##            pil_image = PIL.Image.open(stream)
+##            photo = PIL.ImageTk.PhotoImage(pil_image)
+#
+#            photo = self.photo = PhotoImage(data=imagedata)
+#
+#            self.canvas.create_image(50, 50, image=photo, anchor=NW)
 
     # tkSimpleDialog.Dialog interface -----------------------------------------
 
@@ -636,7 +691,7 @@ class GraphView(tkSimpleDialog.Dialog):
             initial focus.
         """
         master = Frame(self)
-        master.pack(padx=5, pady=0, expand=1, fill=BOTH)
+#        master.pack(padx=5, pady=0, expand=1, fill=BOTH)
 
         buttonbar = Frame(master, pady=1)
         buttonbar.pack(side=LEFT, fill=Y, pady=1)
@@ -655,61 +710,82 @@ class GraphView(tkSimpleDialog.Dialog):
 
         # Image format.
         format = self.format = StringVar(buttonbar)
-        format.set("gif") # default value
+        format.set("png") # default value
         OptionMenu(buttonbar, format, "png", "jpg", "gif").pack(fill=X, pady=2)
 
         # Graph canvas frame.
-        drawframe = Frame(master)
+        fig = self.fig = matplotlib.figure.Figure(figsize=(6, 4), dpi=100)
 
-        drawframe.grid_rowconfigure(0, weight=1)
-        drawframe.grid_columnconfigure(0, weight=1)
+#        from numpy import arange, sin, pi
+#        a = fig.add_subplot(111)
+#        t = arange(0.0,3.0,0.01)
+#        s = sin(2*pi*t)
+#        a.plot(t,s)
 
-        xscrollbar = Scrollbar(drawframe, orient=HORIZONTAL)
-        xscrollbar.grid(row=1, column=0, sticky=E+W)
-
-        yscrollbar = Scrollbar(drawframe)
-        yscrollbar.grid(row=0, column=1, sticky=N+S)
-
-        canvas = self.canvas = Canvas(drawframe, width=600, height=400,
-            bg='white',
-            xscrollcommand=xscrollbar.set,
-            yscrollcommand=yscrollbar.set)
-#        canvas.config(scrollregion=canvas.bbox(ALL))
-        canvas.config(scrollregion=(-800, -600, 1600, 1200))
-
-        canvas.grid(row=0, column=0, sticky=N+S+E+W)
-
-        xscrollbar.config(command=canvas.xview)
-        yscrollbar.config(command=canvas.yview)
-
-
-        xscrollbar.pack(side=BOTTOM, fill=X)
-        yscrollbar.pack(side=RIGHT, fill=Y)
-        canvas.pack(expand=YES, fill=BOTH)
-
-        drawframe.pack(expand=YES, fill=BOTH)
 
         self.draw_graph()
 
-        return canvas # Given initial focus.
+        canvas = FigureCanvasTkAgg(fig, master=master)
+        canvas.show()
+        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+
+        toolbar = NavigationToolbar2TkAgg(canvas, master)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
+
+
+
+#        drawframe = Frame(master)
+#
+#        drawframe.grid_rowconfigure(0, weight=1)
+#        drawframe.grid_columnconfigure(0, weight=1)
+#
+#        xscrollbar = Scrollbar(drawframe, orient=HORIZONTAL)
+#        xscrollbar.grid(row=1, column=0, sticky=E+W)
+#
+#        yscrollbar = Scrollbar(drawframe)
+#        yscrollbar.grid(row=0, column=1, sticky=N+S)
+#
+#        canvas = self.canvas = Canvas(drawframe, width=600, height=400,
+#            bg='white',
+#            xscrollcommand=xscrollbar.set,
+#            yscrollcommand=yscrollbar.set)
+##        canvas.config(scrollregion=canvas.bbox(ALL))
+#        canvas.config(scrollregion=(-800, -600, 1600, 1200))
+#
+#        canvas.grid(row=0, column=0, sticky=N+S+E+W)
+#
+#        xscrollbar.config(command=canvas.xview)
+#        yscrollbar.config(command=canvas.yview)
+#
+#
+#        xscrollbar.pack(side=BOTTOM, fill=X)
+#        yscrollbar.pack(side=RIGHT, fill=Y)
+#        canvas.pack(expand=YES, fill=BOTH)
+#
+#        drawframe.pack(expand=YES, fill=BOTH)
+
+#        self.draw_graph()
+
+        return refresh # Given initial focus.
 
 
     def buttonbox(self):
         ''' Adds a button box.
         '''
-        box = Frame(self)
-
-        w = Button(box, text="Cancel", width=10, command=self.cancel)
-        w.pack(side=LEFT, padx=5, pady=5)
-
-        w = Button(box, text="Select", width=10, command=self.ok,
-                   default=ACTIVE)
-        w.pack(side=LEFT, padx=5, pady=5)
-
-        self.bind("<Return>", self.ok)
-        self.bind("<Escape>", self.cancel)
-
-        box.pack(side=RIGHT, padx=5, pady=5, anchor=S)
+#        box = Frame(self)
+#
+#        w = Button(box, text="Cancel", width=10, command=self.cancel)
+#        w.pack(side=LEFT, padx=5, pady=5)
+#
+#        w = Button(box, text="Select", width=10, command=self.ok,
+#                   default=ACTIVE)
+#        w.pack(side=LEFT, padx=5, pady=5)
+#
+#        self.bind("<Return>", self.ok)
+#        self.bind("<Escape>", self.cancel)
+#
+#        box.pack(side=RIGHT, padx=5, pady=5, anchor=S)
 
 
     def validate(self):

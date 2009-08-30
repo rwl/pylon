@@ -22,6 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import os.path
 import logging
 
 from parsing_util import \
@@ -92,7 +93,11 @@ class MATPOWERReader(object):
         """
         self.file_or_filename = file_or_filename
 
-        logger.info("Parsing MATPOWER case file [%s]." % file_or_filename)
+        if isinstance(file_or_filename, basestring):
+            fname = os.path.basename(file_or_filename)
+            logger.info("Parsing MATPOWER case file [%s]." % fname)
+        else:
+            logger.info("Parsing MATPOWER case file.")
 
         # Initialise:
         self.network = network = Network()
