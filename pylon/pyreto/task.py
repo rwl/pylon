@@ -77,15 +77,35 @@ class ProfitTask(Task):
         """ Computes and returns the reward corresponding to the last action
             performed.
         """
-#        base_mva = self.env.power_system.base_mva
-        asset  = self.env.asset
-        # Define the market clearing price as the maximum of the Lagrangian
-        # multipliers (lambda, $/MWh) for all buses.
-#        mcp = max([bus.p_lambda for bus in self.env.power_system.buses])
+        g = self.env.asset
+        t = self.env.market.period
+        g_online = self.env.market.g_online
 
-        profit = asset.total_cost(asset.p)
+        offerbids = [ob for ob in mkt.offers + mkt.bids if ob.generator == g]
 
-        logger.debug("Profit task [%s] reward: %s" % (asset.name, profit))
-        return array([profit])
+        pay = sum( [ob.cleared_quantity * ob.cleared_price * t \
+                    for ob in offerbids] )
+
+        # Costs for the period (not per hour).
+        c_fixed = g.total_cost(0.0) * t
+        c_variable = (g.total_cost(ob.cleared_quantity) - c_fixed) * t
+        # Startup and shutdown costs.
+        g_idx = self.env.market.network.all_generators.index(g)
+        if not bool(g_online[g_idx]) and g.online:
+            # The generator has been started up.
+            c_updown = g.c_startup
+        elif bool(g_online[g_idx]) and not g.online:
+            # The generator has been turned off.
+            c_updown = g.c_shutdown
+        else:
+            c_updown = 0.0
+
+        cost = c_fixed + c_variable + c_updown
+
+        earnings = pay - cost
+
+        logger.debug("Profit task [%s] reward: %s" % (g.name, earnings))
+
+        return array([earnings])
 
 # EOF -------------------------------------------------------------------------

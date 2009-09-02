@@ -26,7 +26,8 @@ from scipy import array
 from pybrain.rl.environments import Environment
 from pybrain.rl.environments.graphical import GraphicalEnvironment
 
-from pylon import Network, Generator
+from pylon import Generator
+from pylon.pyreto.market import SmartMarket, Offer, Bid
 
 #------------------------------------------------------------------------------
 #  "ParticipantEnvironment" class:
@@ -54,27 +55,29 @@ class ParticipantEnvironment(GraphicalEnvironment):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, power_system, asset, render=True):
+    def __init__(self, asset, market, render=True):
         """ Initialises the environment.
         """
-        assert isinstance(power_system, Network)
         assert isinstance(asset, Generator)
+        assert isinstance(market, SmartMarket)
 
         super(ParticipantEnvironment, self).__init__()
 
         # Energy network in which the asset operates.
-        self.power_system = power_system
+#        self.power_system = power_system
         # Generator instance that the agent controls.
         self.asset = asset
+        # Auction that clears offer and bids using OPF results.
+        self.market = market
         # A nonnegative amount of money.
 #        money = 100
 
         # Store on initialisation as they are set in perfromAction().
         # Positive production capacity.
-        self.p_max = asset.p_max
-        self.p_min = asset.p_min
+#        self.p_max = asset.p_max
+#        self.p_min = asset.p_min
         # Total cost function proportional to current capacity.
-        self.cost_coeffs = asset.cost_coeffs
+#        self.cost_coeffs = asset.cost_coeffs
 #        self.pwl_points  = asset.pwl_points
         # Amortised fixed costs.
 #        self.c_startup = asset.c_startup
@@ -98,12 +101,14 @@ class ParticipantEnvironment(GraphicalEnvironment):
 #            self.updateDone = True
 #            self.updateLock=threading.Lock()
 
-    @property
-    def demand(self):
-        """ Total system demand.
+    def get_demand(self):
+        """ Returns the total system demand including dispatchable loads.
         """
-        base = self.power_system.base_mva
-        return sum([l.p for l in self.power_system.online_loads])
+        n = self.market.network
+        l  = sum( [load.p for load in network.online_loads] )
+        vl = sum( [g.p for g in network.online_generators if g.is_load()] )
+
+        return l + vl
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -112,10 +117,15 @@ class ParticipantEnvironment(GraphicalEnvironment):
     def getSensors(self):
         """ Returns the currently visible state of the world as a numpy array
             of doubles.
-            The state can consist of: 'total demand', 'market clearing price'
-            and/or 'forecast demand'.
         """
-        demand = self.demand
+        g = self.asset
+        mkt = self.market
+
+        offerbids = [ob for ob in mkt.offers + mkt.bids if ob.generator == g]
+
+        demand = self.get_demand()
+
+        c_system = self.market.c_system
 
         if self.hasRenderer():
             data = (demand, None, None, None)
@@ -127,16 +137,11 @@ class ParticipantEnvironment(GraphicalEnvironment):
     def performAction(self, action):
         """ Performs an action on the world that changes it's internal state.
             @param action: an action that should be executed in the Environment
-            @type action: array: [ p_max_bid, proportional_cost ]
+            @type action: array: [ qty, prc, qty, prc, ... ]
         """
-        if self.asset is not None:
-#            base_mva = self.power_system.base_mva
-#            self.asset.p_max_bid = action[0]# / base_mva
-            self.asset.cost_coeffs = (0.0, action[0], 0.0)
-        else:
-            raise ValueError, "Environment [%s] has no asset." % self
-
-        demand = self.demand
+        for i in len(action) / 2:
+            ob = OfferBid(self.asset, qty=action[i * 2], prc=action[i * 2 + 1])
+            self.market.submit(ob)
 
         if self.hasRenderer():
             data = (None, action[0], None, None)
@@ -147,12 +152,14 @@ class ParticipantEnvironment(GraphicalEnvironment):
         """ Reinitialises the environment.
         """
         # Rest the asset parameters.
-        self.asset.p_max = self.p_max
-        self.asset.p_min = self.p_min
-        self.asset.cost_coeffs = self.cost_coeffs
+#        self.asset.p_max = self.p_max
+#        self.asset.p_min = self.p_min
+#        self.asset.cost_coeffs = self.cost_coeffs
 
         # Reset the load profile for each online load.
-        for load in self.power_system.online_loads:
-            load.reset_profile()
+#        for load in self.power_system.online_loads:
+#            load.reset_profile()
+
+        self.market.init()
 
 # EOF -------------------------------------------------------------------------
