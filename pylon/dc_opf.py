@@ -35,7 +35,7 @@ from math import pi
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul
 from cvxopt.umfpack import linsolve
 from cvxopt import solvers
-from cvxopt.solvers import qp
+from cvxopt.solvers import qp, lp
 
 from pylon.y import SusceptanceMatrix
 
@@ -63,12 +63,11 @@ class DCOPF(object):
     #--------------------------------------------------------------------------
 
     def __init__(self, solver=None, show_progress=True, max_iterations=100,
-            absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
-            refinement=1):
+            absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7):
         """ Initialises the new DCOPF instance.
         """
-        # Choice of solver (May be None or "mosek"). Specify None to use the
-        # native Python solver from CVXOPT.
+        # Choice of solver (May be None or "mosek" (or "glpk" for linear
+        # formulation)). Specify None to use the Python solver from CVXOPT.
         self.solver = solver
         # Turns the output to the screen on or off.
         self.show_progress = show_progress
@@ -81,7 +80,7 @@ class DCOPF(object):
         # Tolerance for feasibility conditions.
         self.feasibility_tol = feasibility_tol
         # Number of iterative refinement steps when solving KKT equations.
-        self.refinement = refinement
+#        self.refinement = refinement
 
         # Network object to be optimised.
         self.network = None
@@ -149,7 +148,7 @@ class DCOPF(object):
         solvers.options["abstol"] = self.absolute_tol
         solvers.options["reltol"] = self.relative_tol
         solvers.options["feastol"] = self.feasibility_tol
-        solvers.options["refinement"] = self.refinement
+#        solvers.options["refinement"] = self.refinement
 
         susceptance_matrix = SusceptanceMatrix()
         self._B, self._B_source = susceptance_matrix(self.network)
@@ -175,19 +174,19 @@ class DCOPF(object):
         _aa_flow, _bb_flow = self._get_branch_flow_limit_constraint()
 
         # Combine the equality constraints.
-        self._AA_eq = sparse([_aa_cost, _aa_ref, _aa_mismatch])
-        self._bb_eq = matrix([_bb_cost, _bb_ref, _bb_mismatch])
+        self._AA_eq = sparse([_aa_ref, _aa_mismatch])
+        self._bb_eq = matrix([_bb_ref, _bb_mismatch])
 
         # Combine the inequality constraints.
-        self._AA_ieq = sparse([_aa_gen])#, _aa_flow])
-        self._bb_ieq = matrix([_bb_gen])#, _bb_flow])
+        self._AA_ieq = sparse([_aa_gen, _aa_cost, _aa_flow])
+        self._bb_ieq = matrix([_bb_gen, _bb_cost, _bb_flow])
 
         # The objective function has the form 0.5 * x'*H*x + c'*x.
         self._hh = self._get_h()
         self._cc = self._get_c()
 
         # Solve the problem.
-        solution = self._solve_qp()
+        solution = self._solve_program()
         self.x = solution["x"]
 
         # Compute elapsed time.
@@ -196,6 +195,18 @@ class DCOPF(object):
         if solution["status"] == "optimal":
             self._update_solution_data(solution)
             logger.info("DC OPF completed in %.3fs." % t_elapsed)
+            return True
+        elif solution["status"] == "unknown":
+            #From CVXOPT documentation:
+            #Termination with status 'unknown' indicates that the algorithm
+            #failed to find a solution that satisfies the specified tolerances.
+            #In some cases, the returned solution may be fairly accurate.  If
+            #the primal and dual infeasibilities, the gap, and the relative gap
+            #are small, then x, y, s, z are close to optimal.
+            self._update_solution_data(solution)
+            logger.info("Unknown solution status found in %.3fs. The " \
+                "solution may be fairly accurate. Try using a different " \
+                "solver or relaxing the specified tolerances." % t_elapsed)
             return True
         else:
             logger.error("Non-convergent DC OPF.")
@@ -383,12 +394,13 @@ class DCOPF(object):
                     c = y1 - m * x1 # segment y-intercept
 
                     a_cost[i_segment + j, n_buses + i] = m * base_mva
-                    a_cost[i_segment + j, n_buses + n_generators + i] = -1
+                    a_cost[i_segment + j, n_buses + n_generators + i] = -1.0
                     b_cost[i_segment + j] = -c
 
                 i_segment += n_segments[i]
 
-            a_cost[:, n_buses + n_generators:] = -1
+#            a_cost[:, n_buses + n_generators:] = -1.0
+
 
         elif self._solver_type == "quadratic":
             # The total number of cost variables
@@ -466,27 +478,26 @@ class DCOPF(object):
         for i, v in enumerate(buses):
             for g in v.generators:
                 if g.online:
-                    i_bus_generator[i, j] = 1
+                    i_bus_generator[i, j] = 1.0
                     j += 1
 
         logger.debug("Built bus generator incidence matrix:\n%s" %
-                     i_bus_generator)
+            i_bus_generator)
 
-        # Include zero matrix for pw linear cost constraints
+        # Include zero matrix for pw linear cost constraints.
         if self._solver_type == "linear":
+            # Number of cost variables (n_generators or zero).
             n_cost = len([g.p_cost for g in generators])
-#            cost_mismatch = sparse([matrix(0.0, (n_buses, n_cost))])
-            cost_mismatch = spmatrix([], [], [], size=(n_buses, n_cost))
         else:
-            cost_mismatch = spmatrix([], [], [], size=(n_buses, 0))
+            n_cost = 0
 
-        # sparse() does vstack, to hstack we transpose
-        a_mismatch = sparse([self._B.T,
-                             -i_bus_generator.T,
-                             cost_mismatch.T]).T
+        cost_mismatch = spmatrix([], [], [], size=(n_buses, n_cost))
+
+        # sparse() does vstack, to hstack we transpose.
+        a_mismatch = sparse([self._B.T, -i_bus_generator.T, cost_mismatch.T]).T
 
         logger.debug("Built power balance constraint matrix Aflow:\n%s" %
-                     a_mismatch)
+            a_mismatch)
 
         p_demand = matrix([v.p_demand for v in buses])
         g_shunt = matrix([v.g_shunt for v in buses])
@@ -494,7 +505,7 @@ class DCOPF(object):
         b_mismatch = -((p_demand + g_shunt) / base_mva) - self._theta_inj_bus
 
         logger.debug("Built power balance constraint vector bflow:\n%s" %
-                     b_mismatch)
+            b_mismatch)
 
         return a_mismatch, b_mismatch
 
@@ -521,16 +532,16 @@ class DCOPF(object):
         limit_eye = spdiag([1.0] * n_generators)
 
         if self._solver_type == "linear":
-            # The total number of cost variables
-            n_cost = n_generators
-            a_limit_cost = spmatrix([], [], [], (n_generators, n_cost))
+            # Number of cost variables (n_generators or zero).
+            n_cost = len([g.p_cost for g in generators])
         else:
-            a_limit_cost = spmatrix([], [], [], (n_generators, 0))
+            n_cost = 0
+
+        a_limit_cost = spmatrix([], [], [], (n_generators, n_cost))
 
         # The identity matrix made negative to turn the inequality
-        # contraint into >=. sparse() does vstack. To hstack we transpose
+        # contraint into >=. sparse() does vstack. To hstack we transpose.
         a_lower = sparse([limit_zeros.T, -limit_eye.T, a_limit_cost.T]).T
-
         a_upper = sparse([limit_zeros.T, limit_eye.T, a_limit_cost.T]).T
 
         a_limit = sparse([a_lower, a_upper])
@@ -539,7 +550,6 @@ class DCOPF(object):
 
 
         b_lower = matrix([-g.p_min / base_mva for g in generators])
-
         b_upper = matrix([g.p_max / base_mva for g in generators])
 
         b_limit = matrix([b_lower, b_upper])
@@ -570,21 +580,20 @@ class DCOPF(object):
         logger.debug("Built flow limit zeros:\n%s" % flow_zeros)
 
         if self._solver_type == "linear":
-            # The total number of cost variables.
-            n_cost = n_generators
-            a_flow_cost = spmatrix([], [], [], (n_branches, n_cost))
+            # Number of cost variables (n_generators or zero).
+            n_cost = len([g.p_cost for g in generators])
         else:
-            a_flow_cost = spmatrix([], [], [], (n_branches, 0))
+            n_cost = 0
+
+        a_flow_cost = spmatrix([], [], [], (n_branches, n_cost))
 
         # Source flow limit.
-        a_flow_source = sparse([self._B_source.T,
-                                flow_zeros.T,
-                                a_flow_cost.T]).T
+        a_flow_source = sparse([self._B_source.T, flow_zeros.T,
+            a_flow_cost.T]).T
 
         # Target flow limit.
-        a_flow_target = sparse([-self._B_source.T,
-                                flow_zeros.T,
-                                a_flow_cost.T]).T
+        a_flow_target = sparse([-self._B_source.T, flow_zeros.T,
+            a_flow_cost.T]).T
 
         a_flow = sparse([a_flow_source, a_flow_target])
 
@@ -618,10 +627,12 @@ class DCOPF(object):
         generators   = self.network.online_generators
         n_buses      = len(buses)
         n_generators = len(generators)
+        n_costs      = n_generators
 
         if self._solver_type == "linear":
-            dim = n_buses + n_generators + n_generators
+            dim = n_buses + n_generators + n_costs
             h = spmatrix([], [], [], (dim, dim))
+
         elif self._solver_type == "quadratic":
             coeffs = [g.cost_coeffs for g in generators]
 
@@ -635,9 +646,9 @@ class DCOPF(object):
 
             # TODO: Explain multiplication of the pu coefficients by 2
             h = spmatrix(2 * c2_coeffs,
-                         matrix(range(n_generators)) + n_buses,
-                         matrix(range(n_generators)) + n_buses,
-                         size=(n_buses + n_generators, n_buses + n_generators))
+                matrix(range(n_generators)) + n_buses,
+                matrix(range(n_generators)) + n_buses,
+                size=(n_buses + n_generators, n_buses + n_generators))
         else:
             raise ValueError
 
@@ -662,7 +673,7 @@ class DCOPF(object):
             c = matrix([matrix(0.0, (n_buses + n_generators, 1)),
                         matrix(1.0, (n_cost, 1))])
         else:
-            v_zeros = matrix([0] * n_buses)
+            v_zeros = matrix(0.0, (n_buses, 1))
 
             cost_coeffs = [g.cost_coeffs for g in generators]
 
@@ -676,7 +687,39 @@ class DCOPF(object):
         return c
 
 
-    def _solve_qp(self):
+    def _solve_program(self):
+        """ Solves the formulated program.
+        """
+        # CVXOPT documentation.
+        #
+        #Solves the pair of primal and dual linear programs
+        #    minimize    c'x
+        #    subject to  Gx + s = h
+        #                Ax = b
+        #                s >= 0
+        #
+        #    maximize    -h'*z - b'*y
+        #    subject to  G'*z + A'*y + c = 0
+        #                z >= 0.
+        #
+        #Input arguments.
+        #    G is m x n, h is m x 1, A is p x n, b is p x 1.  G and A must be
+        #    dense or sparse 'd' matrices.   h and b are dense 'd' matrices
+        #    with one column.  The default values for A and b are empty
+        #    matrices with zero rows.
+        if self._solver_type == "linear":
+            c = self._cc
+            G, h = self._AA_ieq, self._bb_ieq,
+            A, b = self._AA_eq, self._bb_eq,
+            solver = self.solver
+            primalstart = {"x": self._x}
+
+#            print "\n", G[:, -7:]
+
+            solution = lp(c, G, h, A, b, solver)#, primalstart)
+
+            logger.debug("Linear solver returned:%s" % solution)
+
 
         #Solves a quadratic program
         #    minimize    (1/2)*x'*P*x + q'*x
@@ -691,12 +734,16 @@ class DCOPF(object):
         #- initvals['y'] is a dense 'd' matrix of size (p,1).
         #- initvals['z'] is a dense 'd' matrix of size (K,1), representing
         #  a vector that is strictly positive with respect to the cone C.
+        else:
+            P, q = self._hh, self._cc
+            G, h = self._AA_ieq, self._bb_ieq,
+            A, b = self._AA_eq, self._bb_eq,
+            solver = self.solver
+            initvals = {"x": self._x}
 
-        solution = qp(P=self._hh, q=self._cc,
-                      G=self._AA_ieq, h=self._bb_ieq,
-                      A=self._AA_eq, b=self._bb_eq,
-                      solver=self.solver,
-                      initvals={"x": self._x})
+            solution = qp(P, q, G, h, A, b, solver, initvals)
+
+            logger.debug("Quadratic solver returned:%s" % solution)
 
         #Returns a dictionary with keys 'status', 'x', 's', 'y', 'z'.
         #
@@ -719,7 +766,8 @@ class DCOPF(object):
         #
         #If status is 'unknown', x, y, s, z are None.
 
-        logger.debug("Quadratic solver returned:%s" % solution)
+        print "\n", solution
+        print solution["x"]
 
         return solution
 
