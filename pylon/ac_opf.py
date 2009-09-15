@@ -74,11 +74,13 @@ class ACOPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, show_progress=True, max_iterations=100,
+    def __init__(self, solver=None, show_progress=True, max_iterations=100,
             absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
             refinement=1):
         """ Initialises a new ACOPF instance.
         """
+        # Choice of solver. Included to comply with OPF interface.
+        self.solver = solver
         # Turns the output to the screen on or off.
         self.show_progress = show_progress
         # Maximum number of iterations.

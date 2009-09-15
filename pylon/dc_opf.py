@@ -29,11 +29,9 @@
 import time
 import logging
 
-from os.path import join, dirname
 from math import pi
 
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul
-from cvxopt.umfpack import linsolve
 from cvxopt import solvers
 from cvxopt.solvers import qp, lp
 
@@ -138,9 +136,11 @@ class DCOPF(object):
         """ Solves a DC OPF.
         """
         t0 = time.time()
-        self.network = network if network is not None else self.network
 
-        logger.debug("Solving DC OPF [%s]" % network.name)
+        self.network = network if network is not None else self.network
+        assert self.network is not None
+
+        logger.info("Solving DC OPF [%s]." % network.name)
 
         # Algorithm parameters.
         solvers.options["show_progress"] = self.show_progress
@@ -765,9 +765,6 @@ class DCOPF(object):
         #    P*x = 0,  q'*x = -1,  G*x + s = 0,  A*x = 0,  s >=0
         #
         #If status is 'unknown', x, y, s, z are None.
-
-        print "\n", solution
-        print solution["x"]
 
         return solution
 

@@ -36,6 +36,7 @@ import logging
 import random
 
 from cvxopt import matrix
+from cvxopt import solvers
 
 from pylon import DCOPF, ACOPF
 
@@ -69,13 +70,36 @@ class UDOPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, dc=True):
+    def __init__(self, dc=True, solver=None, show_progress=False,
+            max_iterations=100, absolute_tol=1e-7, relative_tol=1e-6,
+            feasibility_tol=1e-7):
         """ Initialises a new UDOPF instance.
         """
         # Use DC OPF routine?
         self.dc = dc
+        self._routine = None
+
         # Optimised network.
         self.network = None
+
+        # Choice of solver (May be None or "mosek" (or "glpk" for linear
+        # formulation)). Specify None to use the Python solver from CVXOPT.
+        self.solver = solver
+
+        # Turns the output to the screen on or off.
+        self.show_progress = show_progress
+
+        # Maximum number of iterations.
+        self.max_iterations = max_iterations
+
+        # Absolute accuracy.
+        self.absolute_tol = absolute_tol
+
+        # Relative accuracy.
+        self.relative_tol = relative_tol
+
+        # Tolerance for feasibility conditions.
+        self.feasibility_tol = feasibility_tol
 
 
     def __call__(self, network):
@@ -90,14 +114,16 @@ class UDOPF(object):
         t0 = time.time()
 
         network = self.network if network is None else network
+        assert network is not None
+
         generators = network.online_generators
-        loads = network.online_loads
+        loads      = network.online_loads
 
         logger.info("Solving OPF with unit decommitment [%s]." % network.name)
 
         # 1. Begin at stage zero (N = 0), assuming all generators are on-line
-        # with all limits in place.
-
+        # with all limits in place. At most one generator shutdown per stage.
+        i_stage = 0
 
         # Check for sum(p_min) > total load, decommit as necessary.
         online       = [g for g in generators if not g.is_load]
@@ -111,32 +137,43 @@ class UDOPF(object):
         # Minimum total online generation capacity.
         p_min_tot = sum([g.p_min for g in online])
 
+        # Shutdown the most expensive units until the minimum generation
+        # capacity is less than the total load capacity.
         while p_min_tot > load_capacity:
-            # Shut down most expensive unit.
-            avg_pmin_cost = [g.total_cost(g.p_min) / g.p_min for g in online]
+            i_stage += 1
+            logger.debug("Entered decommitment stage %d." % i_stage)
 
             # Find generator with the maximum average cost at Pmin.
+            avg_pmin_cost = [g.total_cost(g.p_min) / g.p_min for g in online]
+            # Select at random from maximal generators with equal cost.
             g_idx, value = fair_max(avg_pmin_cost)
             generator = online[g_idx]
 
             logger.info("Shutting down generator [%s] to satisfy all "
                         "p_min limits." % generator.name)
 
-            # Set generation to zero.
-#            generator.p = 0.0
-#            generator.q = 0.0
+            # Shut down most expensive unit.
             generator.online = False
 
-            # Update minimum gen capacity.
+            # Update minimum generation capacity for while loop.
             online = [g for g in network.online_generators if not g.is_load]
             p_min_tot = sum([g.p_min for g in online])
 
         # 2. Solve a normal OPF and save the solution as the current best.
+        solver   = self.solver
+        progress = self.show_progress
+        itermax  = self.max_iterations
+        abstol  = self.absolute_tol
+        reltol  = self.relative_tol
+        feastol = self.feasibility_tol
 
         if self.dc:
-            routine = DCOPF()
+            routine = DCOPF(solver, progress, itermax, abstol, reltol, feastol)
         else:
-            routine = ACOPF()
+            routine = ACOPF(solver, progress, itermax, abstol, reltol, feastol)
+
+        self._routine = routine
+
         success = routine(network)
 
         if not success:
@@ -146,11 +183,12 @@ class UDOPF(object):
         # 3. Go to the next stage, N = N + 1. Using the best solution from the
         # previous stage as the base case for this stage, ...
 
-        # Best case so far.
+        # Best case so far. A list of the on-line status of all generators.
         overall_online = [g.online for g in network.all_generators]
+        # The objective function value is the total system cost.
         overall_cost   = routine.f
 
-        # Best case for this stage (ie. with n gens shut down, n=0,1,2 ...).
+        # Best case for this stage.
         stage_online = overall_online
         stage_cost   = overall_cost
 
@@ -162,38 +200,44 @@ class UDOPF(object):
             # Activate generators according to the stage best.
             for i, generator in enumerate(network.all_generators):
                 generator.online = stage_online[i]
-            # Get candidates for shutdown.
+
+            # Get candidates for shutdown. Lagrangian multipliers are often
+            # very small so we round to four decimal places.
             candidates = [g for g in network.online_generators if \
-                          (g.mu_p_min > 0.0) and (g.p_min > 0.0)]
+                          (round(g.mu_p_min, 4) > 0.0) and (g.p_min > 0.0)]
 
-            if not candidates:
-                break
+            if not candidates: break
 
-            # No improvement during this stage.
+            # Assume no improvement during this stage.
             done = True
+
+            i_stage += 1
+            logger.debug("Entered decommitment stage %d." % i_stage)
 
             for candidate in candidates:
                 # 5. For each generator on the candidate list, solve an OPF to
                 # find the total system cost with this generator shut down.
 
-                # Start with best for this stage.
-#                gen = gen0
+                # Activate generators according to the stage best.
+                for i, generator in enumerate(network.all_generators):
+                    generator.online = stage_online[i]
 
                 # Shutdown candidate generator.
-#                candidate.p = 0.0
-#                candidate.q = 0.0
                 candidate.online = False
+
+                logger.info("Attempting OPF with generator '%s' shutdown." %
+                    candidate.name)
 
                 # Run OPF.
                 success = routine(network)
 
-                # Something better?
+                # Compare total system costs for improvement.
                 if success and (routine.f < overall_cost):
                     # 6. Replace the current best solution with this one if it
                     # has a lower cost.
-                    overall_online = network.online_generators
+                    overall_online = [g.online for g in network.all_generators]
                     overall_cost   = routine.f
-                    # Make sure we check for further decommitment.
+                    # Check for further decommitment.
                     done = False
 
             if done:
@@ -204,19 +248,24 @@ class UDOPF(object):
                 # return to step 3.
 
                 # Shutting something else down helps, so let's keep going.
-                logger.info("Shutting down generator [%s].", candidate)
+                logger.info("Shutting down generator '%s'.", candidate.name)
 
                 stage_online = overall_online
                 stage_cost   = overall_cost
 
+        # 8. Use the best overall solution as the final solution.
+        for i, generator in enumerate(network.all_generators):
+            generator.online = overall_online[i]
+
+        success = routine(network)
+
         # Compute elapsed time.
         elapsed = self.elapsed = time.time() - t0
+        plural = "s" if i_stage > 1 else ""
+        logger.info("Unit decommitment OPF used %d decommitment stage%s and "
+                    "solved in %.3fs." % (i_stage, plural, elapsed))
 
-        logger.info("OPF with unit decommitment solved in %.3f." % elapsed)
-
-        # 8. Return the current best solution as the final solution.
-        return network
-
+        return True
 
 #------------------------------------------------------------------------------
 #  "fair_max" function:

@@ -54,14 +54,14 @@ class UOPFTestCase(unittest.TestCase):
     def test_dc(self):
         """ Test routine using DC formulation.
         """
-        solution = self.routine(self.network)
+        success = self.routine(self.network)
         generators = self.network.all_generators
 
         self.assertFalse(generators[0].online)
         self.assertAlmostEqual(generators[1].p, 110.80, places=2)
         self.assertAlmostEqual(generators[2].p,  99.20, places=2)
 
-        self.assertAlmostEqual(solution[''], 2841.59, places=2)
+        self.assertAlmostEqual(self.routine._routine.f, 2841.59, places=2)
 
 
 if __name__ == "__main__":
