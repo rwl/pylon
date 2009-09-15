@@ -65,8 +65,7 @@ class YTest(TestCase):
                 0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i   4.4821 -17.0047i
 
         """
-        admittance_matrix = AdmittanceMatrix()
-        Y = admittance_matrix(self.network)
+        Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
 
         self.assertEqual(Y.size, (6, 6))
 

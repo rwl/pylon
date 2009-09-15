@@ -172,6 +172,10 @@ class AdmittanceMatrix(object):
 
 
     def __call__(self, network):
+        return self.build(network)
+
+
+    def build(self, network=None):
         """ Builds the admittance matrix.
         """
         j = 0 + 1j
@@ -261,13 +265,20 @@ class AdmittanceMatrix(object):
         tt = Ct * spdiag(Ytt) * Ct.T
 
         # Resize otherwise all-zero rows/columns are lost.
-        self.Y = Y = spdiag(Ysh) + \
+        Y = self.Y = spdiag(Ysh) + \
             spmatrix(ff.V, ff.I, ff.J, (n_buses, n_buses), tc="z") + \
             spmatrix(ft.V, ft.I, ft.J, (n_buses, n_buses), tc="z") + \
             spmatrix(tf.V, tf.I, tf.J, (n_buses, n_buses), tc="z") + \
             spmatrix(tt.V, tt.I, tt.J, (n_buses, n_buses), tc="z")
 
-        return Y
+        # Build Ysrc and Ytgt such that Ysrc * V is the vector of complex
+        # branch currents injected at each branch's "source" bus.
+        i = matrix(range(n_branches) + range(n_branches))
+        j = matrix([source_bus, target_bus])
+        Ysource = spmatrix(matrix([Yff, Yft]), i, j, (n_branches, n_buses))
+        Ytarget = spmatrix(matrix([Ytf, Ytt]), i, j, (n_branches, n_buses))
+
+        return Y, Ysource, Ytarget
 
 #------------------------------------------------------------------------------
 #  "SusceptanceMatrix" class:
@@ -287,9 +298,14 @@ class SusceptanceMatrix(object):
     """
 
     def __call__(self, network):
-        """ Build the matrices.
+        return self.build(network)
+
+
+    def build(self, network=None):
+        """ Builds the susceptance matrices.
         """
-        self.network = network
+        network = self.network if network is None else network
+        assert network is not None
 
         buses      = network.buses
         branches   = network.branches
@@ -381,25 +397,25 @@ class PSATAdmittanceMatrix(object):
             # y = 1/(R+jX) + (G+jB)/2
             # The conductance (G) is considered negligible
             try: #avoid zero division
-                z = 1/(complex(e.r, e.x))
+                z = 1 / (complex(e.r, e.x))
             except ZeroDivisionError:
                 z = complex(0, 1e09) #infinite admittance for zero reactance
 
             # Shunt admittance
-            charge = complex(0, e.b)/2
+            charge = complex(0, e.b) / 2
 
-            ts = e.ratio*exp(j*(e.phase_shift*pi/180))
-            ts2 = ts*conjugate(ts)
+            ts = e.ratio * exp(j * (e.phase_shift * pi / 180))
+            ts2 = ts * conj(ts)
 
             # off-diagonal matrix elements (i,j) are the negative
             # admittance of branches between buses[i] and buses[j]
             # TODO: Establish why PSAT does it this way
-            y[source_idx, target_idx] += -z*ts
-            y[target_idx, source_idx] += -z*conjugate(ts)
+            y[source_idx, target_idx] += -z * ts
+            y[target_idx, source_idx] += -z * conj(ts)
             # diagonal matrix elements (k,k) are the sum of the
             # admittances of the branches connected to buses[k]
-            y[source_idx, source_idx] += z+charge
-            y[target_idx, target_idx] += z*ts2+charge
+            y[source_idx, source_idx] += z + charge
+            y[target_idx, target_idx] += z * ts2 + charge
 
         return y
 

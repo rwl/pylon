@@ -26,13 +26,15 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import time
 import logging
-import numpy
+from numpy import pi, polyder, polyval
 
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, exp, div
 from cvxopt import solvers
 
 from pylon.util import conj
+from pylon.y import AdmittanceMatrix
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -104,6 +106,8 @@ class ACOPF(object):
     def solve(self, network=None):
         """ Solves AC OPF for the given network.
         """
+        t0 = time.time()
+
         # Turn off output to screen.
         solvers.options["show_progress"] = self.show_progress
         solvers.options["maxiters"] = self.max_iterations
@@ -113,31 +117,42 @@ class ACOPF(object):
         solvers.options["refinement"] = self.refinement
 
         network = self.network if network is None else network
-        logger.debug("Solving AC OPF [%s]" % network.name)
+        assert network is not None
+
+        logger.debug("Solving AC OPF [%s]." % network.name)
 
         j = 0 + 1j
 
+        base_mva = network.base_mva
         buses = network.connected_buses
         branches = network.online_branches
         generators = network.online_generators
         n_buses = len(network.connected_buses)
         n_branches = len(network.online_branches)
-        n_generators = len(network.online_generators)
+        n_gen = len(network.online_generators)
+
+        # FIXME: Implement piecewise linear cost constraints.
+        assert "pwl" not in [g.cost_model for g in generators]
+        cost_model = "poly"
 
         # The number of non-linear equality constraints.
         n_equality = 2 * n_buses
         # The number of control variables.
-        n_control = 2 * n_buses + 2 * n_generators
+        n_control = 2 * n_buses + 2 * n_gen
 
         # Definition of indexes for the optimisation variable vector.
-        ph_base = 0 # Voltage phase angle.
-        ph_end  = ph_base + n_buses-1;
-        v_base  = ph_end + 1 # Voltage amplitude.
-        v_end   = v_base + n_buses-1
+        # Voltage phase angle.
+        ph_base = 0
+        ph_end  = ph_base + n_buses - 1;
+        # Voltage amplitude.
+        v_base  = ph_end + 1
+        v_end   = v_base + n_buses - 1
+        # Active generation.
         pg_base = v_end + 1
-        pg_end  = pg_base + n_generators-1
+        pg_end  = pg_base + n_gen - 1
+        # Reactive generation.
         qg_base = pg_end + 1
-        qg_end  = qg_base + n_generators-1
+        qg_end  = qg_base + n_gen - 1
 
         # TODO: Definition of indexes for the constraint vector.
 
@@ -157,7 +172,7 @@ class ACOPF(object):
 #
 #        # Initial values of PG and QG must be consistent with specified power
 #        # factor.
-#        q_lim = matrix(0.0, n_generators)
+#        q_lim = matrix(0.0, n_gen)
 #
 #        for i, g in enumerate(generators):
 #            if g in vload:
@@ -182,7 +197,7 @@ class ACOPF(object):
 #            n_angle = len(ang)
 #
 #        n_ineq = 2 * n_buses
-#        n_control = 2 * n_buses + 2 * n_generators
+#        n_control = 2 * n_buses + 2 * n_gen
 #
 #        if not Au:
 #            n_additional = 0
@@ -206,42 +221,48 @@ class ACOPF(object):
             """ Evaluates the objective and nonlinear constraint functions.
             """
             if x is None:
-                # Compute initial vector.
-                x_ph = matrix([bus.v_angle_guess for bus in buses])
-                # TODO: Initialise V from any present generators.
-                x_v = matrix([bus.v_magnitude_guess for bus in buses])
-                x_pg = matrix([g.p for g in generators])
-                x_qg = matrix([g.q for g in generators])
+                # Compute initial optimisation variable vector.
+                x_va = matrix([bus.v_angle_guess * pi / 180 for bus in buses])
+                # FIXME: Initialise V from any present generators.
+                x_vm = matrix([bus.v_magnitude_guess for bus in buses])
+                x_pg = matrix([g.p / base_mva for g in generators])
+                x_qg = matrix([g.q / base_mva for g in generators])
 
-                return n_equality, matrix([x_ph, x_v, x_pg, x_qg])
+                return n_equality, matrix([x_va, x_vm, x_pg, x_qg])
 
             # Evaluate objective function -------------------------------------
 
-            p_gen = x[pg_base:pg_end+1] # Active generation in p.u.
-            q_gen = x[qg_base:qg_end+1] # Reactive generation in p.u.
+            p_gen = x[pg_base:pg_end + 1] # Active generation in p.u.
+            q_gen = x[qg_base:qg_end + 1] # Reactive generation in p.u.
 
-            # Setting P and Q for each generator triggers re-evaluation of the
-            # generator cost (See _get_p_cost()).
             for i, g in enumerate(generators):
-                g.p = p_gen[i]# * network.base_mva
-                g.q = q_gen[i]# * network.base_mva
+                g.p = p_gen[i] * base_mva
+                g.q = q_gen[i] * base_mva
 
-            costs = matrix([g.p_cost for g in generators])
-            f0 = sum(costs)
-            # TODO: Generalised cost term.
+            # Evaluate the objective function value.
+            if cost_model == "poly":
+                # FIXME: Implement reactive power costs.
+                f0 = sum([g.total_cost(g.p) for g in generators])
+            else:
+                f0 = 0
 
             # Evaluate cost gradient ------------------------------------------
 
             # Partial derivative w.r.t. polynomial cost Pg and Qg.
-            df0 = spmatrix([], [], [], (n_generators*2, 1))
+#            df_dPgQg = [polyval(polyder(g.cost_coeffs), g.p) * base_mva \
+#                        for g in generators]
+            df_dPgQg = matrix(0.0, (n_gen * 2, 1))
+
             for i, g in enumerate(generators):
-                der = numpy.polyder(list(g.cost_coeffs))
-                df0[i] = numpy.polyval(der, g.p) * network.base_mva
+                der = polyder( list(g.cost_coeffs) )
+                df_dPgQg[i] = polyval(der, g.p) * base_mva
+
+            df0= matrix([matrix(0.0, (v_end, 1)), df_dPgQg])
 
             # Evaluate nonlinear constraints ----------------------------------
 
             # Net injected power in p.u.
-            s = matrix([complex(b.p_surplus, b.q_surplus) for b in buses])
+            s = matrix([complex(v.p_surplus, v.q_surplus) for v in buses])
 
             # Bus voltage vector.
             v_angle = x[ph_base:ph_end+1]
@@ -250,7 +271,7 @@ class ACOPF(object):
             v = mul(v_magnitude, exp(j * v_angle)) #element-wise product
 
             # Evaluate the power flow equations.
-            Y = make_admittance_matrix(network)
+            Y, Ysource, Ytarget = AdmittanceMatrix().build(network)
             mismatch = mul(v, conj(Y * v)) - s
 
             # Evaluate power balance equality constraint function values.
@@ -260,9 +281,9 @@ class ACOPF(object):
             source_idxs = matrix([buses.index(e.source_bus) for e in branches])
             target_idxs = matrix([buses.index(e.target_bus) for e in branches])
             # Complex power in p.u. injected at the source bus.
-            s_source = mul(v[source_idxs], conj(Y_source, v))
+            s_source = mul(v[source_idxs], conj(Ysource, v))
             # Complex power in p.u. injected at the target bus.
-            s_target = mul(v[target_idxs], conj(Y_target, v))
+            s_target = mul(v[target_idxs], conj(Ytarget, v))
 
             s_max = matrix([e.s_max for e in branches])
 
@@ -272,8 +293,8 @@ class ACOPF(object):
             # Partial derivative of injected bus power
             ds_dvm, ds_dva = dSbus_dV(Y, v) # w.r.t voltage
             pv_idxs = matrix([buses.index(bus) for bus in buses])
-            ds_dpg = spmatrix(-1, pv_idxs, range(n_generators)) # w.r.t Pg
-            ds_dqg = spmatrix(-j, pv_idxs, range(n_generators)) # w.r.t Qg
+            ds_dpg = spmatrix(-1, pv_idxs, range(n_gen)) # w.r.t Pg
+            ds_dqg = spmatrix(-j, pv_idxs, range(n_gen)) # w.r.t Qg
 
             # Transposed Jacobian of the power balance equality constraints.
             dfk_eq = sparse([
@@ -287,7 +308,7 @@ class ACOPF(object):
 
             # Partial derivative of branch power flow w.r.t voltage.
             dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target = \
-                dSbr_dV(branches, Y_source, Y_target, v)
+                dSbr_dV(branches, Ysource, Ytarget, v)
 
             # Magnitude of complex power flow.
             df_dVa, dt_dVa, df_dVm, dt_dVm = \
@@ -307,11 +328,11 @@ class ACOPF(object):
 
             # Evaluate cost Hessian -------------------------------------------
 
-            d2f_d2pg = spmatrix([], [], [], (n_generators, 1))
-            d2f_d2qg = spmatrix([], [], [], (n_generators, 1))
+            d2f_d2pg = spmatrix([], [], [], (n_gen, 1))
+            d2f_d2qg = spmatrix([], [], [], (n_gen, 1))
             for i, g in enumerate(generators):
-                der = numpy.polyder(list(g.cost_coeffs))
-                d2f_d2pg[i] = numpy.polyval(der, g.p) * network.base_mva
+                der = polyder(list(g.cost_coeffs))
+                d2f_d2pg[i] = polyval(der, g.p) * network.base_mva
                 # TODO: Implement reactive power costs.
 
             i = matrix(range(pg_base, qg_end+1)).T
@@ -331,49 +352,51 @@ class ACOPF(object):
         t_elapsed = time.time() - t0
 
         if solution['status'] == 'optimal':
-            logger.info("DC power flow completed in %.3fs." % t_elapsed)
+            logger.info("AC OPF completed in %.3fs." % t_elapsed)
+            return True
         else:
             logger.error("Non-convergent AC OPF.")
+            return False
 
 
-    def _build_additional_linear_constraints(self):
-        """ A, l, u represent additional linear constraints on the
-            optimization variables.
-        """
-        if Au is None:
-            Au = sparse([], [], [], (0, 0))
-            l_bu = matrix([0])
-            u_bu = matrix([0])
-
-        # Piecewise linear convex costs
-        A_y = spmatrix([], [], [], (0, 0))
-        b_y = matrix([0])
-
-        # Branch angle difference limits
-        A_ang = spmatrix([], [], [], (0, 0))
-        l_ang = matrix([0])
-        u_ang = matrix([0])
-
-        # Despatchable loads
-        A_vl = spmatrix([], [], [], (0, 0))
-        l_vl = matrix([0])
-        u_vl = matrix([0])
-
-        # PQ capability curves
-        A_pqh = spmatrix([], [], [], (0, 0))
-        l_bpqh = matrix([0])
-        u_bpqh = matrix([0])
-
-        A_pql = spmatrix([], [], [], (0, 0))
-        l_bpql = matrix([0])
-        u_bpql = matrix([0])
-
-        # Build linear restriction matrix. Note the ordering.
-        # A, l, u represent additional linear constraints on
-        # the optimisation variables
-        A = sparse([Au, A_pqh, A_pql, A_vl, A_ang])
-        l = matrix([l_bu, l_bpqh, l_bpql, l_vl, l_ang])
-        u = matrix([u_bu, u_bpqh, u_bpql, u_vl, l_ang])
+#    def _build_additional_linear_constraints(self):
+#        """ A, l, u represent additional linear constraints on the
+#            optimization variables.
+#        """
+#        if Au is None:
+#            Au = sparse([], [], [], (0, 0))
+#            l_bu = matrix([0])
+#            u_bu = matrix([0])
+#
+#        # Piecewise linear convex costs
+#        A_y = spmatrix([], [], [], (0, 0))
+#        b_y = matrix([0])
+#
+#        # Branch angle difference limits
+#        A_ang = spmatrix([], [], [], (0, 0))
+#        l_ang = matrix([0])
+#        u_ang = matrix([0])
+#
+#        # Despatchable loads
+#        A_vl = spmatrix([], [], [], (0, 0))
+#        l_vl = matrix([0])
+#        u_vl = matrix([0])
+#
+#        # PQ capability curves
+#        A_pqh = spmatrix([], [], [], (0, 0))
+#        l_bpqh = matrix([0])
+#        u_bpqh = matrix([0])
+#
+#        A_pql = spmatrix([], [], [], (0, 0))
+#        l_bpql = matrix([0])
+#        u_bpql = matrix([0])
+#
+#        # Build linear restriction matrix. Note the ordering.
+#        # A, l, u represent additional linear constraints on
+#        # the optimisation variables
+#        A = sparse([Au, A_pqh, A_pql, A_vl, A_ang])
+#        l = matrix([l_bu, l_bpqh, l_bpql, l_vl, l_ang])
+#        u = matrix([u_bu, u_bpqh, u_bpql, u_vl, l_ang])
 
 #------------------------------------------------------------------------------
 #  "dS_dV" function:
@@ -403,7 +426,7 @@ def dSbus_dV(Y, v):
 #  "dSbr_dV" function:
 #------------------------------------------------------------------------------
 
-def dSbr_dV(branches, Y_source, Y_target, v):
+def dSbr_dV(buses, branches, Y_source, Y_target, v):
     """ Computes the branch power flow vector and the partial derivative of
         branch power flow w.r.t voltage.
 
@@ -471,7 +494,7 @@ def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
             Ray Zimmerman, "dAbr_dV.m", MATPOWER, version 3.2,
             PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
     """
-    n_branches = len(s_source)
+#    n_branches = len(s_source)
 
     # Compute apparent powers.
     a_source = abs(s_source)
@@ -499,7 +522,7 @@ def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
     dAt_dVa = dAt_dPt * dSt_dVa.real() + dAt_dQt * dSt_dVa.imag()
     # Partial derivative of apparent power magnitude w.r.t. voltage amplitude.
     dAf_dVm = dAf_dPf * dSf_dVm.real() + dAf_dQf * dSf_dVm.imag()
-    dAt_dVm = dAf_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
+    dAt_dVm = dAt_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
 
     return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
 

@@ -654,7 +654,7 @@ class FastDecoupled(_ACPF):
 
         am = AdmittanceMatrix(bus_shunts=False, line_shunts=False,
                               taps=False, line_resistance=r_line)
-        Y = am(self.network)
+        Y, Ysrc, Ytgt = am(self.network)
 
         self.Bp = Bp = -Y.imag()
 

@@ -143,8 +143,7 @@ class NewtonPFTest(TestCase):
         routine.network = self.network
 
         # See 'y_test_case.py' for admittance matrix tests.
-        admittance_matrix = AdmittanceMatrix()
-        routine.Y = admittance_matrix(self.network)
+        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
 
         routine.v = routine._get_initial_voltage_vector()
         routine.s_surplus = routine._get_power_injection_vector()
@@ -174,9 +173,8 @@ class NewtonPFTest(TestCase):
         routine.network = self.network
 
         # See 'y_test_case.py' for admittance matrix tests.
-        admittance_matrix = AdmittanceMatrix()
-        routine.Y = admittance_matrix(self.network)
-        
+        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
+
         routine.v = self.routine._get_initial_voltage_vector()
         routine.s_surplus = self.routine._get_power_injection_vector()
         routine._index_buses()
@@ -333,13 +331,12 @@ class NewtonPFTest(TestCase):
             [ 1.64e+00  2.06e+00     0      1.00e+00 -4.69e+00     0     -1.00e+00 ... ]
         """
         routine = self.routine
-        
+
         routine.network = self.network
 
         # See 'y_test_case.py' for admittance matrix tests.
-        admittance_matrix = AdmittanceMatrix()
-        routine.Y = admittance_matrix(self.network)
-        
+        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
+
         routine.v = self.routine._get_initial_voltage_vector()
         routine.s_surplus = self.routine._get_power_injection_vector()
         routine._index_buses()
@@ -398,13 +395,12 @@ class NewtonPFTest(TestCase):
                0.9990 - 0.1041i
         """
         routine = self.routine
-        
+
         routine.network = self.network
 
         # See 'y_test_case.py' for admittance matrix tests.
-        admittance_matrix = AdmittanceMatrix()
-        routine.Y = admittance_matrix(self.network)
-        
+        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
+
         routine.v = self.routine._get_initial_voltage_vector()
         routine.s_surplus = self.routine._get_power_injection_vector()
         routine._index_buses()

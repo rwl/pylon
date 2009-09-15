@@ -22,6 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import time
 import logging
 from cvxopt import matrix
 
@@ -43,6 +44,8 @@ class Bid(object):
     def __init__(self, generator, qty, prc):
         # Generating unit to which the bid applies.
         self.generator = generator
+        # Does the bid concern active or reactive power?
+        self.reactive = False
         # Quantity of power bidding to be bought.
         self.quantity = qty
         # Maximum price willing to be paid.
@@ -162,6 +165,9 @@ class SmartMarket(object):
         """
         # Start the clock.
         t0 = time.time()
+
+        offers = self.offers
+        bids = self.bids
 
         buses = self.network.connected_buses
         generators = self.network.all_generators
