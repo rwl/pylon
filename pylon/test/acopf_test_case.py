@@ -50,14 +50,14 @@ class ACOPFTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         reader = MATPOWERReader()
-        self.network = reader(DATA_FILE)
+        self.case = reader(DATA_FILE)
         self.routine = ACOPF()
 
 
     def test_mismatch(self):
         """ Test AC OPF.
         """
-        sucess = self.routine(self.network)
+        sucess = self.routine(self.case)
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

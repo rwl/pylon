@@ -76,7 +76,7 @@ class _ACPF(object):
     def __init__(self, tolerance=1e-08, iter_max=10):
         """ Initialises a new ACPF instance.
         """
-        self.network = None
+        self.case = None
         # Convergence tolerance.
         self.tolerance = tolerance
         # Maximum number of iterations.
@@ -98,10 +98,10 @@ class _ACPF(object):
         self.slack_idx = 0
 
 
-    def __call__(self, network):
-        """ Calls the routine with the given network.
+    def __call__(self, case):
+        """ Calls the routine with the given case.
         """
-        self.solve(network)
+        self.solve(case)
 
 
     def solve(self):
@@ -119,7 +119,7 @@ class _ACPF(object):
             buses, and the reference angle of the swing bus, as well as an
             initial guess for remaining magnitudes and angles.
         """
-        buses = self.network.connected_buses
+        buses = self.case.connected_buses
 
         v_magnitude = matrix([bus.v_magnitude_guess for bus in buses])
 
@@ -151,7 +151,7 @@ class _ACPF(object):
     def _get_power_injection_vector(self):
         """ Makes the vector of complex bus power injections (gen - load).
         """
-        buses = self.network.connected_buses
+        buses = self.case.connected_buses
 
         return matrix(
             [complex(bus.p_surplus, bus.q_surplus) for bus in buses], tc="z")
@@ -163,7 +163,7 @@ class _ACPF(object):
     def _index_buses(self):
         """ Set up indexing for updating v.
         """
-        buses = self.network.connected_buses
+        buses = self.case.connected_buses
 
         # Indexing for updating v
         pv_idxs = [i for i, v in enumerate(buses) if v.mode is "pv"]
@@ -211,18 +211,18 @@ class NewtonRaphson(_ACPF):
     #  Solve power flow using full Newton's method:
     #--------------------------------------------------------------------------
 
-    def solve(self, network):
-        """ Solves the AC power flow for the referenced network using full
+    def solve(self, case):
+        """ Solves the AC power flow for the referenced case using full
             Newton's method.
         """
-        self.network = network
+        self.case = case
 
         logger.info("Performing AC power flow using Newton-Raphson method.")
 
         t0 = time.time()
 
         admittance_matrix = AdmittanceMatrix()
-        self.Y = admittance_matrix(network)
+        self.Y = admittance_matrix(case)
 
         self.v = self._get_initial_voltage_vector()
         self.s_surplus = self._get_power_injection_vector()
@@ -336,7 +336,7 @@ class NewtonRaphson(_ACPF):
         j = 0 + 1j
         y = self.Y
         v = self.v
-        n = len(self.network.buses)
+        n = len(self.case.buses)
 
         pv_idxs = self.pv_idxs
         pq_idxs = self.pq_idxs
@@ -505,13 +505,13 @@ class FastDecoupled(_ACPF):
     #  Solve power flow using Fast Decoupled method:
     #--------------------------------------------------------------------------
 
-    def solve(self, network):
-        """ Solves the AC power flow for the referenced network using fast
+    def solve(self, case):
+        """ Solves the AC power flow for the referenced case using fast
             decoupled method.  Returns the final complex voltages, a flag which
             indicates whether it converged or not, and the number of iterations
             performed.
         """
-        self.network = network
+        self.case = case
 
         logger.info("Performing AC power flow using Fast Decoupled method.")
 
@@ -654,7 +654,7 @@ class FastDecoupled(_ACPF):
 
         am = AdmittanceMatrix(bus_shunts=False, line_shunts=False,
                               taps=False, line_resistance=r_line)
-        Y, Ysrc, Ytgt = am(self.network)
+        Y, Ysrc, Ytgt = am(self.case)
 
         self.Bp = Bp = -Y.imag()
 
@@ -678,7 +678,7 @@ class FastDecoupled(_ACPF):
 
         am = AdmittanceMatrix(line_resistance=r_line, phase_shift=False)
 
-        Y = am(self.network)
+        Y = am(self.case)
 
         self.Bp = Bpp = -Y.imag()
 

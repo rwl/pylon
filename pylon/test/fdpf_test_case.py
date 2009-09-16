@@ -49,9 +49,9 @@ class FDPFTest(TestCase):
         """ The test runner will execute this method prior to each test.
         """
         reader = MATPOWERReader()
-        network = reader(DATA_FILE)
+        case = reader(DATA_FILE)
         self.routine = FastDecoupled()
-        success = self.routine(network)
+        success = self.routine(case)
 
 
     def test_mismatch(self):

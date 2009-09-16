@@ -28,7 +28,7 @@ import logging
 
 from numpy import array, zeros
 
-from pylon import Network, DCOPF
+from pylon import Case, DCOPF
 from pylon.readwrite import ReSTWriter
 
 logger = logging.getLogger(__name__)

@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines the network test case.
+""" Defines the case test case.
 """
 
 #------------------------------------------------------------------------------
@@ -25,48 +25,48 @@
 from os.path import join, dirname
 import unittest
 
-from pylon import Network, Bus, Branch, Generator, Load
+from pylon import Case, Bus, Branch, Generator, Load
 from pylon.readwrite import MATPOWERReader
 
 #-------------------------------------------------------------------------------
 #  Constants:
 #-------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data/case6ww.m")
+DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
 
 #------------------------------------------------------------------------------
-#  "NetworkTest" class:
+#  "CaseTest" class:
 #------------------------------------------------------------------------------
 
-class NetworkTest(unittest.TestCase):
-    """ Defines a test case for the Pylon network.
+class CaseTest(unittest.TestCase):
+    """ Defines a test case for the Pylon case.
     """
 
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
         reader = MATPOWERReader()
-        self.network = reader(DATA_FILE)
+        self.case = reader(DATA_FILE)
 
 
     def test_slack_bus(self):
         """ Test zero or one slack bus.
         """
-        network = self.network
+        case = self.case
 
-        def get_slack_buses(network):
-            return [bus for bus in network.buses if bus.slack]
+        def get_slack_buses(case):
+            return [bus for bus in case.buses if bus.slack]
 
         # Distributed slack bus model.
-        for bus in network.buses:
+        for bus in case.buses:
             bus.slack = False
-        self.assertEqual(len(get_slack_buses(network)), 0)
-        self.assertEqual(network.slack_model, "distributed")
+        self.assertEqual(len(get_slack_buses(case)), 0)
+        self.assertEqual(case.slack_model, "distributed")
 
         # Single slack bus model.
-        network.buses[0].slack = True
-        self.assertEqual(len(get_slack_buses(network)), 1)
-        self.assertEqual(network.slack_model, "single")
+        case.buses[0].slack = True
+        self.assertEqual(len(get_slack_buses(case)), 1)
+        self.assertEqual(case.slack_model, "single")
 
 #------------------------------------------------------------------------------
 #  "BusTest" class:
@@ -127,30 +127,30 @@ class BranchTest(unittest.TestCase):
     def test_bus_indexes(self):
         """ Test the source/target bus index property.
         """
-        n = Network(name="n")
+        c = Case(name="c")
         bus1 = Bus(name="Bus 1")
         bus2 = Bus(name="Bus 2")
         bus3 = Bus(name="Bus 3")
-        n.buses = [bus1, bus2, bus3]
+        c.buses = [bus1, bus2, bus3]
 
         # Append to list.
         branch1 = Branch(bus3, bus1)
-        n.branches.append(branch1)
+        c.branches.append(branch1)
 
-        self.assertEqual(n.buses.index(branch1.source_bus), 2)
-        self.assertEqual(n.buses.index(branch1.target_bus), 0)
+        self.assertEqual(c.buses.index(branch1.source_bus), 2)
+        self.assertEqual(c.buses.index(branch1.target_bus), 0)
 
         # Set list.
         branch2 = Branch(bus2, bus3)
         branch3 = Branch(bus2, bus1)
-        n.branches = [branch2, branch3]
+        c.branches = [branch2, branch3]
 
-        self.assertEqual(n.buses.index(branch2.source_bus), 1)
-        self.assertEqual(n.buses.index(branch2.target_bus), 2)
+        self.assertEqual(c.buses.index(branch2.source_bus), 1)
+        self.assertEqual(c.buses.index(branch2.target_bus), 2)
 
         # Move branch.
         branch2.source_bus = bus1
-        self.assertEqual(n.buses.index(branch2.source_bus), 0)
+        self.assertEqual(c.buses.index(branch2.source_bus), 0)
 
 
 #    def test_v_ratio(self):

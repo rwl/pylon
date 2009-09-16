@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" For writing network data to an Excel file.
+""" For writing case data to an Excel file.
 """
 
 #------------------------------------------------------------------------------
@@ -31,70 +31,70 @@ from common import bus_attrs, branch_attrs, generator_attrs, load_attrs
 #------------------------------------------------------------------------------
 
 class ExcelWriter(object):
-    """ Writes network data to file in Excel format.
+    """ Writes case data to file in Excel format.
     """
 
-    def __call__(self, network, file_or_filename):
-        """ Calls the writer with the given network.
+    def __call__(self, case, file_or_filename):
+        """ Calls the writer with the given case.
         """
-        self.write(network, file_or_filename)
+        self.write(case, file_or_filename)
 
 
-    def write(self, network, file_or_filename):
-        """ Writes network data to file in Excel format.
+    def write(self, case, file_or_filename):
+        """ Writes case data to file in Excel format.
         """
-        self.network = network
+        self.case = case
         self.file_or_filename = file_or_filename
 
         self.book = Workbook()
 
-        self.write_generator_data(network, file)
-        self.write_branch_data(network, file)
-        self.write_generator_data(network, file)
-        self.write_load_data(network, file)
+        self.write_generator_data(case, file)
+        self.write_branch_data(case, file)
+        self.write_generator_data(case, file)
+        self.write_load_data(case, file)
 
         book.save(file_or_filename)
 
 
-    def write_header(self, network, file):
+    def write_header(self, case, file):
         """ Writes the header to file.
         """
         pass
 
 
-    def write_bus_data(self, network, file):
+    def write_bus_data(self, case, file):
         """ Writes bus data to file.
         """
         bus_sheet = book.add_sheet("Buses")
 
-        for i, bus in enumerate(network.buses):
+        for i, bus in enumerate(case.buses):
             for j, attr in enumerate(bus_attrs):
                 bus_sheet.write(i, j, getattr(bus, attr))
 
 
-    def write_branch_data(self, network, file):
+    def write_branch_data(self, case, file):
         """ Writes branch data to file.
         """
         branch_sheet = book.add_sheet("Branches")
 
-        for i, branch in enumerate(network.branches):
+        for i, branch in enumerate(case.branches):
             for j, attr in enumerate(branch_attrs):
                 branch_sheet.write(i, j, getattr(branch, attr))
 
 
-    def write_generator_data(self, network, file):
+    def write_generator_data(self, case, file):
         """ Write generator data to file.
         """
         generator_sheet = book.add_sheet("Generators")
 
-        for i, bus, in enumerate(network.buses):
+        for i, bus, in enumerate(case.buses):
             for j, generator in enumerate(bus.generators):
                 for k, attr in enumerate(generator_attrs):
                     generator_sheet.write(j, 0, i)
 #                    generator_sheet.write(j, k+1, getattr(generator, attr))
 
 
-    def write_load_data(self, network, file):
+    def write_load_data(self, case, file):
         """ Writes load data to file.
         """
         load_sheet = book.add_sheet("Loads")
@@ -102,14 +102,14 @@ class ExcelWriter(object):
         for i, attr in enumerate(load_attrs):
             load_sheet.write(0, i, attr)
 
-        for i, bus, in enumerate(network.buses):
+        for i, bus, in enumerate(case.buses):
             for j, load in enumerate(bus.loads):
                 for k, attr in enumerate(load_attrs):
                     load_sheet.write(j+1, 0, i)
                     load_sheet.write(j+1, k+1, getattr(load, attr))
 
 
-    def write_generator_cost_data(self, network, file):
+    def write_generator_cost_data(self, case, file):
         """ Writes generator cost data to file.
         """
         pass

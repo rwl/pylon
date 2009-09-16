@@ -27,7 +27,7 @@ from pybrain.rl.environments import Environment
 from pybrain.rl.environments.graphical import GraphicalEnvironment
 
 from pylon import Generator
-from pylon.pyreto.market import SmartMarket, Offer, Bid
+from pylon.pyreto.market import Market, Offer, Bid
 
 #------------------------------------------------------------------------------
 #  "ParticipantEnvironment" class:
@@ -59,7 +59,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         """ Initialises the environment.
         """
         assert isinstance(asset, Generator)
-        assert isinstance(market, SmartMarket)
+        assert isinstance(market, Market)
 
         super(ParticipantEnvironment, self).__init__()
 
@@ -104,9 +104,9 @@ class ParticipantEnvironment(GraphicalEnvironment):
     def get_demand(self):
         """ Returns the total system demand including dispatchable loads.
         """
-        n = self.market.network
-        l  = sum( [load.p for load in network.online_loads] )
-        vl = sum( [g.p for g in network.online_generators if g.is_load()] )
+        n = self.market.case
+        l  = sum( [load.p for load in case.online_loads] )
+        vl = sum( [g.p for g in case.online_generators if g.is_load()] )
 
         return l + vl
 

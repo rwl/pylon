@@ -50,7 +50,7 @@ class YTest(TestCase):
         """ The test runner will execute this method prior to each test.
         """
         reader = MATPOWERReader()
-        self.network = reader(DATA_FILE)
+        self.case = reader(DATA_FILE)
         del reader
 
 
@@ -65,7 +65,7 @@ class YTest(TestCase):
                 0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i   4.4821 -17.0047i
 
         """
-        Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
+        Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.case)
 
         self.assertEqual(Y.size, (6, 6))
 
@@ -130,7 +130,7 @@ class BTest(TestCase):
         """ The test runner will execute this method prior to each test.
         """
         reader = MATPOWERReader()
-        self.network = reader(DATA_FILE)
+        self.case = reader(DATA_FILE)
         del reader
 
 
@@ -148,7 +148,7 @@ class BTest(TestCase):
 
         """
         susceptance_matrix = SusceptanceMatrix()
-        B, B_source = susceptance_matrix(self.network)
+        B, B_source = susceptance_matrix(self.case)
 
         self._validate_susceptance_diagonal_values(B)
         self._validate_suseptance_off_diagonal_equality(B)

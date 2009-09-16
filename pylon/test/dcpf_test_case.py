@@ -49,9 +49,9 @@ class DCPFTest(TestCase):
         """ The test runner will execute this method prior to each test.
         """
         reader = MATPOWERReader()
-        network = reader(DATA_FILE)
+        case = reader(DATA_FILE)
         self.routine = DCPF()
-        self.routine(network)
+        self.routine(case)
 
 
     def test_v_angle_guess_vector(self):
@@ -121,9 +121,9 @@ class DCPFTest(TestCase):
 
         places = 4
 
-        n        = self.routine.network
-        buses    = n.connected_buses
-        branches = n.online_branches
+        c        = self.routine.case
+        buses    = c.connected_buses
+        branches = c.online_branches
 
         # Buses
         v_0 = 0.0000

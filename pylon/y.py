@@ -40,13 +40,13 @@ logger.setLevel(logging.INFO)
 #  "make_susceptance_matrix" function:
 #------------------------------------------------------------------------------
 
-#def make_susceptance_matrix(network):
+#def make_susceptance_matrix(case):
 #    """ Returns the susceptance and source bus susceptance matrices for the
-#        given network.
+#        given case.
 #    """
 #
-#    buses      = network.connected_buses
-#    branches   = network.online_branches
+#    buses      = case.connected_buses
+#    branches   = case.online_branches
 #    n_buses    = len(buses)
 #    n_branches = len(branches)
 #
@@ -101,12 +101,12 @@ logger.setLevel(logging.INFO)
 #  "make_admittance_matrix" function:
 #------------------------------------------------------------------------------
 
-#def make_admittance_matrix(network):
-#    """ Returns an admittance matrix for the supplied network.
+#def make_admittance_matrix(case):
+#    """ Returns an admittance matrix for the supplied case.
 #    """
-#    buses    = network.connected_buses
+#    buses    = case.connected_buses
 #    n_buses  = len(buses)
-#    branches = network.online_branches
+#    branches = case.online_branches
 #
 #    Y = spmatrix([], [], [], size=(n_buses, n_buses), tc="z")
 #
@@ -171,19 +171,19 @@ class AdmittanceMatrix(object):
         self.Y = None
 
 
-    def __call__(self, network):
-        return self.build(network)
+    def __call__(self, case):
+        return self.build(case)
 
 
-    def build(self, network=None):
+    def build(self, case=None):
         """ Builds the admittance matrix.
         """
         j = 0 + 1j
 
-        base_mva   = network.base_mva
-        buses      = network.connected_buses
+        base_mva   = case.base_mva
+        buses      = case.connected_buses
         n_buses    = len(buses)
-        branches   = network.branches
+        branches   = case.branches
         n_branches = len(branches)
 
         online = matrix([e.online for e in branches])
@@ -297,18 +297,18 @@ class SusceptanceMatrix(object):
         TODO: Speed up by using spdiag(x)
     """
 
-    def __call__(self, network):
-        return self.build(network)
+    def __call__(self, case):
+        return self.build(case)
 
 
-    def build(self, network=None):
+    def build(self, case=None):
         """ Builds the susceptance matrices.
         """
-        network = self.network if network is None else network
-        assert network is not None
+        case = self.case if case is None else case
+        assert case is not None
 
-        buses      = network.buses
-        branches   = network.branches
+        buses      = case.buses
+        branches   = case.branches
         n_buses    = len(buses)
         n_branches = len(branches)
 
@@ -367,11 +367,11 @@ class PSATAdmittanceMatrix(object):
     """ Defines an admittance matrix as translated from PSAT.
     """
 
-    def __call__(self, network):
+    def __call__(self, case):
         j = 0 + 1j
-        buses = network.connected_buses
+        buses = case.connected_buses
         n_buses = len(buses)
-        branches = network.online_branches
+        branches = case.online_branches
 
         y = spmatrix([], [], [], size=(n_buses, n_buses), tc='z')
 

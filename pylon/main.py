@@ -58,10 +58,10 @@ class PylonApplication(object):
         """
         # Name of the input file.
         self.file_name = file_name
-        # Format in which the network is stored.  Possible values are: 'any',
+        # Format in which the case is stored.  Possible values are: 'any',
         # 'matpower', 'psat', 'matlab' and 'psse'.
         self.type = type
-        # Routine type used to solve the network. Possible values are: 'acpf',
+        # Routine type used to solve the case. Possible values are: 'acpf',
         # 'dcpf', 'acopf' and 'dcopf'.
         self.routine = routine
         # Algorithm to be used in the routine. Possible values are: 'newton'
@@ -76,15 +76,15 @@ class PylonApplication(object):
     #--------------------------------------------------------------------------
 
     def __call__(self, input, output):
-        """ Forms a network from the input text, obtains a solution using the
+        """ Forms a case from the input text, obtains a solution using the
             specified routine and writes a report to the output.
         """
-        # Get the network from the input.
-        network = read_network(input, self.type, self.file_name)
+        # Get the case from the input.
+        case = read_case(input, self.type, self.file_name)
 
-        if network is not None:
+        if case is not None:
             if self.routine != "none":
-                # Get the routine and pass the network to it.
+                # Get the routine and pass the case to it.
                 routine = self._get_routine(self.routine)
 
                 if routine is None:
@@ -92,7 +92,7 @@ class PylonApplication(object):
                         self.routine)
                     return False
 
-                success = routine(network)
+                success = routine(case)
 
             # Solution output.
             writer = None
@@ -113,7 +113,7 @@ class PylonApplication(object):
 
             # Write the solution.
             if writer is not None:
-                writer(network, output)
+                writer(case, output)
 
             return True
         else:
@@ -122,7 +122,7 @@ class PylonApplication(object):
 
 
     def _get_routine(self, routine):
-        """ Returns the routine to which to pass the network.
+        """ Returns the routine to which to pass the case.
         """
         if routine == "dcpf":
             r = DCPF()
@@ -143,10 +143,10 @@ class PylonApplication(object):
         return r
 
 
-def read_network(input, type, file_name):
-    """ Returns a network object from the given input and file name.
+def read_case(input, type, file_name):
+    """ Returns a case object from the given input and file name.
     """
-    network = None
+    case = None
 
     if type == "any":
         type = detect_data_file(input, file_name)
@@ -156,25 +156,25 @@ def read_network(input, type, file_name):
                "psse": PSSEReader,
                "pickle": PickleReader}
 
-    # Read network data.
+    # Read case data.
     if readers.has_key(type):
         reader_klass = readers[type]
         reader = reader_klass()
-        network = reader(input)
+        case = reader(input)
     else:
         for reader_klass in readers.values():
             reader = reader_klass()
             try:
-                network = reader(input)
-                if network is not None:
+                case = reader(input)
+                if case is not None:
                     break
             except:
                 pass
         else:
-            network = input.read()
-            network = None
+            case = input.read()
+            case = None
 
-    return network
+    return case
 
 #------------------------------------------------------------------------------
 #  Format detection:
@@ -208,7 +208,7 @@ def detect_data_file(input, file_name=""):
 
     elif file_name.endswith(".pkl"):
         type = "pickle"
-        logger.info("Recognised pickled network.")
+        logger.info("Recognised pickled case.")
 
     else:
         type = "unrecognised"

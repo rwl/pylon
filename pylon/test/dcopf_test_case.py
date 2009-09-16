@@ -46,11 +46,11 @@ PWL_FILE2 = join(MP_HOME, "case6pwl.m")
 #        """ The test runner will execute this method prior to each test.
 #        """
 #        reader = MATPOWERReader()
-#        self.network = reader(PWL_FILE2)
+#        self.case = reader(PWL_FILE2)
 #
 #        self.routine = DCOPF(show_progress=False)
-##        success = self.routine(network)
-#        self.routine.network = self.network
+##        success = self.routine(case)
+#        self.routine.case = self.case
 #
 #
 #    def test_solver_output(self):
@@ -58,7 +58,7 @@ PWL_FILE2 = join(MP_HOME, "case6pwl.m")
 #        """
 ##        self.routine.solver = "glpk"
 ##        self.routine.solver = "mosek"
-#        self.routine.solve(self.network)
+#        self.routine.solve(self.case)
 #
 ##        print "\n", self.routine.x
 
@@ -79,11 +79,11 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         reader = MATPOWERReader()
-        self.network = reader(PWL_FILE)
+        self.case = reader(PWL_FILE)
 
         self.routine = DCOPF(show_progress=False)
-#        success = self.routine(network)
-        self.routine.network = self.network
+#        success = self.routine(case)
+        self.routine.case = self.case
 
 
     def test_cost_model(self):
@@ -296,7 +296,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         """ Test piecewise linear power balance (mismatch) constraint.
         """
         susceptance = SusceptanceMatrix()
-        self.routine._B, self.routine._B_source = susceptance(self.network)
+        self.routine._B, self.routine._B_source = susceptance(self.case)
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -400,7 +400,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         """
 #        self.routine.solver = "glpk"
 #        self.routine.solver = "mosek"
-        self.routine.solve(self.network)
+        self.routine.solve(self.case)
         x = self.routine.x
 
         places = 4
@@ -429,11 +429,11 @@ class DCOPFTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         reader = MATPOWERReader()
-        self.network = reader(DATA_FILE)
+        self.case = reader(DATA_FILE)
 
         self.routine = DCOPF(show_progress=False)
-        self.routine.network = self.network
-#        success = self.routine(self.network)
+        self.routine.case = self.case
+#        success = self.routine(self.case)
 
 
     def test_theta_injection_source(self):
@@ -564,7 +564,7 @@ class DCOPFTest(unittest.TestCase):
                -0.7000
         """
         susceptance = SusceptanceMatrix()
-        self.routine._B, self.routine._B_source = susceptance(self.network)
+        self.routine._B, self.routine._B_source = susceptance(self.case)
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -719,7 +719,7 @@ class DCOPFTest(unittest.TestCase):
                 0.4000
         """
         susceptance = SusceptanceMatrix()
-        self.routine._B, self.routine._B_source = susceptance(self.network)
+        self.routine._B, self.routine._B_source = susceptance(self.case)
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -843,7 +843,7 @@ class DCOPFTest(unittest.TestCase):
                 0.8807
                 0.7193
         """
-        self.routine(self.network)
+        self.routine(self.case)
         x = self.routine.x
 
         places = 4
@@ -865,7 +865,7 @@ class DCOPFTest(unittest.TestCase):
     def test_model_update(self):
         """ Test update of the model with the results.
         """
-        self.routine(self.network)
+        self.routine(self.case)
         self.assertAlmostEqual(self.routine.f, 3046.41, places=2)
 
 

@@ -33,17 +33,17 @@ from itertools import cycle
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "Network" class:
+#  "Case" class:
 #------------------------------------------------------------------------------
 
-class Network(object):
+class Case(object):
     """ Defines representation of an electric power system as a graph
         of Bus objects connected by Branches.
     """
 
-    def __init__(self, name="network", base_mva=100.0, buses=None,
+    def __init__(self, name="case", base_mva=100.0, buses=None,
             branches=None):
-        """ Initialises a new Network instance.
+        """ Initialises a new Case instance.
         """
         self.name = name
         # Base apparent power (MVA).
@@ -218,7 +218,7 @@ class Bus(object):
 #------------------------------------------------------------------------------
 
 class Branch(object):
-    """ Defines a network edge that links two Bus objects.
+    """ Defines a case edge that links two Bus objects.
     """
 
     def __init__(self, source_bus, target_bus, name="branch", online=True,
@@ -597,49 +597,49 @@ class Load(object):
     p_profile = property(get_p_profile, set_p_profile)
 
 
-class NetworkReport(object):
-    """ Defines a statistical network report.
+class CaseReport(object):
+    """ Defines a statistical case report.
     """
 
-    def __init__(self, network):
-        """ Initialises a NetworkReport instance.
+    def __init__(self, case):
+        """ Initialises a CaseReport instance.
         """
-        self.network = network
+        self.case = case
 
 
     @property
     def n_buses(self):
         """ Total number of buses.
         """
-        return len(self.network.buses)
+        return len(self.case.buses)
 
 
     @property
     def n_connected_buses(self):
         """ Total number of non-islanded buses.
         """
-        return len(self.network.connected_buses)
+        return len(self.case.connected_buses)
 
 
     @property
     def n_generators(self):
         """ Total number of generators.
         """
-        return len(self.network.all_generators)
+        return len(self.case.all_generators)
 
 
     @property
     def n_online_generators(self):
         """ Total number of generators in service.
         """
-        return len(self.network.online_generators)
+        return len(self.case.online_generators)
 
 
     @property
     def committed_generators(self):
         """ Generators that have been despatched.
         """
-        return [g for g in self.network.all_generators if g.p > 0.0]
+        return [g for g in self.case.all_generators if g.p > 0.0]
 
 
     @property
@@ -653,21 +653,21 @@ class NetworkReport(object):
     def n_loads(self):
         """ Total number of loads.
         """
-        return len(self.network.all_loads)
+        return len(self.case.all_loads)
 
 
     @property
     def n_online_loads(self):
         """ Number of active loads.
         """
-        return len(self.network.online_loads)
+        return len(self.case.online_loads)
 
 
     @property
     def fixed(self):
         """ Fixed loads.
         """
-        return self.network.all_loads
+        return self.case.all_loads
 
 
     @property
@@ -681,7 +681,7 @@ class NetworkReport(object):
     def despatchable(self):
         """ Generators with negative output.
         """
-        return [g for g in self.network.all_generators if g.p < 0.0]
+        return [g for g in self.case.all_generators if g.p < 0.0]
 
 
     @property
@@ -696,21 +696,21 @@ class NetworkReport(object):
     def n_branches(self):
         """ Total number of branches.
         """
-        return len(self.network.branches)
+        return len(self.case.branches)
 
 
     @property
     def n_online_branches(self):
         """ Total number of active branches.
         """
-        return len(self.network.online_branches)
+        return len(self.case.online_branches)
 
 
     @property
     def transformers(self):
         """ Branches operating as transformers.
         """
-        return [e for e in self.network.branches if e.mode == "transformer"]
+        return [e for e in self.case.branches if e.mode == "transformer"]
 
 
     @property
@@ -725,9 +725,9 @@ class NetworkReport(object):
     def total_gen_capacity(self):
         """ Total generation capacity.
         """
-        base_mva = self.network.base_mva
-        p = sum([g.p for g in self.network.all_generators])
-        q = sum([g.q for g in self.network.all_generators])
+        base_mva = self.case.base_mva
+        p = sum([g.p for g in self.case.all_generators])
+        q = sum([g.q for g in self.case.all_generators])
 
         return complex(p, q)
 
@@ -736,8 +736,8 @@ class NetworkReport(object):
     def online_capacity(self):
         """ Total online generation capacity.
         """
-        p = sum([g.p for g in self.network.online_generators])
-        q = sum([g.q for g in self.network.online_generators])
+        p = sum([g.p for g in self.case.online_generators])
+        q = sum([g.q for g in self.case.online_generators])
 
         return complex(p, q)
 
@@ -746,8 +746,8 @@ class NetworkReport(object):
     def generation_actual(self):
         """ Total despatched generation.
         """
-        p = sum([g.p for g in self.network.all_generators])
-        q = sum([g.q for g in self.network.all_generators])
+        p = sum([g.p for g in self.case.all_generators])
+        q = sum([g.q for g in self.case.all_generators])
 
         return complex(p, q)
 
@@ -756,8 +756,8 @@ class NetworkReport(object):
     def load(self):
         """ Total system load.
         """
-        p = sum([l.p for l in self.network.all_loads])
-        q = sum([l.q for l in self.network.all_loads])
+        p = sum([l.p for l in self.case.all_loads])
+        q = sum([l.q for l in self.case.all_loads])
 
         return complex(p, q)
 
@@ -793,8 +793,8 @@ class NetworkReport(object):
     def losses(self):
         """ Total system losses.
         """
-        p = sum([e.p_losses for e in self.network.branches])
-        q = sum([e.q_losses for e in self.network.branches])
+        p = sum([e.p_losses for e in self.case.branches])
+        q = sum([e.q_losses for e in self.case.branches])
 
         return complex(p, q)
 
@@ -817,9 +817,9 @@ class NetworkReport(object):
     def min_voltage_amplitude(self):
         """ Minimum bus voltage amplitude.
         """
-        if self.network.buses:
+        if self.case.buses:
 #            l.index(min(l))
-            return min([bus.v_magnitude for bus in self.network.buses])
+            return min([bus.v_magnitude for bus in self.case.buses])
         else:
             return 0.0
 
@@ -828,8 +828,8 @@ class NetworkReport(object):
     def max_voltage_amplitude(self):
         """ Maximum bus voltage amplitude.
         """
-        if self.network.buses:
-            return max([bus.v_magnitude for bus in self.network.buses])
+        if self.case.buses:
+            return max([bus.v_magnitude for bus in self.case.buses])
         else:
             return 0.0
 
@@ -838,8 +838,8 @@ class NetworkReport(object):
     def min_voltage_phase(self):
         """ Minimum bus voltage phase angle.
         """
-        if self.network.buses:
-            return min([bus.v_angle for bus in self.network.buses])
+        if self.case.buses:
+            return min([bus.v_angle for bus in self.case.buses])
         else:
             return 0.0
 
@@ -848,8 +848,8 @@ class NetworkReport(object):
     def max_voltage_phase(self):
         """ Maximum bus voltage phase angle.
         """
-        if self.network.buses:
-            return max([bus.v_angle for bus in self.network.buses])
+        if self.case.buses:
+            return max([bus.v_angle for bus in self.case.buses])
         else:
             return 0.0
 
@@ -858,8 +858,8 @@ class NetworkReport(object):
     def min_p_lambda(self):
         """ Minimum bus active power Lagrangian multiplier.
         """
-        if self.network.buses:
-            return min([v.p_lambda for v in self.network.buses])
+        if self.case.buses:
+            return min([v.p_lambda for v in self.case.buses])
         else:
             return 0.0
 
@@ -868,8 +868,8 @@ class NetworkReport(object):
     def max_p_lambda(self):
         """ Maximum bus active power Lagrangian multiplier.
         """
-        if self.network.buses:
-            return max([v.p_lambda for v in self.network.buses])
+        if self.case.buses:
+            return max([v.p_lambda for v in self.case.buses])
         else:
             return 0.0
 
@@ -878,8 +878,8 @@ class NetworkReport(object):
     def min_q_lambda(self):
         """ Minimum bus reactive power Lagrangian multiplier.
         """
-        if self.network.buses:
-            return min([v.q_lambda for v in self.network.buses])
+        if self.case.buses:
+            return min([v.q_lambda for v in self.case.buses])
         else:
             return 0.0
 
@@ -888,8 +888,8 @@ class NetworkReport(object):
     def max_q_lambda(self):
         """ Maximum bus reactive power Lagrangian multiplier.
         """
-        if self.network.buses:
-            return max([v.q_lambda for v in self.network.buses])
+        if self.case.buses:
+            return max([v.q_lambda for v in self.case.buses])
         else:
             return 0.0
 

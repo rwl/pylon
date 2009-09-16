@@ -97,14 +97,14 @@ class ACOPF(object):
         self.refinement = refinement
 
 
-    def __call__(self, network):
-        """ Calls the routine with the given network.
+    def __call__(self, case):
+        """ Calls the routine with the given case.
         """
-        self.solve(network)
+        self.solve(case)
 
 
-    def solve(self, network=None):
-        """ Solves AC OPF for the given network.
+    def solve(self, case=None):
+        """ Solves AC OPF for the given case.
         """
         t0 = time.time()
 
@@ -116,20 +116,20 @@ class ACOPF(object):
         solvers.options["feastol"] = self.feasibility_tol
         solvers.options["refinement"] = self.refinement
 
-        network = self.network if network is None else network
-        assert network is not None
+        case = self.case if case is None else case
+        assert case is not None
 
-        logger.debug("Solving AC OPF [%s]." % network.name)
+        logger.debug("Solving AC OPF [%s]." % case.name)
 
         j = 0 + 1j
 
-        base_mva = network.base_mva
-        buses = network.connected_buses
-        branches = network.online_branches
-        generators = network.online_generators
-        n_buses = len(network.connected_buses)
-        n_branches = len(network.online_branches)
-        n_gen = len(network.online_generators)
+        base_mva = case.base_mva
+        buses = case.connected_buses
+        branches = case.online_branches
+        generators = case.online_generators
+        n_buses = len(case.connected_buses)
+        n_branches = len(case.online_branches)
+        n_gen = len(case.online_generators)
 
         # FIXME: Implement piecewise linear cost constraints.
         assert "pwl" not in [g.cost_model for g in generators]
@@ -272,7 +272,7 @@ class ACOPF(object):
             v = mul(v_magnitude, exp(j * v_angle)) #element-wise product
 
             # Evaluate the power flow equations.
-            Y, Ysource, Ytarget = AdmittanceMatrix().build(network)
+            Y, Ysource, Ytarget = AdmittanceMatrix().build(case)
             mismatch = mul(v, conj(Y * v)) - s
 
             # Evaluate power balance equality constraint function values.

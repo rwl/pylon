@@ -24,8 +24,8 @@
 
 import unittest
 
-from network_test_case \
-    import NetworkTest, BusTest, BranchTest, GeneratorTest, LoadTest
+from case_test_case \
+    import caseTest, BusTest, BranchTest, GeneratorTest, LoadTest
 
 from y_test_case import BTest, YTest
 from dcpf_test_case import DCPFTest
@@ -46,7 +46,7 @@ def suite():
     """
     suite = unittest.TestSuite()
 
-    suite.addTest(unittest.makeSuite(NetworkTest))
+    suite.addTest(unittest.makeSuite(caseTest))
     suite.addTest(unittest.makeSuite(BusTest))
     suite.addTest(unittest.makeSuite(BranchTest))
     suite.addTest(unittest.makeSuite(GeneratorTest))

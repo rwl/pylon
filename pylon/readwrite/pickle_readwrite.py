@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a reader of pickled networks.
+""" Defines a reader of pickled cases.
 """
 
 #------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class PickleReader(object):
-    """ Defines a reader for pickled networks.
+    """ Defines a reader for pickled cases.
     """
 
     def __call__(self, file_or_filename):
@@ -46,13 +46,13 @@ class PickleReader(object):
 
 
     def read(self, file_or_filename):
-        """ Loads a pickled network.
+        """ Loads a pickled case.
         """
         if isinstance(file_or_filename, basestring):
             file = None
             try:
                 file = open(file_or_filename, "rb")
-                network = pickle.load(file)
+                case = pickle.load(file)
             except:
                 logger.error("Could not open '%s'." % file_or_filename)
                 return None
@@ -61,26 +61,26 @@ class PickleReader(object):
                     file.close()
         else:
             file = file_or_filename
-            network = pickle.load(file)
+            case = pickle.load(file)
 
-        return network
+        return case
 
 #------------------------------------------------------------------------------
 #  "PickleWriter" class:
 #------------------------------------------------------------------------------
 
 class PickleWriter(object):
-    """ Writes a network to file using pickle.
+    """ Writes a case to file using pickle.
     """
 
-    def __call__(self, network, file_or_filename):
-        """ Writes the network to file using pickle.
+    def __call__(self, case, file_or_filename):
+        """ Writes the case to file using pickle.
         """
         if isinstance(file_or_filename, basestring):
             file = None
             try:
                 file = open(file_or_filename, "wb")
-                pickle.dump(file, network)
+                pickle.dump(file, case)
             except:
                 logger.error("Could not open '%s'." % file_or_filename)
                 return False
@@ -89,7 +89,7 @@ class PickleWriter(object):
                     file.close()
         else:
             file = file_or_filename
-            pickle.dump(file, network)
+            pickle.dump(file, case)
 
         return True
 

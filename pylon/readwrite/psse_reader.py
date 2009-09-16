@@ -32,7 +32,7 @@ from pyparsing \
     import Literal, Word, restOfLine, alphanums, printables, quotedString, \
     White, OneOrMore, ZeroOrMore, Optional, alphas
 
-from pylon import Network, Bus, Branch, Generator, Load
+from pylon import Case, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 #-------------------------------------------------------------------------------
 
 class PSSEReader(object):
-    """ Defines a reader of PSS/E data files that returns a network object.
+    """ Defines a reader of PSS/E data files that returns a case object.
     """
 
     def __init__(self):
@@ -53,8 +53,8 @@ class PSSEReader(object):
         """
         # Path to the data file or file object.
         self.file_or_filename = None
-        # The resulting network.
-        self.network = None
+        # The resulting case.
+        self.case = None
 
 
     def __call__(self, file_or_filename):
@@ -64,7 +64,7 @@ class PSSEReader(object):
 
 
     def read(self, file_or_filename):
-        """ Parses a PSS/E data file and returns a network object.
+        """ Parses a PSS/E data file and returns a case object.
         """
         self.file_or_filename = file_or_filename
 
@@ -72,7 +72,7 @@ class PSSEReader(object):
 
         t0 = time.time()
 
-        self.network = Network()
+        self.case = Case()
 
         header = self._get_header_construct()
         title = self._get_title_construct()
@@ -102,7 +102,7 @@ class PSSEReader(object):
         elapsed = time.time() - t0
         logger.info("PSS/E case file parsed in %.3fs." % elapsed)
 
-        return self.network
+        return self.case
 
     #--------------------------------------------------------------------------
     #  Construct getters:
@@ -363,20 +363,20 @@ class PSSEReader(object):
         """ Set the system base.
         """
         logger.debug("MVA Base: %.3f" % tokens[0])
-        self.network.base_mva = tokens[0]
+        self.case.base_mva = tokens[0]
 
 
     def _push_title(self, tokens):
-        """ Handles the network title.
+        """ Handles the case title.
         """
         logger.debug("Title: %s" % tokens[0])
 
 
     def _push_sub_title(self, tokens):
-        """ Sets the network name.
+        """ Sets the case name.
         """
         logger.debug("Sub-Title: %s" % tokens[0])
-        self.network.name = tokens[0]
+        self.case.name = tokens[0]
 
 
     def _push_separator(self):
@@ -386,7 +386,7 @@ class PSSEReader(object):
 
 
     def _push_bus_data(self, tokens):
-        """ Adds a bus to the network.
+        """ Adds a bus to the case.
         """
         # [I, IDE, PL, QL, GL, BL, IA, VM, VA, 'NAME', BASKL, ZONE]
         # Bus, Name, Base_kV, Type, Y_re, Y_im, Area, Zone, PU_Volt, Angle
@@ -402,7 +402,7 @@ class PSSEReader(object):
         bus.v_angle_guess = tokens["Angle"]
         bus.v_angle = tokens["Angle"]
 
-        self.network.buses.append(bus)
+        self.case.buses.append(bus)
 
 
     def _push_load_data(self, tokens):
@@ -411,7 +411,7 @@ class PSSEReader(object):
         #[Bus, Load, ID, Status, Area, Zone, LP, LQ]
         logger.debug("Parsing load data: %s" % tokens)
 
-        for bus in self.network.buses:
+        for bus in self.case.buses:
             if bus._bus_id == tokens["Bus"]:
                 break
         else:
@@ -431,7 +431,7 @@ class PSSEReader(object):
 
         logger.debug("Parsing generator data: %s" % tokens)
 
-        for bus in self.network.buses:
+        for bus in self.case.buses:
             if bus._bus_id == tokens["Bus"]:
                 break
         else:
@@ -456,7 +456,7 @@ class PSSEReader(object):
 
 
     def _push_branch(self, tokens):
-        """ Adds a branch to the network.
+        """ Adds a branch to the case.
         """
         # From, To, ID, R, X, B, RateA, RateB, RateC, G_busI, B_busI,
         # G_busJ, B_busJ, Stat, Len
@@ -464,7 +464,7 @@ class PSSEReader(object):
 
         from_bus = None
         to_bus = None
-        for v in self.network.buses:
+        for v in self.case.buses:
             if from_bus is None:
                 if v._bus_id == tokens["From"]:
                     from_bus = v
@@ -479,7 +479,7 @@ class PSSEReader(object):
             return
 
 #        from_buses = [
-#            bus for bus in self.network.buses if bus.id == tokens["From"]
+#            bus for bus in self.case.buses if bus.id == tokens["From"]
 #        ]
 #
 #        if len(from_buses) == 0:
@@ -492,7 +492,7 @@ class PSSEReader(object):
 #            return
 #
 #        to_buses = [
-#            bus for bus in self.network.buses if bus.id == tokens["To"]
+#            bus for bus in self.case.buses if bus.id == tokens["To"]
 #        ]
 #
 #        if len(to_buses) == 0:
@@ -514,17 +514,17 @@ class PSSEReader(object):
         branch.s_max_summer = tokens["RateC"]
         branch.online = tokens["Stat"]
 
-        self.network.branches.append(branch)
+        self.case.branches.append(branch)
 
 
     def _push_transformer_data(self, tokens):
-        """ Adds a branch to the network with transformer data.
+        """ Adds a branch to the case with transformer data.
         """
         logger.debug("Parsing transformer data: %s" % tokens)
 
         from_bus = None
         to_bus = None
-        for v in self.network.buses:
+        for v in self.case.buses:
             if from_bus is None:
                 if v._bus_id == tokens["From"]:
                     from_bus_id = v
@@ -541,6 +541,6 @@ class PSSEReader(object):
         branch = Branch(source_bus=from_bus, target_bus=to_bus)
         branch.online = tokens["STAT"]
 
-        self.network.branches.append(branch)
+        self.case.branches.append(branch)
 
 # EOF -------------------------------------------------------------------------

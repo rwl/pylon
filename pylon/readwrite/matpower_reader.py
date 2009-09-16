@@ -33,7 +33,7 @@ from pyparsing import \
     Literal, Word, ZeroOrMore, Optional, OneOrMore, alphanums, delimitedList, \
     alphas, Combine, Or, Group
 
-from pylon.network import Network, Bus, Branch, Generator, Load
+from pylon.case import Case, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 class MATPOWERReader(object):
     """ Defines a method class for reading MATPOWER data files and
-        returning a Network object.
+        returning a Case object.
     """
 
     def __init__(self):
@@ -56,8 +56,9 @@ class MATPOWERReader(object):
         """
         # Path to the data file or file object.
         self.file_or_filename = None
-        # The resulting network.
-        self.network = None
+
+        # The resulting case.
+        self.case = None
 
         # The system MVA base to which machines default
         self.base_mva = 100.0
@@ -82,14 +83,14 @@ class MATPOWERReader(object):
         return self.read(file_or_filename)
 
     #--------------------------------------------------------------------------
-    #  Parse a MATPOWER data file and return a network object
+    #  Parse a MATPOWER data file and return a case object
     #--------------------------------------------------------------------------
 
     def read(self, file_or_filename):
-        """ Parse a MATPOWER data file and return a network object
+        """ Parse a MATPOWER data file and return a case object
 
             file_or_filename: File name of file object with MATPOWER data
-            return: Network object
+            return: Case object
         """
         self.file_or_filename = file_or_filename
 
@@ -100,7 +101,7 @@ class MATPOWERReader(object):
             logger.info("Parsing MATPOWER case file.")
 
         # Initialise:
-        self.network = network = Network()
+        self.case = case = Case()
         self.slack_idx = -1
         self.generators = []
 
@@ -114,7 +115,7 @@ class MATPOWERReader(object):
         generator_cost_array = self._get_generator_cost_array_construct()
 
         # Assemble pyparsing case:
-        case = header + \
+        parsing_case = header + \
             ZeroOrMore(matlab_comment) + base_mva + \
             ZeroOrMore(matlab_comment) + bus_array + \
             ZeroOrMore(matlab_comment) + gen_array + \
@@ -123,10 +124,10 @@ class MATPOWERReader(object):
             ZeroOrMore(matlab_comment) + Optional(generator_cost_array)
 
         # Parse the data file
-        data = case.parseFile(file_or_filename)
+        data = parsing_case.parseFile(file_or_filename)
 
         # Set the slack bus.
-        network.buses[self.slack_idx].slack = True
+        case.buses[self.slack_idx].slack = True
 
         # Reset the list of instantiated generators if necessary
         if len(self.generators):
@@ -135,7 +136,7 @@ class MATPOWERReader(object):
 
         self.generators = []
 
-        return network
+        return case
 
     #--------------------------------------------------------------------------
     #  Construct getters:
@@ -144,7 +145,7 @@ class MATPOWERReader(object):
     def _get_header_construct(self):
         """ Returns a construct for the header of a MATPOWER data file.
         """
-        # Use the function name for the Network title
+        # Use the function name for the Case title
         title = Word(alphanums).setResultsName("title")
         title.setParseAction(self._push_title)
         header = Literal("function") + \
@@ -296,20 +297,20 @@ class MATPOWERReader(object):
     #--------------------------------------------------------------------------
 
     def _push_title(self, tokens):
-        """ Sets the network's name.
+        """ Sets the case's name.
         """
-        self.network.name = tokens["title"]
+        self.case.name = tokens["title"]
 
 
     def _push_base_mva(self, tokens):
-        """ Set the MVA base for the network.
+        """ Set the MVA base for the case.
         """
         self.base_mva = base_mva = tokens["baseMVA"]
-        self.network.base_mva = base_mva
+        self.case.base_mva = base_mva
 
 
     def _push_bus(self, tokens):
-        """ Adds a bus to the network and a load (if any).
+        """ Adds a bus to the case and a load (if any).
         """
         logger.debug("Parsing bus data: %s" % tokens)
 
@@ -346,7 +347,7 @@ class MATPOWERReader(object):
         bus.v_max = tokens["Vmax"]
         bus.v_min = tokens["Vmin"]
 
-        self.network.buses.append(bus)
+        self.case.buses.append(bus)
 
 
     def _push_generator(self, tokens):
@@ -360,7 +361,7 @@ class MATPOWERReader(object):
             base_mva = self.base_mva
 
         # Locate the generator's bus.
-        for i, bus in enumerate(self.network.buses):
+        for i, bus in enumerate(self.case.buses):
             if bus._bus_id == tokens["bus_id"]:
                 break
         else:
@@ -385,7 +386,7 @@ class MATPOWERReader(object):
 #        generator.p_min_bid   = tokens["Pmin"]
 
 #        bus.generators.append(generator)
-        self.network.buses[i].generators.append(generator)
+        self.case.buses[i].generators.append(generator)
 
         # Maintain the list of instantiated generators for
         # gen cost evaluation
@@ -393,11 +394,11 @@ class MATPOWERReader(object):
 
 
     def _push_branch(self, tokens):
-        """ Adds a branch to the network.
+        """ Adds a branch to the case.
         """
         logger.debug("Parsing branch data: %s" % tokens)
 
-        buses = self.network.buses
+        buses = self.case.buses
 
         bus_names      = [ v.name for v in buses ]
         source_bus_idx = bus_names.index( str( tokens["fbus"] ) )
@@ -405,10 +406,10 @@ class MATPOWERReader(object):
         source_bus     = buses[ source_bus_idx ]
         target_bus     = buses[ target_bus_idx ]
 
-#        source_bus = self.network.buses[tokens["fbus"]-1]
-#        target_bus = self.network.buses[tokens["tbus"]-1]
+#        source_bus = self.case.buses[tokens["fbus"]-1]
+#        target_bus = self.case.buses[tokens["tbus"]-1]
 
-        branch_names = [e.name for e in self.network.branches]
+        branch_names = [e.name for e in self.case.branches]
         e = Branch(source_bus=source_bus, target_bus=target_bus)
 
         e.name        = make_unique_name("e", branch_names)
@@ -420,7 +421,7 @@ class MATPOWERReader(object):
         e.phase_shift = tokens["angle"]
         e.online      = tokens["status"]
 
-        self.network.branches.append(e)
+        self.case.branches.append(e)
 
 
     def _push_generator_cost(self, string, location, tokens):

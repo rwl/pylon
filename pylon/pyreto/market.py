@@ -48,13 +48,13 @@ class Market(object):
         submitted.
     """
 
-    def __init__(self, network, bids, offers, loc_adjust="dc",
+    def __init__(self, case, bids, offers, loc_adjust="dc",
                  auction_type="first price", price_cap=500, g_online=None,
                  period=1.0):
         """ Initialises a new Market instance. A price cap can be set
             with max_p.
         """
-        self.network = network
+        self.case = case
 
         # Bids to by quantities of power at a price.
         self.bids = bids
@@ -87,7 +87,7 @@ class Market(object):
         # previous period (for computing startup/shutdown costs)
         if g_online is None:
             # Assume all generators on-line unless otherwise specified.
-            self.g_online = matrix(1, (len(network.all_generators), 1))
+            self.g_online = matrix(1, (len(case.all_generators), 1))
         else:
             self.g_online = g_online
 
@@ -107,8 +107,8 @@ class Market(object):
         offers = self.offers
         bids = self.bids
 
-        buses = self.network.connected_buses
-        generators = self.network.all_generators
+        buses = self.case.connected_buses
+        generators = self.case.all_generators
 
         limits = {"max_offer": self.price_cap,
                   "max_cleared_offer": self.price_cap}
@@ -162,7 +162,7 @@ class Market(object):
                 g.p_max += 100 * self.violation
 
         # Solve the optimisation problem.
-        success = DCOPF().solve(self.network)
+        success = DCOPF().solve(self.case)
 
         # Compute quantities, prices and costs.
         if success:

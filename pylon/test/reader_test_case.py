@@ -53,35 +53,35 @@ class ReaderTest(TestCase):
         """ Validate the Network objects properties.
         """
 
-        n = self.network
+        c = self.case
 
-        self.assertEqual(n.base_mva, base_mva)
+        self.assertEqual(c.base_mva, base_mva)
 
 
     def _validate_object_numbers(self, n_buses, n_branches, n_gen, n_loads):
         """ Validates the expected number of objects.
         """
-        n = self.network
+        c = self.case
 
-        self.assertEqual(len(n.buses), n_buses,
-            "%d buses expected, %d found" % (n_buses, len(n.buses)))
+        self.assertEqual(len(c.buses), n_buses,
+            "%d buses expected, %d found" % (n_buses, len(c.buses)))
 
-        self.assertEqual(len(n.branches), n_branches,
-            "%d branches expected, %d found" % (n_branches, len(n.branches)))
+        self.assertEqual(len(c.branches), n_branches,
+            "%d branches expected, %d found" % (n_branches, len(c.branches)))
 
-        self.assertEqual(len(n.all_generators), n_gen,
-            "%d generators expected, %d found" % (n_gen,len(n.all_generators)))
+        self.assertEqual(len(c.all_generators), n_gen,
+            "%d generators expected, %d found" % (n_gen,len(c.all_generators)))
 
-        self.assertEqual(len(n.all_loads), n_loads,
-            "%d loads expected, %d found" % (n_loads, len(n.all_loads)))
+        self.assertEqual(len(c.all_loads), n_loads,
+            "%d loads expected, %d found" % (n_loads, len(c.all_loads)))
 
 
     def _validate_slack_bus(self, slack_idx):
         """ Validates the location and number of slack buses.
         """
-        n = self.network
+        c = self.case
 
-        slack_idxs = [n.buses.index(v) for v in n.buses if v.slack]
+        slack_idxs = [c.buses.index(v) for v in c.buses if v.slack]
 
         self.assertEqual(slack_idxs, [slack_idx])
 
@@ -89,10 +89,10 @@ class ReaderTest(TestCase):
     def _validate_generator_connections(self, gbus_idxs):
         """ Validates that generators are connected to the expected buses.
         """
-        n = self.network
+        c = self.case
 
         for idx in gbus_idxs:
-            bus = n.buses[idx]
+            bus = c.buses[idx]
             self.assertTrue(len(bus.generators),
                 "No generators at bus: %s" % bus.name)
 
@@ -101,17 +101,17 @@ class ReaderTest(TestCase):
         """ Validates that Branch objects are connected to the expected
             source and target buses.
         """
-        n = self.network
+        c = self.case
 
-        for e in n.branches:
-            source_idx = n.buses.index(e.source_bus)
-            source_expected = source_idxs[n.branches.index(e)]
+        for e in c.branches:
+            source_idx = c.buses.index(e.source_bus)
+            source_expected = source_idxs[c.branches.index(e)]
             self.assertEqual(source_idx, source_expected,
                 "Source bus %d expected, %d found" %
                 (source_expected, source_idx))
 
-            target_idx = n.buses.index(e.target_bus)
-            target_expected = target_idxs[n.branches.index(e)]
+            target_idx = c.buses.index(e.target_bus)
+            target_expected = target_idxs[c.branches.index(e)]
             self.assertEqual(target_idx, target_expected,
                 "Target bus %d expected, %d found" %
                 (target_expected, target_idx))
@@ -133,7 +133,7 @@ class MatpowerReaderTest(ReaderTest):
     def test_case6ww(self):
         """ Test parsing case6ww.m file.
         """
-        self.network = n = self.reader(MATPOWER_DATA_FILE)
+        self.case = c = self.reader(MATPOWER_DATA_FILE)
 
         self._validate_base(base_mva=100.0)
 
@@ -150,20 +150,20 @@ class MatpowerReaderTest(ReaderTest):
             target_idxs=[1, 3, 4, 2, 3, 4, 5, 4, 5, 4, 5])
 
         # Generator costs.
-        for g in n.all_generators:
+        for g in c.all_generators:
             self.assertEqual(g.cost_model, "poly")
             self.assertEqual(len(g.cost_coeffs), 3)
 
-        self.assertEqual(n.all_generators[0].cost_coeffs[0], 0.00533)
-        self.assertEqual(n.all_generators[1].cost_coeffs[1], 10.333)
-        self.assertEqual(n.all_generators[2].cost_coeffs[2], 240)
+        self.assertEqual(c.all_generators[0].cost_coeffs[0], 0.00533)
+        self.assertEqual(c.all_generators[1].cost_coeffs[1], 10.333)
+        self.assertEqual(c.all_generators[2].cost_coeffs[2], 240)
 
 
 
     def test_case30pwl(self):
         """ Test parsing case30pwl.m.
         """
-        self.network = self.reader(PWL_MP_DATA_FILE)
+        self.case = self.reader(PWL_MP_DATA_FILE)
 
         self._validate_base(base_mva=100.0)
 
@@ -184,7 +184,7 @@ class MatpowerReaderTest(ReaderTest):
                          23, 23, 24, 25, 26, 26, 28, 29, 29, 27, 27])
 
         # Generator costs.
-        generators = self.network.all_generators
+        generators = self.case.all_generators
 
         for g in generators:
             self.assertEqual(g.cost_model, "pwl")
@@ -207,7 +207,7 @@ class PSSEReaderTest(ReaderTest):
         """ The test runner will execute this method prior to each test.
         """
         reader = PSSEReader()
-        self.network = reader(IPSA_DATA_FILE)
+        self.case = reader(IPSA_DATA_FILE)
 
 
     def test_ipsa(self):
@@ -224,7 +224,7 @@ class PSSEReaderTest(ReaderTest):
         """
         # Parse the file.
         reader = PSSEReader()
-        self.network = reader(UKGDS_DATA_FILE)
+        self.case = reader(UKGDS_DATA_FILE)
 
         # Network structure validation
         self._validate_base(100.0)
@@ -254,7 +254,7 @@ class PSSEReaderTest(ReaderTest):
 #        """ Test parsing of a PSAT data file.
 #        """
 #        reader = PSATReader()
-#        self.network = reader(PSAT_DATA_FILE)
+#        self.case = reader(PSAT_DATA_FILE)
 
 #------------------------------------------------------------------------------
 #  Standalone call:

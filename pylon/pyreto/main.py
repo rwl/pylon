@@ -34,10 +34,10 @@ from pybrain.rl.agents import LearningAgent, PolicyGradientAgent
 from pybrain.rl.learners import SPLA, ENAC
 from pybrain.structure.modules import SigmoidLayer
 
-from pylon import Network, Bus, Generator, Load
+from pylon import Case, Bus, Generator, Load
 from pylon import DCOPF
 
-from pylon.main import read_network
+from pylon.main import read_case
 
 from pylon.readwrite import MATPOWERReader, ReSTWriter
 from pylon.readwrite.rst_writer import ReSTExperimentWriter
@@ -59,7 +59,7 @@ class PyretoApplication(object):
         """
         # Name of the input file.
         self.file_name = file_name
-        # Format in which the network is stored.  Possible values are: 'any',
+        # Format in which the case is stored.  Possible values are: 'any',
         # 'matpower', 'psat', 'matlab' and 'psse'.
         self.type = type
         # Number of interactions to perform.
@@ -72,12 +72,12 @@ class PyretoApplication(object):
     #--------------------------------------------------------------------------
 
     def __call__(self, input, output):
-        """ Forms a network from the input, associates an agent with each
+        """ Forms a case from the input, associates an agent with each
             generator, performs the specified number of interactions and
             writes a report to the output.
         """
-        # Get the network from the input.
-        power_sys = read_network(input, self.type, self.file_name)
+        # Get the case from the input.
+        power_sys = read_case(input, self.type, self.file_name)
 
         experiment = one_for_one(power_sys)
 

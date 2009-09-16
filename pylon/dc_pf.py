@@ -62,8 +62,8 @@ class DCPF(object):
         # CVXOPT offers interfaces to two routines for solving sets of sparse
         # linear equations.  Possible values are 'UMFPACK' and 'CHOLMOD'.
         self.library = library
-        # The network on which the routine is performed
-        self.network = None
+        # The case on which the routine is performed
+        self.case = None
         # Branch susceptance matrix
         self.B = None
         # Branch source bus susceptance matrix
@@ -74,27 +74,27 @@ class DCPF(object):
         self.v_angle = None
 
 
-    def __call__(self, network):
-        """ Calls the routine with the given network.
+    def __call__(self, case):
+        """ Calls the routine with the given case.
         """
-        self.solve(network)
+        self.solve(case)
 
 
-    def solve(self, network):
-        """ Solves DC power flow for the network.
+    def solve(self, case):
+        """ Solves DC power flow for the case.
         """
-        self.network = network
+        self.case = case
 
-        logger.info("Performing DC power flow [%s]." % network.name)
+        logger.info("Performing DC power flow [%s]." % case.name)
 
         t0 = time.time()
 
-        if not self.network.slack_model == "single":
+        if not self.case.slack_model == "single":
             logger.error("DC power flow requires a single slack bus")
             return False
 
         susceptance = SusceptanceMatrix()
-        self.B, self.B_source = susceptance(network)
+        self.B, self.B_source = susceptance(case)
         self._make_v_angle_guess_vector()
 
         # Calculate the voltage phase angles.
@@ -114,8 +114,8 @@ class DCPF(object):
     def _make_v_angle_guess_vector(self):
         """ Make the vector of voltage phase guesses """
 
-        if self.network is not None:
-            buses = self.network.connected_buses
+        if self.case is not None:
+            buses = self.case.connected_buses
             guesses = [v.v_angle_guess for v in buses]
             self.v_angle_guess = matrix(guesses)
             logger.debug("Vector of voltage phase guesses:\n%s" % guesses)
@@ -127,7 +127,7 @@ class DCPF(object):
     def _make_v_angle_vector(self):
         """ Caluclates the voltage phase angles.
         """
-        buses = self.network.connected_buses
+        buses = self.case.connected_buses
 
         # Remove the column and row from the susceptance matrix that
         # correspond to the slack bus
@@ -189,9 +189,9 @@ class DCPF(object):
         """ Updates the network model with values computed from the voltage
             phase angle solution.
         """
-        base_mva = self.network.base_mva
-        buses    = self.network.connected_buses
-        branches = self.network.online_branches
+        base_mva = self.case.base_mva
+        buses    = self.case.connected_buses
+        branches = self.case.online_branches
 
         p_source = self.B_source * self.v_angle * base_mva
         p_target = -p_source

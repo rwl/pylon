@@ -29,7 +29,7 @@ from os.path import basename, splitext
 from parsing_util import integer, boolean, real, scolon, matlab_comment
 from pyparsing import Optional, Literal, ZeroOrMore
 
-from pylon import Network, Bus, Branch, Generator, Load
+from pylon import Case, Bus, Branch, Generator, Load
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 class PSATReader(object):
     """ Defines a method class for reading PSAT data files and
-        returning a Network object.
+        returning a Case object.
     """
 
     def __init__(self):
@@ -51,8 +51,8 @@ class PSATReader(object):
         """
         # Path to the data file or file object.
         self.file_or_filename = None
-        # The resulting network.
-        self.network = None
+        # The resulting case.
+        self.case = None
 
 
     def __call__(self, file_or_filename):
@@ -61,14 +61,14 @@ class PSATReader(object):
         self.read(file_or_filename)
 
     #--------------------------------------------------------------------------
-    #  Parse a PSAT data file and return a network object
+    #  Parse a PSAT data file and return a case object
     #--------------------------------------------------------------------------
 
     def read(self, file_or_filename):
-        """ Parses a PSAT data file and returns a network object
+        """ Parses a PSAT data file and returns a case object
 
             file: File object or path to data file with PSAT format data
-            return: Network object
+            return: Case object
         """
         self.file_or_filename = file_or_filename
 
@@ -76,15 +76,15 @@ class PSATReader(object):
 
         t0 = time.time()
 
-        self.network = Network()
+        self.case = Case()
 
-        # Name the network
+        # Name the case
         if isinstance(file_or_filename, basestring):
             name, ext = splitext(basename(file_or_filename))
         else:
             name, ext = splitext(file_or_filename.name)
 
-        self.network.name = name
+        self.case.name = name
 
         bus_array = self._get_bus_array_construct()
         line_array = self._get_line_array_construct()
@@ -111,7 +111,7 @@ class PSATReader(object):
         elapsed = time.time() - t0
         logger.info("PSAT case file parsed in %.3fs." % elapsed)
 
-        return self.network
+        return self.case
 
     #--------------------------------------------------------------------------
     #  Construct getters:
@@ -380,7 +380,7 @@ class PSATReader(object):
     #--------------------------------------------------------------------------
 
     def push_bus(self, tokens):
-        """ Adds a Bus object to the network.
+        """ Adds a Bus object to the case.
         """
         logger.debug("Pushing bus data: %s" % tokens)
 
@@ -391,22 +391,22 @@ class PSATReader(object):
         bus.v_magnitude = tokens["v_magnitude_guess"]
         bus.v_angle = tokens["v_angle_guess"]
 
-        self.network.buses.append(bus)
+        self.case.buses.append(bus)
 
 
     def sort_buses(self, tokens):
         """ Sorts bus list according to name (bus_no).
         """
-        self.network.buses.sort(key=lambda obj: obj.name)
+        self.case.buses.sort(key=lambda obj: obj.name)
 
 
     def push_line(self, tokens):
-        """ Adds a Branch object to the network.
+        """ Adds a Branch object to the case.
         """
         logger.debug("Pushing line data: %s" % tokens)
 
-        source_bus = self.network.buses[tokens["fbus"]-1]
-        target_bus = self.network.buses[tokens["tbus"]-1]
+        source_bus = self.case.buses[tokens["fbus"]-1]
+        target_bus = self.case.buses[tokens["tbus"]-1]
 
         e = Branch(source_bus=source_bus, target_bus=target_bus)
         e.r = tokens["r"]
@@ -423,7 +423,7 @@ class PSATReader(object):
 #        if "status" in tokens.keys:
 #        e.online = tokens["status"]
 
-        self.network.branches.append(e)
+        self.case.branches.append(e)
 
 
     def push_slack(self, tokens):
@@ -432,7 +432,7 @@ class PSATReader(object):
         """
         logger.debug("Pushing slack data: %s" % tokens)
 
-        bus = self.network.buses[tokens["bus_no"]-1]
+        bus = self.case.buses[tokens["bus_no"]-1]
 
         g = Generator()
         g.q_max = tokens["q_max"]
@@ -460,7 +460,7 @@ class PSATReader(object):
 #        if tokens.has_key("status"):
 #        g.online = tokens["status"]
 
-        bus = self.network.buses[tokens["bus_no"]-1]
+        bus = self.case.buses[tokens["bus_no"]-1]
         bus.generators.append(g)
 
 
@@ -477,7 +477,7 @@ class PSATReader(object):
 #        if tokens.has_key("status"):
 #            l.online = tokens["status"]
 
-        bus = self.network.buses[tokens["bus_no"]-1]
+        bus = self.case.buses[tokens["bus_no"]-1]
         bus.loads.append(l)
 
 
@@ -486,7 +486,7 @@ class PSATReader(object):
         """
         logger.debug("Pushing demand data: %s" % tokens)
 
-        bus = self.network.buses[tokens["bus_no"]-1]
+        bus = self.case.buses[tokens["bus_no"]-1]
         n_loads = len(bus.loads)
 
         if n_loads == 0:
@@ -511,7 +511,7 @@ class PSATReader(object):
         """
         logger.debug("Pushing supply data: %s" % tokens)
 
-        bus = self.network.buses[tokens["bus_no"]-1]
+        bus = self.case.buses[tokens["bus_no"]-1]
         n_generators = len(bus.generators)
 
         if n_generators == 0:

@@ -26,7 +26,7 @@ import pylon
 import cvxopt.info
 
 from pylon import \
-    Network, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
+    Case, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
 
 from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
@@ -254,13 +254,13 @@ class PylonTk(object):
         self.ui_log.level.set(logger.getEffectiveLevel())
 
 
-    def set_network(self, n):
+    def set_case(self, n):
         self.n = n
         e = one_for_one(n)
         self.set_experiment(e)
 
         self.root.title("PylonTk:  %s" % self.n.name)
-        self.n_name.set("Current Network:  %s" % self.n.name)
+        self.n_name.set("Current Case:  %s" % self.n.name)
 #        self.ui_log.n_name.set(n.name)
 
 
@@ -298,23 +298,23 @@ class PylonTk(object):
 
 
     def on_new(self):
-        n = Network()
-        self.set_network(n)
+        c = Case()
+        self.set_case(c)
 
 
     def on_open(self):
         ftypes = [("MATPOWER file", ".m"), ("All files", "*")]
         filename = askopenfilename(filetypes=ftypes, defaultextension='.m')
         if filename:
-            self.set_network(MATPOWERReader().read(filename))
+            self.set_case(MATPOWERReader().read(filename))
 
 
     def on_6_bus(self):
-        self.set_network(MATPOWERReader().read(CASE_6_WW))
+        self.set_case(MATPOWERReader().read(CASE_6_WW))
 
 
     def on_30_bus(self):
-        self.set_network(MATPOWERReader().read(CASE_30))
+        self.set_case(MATPOWERReader().read(CASE_30))
 
 
     def on_save_as(self):
@@ -332,21 +332,21 @@ class PylonTk(object):
         ftypes = [("Pickle file", ".pkl"), ("All files", "*")]
         filename = askopenfilename(filetypes=ftypes, defaultextension='.pkl')
         if filename:
-            self.set_network(PickleReader().read(filename))
+            self.set_case(PickleReader().read(filename))
 
 
     def on_psse(self):
         ftypes = [("PSS/E file", ".raw"), ("All files", "*")]
         filename = askopenfilename(filetypes=ftypes, defaultextension='.raw')
         if filename:
-            self.set_network(PSSEReader().read(filename))
+            self.set_case(PSSEReader().read(filename))
 
 
     def on_psat(self):
         ftypes = [("PSAT file", ".m"), ("All files", "*")]
         filename = askopenfilename(filetypes=ftypes, defaultextension='.m')
         if filename:
-            self.set_network(PSATReader().read(filename))
+            self.set_case(PSATReader().read(filename))
 
     # Export handlers ---------------------------------------------------------
 
@@ -497,13 +497,13 @@ class PylonTk(object):
 
 
 class CaseProperties(tkSimpleDialog.Dialog):
-    """ A dialog for editing the properties of a network.
+    """ A dialog for editing the properties of a case.
     """
 
-    def __init__(self, parent, network, title="Case Properties"):
+    def __init__(self, parent, case, title="Case Properties"):
         """ Initialises the font dialog.
         """
-        self.n = network
+        self.n = case
         tkSimpleDialog.Dialog.__init__(self, parent, title)
 
 
@@ -596,10 +596,10 @@ class GraphView(tkSimpleDialog.Dialog):
     """ A dialog for graph viewing.
     """
 
-    def __init__(self, parent, network, experiment):
+    def __init__(self, parent, case, experiment):
         """ Initialises the font dialog.
         """
-        self.n = network
+        self.n = case
         self.e = experiment
 
         tkSimpleDialog.Dialog.__init__(self, parent, title="Graph")
@@ -608,7 +608,7 @@ class GraphView(tkSimpleDialog.Dialog):
     def draw_graph(self):
         """ Creates a representation of the graph and draws it on the canvas.
         """
-        network = self.n
+        case = self.n
         prog    = self.prog.get()
         format  = self.format.get()
 
@@ -617,7 +617,7 @@ class GraphView(tkSimpleDialog.Dialog):
         sbplt = fig.add_subplot(111)
 
         dotdata = StringIO()
-        DotWriter().write(network, dotdata)
+        DotWriter().write(case, dotdata)
         dotdata.seek(0) # rewind
 
         imagedata = create_graph(dotdata.getvalue(), prog, format)

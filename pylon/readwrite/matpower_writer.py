@@ -29,7 +29,7 @@ from os.path import basename, splitext
 #------------------------------------------------------------------------------
 
 class MATPOWERWriter(object):
-    """ Write network data to a file in MATPOWER format.
+    """ Write case data to a file in MATPOWER format.
     """
 
     def __init__(self):
@@ -38,19 +38,19 @@ class MATPOWERWriter(object):
         # Path to the data file or file object.
         self.file_or_filename = None
         # It is written.
-        self.network = None
+        self.case = None
 
 
-    def __call__(self, network, file_or_filename):
-        """ Calls the writer with the given network.
+    def __call__(self, case, file_or_filename):
+        """ Calls the writer with the given case.
         """
-        self.write(network, file_or_filename)
+        self.write(case, file_or_filename)
 
 
-    def write(self, network, file_or_filename):
-        """ Writes network data to file in MATPOWER format.
+    def write(self, case, file_or_filename):
+        """ Writes case data to file in MATPOWER format.
         """
-        self.network = network
+        self.case = case
         self.file_or_filename = file_or_filename
 
         if isinstance(file_or_filename, basestring):
@@ -60,24 +60,24 @@ class MATPOWERWriter(object):
             file = file_or_filename
             f_name, ext = splitext(file.name)
 
-        self.write_header(network, file)
+        self.write_header(case, file)
 
-        self.write_bus_data(network, file)
+        self.write_bus_data(case, file)
         file.write("\n")
-        self.write_generator_data(network, file)
+        self.write_generator_data(case, file)
         file.write("\n")
-        self.write_branch_data(network, file)
+        self.write_branch_data(case, file)
         file.write("\n")
         file.write("%%-----  OPF Data  -----%%\n")
         self.write_area_data(None, file)
         file.write("\n")
-        self.write_generator_cost_data(network, file)
+        self.write_generator_cost_data(case, file)
 
         if isinstance(file_or_filename, basestring):
             file.close()
 
 
-    def write_header(self, network, file):
+    def write_header(self, case, file):
         """ Writes the header to the given file.
         """
         file.write("function [baseMVA, bus, gen, branch, areas, gencost] = ")
@@ -87,19 +87,19 @@ class MATPOWERWriter(object):
 
         file.write("%%-----  Power Flow Data  -----%%\n")
         file.write("%% system MVA base\n")
-        file.write("baseMVA = %.1f;\n" % network.base_mva)
+        file.write("baseMVA = %.1f;\n" % case.base_mva)
 
         file.write("\n")
 
 
-    def write_bus_data(self, network, file):
+    def write_bus_data(self, case, file):
         """ Writes bus data to file.
         """
         labels = ["bus_id", "type", "Pd", "Qd", "Gs", "Bs", "area", "Vm", "Va",
             "baseKV", "zone", "Vmax", "Vmin"]
 
-        buses = network.buses
-        base_mva = network.base_mva
+        buses = case.buses
+        base_mva = case.base_mva
 
         buses_data = []
         for i, v in enumerate(buses):
@@ -154,14 +154,14 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def write_generator_data(self, network, file):
+    def write_generator_data(self, case, file):
         """ Write generator data to file.
         """
         labels = ["bus", "Pg", "Qg", "Qmax", "Qmin", "Vg", "mBase", "status",
             "Pmax", "Pmin"]
 
-        buses = network.buses
-        generators = network.all_generators
+        buses = case.buses
+        generators = case.all_generators
 
         generators_data = []
         for g in generators:
@@ -214,15 +214,15 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def write_branch_data(self, network, file):
+    def write_branch_data(self, case, file):
         """ Writes branch data to file.
         """
         labels = ["fbus", "tbus", "r", "x", "b", "rateA", "rateB", "rateC",
             "ratio", "angle", "status"]
 
-        base_mva = network.base_mva
-        branches = network.branches
-        buses    = network.buses
+        base_mva = case.base_mva
+        branches = case.branches
+        buses    = case.buses
 
         branches_data = []
         for e in branches:
@@ -271,7 +271,7 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def write_area_data(self, network, file):
+    def write_area_data(self, case, file):
         """ Writes area data to file.
         """
         file.write("%% area data" + "\n")
@@ -283,7 +283,7 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def write_generator_cost_data(self, network, file):
+    def write_generator_cost_data(self, case, file):
         """ Writes generator cost data to file.
         """
         file.write("%% generator cost data" + "\n")

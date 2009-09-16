@@ -52,8 +52,8 @@ class UnitCommitmentRoutine(object):
         else:
             self.demand = demand
 
-        # The network passed to the routine.
-        self.network = None
+        # The case passed to the routine.
+        self.case = None
         # Selects one of three available LP solvers: the default solver written
         # in Python, the GLPK solver or the MOSEK LP solver.
         self.solver = None # "glpk" "mosek"
@@ -79,10 +79,10 @@ class UnitCommitmentRoutine(object):
         # A Result instance changes to which GenCos listen for.
 #        self.result = None
 
-    def __call__(self, network):
-        """ Solves the unit commitment problem for the given network.
+    def __call__(self, case):
+        """ Solves the unit commitment problem for the given case.
         """
-        self.network = network
+        self.case = case
 
         # Sanity checks -------------------------------------------------------
 
@@ -118,7 +118,7 @@ class UnitCommitmentRoutine(object):
 
         # Generation ----------------------------------------------------------
 
-        generators = self.network.online_generators
+        generators = self.case.online_generators
 
         # Generation output limits
         self.p_min = matrix( [ g.p_min for g in generators ] )
@@ -153,8 +153,8 @@ class UnitCommitmentRoutine(object):
             creation from problem instantiation and solution.
         """
 
-        n = self.network
-        n_gen = len( n.online_generators )
+        c = self.case
+        n_gen = len( c.online_generators )
         n_periods = self.n_periods
 
         # Problem variables declaration
@@ -194,7 +194,7 @@ class UnitCommitmentRoutine(object):
 
         lp = None#op( objective, [ lt_max, gt_min, balance ] )
 
-#        logger.debug( "Solving the Unit Commitment problem [%s]." % n.name )
+#        logger.debug( "Solving the Unit Commitment problem [%s]." % c.name )
 #        lp.solve( format = "dense", solver = self.solver )
 
         return lp, p_gen

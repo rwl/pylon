@@ -48,14 +48,14 @@ class UOPFTestCase(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.network = MATPOWERReader().read(DATA_FILE)
+        self.case = MATPOWERReader().read(DATA_FILE)
         self.routine = UDOPF(dc=True)
 
     def test_dc(self):
         """ Test routine using DC formulation.
         """
-        success = self.routine(self.network)
-        generators = self.network.all_generators
+        success = self.routine(self.case)
+        generators = self.case.all_generators
 
         self.assertFalse(generators[0].online)
         self.assertAlmostEqual(generators[1].p, 110.80, places=2)

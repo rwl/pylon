@@ -15,21 +15,21 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a class for writing network data to a ReStructuredText file.
+""" Defines a class for writing case data to a ReStructuredText file.
 """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pylon import Network, NetworkReport
+from pylon import Case, CaseReport
 
 #------------------------------------------------------------------------------
 #  "ReSTWriter" class:
 #------------------------------------------------------------------------------
 
 class ReSTWriter(object):
-    """ Write network data to a file in ReStructuredText format.
+    """ Write case data to a file in ReStructuredText format.
     """
 
     def __init__(self, include_title=True, include_summary=True,
@@ -43,45 +43,45 @@ class ReSTWriter(object):
         self.include_branch_data = include_branch_data
         self.include_generator_data = include_generator_data
 
-        self.network = None
+        self.case = None
         self.file_or_filename = ""
 
 
-    def __call__(self, network, file_or_filename):
-        """ Calls the writer with the given network.
+    def __call__(self, case, file_or_filename):
+        """ Calls the writer with the given case.
         """
-        self.write(network, file_or_filename)
+        self.write(case, file_or_filename)
 
 
-    def write(self, network, file_or_filename):
-        """ Writes network data to file in ReStructuredText format.
+    def write(self, case, file_or_filename):
+        """ Writes case data to file in ReStructuredText format.
         """
-        self.network = network
+        self.case = case
         self.file_or_filename = file_or_filename
 
         file = _get_file(file_or_filename)
 
-        self.write_header(network, file)
+        self.write_header(case, file)
 
         # Section II.
         if self.include_bus_data:
             file.write("Bus Data\n")
             file.write("-" * 8 + "\n")
-            self.write_bus_data(network, file)
+            self.write_bus_data(case, file)
             file.write("\n")
 
         # Section III.
         if self.include_branch_data:
             file.write("Branch Data\n")
             file.write("-" * 11 + "\n")
-            self.write_branch_data(network, file)
+            self.write_branch_data(case, file)
             file.write("\n")
 
         # Section IV
         if self.include_generator_data:
             file.write("Generator Data\n")
             file.write("-" * 14 + "\n")
-            self.write_generator_data(network, file)
+            self.write_generator_data(case, file)
             file.write("\n")
 
         # Close if passed the name of a file.
@@ -89,7 +89,7 @@ class ReSTWriter(object):
             file.close()
 
 
-    def write_header(self, network, file):
+    def write_header(self, case, file):
         """ Writes the header to file.
         """
         # Document title.
@@ -103,7 +103,7 @@ class ReSTWriter(object):
             file.write("\n")
 
             # Document subtitle.
-            subtitle = network.name
+            subtitle = case.name
             file.write("-" * len(subtitle))
             file.write("\n")
             file.write(subtitle)
@@ -117,17 +117,17 @@ class ReSTWriter(object):
             file.write("-" * 14)
             file.write("\n")
 
-            self.write_how_many(network, file)
-            self.write_how_much(network, file)
-            self.write_min_max(network, file)
+            self.write_how_many(case, file)
+            self.write_how_much(case, file)
+            self.write_min_max(case, file)
 
 
-    def write_how_many(self, network=None, file_or_filename=None):
+    def write_how_many(self, case=None, file_or_filename=None):
         """ Writes component numbers to a table.
         """
-        network = self.network if network is None else network
+        case = self.case if case is None else case
 
-        report = NetworkReport(network)
+        report = CaseReport(case)
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
@@ -178,12 +178,12 @@ class ReSTWriter(object):
         del report
 
 
-    def write_how_much(self, network=None, file_or_filename=None):
+    def write_how_much(self, case=None, file_or_filename=None):
         """ Write component quantities to a table.
         """
-        network = self.network if network is None else network
+        case = self.case if case is None else case
 
-        report = NetworkReport(network)
+        report = CaseReport(case)
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
@@ -260,12 +260,12 @@ class ReSTWriter(object):
         del report
 
 
-    def write_min_max(self, network=None, file_or_filename=None):
+    def write_min_max(self, case=None, file_or_filename=None):
         """ Writes minimum and maximum values to a table.
         """
-        network = self.network if network is None else network
+        case = self.case if case is None else case
 
-        report = NetworkReport(network)
+        report = CaseReport(case)
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
@@ -312,14 +312,14 @@ class ReSTWriter(object):
         del report
 
 
-    def write_bus_data(self, network=None, file_or_filename=None):
+    def write_bus_data(self, case=None, file_or_filename=None):
         """ Writes bus data to a ReST table.
         """
-        network = self.network if network is None else network
+        case = self.case if case is None else case
 
-        report = NetworkReport(network)
+        report = CaseReport(case)
 
-        buses = network.buses
+        buses = case.buses
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
@@ -388,14 +388,14 @@ class ReSTWriter(object):
         del report
 
 
-    def write_branch_data(self, network=None, file_or_filename=None):
+    def write_branch_data(self, case=None, file_or_filename=None):
         """ Writes branch data to a ReST table.
         """
-        network = self.network if network is None else network
+        case = self.case if case is None else case
 
-        report = NetworkReport(network)
+        report = CaseReport(case)
 
-        branches = network.branches
+        branches = case.branches
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename
@@ -469,14 +469,14 @@ class ReSTWriter(object):
         del report
 
 
-    def write_generator_data(self, network=None, file_or_filename=None):
+    def write_generator_data(self, case=None, file_or_filename=None):
         """ Writes generator data to a ReST table.
         """
-        network = self.network if network is None else network
+        case = self.case if case is None else case
 
-        report = NetworkReport(network)
+        report = CaseReport(case)
 
-        generators = network.all_generators
+        generators = case.all_generators
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename

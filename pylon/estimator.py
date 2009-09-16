@@ -63,7 +63,7 @@ class StateEsimationRoutine(object):
         else:
             self.pf_routine = ACPF()
 
-        self.network = None
+        self.case = None
         # Has the routine converged?
         self.converged = False
 
@@ -71,11 +71,11 @@ class StateEsimationRoutine(object):
     #  Solves a state estimation problem:
     #--------------------------------------------------------------------------
 
-    def __call__(self, network):
+    def __call__(self, case):
         """ Solves a state estimation problem.
         """
-        self.network = network
-        branches = network.online_branches
+        self.case = case
+        branches = case.online_branches
 
         # Run the power flow.
         self.pf_routine.solve()

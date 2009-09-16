@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a class for writing network data in Graphviz DOT language.
+""" Defines a class for writing case data in Graphviz DOT language.
 """
 
 #------------------------------------------------------------------------------
@@ -42,13 +42,13 @@ DEFAULT_LOAD_ATTR = {}
 #------------------------------------------------------------------------------
 
 class DotWriter(object):
-    """ Write network data to file in Graphviz DOT language.
+    """ Write case data to file in Graphviz DOT language.
     """
 
     def __init__(self, bus_attr=None):
         """ Initialises a new DOTWriter instance.
         """
-        self.network = None
+        self.case = None
         self.file_or_filename = ""
 
         if bus_attr is None:
@@ -61,26 +61,26 @@ class DotWriter(object):
         self.load_attr = DEFAULT_LOAD_ATTR
 
 
-    def __call__(self, network, file_or_filename):
-        """ Calls the writer with the given network.
+    def __call__(self, case, file_or_filename):
+        """ Calls the writer with the given case.
         """
-        self.write(network, file_or_filename)
+        self.write(case, file_or_filename)
 
 
-    def write(self, network, file_or_filename):
-        """ Writes network data to file in Graphviz DOT language.
+    def write(self, case, file_or_filename):
+        """ Writes case data to file in Graphviz DOT language.
         """
-        self.network = network
+        self.case = case
         self.file_or_filename = file_or_filename
 
         file = _get_file(file_or_filename)
 
-        self.write_header(network, file)
-        self.write_bus_data(network, file)
-        self.write_branch_data(network, file)
-#        self.write_generator_data(network, file)
-#        self.write_load_data(network, file)
-#        self.write_generator_cost_data(network, file)
+        self.write_header(case, file)
+        self.write_bus_data(case, file)
+        self.write_branch_data(case, file)
+#        self.write_generator_data(case, file)
+#        self.write_load_data(case, file)
+#        self.write_generator_cost_data(case, file)
 
         file.write("}\n")
 
@@ -89,17 +89,17 @@ class DotWriter(object):
             file.close()
 
 
-    def write_header(self, network, file):
+    def write_header(self, case, file):
         """ Writes the header to file.
         """
-        file.write("digraph %s {" % network.name)
+        file.write("digraph %s {" % case.name)
         file.write("\n")
 
 
-    def write_bus_data(self, network, file, padding="    "):
+    def write_bus_data(self, case, file, padding="    "):
         """ Writes bus data to file.
         """
-        for bus in network.buses:
+        for bus in case.buses:
 #            attr = 'label="%s", %s' % (bus.name, self.bus_attr)
             bus_attr = self.bus_attr
 
@@ -111,10 +111,10 @@ class DotWriter(object):
             file.write("\n")
 
 
-    def write_branch_data(self, network, file, padding="    "):
+    def write_branch_data(self, case, file, padding="    "):
         """ Writes branch data to file.
         """
-        for branch in network.branches:
+        for branch in case.branches:
             source_bus = branch.source_bus
             target_bus = branch.target_bus
             branch_attr = self.branch_attr
@@ -127,10 +127,10 @@ class DotWriter(object):
             file.write("\n")
 
 
-    def write_generator_data(self, network, file):
+    def write_generator_data(self, case, file):
         """ Write generator data to file.
         """
-        for bus in network.buses:
+        for bus in case.buses:
             for generator in bus.generators:
                 # Generator node.
                 file.write("%s%s [%s];" % \
@@ -143,10 +143,10 @@ class DotWriter(object):
                 file.write("\n")
 
 
-    def write_load_data(self, network, file):
+    def write_load_data(self, case, file):
         """ Writes load data to file.
         """
-        for bus in network.buses:
+        for bus in case.buses:
             for load in bus.loads:
                 # Load node.
                 file.write("%s%s [%s];" % \
@@ -159,7 +159,7 @@ class DotWriter(object):
                 file.write("\n")
 
 
-    def write_generator_cost_data(self, network, file):
+    def write_generator_cost_data(self, case, file):
         """ Writes generator cost data to file.
         """
         pass
@@ -261,7 +261,7 @@ def create_graph(dotdata, prog="dot", format="xdot"):
 #------------------------------------------------------------------------------
 
 #class XDotWriter(DotWriter):
-#    """ Write network data to file in Graphviz XDOT format.
+#    """ Write case data to file in Graphviz XDOT format.
 #    """
 #
 #    def __init__(self, prog="dot", format="xdot"):
@@ -283,47 +283,47 @@ def create_graph(dotdata, prog="dot", format="xdot"):
 #            self.programs = {}
 #
 #
-#    def write(self, network, file_or_filename):
-#        """ Writes network data to file in Graphviz XDOT language.
+#    def write(self, case, file_or_filename):
+#        """ Writes case data to file in Graphviz XDOT language.
 #        """
-#        xdot_data = self.create(network)
+#        xdot_data = self.create(case)
 #
 #        file = _get_file(file_or_filename)
 #        file.write(xdot_data)
 #        file.close()
 #
 #
-#    def write_header(self, network, file):
+#    def write_header(self, case, file):
 #        """ Writes the header to file.
 #        """
 #        raise NotImplementedError
 #
 #
-#    def write_bus_data(self, network, file):
+#    def write_bus_data(self, case, file):
 #        """ Writes bus data to file.
 #        """
 #        raise NotImplementedError
 #
 #
-#    def write_branch_data(self, network, file):
+#    def write_branch_data(self, case, file):
 #        """ Writes branch data to file.
 #        """
 #        raise NotImplementedError
 #
 #
-#    def write_generator_data(self, network, file):
+#    def write_generator_data(self, case, file):
 #        """ Write generator data to file.
 #        """
 #        raise NotImplementedError
 #
 #
-#    def write_load_data(self, network, file):
+#    def write_load_data(self, case, file):
 #        """ Writes load data to file.
 #        """
 #        raise NotImplementedError
 #
 #
-#    def write_generator_cost_data(self, network, file):
+#    def write_generator_cost_data(self, case, file):
 #        """ Writes generator cost data to file.
 #        """
 #        raise NotImplementedError

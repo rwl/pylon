@@ -29,7 +29,7 @@ import unittest
 from os.path import dirname, join
 
 from pylon.readwrite import MATPOWERReader
-from pylon.pyreto.market import SmartMarket, Bid, Offer
+from pylon.pyreto.market import Market, Bid, Offer
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -48,9 +48,9 @@ class MarketTestCase(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.network = MATPOWERReader().read(DATA_FILE)
+        self.case = MATPOWERReader().read(DATA_FILE)
 
-        generators = self.network.generators
+        generators = self.case.generators
 
         self.offers = [
             Offer(generators[0], 12.0, 20.0),
@@ -96,7 +96,7 @@ class MarketTestCase(unittest.TestCase):
     def test_dc(self):
         """ Test market clearing using DC OPF routine.
         """
-        mkt = SmartMarket(self.network, self.bids, self.offers,
+        mkt = Market(self.case, self.bids, self.offers,
             loc_adjust='dc', auction_type="first price", price_cap=100.0)
 
         mkt.run()

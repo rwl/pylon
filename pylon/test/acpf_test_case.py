@@ -51,7 +51,7 @@ class NewtonPFTest(TestCase):
         """
         # See 'reader_test_case.py' for MATPOWER reader tests.
         reader = MATPOWERReader()
-        self.network = reader(DATA_FILE)
+        self.case = reader(DATA_FILE)
         del reader
 
         self.routine = NewtonRaphson()
@@ -69,7 +69,7 @@ class NewtonPFTest(TestCase):
                 1.0000
                 1.0000
         """
-        self.routine.network = self.network
+        self.routine.case = self.case
         v_initial = self.routine._get_initial_voltage_vector()
 
 #        print v_initial
@@ -79,7 +79,7 @@ class NewtonPFTest(TestCase):
 
         places = 4
 
-        # TODO: Repeat test for a network with generator voltage set points
+        # TODO: Repeat test for a case with generator voltage set points
         # different to the initial bus voltage magnitudes.
         v0_0 = 1.0500
         v0_2 = 1.0700
@@ -102,7 +102,7 @@ class NewtonPFTest(TestCase):
               -0.7000 - 0.7000i
               -0.7000 - 0.7000i
         """
-        self.routine.network = self.network
+        self.routine.case = self.case
         s_surplus = self.routine._get_power_injection_vector()
 
         self.assertEqual(s_surplus.typecode, "z")
@@ -140,10 +140,10 @@ class NewtonPFTest(TestCase):
         routine = self.routine
 
         # Perform preliminary steps.
-        routine.network = self.network
+        routine.case = self.case
 
         # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
+        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.case)
 
         routine.v = routine._get_initial_voltage_vector()
         routine.s_surplus = routine._get_power_injection_vector()
@@ -170,10 +170,10 @@ class NewtonPFTest(TestCase):
         routine = self.routine
 
         # Perform preliminary steps.
-        routine.network = self.network
+        routine.case = self.case
 
         # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
+        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.case)
 
         routine.v = self.routine._get_initial_voltage_vector()
         routine.s_surplus = self.routine._get_power_injection_vector()
@@ -211,7 +211,7 @@ class NewtonPFTest(TestCase):
                 2  3  4  5  6
         """
         routine = self.routine
-        routine.network = self.network
+        routine.case = self.case
         routine._index_buses()
 
         self.assertEqual(len(routine.pv_idxs), 2)
@@ -332,10 +332,10 @@ class NewtonPFTest(TestCase):
         """
         routine = self.routine
 
-        routine.network = self.network
+        routine.case = self.case
 
         # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
+        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.case)
 
         routine.v = self.routine._get_initial_voltage_vector()
         routine.s_surplus = self.routine._get_power_injection_vector()
@@ -396,10 +396,10 @@ class NewtonPFTest(TestCase):
         """
         routine = self.routine
 
-        routine.network = self.network
+        routine.case = self.case
 
         # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.network)
+        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.case)
 
         routine.v = self.routine._get_initial_voltage_vector()
         routine.s_surplus = self.routine._get_power_injection_vector()

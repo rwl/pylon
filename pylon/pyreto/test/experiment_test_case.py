@@ -30,7 +30,7 @@ from os.path import dirname, join
 
 from scipy import array
 
-from pylon import Network, Bus, Generator, Load
+from pylon import Case, Bus, Generator, Load
 from pylon.readwrite import MATPOWERReader
 
 from pylon.pyreto import MarketExperiment, ParticipantEnvironment, ProfitTask
@@ -53,9 +53,9 @@ DATA_FILE = join(dirname(__file__), "data", "auction_case.m")
 #------------------------------------------------------------------------------
 
 def get_test_network():
-    """ Returns a test power system network.
+    """ Returns a test power system case.
     """
-    # Read network from data file.
+    # Read case from data file.
     reader = MATPOWERReader()
     power_sys = reader(DATA_FILE)
 
@@ -92,7 +92,7 @@ class MarketExperimentTest(unittest.TestCase):
         self.bus1.generators.append(self.generator2)
         self.bus1.loads.append(load)
 
-        self.power_sys = Network(name="1bus")
+        self.power_sys = Case(name="1bus")
         self.power_sys.buses.append(self.bus1)
 
 

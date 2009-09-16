@@ -80,8 +80,8 @@ class DCOPF(object):
         # Number of iterative refinement steps when solving KKT equations.
 #        self.refinement = refinement
 
-        # Network object to be optimised.
-        self.network = None
+        # Case to be optimised.
+        self.case = None
 
         # Sparse branch susceptance matrix.  The bus real power injections are
         # related to bus voltage angles by P = Bbus * Va + Pbusinj
@@ -126,21 +126,21 @@ class DCOPF(object):
         self.t_elapsed = 0.0
 
 
-    def __call__(self, network):
+    def __call__(self, case):
         """ Call the routine using routine(n).
         """
-        return self.solve(network)
+        return self.solve(case)
 
 
-    def solve(self, network=None):
+    def solve(self, case=None):
         """ Solves a DC OPF.
         """
         t0 = time.time()
 
-        self.network = network if network is not None else self.network
-        assert self.network is not None
+        self.case = case if case is not None else self.case
+        assert self.case is not None
 
-        logger.info("Solving DC OPF [%s]." % network.name)
+        logger.info("Solving DC OPF [%s]." % case.name)
 
         # Algorithm parameters.
         solvers.options["show_progress"] = self.show_progress
@@ -151,7 +151,7 @@ class DCOPF(object):
 #        solvers.options["refinement"] = self.refinement
 
         susceptance_matrix = SusceptanceMatrix()
-        self._B, self._B_source = susceptance_matrix(self.network)
+        self._B, self._B_source = susceptance_matrix(self.case)
 
         self._theta_inj_source = self._get_theta_inj_source()
         self._theta_inj_bus = self._get_theta_inj_bus()
@@ -223,7 +223,7 @@ class DCOPF(object):
             |    | = |          | * |     | + |       |
             | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
         """
-        branches = self.network.online_branches
+        branches = self.case.online_branches
 
 #        b = matrix([1/e.x * e.online for e in branches])
         susc = []
@@ -248,10 +248,10 @@ class DCOPF(object):
     def _get_theta_inj_bus(self):
         """ Pbusinj = dot(Cf, Pfinj) + dot(Ct, Ptinj)
         """
-        buses = self.network.connected_buses
-        branches = self.network.online_branches
-        n_buses = len(self.network.connected_buses)
-        n_branches = len(self.network.online_branches)
+        buses = self.case.connected_buses
+        branches = self.case.online_branches
+        n_buses = len(self.case.connected_buses)
+        n_branches = len(self.case.online_branches)
 
         # Build incidence matrices
         source_incd = matrix(0, (n_buses, n_branches), tc="i")
@@ -281,8 +281,8 @@ class DCOPF(object):
             then those that are get converted to piecewise linear models. The
             algorithm attribute is then set accordingly.
         """
-        buses = self.network.connected_buses
-        generators = self.network.online_generators
+        buses = self.case.connected_buses
+        generators = self.case.online_generators
 
         models = [g.cost_model for g in generators]
 
@@ -318,9 +318,9 @@ class DCOPF(object):
             voltage phases for each generator bus, the generator real power
             output and if using pw linear costs, the output cost.
         """
-        base_mva = self.network.base_mva
-        buses = self.network.connected_buses
-        generators = self.network.online_generators
+        base_mva = self.case.base_mva
+        buses = self.case.connected_buses
+        generators = self.case.online_generators
 
         v_angle = matrix([v.v_angle_guess * pi / 180 for v in buses])
 
@@ -358,9 +358,9 @@ class DCOPF(object):
             segment of the function. For polynomial (quadratic) models we
             just add an appropriately sized empty matrix.
         """
-        base_mva     = self.network.base_mva
-        buses        = self.network.connected_buses
-        generators   = self.network.online_generators
+        base_mva     = self.case.base_mva
+        buses        = self.case.connected_buses
+        generators   = self.case.online_generators
         n_buses      = len(buses)
         n_generators = len(generators)
 
@@ -424,8 +424,8 @@ class DCOPF(object):
     def _get_reference_angle_constraint(self):
         """ Use the slack bus angle for reference or buses[0].
         """
-        buses        = self.network.connected_buses
-        generators   = self.network.online_generators
+        buses        = self.case.connected_buses
+        generators   = self.case.online_generators
         n_buses      = len(buses)
         n_generators = len(generators)
 
@@ -462,9 +462,9 @@ class DCOPF(object):
     def _get_active_power_flow_equations(self):
         """ P mismatch (B*Va + Pg = Pd).
         """
-        base_mva     = self.network.base_mva
-        buses        = self.network.connected_buses
-        generators   = self.network.online_generators
+        base_mva     = self.case.base_mva
+        buses        = self.case.connected_buses
+        generators   = self.case.online_generators
         n_buses      = len(buses)
         n_generators = len(generators)
 
@@ -518,9 +518,9 @@ class DCOPF(object):
             bid values are used and represent the volume each generator is
             willing to produce and not the rated capacity of the machine.
         """
-        base_mva     = self.network.base_mva
-        buses        = self.network.connected_buses
-        generators   = self.network.online_generators
+        base_mva     = self.case.base_mva
+        buses        = self.case.connected_buses
+        generators   = self.case.online_generators
         n_buses      = len(buses)
         n_generators = len(generators)
 
@@ -568,9 +568,9 @@ class DCOPF(object):
 
             FIXME: No solution when adding this constraint.
         """
-        base_mva     = self.network.base_mva
-        branches     = self.network.online_branches
-        generators   = self.network.online_generators
+        base_mva     = self.case.base_mva
+        branches     = self.case.online_branches
+        generators   = self.case.online_generators
         n_branches   = len(branches)
         n_generators = len(generators)
 
@@ -622,9 +622,9 @@ class DCOPF(object):
 
             Quadratic cost function coefficients: a + bx + cx^2
         """
-        base_mva     = self.network.base_mva
-        buses        = self.network.connected_buses
-        generators   = self.network.online_generators
+        base_mva     = self.case.base_mva
+        buses        = self.case.connected_buses
+        generators   = self.case.online_generators
         n_buses      = len(buses)
         n_generators = len(generators)
         n_costs      = n_generators
@@ -662,9 +662,9 @@ class DCOPF(object):
 
             Quadratic cost function coefficients: c0*x^2 + c1*x + c2
         """
-        base_mva     = self.network.base_mva
-        buses        = self.network.connected_buses
-        generators   = self.network.online_generators
+        base_mva     = self.case.base_mva
+        buses        = self.case.connected_buses
+        generators   = self.case.online_generators
         n_buses      = len(buses)
         n_generators = len(generators)
         n_cost       = n_generators
@@ -773,17 +773,17 @@ class DCOPF(object):
         """ Sets bus voltages angles, generator output powers and branch
             power flows using the solution.
         """
-        base_mva     = self.network.base_mva
-        buses        = self.network.connected_buses
-        branches     = self.network.online_branches
-        generators   = self.network.online_generators
+        base_mva     = self.case.base_mva
+        buses        = self.case.connected_buses
+        branches     = self.case.online_branches
+        generators   = self.case.online_generators
         n_buses      = len(buses)
         n_generators = len(generators)
 
         offline_branches = [
-            e for e in self.network.branches if e not in branches]
+            e for e in self.case.branches if e not in branches]
         offline_generators = [
-            g for g in self.network.all_generators if g not in generators]
+            g for g in self.case.all_generators if g not in generators]
 
         # Bus voltage angles.
         v_angle = solution["x"][:n_buses]

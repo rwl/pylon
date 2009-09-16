@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" For writing network data to file as Comma Separated Values (CSV).
+""" For writing case data to file as Comma Separated Values (CSV).
 """
 
 #------------------------------------------------------------------------------
@@ -31,19 +31,19 @@ from common import bus_attrs, branch_attrs, generator_attrs, load_attrs
 #------------------------------------------------------------------------------
 
 class CSVWriter(object):
-    """ Writes network data to file as CSV.
+    """ Writes case data to file as CSV.
     """
 
-    def __call__(self, network, file_or_filename):
-        """ Calls the writer with the given network.
+    def __call__(self, case, file_or_filename):
+        """ Calls the writer with the given case.
         """
-        self.write(network, file_or_filename)
+        self.write(case, file_or_filename)
 
 
-    def write(self, network, file_or_filename):
-        """ Writes network data to file as CSV.
+    def write(self, case, file_or_filename):
+        """ Writes case data to file as CSV.
         """
-        self.network = network
+        self.case = case
         self.file_or_filename = file_or_filename
 
         if isinstance(file_or_filename, basestring):
@@ -53,68 +53,68 @@ class CSVWriter(object):
 
         self.writer = csv.writer(file)
 
-        self.write_generator_data(network, file)
-        self.write_branch_data(network, file)
-        self.write_generator_data(network, file)
-        self.write_load_data(network, file)
-        self.write_generator_cost_data(network, file)
+        self.write_generator_data(case, file)
+        self.write_branch_data(case, file)
+        self.write_generator_data(case, file)
+        self.write_load_data(case, file)
+        self.write_generator_cost_data(case, file)
 
         file.close()
 
 
-    def write_header(self, network, file):
+    def write_header(self, case, file):
         """ Writes the header to file.
         """
         pass
 
 
-    def write_bus_data(self, network, file):
+    def write_bus_data(self, case, file):
         """ Writes bus data to file.
         """
         self.writer.writerow(bus_attrs)
 
-        for bus in network.buses:
+        for bus in case.buses:
             values = [getattr(bus, attr) for attr in bus_attrs]
             writer.writerow(values)
             del values
 
 
-    def write_branch_data(self, network, file):
+    def write_branch_data(self, case, file):
         """ Writes branch data to file.
         """
         self.writer.writerow(branch_attrs)
 
-        for branch in network.branches:
+        for branch in case.branches:
             values = [getattr(branch, attr) for attr in branch_attrs]
             writer.writerow(values)
             del values
 
 
-    def write_generator_data(self, network, file):
+    def write_generator_data(self, case, file):
         """ Write generator data to file.
         """
         self.writer.writerow(["bus"] + generator_attrs)
 
-        for i, bus in enumerate(network.buses):
+        for i, bus in enumerate(case.buses):
             for generator in bus.generators:
                 values = [getattr(generator, attr) for attr in generator_attrs]
                 writer.writerow([i] + values)
                 del values
 
 
-    def write_load_data(self, network, file):
+    def write_load_data(self, case, file):
         """ Writes load data to file.
         """
         writer.writerow(["bus"] + load_attrs)
 
-        for i, bus in enumerate(network.buses):
+        for i, bus in enumerate(case.buses):
             for load in bus.loads:
                 values = [getattr(load, attr) for attr in load_attrs]
                 writer.writerow([i] + values)
                 del values
 
 
-    def write_generator_cost_data(self, network, file):
+    def write_generator_cost_data(self, case, file):
         """ Writes generator cost data to file.
         """
         pass

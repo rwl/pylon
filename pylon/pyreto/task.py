@@ -90,7 +90,7 @@ class ProfitTask(Task):
         c_fixed = g.total_cost(0.0) * t
         c_variable = (g.total_cost(ob.cleared_quantity) - c_fixed) * t
         # Startup and shutdown costs.
-        g_idx = self.env.market.network.all_generators.index(g)
+        g_idx = self.env.market.case.all_generators.index(g)
         if not bool(g_online[g_idx]) and g.online:
             # The generator has been started up.
             c_updown = g.c_startup
