@@ -286,7 +286,7 @@ class DCOPF(object):
 
         models = [g.cost_model for g in generators]
 
-        if ("polynomial" in models) and ("piecewise linear" in models):
+        if ("poly" in models) and ("pwl" in models):
             logger.info("Not all generators use the same cost model, all will "
                 "be converted to piece-wise linear.")
 
@@ -296,11 +296,11 @@ class DCOPF(object):
             logger.debug("Using linear solver for DC OPF.")
             solver_type = "linear"
 
-        elif "polynomial" not in models:
+        elif "poly" not in models:
             logger.debug("Using linear solver for DC OPF.")
             solver_type = "linear"
 
-        elif "piecewise linear" not in models:
+        elif "pwl" not in models:
             logger.debug("Using quadratic solver for DC OPF.")
             solver_type = "quadratic"
 

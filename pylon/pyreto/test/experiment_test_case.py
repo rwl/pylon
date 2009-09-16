@@ -76,13 +76,13 @@ class MarketExperimentTest(unittest.TestCase):
         self.generator1 = Generator(name        = "G1",
                                     p_max       = 60.0,
                                     p_min       = 0.0,
-                                    cost_model  = "polynomial",
+                                    cost_model  = "poly",
                                     cost_coeffs = (0.0, 10.0, 0.0))
 
         self.generator2 = Generator(name        = "G2",
                                     p_max       = 100.0,
                                     p_min       = 0.0,
-                                    cost_model  = "polynomial",
+                                    cost_model  = "poly",
                                     cost_coeffs = (0.0, 20.0, 0.0))
 
         load = Load(name="L1", p=100.0, q=0.0)

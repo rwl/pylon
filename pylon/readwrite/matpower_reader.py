@@ -463,7 +463,7 @@ class MATPOWERReader(object):
 #            print "Points:", points
 
             g.pwl_points = points
-            g.cost_model = "piecewise linear"
+            g.cost_model = "pwl"
 
         # Polynomial cost data
         elif tokens["model"] == 2:
@@ -485,7 +485,7 @@ class MATPOWERReader(object):
                     coeffs.append(0)
 
             g.cost_coeffs = tuple(coeffs)
-            g.cost_model  = "polynomial"
+            g.cost_model  = "poly"
 
         else:
             raise ValueError, "Invalid cost model number"

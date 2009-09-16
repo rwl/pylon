@@ -18,8 +18,23 @@
 """ Defines the Pylon network model.
 """
 
+#------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+import logging
+
 from itertools import cycle
 
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
+
+#------------------------------------------------------------------------------
+#  "Network" class:
+#------------------------------------------------------------------------------
 
 class Network(object):
     """ Defines representation of an electric power system as a graph
@@ -97,6 +112,9 @@ class Network(object):
         """
         return [branch for branch in self.branches if branch.online]
 
+#------------------------------------------------------------------------------
+#  "Bus" class:
+#------------------------------------------------------------------------------
 
 class Bus(object):
     """ Defines a power system bus node.
@@ -195,6 +213,9 @@ class Bus(object):
         """
         return self.q_supply - self.q_demand
 
+#------------------------------------------------------------------------------
+#  "Branch" class:
+#------------------------------------------------------------------------------
 
 class Branch(object):
     """ Defines a network edge that links two Bus objects.
@@ -277,7 +298,7 @@ class Generator(object):
     def __init__(self, name="generator", online=True, base_mva=100.0, p=100.0,
             p_max=200.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0,
             q_min=-30.0, p_max_bid=None, p_min_bid=None, c_startup=0.0,
-            c_shutdown=0.0, cost_model="polynomial", pwl_points=None,
+            c_shutdown=0.0, cost_model="poly", pwl_points=None,
             cost_coeffs=None, rate_up=1.0, rate_down=1.0, min_up=0,
             min_down=0, initial_up=1, initial_down=0):
         """ Initialises a new Generator instance.
@@ -318,7 +339,7 @@ class Generator(object):
         self.c_startup = c_startup
         # Shut down cost.
         self.c_shutdown = c_shutdown
-        # Valid values are 'polynomial' and 'piecewise linear'.
+        # Valid values are 'poly' and 'pwl'.
         self.cost_model = cost_model
         # Polynomial cost curve coefficients.
         # (a, b, c) relates to: cost = c*p**3 + b*p**2 + a*p.
@@ -369,7 +390,7 @@ class Generator(object):
         if 0 <= self.p_min < self.p_max:
             return "generator"
         elif self.p_min < self.p_max <= 0.0:
-            return "dispatchable load"
+            return "vload"
         else:
             return "unknown"
 
@@ -391,7 +412,7 @@ class Generator(object):
     def total_cost(self, p):
         """ Computes total cost for the generator at the given output level.
         """
-        if self.cost_model == "piecewise linear":
+        if self.cost_model == "pwl":
             n_segments = len(self.pwl_points) - 1
             # Iterate over the piece-wise linear segments.
             for i in range(n_segments):
@@ -410,7 +431,7 @@ class Generator(object):
 #                # Use the last segment for values outwith the cost curve.
 #                result = m*p + c
 
-        elif self.cost_model == "polynomial":
+        elif self.cost_model == "poly":
             result = self.cost_coeffs[-1]
 
             for i in range(1, len(self.cost_coeffs)):
@@ -431,7 +452,7 @@ class Generator(object):
         p_max = self.p_max
         self.pwl_points = []
         # Ensure that the cost model is polynomial for calling total_cost.
-        self.cost_model = "polynomial"
+        self.cost_model = "poly"
 
         if p_min > 0.0:
             # Make the first segment go from the origin to p_min.
@@ -452,7 +473,7 @@ class Generator(object):
             x += step
 
         # Change the cost model.
-        self.cost_model = "piecewise linear"
+        self.cost_model = "pwl"
 
 
     def get_offers(self):
@@ -460,7 +481,7 @@ class Generator(object):
         """
         from pylon.pyreto.market import Offer
 
-        if self.cost_model == "polynomial":
+        if self.cost_model == "poly":
             # Convert polynomials to piece-wise linear.
             self.poly_to_pwl(n_points=6)
 
@@ -516,8 +537,11 @@ class Generator(object):
 
         self.pwl_points = points
 
-        self.cost_model = "piecewise linear"
+        self.cost_model = "pwl"
 
+#------------------------------------------------------------------------------
+#  "Load" class:
+#------------------------------------------------------------------------------
 
 class Load(object):
     """ Defines a PQ load component.

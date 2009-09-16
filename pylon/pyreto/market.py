@@ -24,7 +24,12 @@
 
 import time
 import logging
+
 from cvxopt import matrix
+
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
 
@@ -35,93 +40,25 @@ logger = logging.getLogger(__name__)
 BIG_NUMBER = 1e6
 
 #------------------------------------------------------------------------------
-#  "Bid" class:
+#  "Market" class:
 #------------------------------------------------------------------------------
 
-class Bid(object):
-    """ Defines a bid to buy a quantity of power at a defined price.
-    """
-    def __init__(self, generator, qty, prc):
-        # Generating unit to which the bid applies.
-        self.generator = generator
-        # Does the bid concern active or reactive power?
-        self.reactive = False
-        # Quantity of power bidding to be bought.
-        self.quantity = qty
-        # Maximum price willing to be paid.
-        self.price = prc
-        # Is the bid valid?
-        self.withheld = False
-        # Has the bid been partially or fully accepted?
-        self.accepted = False
-
-        # Quantity of bid cleared by the market.
-        self.cleared_quantity = 0.0
-        # Price at which the bid was cleared.
-        self.cleared_price = 0.0
-
-    @property
-    def total_quantity(self):
-        """ Output at which the generator has been dispatched.
-        """
-        self.generator.p
-
-
-    @property
-    def difference(self):
-        """ The gap between the marginal unit (setting lambda) and the
-            offer/bid price.
-        """
-        return self.price - self.p_lambda
-
-#------------------------------------------------------------------------------
-#  "Offer" class:
-#------------------------------------------------------------------------------
-
-class Offer(object):
-    """ Defines a offer to sell a quantity of power at a defined price.
-    """
-    def __init__(self, qty, prc):
-        self.quantity = qty
-        self.price = prc
-        # Is the offer valid?
-        self.withheld = False
-        # Has the offer been partially or fully accepted?
-        self.accepted = False
-
-#------------------------------------------------------------------------------
-#  "PriceLimit" class:
-#------------------------------------------------------------------------------
-
-class PriceLimit(object):
-    """ Defines limits to offer/bid prices.
-    """
-    def __init__(self, min_bid, max_offer, min_cleared_bid, max_cleared_offer):
-        """ Initialises a new PriceLimit instance.
-        """
-        self.p_min_bid = min_bid
-        self.p_max_offer = max_offer
-        self.p_min_cleared_bid = min_cleared_bid
-        self.p_max_cleared_offer = max_cleared_offer
-
-#------------------------------------------------------------------------------
-#  "SmartMarket" class:
-#------------------------------------------------------------------------------
-
-class SmartMarket(object):
+class Market(object):
     """ Computes the new generation and price schedules based on the offers
         submitted.
     """
+
     def __init__(self, network, bids, offers, loc_adjust="dc",
                  auction_type="first price", price_cap=500, g_online=None,
                  period=1.0):
-        """ Initialises a new SmartMarket instance. A price cap can be set
+        """ Initialises a new Market instance. A price cap can be set
             with max_p.
         """
         self.network = network
 
         # Bids to by quantities of power at a price.
         self.bids = bids
+
         # Offers to sell power.
         self.offers = offers
 
@@ -149,6 +86,7 @@ class SmartMarket(object):
         # A vector containing the commitment status of each generator from the
         # previous period (for computing startup/shutdown costs)
         if g_online is None:
+            # Assume all generators on-line unless otherwise specified.
             self.g_online = matrix(1, (len(network.all_generators), 1))
         else:
             self.g_online = g_online
@@ -180,8 +118,8 @@ class SmartMarket(object):
             self.offers = [g.get_offer for g in generators]
 
         # Number of points to define piece-wise linear cost.
-        n_points = len(self.offers) + len(self.bids) + 1
-        n_points = max([len(self.offers), len(self.bids)]) + 1
+        n_points = len(offers) + len(bids) + 1
+        n_points = max([len(offers), len(bids)]) + 1
 
         # Convert active power bids & offers into piecewise linear segments.
         for g in generators:
@@ -200,7 +138,7 @@ class SmartMarket(object):
             if g.p_min < 0.0:
                 p_min = min([point[0] for point in points])
                 if g.p_min <= p_min <= g.p_max:
-                    if g.mode == "dispatchable load":
+                    if g.mode == "vload":
                         q_min = g.q_min * p_min / g.p_min
                         q_max = g.q_max * p_min / g.p_min
                     else:
@@ -279,6 +217,9 @@ class SmartMarket(object):
 #                    shutdown_cost = g.total_cost(g.c_shutdown)
 
         elapsed = time.time() - t0
+        logger.info("Market cleared in %.3fs" % elapsed)
+
+        return True
 
 
     def auction(self):
@@ -433,6 +374,100 @@ class SmartMarket(object):
                 offbid.accepted = True
             else:
                 offbid.accepted = False
+
+#------------------------------------------------------------------------------
+#  "_OfferBid" class:
+#------------------------------------------------------------------------------
+
+class _OfferBid(object):
+    """ Defines a base class for bids to buy or offers to sell a quantity of
+        power at a defined price.
+    """
+
+    def __init__(self, qty, prc):
+        # Does the bid concern active or reactive power?
+        self.reactive = False
+        # Quantity of power bidding to be bought.
+        self.quantity = qty
+        # Maximum price willing to be paid.
+        self.price = prc
+        # Is the bid valid?
+        self.withheld = False
+        # Has the bid been partially or fully accepted?
+        self.accepted = False
+
+        # Quantity of bid cleared by the market.
+        self.cleared_quantity = 0.0
+        # Price at which the bid was cleared.
+        self.cleared_price = 0.0
+
+
+    @property
+    def difference(self):
+        """ The gap between the marginal unit (setting lambda) and the
+            offer/bid price.
+        """
+        return self.price - self.p_lambda
+
+#------------------------------------------------------------------------------
+#  "Bid" class:
+#------------------------------------------------------------------------------
+
+class Bid(_OfferBid):
+    """ Defines a bid to buy a quantity of power at a defined price.
+    """
+
+    def __init__(self, generator, qty, prc):
+        """ Initialises a new Bid instance.
+        """
+        super(Bid, self).__init__(qty, prc)
+
+        # Generating unit to which the bid applies.
+        self.generator = generator
+
+    @property
+    def total_quantity(self):
+        """ Output at which the generator has been dispatched.
+        """
+        self.generator.p
+
+#------------------------------------------------------------------------------
+#  "Offer" class:
+#------------------------------------------------------------------------------
+
+class Offer(_OfferBid):
+    """ Defines a offer to sell a quantity of power at a defined price.
+    """
+
+    def __init__(self, vload, qty, prc):
+        """ Initialises a new Offer instance.
+        """
+        super(Offer, self).__init__(qty, prc)
+
+        # Dispatchable load to which the offer applies.
+        self.vload = vload
+
+    @property
+    def total_quantity(self):
+        """ Output at which the generator has been dispatched.
+        """
+        self.vload.p
+
+#------------------------------------------------------------------------------
+#  "PriceLimit" class:
+#------------------------------------------------------------------------------
+
+class PriceLimit(object):
+    """ Defines limits to offer/bid prices.
+    """
+
+    def __init__(self, min_bid, max_offer, min_cleared_bid, max_cleared_offer):
+        """ Initialises a new PriceLimit instance.
+        """
+        self.p_min_bid = min_bid
+        self.p_max_offer = max_offer
+        self.p_min_cleared_bid = min_cleared_bid
+        self.p_max_cleared_offer = max_cleared_offer
 
 
 #------------------------------------------------------------------------------

@@ -151,7 +151,7 @@ class MatpowerReaderTest(ReaderTest):
 
         # Generator costs.
         for g in n.all_generators:
-            self.assertEqual(g.cost_model, "polynomial")
+            self.assertEqual(g.cost_model, "poly")
             self.assertEqual(len(g.cost_coeffs), 3)
 
         self.assertEqual(n.all_generators[0].cost_coeffs[0], 0.00533)
@@ -187,7 +187,7 @@ class MatpowerReaderTest(ReaderTest):
         generators = self.network.all_generators
 
         for g in generators:
-            self.assertEqual(g.cost_model, "piecewise linear")
+            self.assertEqual(g.cost_model, "pwl")
             self.assertEqual(len(g.pwl_points), 4)
             self.assertEqual(g.pwl_points[0], (0.0, 0.0))
 

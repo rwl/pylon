@@ -211,7 +211,7 @@ class GeneratorTest(unittest.TestCase):
     def test_total_polynomial_cost(self):
         """ Test total cost calculation with polynomial cost model.
         """
-        g = Generator(cost_model="polynomial")
+        g = Generator(cost_model="poly")
 
         g.p_max = 100.0
         g.p_min = 20.0
@@ -224,7 +224,7 @@ class GeneratorTest(unittest.TestCase):
     def test_total_piecewise_linear_cost(self):
         """ Test total cost calculation with piecewise linear cost model.
         """
-        g = Generator(cost_model="piecewise linear")
+        g = Generator(cost_model="pwl")
 
         p0 = (0.0, 0.0)
         p1 = (40.0, 100.0)
@@ -241,12 +241,12 @@ class GeneratorTest(unittest.TestCase):
     def test_poly_to_pwl(self):
         """ Test cost model conversion from polynomial to piece-wise linear.
         """
-        g = Generator(p_min=0.0, p_max=80.0, cost_model="polynomial")
+        g = Generator(p_min=0.0, p_max=80.0, cost_model="poly")
         g.cost_coeffs=(0.02, 2.0, 0.0)
 
         g.poly_to_pwl(n_points=10)
 
-        self.assertEqual(g.cost_model, "piecewise linear")
+        self.assertEqual(g.cost_model, "pwl")
         self.assertEqual(len(g.pwl_points), 10)
 
         self.assertAlmostEqual(g.pwl_points[2][0], 17.78, places=2)
@@ -307,7 +307,7 @@ class GeneratorTest(unittest.TestCase):
         places = 4
 
         g = Generator(p_min=50.0, p_max=200.0)
-        g.cost_model="polynomial"
+        g.cost_model="poly"
         g.cost_coeffs=(0.00533, 11.669, 213.1)
 
         poly_offers = g.get_offers()
@@ -320,7 +320,7 @@ class GeneratorTest(unittest.TestCase):
 
 
         g = Generator(p_min=0.0, p_max=80.0)
-        g.cost_model="piecewise linear"
+        g.cost_model="pwl"
         g.pwl_points=[(0, 0), (12, 144), (36, 1008), (60, 2832)]
 
         pwl_offers = g.get_offers()
