@@ -23,12 +23,52 @@
 #------------------------------------------------------------------------------
 
 import math
-import cmath
 
-from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
+from itertools import count
+
+from cvxopt.base import matrix
 
 #------------------------------------------------------------------------------
-#  Convenient conjugate function:
+#  "Named" class:
+#------------------------------------------------------------------------------
+
+class Named(object):
+    """ Base class for objects guaranteed to have a unique name.
+    """
+
+    _name_ids = count(0)
+
+    def _get_name(self):
+        """ Returns the name, which is generated if it has not been already.
+        """
+        if self._name is None:
+            self._name = self._generate_name()
+        return self._name
+
+
+    def _set_name(self, value):
+        """ Changes name to 'value'. Uniquity no longer guaranteed.
+        """
+        self._name = value
+
+
+    _name = None
+    name = property(_get_name, _set_name)
+
+
+    def _generate_name(self):
+        """ Return a unique name for this object.
+        """
+        return "%s-%i" % (self.__class__.__name__, self._name_ids.next())
+
+
+    def __repr__(self):
+        """ The default representation of a named object is its name.
+        """
+        return "<%s '%s'>" % (self.__class__.__name__, self.name)
+
+#------------------------------------------------------------------------------
+#  Return the complex conjugate:
 #------------------------------------------------------------------------------
 
 def conj(A):
@@ -40,7 +80,7 @@ def conj(A):
 def atan2(X, Y):
     """ atan2 function.
     """
-    matrix([math.arctan2(Y, X) for k in xrange(nrows*ncols)],
+    matrix([math.arctan2(Y, X) for k in xrange(nrows * ncols)],
            (nrows, ncols), 'd')
 
 
@@ -72,7 +112,7 @@ def angle(z, deg=0):
         45.0
     """
     if deg:
-        fact = 180/pi
+        fact = 180 / math.pi
     else:
         fact = 1.0
 #    z = asarray(z)

@@ -26,6 +26,8 @@ import logging
 
 from itertools import cycle
 
+from util import Named
+
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -36,16 +38,14 @@ logger = logging.getLogger(__name__)
 #  "Case" class:
 #------------------------------------------------------------------------------
 
-class Case(object):
+class Case(Named):
     """ Defines representation of an electric power system as a graph
         of Bus objects connected by Branches.
     """
 
-    def __init__(self, name="case", base_mva=100.0, buses=None,
-            branches=None):
+    def __init__(self, base_mva=100.0, buses=None, branches=None):
         """ Initialises a new Case instance.
         """
-        self.name = name
         # Base apparent power (MVA).
         self.base_mva = base_mva
 
@@ -116,16 +116,15 @@ class Case(object):
 #  "Bus" class:
 #------------------------------------------------------------------------------
 
-class Bus(object):
+class Bus(Named):
     """ Defines a power system bus node.
     """
 
-    def __init__(self, name="bus", slack=False, v_base=100.0,
-            v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
-            g_shunt=0.0, b_shunt=0.0, generators=None, loads=None):
+    def __init__(self, slack=False, v_base=100.0, v_magnitude_guess=1.0,
+            v_angle_guess=0.0, v_max=1.1, v_min=0.9, g_shunt=0.0, b_shunt=0.0,
+            generators=None, loads=None):
         """ Initialises a new Bus instance.
         """
-        self.name = name
         # Is the bus a reference/slack/swing bus?
         self.slack = slack
         # Base voltage
@@ -217,12 +216,12 @@ class Bus(object):
 #  "Branch" class:
 #------------------------------------------------------------------------------
 
-class Branch(object):
+class Branch(Named):
     """ Defines a case edge that links two Bus objects.
     """
 
-    def __init__(self, source_bus, target_bus, name="branch", online=True,
-            r=0.001, x=0.001, b=0.001, s_max=2.0, ratio=1.0, phase_shift=0.0):
+    def __init__(self, source_bus, target_bus, online=True, r=0.001, x=0.001,
+            b=0.001, s_max=2.0, ratio=1.0, phase_shift=0.0):
         """ Initialises a new Branch instance.
         """
         # Source/from/start bus.
@@ -232,7 +231,6 @@ class Branch(object):
         self.target_bus = target_bus
 #        self.target_bus_idx = 0
 
-        self.name = name
         # Is the branch in service?
         self.online = online
         # Positive sequence resistance (pu).
@@ -289,21 +287,20 @@ class Branch(object):
 #  "Generator" class:
 #------------------------------------------------------------------------------
 
-class Generator(object):
+class Generator(Named):
     """ Defines a power system generator component. Fixes voltage magnitude
         and active power injected at parent bus. Or when at it's reactive
         power limit fixes active and reactive power injected at parent bus.
     """
 
-    def __init__(self, name="generator", online=True, base_mva=100.0, p=100.0,
-            p_max=200.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0,
-            q_min=-30.0, p_max_bid=None, p_min_bid=None, c_startup=0.0,
+    def __init__(self, online=True, base_mva=100.0, p=100.0, p_max=200.0,
+            p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0, q_min=-30.0,
+            p_max_bid=None, p_min_bid=None, c_startup=0.0,
             c_shutdown=0.0, cost_model="poly", pwl_points=None,
             cost_coeffs=None, rate_up=1.0, rate_down=1.0, min_up=0,
             min_down=0, initial_up=1, initial_down=0):
         """ Initialises a new Generator instance.
         """
-        self.name = name
         # Is the generator in service?
         self.online = online
         # Machine MVA base.
@@ -476,18 +473,38 @@ class Generator(object):
         self.cost_model = "pwl"
 
 
-    def get_offers(self):
-        """ Returns a quantity and price offer created from the cost function.
+    def get_offers(self, n_points=6):
+        """ Returns quantity and price offers created from the cost function.
         """
         from pylon.pyreto.market import Offer
 
+        qtyprc = self._get_qty_prc(n_points)
+
+        return [Offer(self, qty, prc) for qty, prc in qtyprc]
+
+
+    def get_bids(self, n_points=6):
+        """ Returns quantity and price bids created from the cost function.
+        """
+        from pylon.pyreto.market import Bid
+
+        qtyprc = self._get_qtyprc(n_points)
+
+        return [Bid(self, qty, prc) for qty, prc in qtyprc]
+
+
+    def _get_qtyprc(self, n_points=6):
+        """ Returns a list of tuples of the form (qty, prc) created from the
+            cost function.  If the cost function is polynomial it will be
+            converted to piece-wise linear using poly_to_pwl(n_points).
+        """
         if self.cost_model == "poly":
-            # Convert polynomials to piece-wise linear.
-            self.poly_to_pwl(n_points=6)
+            # Convert polynomial cost function to piece-wise linear.
+            self.poly_to_pwl(n_points)
 
         n_segments = len(self.pwl_points) - 1
 
-        offers = []
+        qtyprc = []
 
         for i in range(n_segments):
             x1, y1 = self.pwl_points[i]
@@ -496,62 +513,70 @@ class Generator(object):
             quantity = x2 - x1
             price = (y2 - y1) / quantity
 
-            offers.append(Offer(quantity, price))
+            qtyprc.append((quantity, price))
 
-        return offers
+        return qtyprc
 
 
-    def offers_to_pwl(self, offers, is_bid=False, limits=None):
-        """ Sets the piecewise linear total cost function according to the
-            given bid/offer blocks.
+    def offers_to_pwl(self, offers):
+        """ Updates the piece-wise linear total cost function using the given
+            offer blocks.
 
-            @see: extras/smartmarket/off2case.m
+            @see: matpower3.2/extras/smartmarket/off2case.m
         """
-        from numpy import cumsum
+        self.pwl_points = self._offbids_to_points(offers)
+        # FIXME: Set all reactive costs to zero if not provided.
+        self.cost_model = "pwl"
 
-        if min([off.quantity for off in offers]) < 0.0:
-            logger.error("Offer/bid quantities must be non-negative.")
 
-        # Strip zero quantities and optionally strip prices beyond limits.
-        if limits is not None:
-            if is_bid:
-                offers = [off for off in offers if off.quantity >= limit]
-                offers = [off for off in offers if off.price >= limit]
-            else:
-                offers = [off for off in offers if off.quantity <= limit]
-                offers = [off for off in offers if off.price <= limit]
+    def bids_to_pwl(self, bids):
+        """ Updates the piece-wise linear total cost function using the given
+            bid blocks.
 
-        n_points = len(offers) + 1 # Number of points to define pwl function.
+            @see: matpower3.2/extras/smartmarket/off2case.m
+        """
+        points = self._offbids_to_points(bids)
+
+        # Shift the points to represent bids by subtracting the maximum value
+        # from each.
+        x_end, y_end = points[-1]
+        points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
+
+        self.pwl_points = points
+        # FIXME: Set all reactive costs to zero if not provided.
+        self.cost_model = "pwl"
+
+
+    def _offbids_to_points(self, offbids):
+        """ Returns a list of points for a piece-wise linear function from the
+            given offer/bid blocks.
+        """
+        # Sort offers/bids by price in ascending order.
+        offbids.sort(key=lambda x: x.price)
 
         points = [(0.0, 0.0)]
         # Form piece-wise linear total cost function.
-        for i, off in enumerate(offers):
-            x = points[i][0] + off.quantity
-            y = points[i][1] + off.price
-            points.append((x, y))
+        for i, offbid in enumerate(offbids):
+            x1, y1 = points[i]
+            x2 = points[i][0] + offbid.quantity # MW.
+            m = offbid.price # $/MWh
+            y2 = m * (x2 - x1) + y1
+            points.append((x2, y2))
 
-        if is_bid:
-            x_end = points[-1][0]
-            y_end = points[-1][1]
-            points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
-
-        self.pwl_points = points
-
-        self.cost_model = "pwl"
+        return points
 
 #------------------------------------------------------------------------------
 #  "Load" class:
 #------------------------------------------------------------------------------
 
-class Load(object):
+class Load(Named):
     """ Defines a PQ load component.
     """
 
-    def __init__(self, name="load", online=True, p=1.0, q=0.1, p_max=1.0,
-            p_min=0.0, p_profile=None):
+    def __init__(self, online=True, p=1.0, q=0.1, p_max=1.0, p_min=0.0,
+            p_profile=None):
         """ Initialises a new Load instance.
         """
-        self.name = name
         # Is the load in service?
         self.online = online
         # Active power demand (MW).
@@ -596,8 +621,11 @@ class Load(object):
 
     p_profile = property(get_p_profile, set_p_profile)
 
+#------------------------------------------------------------------------------
+#  "CaseReport" class:
+#------------------------------------------------------------------------------
 
-class CaseReport(object):
+class CaseReport(Named):
     """ Defines a statistical case report.
     """
 

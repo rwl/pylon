@@ -25,7 +25,9 @@
 import time
 import logging
 
-from cvxopt import matrix
+from cvxopt import matrix, spdiag
+
+from pylon import DCOPF, ACOPF
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -48,19 +50,33 @@ class Market(object):
         submitted.
     """
 
-    def __init__(self, case, bids, offers, loc_adjust="dc",
-                 auction_type="first price", price_cap=500, g_online=None,
-                 period=1.0):
-        """ Initialises a new Market instance. A price cap can be set
-            with max_p.
+    def __init__(self, case, bids=None, offers=None, limits=None,
+            loc_adjust="dc", auction_type="first price", price_cap=500,
+            g_online=None, period=1.0):
+        """ Initialises a new Market instance.
         """
         self.case = case
 
-        # Bids to by quantities of power at a price.
-        self.bids = bids
+        # Offers to sell a quantity of power at a particular price.
+        if offers is None:
+            self.offers = []
+        else:
+            self.offers = offers
 
-        # Offers to sell power.
-        self.offers = offers
+        # Bids to buy power.
+        if bids is None:
+            self.bids = []
+        else:
+            self.bids = bids
+
+        # Offer/bid limits.
+        if limits is None:
+#            self.limits = PriceLimit()
+#            self.limits = {"min_bid": None, "max_offer": None,
+#                "min_cleared_bid": None, "max_cleared_offer": None}
+            self.limits = {}
+        else:
+            self.limits = limits
 
         # Compute locational adjustments ('ignore', 'ac', 'dc').
         self.loc_adjust = loc_adjust
@@ -97,52 +113,96 @@ class Market(object):
         # Constraint violation tolerance.
         self.violation = 5e-6
 
+        # Finish initialising the market.
+        self.init()
 
-    def run(self):
+
+    def init(self):
+        """ Initialises the market.
+        """
+        generators = [g for g in self.case.all_generators if not g.is_load]
+        vloads     = [g for g in self.case.all_generators if g.is_load]
+
+        # Number of points to define piece-wise linear cost.
+#        n_points = max([len(offers), len(bids)]) + 1
+
+        if not self.offers:
+            # Create offers from the generator cost functions.
+            self.offers = [off for g in generators for off in g.get_offers()]
+
+        if not self.bids:
+            self.bids = [bid for vl in vloads for bid in vl.get_bids()]
+
+
+    def clear(self):
         """ Computes cleared offers and bids.
         """
-        # Start the clock.
         t0 = time.time()
 
         offers = self.offers
         bids = self.bids
+        limits = self.limits
 
         buses = self.case.connected_buses
-        generators = self.case.all_generators
+        all_generators = self.case.all_generators
+        generators = [g for g in all_generators if not g.is_load]
+        vloads     = [g for g in all_generators if g.is_load]
 
-        limits = {"max_offer": self.price_cap,
-                  "max_cleared_offer": self.price_cap}
+        # Eliminates offers (but not bids) above 'price_cap'.
+        limits['max_offer'] = self.price_cap
+        limits['max_cleared_offer'] = self.price_cap
 
-        # Create offers from the generator cost function.
-        if not self.offers:
-            self.offers = [g.get_offer for g in generators]
+        if [offbid for offbid in offers + bids if offbid.reactive]:
+            have_q = True
+            raise NotImplementedError, "Combined active/reactive power " \
+                "market not yet implemented."
+        else:
+            have_q = False
 
-        # Number of points to define piece-wise linear cost.
-        n_points = len(offers) + len(bids) + 1
-        n_points = max([len(offers), len(bids)]) + 1
+        if min([offbid.quantity for offbid in offers + bids]) < 0.0:
+            logger.info("Ignoring offers/bids with negative quantities.")
 
-        # Convert active power bids & offers into piecewise linear segments.
+        # Strip zero quantities (rounded to 4 decimal places).
+        offers = [offr for offr in offers if round(offr.quantity, 4) <= 0.0]
+        bids = [bid for bid in bids if round(bid.quantity, 4) <= 0.0]
+
+        # Optionally strip prices beyond limits.
+        if limits.has_key('max_offer'):
+            offers = [ofr for ofr in offers if ofr.price < limits['max_offer']]
+        if limits.has_key('min_bid'):
+            bids = [bid for bid in bids if bid.price > limits['min_bid']]
+
+        # Convert active power offers into piecewise linear segments.
         for g in generators:
-            g_offers = [off for off in offers if off.generator == g]
-            g.offers_to_pwl(g_offers)
+            g_offers = [offer for offer in offers if offer.generator == g]
 
-            g_bids = [bid for bid in bids if bid.generator == g]
-            g.offers_to_pwl(g_bids, is_bid=True)
+            if g_offers:
+                g.offers_to_pwl(g_offers)
+            else:
+                g.online = False
+
+        # Convert active power bids into piecewise linear segments.
+        for vl in vloads:
+            vl_bids = [bid for bid in bids if bid.vload == vl]
+            if vl_bids:
+                vl.bids_to_pwl(vl_bids)
+            else:
+                vl.online = False
 
         # Update generator limits.
         for g in generators:
             if g.p_max > 0.0:
-                p_max = max([point[0] for point in points])
+                p_max = max([point[0] for point in g.pwl_points])
                 if not g.p_min <= p_max <= g.p_max:
                     logger.error("Offer quantity outwith range.")
             if g.p_min < 0.0:
-                p_min = min([point[0] for point in points])
+                p_min = min([point[0] for point in g.pwl_points])
                 if g.p_min <= p_min <= g.p_max:
                     if g.mode == "vload":
                         q_min = g.q_min * p_min / g.p_min
                         q_max = g.q_max * p_min / g.p_min
-                    else:
-                        logger.error("Bid quantity outwith range.")
+                else:
+                    logger.error("Bid quantity outwith range.")
 
             g.p_min = p_min
             g.p_max = p_max
@@ -162,7 +222,12 @@ class Market(object):
                 g.p_max += 100 * self.violation
 
         # Solve the optimisation problem.
-        success = DCOPF().solve(self.case)
+        if self.loc_adjust == "dc":
+            success = DCOPF().solve(self.case)
+        elif self.loc_adjust == "ac":
+            success = ACOPF().solve(self.case)
+        else:
+            raise NotImplementedError, "Ignore network not implemented."
 
         # Compute quantities, prices and costs.
         if success:
@@ -179,7 +244,7 @@ class Market(object):
 
             for offer in offers:
                 offer.p_lambda = bus.p_lambda
-                offer.total_quantity = generator.p
+                offer.total_quantity = offer.generator.p
 
             for bid in bids:
                 if self.have_q:
@@ -192,7 +257,7 @@ class Market(object):
                     bid.p_lambda = bus.p_lambda + spdiag(pf[l]) * bus.q_lambda
                     # Guarantee that cleared bids are <= bids.
                     guarantee_bid_price = True
-                bid.total_quantity = dispatchable_load.p
+                bid.total_quantity = bid.vload.p
 
             # Clear bids and offers.
             cleared_offers, cleared_bids = self.auction(offers, bids)
@@ -201,7 +266,7 @@ class Market(object):
             logger.error("Non-convergent OPF.")
 
             quantity = 0.0
-            price = limits["max_offer"]
+            price = limits.max_offer
 
             for offbid in offers + bids:
                 offbid.quantity = 0.0
@@ -209,8 +274,8 @@ class Market(object):
 
             # Compute costs in $ (not $/hr).
             for g in generators:
-                fixed_cost = market_time * g.total_cost(0.0)
-                variable_cost = g.total_cost(market_time * quantity)-fixed_cost
+                fixed_cost = self.period * g.total_cost(0.0)
+                variable_cost = g.total_cost(self.period * quantity)-fixed_cost
 #                if g.online:
 #                    startup_cost = g.total_cost(g.c_startup)
 #                else:
@@ -226,7 +291,11 @@ class Market(object):
         """ Clears a set of bids and offers, where the pricing is adjusted for
             network losses and binding constraints.
         """
+        offers = self.offers
+        bids = self.bids
         limits = self.limits
+        generators = [g for g in self.case.all_generators if not g.is_load]
+        vloads     = [g for g in self.case.all_generators if g.is_load]
 
         # Enforce price limits.
         if limits.has_key("max_offer"):
@@ -291,6 +360,8 @@ class Market(object):
 
         # Cleared offer/bid prices for different auction types.
         for offbid in offers + bids:
+            auction_type = self.auction_type
+
             if auction_type == "discriminative":
                 offbid.cleared_price = offbid.price
             elif auction_type == "lao":
@@ -385,21 +456,49 @@ class _OfferBid(object):
     """
 
     def __init__(self, qty, prc):
-        # Does the bid concern active or reactive power?
-        self.reactive = False
         # Quantity of power bidding to be bought.
         self.quantity = qty
+
         # Maximum price willing to be paid.
         self.price = prc
+
+        # Does the bid concern active or reactive power?
+        self.reactive = False
+
         # Is the bid valid?
         self.withheld = False
+
         # Has the bid been partially or fully accepted?
         self.accepted = False
 
         # Quantity of bid cleared by the market.
         self.cleared_quantity = 0.0
+
         # Price at which the bid was cleared.
         self.cleared_price = 0.0
+
+#------------------------------------------------------------------------------
+#  "Offer" class:
+#------------------------------------------------------------------------------
+
+class Offer(_OfferBid):
+    """ Defines a offer to sell a quantity of power at a defined price.
+    """
+
+    def __init__(self, generator, qty, prc):
+        """ Initialises a new Offer instance.
+        """
+        super(Offer, self).__init__(qty, prc)
+
+        # Generating unit to which the bid applies.
+        self.generator = generator
+
+
+    @property
+    def total_quantity(self):
+        """ Output at which the generator has been dispatched.
+        """
+        self.generator.p
 
 
     @property
@@ -417,35 +516,14 @@ class Bid(_OfferBid):
     """ Defines a bid to buy a quantity of power at a defined price.
     """
 
-    def __init__(self, generator, qty, prc):
+    def __init__(self, vload, qty, prc):
         """ Initialises a new Bid instance.
         """
         super(Bid, self).__init__(qty, prc)
 
-        # Generating unit to which the bid applies.
-        self.generator = generator
-
-    @property
-    def total_quantity(self):
-        """ Output at which the generator has been dispatched.
-        """
-        self.generator.p
-
-#------------------------------------------------------------------------------
-#  "Offer" class:
-#------------------------------------------------------------------------------
-
-class Offer(_OfferBid):
-    """ Defines a offer to sell a quantity of power at a defined price.
-    """
-
-    def __init__(self, vload, qty, prc):
-        """ Initialises a new Offer instance.
-        """
-        super(Offer, self).__init__(qty, prc)
-
         # Dispatchable load to which the offer applies.
         self.vload = vload
+
 
     @property
     def total_quantity(self):
@@ -461,14 +539,29 @@ class PriceLimit(object):
     """ Defines limits to offer/bid prices.
     """
 
-    def __init__(self, min_bid, max_offer, min_cleared_bid, max_cleared_offer):
+    def __init__(self, min_bid=None, max_offer=None, min_cleared_bid=None,
+            max_cleared_offer=None):
         """ Initialises a new PriceLimit instance.
         """
-        self.p_min_bid = min_bid
-        self.p_max_offer = max_offer
-        self.p_min_cleared_bid = min_cleared_bid
-        self.p_max_cleared_offer = max_cleared_offer
+        # Offers above this are withheld.
+        self.max_offer = max_offer
 
+        # Bids below this are withheld.
+        self.min_bid = min_bid
+
+        # Cleared offer prices above this are clipped.
+        self.max_cleared_offer = max_cleared_offer
+
+        # Cleared bid prices below this are clipped.
+        self.min_cleared_bid = min_cleared_bid
+
+        self.q_max_offer = max_offer
+
+        self.q_min_bid = min_bid
+
+        self.q_max_cleared_offer = max_cleared_offer
+
+        self.q_min_cleared_bid = min_cleared_bid
 
 #------------------------------------------------------------------------------
 #  "ContractsMarket" class:
