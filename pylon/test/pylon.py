@@ -24,15 +24,14 @@
 
 import unittest
 
-from case_test_case \
-    import caseTest, BusTest, BranchTest, GeneratorTest, LoadTest
+from case import CaseTest, BusTest, BranchTest, GeneratorTest, LoadTest
 
-from y_test_case import BTest, YTest
-from dcpf_test_case import DCPFTest
-from acpf_test_case import NewtonPFTest
-from dcopf_test_case import DCOPFTest
-from acopf_test_case import ACOPFTest
-from uc_test_case import UnitCommitmentTest
+from y import BTest, YTest
+from dcpf import DCPFTest
+from acpf import NewtonPFTest
+from dcopf import DCOPFTest
+from acopf import ACOPFTest
+from uc import UnitCommitmentTest
 
 from reader_test_case \
     import MatpowerReaderTest, PSSEReaderTest, PSATReaderTest
