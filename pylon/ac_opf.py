@@ -259,13 +259,14 @@ class ACOPF(object):
 
             df0= matrix([matrix(0.0, (v_end, 1)), df_dPgQg])
 
-            # Evaluate nonlinear constraints ----------------------------------
+            # Evaluate nonlinear equality constraints -------------------------
 
-            # Net injected power in p.u.
-            s = matrix([complex(v.p_surplus, v.q_surplus) for v in buses])
+            # Net complex bus power injection vector in p.u.
+            s = matrix([complex(v.p_surplus, v.q_surplus) / base_mva
+                        for v in buses])
 
             # Bus voltage vector.
-            v_angle = x[ph_base:ph_end+1]
+            v_angle = x[ph_base:ph_end + 1]
             v_magnitude = x[v_base:v_end]
 #            Va0r = Va0 * pi / 180 #convert to radians
             v = mul(v_magnitude, exp(j * v_angle)) #element-wise product
@@ -277,7 +278,9 @@ class ACOPF(object):
             # Evaluate power balance equality constraint function values.
             fk_eq = matrix([mismatch.real(), mismatch.imag()])
 
-            # Branch power flow inequality constraint function values.
+            # Evaluate nonlinear inequality constraints -----------------------
+
+            # Branch power flow limit inequality constraint function values.
             source_idxs = matrix([buses.index(e.source_bus) for e in branches])
             target_idxs = matrix([buses.index(e.target_bus) for e in branches])
             # Complex power in p.u. injected at the source bus.
@@ -285,24 +288,27 @@ class ACOPF(object):
             # Complex power in p.u. injected at the target bus.
             s_target = mul(v[target_idxs], conj(Ytarget, v))
 
+            # Apparent power flow limit in MVA, |S|.
             s_max = matrix([e.s_max for e in branches])
 
-            fk_ieq = matrix([abs(s_source)-s_max, abs(s_target)-s_max])
+            # FIXME: Implement active power and current magnitude limits.
+            fk_ieq = matrix([abs(s_source) - s_max, abs(s_target) - s_max])
 
             # Evaluate partial derivatives of constraints ---------------------
+
             # Partial derivative of injected bus power
-            ds_dvm, ds_dva = dSbus_dV(Y, v) # w.r.t voltage
+            dS_dVm, dS_dVa = dSbus_dV(Y, v) # w.r.t voltage
             pv_idxs = matrix([buses.index(bus) for bus in buses])
-            ds_dpg = spmatrix(-1, pv_idxs, range(n_gen)) # w.r.t Pg
-            ds_dqg = spmatrix(-j, pv_idxs, range(n_gen)) # w.r.t Qg
+            dS_dPg = spmatrix(-1, pv_idxs, range(n_gen)) # w.r.t Pg
+            dS_dQg = spmatrix(-j, pv_idxs, range(n_gen)) # w.r.t Qg
 
             # Transposed Jacobian of the power balance equality constraints.
             dfk_eq = sparse([
                 sparse([
-                    ds_dva.real(), ds_dvm.real(), ds_dpg.real(), ds_dqg.real()
+                    dS_dVa.real(), dS_dVm.real(), dS_dPg.real(), dS_dQg.real()
                 ]),
                 sparse([
-                    ds_dva.imag(), ds_dvm.imag(), ds_dpg.imag(), ds_dqg.imag()
+                    dS_dVa.imag(), dS_dVm.imag(), dS_dPg.imag(), dS_dQg.imag()
                 ])
             ]).T
 
@@ -315,10 +321,8 @@ class ACOPF(object):
                 dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target)
 
             # Transposed Jacobian of branch power flow inequality constraints.
-            dfk_ieq = matrix([
-                matrix([df_dVa, df_dVm]),
-                matrix([dt_dVa, dt_dVm])
-            ]).T
+            dfk_ieq = matrix([matrix([df_dVa, df_dVm]),
+                              matrix([dt_dVa, dt_dVm])]).T
 
             f = matrix([f0, fk_eq, fk_ieq])
             df = matrix([df0, dfk_eq, dfk_ieq])
@@ -328,15 +332,15 @@ class ACOPF(object):
 
             # Evaluate cost Hessian -------------------------------------------
 
-            d2f_d2pg = spmatrix([], [], [], (n_gen, 1))
-            d2f_d2qg = spmatrix([], [], [], (n_gen, 1))
+            d2f_d2Pg = spmatrix([], [], [], (n_gen, 1))
+            d2f_d2Qg = spmatrix([], [], [], (n_gen, 1))
             for i, g in enumerate(generators):
                 der = polyder(list(g.cost_coeffs))
-                d2f_d2pg[i] = polyval(der, g.p) * network.base_mva
                 # TODO: Implement reactive power costs.
+                d2f_d2Pg[i] = polyval(der, g.p) * base_mva
 
-            i = matrix(range(pg_base, qg_end+1)).T
-            H = spmatrix(matrix([d2f_d2pg, d2f_d2qg]), i, i)
+            i = matrix(range(pg_base, qg_end + 1)).T
+            H = spmatrix(matrix([d2f_d2Pg, d2f_d2Qg]), i, i)
 
             return f, df, H
 
