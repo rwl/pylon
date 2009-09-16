@@ -24,17 +24,16 @@
 
 import unittest
 
-from case import CaseTest, BusTest, BranchTest, GeneratorTest, LoadTest
+from pylon.test.case import CaseTest, BusTest, BranchTest, GeneratorTest, LoadTest
 
 from y import BTest, YTest
-from dcpf import DCPFTest
-from acpf import NewtonPFTest
-from dcopf import DCOPFTest
-from acopf import ACOPFTest
+from dc_pf import DCPFTest
+from ac_pf import NewtonPFTest
+from dc_opf import DCOPFTest
+from ac_opf import ACOPFTest
 from uc import UnitCommitmentTest
 
-from reader_test_case \
-    import MatpowerReaderTest, PSSEReaderTest, PSATReaderTest
+from reader import MatpowerReaderTest, PSSEReaderTest#, PSATReaderTest
 
 #------------------------------------------------------------------------------
 #  "suite" function:
@@ -45,7 +44,7 @@ def suite():
     """
     suite = unittest.TestSuite()
 
-    suite.addTest(unittest.makeSuite(caseTest))
+    suite.addTest(unittest.makeSuite(CaseTest))
     suite.addTest(unittest.makeSuite(BusTest))
     suite.addTest(unittest.makeSuite(BranchTest))
     suite.addTest(unittest.makeSuite(GeneratorTest))
@@ -55,7 +54,7 @@ def suite():
     suite.addTest(unittest.makeSuite(BTest))
     suite.addTest(unittest.makeSuite(YTest))
     suite.addTest(unittest.makeSuite(DCPFTest))
-    suite.addTest(unittest.makeSuite(ACPFTest))
+    suite.addTest(unittest.makeSuite(NewtonPFTest))
     suite.addTest(unittest.makeSuite(DCOPFTest))
     suite.addTest(unittest.makeSuite(ACOPFTest))
     suite.addTest(unittest.makeSuite(UnitCommitmentTest))
@@ -63,7 +62,7 @@ def suite():
     # Read/write test cases.
     suite.addTest(unittest.makeSuite(MatpowerReaderTest))
     suite.addTest(unittest.makeSuite(PSSEReaderTest))
-    suite.addTest(unittest.makeSuite(PSATReaderTest))
+#    suite.addTest(unittest.makeSuite(PSATReaderTest))
 
     return suite
 
