@@ -15,6 +15,8 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
+from market import Market, Offer, Bid
+
 from experiment import MarketExperiment
 from environment import ParticipantEnvironment
 from task import ProfitTask

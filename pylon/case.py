@@ -43,9 +43,12 @@ class Case(Named):
         of Bus objects connected by Branches.
     """
 
-    def __init__(self, base_mva=100.0, buses=None, branches=None):
+    def __init__(self, name=None, base_mva=100.0, buses=None, branches=None):
         """ Initialises a new Case instance.
         """
+        # Unique name.
+        self.name = name
+
         # Base apparent power (MVA).
         self.base_mva = base_mva
 
@@ -120,11 +123,13 @@ class Bus(Named):
     """ Defines a power system bus node.
     """
 
-    def __init__(self, slack=False, v_base=100.0, v_magnitude_guess=1.0,
-            v_angle_guess=0.0, v_max=1.1, v_min=0.9, g_shunt=0.0, b_shunt=0.0,
-            generators=None, loads=None):
+    def __init__(self, name=None, slack=False, v_base=100.0,
+            v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
+            g_shunt=0.0, b_shunt=0.0, generators=None, loads=None):
         """ Initialises a new Bus instance.
         """
+        # Unique name.
+        self.name = name
         # Is the bus a reference/slack/swing bus?
         self.slack = slack
         # Base voltage
@@ -220,8 +225,8 @@ class Branch(Named):
     """ Defines a case edge that links two Bus objects.
     """
 
-    def __init__(self, source_bus, target_bus, online=True, r=0.001, x=0.001,
-            b=0.001, s_max=2.0, ratio=1.0, phase_shift=0.0):
+    def __init__(self, source_bus, target_bus, name=None, online=True, r=0.001,
+            x=0.001, b=0.001, s_max=2.0, ratio=1.0, phase_shift=0.0):
         """ Initialises a new Branch instance.
         """
         # Source/from/start bus.
@@ -231,6 +236,8 @@ class Branch(Named):
         self.target_bus = target_bus
 #        self.target_bus_idx = 0
 
+        # Unique name.
+        self.name = name
         # Is the branch in service?
         self.online = online
         # Positive sequence resistance (pu).
@@ -293,14 +300,16 @@ class Generator(Named):
         power limit fixes active and reactive power injected at parent bus.
     """
 
-    def __init__(self, online=True, base_mva=100.0, p=100.0, p_max=200.0,
-            p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0, q_min=-30.0,
-            p_max_bid=None, p_min_bid=None, c_startup=0.0,
+    def __init__(self, name=None, online=True, base_mva=100.0, p=100.0,
+            p_max=200.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0,
+            q_min=-30.0, p_max_bid=None, p_min_bid=None, c_startup=0.0,
             c_shutdown=0.0, cost_model="poly", pwl_points=None,
             cost_coeffs=None, rate_up=1.0, rate_down=1.0, min_up=0,
             min_down=0, initial_up=1, initial_down=0):
         """ Initialises a new Generator instance.
         """
+        # Unique name.
+        self.name = name
         # Is the generator in service?
         self.online = online
         # Machine MVA base.
@@ -525,6 +534,7 @@ class Generator(Named):
             @see: matpower3.2/extras/smartmarket/off2case.m
         """
         self.pwl_points = self._offbids_to_points(offers)
+        # FIXME: Convert reactive power bids into piecewise linear segments.
         # FIXME: Set all reactive costs to zero if not provided.
         self.cost_model = "pwl"
 
@@ -543,6 +553,7 @@ class Generator(Named):
         points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
 
         self.pwl_points = points
+        # FIXME: Convert reactive power bids into piecewise linear segments.
         # FIXME: Set all reactive costs to zero if not provided.
         self.cost_model = "pwl"
 
@@ -573,8 +584,8 @@ class Load(Named):
     """ Defines a PQ load component.
     """
 
-    def __init__(self, online=True, p=1.0, q=0.1, p_max=1.0, p_min=0.0,
-            p_profile=None):
+    def __init__(self, name=None, online=True, p=1.0, q=0.1, p_max=1.0,
+            p_min=0.0, p_profile=None):
         """ Initialises a new Load instance.
         """
         # Is the load in service?
@@ -625,7 +636,7 @@ class Load(Named):
 #  "CaseReport" class:
 #------------------------------------------------------------------------------
 
-class CaseReport(Named):
+class CaseReport(object):
     """ Defines a statistical case report.
     """
 

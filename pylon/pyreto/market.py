@@ -27,7 +27,7 @@ import logging
 
 from cvxopt import matrix, spdiag
 
-from pylon import DCOPF, ACOPF
+from pylon import UDOPF
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -168,66 +168,84 @@ class Market(object):
 
         # Optionally strip prices beyond limits.
         if limits.has_key('max_offer'):
-            offers = [ofr for ofr in offers if ofr.price < limits['max_offer']]
+            offers = [of for of in offers if of.price <= limits['max_offer']]
         if limits.has_key('min_bid'):
-            bids = [bid for bid in bids if bid.price > limits['min_bid']]
+            bids = [bid for bid in bids if bid.price >= limits['min_bid']]
 
-        # Convert active power offers into piecewise linear segments.
+
+        # Convert power offers into piecewise linear segments and update
+        # generator limits.
         for g in generators:
             g_offers = [offer for offer in offers if offer.generator == g]
 
             if g_offers:
                 g.offers_to_pwl(g_offers)
+
+            p_offers = [ofr for ofr in g_offers if not ofr.reactive]
+            q_offers = [ofr for ofr in g_offers if ofr.reactive]
+
+            # Capacity offered for active power.
+            if p_offers:
+                p_max = max([point[0] for point in g.pwl_points])
+                if not g.p_min <= p_max <= g.p_max:
+                    logger.error("Offer quantity (%.2f) must be between %.2f "
+                        "and %.2f." % (p_max, max([0, g.p_min]), g.p_max))
+                else:
+                    g.p_max = p_max
+                    g.online = True
+            elif q_offers:
+                # FIXME: Dispatch at zero real power without shutting down
+                # if capacity offered for reactive power.
+#                g.p_min = g.p_max = 0.0
+                g.online = True
             else:
+                # Shutdown the unit if no capacity offered for active or
+                # reactive power.
                 g.online = False
 
-        # Convert active power bids into piecewise linear segments.
+            # FIXME: Update generator reactive power limits.
+
+        # Convert power bids into piecewise linear segments and update
+        # dispatchable load limits.
         for vl in vloads:
             vl_bids = [bid for bid in bids if bid.vload == vl]
+
             if vl_bids:
                 vl.bids_to_pwl(vl_bids)
+
+            p_bids = [bid for bid in vl_bids if not bid.reactive]
+            q_bids = [bid for bid in vl_bids if bid.reactive]
+
+            # Capacity offered for active power.
+            if p_bids:
+                p_min = min([point[0] for point in g.pwl_points])
+                if vl.p_min <= p_min <= vl.p_max:
+                    vl.q_min = vl.q_min * p_min / vl.p_min
+                    vl.q_max = vl.q_max * p_min / vl.p_min
+                    vl.p_min = p_min
+                    vl.online = True
+                else:
+                    logger.error("Bid quantity (%.2f) must be between %.2f "
+                        "and %.2f." % (-p_min, max([0, vl.p_max]), -vl.p_min))
+            elif q_bids:
+                # FIXME: Dispatch at zero real power without shutting down if
+                # reactive power offered.
+#                vl.q_min = vl.q_max = 0.0
+                vl.online = True
             else:
                 vl.online = False
 
-        # Update generator limits.
-        for g in generators:
-            if g.p_max > 0.0:
-                p_max = max([point[0] for point in g.pwl_points])
-                if not g.p_min <= p_max <= g.p_max:
-                    logger.error("Offer quantity outwith range.")
-            if g.p_min < 0.0:
-                p_min = min([point[0] for point in g.pwl_points])
-                if g.p_min <= p_min <= g.p_max:
-                    if g.mode == "vload":
-                        q_min = g.q_min * p_min / g.p_min
-                        q_max = g.q_max * p_min / g.p_min
-                else:
-                    logger.error("Bid quantity outwith range.")
-
-            g.p_min = p_min
-            g.p_max = p_max
-
-        # No capacity bid/offered for active power.
-        participating = [offbid.generator for offbid in offers + bids]
-        for g in generators:
-            if g not in participating:
-                g.online = False
+            # FIXME: Update dispatchable load reactive power limits.
 
         # Move p_min and p_max limits out slightly to avoid problems with
         # lambdas caused by rounding errors when corner point of cost function
         # lies at exactly p_min or p_max.
-        for g in generators:
-            if g.mode == "generator": # Skip dispatchable loads.
-                g.p_min -= 100 * self.violation
-                g.p_max += 100 * self.violation
+        for g in generators: # Skip dispatchable loads.
+            g.p_min -= 100 * self.violation
+            g.p_max += 100 * self.violation
 
         # Solve the optimisation problem.
-        if self.loc_adjust == "dc":
-            success = DCOPF().solve(self.case)
-        elif self.loc_adjust == "ac":
-            success = ACOPF().solve(self.case)
-        else:
-            raise NotImplementedError, "Ignore network not implemented."
+        success = UDOPF(dc=self.loc_adjust=="dc").solve(self.case)
 
         # Compute quantities, prices and costs.
         if success:

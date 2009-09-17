@@ -36,6 +36,8 @@ from pylon.ud_opf import UDOPF
 #------------------------------------------------------------------------------
 
 DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
+PWL_FILE  = join(dirname(__file__), "..", "pyreto", "test", "data",
+    "auction_case.m")
 
 #------------------------------------------------------------------------------
 #  "UOPFTestCase" class:
@@ -51,18 +53,29 @@ class UOPFTestCase(unittest.TestCase):
         self.case = MATPOWERReader().read(DATA_FILE)
         self.routine = UDOPF(dc=True)
 
+
     def test_dc(self):
         """ Test routine using DC formulation.
         """
         success = self.routine(self.case)
         generators = self.case.all_generators
 
+        self.assertTrue(success)
         self.assertFalse(generators[0].online)
         self.assertAlmostEqual(generators[1].p, 110.80, places=2)
         self.assertAlmostEqual(generators[2].p,  99.20, places=2)
 
         self.assertAlmostEqual(self.routine._routine.f, 2841.59, places=2)
 
+
+    def test_pwl(self):
+        """ Test UDOPF routine with pwl auction case.
+        """
+        case = MATPOWERReader().read(PWL_FILE)
+        routine = UDOPF(case, dc=True)
+        success = routine.solve()
+
+        self.assertTrue(success)
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,

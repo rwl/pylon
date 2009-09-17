@@ -70,7 +70,7 @@ class UDOPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, dc=True, solver=None, show_progress=False,
+    def __init__(self, case=None, dc=True, solver=None, show_progress=False,
             max_iterations=100, absolute_tol=1e-7, relative_tol=1e-6,
             feasibility_tol=1e-7):
         """ Initialises a new UDOPF instance.
@@ -80,7 +80,7 @@ class UDOPF(object):
         self._routine = None
 
         # Optimised case.
-        self.case = None
+        self.case = case
 
         # Choice of solver (May be None or "mosek" (or "glpk" for linear
         # formulation)). Specify None to use the Python solver from CVXOPT.
@@ -168,9 +168,11 @@ class UDOPF(object):
         feastol = self.feasibility_tol
 
         if self.dc:
-            routine = DCOPF(solver, progress, itermax, abstol, reltol, feastol)
+            routine = DCOPF(case, solver, progress, itermax, abstol, reltol,
+                feastol)
         else:
-            routine = ACOPF(solver, progress, itermax, abstol, reltol, feastol)
+            routine = ACOPF(case, solver, progress, itermax, abstol, reltol,
+                feastol)
 
         self._routine = routine
 

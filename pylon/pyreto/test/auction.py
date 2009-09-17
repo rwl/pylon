@@ -28,8 +28,9 @@ import unittest
 
 from os.path import dirname, join
 
+from pylon import DCOPF
 from pylon.readwrite import MATPOWERReader
-from pylon.pyreto.market import Market, Bid, Offer
+from pylon.pyreto import Market, Bid, Offer
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -50,7 +51,7 @@ class MarketTestCase(unittest.TestCase):
         """
         self.case = MATPOWERReader().read(DATA_FILE)
 
-        generators = self.case.generators
+        generators = self.case.all_generators
 
         self.offers = [
             Offer(generators[0], 12.0, 20.0),
@@ -93,13 +94,24 @@ class MarketTestCase(unittest.TestCase):
         ]
 
 
+    def test_dc_opf(self):
+        """ Test solving the auction case using DC OPF.
+        """
+        routine = DCOPF(self.case, show_progress=False)
+        success = routine.solve()
+        self.assertTrue(success)
+        self.assertAlmostEqual(routine.f, -517.81, places=2)
+
+
     def test_dc(self):
         """ Test market clearing using DC OPF routine.
         """
         mkt = Market(self.case, self.bids, self.offers,
             loc_adjust='dc', auction_type="first price", price_cap=100.0)
 
-        mkt.run()
+        success = mkt.clear()
+
+        self.assertTrue(success)
 
 
 if __name__ == "__main__":

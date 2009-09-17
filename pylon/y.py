@@ -25,7 +25,7 @@
 import logging
 from math import pi
 
-from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
+from cvxopt.base import matrix, spmatrix, spdiag, exp, mul, div
 
 from pylon.util import conj
 
@@ -34,111 +34,7 @@ from pylon.util import conj
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-#------------------------------------------------------------------------------
-#  "make_susceptance_matrix" function:
-#------------------------------------------------------------------------------
-
-#def make_susceptance_matrix(case):
-#    """ Returns the susceptance and source bus susceptance matrices for the
-#        given case.
-#    """
-#
-#    buses      = case.connected_buses
-#    branches   = case.online_branches
-#    n_buses    = len(buses)
-#    n_branches = len(branches)
-#
-#    # Create an empty sparse susceptance matrix.
-#    # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node32.html
-#    b = spmatrix([], [], [], (n_buses, n_buses))
-#
-#    # Make an empty sparse source bus susceptance matrix
-#    b_source = spmatrix([], [], [], (n_branches, n_buses))
-#
-#    # Filter out branches that are out of service
-##        active_branches = [e for e in branches if e.online]
-#
-#    for e in branches:
-#        e_idx = branches.index(e)
-#        # Find the indexes of the buses at either end of the branch
-#        src_idx = buses.index(e.source_bus)
-#        dst_idx = buses.index(e.target_bus)
-#
-#        # B = 1/X
-#        if e.x != 0.0: # Avoid zero division
-#            b_branch = 1/e.x
-#        else:
-#            # infinite susceptance for zero reactance branch
-#            b_branch = 1e12#numpy.Inf
-#
-#        # Divide by the branch tap ratio
-#        if e.ratio != 0.0:
-#            b_branch /= e.ratio
-#
-#        # Off-diagonal matrix elements (i,j) are the negative
-#        # susceptance of branches between buses[i] and buses[j]
-#        b[src_idx, dst_idx] += -b_branch
-#        b[dst_idx, src_idx] += -b_branch
-#        # Diagonal matrix elements (k,k) are the sum of the
-#        # susceptances of the branches connected to buses[k]
-#        b[src_idx, src_idx] += b_branch
-#        b[dst_idx, dst_idx] += b_branch
-#
-#        # Build Bf such that Bf * Va is the vector of real branch
-#        # powers injected at each branch's "source" bus
-#        b_source[e_idx, src_idx] = b_branch
-#        b_source[e_idx, dst_idx] = -b_branch
-#
-#    logger.debug("Built branch susceptance matrix:\n%s" % b)
-#
-#    logger.debug("Built source bus susceptance matrix:\n%s" % b_source)
-#
-#    return b, b_source
-
-#------------------------------------------------------------------------------
-#  "make_admittance_matrix" function:
-#------------------------------------------------------------------------------
-
-#def make_admittance_matrix(case):
-#    """ Returns an admittance matrix for the supplied case.
-#    """
-#    buses    = case.connected_buses
-#    n_buses  = len(buses)
-#    branches = case.online_branches
-#
-#    Y = spmatrix([], [], [], size=(n_buses, n_buses), tc="z")
-#
-#    for br in branches:
-#        src_idx = buses.index(br.source_bus)
-#        dst_idx = buses.index(br.target_bus)
-#        # y = 1/(R+jX) + (G+jB)/2
-#        # The conductance (G) is considered negligble
-#        try:
-#            y = 1/(complex(br.r, br.x))
-#        except ZeroDivisionError:
-##            print 'WW: zero division'
-#            # if the branch has zero resistance and reactance then
-#            # the admittance is infinite
-#            y = 1e10
-##        print 'y', y
-#        chrg = complex(0, br.b)/2
-#        # off-diagonal matrix elements (i,j) are the negative
-#        # admittance of branches between buses[i] and buses[j]
-#
-#        # TODO: find out why the shunt admittance is not added
-#        # to off-diagonal elements.
-#        Y[src_idx, dst_idx] += -y
-#        Y[dst_idx, src_idx] += -y
-#        # diagonal matrix elements (k,k) are the sum of the
-#        # admittances of the branches connected to buses[k]
-#        Y[src_idx, src_idx] += y + chrg
-#        Y[dst_idx, dst_idx] += y + chrg
-#
-#        # TODO: investigate why the imaginary componenets of the admittance
-#        # matrix are slightly different to this from MATPOWER
-#    return Y
+#logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
 #  "AdmittanceMatrix" class:
@@ -182,8 +78,8 @@ class AdmittanceMatrix(object):
 
         base_mva   = case.base_mva
         buses      = case.connected_buses
+        branches   = case.online_branches
         n_buses    = len(buses)
-        branches   = case.branches
         n_branches = len(branches)
 
         online = matrix([e.online for e in branches])
@@ -301,14 +197,11 @@ class SusceptanceMatrix(object):
         return self.build(case)
 
 
-    def build(self, case=None):
+    def build(self, case):
         """ Builds the susceptance matrices.
         """
-        case = self.case if case is None else case
-        assert case is not None
-
-        buses      = case.buses
-        branches   = case.branches
+        buses      = case.connected_buses
+        branches   = case.online_branches
         n_buses    = len(buses)
         n_branches = len(branches)
 
@@ -318,9 +211,6 @@ class SusceptanceMatrix(object):
 
         # Make an empty sparse source bus susceptance matrix
         self.b_source = b_source = spmatrix([], [], [], (n_branches, n_buses))
-
-        # Filter out branches that are out of service
-#        active_branches = [e for e in branches if e.online]
 
         for e in branches:
             e_idx = branches.index(e)
@@ -418,5 +308,109 @@ class PSATAdmittanceMatrix(object):
             y[target_idx, target_idx] += z * ts2 + charge
 
         return y
+
+#------------------------------------------------------------------------------
+#  "make_susceptance_matrix" function:
+#------------------------------------------------------------------------------
+
+#def make_susceptance_matrix(case):
+#    """ Returns the susceptance and source bus susceptance matrices for the
+#        given case.
+#    """
+#
+#    buses      = case.connected_buses
+#    branches   = case.online_branches
+#    n_buses    = len(buses)
+#    n_branches = len(branches)
+#
+#    # Create an empty sparse susceptance matrix.
+#    # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node32.html
+#    b = spmatrix([], [], [], (n_buses, n_buses))
+#
+#    # Make an empty sparse source bus susceptance matrix
+#    b_source = spmatrix([], [], [], (n_branches, n_buses))
+#
+#    # Filter out branches that are out of service
+##        active_branches = [e for e in branches if e.online]
+#
+#    for e in branches:
+#        e_idx = branches.index(e)
+#        # Find the indexes of the buses at either end of the branch
+#        src_idx = buses.index(e.source_bus)
+#        dst_idx = buses.index(e.target_bus)
+#
+#        # B = 1/X
+#        if e.x != 0.0: # Avoid zero division
+#            b_branch = 1/e.x
+#        else:
+#            # infinite susceptance for zero reactance branch
+#            b_branch = 1e12#numpy.Inf
+#
+#        # Divide by the branch tap ratio
+#        if e.ratio != 0.0:
+#            b_branch /= e.ratio
+#
+#        # Off-diagonal matrix elements (i,j) are the negative
+#        # susceptance of branches between buses[i] and buses[j]
+#        b[src_idx, dst_idx] += -b_branch
+#        b[dst_idx, src_idx] += -b_branch
+#        # Diagonal matrix elements (k,k) are the sum of the
+#        # susceptances of the branches connected to buses[k]
+#        b[src_idx, src_idx] += b_branch
+#        b[dst_idx, dst_idx] += b_branch
+#
+#        # Build Bf such that Bf * Va is the vector of real branch
+#        # powers injected at each branch's "source" bus
+#        b_source[e_idx, src_idx] = b_branch
+#        b_source[e_idx, dst_idx] = -b_branch
+#
+#    logger.debug("Built branch susceptance matrix:\n%s" % b)
+#
+#    logger.debug("Built source bus susceptance matrix:\n%s" % b_source)
+#
+#    return b, b_source
+
+#------------------------------------------------------------------------------
+#  "make_admittance_matrix" function:
+#------------------------------------------------------------------------------
+
+#def make_admittance_matrix(case):
+#    """ Returns an admittance matrix for the supplied case.
+#    """
+#    buses    = case.connected_buses
+#    n_buses  = len(buses)
+#    branches = case.online_branches
+#
+#    Y = spmatrix([], [], [], size=(n_buses, n_buses), tc="z")
+#
+#    for br in branches:
+#        src_idx = buses.index(br.source_bus)
+#        dst_idx = buses.index(br.target_bus)
+#        # y = 1/(R+jX) + (G+jB)/2
+#        # The conductance (G) is considered negligble
+#        try:
+#            y = 1/(complex(br.r, br.x))
+#        except ZeroDivisionError:
+##            print 'WW: zero division'
+#            # if the branch has zero resistance and reactance then
+#            # the admittance is infinite
+#            y = 1e10
+##        print 'y', y
+#        chrg = complex(0, br.b)/2
+#        # off-diagonal matrix elements (i,j) are the negative
+#        # admittance of branches between buses[i] and buses[j]
+#
+#        # TODO: find out why the shunt admittance is not added
+#        # to off-diagonal elements.
+#        Y[src_idx, dst_idx] += -y
+#        Y[dst_idx, src_idx] += -y
+#        # diagonal matrix elements (k,k) are the sum of the
+#        # admittances of the branches connected to buses[k]
+#        Y[src_idx, src_idx] += y + chrg
+#        Y[dst_idx, dst_idx] += y + chrg
+#
+#        # TODO: investigate why the imaginary componenets of the admittance
+#        # matrix are slightly different to this from MATPOWER
+#    return Y
 
 # EOF -------------------------------------------------------------------------

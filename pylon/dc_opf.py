@@ -60,8 +60,9 @@ class DCOPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, solver=None, show_progress=True, max_iterations=100,
-            absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7):
+    def __init__(self, case=None, solver=None, show_progress=True,
+            max_iterations=100, absolute_tol=1e-7, relative_tol=1e-6,
+            feasibility_tol=1e-7):
         """ Initialises the new DCOPF instance.
         """
         # Choice of solver (May be None or "mosek" (or "glpk" for linear
@@ -81,16 +82,16 @@ class DCOPF(object):
 #        self.refinement = refinement
 
         # Case to be optimised.
-        self.case = None
+        self.case = case
 
         # Sparse branch susceptance matrix.  The bus real power injections are
         # related to bus voltage angles by P = Bbus * Va + Pbusinj
-        self._B = None
+        self.B = None
 
         # Sparse branch source bus susceptance matrix. The real power flows at
         # the from end the lines are related to the bus voltage angles by
         # Pf = Bf * Va + Pfinj
-        self._B_source = None
+        self.Bsrc = None
 
         # The real power flows at the from end the lines are related to the bus
         # voltage angles by Pf = Bf * Va + Pfinj
@@ -104,17 +105,17 @@ class DCOPF(object):
         self._solver_type = "linear" # or "quadratic"
 
         # Initial values for x.
-        self._x = None
+        self.x_init = None
 
         # The equality and inequality problem constraints combined.
-        self._AA_eq = None # sparse
-        self._AA_ieq = None # sparse
-        self._bb_eq = None
-        self._bb_ieq = None
+        self.Aeq = None # sparse
+        self.Aieq = None # sparse
+        self.b_eq = None
+        self.b_ieq = None
 
         # Objective function of the form 0.5 * x'*H*x + c'*x.
-        self._hh = None # sparse
-        self._cc = None
+        self.H = None # sparse
+        self.c = None
 
         # Solution.
         self.x = None
@@ -137,8 +138,8 @@ class DCOPF(object):
         """
         t0 = time.time()
 
-        self.case = case if case is not None else self.case
-        assert self.case is not None
+        case = self.case if case is None else case
+        self.case = case
 
         logger.info("Solving DC OPF [%s]." % case.name)
 
@@ -151,7 +152,7 @@ class DCOPF(object):
 #        solvers.options["refinement"] = self.refinement
 
         susceptance_matrix = SusceptanceMatrix()
-        self._B, self._B_source = susceptance_matrix(self.case)
+        self.B, self.Bsrc = susceptance_matrix(self.case)
 
         self._theta_inj_source = self._get_theta_inj_source()
         self._theta_inj_bus = self._get_theta_inj_bus()
@@ -160,7 +161,7 @@ class DCOPF(object):
         self._solver_type = self._get_solver_type()
 
         # Get the vector x where, AA * x <= bb.
-        self._x = self._get_x()
+        self.x_init = self._get_x()
 
         # Problem constraints.
         _aa_cost, _bb_cost = self._get_cost_constraint()
@@ -174,16 +175,16 @@ class DCOPF(object):
         _aa_flow, _bb_flow = self._get_branch_flow_limit_constraint()
 
         # Combine the equality constraints.
-        self._AA_eq = sparse([_aa_ref, _aa_mismatch])
-        self._bb_eq = matrix([_bb_ref, _bb_mismatch])
+        self.Aeq = sparse([_aa_ref, _aa_mismatch])
+        self.b_eq = matrix([_bb_ref, _bb_mismatch])
 
         # Combine the inequality constraints.
-        self._AA_ieq = sparse([_aa_gen, _aa_cost, _aa_flow])
-        self._bb_ieq = matrix([_bb_gen, _bb_cost, _bb_flow])
+        self.Aieq = sparse([_aa_gen, _aa_cost, _aa_flow])
+        self.b_ieq = matrix([_bb_gen, _bb_cost, _bb_flow])
 
         # The objective function has the form 0.5 * x'*H*x + c'*x.
-        self._hh = self._get_h()
-        self._cc = self._get_c()
+        self.H = self._get_hessian()
+        self.c = self._get_c()
 
         # Solve the problem.
         solution = self._solve_program()
@@ -239,7 +240,7 @@ class DCOPF(object):
         # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node9.html
         source_inj = mul(b, angle)
 
-        logger.debug("Built source bus phase shift injection vector:\n%s" %
+        logger.debug("Source bus phase shift injection vector:\n%s" %
             source_inj)
 
         return source_inj
@@ -281,7 +282,6 @@ class DCOPF(object):
             then those that are get converted to piecewise linear models. The
             algorithm attribute is then set accordingly.
         """
-        buses = self.case.connected_buses
         generators = self.case.online_generators
 
         models = [g.cost_model for g in generators]
@@ -343,7 +343,7 @@ class DCOPF(object):
             pw_cost = matrix(p_cost)
             x = matrix([x, pw_cost])
 
-        logger.debug("Built DC OPF x vector:\n%s" % x)
+        logger.debug("Initial x vector:\n%s" % x)
 
         return x
 
@@ -412,8 +412,8 @@ class DCOPF(object):
         else:
             raise ValueError
 
-        logger.debug("Cost constraint matrix (Acc):\n%s" % a_cost)
-        logger.debug("Cost constraint vector (bcc):\n%s" % b_cost)
+        logger.debug("Cost constraint matrix:\n%s" % a_cost)
+        logger.debug("Cost constraint vector:\n%s" % b_cost)
 
         return a_cost, b_cost
 
@@ -450,8 +450,8 @@ class DCOPF(object):
 
         b_ref = matrix([buses[ref_idx].v_angle_guess])
 
-        logger.debug("Built reference constraint matrix Aref:\n%s" % a_ref)
-        logger.debug("Built reference constraint vector bref:\n%s" % b_ref)
+        logger.debug("Reference angle matrix:\n%s" % a_ref)
+        logger.debug("Reference angle vector:\n%s" % b_ref)
 
         return a_ref, b_ref
 
@@ -481,7 +481,7 @@ class DCOPF(object):
                     i_bus_generator[i, j] = 1.0
                     j += 1
 
-        logger.debug("Built bus generator incidence matrix:\n%s" %
+        logger.debug("Bus generator incidence matrix:\n%s" %
             i_bus_generator)
 
         # Include zero matrix for pw linear cost constraints.
@@ -494,9 +494,9 @@ class DCOPF(object):
         cost_mismatch = spmatrix([], [], [], size=(n_buses, n_cost))
 
         # sparse() does vstack, to hstack we transpose.
-        a_mismatch = sparse([self._B.T, -i_bus_generator.T, cost_mismatch.T]).T
+        a_mismatch = sparse([self.B.T, -i_bus_generator.T, cost_mismatch.T]).T
 
-        logger.debug("Built power balance constraint matrix Aflow:\n%s" %
+        logger.debug("Power balance matrix:\n%s" %
             a_mismatch)
 
         p_demand = matrix([v.p_demand for v in buses])
@@ -504,7 +504,7 @@ class DCOPF(object):
 
         b_mismatch = -((p_demand + g_shunt) / base_mva) - self._theta_inj_bus
 
-        logger.debug("Built power balance constraint vector bflow:\n%s" %
+        logger.debug("Power balance vector:\n%s" %
             b_mismatch)
 
         return a_mismatch, b_mismatch
@@ -546,7 +546,7 @@ class DCOPF(object):
 
         a_limit = sparse([a_lower, a_upper])
 
-        logger.debug("Built generator limit constraint matrix:\n%s" % a_limit)
+        logger.debug("Generator limit matrix:\n%s" % a_limit)
 
 
         b_lower = matrix([-g.p_min / base_mva for g in generators])
@@ -554,7 +554,7 @@ class DCOPF(object):
 
         b_limit = matrix([b_lower, b_upper])
 
-        logger.debug("Built generator limit constraint vector:\n%s" % b_limit)
+        logger.debug("Generator limit vector:\n%s" % b_limit)
 
         return a_limit, b_limit
 
@@ -564,58 +564,49 @@ class DCOPF(object):
 
     def _get_branch_flow_limit_constraint(self):
         """ The real power flows at the from end the lines are related to the
-            bus voltage angles by Pf = Bf * Va + Pfinj
-
-            FIXME: No solution when adding this constraint.
+            bus voltage angles by Pf = Bf * Va + Pfinj.
         """
-        base_mva     = self.case.base_mva
-        branches     = self.case.online_branches
-        generators   = self.case.online_generators
-        n_branches   = len(branches)
-        n_generators = len(generators)
-
-        # All zero sparse matrix to exclude power generation from the
-        # constraint.
-        flow_zeros = spmatrix([], [], [], size=(n_branches, n_generators))
-        logger.debug("Built flow limit zeros:\n%s" % flow_zeros)
+        base_mva   = self.case.base_mva
+        branches   = self.case.online_branches
+        generators = self.case.online_generators
+        n_branch   = len(branches)
+        n_gen      = len(generators)
 
         if self._solver_type == "linear":
-            # Number of cost variables (n_generators or zero).
+            # Number of cost variables (n_gen or zero).
             n_cost = len([g.p_cost for g in generators])
         else:
             n_cost = 0
 
-        a_flow_cost = spmatrix([], [], [], (n_branches, n_cost))
+        # Exclude generation and cost variables from the constraint.
+        A_gen = spmatrix([], [], [], (n_branch, n_gen + n_cost))
 
-        # Source flow limit.
-        a_flow_source = sparse([self._B_source.T, flow_zeros.T,
-            a_flow_cost.T]).T
+        # Branch 'source' end flow limit.
+        A_source = sparse([self.Bsrc.T, A_gen.T]).T
+        # Branch 'target' flow limit.
+        A_target = sparse([-self.Bsrc.T, A_gen.T]).T
 
-        # Target flow limit.
-        a_flow_target = sparse([-self._B_source.T, flow_zeros.T,
-            a_flow_cost.T]).T
+        A_flow = sparse([A_source, A_target])
 
-        a_flow = sparse([a_flow_source, a_flow_target])
-
-        logger.debug("Built flow limit constraint matrix:\n%s" % a_flow)
+        logger.debug("Flow limit matrix:\n%s" % A_flow)
 
 
-        flow_s_max = matrix([e.s_max for e in branches])
+        s_max = matrix([e.s_max for e in branches])
         # Source and target limits are both the same.
-        source_s_max = flow_s_max / base_mva - self._theta_inj_source
-        target_s_max = flow_s_max / base_mva + self._theta_inj_source
+        b_source = s_max / base_mva - self._theta_inj_source
+        b_target = s_max / base_mva + self._theta_inj_source
 
-        b_flow = matrix([source_s_max, target_s_max])
+        b_flow = matrix([b_source, b_target])
 
-        logger.debug("Built flow limit constraint vector:\n%s" % b_flow)
+        logger.debug("Flow limit vector:\n%s" % b_flow)
 
-        return a_flow, b_flow
+        return A_flow, b_flow
 
     #--------------------------------------------------------------------------
     #  Objective function:
     #--------------------------------------------------------------------------
 
-    def _get_h(self):
+    def _get_hessian(self):
         """ H is a sparse square matrix.
 
             The objective function has the form 0.5 * x'*H*x + c'*x
@@ -652,7 +643,7 @@ class DCOPF(object):
         else:
             raise ValueError
 
-        logger.debug("Built objective function matrix:\n%s" % h)
+        logger.debug("Hessian matrix:\n%s" % h)
 
         return h
 
@@ -682,7 +673,7 @@ class DCOPF(object):
 
             c = matrix([v_zeros, c1_coeffs])
 
-        logger.debug("Built objective function vector:\n%s" % c)
+        logger.debug("Objective function vector:\n%s" % c)
 
         return c
 
@@ -708,11 +699,11 @@ class DCOPF(object):
         #    with one column.  The default values for A and b are empty
         #    matrices with zero rows.
         if self._solver_type == "linear":
-            c = self._cc
-            G, h = self._AA_ieq, self._bb_ieq,
-            A, b = self._AA_eq, self._bb_eq,
+            c = self.c
+            G, h = self.Aieq, self.b_ieq,
+            A, b = self.Aeq, self.b_eq,
             solver = self.solver
-            primalstart = {"x": self._x}
+            primalstart = {"x": self.x_init}
 
 #            print "\n", G[:, -7:]
 
@@ -735,11 +726,11 @@ class DCOPF(object):
         #- initvals['z'] is a dense 'd' matrix of size (K,1), representing
         #  a vector that is strictly positive with respect to the cone C.
         else:
-            P, q = self._hh, self._cc
-            G, h = self._AA_ieq, self._bb_ieq,
-            A, b = self._AA_eq, self._bb_eq,
+            P, q = self.H, self.c
+            G, h = self.Aieq, self.b_ieq,
+            A, b = self.Aeq, self.b_eq,
             solver = self.solver
-            initvals = {"x": self._x}
+            initvals = {"x": self.x_init}
 
             solution = qp(P, q, G, h, A, b, solver, initvals)
 
@@ -799,7 +790,7 @@ class DCOPF(object):
 #            generator.p_despatch = p[i] * base_mva
 
         # Branch power flows.
-        p_source = self._B_source * v_angle * base_mva
+        p_source = self.Bsrc * v_angle * base_mva
         p_target = -p_source
         for j, branch in enumerate(branches):
             branch.p_source = p_source[j]

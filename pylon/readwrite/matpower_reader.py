@@ -31,7 +31,7 @@ from parsing_util import \
 
 from pyparsing import \
     Literal, Word, ZeroOrMore, Optional, OneOrMore, alphanums, delimitedList, \
-    alphas, Combine, Or, Group
+    alphas, Combine, printables
 
 from pylon.case import Case, Bus, Branch, Generator, Load
 
@@ -146,7 +146,7 @@ class MATPOWERReader(object):
         """ Returns a construct for the header of a MATPOWER data file.
         """
         # Use the function name for the Case title
-        title = Word(alphanums).setResultsName("title")
+        title = Word(printables).setResultsName("title")
         title.setParseAction(self._push_title)
         header = Literal("function") + \
             lbrack + delimitedList(Word(alphas)) + rbrack + \
@@ -158,7 +158,7 @@ class MATPOWERReader(object):
     def _get_base_mva_construct(self):
         """ Returns a construct for the base MVA expression.
         """
-        base_mva = integer.setResultsName("baseMVA")
+        base_mva = real.setResultsName("baseMVA")
         base_mva.setParseAction(self._push_base_mva)
         base_mva_expr = Literal("baseMVA") + Literal("=") + base_mva + scolon
 

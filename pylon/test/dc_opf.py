@@ -296,7 +296,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         """ Test piecewise linear power balance (mismatch) constraint.
         """
         susceptance = SusceptanceMatrix()
-        self.routine._B, self.routine._B_source = susceptance(self.case)
+        self.routine.B, self.routine.Bsrc = susceptance(self.case)
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -344,7 +344,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
 #        """
 #        self.routine._solver_type = self.routine._get_solver_type()
 #
-#        H = self.routine._get_h()
+#        H = self.routine._get_hessian()
 #        c = self.routine._get_c()
 
 
@@ -564,7 +564,7 @@ class DCOPFTest(unittest.TestCase):
                -0.7000
         """
         susceptance = SusceptanceMatrix()
-        self.routine._B, self.routine._B_source = susceptance(self.case)
+        self.routine.B, self.routine.Bsrc = susceptance(self.case)
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -719,7 +719,7 @@ class DCOPFTest(unittest.TestCase):
                 0.4000
         """
         susceptance = SusceptanceMatrix()
-        self.routine._B, self.routine._B_source = susceptance(self.case)
+        self.routine.B, self.routine.Bsrc = susceptance(self.case)
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -798,7 +798,7 @@ class DCOPFTest(unittest.TestCase):
         """
         self.routine._solver_type = self.routine._get_solver_type()
 
-        H = self.routine._get_h()
+        H = self.routine._get_hessian()
         c = self.routine._get_c()
 
         places = 4
