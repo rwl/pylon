@@ -27,6 +27,7 @@ import unittest
 
 from pylon import Case, Bus, Branch, Generator, Load
 from pylon.readwrite import MATPOWERReader
+from pylon.pyreto import Offer
 
 #-------------------------------------------------------------------------------
 #  Constants:
