@@ -24,16 +24,16 @@
 
 import unittest
 
-from pylon.test.case import CaseTest, BusTest, BranchTest, GeneratorTest, LoadTest
+from pylon.test.case_test import CaseTest, BusTest, BranchTest, GeneratorTest, LoadTest
 
-from y import BTest, YTest
-from dc_pf import DCPFTest
-from ac_pf import NewtonPFTest
-from dc_opf import DCOPFTest
-from ac_opf import ACOPFTest
-from uc import UnitCommitmentTest
+from y_test import BTest, YTest
+from dcpf_test import DCPFTest
+from acpf_test import NewtonPFTest
+from dcopf_test import DCOPFTest
+from acopf_test import ACOPFTest
+from uc_test import UnitCommitmentTest
 
-from reader import MatpowerReaderTest, PSSEReaderTest#, PSATReaderTest
+from reader_test import MatpowerReaderTest, PSSEReaderTest#, PSATReaderTest
 
 #------------------------------------------------------------------------------
 #  "suite" function:
