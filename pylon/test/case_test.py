@@ -26,14 +26,14 @@ from os.path import join, dirname
 import unittest
 
 from pylon import Case, Bus, Branch, Generator, Load
-from pylon.readwrite import MATPOWERReader
+from pylon.readwrite import PickleReader
 from pylon.pyreto import Offer
 
 #-------------------------------------------------------------------------------
 #  Constants:
 #-------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
+DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 
 #------------------------------------------------------------------------------
 #  "CaseTest" class:
@@ -46,8 +46,7 @@ class CaseTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        reader = MATPOWERReader()
-        self.case = reader(DATA_FILE)
+        self.case = PickleReader().read(DATA_FILE)
 
 
     def test_slack_bus(self):

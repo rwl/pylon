@@ -28,16 +28,16 @@ import unittest
 
 from os.path import dirname, join
 
-from pylon.readwrite import MATPOWERReader
+from pylon.readwrite import PickleReader
 from pylon.ud_opf import UDOPF
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
+DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 PWL_FILE  = join(dirname(__file__), "..", "pyreto", "test", "data",
-    "auction_case.m")
+    "auction_case.pkl")
 
 #------------------------------------------------------------------------------
 #  "UOPFTestCase" class:
@@ -50,7 +50,7 @@ class UOPFTestCase(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = MATPOWERReader().read(DATA_FILE)
+        self.case = PickleReader().read(DATA_FILE)
         self.routine = UDOPF(dc=True)
 
 
@@ -71,7 +71,7 @@ class UOPFTestCase(unittest.TestCase):
     def test_pwl(self):
         """ Test UDOPF routine with pwl auction case.
         """
-        case = MATPOWERReader().read(PWL_FILE)
+        case = PickleReader().read(PWL_FILE)
         routine = UDOPF(case, dc=True)
         success = routine.solve()
 

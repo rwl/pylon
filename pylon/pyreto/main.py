@@ -90,15 +90,15 @@ class PyretoApplication(object):
 #  Associate one agent with each generator in the network:
 #------------------------------------------------------------------------------
 
-def one_for_one(power_sys):
+def one_for_one(smart_market):
     """ Associates an agent and a task with each generator in the network.
     """
     tasks = []
     agents = []
 
-    for generator in power_sys.online_generators:
+    for generator in smart_market.case.online_generators:
         # Create the world in which the trading agent acts.
-        env = ParticipantEnvironment(power_system=power_sys, asset=generator)
+        env = ParticipantEnvironment(asset=generator, market=smart_market)
 
         # Create a task that connects each agent to it's environment. The task
         # defines what the goal is for an agent and how the agent is rewarded

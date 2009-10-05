@@ -25,7 +25,7 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.readwrite import MATPOWERReader
+from pylon.readwrite import PickleReader
 from pylon.y import AdmittanceMatrix
 from pylon import NewtonRaphson
 
@@ -33,7 +33,7 @@ from pylon import NewtonRaphson
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
+DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 
 #------------------------------------------------------------------------------
 #  "NewtonPFTest" class:
@@ -50,9 +50,7 @@ class NewtonPFTest(TestCase):
         """ The test runner will execute this method prior to each test.
         """
         # See 'reader_test_case.py' for MATPOWER reader tests.
-        reader = MATPOWERReader()
-        self.case = reader(DATA_FILE)
-        del reader
+        self.case = PickleReader().read(DATA_FILE)
 
         self.routine = NewtonRaphson()
 

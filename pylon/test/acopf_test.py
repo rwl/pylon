@@ -25,14 +25,14 @@
 import unittest
 from os.path import join, dirname
 
-from pylon.readwrite import MATPOWERReader
+from pylon.readwrite import PickleReader
 from pylon import ACOPF
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
+DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 
 #------------------------------------------------------------------------------
 #  "ACOPFTest" class:
@@ -49,15 +49,14 @@ class ACOPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        reader = MATPOWERReader()
-        self.case = reader(DATA_FILE)
+        self.case = PickleReader().read(DATA_FILE)
         self.routine = ACOPF()
 
 
     def test_mismatch(self):
         """ Test AC OPF.
         """
-        sucess = self.routine(self.case)
+        success = self.routine(self.case)
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

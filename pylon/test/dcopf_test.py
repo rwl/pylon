@@ -25,7 +25,7 @@
 from os.path import join, dirname
 import unittest
 
-from pylon.readwrite import MATPOWERReader
+from pylon.readwrite import PickleReader
 from pylon import DCOPF
 from pylon.y import SusceptanceMatrix
 
@@ -35,9 +35,9 @@ from pylon.y import SusceptanceMatrix
 
 MP_HOME = "/home/rwl/tmp/matpower3.2"
 
-DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
-PWL_FILE  = join(dirname(__file__), "data", "case30pwl.m")
-PWL_FILE2 = join(MP_HOME, "case6pwl.m")
+DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
+PWL_FILE  = join(dirname(__file__), "data", "case30pwl.pkl")
+PWL_FILE2 = join(MP_HOME, "case6pwl.pkl")
 
 
 #class PiecewiseLinearDCOPFTest2(unittest.TestCase):
@@ -78,8 +78,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        reader = MATPOWERReader()
-        self.case = reader(PWL_FILE)
+        self.case = PickleReader().read(PWL_FILE)
 
         self.routine = DCOPF(show_progress=False)
 #        success = self.routine(case)
@@ -428,8 +427,7 @@ class DCOPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        reader = MATPOWERReader()
-        self.case = reader(DATA_FILE)
+        self.case = PickleReader().read(DATA_FILE)
 
         self.routine = DCOPF(show_progress=False)
         self.routine.case = self.case

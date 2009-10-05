@@ -25,14 +25,14 @@
 from os.path import join, dirname
 from unittest import TestCase, main
 
-from pylon.readwrite import MATPOWERReader
+from pylon.readwrite import PickleReader
 from pylon import FastDecoupled
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data/case6ww.m")
+DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 
 #------------------------------------------------------------------------------
 #  "FDPFTest" class:
@@ -48,10 +48,9 @@ class FDPFTest(TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        reader = MATPOWERReader()
-        case = reader(DATA_FILE)
+        case = PickleReader().read(DATA_FILE)
         self.routine = FastDecoupled()
-        success = self.routine(case)
+        success = self.routine.solve(case)
 
 
     def test_mismatch(self):

@@ -30,7 +30,7 @@ from pylon import \
 
 from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
-    CSVWriter, ExcelWriter, DotWriter
+    CSVWriter, ExcelWriter, DotWriter, PickleReader, PickleWriter
 
 from pylon.readwrite.dot_writer import create_graph
 
@@ -42,8 +42,8 @@ from pylon.readwrite.common import bus_attrs, branch_attrs, generator_attrs
 
 logger = logging.getLogger('pylon')
 
-CASE_6_WW = os.path.dirname(__file__) + "/test/data/case6ww.m"
-CASE_30   = os.path.dirname(__file__) + "/test/data/case30pwl.m"
+CASE_6_WW = os.path.dirname(__file__) + "/test/data/case6ww.pkl"
+CASE_30   = os.path.dirname(__file__) + "/test/data/case30pwl.pkl"
 
 
 class PylonTk(object):
@@ -310,11 +310,11 @@ class PylonTk(object):
 
 
     def on_6_bus(self):
-        self.set_case(MATPOWERReader().read(CASE_6_WW))
+        self.set_case(PickleReader().read(CASE_6_WW))
 
 
     def on_30_bus(self):
-        self.set_case(MATPOWERReader().read(CASE_30))
+        self.set_case(PickleReader().read(CASE_30))
 
 
     def on_save_as(self):

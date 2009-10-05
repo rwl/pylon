@@ -27,7 +27,7 @@ from pybrain.rl.environments import Environment
 from pybrain.rl.environments.graphical import GraphicalEnvironment
 
 from pylon import Generator
-from pylon.pyreto.market import SmartMarket, Offer, Bid
+from pylon.pyreto.smart_market import SmartMarket, Offer, Bid
 
 #------------------------------------------------------------------------------
 #  "ParticipantEnvironment" class:
