@@ -3719,6 +3719,6 @@ ag533
 asg48
 F100.0
 sg27
-S't_auction_case'
+S'auction_case'
 p562
 sb.

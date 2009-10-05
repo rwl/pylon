@@ -263,8 +263,8 @@ class UDOPF(object):
 
         # Compute elapsed time.
         elapsed = self.elapsed = time.time() - t0
-        plural = "s" if i_stage > 1 else ""
-        logger.info("Unit decommitment OPF used %d decommitment stage%s and "
+        plural = "" if i_stage == 1 else "s"
+        logger.info("Unit decommitment OPF passed %d decommitment stage%s and "
                     "solved in %.3fs." % (i_stage, plural, elapsed))
 
         return True

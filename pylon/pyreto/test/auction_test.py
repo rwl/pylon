@@ -53,6 +53,9 @@ class MarketTestCase(unittest.TestCase):
 
         generators = self.case.all_generators
 
+#        for gen in generators:
+#            print gen#gen.name, gen.online, gen.pwl_points
+
         self.offers = [
             Offer(generators[0], 12.0, 20.0),
             Offer(generators[0], 24.0, 50.0),

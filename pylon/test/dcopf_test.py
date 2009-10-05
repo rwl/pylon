@@ -33,13 +33,12 @@ from pylon.y import SusceptanceMatrix
 #  Constants:
 #------------------------------------------------------------------------------
 
-MP_HOME = "/home/rwl/tmp/matpower3.2"
-
 DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 PWL_FILE  = join(dirname(__file__), "data", "case30pwl.pkl")
-PWL_FILE2 = join(MP_HOME, "case6pwl.pkl")
 
-
+#MP_HOME = "/home/rwl/tmp/matpower3.2"
+#PWL_FILE2 = join(MP_HOME, "case6pwl.pkl")
+#
 #class PiecewiseLinearDCOPFTest2(unittest.TestCase):
 #
 #    def setUp(self):

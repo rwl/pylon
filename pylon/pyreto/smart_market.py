@@ -167,15 +167,14 @@ class SmartMarket(object):
             logger.info("Ignoring offers/bids with negative quantities.")
 
         # Strip zero quantities (rounded to 4 decimal places).
-        offers = [offr for offr in offers if round(offr.quantity, 4) <= 0.0]
-        bids = [bid for bid in bids if round(bid.quantity, 4) <= 0.0]
+        offers = [offr for offr in offers if round(offr.quantity, 4) > 0.0]
+        bids = [bid for bid in bids if round(bid.quantity, 4) > 0.0]
 
         # Optionally strip prices beyond limits.
         if limits.has_key('max_offer'):
             offers = [of for of in offers if of.price <= limits['max_offer']]
         if limits.has_key('min_bid'):
             bids = [bid for bid in bids if bid.price >= limits['min_bid']]
-
 
         # Convert power offers into piecewise linear segments and update
         # generator limits.

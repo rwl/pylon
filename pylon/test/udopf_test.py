@@ -50,17 +50,18 @@ class UOPFTestCase(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = PickleReader().read(DATA_FILE)
-        self.routine = UDOPF(dc=True)
+        case = self.case = PickleReader().read(DATA_FILE)
+        self.routine = UDOPF(case, dc=True)
 
 
     def test_dc(self):
         """ Test routine using DC formulation.
         """
-        success = self.routine(self.case)
+        success = self.routine.solve()
         generators = self.case.all_generators
 
         self.assertTrue(success)
+        # Generator 1 gets shutdown.
         self.assertFalse(generators[0].online)
         self.assertAlmostEqual(generators[1].p, 110.80, places=2)
         self.assertAlmostEqual(generators[2].p,  99.20, places=2)
@@ -74,8 +75,11 @@ class UOPFTestCase(unittest.TestCase):
         case = PickleReader().read(PWL_FILE)
         routine = UDOPF(case, dc=True)
         success = routine.solve()
+        generators = self.case.all_generators
 
         self.assertTrue(success)
+        self.assertTrue(False not in [g.online for g in generators])
+
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,

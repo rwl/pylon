@@ -62,10 +62,10 @@ class Named(object):
         return "%s-%i" % (self.__class__.__name__, self._name_ids.next())
 
 
-    def __repr__(self):
-        """ The default representation of a named object is its name.
-        """
-        return "<%s '%s'>" % (self.__class__.__name__, self.name)
+#    def __repr__(self):
+#        """ The default representation of a named object is its name.
+#        """
+#        return "<%s '%s'>" % (self.__class__.__name__, self.name)
 
 #------------------------------------------------------------------------------
 #  Return the complex conjugate:
