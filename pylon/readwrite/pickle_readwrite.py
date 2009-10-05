@@ -22,6 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import os.path
 import pickle
 import logging
 
@@ -49,12 +50,15 @@ class PickleReader(object):
         """ Loads a pickled case.
         """
         if isinstance(file_or_filename, basestring):
+            fname = os.path.basename(file_or_filename)
+            logger.info("Unpickling case file [%s]." % fname)
+
             file = None
             try:
                 file = open(file_or_filename, "rb")
                 case = pickle.load(file)
             except:
-                logger.error("Could not open '%s'." % file_or_filename)
+                logger.error("Error unpickling '%s'." % fname)
                 return None
             finally:
                 if file is not None:
@@ -74,15 +78,24 @@ class PickleWriter(object):
     """
 
     def __call__(self, case, file_or_filename):
+        """ Calls the writer with the given file or file name.
+        """
+        self.write(case, file_or_filename)
+
+
+    def write(self, case, file_or_filename):
         """ Writes the case to file using pickle.
         """
         if isinstance(file_or_filename, basestring):
+            fname = os.path.basename(file_or_filename)
+            logger.info("Pickling case [%s]." % fname)
+
             file = None
             try:
                 file = open(file_or_filename, "wb")
-                pickle.dump(file, case)
+                pickle.dump(case, file)
             except:
-                logger.error("Could not open '%s'." % file_or_filename)
+                logger.error("Error writing to '%s'." % fname)
                 return False
             finally:
                 if file is not None:
