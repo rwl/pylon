@@ -27,7 +27,7 @@ from pybrain.rl.environments import Environment
 from pybrain.rl.environments.graphical import GraphicalEnvironment
 
 from pylon import Generator
-from pylon.pyreto.market import Market, Offer, Bid
+from pylon.pyreto.market import SmartMarket, Offer, Bid
 
 #------------------------------------------------------------------------------
 #  "ParticipantEnvironment" class:
@@ -59,7 +59,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         """ Initialises the environment.
         """
         assert isinstance(asset, Generator)
-        assert isinstance(market, Market)
+        assert isinstance(market, SmartMarket)
 
         super(ParticipantEnvironment, self).__init__()
 

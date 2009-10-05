@@ -30,7 +30,7 @@ from os.path import dirname, join
 
 from pylon import DCOPF
 from pylon.readwrite import MATPOWERReader
-from pylon.pyreto import Market, Bid, Offer
+from pylon.pyreto import SmartMarket, Bid, Offer
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -106,7 +106,7 @@ class MarketTestCase(unittest.TestCase):
     def test_dc(self):
         """ Test market clearing using DC OPF routine.
         """
-        mkt = Market(self.case, self.bids, self.offers,
+        mkt = SmartMarket(self.case, self.bids, self.offers,
             loc_adjust='dc', auction_type="first price", price_cap=100.0)
 
         success = mkt.clear()

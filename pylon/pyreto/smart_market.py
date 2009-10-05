@@ -42,18 +42,22 @@ logger = logging.getLogger(__name__)
 BIG_NUMBER = 1e6
 
 #------------------------------------------------------------------------------
-#  "Market" class:
+#  "SmartMarket" class:
 #------------------------------------------------------------------------------
 
-class Market(object):
+class SmartMarket(object):
     """ Computes the new generation and price schedules based on the offers
         submitted.
+
+        References:
+            R. Zimmerman, 'extras/smartmarket/smartmkt.m', MATPOWER,
+            PSERC (Cornell), version 3.2, http://www.pserc.cornell.edu/matpower
     """
 
     def __init__(self, case, bids=None, offers=None, limits=None,
             loc_adjust="dc", auction_type="first price", price_cap=500,
             g_online=None, period=1.0):
-        """ Initialises a new Market instance.
+        """ Initialises a new SmartMarket instance.
         """
         self.case = case
 
@@ -300,7 +304,7 @@ class Market(object):
 #                    shutdown_cost = g.total_cost(g.c_shutdown)
 
         elapsed = time.time() - t0
-        logger.info("Market cleared in %.3fs" % elapsed)
+        logger.info("SmartMarket cleared in %.3fs" % elapsed)
 
         return True
 
@@ -308,6 +312,10 @@ class Market(object):
     def auction(self):
         """ Clears a set of bids and offers, where the pricing is adjusted for
             network losses and binding constraints.
+
+            References:
+                R. Zimmerman, 'extras/smartmarket/auction.m', MATPOWER,
+                Cornell, version 3.2, http://www.pserc.cornell.edu/matpower
         """
         offers = self.offers
         bids = self.bids
@@ -553,33 +561,33 @@ class Bid(_OfferBid):
 #  "PriceLimit" class:
 #------------------------------------------------------------------------------
 
-class PriceLimit(object):
-    """ Defines limits to offer/bid prices.
-    """
-
-    def __init__(self, min_bid=None, max_offer=None, min_cleared_bid=None,
-            max_cleared_offer=None):
-        """ Initialises a new PriceLimit instance.
-        """
-        # Offers above this are withheld.
-        self.max_offer = max_offer
-
-        # Bids below this are withheld.
-        self.min_bid = min_bid
-
-        # Cleared offer prices above this are clipped.
-        self.max_cleared_offer = max_cleared_offer
-
-        # Cleared bid prices below this are clipped.
-        self.min_cleared_bid = min_cleared_bid
-
-        self.q_max_offer = max_offer
-
-        self.q_min_bid = min_bid
-
-        self.q_max_cleared_offer = max_cleared_offer
-
-        self.q_min_cleared_bid = min_cleared_bid
+#class PriceLimit(object):
+#    """ Defines limits to offer/bid prices.
+#    """
+#
+#    def __init__(self, min_bid=None, max_offer=None, min_cleared_bid=None,
+#            max_cleared_offer=None):
+#        """ Initialises a new PriceLimit instance.
+#        """
+#        # Offers above this are withheld.
+#        self.max_offer = max_offer
+#
+#        # Bids below this are withheld.
+#        self.min_bid = min_bid
+#
+#        # Cleared offer prices above this are clipped.
+#        self.max_cleared_offer = max_cleared_offer
+#
+#        # Cleared bid prices below this are clipped.
+#        self.min_cleared_bid = min_cleared_bid
+#
+#        self.q_max_offer = max_offer
+#
+#        self.q_min_bid = min_bid
+#
+#        self.q_max_cleared_offer = max_cleared_offer
+#
+#        self.q_min_cleared_bid = min_cleared_bid
 
 #------------------------------------------------------------------------------
 #  "ContractsMarket" class:
