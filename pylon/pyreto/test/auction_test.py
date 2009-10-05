@@ -29,14 +29,14 @@ import unittest
 from os.path import dirname, join
 
 from pylon import DCOPF
-from pylon.readwrite import MATPOWERReader
+from pylon.readwrite import PickleReader
 from pylon.pyreto import SmartMarket, Bid, Offer
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "auction_case.m")
+DATA_FILE = join(dirname(__file__), "data", "auction_case.pkl")
 
 #------------------------------------------------------------------------------
 #  "MarketTestCase" class:
@@ -49,7 +49,7 @@ class MarketTestCase(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = MATPOWERReader().read(DATA_FILE)
+        self.case = PickleReader().read(DATA_FILE)
 
         generators = self.case.all_generators
 

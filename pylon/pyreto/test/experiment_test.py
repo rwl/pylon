@@ -31,7 +31,7 @@ from os.path import dirname, join
 from scipy import array
 
 from pylon import Case, Bus, Generator, Load
-from pylon.readwrite import MATPOWERReader
+from pylon.readwrite import PickleReader
 
 from pylon.pyreto import MarketExperiment, ParticipantEnvironment, ProfitTask
 from pylon.pyreto.renderer import ParticipantRenderer
@@ -46,7 +46,7 @@ from pybrain.rl.learners import ENAC
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "auction_case.m")
+DATA_FILE = join(dirname(__file__), "data", "auction_case.pkl")
 
 #------------------------------------------------------------------------------
 #  Returns a test power system:
@@ -56,8 +56,7 @@ def get_test_network():
     """ Returns a test power system case.
     """
     # Read case from data file.
-    reader = MATPOWERReader()
-    power_sys = reader(DATA_FILE)
+    power_sys = PickleReader().read(DATA_FILE)
 
     return power_sys
 
