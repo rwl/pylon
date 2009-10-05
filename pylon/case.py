@@ -608,6 +608,21 @@ class Load(Named):
 
         self._p_cycle = cycle(self.p_profile)
 
+
+    def __getstate__(self):
+        """ Prevents the 'cycle' from being pickled.
+        """
+        result = self.__dict__.copy()
+        del result['_p_cycle']
+        return result
+
+
+    def __setstate__(self, dict):
+        """ Sets the load profile cycle when unpickling.
+        """
+        self.__dict__ = dict
+        self._p_cycle = cycle(self.p_profile)
+
     @property
     def p_profiled(self):
         """ Active power demand scaled between 'p_max' and 'p_min'
