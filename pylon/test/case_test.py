@@ -462,8 +462,8 @@ class OfferBidToPWLTest(unittest.TestCase):
         self.assertAlmostEqual(vloads[0].q_max,   0.0, places=1)
 
         self.assertAlmostEqual(vloads[1].p_min, -28.0, places=1)
-        self.assertAlmostEqual(vloads[0].q_min,   0.0, places=1)
-        self.assertAlmostEqual(vloads[0].q_max,   7.0, places=1)
+        self.assertAlmostEqual(vloads[1].q_min,   0.0, places=1)
+        self.assertAlmostEqual(vloads[1].q_max,   7.0, places=1)
 
         # One piecewise linear segment per offer.
         self.assertEqual(len(vloads[0].pwl_points), 2)
@@ -479,6 +479,51 @@ class OfferBidToPWLTest(unittest.TestCase):
         self.assertAlmostEqual(vloads[0].pwl_points[0][1], -2000.0, places=1)
         self.assertAlmostEqual(vloads[1].pwl_points[0][0], -28.0, places=1)
         self.assertAlmostEqual(vloads[1].pwl_points[0][1], -280.0, places=1)
+
+
+    def test_multi_block(self):
+        """ Test conversion of multiple offer/bid blocks.
+        """
+        all_gens = self.all_generators
+        gens = self.generators
+        vloads = self.vloads
+
+        offers = [Offer(gens[0], 10.0, 10.0),
+
+                  Offer(gens[1], 20.0, 25.0),
+                  Offer(gens[1], 30.0, 65.0),
+
+                  Offer(gens[2], 25.0, 50.0)]
+
+        bids = [Bid(vloads[0], 20.0, 100.0),
+                Bid(vloads[0], 10.0, 60.0),
+
+                Bid(vloads[1], 12.0, 70.0)]
+
+        for g in all_gens:
+            g.offers_to_pwl(offers)
+            g.bids_to_pwl(bids)
+
+        self.assertEqual(len(gens[0].pwl_points), 2)
+        self.assertEqual(len(gens[1].pwl_points), 3)
+        self.assertEqual(len(gens[2].pwl_points), 2)
+
+        self.assertAlmostEqual(gens[0].pwl_points[0][0], 0.0, places=1)
+        self.assertAlmostEqual(gens[0].pwl_points[0][1], 0.0, places=1)
+        self.assertAlmostEqual(gens[1].pwl_points[0][0], 0.0, places=1)
+        self.assertAlmostEqual(gens[1].pwl_points[0][1], 0.0, places=1)
+        self.assertAlmostEqual(gens[2].pwl_points[0][0], 0.0, places=1)
+        self.assertAlmostEqual(gens[2].pwl_points[0][1], 0.0, places=1)
+
+        self.assertAlmostEqual(gens[0].pwl_points[1][0], 10.0, places=1)
+        self.assertAlmostEqual(gens[0].pwl_points[1][1], 100.0, places=1)
+        self.assertAlmostEqual(gens[1].pwl_points[1][0], 20.0, places=1)
+        self.assertAlmostEqual(gens[1].pwl_points[1][1], 500.0, places=1)
+        self.assertAlmostEqual(gens[2].pwl_points[1][0], 25.0, places=1)
+        self.assertAlmostEqual(gens[2].pwl_points[1][1], 1250.0, places=1)
+
+        self.assertAlmostEqual(gens[1].pwl_points[2][0], 50.0, places=1)
+        self.assertAlmostEqual(gens[1].pwl_points[2][1], 2450.0, places=1)
 
 #------------------------------------------------------------------------------
 #  "LoadTest" class:
