@@ -117,6 +117,12 @@ class SmartMarket(object):
         # Constraint violation tolerance.
         self.violation = 5e-6
 
+        # Guarantee that cleared offers are >= offers.
+        self.guarantee_offer_price = True
+
+        # Guarantee that cleared bids are <= bids.
+        self.guarantee_bid_price = True
+
         # Finish initialising the market.
         self.init()
 
@@ -246,7 +252,6 @@ class SmartMarket(object):
 
             # FIXME: Update dispatchable load reactive power limits.
 
-
         # Move p_min and p_max limits out slightly to avoid problems with
         # lambdas caused by rounding errors when corner point of cost function
         # lies at exactly p_min or p_max.
@@ -262,38 +267,60 @@ class SmartMarket(object):
         # Compute quantities, prices and costs.
         if success:
             # Get nodal marginal prices from OPF.
-            p_lambda = spdiag([bus.p_lambda for bus in buses])
-            q_lambda = spdiag([bus.q_lambda for bus in buses])
-
-            # Compute fudge factor for p_lambda to include price of bundled
-            # reactive power. For loads Q = pf * P.
-            pass
+#            p_lambda = spdiag([bus.p_lambda for bus in buses])
+#            q_lambda = spdiag([bus.q_lambda for bus in buses])
 
             # Guarantee that cleared offers are >= offers.
-            guarantee_offer_price = True
+            self.guarantee_offer_price = True
 
             for offer in offers:
+                # Locate the bus to which the generator is connected.
+                for bus in buses:
+                    if offer.generator in bus.generators:
+                        break
+                else:
+                    logger.error("Generator bus not found.")
+
+                # Get nodal marginal price from OPF results.
                 offer.p_lambda = bus.p_lambda
                 offer.total_quantity = offer.generator.p
 
             for bid in bids:
-                if self.have_q:
+                # Locate the bus to which the dispatchable load is connected.
+                for bus in buses:
+                    if bid.vload in bus.generators:
+                        break
+                else:
+                    logger.error("Dispatchable load bus not found.")
+
+                if have_q:
                     # Use unbundled lambdas.
                     bid.p_lambda = bus.p_lambda
                     # Allow cleared bids to be above bid price.
-                    guarantee_bid_price = False
+                    self.guarantee_bid_price = False
                 else:
+                    # Compute fudge factor for p_lambda to include price of
+                    # bundled reactive power. For loads Q = pf * P.
+                    if bid.vload.q_max == 0.0:
+                        pf = bid.vload.q_min / bid.vload.p_min
+                    elif bid.vload.q_min == 0.0:
+                        pf = bid.vload.q_max / bid.vload.p_min
+                    else:
+                        pf = 0.0
+
                     # Use bundled lambdas.
-                    bid.p_lambda = bus.p_lambda + spdiag(pf[l]) * bus.q_lambda
+                    bid.p_lambda = bus.p_lambda + pf * bus.q_lambda
+
                     # Guarantee that cleared bids are <= bids.
-                    guarantee_bid_price = True
+                    self.guarantee_bid_price = True
+
                 bid.total_quantity = bid.vload.p
 
             # Clear bids and offers.
-            cleared_offers, cleared_bids = self.auction(offers, bids)
+            cleared_offers, cleared_bids = self.auction()
 
         else:
-            logger.error("Non-convergent OPF.")
+            logger.error("Non-convergent UOPF.")
 
             quantity = 0.0
             price = limits.max_offer
@@ -333,26 +360,26 @@ class SmartMarket(object):
 
         # Enforce price limits.
         if limits.has_key("max_offer"):
-            max_offer = limits["max_offer"]
             for offer in offers:
-                if offer.price >= max_offer:
+                if offer.price >= limits["max_offer"]:
                     offer.withheld = True
+
         if limits.has_key("min_bid"):
-            min_bid = limits["min_bid"]
             for bid in bids:
-                if bid.price <= min_bid:
+                if bid.price <= limits["min_bid"]:
                     bid.withheld = True
 
         for g in generators:
             g_offers = [offer for offer in offers if offer.generator == g]
-            self.clear_quantities(g_offers)
+            self.clear_quantity(g_offers)
 
-            g_bids   = [bid for bid in bids if bid.generator == g]
-            self.clear_quantities(g_bids)
+        for vl in vloads:
+            vl_bids = [bid for bid in bids if bid.vload == vl]
+            self.clear_quantity(vl_bids)
 
         # Initialise cleared prices.
-        for offbid in offers + bids:
-            offbid.cleared_price = 0.0
+#        for offbid in offers + bids:
+#            offbid.cleared_price = 0.0
 
         # Compute shift values to add to lam to get desired pricing.
 
@@ -458,7 +485,7 @@ class SmartMarket(object):
         """
         # Get the total output that the generator has been dispatched at by
         # the OPF routine.
-        total_quantity = offbids[0].generator.p
+        total_quantity = offbids[0].total_quantity
 
         ob_quantity = sum([ob.quantity for ob in offbids])
 
@@ -499,6 +526,12 @@ class _OfferBid(object):
         # Does the bid concern active or reactive power?
         self.reactive = reactive
 
+        # Output at which the generator was dispatched.
+        self.total_quantity = 0.0
+
+        # Nodal marginal price from OPF.
+        self.p_lambda = 0.0
+
         # Is the bid valid?
         self.withheld = False
 
@@ -510,6 +543,24 @@ class _OfferBid(object):
 
         # Price at which the bid was cleared.
         self.cleared_price = 0.0
+
+
+    @property
+    def difference(self):
+        """ The locationally adjusted offer/bid price, when normalized to an
+            arbitrary reference location where lambda is equal to ref_lam, is:
+
+                norm_prc = prc + (ref_lam - lam)
+
+            Then we can define the difference between the normalized offer/bid
+            prices and the ref_lam as:
+
+                diff = norm_prc - ref_lam = prc - lam
+
+            This diff represents the gap between the marginal unit (setting
+            lambda) and the offer/bid price in question.
+        """
+        return self.price - self.p_lambda
 
 #------------------------------------------------------------------------------
 #  "Offer" class:
@@ -524,23 +575,15 @@ class Offer(_OfferBid):
         """
         super(Offer, self).__init__(qty, prc, reactive)
 
-        # Generating unit to which the bid applies.
+        # Generating unit to which the offer applies.
         self.generator = generator
 
 
-    @property
-    def total_quantity(self):
-        """ Output at which the generator has been dispatched.
-        """
-        self.generator.p
-
-
-    @property
-    def difference(self):
-        """ The gap between the marginal unit (setting lambda) and the
-            offer/bid price.
-        """
-        return self.price - self.p_lambda
+#    @property
+#    def total_quantity(self):
+#        """ Output at which the generator has been dispatched.
+#        """
+#        self.generator.p
 
 #------------------------------------------------------------------------------
 #  "Bid" class:
@@ -555,15 +598,15 @@ class Bid(_OfferBid):
         """
         super(Bid, self).__init__(qty, prc, reactive)
 
-        # Dispatchable load to which the offer applies.
+        # Dispatchable load to which the bid applies.
         self.vload = vload
 
 
-    @property
-    def total_quantity(self):
-        """ Output at which the generator has been dispatched.
-        """
-        self.vload.p
+#    @property
+#    def total_quantity(self):
+#        """ Output at which the generator has been dispatched.
+#        """
+#        self.vload.p
 
 #------------------------------------------------------------------------------
 #  "PriceLimit" class:
