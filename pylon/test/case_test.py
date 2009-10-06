@@ -27,7 +27,7 @@ import unittest
 
 from pylon import Case, Bus, Branch, Generator, Load
 from pylon.readwrite import PickleReader
-from pylon.pyreto import Offer
+from pylon.pyreto import Offer, Bid
 
 #-------------------------------------------------------------------------------
 #  Constants:
@@ -368,7 +368,7 @@ class OfferBidToPWLTest(unittest.TestCase):
         self.vloads     = [g for g in self.all_generators if g.is_load]
 
 
-    def test_offers_to_pwl(self):
+    def test_p_only(self):
         """ Test active power offers only.
         """
         all_gens = self.all_generators
@@ -386,6 +386,7 @@ class OfferBidToPWLTest(unittest.TestCase):
 
         # All dispatchable loads are shutdown as they have no bids.
         self.assertTrue(True not in [vl.online for vl in vloads])
+        self.assertTrue(False not in [g.online for g in gens])
 
         # Price models should be piecewise linear.
         self.assertEqual(gens[0].cost_model, "pwl")
@@ -416,6 +417,68 @@ class OfferBidToPWLTest(unittest.TestCase):
         self.assertAlmostEqual(gens[1].pwl_points[1][1], 1300.0, places=1)
         self.assertAlmostEqual(gens[2].pwl_points[1][0], 27.0, places=1)
         self.assertAlmostEqual(gens[2].pwl_points[1][1], 2700.0, places=1)
+
+
+    def test_zero_quantity(self):
+        """ Test offline for zero quantity offer.
+        """
+        all_gens = self.all_generators
+        gens = self.generators
+
+        offers = [Offer(gens[0], 0.0, 10.0),
+                  Offer(gens[1], 26.0, 50.0),
+                  Offer(gens[2], 27.0, 100.0)]
+        bids = []
+
+        for g in all_gens:
+            g.offers_to_pwl(offers)
+            g.bids_to_pwl(bids)
+
+        self.assertFalse(gens[0].online)
+        self.assertTrue(gens[1].online)
+        self.assertTrue(gens[2].online)
+
+
+    def test_offers_and_bids(self):
+        """ Test active power offers and bids.
+        """
+        all_gens = self.all_generators
+        gens = self.generators
+        vloads = self.vloads
+
+        offers = [Offer(gens[0], 25.0, 10.0),
+                  Offer(gens[1], 26.0, 50.0),
+                  Offer(gens[2], 27.0, 100.0)]
+
+        bids = [Bid(vloads[0], 20.0, 100.0),
+                Bid(vloads[1], 28.0, 10.0)]
+
+        for g in all_gens:
+            g.offers_to_pwl(offers)
+            g.bids_to_pwl(bids)
+
+        self.assertAlmostEqual(vloads[0].p_min, -20.0, places=1)
+        self.assertAlmostEqual(vloads[0].q_min, -10.0, places=1)
+        self.assertAlmostEqual(vloads[0].q_max,   0.0, places=1)
+
+        self.assertAlmostEqual(vloads[1].p_min, -28.0, places=1)
+        self.assertAlmostEqual(vloads[0].q_min,   0.0, places=1)
+        self.assertAlmostEqual(vloads[0].q_max,   7.0, places=1)
+
+        # One piecewise linear segment per offer.
+        self.assertEqual(len(vloads[0].pwl_points), 2)
+        self.assertEqual(len(vloads[1].pwl_points), 2)
+
+        # The last point must begin at the origin.
+        self.assertAlmostEqual(vloads[0].pwl_points[1][0], 0.0, places=1)
+        self.assertAlmostEqual(vloads[0].pwl_points[1][1], 0.0, places=1)
+        self.assertAlmostEqual(vloads[1].pwl_points[1][0], 0.0, places=1)
+        self.assertAlmostEqual(vloads[1].pwl_points[1][1], 0.0, places=1)
+
+        self.assertAlmostEqual(vloads[0].pwl_points[0][0], -20.0, places=1)
+        self.assertAlmostEqual(vloads[0].pwl_points[0][1], -2000.0, places=1)
+        self.assertAlmostEqual(vloads[1].pwl_points[0][0], -28.0, places=1)
+        self.assertAlmostEqual(vloads[1].pwl_points[0][1], -280.0, places=1)
 
 #------------------------------------------------------------------------------
 #  "LoadTest" class:

@@ -533,16 +533,22 @@ class Generator(Named):
 
             @see: matpower3.2/extras/smartmarket/off2case.m
         """
+        # Only apply offers associated with this generator.
         g_offers = [offer for offer in offers if offer.generator == self]
 
-        if g_offers:
-            self.pwl_points = self._offbids_to_points(g_offers)
+        # Fliter out zero quantity offers.
+        valid = [offr for offr in g_offers if round(offr.quantity, 4) > 0.0]
+
+        if valid:
+            self.pwl_points = self._offbids_to_points(valid)
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
             self.cost_model = "pwl"
 
             self.p_max = max([point[0] for point in self.pwl_points])
-        else:
+            self.online = True
+        elif not self.is_load:
+            logger.info("No valid offers for generator, shutting down.")
             self.online = False
 
 
@@ -552,10 +558,14 @@ class Generator(Named):
 
             @see: matpower3.2/extras/smartmarket/off2case.m
         """
+        # Apply only those bids associated with this dispatchable load.
         vl_bids = [bid for bid in bids if bid.vload == self]
 
-        if vl_bids:
-            points = self._offbids_to_points(vl_bids)
+        # Filter out zero quantity bids.
+        valid_bids = [bid for bid in vl_bids if round(bid.quantity, 4) > 0.0]
+
+        if valid_bids:
+            points = self._offbids_to_points(valid_bids)
 
             # Shift the points to represent bids by subtracting the maximum value
             # from each.
@@ -573,7 +583,8 @@ class Generator(Named):
                 self.q_max = self.q_max * p_min / self.p_min
 
             self.p_min = p_min
-        else:
+        elif self.is_load:
+            logger.info("No valid bids for dispatchable load, shutting down.")
             self.online = False
 
 
