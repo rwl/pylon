@@ -525,6 +525,23 @@ class OfferBidToPWLTest(unittest.TestCase):
         self.assertAlmostEqual(gens[1].pwl_points[2][0], 50.0, places=1)
         self.assertAlmostEqual(gens[1].pwl_points[2][1], 2450.0, places=1)
 
+
+        self.assertEqual(len(vloads[0].pwl_points), 3)
+        self.assertEqual(len(vloads[1].pwl_points), 2)
+
+        self.assertAlmostEqual(vloads[0].pwl_points[0][0], -30.0, places=1)
+        self.assertAlmostEqual(vloads[0].pwl_points[0][1], -2600.0, places=1)
+        self.assertAlmostEqual(vloads[1].pwl_points[0][0], -12.0, places=1)
+        self.assertAlmostEqual(vloads[1].pwl_points[0][1], -840.0, places=1)
+
+        self.assertAlmostEqual(vloads[0].pwl_points[1][0], -20.0, places=1)
+        self.assertAlmostEqual(vloads[0].pwl_points[1][1], -2000.0, places=1)
+        self.assertAlmostEqual(vloads[1].pwl_points[1][0], 0.0, places=1)
+        self.assertAlmostEqual(vloads[1].pwl_points[1][1], 0.0, places=1)
+
+        self.assertAlmostEqual(vloads[0].pwl_points[2][0], 0.0, places=1)
+        self.assertAlmostEqual(vloads[0].pwl_points[2][1], 0.0, places=1)
+
 #------------------------------------------------------------------------------
 #  "LoadTest" class:
 #------------------------------------------------------------------------------

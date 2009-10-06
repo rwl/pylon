@@ -54,7 +54,7 @@ class SmartMarket(object):
             PSERC (Cornell), version 3.2, http://www.pserc.cornell.edu/matpower
     """
 
-    def __init__(self, case, bids=None, offers=None, limits=None,
+    def __init__(self, case, offers=None, bids=None, limits=None,
             loc_adjust="dc", auction_type="first price", price_cap=500,
             g_online=None, period=1.0):
         """ Initialises a new SmartMarket instance.
@@ -187,16 +187,11 @@ class SmartMarket(object):
         # Convert power offers into piecewise linear segments and update
         # generator limits.
         for g in generators:
-
-            print "BEFORE:", g.pwl_points
-
             g_offers = [offer for offer in offers if offer.generator == g]
+            g.offers_to_pwl(g_offers)
 
-            if g_offers:
-                g.offers_to_pwl(g_offers)
-
-            p_offers = [ofr for ofr in g_offers if not ofr.reactive]
-            q_offers = [ofr for ofr in g_offers if ofr.reactive]
+            p_offers = [of for of in g_offers if not of.reactive]
+            q_offers = [of for of in g_offers if of.reactive]
 
             # Capacity offered for active power.
             if p_offers:
@@ -218,8 +213,6 @@ class SmartMarket(object):
                 # reactive power.
                 g.online = False
 
-            print "AFTER:", g.pwl_points, "\n"
-
             # FIXME: Update generator reactive power limits.
 
         # Convert power bids into piecewise linear segments and update
@@ -227,8 +220,7 @@ class SmartMarket(object):
         for vl in vloads:
             vl_bids = [bid for bid in bids if bid.vload == vl]
 
-            if vl_bids:
-                vl.bids_to_pwl(vl_bids)
+            vl.bids_to_pwl(vl_bids)
 
             p_bids = [bid for bid in vl_bids if not bid.reactive]
             q_bids = [bid for bid in vl_bids if bid.reactive]
@@ -236,14 +228,14 @@ class SmartMarket(object):
             # Capacity offered for active power.
             if p_bids:
                 p_min = min([point[0] for point in g.pwl_points])
-                if vl.p_min <= p_min <= vl.p_max:
-                    vl.q_min = vl.q_min * p_min / vl.p_min
-                    vl.q_max = vl.q_max * p_min / vl.p_min
-                    vl.p_min = p_min
-                    vl.online = True
-                else:
-                    logger.error("Bid quantity (%.2f) must be between %.2f "
-                        "and %.2f." % (-p_min, max([0, vl.p_max]), -vl.p_min))
+#                if vl.p_min <= p_min <= vl.p_max:
+#                    vl.q_min = vl.q_min * p_min / vl.p_min
+#                    vl.q_max = vl.q_max * p_min / vl.p_min
+#                    vl.p_min = p_min
+#                    vl.online = True
+#                else:
+#                    logger.error("Bid quantity (%.2f) must be between %.2f "
+#                        "and %.2f." % (-p_min, max([0, vl.p_max]), -vl.p_min))
             elif q_bids:
                 # FIXME: Dispatch at zero real power without shutting down if
                 # reactive power offered.
@@ -253,6 +245,7 @@ class SmartMarket(object):
                 vl.online = False
 
             # FIXME: Update dispatchable load reactive power limits.
+
 
         # Move p_min and p_max limits out slightly to avoid problems with
         # lambdas caused by rounding errors when corner point of cost function

@@ -54,7 +54,12 @@ class MarketTestCase(unittest.TestCase):
         generators = self.case.all_generators
 
 #        for gen in generators:
-#            print gen#gen.name, gen.online, gen.pwl_points
+#            print gen.name, gen.is_load, gen.pwl_points
+
+        # NB: Pylon orders the generators according to bus number.
+        # Bus No:  1, 2, 3, 4, 5, 6, 7, 8, 9
+        # Index:   0, 1, 2, 3, 4, 5, 6, 7, 8
+        # MP No:   1, 2, 7, 6, 8, 3, 5, 4, 9
 
         self.offers = [
             Offer(generators[0], 12.0, 20.0),
@@ -65,47 +70,47 @@ class MarketTestCase(unittest.TestCase):
             Offer(generators[1], 12.0, 20.0),
             Offer(generators[1], 24.0, 40.0),
             Offer(generators[1], 24.0, 70.0),
-#            Offer(generators[0], 60.0, 0.0, reactive=True),
-
-            Offer(generators[2], 12.0, 20.0),
-            Offer(generators[2], 24.0, 42.0),
-            Offer(generators[2], 24.0, 80.0),
-#            Offer(generators[0], 60.0, 0.0, reactive=True),
-
-            Offer(generators[3], 12.0, 20.0),
-            Offer(generators[3], 24.0, 44.0),
-            Offer(generators[3], 24.0, 90.0),
-#            Offer(generators[0], 60.0, 0.0, reactive=True),
-
-            Offer(generators[4], 12.0, 20.0),
-            Offer(generators[4], 24.0, 46.0),
-            Offer(generators[4], 24.0, 75.0),
-#            Offer(generators[0], 60.0, 0.0, reactive=True),
+#            Offer(generators[1], 60.0, 0.0, reactive=True),
 
             Offer(generators[5], 12.0, 20.0),
-            Offer(generators[5], 24.0, 48.0),
-            Offer(generators[5], 24.0, 60.0),
-#            Offer(generators[0], 60.0, 3.0, reactive=True),
+            Offer(generators[5], 24.0, 42.0),
+            Offer(generators[5], 24.0, 80.0),
+#            Offer(generators[5], 60.0, 0.0, reactive=True),
+
+            Offer(generators[7], 12.0, 20.0),
+            Offer(generators[7], 24.0, 44.0),
+            Offer(generators[7], 24.0, 90.0),
+#            Offer(generators[7], 60.0, 0.0, reactive=True),
+
+            Offer(generators[6], 12.0, 20.0),
+            Offer(generators[6], 24.0, 46.0),
+            Offer(generators[6], 24.0, 75.0),
+#            Offer(generators[6], 60.0, 0.0, reactive=True),
+
+            Offer(generators[3], 12.0, 20.0),
+            Offer(generators[3], 24.0, 48.0),
+            Offer(generators[3], 24.0, 60.0),
+#            Offer(generators[3], 60.0, 3.0, reactive=True),
         ]
 
         self.bids = [
 #            Bid(generators[0], 15.0, 0.0, reactive=True),
 #            Bid(generators[1], 15.0, 0.0, reactive=True),
-#            Bid(generators[2], 15.0, 0.0, reactive=True),
-#            Bid(generators[3], 15.0, 0.0, reactive=True),
-#            Bid(generators[4], 15.0, 0.0, reactive=True),
 #            Bid(generators[5], 15.0, 0.0, reactive=True),
-
-            Bid(generators[6], 10.0, 100.0),
-            Bid(generators[6], 10.0, 70.0),
-            Bid(generators[6], 10.0, 60.0),
+#            Bid(generators[7], 15.0, 0.0, reactive=True),
 #            Bid(generators[6], 15.0, 0.0, reactive=True),
+#            Bid(generators[3], 15.0, 0.0, reactive=True),
 
-            Bid(generators[7], 10.0, 100.0),
-            Bid(generators[7], 10.0, 50.0),
-            Bid(generators[7], 10.0, 20.0),
-##            Bid(generators[7], 12.0, 83.9056, reactive=True),
-#            Bid(generators[7], 12.0, 20.0, reactive=True),
+            Bid(generators[2], 10.0, 100.0),
+            Bid(generators[2], 10.0, 70.0),
+            Bid(generators[2], 10.0, 60.0),
+#            Bid(generators[2], 15.0, 0.0, reactive=True),
+
+            Bid(generators[4], 10.0, 100.0),
+            Bid(generators[4], 10.0, 50.0),
+            Bid(generators[4], 10.0, 20.0),
+##            Bid(generators[4], 12.0, 83.9056, reactive=True),
+#            Bid(generators[4], 12.0, 20.0, reactive=True),
 
             Bid(generators[8], 10.0, 100.0),
             Bid(generators[8], 10.0, 60.0),
@@ -126,7 +131,7 @@ class MarketTestCase(unittest.TestCase):
     def test_dc(self):
         """ Test market clearing using DC OPF routine.
         """
-        mkt = SmartMarket(self.case, self.bids, self.offers,
+        mkt = SmartMarket(self.case, self.offers, self.bids,
             loc_adjust='dc', auction_type="first price", price_cap=100.0)
 
         success = mkt.clear()

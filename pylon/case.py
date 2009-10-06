@@ -548,8 +548,12 @@ class Generator(Named):
             self.p_max = max([point[0] for point in self.pwl_points])
             self.online = True
         elif not self.is_load:
-            logger.info("No valid offers for generator, shutting down.")
+#            logger.info("No valid offers for generator, shutting down.")
+            print "No valid offers for generator, shutting down."
             self.online = False
+        else:
+#            logger.info("No valid offers for generator.")
+            print "No valid offers for generator."
 
 
     def bids_to_pwl(self, bids):
