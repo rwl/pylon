@@ -487,7 +487,7 @@ class Generator(Named):
         """
         from pylon.pyreto.smart_market import Offer
 
-        qtyprc = self._get_qty_prc(n_points)
+        qtyprc = self._get_qtyprc(n_points)
 
         return [Offer(self, qty, prc) for qty, prc in qtyprc]
 
@@ -533,10 +533,17 @@ class Generator(Named):
 
             @see: matpower3.2/extras/smartmarket/off2case.m
         """
-        self.pwl_points = self._offbids_to_points(offers)
-        # FIXME: Convert reactive power bids into piecewise linear segments.
-        # FIXME: Set all reactive costs to zero if not provided.
-        self.cost_model = "pwl"
+        g_offers = [offer for offer in offers if offer.generator == self]
+
+        if g_offers:
+            self.pwl_points = self._offbids_to_points(g_offers)
+            # FIXME: Convert reactive power bids into piecewise linear segments.
+            # FIXME: Set all reactive costs to zero if not provided.
+            self.cost_model = "pwl"
+
+            self.p_max = max([point[0] for point in self.pwl_points])
+        else:
+            self.online = False
 
 
     def bids_to_pwl(self, bids):
@@ -545,17 +552,29 @@ class Generator(Named):
 
             @see: matpower3.2/extras/smartmarket/off2case.m
         """
-        points = self._offbids_to_points(bids)
+        vl_bids = [bid for bid in bids if bid.vload == self]
 
-        # Shift the points to represent bids by subtracting the maximum value
-        # from each.
-        x_end, y_end = points[-1]
-        points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
+        if vl_bids:
+            points = self._offbids_to_points(vl_bids)
 
-        self.pwl_points = points
-        # FIXME: Convert reactive power bids into piecewise linear segments.
-        # FIXME: Set all reactive costs to zero if not provided.
-        self.cost_model = "pwl"
+            # Shift the points to represent bids by subtracting the maximum value
+            # from each.
+            x_end, y_end = points[-1]
+            points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
+
+            self.pwl_points = points
+            # FIXME: Convert reactive power bids into piecewise linear segments.
+            # FIXME: Set all reactive costs to zero if not provided.
+            self.cost_model = "pwl"
+
+            p_min = min([point[0] for point in self.pwl_points])
+            if self.p_min <= p_min <= self.p_max:
+                self.q_min = self.q_min * p_min / self.p_min
+                self.q_max = self.q_max * p_min / self.p_min
+
+            self.p_min = p_min
+        else:
+            self.online = False
 
 
     def _offbids_to_points(self, offbids):

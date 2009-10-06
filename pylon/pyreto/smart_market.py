@@ -163,6 +163,14 @@ class SmartMarket(object):
         else:
             have_q = False
 
+#        if have_q and vloads and self.auction_type not in ["discriminative",
+#                                                           "lao",
+#                                                           "first price"]:
+#            logger.error("Combined active/reactive power markets with "
+#                "constant power factor dispatchable loads are only "
+#                "implemented for 'discriminative', 'lao' and 'first price' "
+#                "auction types.")
+
         if min([offbid.quantity for offbid in offers + bids]) < 0.0:
             logger.info("Ignoring offers/bids with negative quantities.")
 
@@ -179,6 +187,9 @@ class SmartMarket(object):
         # Convert power offers into piecewise linear segments and update
         # generator limits.
         for g in generators:
+
+            print "BEFORE:", g.pwl_points
+
             g_offers = [offer for offer in offers if offer.generator == g]
 
             if g_offers:
@@ -189,13 +200,14 @@ class SmartMarket(object):
 
             # Capacity offered for active power.
             if p_offers:
-                p_max = max([point[0] for point in g.pwl_points])
-                if not g.p_min <= p_max <= g.p_max:
-                    logger.error("Offer quantity (%.2f) must be between %.2f "
-                        "and %.2f." % (p_max, max([0, g.p_min]), g.p_max))
-                else:
-                    g.p_max = p_max
-                    g.online = True
+                pass
+#                p_max = max([point[0] for point in g.pwl_points])
+#                if not g.p_min <= p_max <= g.p_max:
+#                    logger.error("Offer quantity (%.2f) must be between %.2f "
+#                        "and %.2f." % (p_max, max([0, g.p_min]), g.p_max))
+#                else:
+#                    g.p_max = p_max
+#                    g.online = True
             elif q_offers:
                 # FIXME: Dispatch at zero real power without shutting down
                 # if capacity offered for reactive power.
@@ -205,6 +217,8 @@ class SmartMarket(object):
                 # Shutdown the unit if no capacity offered for active or
                 # reactive power.
                 g.online = False
+
+            print "AFTER:", g.pwl_points, "\n"
 
             # FIXME: Update generator reactive power limits.
 
@@ -247,8 +261,10 @@ class SmartMarket(object):
             g.p_min -= 100 * self.violation
             g.p_max += 100 * self.violation
 
+
         # Solve the optimisation problem.
         success = UDOPF(dc=self.loc_adjust=="dc").solve(self.case)
+
 
         # Compute quantities, prices and costs.
         if success:
@@ -480,7 +496,7 @@ class _OfferBid(object):
         power at a defined price.
     """
 
-    def __init__(self, qty, prc):
+    def __init__(self, qty, prc, reactive=False):
         # Quantity of power bidding to be bought.
         self.quantity = qty
 
@@ -488,7 +504,7 @@ class _OfferBid(object):
         self.price = prc
 
         # Does the bid concern active or reactive power?
-        self.reactive = False
+        self.reactive = reactive
 
         # Is the bid valid?
         self.withheld = False
@@ -510,10 +526,10 @@ class Offer(_OfferBid):
     """ Defines a offer to sell a quantity of power at a defined price.
     """
 
-    def __init__(self, generator, qty, prc):
+    def __init__(self, generator, qty, prc, reactive=False):
         """ Initialises a new Offer instance.
         """
-        super(Offer, self).__init__(qty, prc)
+        super(Offer, self).__init__(qty, prc, reactive)
 
         # Generating unit to which the bid applies.
         self.generator = generator
@@ -541,10 +557,10 @@ class Bid(_OfferBid):
     """ Defines a bid to buy a quantity of power at a defined price.
     """
 
-    def __init__(self, vload, qty, prc):
+    def __init__(self, vload, qty, prc, reactive=False):
         """ Initialises a new Bid instance.
         """
-        super(Bid, self).__init__(qty, prc)
+        super(Bid, self).__init__(qty, prc, reactive)
 
         # Dispatchable load to which the offer applies.
         self.vload = vload
