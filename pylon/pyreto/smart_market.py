@@ -377,6 +377,8 @@ class SmartMarket(object):
             vl_bids = [bid for bid in bids if bid.vload == vl]
             self.clear_quantity(vl_bids)
 
+        print [ob.cleared_quantity for ob in offers]
+
         # Initialise cleared prices.
 #        for offbid in offers + bids:
 #            offbid.cleared_price = 0.0
@@ -483,15 +485,24 @@ class SmartMarket(object):
     def clear_quantity(self, offbids):
         """ Computes the cleared bid quantity from total cleared quantity.
         """
+        # Filter out zero quantity offers/bids.
+        offbids = [ob for ob in offbids if round(ob.quantity, 4) > 0.0]
+
+        # Offers/bids within valid price limits (not withheld).
+        valid = [ob for ob in offbids if not ob.withheld]
+
+
         # Get the total output that the generator has been dispatched at by
         # the OPF routine.
         total_quantity = offbids[0].total_quantity
 
+        # Total quantity offered/bid for.
         ob_quantity = sum([ob.quantity for ob in offbids])
 
-        # TODO: Sort offers/bids according to ascending price.
+        # Sort offers/bids by price in ascending order.
+        valid.sort(key=lambda x: x.price)
 
-        for offbid in offbids:
+        for offbid in valid:
             # Compute the fraction of the block accepted.
             accepted = (total_quantity - ob_quantity) / offbid.quantity
             # Clip to the range 0-1.
