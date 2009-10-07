@@ -391,7 +391,7 @@ class Generator(Named):
     def mode(self):
         """ Does the machine represent a generator or a despatchable load.
         """
-        raise DeprecationWarning, "Use is_load instead."
+        raise DeprecationWarning, "Use .is_load instead."
 
         if 0 <= self.p_min < self.p_max:
             return "generator"
