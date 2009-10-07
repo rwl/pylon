@@ -152,8 +152,17 @@ class MarketTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
-        format="%(levelname)s: %(message)s")
+#    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
+#        format="%(levelname)s: %(message)s")
+
+    logger = logging.getLogger('pylon.pyreto')
+
+    # Remove PyBrain handlers.
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
+
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
 
     unittest.main()
 
