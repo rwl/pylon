@@ -25,8 +25,6 @@
 import time
 import logging
 
-from cvxopt import matrix, spdiag
-
 from pylon import UDOPF
 
 #------------------------------------------------------------------------------
@@ -44,8 +42,8 @@ class SmartMarket(object):
         submitted.
 
         References:
-            R. Zimmerman, 'extras/smartmarket/smartmkt.m', MATPOWER,
-            PSERC (Cornell), version 3.2, http://www.pserc.cornell.edu/matpower
+            R. D. Zimmerman, 'extras/smartmarket/smartmkt.m', MATPOWER,
+            PSERC (Cornell), version 3.2, www.pserc.cornell.edu/matpower
     """
 
     def __init__(self, case, offers=None, bids=None, limits=None,
@@ -57,24 +55,21 @@ class SmartMarket(object):
 
         # Offers to sell a quantity of power at a particular price.
         if offers is None:
-            self.offers = []
-        else:
             self.offers = offers
+        else:
+            self.offers = []
 
         # Bids to buy power.
-        if bids is None:
-            self.bids = []
-        else:
+        if bids:
             self.bids = bids
+        else:
+            self.bids = []
 
         # Offer/bid limits.
         if limits is None:
-#            self.limits = PriceLimit()
-#            self.limits = {"min_bid": None, "max_offer": None,
-#                "min_cleared_bid": None, "max_cleared_offer": None}
-            self.limits = {}
-        else:
             self.limits = limits
+        else:
+            self.limits = {}
 
         # Compute locational adjustments ('ignore', 'ac', 'dc').
         self.loc_adjust = loc_adjust
@@ -97,13 +92,12 @@ class SmartMarket(object):
         # Price cap. Offers greater than this are eliminated.
         self.price_cap = price_cap
 
-        # A vector containing the commitment status of each generator from the
-        # previous period (for computing startup/shutdown costs)
-        if g_online is None:
-            # Assume all generators on-line unless otherwise specified.
-            self.g_online = matrix(1, (len(case.all_generators), 1))
-        else:
+        # A list of the commitment status of each generator from the
+        # previous period (for computing startup/shutdown costs).
+        if g_online:
             self.g_online = g_online
+        else:
+            self.g_online = [True] * len(case.all_generators)
 
         # Time duration of the dispatch period in hours.
         self.period = period
@@ -299,27 +293,55 @@ class SmartMarket(object):
 
                 bid.total_quantity = -bid.vload.p
 
-            # Clear bids and offers.
-            cleared_offers, cleared_bids = self.auction(offers, bids)
+
+            # Clear offer/bid quantities and prices.
+            self.auction(offers, bids)
+
+#            prices = [of.quantity * of.price for of in offers]
 
         else:
             logger.error("Non-convergent UOPF.")
 
-            quantity = 0.0
-            price = limits.max_offer
+#            quantity = 0.0
+#            if limits.has_key("max_offer"):
+#                price = limits["max_offer"]
+#            else:
+#                price = 0.0
 
             for offbid in offers + bids:
-                offbid.quantity = 0.0
-                offbid.price = 0.0
+                offbid.cleared_quantity = offbid.cleared_price = 0.0
+
+#            cleared_offers, cleared_bids = offers, bids
+
+
+        t = self.period
+        for i, g in enumerate(generators):
+            g_offers = [offer for offer in offers if offer.generator == g]
+
+            g_quantity = g.p
+
+            totclrqty = sum([offer.cleared_quantity for offer in g_offers])
+            g_price = sum([of.cleared_quantity * of.cleared_price / totclrqty
+                           for of in g_offers])
 
             # Compute costs in $ (not $/hr).
-            for g in generators:
-                fixed_cost = self.period * g.total_cost(0.0)
-                variable_cost = g.total_cost(self.period * quantity)-fixed_cost
-#                if g.online:
-#                    startup_cost = g.total_cost(g.c_startup)
-#                else:
-#                    shutdown_cost = g.total_cost(g.c_shutdown)
+            fixed_cost = t * g.total_cost(0.0)
+
+            variable_cost = (t * g.p_cost()) - fixed_cost
+
+            if not self.g_online[i] and g.online:
+                startup_cost = g.total_cost(g.c_startup)
+                shutdown_cost = 0.0
+            elif self.g_online[i] and not g.online:
+                startup_cost = 0.0
+                shutdown_cost = g.total_cost(g.c_shutdown)
+            else:
+                startup_cost = 0.0
+                shutdown_cost = 0.0
+
+            d = Dispatch(g, g_quantity, g_price, fixed_cost, variable_cost,
+                         startup_cost, shutdown_cost)
+
 
         elapsed = time.time() - t0
         logger.info("SmartMarket cleared in %.3fs" % elapsed)
@@ -345,18 +367,7 @@ class SmartMarket(object):
             self.clear_quantity(bids, vl)
 
         # Compute shift values to add to lam to get desired pricing.
-        #
-        # The locationally adjusted offer/bid price, when normalized to an
-        # arbitrary reference location where lambda is equal to ref_lam, is:
-        #     norm_prc = prc + (ref_lam - lam)
-        # Then we can define the difference between the normalized offer/bid
-        # prices and the ref_lam as:
-        #     diff = norm_prc - ref_lam = prc - lam
-        # This diff represents the gap between the marginal unit (setting
-        # lambda) and the offer/bid price in question.
-        #
-        # Rejected offers will have a positive diff and the lao has the least
-        # negative diff.
+
         accepted = [of for of in offers if of.accepted]
         rejected = [of for of in offers if not of.accepted]
 
@@ -399,35 +410,41 @@ class SmartMarket(object):
             if auction_type == "discriminative":
                 offbid.cleared_price = offbid.price
             elif auction_type == "lao":
-                offbid.cleared_price = offbid.p_lambda + lao
+                offbid.cleared_price = offbid.p_lambda + lao.price
             elif auction_type == "fro":
-                offbid.cleared_price = offbid.p_lambda + fro
+                offbid.cleared_price = offbid.p_lambda + fro.price
             elif auction_type == "lab":
-                offbid.cleared_price = offbid.p_lambda + lab
+                offbid.cleared_price = offbid.p_lambda + lab.price
             elif auction_type == "frb":
-                offbid.cleared_price = offbid.p_lambda + frb
+                offbid.cleared_price = offbid.p_lambda + frb.price
             elif auction_type == "first price":
                 offbid.cleared_price = offbid.p_lambda
             elif auction_type == "second price":
-                if abs(lao) < self.zero_tol:
-                    offbid.cleared_price = offbid.p_lambda + min(fro, lab)
+                if abs(lao.price) < 1e-5:
+                    offbid.cleared_price = offbid.p_lambda + min(fro.price,
+                                                                 lab.price)
                 else:
-                    offbid.cleared_price = offbid.p_lambda + max(lao, frb)
+                    offbid.cleared_price = offbid.p_lambda + max(lao.price,
+                                                                 frb.price)
             elif auction_type == "split":
-                offbid.cleared_price = offbid.p_lambda + (lao - lab) / 2.0
+                split_price = (lao.price - lab.price) / 2.0
+                offbid.cleared_price = offbid.p_lambda + split_price
             elif auction_type == "dual laob":
-                raise NotImplementedError
+                if isinstance(offbid, Offer):
+                    offbid.cleared_price = offbid.p_lambda + lao.price
+                else:
+                    offbid.cleared_price = offbid.p_lambda + lab.price
 
         # Guarantee that cleared offer prices are >= offers.
         if self.guarantee_offer_price:
             for offer in offers:
-                if offer.price > offer.cleared_price:
+                if offer.cleared_price < offer.price:
                     offer.cleared_price = offer.price
 
         # Guarantee that cleared bid prices are <= bids.
         if self.guarantee_bid_price:
             for bid in bids:
-                if bid.price <= bid.cleared_price:
+                if bid.cleared_price > bid.price:
                     bid.cleared_price = bid.price
 
         # Clip cleared offer prices.
@@ -446,11 +463,25 @@ class SmartMarket(object):
                 if bid.cleared_price < min_cleared_bid:
                     bid.cleared_price = min_cleared_bid
 
-        # Make prices uniform after clipping (except for discrim auction)
-        # since clipping may only affect a single block of a multi-block
-        # generator.
-        if auction_type != "discriminatory":
-            raise NotImplementedError
+        # Make prices uniform across all offers/bids for each generator after
+        # clipping (except for discrim auction) since clipping may only affect
+        # a single block of a multi-block generator.
+        if auction_type != "discriminative":
+            for g in generators + vloads:
+                g_offers = [of for of in offers if of.generator == g]
+                if g_offers:
+                    uniform_price = max([of.price for of in g_offers])
+                    for of in g_offers:
+                        of.price = uniform_price
+
+                g_bids = [bid for bid in bids if bid.vload == g]
+                if g_bids:
+                    uniform_price = min([bid.price for bid in g_bids])
+                    for bid in g_bids:
+                        bid.price = uniform_price
+
+        # Return offers and bids with cleared quantities and prices.
+        return offers, bids
 
 
     def clear_quantity(self, offbids, gen):
@@ -464,9 +495,9 @@ class SmartMarket(object):
 
         # Offers/bids within valid price limits (not withheld).
         valid = [ob for ob in offbids if not ob.withheld]
+
         # Sort offers by price in ascending order and bids in decending order.
-        reverse = [False, True][gen.is_load]
-        valid.sort(key=lambda ob: ob.price, reverse=reverse)
+        valid.sort(key=lambda ob: ob.price, reverse=[False, True][gen.is_load])
 
         accepted_qty = 0.0
         for ob in valid:
@@ -624,13 +655,6 @@ class Offer(_OfferBid):
     def asset_name(self):
         return self.generator.name
 
-
-#    @property
-#    def total_quantity(self):
-#        """ Output at which the generator has been dispatched.
-#        """
-#        self.generator.p
-
 #------------------------------------------------------------------------------
 #  "Bid" class:
 #------------------------------------------------------------------------------
@@ -651,74 +675,38 @@ class Bid(_OfferBid):
     def asset_name(self):
         return self.vload.name
 
-#    @property
-#    def total_quantity(self):
-#        """ Output at which the generator has been dispatched.
-#        """
-#        self.vload.p
-
 #------------------------------------------------------------------------------
-#  "PriceLimit" class:
+#  "Dispatch" class:
 #------------------------------------------------------------------------------
 
-#class PriceLimit(object):
-#    """ Defines limits to offer/bid prices.
-#    """
-#
-#    def __init__(self, min_bid=None, max_offer=None, min_cleared_bid=None,
-#            max_cleared_offer=None):
-#        """ Initialises a new PriceLimit instance.
-#        """
-#        # Offers above this are withheld.
-#        self.max_offer = max_offer
-#
-#        # Bids below this are withheld.
-#        self.min_bid = min_bid
-#
-#        # Cleared offer prices above this are clipped.
-#        self.max_cleared_offer = max_cleared_offer
-#
-#        # Cleared bid prices below this are clipped.
-#        self.min_cleared_bid = min_cleared_bid
-#
-#        self.q_max_offer = max_offer
-#
-#        self.q_min_bid = min_bid
-#
-#        self.q_max_cleared_offer = max_cleared_offer
-#
-#        self.q_min_cleared_bid = min_cleared_bid
+class Dispatch(object):
+    """ Defines a container for results from the SmartMarket.
+    """
 
-#------------------------------------------------------------------------------
-#  "ContractsMarket" class:
-#------------------------------------------------------------------------------
+    def __init__(self, generator, quantity, price, fixed, variable, startup,
+                 shutdown):
+        """ Initialises a new Dispatch instance.
+        """
+        # Generator to which the dispatch applies.
+        self.generator = generator
 
-#class ContractsMarket(object):
-#    """ Defines a market for the formation of long-term bilateral contracts.
-#    """
-#    def __init__(self, buyers, sellers):
-#        """ Initialises a new ContractsMarket instance.
-#        """
-#        # Agents associated with Generator instances operating as dispatchable
-#        # loads and wishing to buy of electric energy.
-#        self.buyers = buyers
-#
-#        self.bids = {}
-#
-#        # Agents associated with generators that may contract to sell electric
-#        # energy to buyers.
-#        self.sellers = sellers
-#
-#        self.offers = {}
-#
-#
-#    def get_bids(self, agent):
-#        """ Returns proposals from buyers bidding to buy electric energy from
-#            the given seller 'agent'.
-#        """
-#        if self.bids.has_key(agent):
-#            return self.bids[agent]
-#        else:
-#            return matrix()
+        # Output level at which the generator has been despatched.
+        self.quantity = quantity
+
+        # Value at which the generator's output has been priced.
+        self.price = price
+
+        # Cost for the generator at zero output.
+        self.fixed = fixed
+
+        # Cost for the generator at the dispatched output level minus any fixed
+        # costs.
+        self.variable = variable
+
+        # Cost incurred due to starting up the generator.
+        self.startup = startup
+
+        # Cost incurred due to shutting down the generator.
+        self.shutdown = shutdown
 
 # EOF -------------------------------------------------------------------------
