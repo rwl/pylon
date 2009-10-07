@@ -161,7 +161,7 @@ if __name__ == "__main__":
     for handler in logger.handlers:
         logger.removeHandler(handler)
 
-    logger.addHandler(logging.StreamHandler(sys.stdout))
+#    logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
     unittest.main()

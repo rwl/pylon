@@ -370,15 +370,27 @@ class SmartMarket(object):
         # fro + lambda is equal to the first rejected offer.
         fro = rejected[0]  # First Rejected Offer
 
+        logger.info("LAO: %s, %.2f (%.2f), %.2f" %
+            (lao.asset_name, lao.quantity, lao.cleared_quantity, lao.price))
+        logger.info("FRO: %s, %.2f (%.2f), %.2f" %
+            (fro.asset_name, fro.quantity, fro.cleared_quantity, fro.price))
 
+
+        # Determine last accepted bid and first rejected bid.
         accepted_bids = [bid for bid in bids if bid.accepted]
-        accepted_bids.sort(key=lambda bid: bid.difference)#, reverse=True)
+        accepted_bids.sort(key=lambda bid: bid.difference, reverse=True)
 
         rejected_bids = [bid for bid in bids if not bid.accepted]
-        rejected_bids.sort(key=lambda bid: bid.difference)#, reverse=True)
+        rejected_bids.sort(key=lambda bid: bid.difference, reverse=True)
 
         lab = accepted_bids[-1] if accepted_bids else None # Last Accepted Bid
         frb = rejected_bids[0] if rejected_bids else None # First Rejected Bid
+
+        logger.info("LAB: %s, %.2f (%.2f), %.2f" %
+            (lab.asset_name, lab.quantity, lab.cleared_quantity, lab.price))
+        logger.info("FRB: %s, %.2f (%.2f), %.2f" %
+            (frb.asset_name, frb.quantity, frb.cleared_quantity, frb.price))
+
 
         # Cleared offer/bid prices for different auction types.
         for offbid in offers + bids:
@@ -452,8 +464,9 @@ class SmartMarket(object):
 
         # Offers/bids within valid price limits (not withheld).
         valid = [ob for ob in offbids if not ob.withheld]
-        # Sort offers/bids by price in ascending order.
-        valid.sort(key=lambda ob: ob.price)
+        # Sort offers by price in ascending order and bids in decending order.
+        reverse = [False, True][gen.is_load]
+        valid.sort(key=lambda ob: ob.price, reverse=reverse)
 
         accepted_qty = 0.0
         for ob in valid:
@@ -475,7 +488,7 @@ class SmartMarket(object):
 
             # Log the event.
             if ob.accepted:
-                logger.info("%s [%s, %.3f, %.3f] accepted at %.2fMW." %
+                logger.info("%s [%s, %.3f, %.3f] accepted at %.2f MWh." %
                     (ob.__class__.__name__, ob.asset_name, ob.quantity,
                      ob.price, ob.cleared_quantity))
             else:
