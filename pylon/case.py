@@ -527,6 +527,20 @@ class Generator(Named):
         return qtyprc
 
 
+    def adjust_limits(self):
+        """ Sets the active power limits, 'p_max' and 'p_min', according to the
+            pwl cost function points.
+        """
+        if not self.is_load:
+            self.p_max = max([point[0] for point in self.pwl_points])
+        else:
+            p_min = min([point[0] for point in self.pwl_points])
+            if self.p_min <= p_min <= self.p_max:
+                self.q_min = self.q_min * p_min / self.p_min
+                self.q_max = self.q_max * p_min / self.p_min
+            self.p_min = p_min
+
+
     def offers_to_pwl(self, offers):
         """ Updates the piece-wise linear total cost function using the given
             offer blocks.
@@ -539,21 +553,22 @@ class Generator(Named):
         # Fliter out zero quantity offers.
         valid = [offr for offr in g_offers if round(offr.quantity, 4) > 0.0]
 
+        # Ignore withheld offers.
+        valid = [offer for offer in valid if not offer.withheld]
+
         if valid:
             self.pwl_points = self._offbids_to_points(valid)
+
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
-            self.cost_model = "pwl"
 
-            self.p_max = max([point[0] for point in self.pwl_points])
+            self.cost_model = "pwl"
             self.online = True
         elif not self.is_load:
-#            logger.info("No valid offers for generator, shutting down.")
-            print "No valid offers for generator, shutting down."
+            logger.info("No valid offers for generator, shutting down.")
             self.online = False
         else:
-#            logger.info("No valid offers for generator.")
-            print "No valid offers for generator."
+            logger.info("No valid offers for generator.")
 
 
     def bids_to_pwl(self, bids):
@@ -568,6 +583,9 @@ class Generator(Named):
         # Filter out zero quantity bids.
         valid_bids = [bid for bid in vl_bids if round(bid.quantity, 4) > 0.0]
 
+        # Ignore withheld offers.
+        valid_bids = [bid for bid in valid_bids if not bid.withheld]
+
         if valid_bids:
             points = self._offbids_to_points(valid_bids)
 
@@ -580,13 +598,6 @@ class Generator(Named):
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
             self.cost_model = "pwl"
-
-            p_min = min([point[0] for point in self.pwl_points])
-            if self.p_min <= p_min <= self.p_max:
-                self.q_min = self.q_min * p_min / self.p_min
-                self.q_max = self.q_max * p_min / self.p_min
-
-            self.p_min = p_min
         elif self.is_load:
             logger.info("No valid bids for dispatchable load, shutting down.")
             self.online = False
@@ -607,6 +618,9 @@ class Generator(Named):
             m = offbid.price # $/MWh
             y2 = m * (x2 - x1) + y1
             points.append((x2, y2))
+
+        logger.info("Setting pwl cost function with %d segments" %
+                    (len(points) - 1))
 
         return points
 

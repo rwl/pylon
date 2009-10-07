@@ -383,6 +383,7 @@ class OfferBidToPWLTest(unittest.TestCase):
         for g in all_gens:
             g.offers_to_pwl(offers)
             g.bids_to_pwl(bids)
+            g.adjust_limits()
 
         # All dispatchable loads are shutdown as they have no bids.
         self.assertTrue(True not in [vl.online for vl in vloads])
@@ -433,6 +434,7 @@ class OfferBidToPWLTest(unittest.TestCase):
         for g in all_gens:
             g.offers_to_pwl(offers)
             g.bids_to_pwl(bids)
+            g.adjust_limits()
 
         self.assertFalse(gens[0].online)
         self.assertTrue(gens[1].online)
@@ -456,6 +458,7 @@ class OfferBidToPWLTest(unittest.TestCase):
         for g in all_gens:
             g.offers_to_pwl(offers)
             g.bids_to_pwl(bids)
+            g.adjust_limits()
 
         self.assertAlmostEqual(vloads[0].p_min, -20.0, places=1)
         self.assertAlmostEqual(vloads[0].q_min, -10.0, places=1)
@@ -503,6 +506,7 @@ class OfferBidToPWLTest(unittest.TestCase):
         for g in all_gens:
             g.offers_to_pwl(offers)
             g.bids_to_pwl(bids)
+            g.adjust_limits()
 
         self.assertEqual(len(gens[0].pwl_points), 2)
         self.assertEqual(len(gens[1].pwl_points), 3)
@@ -541,6 +545,8 @@ class OfferBidToPWLTest(unittest.TestCase):
 
         self.assertAlmostEqual(vloads[0].pwl_points[2][0], 0.0, places=1)
         self.assertAlmostEqual(vloads[0].pwl_points[2][1], 0.0, places=1)
+
+    # TODO: Implement test for ignoring withheld offers/bids.
 
 #------------------------------------------------------------------------------
 #  "LoadTest" class:
