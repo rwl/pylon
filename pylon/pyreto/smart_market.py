@@ -36,12 +36,6 @@ from pylon import UDOPF
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  Constants:
-#------------------------------------------------------------------------------
-
-BIG_NUMBER = 1e6
-
-#------------------------------------------------------------------------------
 #  "SmartMarket" class:
 #------------------------------------------------------------------------------
 
@@ -93,8 +87,8 @@ class SmartMarket(object):
         # 'first price'    - first price auction (marginal unit, offer or bid,
         #                    sets the price)
         # 'second price'   - second price auction (if offer is marginal, then
-        #                    price is set by min(FRO,LAB), if bid, then
-        #                    max(FRB,LAO)
+        #                    price is set by min(fro, lab), if bid, then
+        #                    max(frb, lao)
         # 'split'          - split the difference pricing (price set by last
         #                    accepted offer & bid)
         # 'dual laob'      - LAO sets seller price, LAB sets buyer price
@@ -123,6 +117,7 @@ class SmartMarket(object):
         # Guarantee that cleared bids are <= bids.
         self.guarantee_bid_price = True
 
+
         # Finish initialising the market.
         self.init()
 
@@ -132,9 +127,6 @@ class SmartMarket(object):
         """
         generators = [g for g in self.case.all_generators if not g.is_load]
         vloads     = [g for g in self.case.all_generators if g.is_load]
-
-        # Number of points to define piece-wise linear cost.
-#        n_points = max([len(offers), len(bids)]) + 1
 
         if not self.offers:
             # Create offers from the generator cost functions.
@@ -158,10 +150,6 @@ class SmartMarket(object):
         generators = [g for g in all_generators if not g.is_load]
         vloads     = [g for g in all_generators if g.is_load]
 
-        # Eliminates offers (but not bids) above 'price_cap'.
-        limits['max_offer'] = self.price_cap
-        limits['max_cleared_offer'] = self.price_cap
-
         if [offbid for offbid in offers + bids if offbid.reactive]:
             have_q = True
             raise NotImplementedError, "Combined active/reactive power " \
@@ -176,6 +164,11 @@ class SmartMarket(object):
 #                "constant power factor dispatchable loads are only "
 #                "implemented for 'discriminative', 'lao' and 'first price' "
 #                "auction types.")
+
+
+        # Eliminates offers (but not bids) above 'price_cap'.
+        limits['max_offer'] = self.price_cap
+        limits['max_cleared_offer'] = self.price_cap
 
         # Withhold offers/bids outwith optional price limits.
         self.enforce_limits(offers, bids, limits)
@@ -260,18 +253,14 @@ class SmartMarket(object):
 
         # Compute quantities, prices and costs.
         if success:
-            # Get nodal marginal prices from OPF.
-#            p_lambda = spdiag([bus.p_lambda for bus in buses])
-#            q_lambda = spdiag([bus.q_lambda for bus in buses])
-
             # Guarantee that cleared offers are >= offers.
             self.guarantee_offer_price = True
 
             for offer in offers:
-                # Locate the bus to which the generator is connected.
+                # Locate the bus to which the offer's generator is connected.
                 for bus in buses:
                     if offer.generator in bus.generators:
-                        break
+                        break # Go with the first one found.
                 else:
                     logger.error("Generator bus not found.")
 
@@ -308,7 +297,7 @@ class SmartMarket(object):
                     # Guarantee that cleared bids are <= bids.
                     self.guarantee_bid_price = True
 
-                bid.total_quantity = bid.vload.p
+                bid.total_quantity = -bid.vload.p
 
             # Clear bids and offers.
             cleared_offers, cleared_bids = self.auction(offers, bids)
@@ -346,43 +335,17 @@ class SmartMarket(object):
                 R. Zimmerman, 'extras/smartmarket/auction.m', MATPOWER,
                 Cornell, version 3.2, http://www.pserc.cornell.edu/matpower
         """
-#        offers = self.offers
-#        bids = self.bids
-        limits = self.limits
         generators = [g for g in self.case.all_generators if not g.is_load]
         vloads     = [g for g in self.case.all_generators if g.is_load]
 
-        # Enforce price limits.
-#        if limits.has_key("max_offer"):
-#            for offer in offers:
-#                if offer.price >= limits["max_offer"]:
-#                    logger.info("Offer price [%.2f] above limit [%.3f], "
-#                        "withholding." % (offer.price, limits["max_offer"]))
-#                    offer.withheld = True
-
-#        if limits.has_key("min_bid"):
-#            for bid in bids:
-#                if bid.price <= limits["min_bid"]:
-#                    logger.info("Bid price [%.2f] below limit [%.2f], "
-#                        "withholding." % (bid.price, limits["min_bid"]))
-#                    bid.withheld = True
-
         for g in generators:
-            g_offers = [offer for offer in offers if offer.generator == g]
-            self.clear_quantity(g_offers)
+            self.clear_quantity(offers, g)
 
         for vl in vloads:
-            vl_bids = [bid for bid in bids if bid.vload == vl]
-            self.clear_quantity(vl_bids)
-
-        print [ob.cleared_quantity for ob in offers]
-
-        # Initialise cleared prices.
-#        for offbid in offers + bids:
-#            offbid.cleared_price = 0.0
+            self.clear_quantity(bids, vl)
 
         # Compute shift values to add to lam to get desired pricing.
-
+        #
         # The locationally adjusted offer/bid price, when normalized to an
         # arbitrary reference location where lambda is equal to ref_lam, is:
         #     norm_prc = prc + (ref_lam - lam)
@@ -391,33 +354,31 @@ class SmartMarket(object):
         #     diff = norm_prc - ref_lam = prc - lam
         # This diff represents the gap between the marginal unit (setting
         # lambda) and the offer/bid price in question.
-        accepted = []
-        rejected = []
-        for offer in offers:
-            if offer.withheld:
-                lao = offer.difference
-                fro = BIG_NUMBER
-            else:
-                lao = -BIG_NUMBER
-                fro = offer.difference
-            accepted.append(lao)
-            rejected.append(fro)
+        #
+        # Rejected offers will have a positive diff and the lao has the least
+        # negative diff.
+        accepted = [of for of in offers if of.accepted]
+        rejected = [of for of in offers if not of.accepted]
 
-        lao = max(accepted)
-        fro = min(rejected)
+        # Sort according to the difference between the offer price and the
+        # reference nodal marginal price in ascending order.
+        accepted.sort(key=lambda x: x.difference)
+        rejected.sort(key=lambda x: x.difference)
 
         # lao + lambda is equal to the last accepted offer.
-        lao = max([offer.difference for offer in offers])
+        lao = accepted[-1] # Last Accepted Offer
         # fro + lambda is equal to the first rejected offer.
-        fro = min([offer.difference for offer in offers])
+        fro = rejected[0]  # First Rejected Offer
 
-        if bids:
-            # lab + lambda is equal to the last accepted bid.
-            lab = min([bid.difference for bid in bids])
-            # frb + lambda is equal to the first rejected bid.
-            frb = max([bid.difference for bid in bids])
-        else:
-            lab = frb = BIG_NUMBER
+
+        accepted_bids = [bid for bid in bids if bid.accepted]
+        accepted_bids.sort(key=lambda bid: bid.difference)#, reverse=True)
+
+        rejected_bids = [bid for bid in bids if not bid.accepted]
+        rejected_bids.sort(key=lambda bid: bid.difference)#, reverse=True)
+
+        lab = accepted_bids[-1] if accepted_bids else None # Last Accepted Bid
+        frb = rejected_bids[0] if rejected_bids else None # First Rejected Bid
 
         # Cleared offer/bid prices for different auction types.
         for offbid in offers + bids:
@@ -458,16 +419,16 @@ class SmartMarket(object):
                     bid.cleared_price = bid.price
 
         # Clip cleared offer prices.
-        if limits.has_key("max_cleared_offer"):
-            max_cleared_offer = limits["max_cleared_offer"]
+        if self.limits.has_key("max_cleared_offer"):
+            max_cleared_offer = self.limits["max_cleared_offer"]
 
             for offer in offers:
                 if offer.cleared_price > max_cleared_offer:
                     offer.cleared_price = max_cleared_offer
 
         # Clip cleared bid prices.
-        if limits.has_key("min_cleared_bid"):
-            min_cleared_bid = limits["min_cleared_bid"]
+        if self.limits.has_key("min_cleared_bid"):
+            min_cleared_bid = self.limits["min_cleared_bid"]
 
             for bid in bids:
                 if bid.cleared_price < min_cleared_bid:
@@ -480,41 +441,50 @@ class SmartMarket(object):
             raise NotImplementedError
 
 
-    def clear_quantity(self, offbids):
+    def clear_quantity(self, offbids, gen):
         """ Computes the cleared bid quantity from total cleared quantity.
         """
-        # Filter out zero quantity offers/bids.
-        offbids = [ob for ob in offbids if round(ob.quantity, 4) > 0.0]
+        # Filter out offers/bids not applicable to the generator in question.
+        if gen.is_load:
+            offbids = [offer for offer in offbids if offer.vload == gen]
+        else:
+            offbids = [offer for offer in offbids if offer.generator == gen]
 
         # Offers/bids within valid price limits (not withheld).
         valid = [ob for ob in offbids if not ob.withheld]
-
-
-        # Get the total output that the generator has been dispatched at by
-        # the OPF routine.
-        total_quantity = offbids[0].total_quantity
-
-        # Total quantity offered/bid for.
-        ob_quantity = sum([ob.quantity for ob in offbids])
-
         # Sort offers/bids by price in ascending order.
-        valid.sort(key=lambda x: x.price)
+        valid.sort(key=lambda ob: ob.price)
 
-        for offbid in valid:
+        accepted_qty = 0.0
+        for ob in valid:
             # Compute the fraction of the block accepted.
-            accepted = (total_quantity - ob_quantity) / offbid.quantity
+            accepted = (ob.total_quantity - accepted_qty) / ob.quantity
+
             # Clip to the range 0-1.
             if accepted > 1.0:
                 accepted = 1.0
             elif accepted < 1.0e-05:
                 accepted = 0.0
 
-            offbid.cleared_quantity = accepted * offbid.quantity
+            ob.cleared_quantity = accepted * ob.quantity
 
             if accepted > 0.0:
-                offbid.accepted = True
+                ob.accepted = True
             else:
-                offbid.accepted = False
+                ob.accepted = False
+
+            # Log the event.
+            if ob.accepted:
+                logger.info("%s [%s, %.3f, %.3f] accepted at %.2fMW." %
+                    (ob.__class__.__name__, ob.asset_name, ob.quantity,
+                     ob.price, ob.cleared_quantity))
+            else:
+                logger.info("%s [%s, %.3f, %.3f] rejected." %
+                    (ob.__class__.__name__, ob.asset_name, ob.quantity,
+                     ob.price))
+
+            # Increment the accepted quantity.
+            accepted_qty += ob.quantity
 
 
     def enforce_limits(self, offers, bids, limits):
@@ -637,6 +607,10 @@ class Offer(_OfferBid):
         # Generating unit to which the offer applies.
         self.generator = generator
 
+    @property
+    def asset_name(self):
+        return self.generator.name
+
 
 #    @property
 #    def total_quantity(self):
@@ -660,6 +634,9 @@ class Bid(_OfferBid):
         # Dispatchable load to which the bid applies.
         self.vload = vload
 
+    @property
+    def asset_name(self):
+        return self.vload.name
 
 #    @property
 #    def total_quantity(self):

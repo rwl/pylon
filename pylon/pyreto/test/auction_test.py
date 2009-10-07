@@ -155,7 +155,7 @@ if __name__ == "__main__":
 #    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
 #        format="%(levelname)s: %(message)s")
 
-    logger = logging.getLogger('pylon.pyreto')
+    logger = logging.getLogger('pylon.pyreto.smart_market')
 
     # Remove PyBrain handlers.
     for handler in logger.handlers:
