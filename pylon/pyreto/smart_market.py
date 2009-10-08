@@ -111,6 +111,9 @@ class SmartMarket(object):
         # Guarantee that cleared bids are <= bids.
         self.guarantee_bid_price = True
 
+        # Results of the settlement process. A list of Dispatch objects.
+        self.settlement = []
+
 
         # Finish initialising the market.
         self.init()
@@ -316,8 +319,8 @@ class SmartMarket(object):
 
 
         t = self.period
+        settlement = self.settlement = []
 
-        settlement = []
         for i, g in enumerate(all_generators):
             g_offbids = [ob for ob in offers + bids if ob.generator == g]
 

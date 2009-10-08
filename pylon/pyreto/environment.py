@@ -23,11 +23,11 @@
 #------------------------------------------------------------------------------
 
 from scipy import array
-from pybrain.rl.environments import Environment
+#from pybrain.rl.environments import Environment
 from pybrain.rl.environments.graphical import GraphicalEnvironment
 
-from pylon import Generator
-from pylon.pyreto.smart_market import SmartMarket, Offer, Bid
+#from pylon import Generator
+from pylon.pyreto.smart_market import Offer, Bid
 
 #------------------------------------------------------------------------------
 #  "ParticipantEnvironment" class:
@@ -46,10 +46,10 @@ class ParticipantEnvironment(GraphicalEnvironment):
     #--------------------------------------------------------------------------
 
     # The number of action values the environment accepts.
-    indim = 1
+#    indim = 2
 
     # The number of sensor values the environment produces.
-    outdim = 1
+#    outdim = 1
 
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -58,21 +58,20 @@ class ParticipantEnvironment(GraphicalEnvironment):
     def __init__(self, asset, market, render=True):
         """ Initialises the environment.
         """
-        assert isinstance(asset, Generator)
-        assert isinstance(market, SmartMarket)
+#        assert isinstance(asset, Generator)
+#        assert isinstance(market, SmartMarket)
 
         super(ParticipantEnvironment, self).__init__()
 
-        # Energy network in which the asset operates.
-#        self.power_system = power_system
         # Generator instance that the agent controls.
         self.asset = asset
+
         # Auction that clears offer and bids using OPF results.
         self.market = market
+
         # A nonnegative amount of money.
 #        money = 100
 
-        # Store on initialisation as they are set in perfromAction().
         # Positive production capacity.
 #        self.p_max = asset.p_max
 #        self.p_min = asset.p_min
@@ -82,10 +81,8 @@ class ParticipantEnvironment(GraphicalEnvironment):
         # Amortised fixed costs.
 #        self.c_startup = asset.c_startup
 #        self.c_shutdown = asset.c_shutdown
-        # Total number of agents.
-#        self.n_agents = n_agents
 
-#        if asset.mode == "":
+#        if asset.is_load:
 #            # Income received each periods.
 #            self.endowment_profile = 10
 #            # Needs and preferences for power consumption each period.
@@ -101,14 +98,16 @@ class ParticipantEnvironment(GraphicalEnvironment):
 #            self.updateDone = True
 #            self.updateLock=threading.Lock()
 
-    def get_demand(self):
-        """ Returns the total system demand including dispatchable loads.
-        """
-        n = self.market.case
-        l  = sum( [load.p for load in case.online_loads] )
-        vl = sum( [g.p for g in case.online_generators if g.is_load()] )
+        # Set the number of action values that the environment accepts.
+        self.indim = 2
 
-        return l + vl
+        # Set the number of sensor values that the environment produces.
+        case = market.case
+        outdim = 0
+        outdim += 1 # Total system cost.
+        outdim += 1 # Previous bid quantity.
+        outdim += len(case.branches)
+        self.outdim = outdim
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -120,18 +119,32 @@ class ParticipantEnvironment(GraphicalEnvironment):
         """
         g = self.asset
         mkt = self.market
+        case = mkt.case
 
+        # Get sensor info from the previous settlement process.
+        settlement = [d for d in mkt.settlement if d.generator == g]
+        if settlement:
+            dispatch = settlement[0]
+            system_cost = dispatch.f
+        else:
+            system_cost = 0.0
+
+        # Get sensor info from previous offers/bids.
         offerbids = [ob for ob in mkt.offers + mkt.bids if ob.generator == g]
+        if offerbids:
+            offbid = offerbids[0]
+            previous_qty = offbid.quantity
+        else:
+            previous_qty = 0.0
 
-        demand = self.get_demand()
 
-        c_system = self.market.c_system
+        flows = [b.p_source for b in case.branches]
 
-        if self.hasRenderer():
-            data = (demand, None, None, None)
-            self.getRenderer().updateData(data, False)
+#        if self.hasRenderer():
+#            data = (demand, None, None, None)
+#            self.getRenderer().updateData(data, False)
 
-        return array([demand])
+        return array([system_cost, previous_qty] + flows)
 
 
     def performAction(self, action):
@@ -140,8 +153,18 @@ class ParticipantEnvironment(GraphicalEnvironment):
             @type action: array: [ qty, prc, qty, prc, ... ]
         """
         for i in len(action) / 2:
-            ob = OfferBid(self.asset, qty=action[i * 2], prc=action[i * 2 + 1])
-            self.market.submit(ob)
+            asset = self.asset
+            mkt = self.market
+
+            qty = action[i * 2]
+            prc = action[i * 2 + 1]
+
+            if not asset.is_load:
+                offer = Offer(asset, qty, prc)
+                mkt.offers.append(offer)
+            else:
+                bid = Bid(asset, qty, prc)
+                mkt.bids.append(bid)
 
         if self.hasRenderer():
             data = (None, action[0], None, None)
@@ -151,15 +174,6 @@ class ParticipantEnvironment(GraphicalEnvironment):
     def reset(self):
         """ Reinitialises the environment.
         """
-        # Rest the asset parameters.
-#        self.asset.p_max = self.p_max
-#        self.asset.p_min = self.p_min
-#        self.asset.cost_coeffs = self.cost_coeffs
-
-        # Reset the load profile for each online load.
-#        for load in self.power_system.online_loads:
-#            load.reset_profile()
-
         self.market.init()
 
 # EOF -------------------------------------------------------------------------

@@ -42,14 +42,12 @@ class ProfitTask(Task):
         Task.__init__(self, environment)
 
         # Limits for scaling of sensors.
-        power_sys = environment.power_system
-        base_mva = power_sys.base_mva
-        sensor_max = [l.p_max for l in power_sys.online_loads]
         self.sensor_limits = None#[(0.000, sensor_max)]
 
         # Limits for scaling of actors.
-        asset = environment.asset
-        self.actor_limits = None#[(asset.p_min, asset.p_max)]
+#        mkt = environment.market
+#        price_cap = mkt.price_cap
+        self.actor_limits = None#[(asset.p_min, price_cap)]
 
 
     def performAction(self, action):
@@ -68,8 +66,8 @@ class ProfitTask(Task):
             environment.
         """
         sensors = Task.getObservation(self)
-        logger.debug("Profit task [%s] normalised sensors: %s" %
-                     (self.env.asset.name, sensors))
+#        logger.debug("Profit task [%s] normalised sensors: %s" %
+#                     (self.env.asset.name, sensors))
         return sensors
 
 
@@ -78,34 +76,16 @@ class ProfitTask(Task):
             performed.
         """
         g = self.env.asset
-        t = self.env.market.period
-        g_online = self.env.market.g_online
+        mkt = self.env.market
 
-        offerbids = [ob for ob in mkt.offers + mkt.bids if ob.generator == g]
-
-        pay = sum( [ob.cleared_quantity * ob.cleared_price * t \
-                    for ob in offerbids] )
-
-        # Costs for the period (not per hour).
-        c_fixed = g.total_cost(0.0) * t
-        c_variable = (g.total_cost(ob.cleared_quantity) - c_fixed) * t
-        # Startup and shutdown costs.
-        g_idx = self.env.market.case.all_generators.index(g)
-        if not bool(g_online[g_idx]) and g.online:
-            # The generator has been started up.
-            c_updown = g.c_startup
-        elif bool(g_online[g_idx]) and not g.online:
-            # The generator has been turned off.
-            c_updown = g.c_shutdown
+        g_settlement = [d for d in mkt.settlement if d.generator == g]
+        if g_settlement:
+            dispatch = g_settlement[0]
         else:
-            c_updown = 0.0
+            raise ValueError, "Dispatch not found."
 
-        cost = c_fixed + c_variable + c_updown
+        logger.debug("Profit task [%s] reward: %s" % (g.name, d.earnings))
 
-        earnings = pay - cost
-
-        logger.debug("Profit task [%s] reward: %s" % (g.name, earnings))
-
-        return array([earnings])
+        return array([d.earnings])
 
 # EOF -------------------------------------------------------------------------

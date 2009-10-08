@@ -26,9 +26,6 @@
 import sys
 import logging
 
-from numpy import array, zeros
-
-from pylon import Case, DCOPF
 from pylon.readwrite import ReSTWriter
 
 logger = logging.getLogger(__name__)
@@ -45,25 +42,19 @@ class MarketExperiment(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, tasks, agents, power_system, routine=None, steps=1):
+    def __init__(self, tasks, agents, market):
         """ Initialises the market experiment.
         """
         assert len(tasks) == len(agents)
 
+        # Tasks associate and agent with its environment.
         self.tasks = tasks
+
         # Agents capable of producing actions based on previous observations.
         self.agents = agents
-        # The power system model containing the agent's assets.
-        self.power_system = power_system
 
-        # Routine for solving the OPF problem.
-        if routine is None:
-            self.routine = DCOPF(show_progress=False)
-        else:
-            self.routine = routine
-
-        # Number of interactions to perform.
-        self.steps = steps
+        # Market to which agents submit offers/bids.
+        self.market = market
 
         self.stepid = 0
 
@@ -83,39 +74,32 @@ class MarketExperiment(object):
 
                 self.stepid += 1
                 observation = task.getObservation()
-                logger.debug("Agent [%s] integrating observation: %s" %
-                             (agent.name, observation))
+#                logger.debug("Agent [%s] integrating observation: %s" %
+#                             (agent.name, observation))
                 agent.integrateObservation(observation)
 
                 action = agent.getAction()
-                logger.debug("Agent [%s] performing action: %s" %
-                             (agent.name, action))
+#                logger.debug("Agent [%s] performing action: %s" %
+#                             (agent.name, action))
                 task.performAction(action)
+
+#            writer.write_generator_data(self.power_system, sys.stdout)
+
+
+            # Clear the market.
+            self.market.clear()
 
 
 #            writer.write_generator_data(self.power_system, sys.stdout)
 
-            # Optimise the power system model.
-            success = self.routine(self.power_system)
-
-            writer.write_generator_data(self.power_system, sys.stdout)
-
-            if not success:
-                logger.debug("No solution for interaction: %d" % interaction)
-
-                if logger.handlers:
-                    stream = logger.handlers[0].stream
-                else:
-                    stream = sys.stdout
-
-                writer.write_generator_data(self.power_system, stream)
 
             # Reward each agent appropriately.
             for i, agent in enumerate(self.agents):
                 task   = self.tasks[i]
+
                 reward = task.getReward()
-                logger.debug("Agent [%s] receiving reward: %s" %
-                             (agent.name, reward))
+#                logger.debug("Agent [%s] receiving reward: %s" %
+#                             (agent.name, reward))
 
                 if task.env.hasRenderer():
                     data = (None, None, reward[0], None)
@@ -125,12 +109,12 @@ class MarketExperiment(object):
 
             # Instruct each agent to learn from it's actions.
             for agent in self.agents:
-                logger.debug("Agent [%s] being instructed to learn." %
-                             agent.name)
+#                logger.debug("Agent [%s] being instructed to learn." %
+#                             agent.name)
                 agent.learn()
 
-                logger.debug("Module [%s] parameters: %s" %
-                             (agent.module.name, agent.module.params))
+#                logger.debug("Module [%s] parameters: %s" %
+#                             (agent.module.name, agent.module.params))
 
                 if task.env.hasRenderer():
                     data = (None, None, None, agent.module.params[0])
