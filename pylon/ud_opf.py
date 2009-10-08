@@ -77,7 +77,7 @@ class UDOPF(object):
         """
         # Use DC OPF routine?
         self.dc = dc
-        self._routine = None
+        self.routine = None
 
         # Optimised case.
         self.case = case
@@ -105,7 +105,13 @@ class UDOPF(object):
     def __call__(self, case):
         """ Calls the routine with the given case.
         """
-        self.solve(case)
+        return self.solve(case)
+
+    @property
+    def f(self):
+        """ Objective function value. Delegates to the routine used.
+        """
+        return self.routine.f
 
 
     def solve(self, case=None):
@@ -168,14 +174,13 @@ class UDOPF(object):
         feastol = self.feasibility_tol
 
         if self.dc:
-            routine = DCOPF(case, solver, progress, itermax, abstol, reltol,
-                feastol)
+            routine = self.routine = DCOPF(case, solver, progress, itermax,
+                                           abstol, reltol, feastol)
         else:
-            routine = ACOPF(case, solver, progress, itermax, abstol, reltol,
-                feastol)
+            routine = self.routine = ACOPF(case, solver, progress, itermax,
+                                           abstol, reltol, feastol)
 
-        self._routine = routine
-
+        # Initial solve fo the OPF problem.
         success = routine(case)
 
         if not success:
@@ -259,9 +264,11 @@ class UDOPF(object):
         for i, generator in enumerate(case.all_generators):
             generator.online = overall_online[i]
 
+        # One final solve using the best case to ensure all results are
+        # up-to-date.
         success = routine(case)
 
-        # Compute elapsed time.
+        # Compute elapsed time and log it.
         elapsed = self.elapsed = time.time() - t0
         plural = "" if i_stage == 1 else "s"
         logger.info("Unit decommitment OPF passed %d decommitment stage%s and "

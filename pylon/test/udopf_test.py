@@ -66,7 +66,7 @@ class UOPFTestCase(unittest.TestCase):
         self.assertAlmostEqual(generators[1].p, 110.80, places=2)
         self.assertAlmostEqual(generators[2].p,  99.20, places=2)
 
-        self.assertAlmostEqual(self.routine._routine.f, 2841.59, places=2)
+        self.assertAlmostEqual(self.routine.routine.f, 2841.59, places=2)
 
 
     def test_pwl(self):
