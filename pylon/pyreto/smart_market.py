@@ -54,7 +54,7 @@ class SmartMarket(object):
         self.case = case
 
         # Offers to sell a quantity of power at a particular price.
-        if offers is None:
+        if offers:
             self.offers = offers
         else:
             self.offers = []
@@ -66,7 +66,7 @@ class SmartMarket(object):
             self.bids = []
 
         # Offer/bid limits.
-        if limits is None:
+        if limits:
             self.limits = limits
         else:
             self.limits = {}
@@ -242,7 +242,8 @@ class SmartMarket(object):
 
 
         # Solve the optimisation problem.
-        success = UDOPF(dc=self.loc_adjust=="dc").solve(self.case)
+        routine = UDOPF(dc=self.loc_adjust == "dc")
+        success = routine(self.case)
 
 
         # Compute quantities, prices and costs.
@@ -315,38 +316,50 @@ class SmartMarket(object):
 
 
         t = self.period
-        for i, g in enumerate(generators):
-            g_offers = [offer for offer in offers if offer.generator == g]
 
-            g_quantity = g.p
+        settlement = []
+        for i, g in enumerate(all_generators):
+            g_offbids = [ob for ob in offers + bids if ob.generator == g]
 
-            totclrqty = sum([offer.cleared_quantity for offer in g_offers])
-            g_price = sum([of.cleared_quantity * of.cleared_price / totclrqty
-                           for of in g_offers])
+            if not g_offbids: continue
+
+            quantity = g.p
+
+            totclrqty = sum([offer.cleared_quantity for offer in g_offbids])
+            if totclrqty == 0.0:
+                price = totclrqty
+            else:
+                price = sum([of.cleared_quantity * of.cleared_price / totclrqty
+                             for of in g_offers])
+
+            print price
 
             # Compute costs in $ (not $/hr).
             fixed_cost = t * g.total_cost(0.0)
 
-            variable_cost = (t * g.p_cost()) - fixed_cost
+            variable_cost = (t * g.p_cost) - fixed_cost
 
             if not self.g_online[i] and g.online:
                 startup_cost = g.total_cost(g.c_startup)
                 shutdown_cost = 0.0
+
             elif self.g_online[i] and not g.online:
                 startup_cost = 0.0
                 shutdown_cost = g.total_cost(g.c_shutdown)
+
             else:
                 startup_cost = 0.0
                 shutdown_cost = 0.0
 
-            d = Dispatch(g, g_quantity, g_price, fixed_cost, variable_cost,
-                         startup_cost, shutdown_cost)
+            d = Dispatch(g, t, routine.f, quantity, price, fixed_cost,
+                         variable_cost, startup_cost, shutdown_cost)
 
+            settlement.append(d)
 
         elapsed = time.time() - t0
         logger.info("SmartMarket cleared in %.3fs" % elapsed)
 
-        return True
+        return settlement
 
 
     def auction(self, offers, bids):
@@ -354,7 +367,7 @@ class SmartMarket(object):
             network losses and binding constraints.
 
             References:
-                R. Zimmerman, 'extras/smartmarket/auction.m', MATPOWER,
+                R. D. Zimmerman, 'extras/smartmarket/auction.m', MATPOWER,
                 Cornell, version 3.2, http://www.pserc.cornell.edu/matpower
         """
         generators = [g for g in self.case.all_generators if not g.is_load]
@@ -382,9 +395,9 @@ class SmartMarket(object):
         fro = rejected[0]  # First Rejected Offer
 
         logger.info("LAO: %s, %.2f (%.2f), %.2f" %
-            (lao.asset_name, lao.quantity, lao.cleared_quantity, lao.price))
+            (lao.generator.name, lao.quantity, lao.cleared_quantity, lao.price))
         logger.info("FRO: %s, %.2f (%.2f), %.2f" %
-            (fro.asset_name, fro.quantity, fro.cleared_quantity, fro.price))
+            (fro.generator.name, fro.quantity, fro.cleared_quantity, fro.price))
 
 
         # Determine last accepted bid and first rejected bid.
@@ -398,9 +411,9 @@ class SmartMarket(object):
         frb = rejected_bids[0] if rejected_bids else None # First Rejected Bid
 
         logger.info("LAB: %s, %.2f (%.2f), %.2f" %
-            (lab.asset_name, lab.quantity, lab.cleared_quantity, lab.price))
+            (lab.generator.name, lab.quantity, lab.cleared_quantity, lab.price))
         logger.info("FRB: %s, %.2f (%.2f), %.2f" %
-            (frb.asset_name, frb.quantity, frb.cleared_quantity, frb.price))
+            (frb.generator.name, frb.quantity, frb.cleared_quantity, frb.price))
 
 
         # Cleared offer/bid prices for different auction types.
@@ -520,11 +533,11 @@ class SmartMarket(object):
             # Log the event.
             if ob.accepted:
                 logger.info("%s [%s, %.3f, %.3f] accepted at %.2f MWh." %
-                    (ob.__class__.__name__, ob.asset_name, ob.quantity,
+                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
                      ob.price, ob.cleared_quantity))
             else:
                 logger.info("%s [%s, %.3f, %.3f] rejected." %
-                    (ob.__class__.__name__, ob.asset_name, ob.quantity,
+                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
                      ob.price))
 
             # Increment the accepted quantity.
@@ -589,7 +602,10 @@ class _OfferBid(object):
         power at a defined price.
     """
 
-    def __init__(self, qty, prc, reactive=False):
+    def __init__(self, generator, qty, prc, reactive=False):
+        # Generating unit (dispatchable load) to which the offer (bid) applies.
+        self.generator = generator
+
         # Quantity of power bidding to be bought.
         self.quantity = qty
 
@@ -640,40 +656,33 @@ class _OfferBid(object):
 #------------------------------------------------------------------------------
 
 class Offer(_OfferBid):
-    """ Defines a offer to sell a quantity of power at a defined price.
+    """ Defines a offer to sell a quantity of power at a specified price.
     """
 
     def __init__(self, generator, qty, prc, reactive=False):
         """ Initialises a new Offer instance.
         """
-        super(Offer, self).__init__(qty, prc, reactive)
-
-        # Generating unit to which the offer applies.
-        self.generator = generator
-
-    @property
-    def asset_name(self):
-        return self.generator.name
+        super(Offer, self).__init__(generator, qty, prc, reactive)
 
 #------------------------------------------------------------------------------
 #  "Bid" class:
 #------------------------------------------------------------------------------
 
 class Bid(_OfferBid):
-    """ Defines a bid to buy a quantity of power at a defined price.
+    """ Defines a bid to buy a quantity of power at a specified price.
     """
 
     def __init__(self, vload, qty, prc, reactive=False):
         """ Initialises a new Bid instance.
         """
-        super(Bid, self).__init__(qty, prc, reactive)
-
-        # Dispatchable load to which the bid applies.
-        self.vload = vload
+        super(Bid, self).__init__(vload, qty, prc, reactive)
 
     @property
-    def asset_name(self):
-        return self.vload.name
+    def vload(self):
+        """ Dispatchable load to which the bid applies. Synonym for the
+            'generator' attribute.
+        """
+        return self.generator
 
 #------------------------------------------------------------------------------
 #  "Dispatch" class:
@@ -683,12 +692,18 @@ class Dispatch(object):
     """ Defines a container for results from the SmartMarket.
     """
 
-    def __init__(self, generator, quantity, price, fixed, variable, startup,
-                 shutdown):
+    def __init__(self, generator, period, f, quantity, price, fixed, variable,
+                 startup, shutdown):
         """ Initialises a new Dispatch instance.
         """
         # Generator to which the dispatch applies.
         self.generator = generator
+
+        # Time duration of the dispatch period in hours.
+        self.period = period
+
+        # Objective function value (total system cost).
+        self.f = f
 
         # Output level at which the generator has been despatched.
         self.quantity = quantity
@@ -708,5 +723,29 @@ class Dispatch(object):
 
         # Cost incurred due to shutting down the generator.
         self.shutdown = shutdown
+
+        # Penalty costs incurred. Not currently used.
+        self.penalty = 0.0
+
+    @property
+    def revenue(self):
+        """ Returns the value in dollars of producing the dispatched quantity
+            at the cleared price over the period of the auction.
+        """
+        return self.quantity * self.price * self.period
+
+    @property
+    def total_cost(self):
+        """ Returns the sum of the fixed, variable, startup and shutdown costs,
+            plus any incurred penalties.
+        """
+        return sum([self.fixed, self.variable, self.startup, self.shutdown,
+                   self.penalty])
+
+    @property
+    def earnings(self):
+        """ Returns the revenue minus incurred costs.
+        """
+        self.revenue - self.total_cost
 
 # EOF -------------------------------------------------------------------------
