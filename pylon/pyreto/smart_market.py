@@ -743,12 +743,12 @@ class Dispatch(object):
             plus any incurred penalties.
         """
         return sum([self.fixed, self.variable, self.startup, self.shutdown,
-                   self.penalty])
+                    self.penalty])
 
     @property
     def earnings(self):
         """ Returns the revenue minus incurred costs.
         """
-        self.revenue - self.total_cost
+        return self.revenue - self.total_cost
 
 # EOF -------------------------------------------------------------------------
