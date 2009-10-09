@@ -807,8 +807,8 @@ class DCOPF(object):
         for i, bus in enumerate(buses):
             bus.p_lambda = eqlin[i + 1] / base_mva
             bus.q_lambda = 0.0
-            bus.mu_v_min = 0.0
-            bus.mu_v_max = 0.0
+            bus.mu_vmin = 0.0
+            bus.mu_vmax = 0.0
 
         for j, branch in enumerate(branches):
             # TODO: Find multipliers for lower and upper bound constraints.
@@ -816,8 +816,8 @@ class DCOPF(object):
             branch.mu_s_target = 0.0
 
         for k, generator in enumerate(generators):
-            generator.mu_p_min = ineqlin[k] / base_mva
-            generator.mu_p_max = ineqlin[k + n_generators] / base_mva
+            generator.mu_pmin = ineqlin[k] / base_mva
+            generator.mu_pmax = ineqlin[k + n_generators] / base_mva
             generator.mu_q_min = 0.0
             generator.mu_q_max = 0.0
 
@@ -827,8 +827,8 @@ class DCOPF(object):
             branch.mu_s_target = 0.0
 
         for generator in offline_generators:
-            generator.mu_p_min = 0.0
-            generator.mu_p_max = 0.0
+            generator.mu_pmin = 0.0
+            generator.mu_pmax = 0.0
             generator.mu_q_min = 0.0
             generator.mu_q_max = 0.0
 
