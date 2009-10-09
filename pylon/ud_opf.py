@@ -211,7 +211,7 @@ class UDOPF(object):
             # Get candidates for shutdown. Lagrangian multipliers are often
             # very small so we round to four decimal places.
             candidates = [g for g in case.online_generators if \
-                          (g.mu_p_min > 0.0) and (g.p_min > 0.0)]
+                          (g.mu_pmin > 0.0) and (g.p_min > 0.0)]
 
             if not candidates: break
 
