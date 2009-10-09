@@ -22,6 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import logging
 import scipy
 
 #from pybrain.rl.environments import Environment
@@ -29,6 +30,8 @@ from pybrain.rl.environments.graphical import GraphicalEnvironment
 
 #from pylon import Generator
 from pylon.pyreto.smart_market import Offer, Bid
+
+logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  "ParticipantEnvironment" class:
@@ -134,14 +137,17 @@ class ParticipantEnvironment(GraphicalEnvironment):
         case = mkt.case
 
         # Dispatch related sensors.
-        dispatch_sensors = []
-        dispatch = mkt.settlement[g]
-        dispatch_sensors.append(dispatch.f)
-        dispatch_sensors.append(dispatch.quantity)
-        dispatch_sensors.append(dispatch.price)
-        dispatch_sensors.append(dispatch.variable)
-        dispatch_sensors.append(dispatch.startup)
-        dispatch_sensors.append(dispatch.shutdown)
+        if mkt.settlement.has_key(g):
+            dispatch_sensors = []
+            dispatch = mkt.settlement[g]
+            dispatch_sensors.append(dispatch.f)
+            dispatch_sensors.append(dispatch.quantity)
+            dispatch_sensors.append(dispatch.price)
+            dispatch_sensors.append(dispatch.variable)
+            dispatch_sensors.append(dispatch.startup)
+            dispatch_sensors.append(dispatch.shutdown)
+        else:
+            dispatch_sensors = [0.0] * 6
 
         # Case related sensors.
         flows = [branch.p_source for branch in case.branches]
@@ -176,14 +182,18 @@ class ParticipantEnvironment(GraphicalEnvironment):
 
         if not self.offbid_qty:
             # The rated capacity is divided equally among the offers/bids.
-            qty = asset.rated_p_max / n_offbids
+            qty = asset.rated_pmax / n_offbids
             for prc in action:
                 if not asset.is_load:
                     offer = Offer(asset, qty, prc)
                     mkt.offers.append(offer)
+                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
+                                (qty, prc, asset.name))
                 else:
                     bid = Bid(asset, qty, prc)
                     mkt.bids.append(bid)
+                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
+                                (prc, qty, asset.name))
         else:
             # Agent's actions comprise both quantities and prices.
             for i in range(0, len(action), 2):
@@ -192,9 +202,13 @@ class ParticipantEnvironment(GraphicalEnvironment):
                 if not asset.is_load:
                     offer = Offer(asset, qty, prc)
                     mkt.offers.append(offer)
+                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
+                                (qty, prc, asset.name))
                 else:
                     bid = Bid(asset, qty, prc)
                     mkt.bids.append(bid)
+                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
+                                (prc, qty, asset.name))
 
 #        if self.hasRenderer():
 #            render = self.getRenderer()

@@ -28,6 +28,8 @@ from pybrain.rl.environments import Task
 
 logger = logging.getLogger(__name__)
 
+BIGNUM = 1e06
+
 #------------------------------------------------------------------------------
 #  "ProfitTask" class:
 #------------------------------------------------------------------------------
@@ -57,20 +59,26 @@ class ProfitTask(Task):
         case = mkt.case
 
         sensor_limits = []
-        sensor_limits.append((0.0, None)) # f
+        sensor_limits.append((0.0, BIGNUM)) # f
         sensor_limits.append((0.0, g.rated_pmax)) # quantity
-        sensor_limits.append((0.0, None)) # price
+        sensor_limits.append((0.0, BIGNUM)) # price
         sensor_limits.append((0.0, g.total_cost(g.rated_pmax))) # variable
-        sensor_limits.append((0.0, g.c_startup)) # startup
-        sensor_limits.append((0.0, g.c_shutdown)) # shutdown
+        c_startup = 2.0 if g.c_startup == 0.0 else g.c_startup
+        sensor_limits.append((0.0, c_startup)) # startup
+        c_shutdown = 2.0 if g.c_shutdown == 0.0 else g.c_shutdown
+        sensor_limits.append((0.0, c_shutdown)) # shutdown
 
         sensor_limits.extend([(0.0, b.s_max) for b in case.branches])
-        sensor_limits.extend([(None, None) for b in case.branches]) # mu_flow
+        sensor_limits.extend([(-BIGNUM, BIGNUM) for b in case.branches]) # mu_flow
 
-        sensor_limits.extend([(b.v_min, b.v_max) for b in case.buses]) #mu_vmin
-        sensor_limits.extend([(b.v_min, b.v_max) for b in case.buses]) #mu_vmax
-        sensor_limits.extend([(0., b.rated_pmax) for b in case.all_generators]) # Pg
-        sensor_limits.extend([(None, None) for g in case.all_generators])
+        sensor_limits.extend([(-180.0, 180.0) for b in case.buses]) #angle
+        sensor_limits.extend([(0.0, BIGNUM) for b in case.buses]) #p_lambda
+#        sensor_limits.extend([(b.v_min, b.v_max) for b in case.buses]) #mu_vmin
+#        sensor_limits.extend([(b.v_min, b.v_max) for b in case.buses]) #mu_vmax
+
+        sensor_limits.extend([(0., b.rated_pmax) for b in case.all_generators]) #pg
+        sensor_limits.extend([(-BIGNUM, BIGNUM) for g in case.all_generators]) #g_pmax
+        sensor_limits.extend([(-BIGNUM, BIGNUM) for g in case.all_generators]) #g_pmin
 
         return sensor_limits
 
@@ -82,12 +90,13 @@ class ProfitTask(Task):
         g = self.env.asset
         n_offbids = self.env.n_offbids
         offbid_qty = self.env.offbid_qty
+        mkt = self.env.market
 
         actor_limits = []
         for i in range(n_offbids):
             if offbid_qty:
                 actor_limits.append((0.0, g.rated_pmax))
-            actor_limits.append((0.0, None))
+            actor_limits.append((0.0, mkt.price_cap))
 
         return actor_limits
 
