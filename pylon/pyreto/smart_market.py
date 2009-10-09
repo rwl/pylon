@@ -410,7 +410,7 @@ class SmartMarket(object):
             the units revenue and associated costs.
         """
         t = self.period
-        settlement = self.settlement = []
+        settlement = self.settlement = {}
 
         for i, g in enumerate(case.all_generators):
             g_offbids = [ob for ob in offers + bids if ob.generator == g]
@@ -448,7 +448,7 @@ class SmartMarket(object):
             d = Dispatch(g, t, self.routine.f, quantity, price, fixed_cost,
                          variable_cost, startup_cost, shutdown_cost)
 
-            settlement.append(d)
+            settlement[g] = d
 
         return settlement
 
