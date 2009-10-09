@@ -159,11 +159,15 @@ class Bus(Named):
         else:
             self.loads = loads
 
+        # Voltage magnitude, typically determined by a routine.
+        self.v_magnitude = 0.0
+        # Voltage angle, typically determined by a routine.
+        self.v_angle = 0.0
         # Lambda (GBP/MWh).
         self.p_lambda = 0.0
         # Lambda (GBP/MVAr-hr).
         self.q_lambda = 0.0
-
+        # Lagrangian multiplier for voltage constraint.
         self.mu_vmin = 0.0
         self.mu_vmax = 0.0
 
@@ -378,8 +382,8 @@ class Generator(Named):
         # as a result of solving the OPF problem.
 #        self.p_despatch = 0.0
 
-        self.mu_pmin = None
-        self.mu_pmax = None
+        self.mu_pmin = 0.0
+        self.mu_pmax = 0.0
 
     @property
     def q_limited(self):
@@ -542,7 +546,7 @@ class Generator(Named):
                 self.q_min = self.q_min * p_min / self.rated_pmin
                 self.q_max = self.q_max * p_min / self.rated_pmin
             else:
-                logger.error("active power limit outwith rating.")
+                logger.error("Active power limit outwith rating.")
             self.p_min = p_min
 
 
@@ -631,8 +635,10 @@ class Generator(Named):
             y2 = m * (x2 - x1) + y1
             points.append((x2, y2))
 
-        logger.info("Setting pwl cost function with %d segments" %
-                    (len(points) - 1))
+        n_segs = len(points) - 1
+        plural = "" if n_segs == 1 else "s"
+        logger.info("Creating pwl cost function with %d segment%s [%s]." %
+                    (n_segs, plural, points))
 
         return points
 
