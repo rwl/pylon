@@ -75,7 +75,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         self.n_offbids = n_offbids
 
         # Does a participant's offer/bid comprise quantity aswell as price.
-        offbid_qty = offbid_qty
+        self.offbid_qty = offbid_qty
 
         # A nonnegative amount of money.
 #        money = 100
@@ -118,7 +118,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         outdim += 6 # Dispatch sensors.
         outdim += len(case.branches) * 2
         outdim += len(case.buses) * 2
-        outdim += len(case.generators) * 3
+        outdim += len(case.all_generators) * 3
         self.outdim = outdim
 
     #--------------------------------------------------------------------------

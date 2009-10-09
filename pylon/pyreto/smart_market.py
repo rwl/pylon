@@ -545,10 +545,14 @@ class Auction(object):
         lab = self.lab = accepted_bids[-1] if accepted_bids else None
         frb = self.frb = rejected_bids[0] if rejected_bids else None
 
-        logger.info("LAB: %s, %.2f (%.2f), %.2f" %
-            (lab.generator.name, lab.quantity, lab.cleared_quantity, lab.price))
-        logger.info("FRB: %s, %.2f (%.2f), %.2f" %
-            (frb.generator.name, frb.quantity, frb.cleared_quantity, frb.price))
+        if lab is not None:
+            logger.info("LAB: %s, %.2f (%.2f), %.2f" %
+                        (lab.generator.name, lab.quantity,
+                         lab.cleared_quantity, lab.price))
+        if frb is not None:
+            logger.info("FRB: %s, %.2f (%.2f), %.2f" %
+                        (frb.generator.name, frb.quantity,
+                         frb.cleared_quantity, frb.price))
 
 
     def _clear_prices(self, offers, bids, auction_type):

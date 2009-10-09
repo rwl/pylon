@@ -69,7 +69,7 @@ class ProfitTask(Task):
 
         sensor_limits.extend([(b.v_min, b.v_max) for b in case.buses]) #mu_vmin
         sensor_limits.extend([(b.v_min, b.v_max) for b in case.buses]) #mu_vmax
-        sensor_limits.extend([(0.0, b.rated_pmax) for b in case.buses]) # Pg
+        sensor_limits.extend([(0., b.rated_pmax) for b in case.all_generators]) # Pg
         sensor_limits.extend([(None, None) for g in case.all_generators])
 
         return sensor_limits

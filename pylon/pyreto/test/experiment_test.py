@@ -33,13 +33,13 @@ from scipy import array
 from pylon import Case, Bus, Generator, Load
 from pylon.readwrite import PickleReader
 
-from pylon.pyreto import MarketExperiment, ParticipantEnvironment, ProfitTask
+from pylon.pyreto import \
+    MarketExperiment, ParticipantEnvironment, ProfitTask, SmartMarket
+
 from pylon.pyreto.renderer import ParticipantRenderer
-from pylon.pyreto.main import one_for_one
 
 from pybrain.tools.shortcuts import buildNetwork
-from pybrain.rl.experiments import ContinuousExperiment
-from pybrain.rl.agents import LearningAgent, PolicyGradientAgent
+from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners import ENAC
 
 #------------------------------------------------------------------------------
@@ -56,9 +56,26 @@ def get_test_network():
     """ Returns a test power system case.
     """
     # Read case from data file.
-    power_sys = PickleReader().read(DATA_FILE)
+    return PickleReader().read(DATA_FILE)
 
-    return power_sys
+
+def get_1bus():
+    """ Returns a simple one bus case.
+    """
+    g1 = Generator(name="G1", p_max=60.0, p_min=0.0)
+    g2 = Generator(name="G2", p_max=100.0, p_min=0.0)
+
+    l1 = Load(name="L1", p=80.0, q=0.0)
+
+    bus1 = Bus(name="Bus1")
+#    bus1.generators.append(g1)
+    bus1.generators.append(g2)
+    bus1.loads.append(l1)
+
+    case = Case(name="1Bus")
+    case.buses.append(bus1)
+
+    return case
 
 #------------------------------------------------------------------------------
 #  "MarketExperimentTest" class:
@@ -71,56 +88,38 @@ class MarketExperimentTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        # Build one bus test network.
-        self.generator1 = Generator(name        = "G1",
-                                    p_max       = 60.0,
-                                    p_min       = 0.0,
-                                    cost_model  = "poly",
-                                    cost_coeffs = (0.0, 10.0, 0.0))
-
-        self.generator2 = Generator(name        = "G2",
-                                    p_max       = 100.0,
-                                    p_min       = 0.0,
-                                    cost_model  = "poly",
-                                    cost_coeffs = (0.0, 20.0, 0.0))
-
-        load = Load(name="L1", p=100.0, q=0.0)
-
-        self.bus1 = Bus(name="Bus 1")
-        self.bus1.generators.append(self.generator1)
-        self.bus1.generators.append(self.generator2)
-        self.bus1.loads.append(load)
-
-        self.power_sys = Case(name="1bus")
-        self.power_sys.buses.append(self.bus1)
+        self.case = get_1bus()
 
 
     def test_learning(self):
         """ Test maximisation of marginal generator offer.
         """
-        # Create agent for generator 1.
-        env = ParticipantEnvironment(self.power_sys, self.generator1)
-        env.setRenderer(ParticipantRenderer())
-        env.getRenderer().start()
+        mkt = SmartMarket(self.case)
 
-        task = ProfitTask(env)
+        agents = []
+        tasks = []
+        for g in self.case.all_generators:
+            # Create agent for generator 1.
+            env = ParticipantEnvironment(g, mkt)
+#            env.setRenderer(ParticipantRenderer())
+#            env.getRenderer().start()
 
-        net = buildNetwork(1, 1, bias=False)
-        net._setParameters(array([0.1]))
+            task = ProfitTask(env)
 
-#        agent = LearningAgent(net, None)
+            net = buildNetwork(task.indim, task.outdim, bias=False,
+                               outputbias=False)
+#            net._setParameters(array([9]))
 
-        agent = PolicyGradientAgent(module=net, learner=ENAC())
-        # initialize parameters (variance)
-        agent.setSigma([-1.5])
-        # learning options
-        agent.learner.alpha = 2.0
-        # agent.learner.rprop = True
-        agent.actaspg = False
-#        agent.disableLearning()
+            agent = LearningAgent(module=net, learner=ENAC())
+            # initialize parameters (variance)
+#            agent.setSigma([-1.5])
+            # learning options
+            agent.learner.alpha = 2.0
+            # agent.learner.rprop = True
+            agent.actaspg = False
+    #        agent.disableLearning()
 
-#        experiment = ContinuousExperiment(task1, agent1)
-        experiment = MarketExperiment([task], [agent], self.power_sys)
+        experiment = MarketExperiment(tasks, agents, mkt)
 
         # Experiment event sequence:
         #   task.getObservation()
@@ -137,62 +136,21 @@ class MarketExperimentTest(unittest.TestCase):
         #   task.getReward()
         #   agent.giveReward()
         #   agent.learn()
-        experiment.doInteractions(250)
+        experiment.doInteractions(1)
 
-        env.getRenderer().stop()
+#        env.getRenderer().stop()
 
-        self.assertAlmostEqual(self.generator1.cost_coeffs[1], 20.0, places=2)
-
-
-#    def test_contracts_market(self):
-#        """ Test trading through a bilateral contracts market.
-#        """
-#        market = ContractsMarket()
-#        buyer = Agent()
-#        market.add_buyer(buyer)
-#        seller = Agent()
-#        market.add_seller(seller)
-#
-#        bids = market.get_bids(seller)
-#        offers = market.get_quotes(buyer)
-#
-#        market.submit_bid(buyer, (100.0, 12.6, 48))
-#        market.request_quote(buyer, (80.0, 9.0, 24))
-#
-#        market.submit_quote(seller, (80.0, 9.0, 24))
-#
-#
-#    def test_over_the_counter_trading(self):
-#        """ Test trading through shorter-term bilateral contracts.
-#        """
-#        otc = OTCMarket()
-#
-#
-#    def test_power_exchange(self):
-#        """ Test trading through exchange facilities constructed for the
-#            purpose of trading.
-#        """
-#        px = PowerExchange()
-#
-#
-#    def test_balancing_mechanism(self):
-#        """ Test system balancing using a reserve market.
-#        """
-#        bm = BalancingMechanism()
-
-
-#    def test_opf(self):
-#        """ Examine the DC OPF routine output.
-#        """
-#        routine = DCOPF()
-#        routine(power_sys)
-#        writer = ReSTWriter()
-#        writer.write_generator_data(power_sys, sys.stdout)
+#        self.assertAlmostEqual(g1.cost_coeffs[1], 20.0, places=2)
 
 
 if __name__ == "__main__":
 #    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
 #        format="%(levelname)s: %(message)s")
+
+    dcopf_logger = logging.getLogger('pylon.dc_opf')
+    dcopf_logger.setLevel(logging.INFO)
+    y_logger = logging.getLogger('pylon.y')
+    y_logger.setLevel(logging.INFO)
 
     logger = logging.getLogger()
 
