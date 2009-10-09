@@ -42,33 +42,75 @@ class ProfitTask(Task):
         Task.__init__(self, environment)
 
         # Limits for scaling of sensors.
-        self.sensor_limits = None#[(0.000, sensor_max)]
+        self.sensor_limits = self.getSensorLimits()
 
         # Limits for scaling of actors.
-#        mkt = environment.market
-#        price_cap = mkt.price_cap
-        self.actor_limits = None#[(asset.p_min, price_cap)]
+        self.actor_limits = self.getActorLimits()
 
 
-    def performAction(self, action):
-        """ A filtered mapping of the .performAction() method of the underlying
-            environment.
+    def getSensorLimits(self):
+        """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
+            one tuple per parameter, giving min and max for that parameter.
         """
+        g = self.env.asset
+        mkt = self.env.market
+        case = mkt.case
+
+        sensor_limits = []
+        sensor_limits.append((0.0, None)) # f
+        sensor_limits.append((0.0, g.rated_pmax)) # quantity
+        sensor_limits.append((0.0, None)) # price
+        sensor_limits.append((0.0, g.total_cost(g.rated_pmax))) # variable
+        sensor_limits.append((0.0, g.c_startup)) # startup
+        sensor_limits.append((0.0, g.c_shutdown)) # shutdown
+
+        sensor_limits.extend([(0.0, b.s_max) for b in case.branches])
+        sensor_limits.extend([(None, None) for b in case.branches]) # mu_flow
+
+        sensor_limits.extend([(b.v_min, b.v_max) for b in case.buses]) #mu_vmin
+        sensor_limits.extend([(b.v_min, b.v_max) for b in case.buses]) #mu_vmax
+        sensor_limits.extend([(0.0, b.rated_pmax) for b in case.buses]) # Pg
+        sensor_limits.extend([(None, None) for g in case.all_generators])
+
+        return sensor_limits
+
+
+    def getActorLimits(self):
+        """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
+            one tuple per parameter, giving min and max for that parameter.
+        """
+        g = self.env.asset
+        n_offbids = self.env.n_offbids
+        offbid_qty = self.env.offbid_qty
+
+        actor_limits = []
+        for i in range(n_offbids):
+            if offbid_qty:
+                actor_limits.append((0.0, g.rated_pmax))
+            actor_limits.append((0.0, None))
+
+        return actor_limits
+
+
+#    def performAction(self, action):
+#        """ A filtered mapping of the .performAction() method of the underlying
+#            environment.
+#        """
 #        logger.debug("Profit task [%s] filtering action: %s" %
 #                     (self.env.asset.name, action))
 #        logger.debug("Profit task [%s] denormalised action: %s" %
 #                     (self.env.asset.name, self.denormalize(action)))
-        Task.performAction(self, action)
+#        Task.performAction(self, action)
 
 
-    def getObservation(self):
-        """ A filtered mapping to the .getSample() method of the underlying
-            environment.
-        """
-        sensors = Task.getObservation(self)
+#    def getObservation(self):
+#        """ A filtered mapping to the .getSample() method of the underlying
+#            environment.
+#        """
+#        sensors = Task.getObservation(self)
 #        logger.debug("Profit task [%s] normalised sensors: %s" %
 #                     (self.env.asset.name, sensors))
-        return sensors
+#        return sensors
 
 
     def getReward(self):
@@ -78,12 +120,7 @@ class ProfitTask(Task):
         g = self.env.asset
         mkt = self.env.market
 
-        g_settlement = [d for d in mkt.settlement if d.generator == g]
-        if g_settlement:
-            dispatch = g_settlement[0]
-        else:
-            raise ValueError, "Dispatch not found."
-
+        d = mkt.settlement[g]
         logger.debug("Profit task [%s] reward: %s" % (g.name, d.earnings))
 
         return array([d.earnings])

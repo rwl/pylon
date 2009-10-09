@@ -22,7 +22,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from scipy import array
+import scipy
+
 #from pybrain.rl.environments import Environment
 from pybrain.rl.environments.graphical import GraphicalEnvironment
 
@@ -55,7 +56,8 @@ class ParticipantEnvironment(GraphicalEnvironment):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, asset, market, render=True):
+    def __init__(self, asset, market, n_offbids=1, offbid_qty=False,
+                 render=True):
         """ Initialises the environment.
         """
 #        assert isinstance(asset, Generator)
@@ -68,6 +70,12 @@ class ParticipantEnvironment(GraphicalEnvironment):
 
         # Auction that clears offer and bids using OPF results.
         self.market = market
+
+        # Number of offers/bids a participant submits.
+        self.n_offbids = n_offbids
+
+        # Does a participant's offer/bid comprise quantity aswell as price.
+        offbid_qty = offbid_qty
 
         # A nonnegative amount of money.
 #        money = 100
@@ -99,14 +107,18 @@ class ParticipantEnvironment(GraphicalEnvironment):
 #            self.updateLock=threading.Lock()
 
         # Set the number of action values that the environment accepts.
-        self.indim = 2
+        if offbid_qty:
+            self.indim = n_offbids * 2
+        else:
+            self.indim = n_offbids
 
         # Set the number of sensor values that the environment produces.
         case = market.case
         outdim = 0
-        outdim += 1 # Total system cost.
-        outdim += 1 # Previous bid quantity.
-        outdim += len(case.branches)
+        outdim += 6 # Dispatch sensors.
+        outdim += len(case.branches) * 2
+        outdim += len(case.buses) * 2
+        outdim += len(case.generators) * 3
         self.outdim = outdim
 
     #--------------------------------------------------------------------------
@@ -121,30 +133,36 @@ class ParticipantEnvironment(GraphicalEnvironment):
         mkt = self.market
         case = mkt.case
 
-        # Get sensor info from the previous settlement process.
-        settlement = [d for d in mkt.settlement if d.generator == g]
-        if settlement:
-            dispatch = settlement[0]
-            system_cost = dispatch.f
-        else:
-            system_cost = 0.0
+        # Dispatch related sensors.
+        dispatch_sensors = []
+        dispatch = mkt.settlement[g]
+        dispatch_sensors.append(dispatch.f)
+        dispatch_sensors.append(dispatch.quantity)
+        dispatch_sensors.append(dispatch.price)
+        dispatch_sensors.append(dispatch.variable)
+        dispatch_sensors.append(dispatch.startup)
+        dispatch_sensors.append(dispatch.shutdown)
 
-        # Get sensor info from previous offers/bids.
-        offerbids = [ob for ob in mkt.offers + mkt.bids if ob.generator == g]
-        if offerbids:
-            offbid = offerbids[0]
-            previous_qty = offbid.quantity
-        else:
-            previous_qty = 0.0
+        # Case related sensors.
+        flows = [branch.p_source for branch in case.branches]
+        mu_flow = [branch.mu_s_source for branch in case.branches]
+        voltages = [bus.v_magnitude for bus in case.buses]
+        angles = [bus.v_angle for bus in case.buses]
+        nodal_prc = [bus.p_lambda for bus in case.buses]
+        v_max = [bus.mu_vmax for bus in case.buses]
+        v_min = [bus.mu_vmin for bus in case.buses]
+        pg = [g.p for g in case.all_generators]
+        g_max = [g.mu_pmax for g in case.all_generators]
+        g_min = [g.mu_pmin for g in case.all_generators]
 
-
-        flows = [b.p_source for b in case.branches]
+        case_sensors = flows + mu_flow + \
+                       angles + nodal_prc + \
+                       pg + g_max + g_min
 
 #        if self.hasRenderer():
-#            data = (demand, None, None, None)
-#            self.getRenderer().updateData(data, False)
+#            renderer = self.getRenderer()
 
-        return array([system_cost, previous_qty] + flows)
+        return scipy.array(dispatch_sensors + case_sensors)
 
 
     def performAction(self, action):
@@ -152,23 +170,34 @@ class ParticipantEnvironment(GraphicalEnvironment):
             @param action: an action that should be executed in the Environment
             @type action: array: [ qty, prc, qty, prc, ... ]
         """
-        for i in len(action) / 2:
-            asset = self.asset
-            mkt = self.market
+        asset = self.asset
+        mkt = self.market
+        n_offbids = self.n_offbids
 
-            qty = action[i * 2]
-            prc = action[i * 2 + 1]
+        if not self.offbid_qty:
+            # The rated capacity is divided equally among the offers/bids.
+            qty = asset.rated_p_max / n_offbids
+            for prc in action:
+                if not asset.is_load:
+                    offer = Offer(asset, qty, prc)
+                    mkt.offers.append(offer)
+                else:
+                    bid = Bid(asset, qty, prc)
+                    mkt.bids.append(bid)
+        else:
+            # Agent's actions comprise both quantities and prices.
+            for i in range(0, len(action), 2):
+                qty = action[i]
+                prc = action[i + 1]
+                if not asset.is_load:
+                    offer = Offer(asset, qty, prc)
+                    mkt.offers.append(offer)
+                else:
+                    bid = Bid(asset, qty, prc)
+                    mkt.bids.append(bid)
 
-            if not asset.is_load:
-                offer = Offer(asset, qty, prc)
-                mkt.offers.append(offer)
-            else:
-                bid = Bid(asset, qty, prc)
-                mkt.bids.append(bid)
-
-        if self.hasRenderer():
-            data = (None, action[0], None, None)
-            self.getRenderer().updateData(data, False)
+#        if self.hasRenderer():
+#            render = self.getRenderer()
 
 
     def reset(self):
