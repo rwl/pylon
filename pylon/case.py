@@ -160,12 +160,12 @@ class Bus(Named):
             self.loads = loads
 
         # Lambda (GBP/MWh).
-        p_lambda = 0.0
+        self.p_lambda = 0.0
         # Lambda (GBP/MVAr-hr).
-        q_lambda = 0.0
+        self.q_lambda = 0.0
 
-        mu_v_min = 0.0
-        mu_v_max = 0.0
+        self.mu_vmin = 0.0
+        self.mu_vmax = 0.0
 
     @property
     def mode(self):
@@ -302,7 +302,7 @@ class Generator(Named):
 
     def __init__(self, name=None, online=True, base_mva=100.0, p=100.0,
             p_max=200.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0,
-            q_min=-30.0, p_max_bid=None, p_min_bid=None, c_startup=0.0,
+            q_min=-30.0, c_startup=0.0,
             c_shutdown=0.0, cost_model="poly", pwl_points=None,
             cost_coeffs=None, rate_up=1.0, rate_down=1.0, min_up=0,
             min_down=0, initial_up=1, initial_down=0):
@@ -318,8 +318,10 @@ class Generator(Named):
         self.p = p
         # Maximum active power output (MW).
         self.p_max = p_max
+        self.rated_pmax = p_max
         # Minimum active power output (MW).
         self.p_min = p_min
+        self.rated_pmin = p_min
         # Voltage magnitude setpoint (pu).
         self.v_magnitude = v_magnitude
         # Reactive power output (MVAr).
@@ -331,16 +333,16 @@ class Generator(Named):
 
         # Maximum active power output bid. Used in OPF routines. Should be less
         # than or equal to p_max.
-        if p_max_bid is None:
-            self.p_max_bid = p_max
-        else:
-            self.p_max_bid = 0.0
+#        if p_max_bid is None:
+#            self.p_max_bid = p_max
+#        else:
+#            self.p_max_bid = 0.0
         # Minimum active power bid. Used in OPF routines. Should be greater
         # than or equal to p_min.
-        if p_min_bid is None:
-            self.p_min_bid = p_min
-        else:
-            self.p_min_bid = 0.0
+#        if p_min_bid is None:
+#            self.p_min_bid = p_min
+#        else:
+#            self.p_min_bid = 0.0
         # Start up cost.
         self.c_startup = c_startup
         # Shut down cost.
@@ -349,15 +351,16 @@ class Generator(Named):
         self.cost_model = cost_model
         # Polynomial cost curve coefficients.
         # (a, b, c) relates to: cost = c*p**3 + b*p**2 + a*p.
-        if cost_coeffs is None:
-            self.cost_coeffs = (0.01, 0.1, 10.0)
-        else:
+        if cost_coeffs:
             self.cost_coeffs = cost_coeffs
-        # Piecewise linear cost segment points.
-        if pwl_points == None:
-            self.pwl_points = [(0.0, 0.0), (1.0, 10.0)]
         else:
+            self.cost_coeffs = (0.01, 0.1, 10.0)
+        # Piecewise linear cost segment points.
+        if pwl_points:
             self.pwl_points = pwl_points
+        else:
+            self.pwl_points = [(0.0, 0.0), (1.0, 10.0)]
+
         # Ramp up rate (p.u./h).
         self.rate_up = rate_up
         # Ramp down rate (p.u./h).
@@ -375,8 +378,8 @@ class Generator(Named):
         # as a result of solving the OPF problem.
 #        self.p_despatch = 0.0
 
-        self.mu_p_min = None
-        self.mu_p_max = None
+        self.mu_pmin = None
+        self.mu_pmax = None
 
     @property
     def q_limited(self):
@@ -535,10 +538,19 @@ class Generator(Named):
             self.p_max = max([point[0] for point in self.pwl_points])
         else:
             p_min = min([point[0] for point in self.pwl_points])
-            if self.p_min <= p_min <= self.p_max:
-                self.q_min = self.q_min * p_min / self.p_min
-                self.q_max = self.q_max * p_min / self.p_min
+            if self.rated_pmin <= p_min <= self.rated_pmax:
+                self.q_min = self.q_min * p_min / self.rated_pmin
+                self.q_max = self.q_max * p_min / self.rated_pmin
+            else:
+                logger.error("active power limit outwith rating.")
             self.p_min = p_min
+
+
+    def reset_limits(self):
+        """ Resets active power limits to the generator ratings.
+        """
+        self.p_max = self.rated_pmax
+        self.p_min = self.rated_pmin
 
 
     def offers_to_pwl(self, offers):
