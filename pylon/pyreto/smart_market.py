@@ -112,7 +112,7 @@ class SmartMarket(object):
 #        self.guarantee_bid_price = True
 
         # Results of the settlement process. A list of Dispatch objects.
-        self.settlement = []
+        self.settlement = {}
 
 
         # Finish initialising the market.
@@ -122,15 +122,16 @@ class SmartMarket(object):
     def init(self):
         """ Initialises the market.
         """
-        generators = [g for g in self.case.all_generators if not g.is_load]
-        vloads     = [g for g in self.case.all_generators if g.is_load]
-
-        if not self.offers:
-            # Create offers from the generator cost functions.
-            self.offers = [off for g in generators for off in g.get_offers()]
-
-        if not self.bids:
-            self.bids = [bid for vl in vloads for bid in vl.get_bids()]
+        pass
+#        generators = [g for g in self.case.all_generators if not g.is_load]
+#        vloads     = [g for g in self.case.all_generators if g.is_load]
+#
+#        if not self.offers:
+#            # Create offers from the generator cost functions.
+#            self.offers = [off for g in generators for off in g.get_offers()]
+#
+#        if not self.bids:
+#            self.bids = [bid for vl in vloads for bid in vl.get_bids()]
 
 
     def clear(self):
@@ -230,14 +231,14 @@ class SmartMarket(object):
 
         if limits.has_key("max_offer"):
             for offer in offers:
-                if offer.price >= limits["max_offer"]:
+                if offer.price > limits["max_offer"]:
                     logger.info("Offer price [%.2f] above limit [%.3f], "
                         "withholding." % (offer.price, limits["max_offer"]))
                     offer.withheld = True
 
         if limits.has_key("min_bid"):
             for bid in bids:
-                if bid.price <= limits["min_bid"]:
+                if bid.price < limits["min_bid"]:
                     logger.info("Bid price [%.2f] below limit [%.2f], "
                         "withholding." % (bid.price, limits["min_bid"]))
                     bid.withheld = True
@@ -250,6 +251,7 @@ class SmartMarket(object):
         # generator limits.
         for g in generators:
             g_offers = [offer for offer in offers if offer.generator == g]
+
             g.offers_to_pwl(g_offers)
 
             # Adjust generator limits.
@@ -426,8 +428,6 @@ class SmartMarket(object):
                 price = sum([of.cleared_quantity * of.cleared_price / totclrqty
                              for of in g_offbids])
 
-            print price
-
             # Compute costs in $ (not $/hr).
             fixed_cost = t * g.total_cost(0.0)
 
@@ -525,14 +525,23 @@ class Auction(object):
         rejected.sort(key=lambda x: x.difference)
 
         # lao + lambda is equal to the last accepted offer.
-        lao = self.lao = accepted[-1]
+        lao = self.lao = accepted[-1] if accepted else None
         # fro + lambda is equal to the first rejected offer.
-        fro = self.fro = rejected[0]
+        fro = self.fro = rejected[0] if rejected else None
 
-        logger.info("LAO: %s, %.2f (%.2f), %.2f" %
-            (lao.generator.name, lao.quantity, lao.cleared_quantity, lao.price))
-        logger.info("FRO: %s, %.2f (%.2f), %.2f" %
-            (fro.generator.name, fro.quantity, fro.cleared_quantity, fro.price))
+        if lao is not None:
+            logger.info("LAO: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
+                        (lao.generator.name, lao.quantity,
+                         lao.cleared_quantity, lao.price))
+        elif offers:
+            logger.info("No accepted offers.")
+
+        if fro is not None:
+            logger.info("FRO: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
+                        (fro.generator.name, fro.quantity,
+                         fro.cleared_quantity, fro.price))
+        elif offers:
+            logger.info("No rejected offers.")
 
 
         # Determine last accepted bid and first rejected bid.
@@ -546,13 +555,18 @@ class Auction(object):
         frb = self.frb = rejected_bids[0] if rejected_bids else None
 
         if lab is not None:
-            logger.info("LAB: %s, %.2f (%.2f), %.2f" %
+            logger.info("LAB: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
                         (lab.generator.name, lab.quantity,
                          lab.cleared_quantity, lab.price))
+        elif bids:
+            logger.info("No accepted bids.")
+
         if frb is not None:
-            logger.info("FRB: %s, %.2f (%.2f), %.2f" %
+            logger.info("FRB: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
                         (frb.generator.name, frb.quantity,
                          frb.cleared_quantity, frb.price))
+        elif bids:
+            logger.info("No rejected bids.")
 
 
     def _clear_prices(self, offers, bids, auction_type):
@@ -679,7 +693,7 @@ class Auction(object):
 
             # Log the event.
             if ob.accepted:
-                logger.info("%s [%s, %.3f, %.3f] accepted at %.2f MWh." %
+                logger.info("%s [%s, %.3f, %.3f] accepted at %.2f MW." %
                     (ob.__class__.__name__, ob.generator.name, ob.quantity,
                      ob.price, ob.cleared_quantity))
             else:
