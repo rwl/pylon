@@ -24,7 +24,7 @@
 
 import logging
 from scipy import array
-from pybrain.rl.tasks import EpisodicTask, Task
+from pybrain.rl.environments import Task
 
 logger = logging.getLogger(__name__)
 
