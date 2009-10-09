@@ -207,7 +207,7 @@ class DCOPF(object):
             self._update_solution_data(solution)
             logger.info("Unknown solution status found in %.3fs. The " \
                 "solution may be fairly accurate. Try using a different " \
-                "solver or relaxing the specified tolerances." % t_elapsed)
+                "solver or relaxing the tolerances." % t_elapsed)
             return True
         else:
             logger.error("Non-convergent DC OPF.")
