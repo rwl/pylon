@@ -65,12 +65,12 @@ class MarketExperiment(object):
     def doInteractions(self, number=1):
         """ Directly maps the agents and the tasks.
         """
-        writer = ReSTWriter()
-
         for interaction in range(number):
+            # Initialise the market.
+            self.market.init()
+
             # Get an action from each agent and perform it.
-            for i, agent in enumerate(self.agents):
-                task = self.tasks[i]
+            for task, agent in zip(self.tasks, self.agents):
 
                 self.stepid += 1
                 observation = task.getObservation()
@@ -83,19 +83,13 @@ class MarketExperiment(object):
 #                             (agent.name, action))
                 task.performAction(action)
 
-#            writer.write_generator_data(self.power_system, sys.stdout)
-
 
             # Clear the market.
             self.market.clear()
 
 
-#            writer.write_generator_data(self.power_system, sys.stdout)
-
-
             # Reward each agent appropriately.
-            for i, agent in enumerate(self.agents):
-                task   = self.tasks[i]
+            for task, agent in zip(self.tasks, self.agents):
 
                 reward = task.getReward()
 #                logger.debug("Agent [%s] receiving reward: %s" %

@@ -52,7 +52,7 @@ DATA_FILE = join(dirname(__file__), "data", "auction_case.pkl")
 #  Returns a test power system:
 #------------------------------------------------------------------------------
 
-def get_test_network():
+def get_pickled_case():
     """ Returns a test power system case.
     """
     # Read case from data file.
@@ -68,7 +68,7 @@ def get_1bus():
     l1 = Load(name="L1", p=80.0, q=0.0)
 
     bus1 = Bus(name="Bus1")
-#    bus1.generators.append(g1)
+    bus1.generators.append(g1)
     bus1.generators.append(g2)
     bus1.loads.append(l1)
 
@@ -88,7 +88,8 @@ class MarketExperimentTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = get_1bus()
+#        self.case = get_1bus()
+        self.case = get_pickled_case()
 
 
     def test_learning(self):
@@ -100,13 +101,13 @@ class MarketExperimentTest(unittest.TestCase):
         tasks = []
         for g in self.case.all_generators:
             # Create agent for generator 1.
-            env = ParticipantEnvironment(g, mkt)
+            env = ParticipantEnvironment(g, mkt, n_offbids=2)
 #            env.setRenderer(ParticipantRenderer())
 #            env.getRenderer().start()
 
             task = ProfitTask(env)
 
-            net = buildNetwork(task.indim, task.outdim, bias=False,
+            net = buildNetwork(task.outdim, task.indim, bias=False,
                                outputbias=False)
 #            net._setParameters(array([9]))
 
@@ -118,6 +119,9 @@ class MarketExperimentTest(unittest.TestCase):
             # agent.learner.rprop = True
             agent.actaspg = False
     #        agent.disableLearning()
+
+            agents.append(agent)
+            tasks.append(task)
 
         experiment = MarketExperiment(tasks, agents, mkt)
 
