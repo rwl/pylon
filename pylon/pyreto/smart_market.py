@@ -106,10 +106,10 @@ class SmartMarket(object):
         self.violation = 5e-6
 
         # Guarantee that cleared offers are >= offers.
-        self.guarantee_offer_price = True
+#        self.guarantee_offer_price = True
 
         # Guarantee that cleared bids are <= bids.
-        self.guarantee_bid_price = True
+#        self.guarantee_bid_price = True
 
         # Results of the settlement process. A list of Dispatch objects.
         self.settlement = []
@@ -141,18 +141,40 @@ class SmartMarket(object):
         offers = self.offers
         bids = self.bids
         limits = self.limits
-
-        buses = self.case.connected_buses
         all_generators = self.case.all_generators
         generators = [g for g in all_generators if not g.is_load]
         vloads     = [g for g in all_generators if g.is_load]
 
+        # Manage reactive power offers/bids.
+        self._reactive_power_market(offers, bids)
+
+        # Withhold offers/bids outwith optional price limits.
+        self._enforce_limits(offers, bids, limits)
+
+        self._setup_opf(generators, vloads, offers, bids)
+
+        self._run_opf(self.case)
+
+        self._run_auction(self.case, offers, bids)
+
+        self._compute_costs(self.case, offers, bids)
+
+        elapsed = self.elapsed = time.time() - t0
+        logger.info("SmartMarket cleared in %.3fs" % elapsed)
+
+
+    def _reactive_power_market(self, offers, bids):
+        """ Returns a flag indicating the existance of offers/bids for reactive
+            power.
+        """
+#        offers, bids = self.offers, self.bids
+
         if [offbid for offbid in offers + bids if offbid.reactive]:
-            have_q = True
+            have_q = self.have_q = True
             raise NotImplementedError, "Combined active/reactive power " \
                 "market not yet implemented."
         else:
-            have_q = False
+            have_q = self.have_q = False
 
 #        if have_q and vloads and self.auction_type not in ["discriminative",
 #                                                           "lao",
@@ -162,14 +184,68 @@ class SmartMarket(object):
 #                "implemented for 'discriminative', 'lao' and 'first price' "
 #                "auction types.")
 
+        return have_q
 
-        # Eliminates offers (but not bids) above 'price_cap'.
-        limits['max_offer'] = self.price_cap
-        limits['max_cleared_offer'] = self.price_cap
 
-        # Withhold offers/bids outwith optional price limits.
-        self.enforce_limits(offers, bids, limits)
+    def _enforce_limits(self, offers, bids, limits):
+        """ Returns a tuple of lists of offers and bids with their withheld
+            flags set if they represent invalid (<= 0.0) quantities or have
+            prices outwith the set limits.
+        """
+        limits = self.limits
 
+        if not limits.has_key('max_offer'):
+            # Eliminates offers (but not bids) above 'price_cap'.
+            limits['max_offer'] = self.price_cap
+        if not limits.has_key('max_cleared_offer'):
+            limits['max_cleared_offer'] = self.price_cap
+
+        # Strip zero quantities (rounded to 4 decimal places).
+#        if min([offbid.quantity for offbid in offers + bids]) < 0.0:
+#            logger.info("Ignoring offers/bids with negative quantities.")
+#
+#        if 0.0 in [round(offer, 4) for offer in offers + bids]:
+#            logger.info("Ignoring zero quantity offers/bids.")
+#
+#        offers = [offr for offr in offers if round(offr.quantity, 4) > 0.0]
+#        bids = [bid for bid in bids if round(bid.quantity, 4) > 0.0]
+
+        for offer in offers:
+            if round(offer.quantity, 4) <= 0.0:
+                logger.info("Withholding non-posistive quantity [%.2f] "
+                            "offer." % offer.quantity)
+                offer.withheld = True
+
+        for bid in bids:
+            if round(bid.quantity, 4) <= 0.0:
+                logger.info("Withholding non-posistive quantity [%.2f] "
+                            "bid." % bid.quantity)
+                bid.withheld = True
+
+        # Optionally strip prices beyond limits.
+#        if limits.has_key('max_offer'):
+#            offers = [of for of in offers if of.price <= limits['max_offer']]
+#        if limits.has_key('min_bid'):
+#            bids = [bid for bid in bids if bid.price >= limits['min_bid']]
+
+        if limits.has_key("max_offer"):
+            for offer in offers:
+                if offer.price >= limits["max_offer"]:
+                    logger.info("Offer price [%.2f] above limit [%.3f], "
+                        "withholding." % (offer.price, limits["max_offer"]))
+                    offer.withheld = True
+
+        if limits.has_key("min_bid"):
+            for bid in bids:
+                if bid.price <= limits["min_bid"]:
+                    logger.info("Bid price [%.2f] below limit [%.2f], "
+                        "withholding." % (bid.price, limits["min_bid"]))
+                    bid.withheld = True
+
+        return offers, bids
+
+
+    def _setup_opf(self, generators, vloads, offers, bids):
         # Convert power offers into piecewise linear segments and update
         # generator limits.
         for g in generators:
@@ -243,20 +319,30 @@ class SmartMarket(object):
             g.p_min -= 100 * self.violation
             g.p_max += 100 * self.violation
 
-
-        # Solve the optimisation problem.
-        routine = UDOPF(dc=self.loc_adjust == "dc")
-        success = routine(self.case)
+        return generators, vloads
 
 
-        # Compute quantities, prices and costs.
-        if success:
+    def _run_opf(self, case):
+        """ Solves the optimisation problem.
+        """
+        routine = self.routine = UDOPF(dc=self.loc_adjust == "dc")
+        success = self.success = routine(case)
+
+        return success
+
+
+    def _run_auction(self, case, offers, bids):
+        """ Clears an auction to determine the quantity and price for each
+            offer/bid.
+        """
+        if self.success:
             # Guarantee that cleared offers are >= offers.
-            self.guarantee_offer_price = True
+            guarantee_offer_price = True
+            guarantee_bid_price = True
 
             for offer in offers:
                 # Locate the bus to which the offer's generator is connected.
-                for bus in buses:
+                for bus in case.buses:
                     if offer.generator in bus.generators:
                         break # Go with the first one found.
                 else:
@@ -268,17 +354,17 @@ class SmartMarket(object):
 
             for bid in bids:
                 # Locate the bus to which the dispatchable load is connected.
-                for bus in buses:
+                for bus in case.buses:
                     if bid.vload in bus.generators:
                         break
                 else:
                     logger.error("Dispatchable load bus not found.")
 
-                if have_q:
+                if self.have_q:
                     # Use unbundled lambdas.
                     bid.p_lambda = bus.p_lambda
                     # Allow cleared bids to be above bid price.
-                    self.guarantee_bid_price = False
+                    guarantee_bid_price = False
                 else:
                     # Compute fudge factor for p_lambda to include price of
                     # bundled reactive power. For loads Q = pf * P.
@@ -299,7 +385,8 @@ class SmartMarket(object):
 
 
             # Clear offer/bid quantities and prices.
-            self.auction(offers, bids)
+            Auction(case, offers, bids, guarantee_offer_price,
+                guarantee_bid_price, self.limits).clear(self.auction_type)
 
 #            prices = [of.quantity * of.price for of in offers]
 
@@ -318,10 +405,14 @@ class SmartMarket(object):
 #            cleared_offers, cleared_bids = offers, bids
 
 
+    def _compute_costs(self, case, offers, bids):
+        """ Returns a map of generators to their dispatch info, which details
+            the units revenue and associated costs.
+        """
         t = self.period
         settlement = self.settlement = []
 
-        for i, g in enumerate(all_generators):
+        for i, g in enumerate(case.all_generators):
             g_offbids = [ob for ob in offers + bids if ob.generator == g]
 
             if not g_offbids: continue
@@ -333,7 +424,7 @@ class SmartMarket(object):
                 price = totclrqty
             else:
                 price = sum([of.cleared_quantity * of.cleared_price / totclrqty
-                             for of in g_offers])
+                             for of in g_offbids])
 
             print price
 
@@ -354,36 +445,77 @@ class SmartMarket(object):
                 startup_cost = 0.0
                 shutdown_cost = 0.0
 
-            d = Dispatch(g, t, routine.f, quantity, price, fixed_cost,
+            d = Dispatch(g, t, self.routine.f, quantity, price, fixed_cost,
                          variable_cost, startup_cost, shutdown_cost)
 
             settlement.append(d)
 
-        elapsed = time.time() - t0
-        logger.info("SmartMarket cleared in %.3fs" % elapsed)
-
         return settlement
 
+#------------------------------------------------------------------------------
+#  "Auction" class:
+#------------------------------------------------------------------------------
 
-    def auction(self, offers, bids):
-        """ Clears a set of bids and offers, where the pricing is adjusted for
-            network losses and binding constraints.
+class Auction(object):
+    """ Defines a power auction for clearing offers/bids, where the pricing is
+        adjusted for network losses and binding constraints.
 
-            References:
-                R. D. Zimmerman, 'extras/smartmarket/auction.m', MATPOWER,
-                Cornell, version 3.2, http://www.pserc.cornell.edu/matpower
+        References:
+            R. D. Zimmerman, 'extras/smartmarket/auction.m', MATPOWER,
+            PSERC (Cornell), version 3.2, www.pserc.cornell.edu/matpower
+    """
+
+    def __init__(self, case, offers, bids, guarantee_offer_price,
+                 guarantee_bid_price, limits):
+        """ Initialises an new Auction instance.
         """
+        self.case = case
+
+        # Offers to produce a quantity of energy at a specified price.
+        self.offers = offers
+
+        # Bids to buy a quantity of energy at a specified price.
+        self.bids = bids
+
+        # Guarantee that cleared offers are >= offers.
+        self.guarantee_offer_price = True
+
+        # Guarantee that cleared bids are <= bids.
+        self.guarantee_bid_price = True
+
+        # Offer/bid price limits.
+        self.limits = limits
+
+
+    def clear(self, auction_type):
+        """ Clears a set of bids and offers.
+        """
+        offers, bids = self.offers, self.bids
         generators = [g for g in self.case.all_generators if not g.is_load]
         vloads     = [g for g in self.case.all_generators if g.is_load]
 
+        self._clear_quantities(generators, vloads, offers, bids)
+        self._compute_shift_values(offers, bids)
+        self._clear_prices(offers, bids, auction_type)
+        self._clip_prices(generators, vloads, offers, bids, auction_type)
+
+        return offers, bids
+
+
+    def _clear_quantities(self, generators, vloads, offers, bids):
+        """ Computes the cleared quantities for each offer/bid according to
+            the dispatched output from the OPF solution.
+        """
         for g in generators:
-            self.clear_quantity(offers, g)
+            self._clear_quantity(offers, g)
 
         for vl in vloads:
-            self.clear_quantity(bids, vl)
+            self._clear_quantity(bids, vl)
 
-        # Compute shift values to add to lam to get desired pricing.
 
+    def _compute_shift_values(self, offers, bids):
+        """ Compute shift values to add to lam to get desired pricing.
+        """
         accepted = [of for of in offers if of.accepted]
         rejected = [of for of in offers if not of.accepted]
 
@@ -393,9 +525,9 @@ class SmartMarket(object):
         rejected.sort(key=lambda x: x.difference)
 
         # lao + lambda is equal to the last accepted offer.
-        lao = accepted[-1] # Last Accepted Offer
+        lao = self.lao = accepted[-1]
         # fro + lambda is equal to the first rejected offer.
-        fro = rejected[0]  # First Rejected Offer
+        fro = self.fro = rejected[0]
 
         logger.info("LAO: %s, %.2f (%.2f), %.2f" %
             (lao.generator.name, lao.quantity, lao.cleared_quantity, lao.price))
@@ -410,8 +542,8 @@ class SmartMarket(object):
         rejected_bids = [bid for bid in bids if not bid.accepted]
         rejected_bids.sort(key=lambda bid: bid.difference, reverse=True)
 
-        lab = accepted_bids[-1] if accepted_bids else None # Last Accepted Bid
-        frb = rejected_bids[0] if rejected_bids else None # First Rejected Bid
+        lab = self.lab = accepted_bids[-1] if accepted_bids else None
+        frb = self.frb = rejected_bids[0] if rejected_bids else None
 
         logger.info("LAB: %s, %.2f (%.2f), %.2f" %
             (lab.generator.name, lab.quantity, lab.cleared_quantity, lab.price))
@@ -419,9 +551,13 @@ class SmartMarket(object):
             (frb.generator.name, frb.quantity, frb.cleared_quantity, frb.price))
 
 
-        # Cleared offer/bid prices for different auction types.
+    def _clear_prices(self, offers, bids, auction_type):
+        """ Cleared offer/bid prices for different auction types.
+        """
+        lao, fro = self.lao, self.fro
+        lab, frb = self.lab, self.frb
+
         for offbid in offers + bids:
-            auction_type = self.auction_type
 
             if auction_type == "discriminative":
                 offbid.cleared_price = offbid.price
@@ -437,11 +573,11 @@ class SmartMarket(object):
                 offbid.cleared_price = offbid.p_lambda
             elif auction_type == "second price":
                 if abs(lao.price) < 1e-5:
-                    offbid.cleared_price = offbid.p_lambda + min(fro.price,
-                                                                 lab.price)
+                    clr_prc = offbid.p_lambda + min(fro.price, lab.price)
+                    offbid.cleared_price = clr_prc
                 else:
-                    offbid.cleared_price = offbid.p_lambda + max(lao.price,
-                                                                 frb.price)
+                    clr_prc = offbid.p_lambda + max(lao.price, frb.price)
+                    offbid.cleared_price = clr_prc
             elif auction_type == "split":
                 split_price = (lao.price - lab.price) / 2.0
                 offbid.cleared_price = offbid.p_lambda + split_price
@@ -451,17 +587,21 @@ class SmartMarket(object):
                 else:
                     offbid.cleared_price = offbid.p_lambda + lab.price
 
+
+    def _clip_prices(self, generators, vloads, offers, bids, auction_type):
+        """ Clip cleared prices according to guarantees and limits.
+        """
         # Guarantee that cleared offer prices are >= offers.
-        if self.guarantee_offer_price:
-            for offer in offers:
-                if offer.cleared_price < offer.price:
-                    offer.cleared_price = offer.price
+#        if self.guarantee_offer_price:
+#            for offer in offers:
+#                if offer.cleared_price < offer.price:
+#                    offer.cleared_price = offer.price
 
         # Guarantee that cleared bid prices are <= bids.
-        if self.guarantee_bid_price:
-            for bid in bids:
-                if bid.cleared_price > bid.price:
-                    bid.cleared_price = bid.price
+#        if self.guarantee_bid_price:
+#            for bid in bids:
+#                if bid.cleared_price > bid.price:
+#                    bid.cleared_price = bid.price
 
         # Clip cleared offer prices.
         if self.limits.has_key("max_cleared_offer"):
@@ -500,8 +640,8 @@ class SmartMarket(object):
         return offers, bids
 
 
-    def clear_quantity(self, offbids, gen):
-        """ Computes the cleared bid quantity from total cleared quantity.
+    def _clear_quantity(self, offbids, gen):
+        """ Computes the cleared bid quantity from total dispatched quantity.
         """
         # Filter out offers/bids not applicable to the generator in question.
         if gen.is_load:
@@ -545,56 +685,6 @@ class SmartMarket(object):
 
             # Increment the accepted quantity.
             accepted_qty += ob.quantity
-
-
-    def enforce_limits(self, offers, bids, limits):
-        """ Returns a tuple of lists of offers and bids with their withheld
-            flags set if they represent invalid (<= 0.0) quantities or have
-            prices outwith the set limits.
-        """
-        # Strip zero quantities (rounded to 4 decimal places).
-#        if min([offbid.quantity for offbid in offers + bids]) < 0.0:
-#            logger.info("Ignoring offers/bids with negative quantities.")
-#
-#        if 0.0 in [round(offer, 4) for offer in offers + bids]:
-#            logger.info("Ignoring zero quantity offers/bids.")
-#
-#        offers = [offr for offr in offers if round(offr.quantity, 4) > 0.0]
-#        bids = [bid for bid in bids if round(bid.quantity, 4) > 0.0]
-
-        for offer in offers:
-            if round(offer.quantity, 4) <= 0.0:
-                logger.info("Withholding non-posistive quantity [%.2f] "
-                            "offer." % offer.quantity)
-                offer.withheld = True
-
-        for bid in bids:
-            if round(bid.quantity, 4) <= 0.0:
-                logger.info("Withholding non-posistive quantity [%.2f] "
-                            "bid." % bid.quantity)
-                bid.withheld = True
-
-        # Optionally strip prices beyond limits.
-#        if limits.has_key('max_offer'):
-#            offers = [of for of in offers if of.price <= limits['max_offer']]
-#        if limits.has_key('min_bid'):
-#            bids = [bid for bid in bids if bid.price >= limits['min_bid']]
-
-        if limits.has_key("max_offer"):
-            for offer in offers:
-                if offer.price >= limits["max_offer"]:
-                    logger.info("Offer price [%.2f] above limit [%.3f], "
-                        "withholding." % (offer.price, limits["max_offer"]))
-                    offer.withheld = True
-
-        if limits.has_key("min_bid"):
-            for bid in bids:
-                if bid.price <= limits["min_bid"]:
-                    logger.info("Bid price [%.2f] below limit [%.2f], "
-                        "withholding." % (bid.price, limits["min_bid"]))
-                    bid.withheld = True
-
-        return offers, bids
 
 #------------------------------------------------------------------------------
 #  "_OfferBid" class:
