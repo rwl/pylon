@@ -132,6 +132,6 @@ class ProfitTask(Task):
         d = mkt.settlement[g]
         logger.debug("Profit task [%s] reward: %s" % (g.name, d.earnings))
 
-        return array([d.earnings])
+        return d.earnings
 
 # EOF -------------------------------------------------------------------------
