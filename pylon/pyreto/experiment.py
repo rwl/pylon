@@ -23,10 +23,11 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-import sys
 import logging
 
-from pylon.readwrite import ReSTWriter
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
 
@@ -59,79 +60,62 @@ class MarketExperiment(object):
         self.stepid = 0
 
     #--------------------------------------------------------------------------
-    #  PyBrain "Experiment" interface:
+    #  "Experiment" interface:
     #--------------------------------------------------------------------------
 
     def doInteractions(self, number=1):
         """ Directly maps the agents and the tasks.
         """
         for interaction in range(number):
+            self.stepid += 1
+
             # Initialise the market.
             self.market.init()
 
             # Get an action from each agent and perform it.
             for task, agent in zip(self.tasks, self.agents):
-
-                self.stepid += 1
                 observation = task.getObservation()
-#                logger.debug("Agent [%s] integrating observation: %s" %
-#                             (agent.name, observation))
                 agent.integrateObservation(observation)
 
                 action = agent.getAction()
-#                logger.debug("Agent [%s] performing action: %s" %
-#                             (agent.name, action))
                 task.performAction(action)
 
 
             # Clear the market.
-            self.market.clear()
+            self.market.clear_offers_and_bids()
 
 
             # Reward each agent appropriately.
             for task, agent in zip(self.tasks, self.agents):
-
                 reward = task.getReward()
-#                logger.debug("Agent [%s] receiving reward: %s" %
-#                             (agent.name, reward))
-
-                if task.env.hasRenderer():
-                    data = (None, None, reward[0], None)
-                    task.env.getRenderer().updateData(data, False)
-
                 agent.giveReward(reward)
 
             # Instruct each agent to learn from it's actions.
             for agent in self.agents:
-#                logger.debug("Agent [%s] being instructed to learn." %
-#                             agent.name)
                 agent.learn()
 
-#                logger.debug("Module [%s] parameters: %s" %
-#                             (agent.module.name, agent.module.params))
-
+            # Update environment rendering data.
+            for task, agent in zip(self.tasks, self.agents):
                 if task.env.hasRenderer():
-                    data = (None, None, None, agent.module.params[0])
-                    task.env.getRenderer().updateData(data)
+                    numseq = agent.history.getNumSequences()
+                    seq = agent.history.getSequence(numseq - 1)
+                    states = seq[0][-1]
+                    actions = seq[1][-1]
+                    rewards = seq[2][-1]
+                    task.env.getRenderer().updateData(states, actions, rewards)
 
-            # Update each agent's environment state attributes.
-#            for task in self.tasks:
-#                demand = sum([l.p for l in self.power_system.online_loads])
-#                task.env.demand = demand
-#                # TODO: Implement computation of MCP and demand forecast.
-#                task.env.mcp      = 0.0
-#                task.env.forecast = demand
-
+    #--------------------------------------------------------------------------
+    #  Set initial conditions for the experiment:
+    #--------------------------------------------------------------------------
 
     def reset(self):
-        """ Set initial conditions.
+        """ Sets initial conditions for the experiment.
         """
         self.stepid = 0
 
-        for task in self.tasks:
+        for task, agent in zip(self.tasks, self.agents):
             task.env.reset()
 
-        for agent in self.agents:
             agent.module.reset()
             agent.history.reset()
 #            agent.history.clear()

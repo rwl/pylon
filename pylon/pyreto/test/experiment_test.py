@@ -100,17 +100,20 @@ class MarketExperimentTest(unittest.TestCase):
         agents = []
         tasks = []
         for g in self.case.all_generators:
-            # Create agent for generator 1.
+            # Create an environment for the agent with an asset and a market.
             env = ParticipantEnvironment(g, mkt, n_offbids=2)
-#            env.setRenderer(ParticipantRenderer())
-#            env.getRenderer().start()
+            env.setRenderer(ParticipantRenderer(env.outdim, env.indim))
+            env.getRenderer().start()
 
+            # Create a task for the agent to achieve.
             task = ProfitTask(env)
 
+            # Build an artificial neural network for the agent.
             net = buildNetwork(task.outdim, task.indim, bias=False,
                                outputbias=False)
 #            net._setParameters(array([9]))
 
+            # Create a learning agent with a learning algorithm.
             agent = LearningAgent(module=net, learner=ENAC())
             # initialize parameters (variance)
 #            agent.setSigma([-1.5])
@@ -140,7 +143,7 @@ class MarketExperimentTest(unittest.TestCase):
         #   task.getReward()
         #   agent.giveReward()
         #   agent.learn()
-        experiment.doInteractions(1)
+        experiment.doInteractions(3)
 
 #        env.getRenderer().stop()
 
