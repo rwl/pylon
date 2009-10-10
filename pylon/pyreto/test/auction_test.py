@@ -134,7 +134,7 @@ class MarketTestCase(unittest.TestCase):
         mkt = SmartMarket(self.case, self.offers, self.bids,
             loc_adjust='dc', auction_type="first price", price_cap=100.0)
 
-        settlement = mkt.clear()
+        settlement = mkt.clear_offers_and_bids()
 
 #        for dispatch in settlement:
 #            print dispatch.quantity, dispatch.price

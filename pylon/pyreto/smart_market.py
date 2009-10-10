@@ -25,7 +25,7 @@
 import time
 import logging
 
-from pylon import UDOPF
+from pylon import UDOPF, DCOPF
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -134,7 +134,7 @@ class SmartMarket(object):
 #            self.bids = [bid for vl in vloads for bid in vl.get_bids()]
 
 
-    def clear(self):
+    def clear_offers_and_bids(self):
         """ Computes cleared offers and bids.
         """
         t0 = time.time()
@@ -327,7 +327,8 @@ class SmartMarket(object):
     def _run_opf(self, case):
         """ Solves the optimisation problem.
         """
-        routine = self.routine = UDOPF(dc=self.loc_adjust == "dc")
+#        routine = self.routine = UDOPF(dc=self.loc_adjust == "dc")
+        routine = self.routine = DCOPF(show_progress=False)
         success = self.success = routine(case)
 
         return success
@@ -387,10 +388,9 @@ class SmartMarket(object):
 
 
             # Clear offer/bid quantities and prices.
-            Auction(case, offers, bids, guarantee_offer_price,
-                guarantee_bid_price, self.limits).clear(self.auction_type)
-
-#            prices = [of.quantity * of.price for of in offers]
+            Auction(case, offers, bids,
+                guarantee_offer_price, guarantee_bid_price,
+                self.limits).clear_offers_and_bids(self.auction_type)
 
         else:
             logger.error("Non-convergent UOPF.")
@@ -403,8 +403,6 @@ class SmartMarket(object):
 
             for offbid in offers + bids:
                 offbid.cleared_quantity = offbid.cleared_price = 0.0
-
-#            cleared_offers, cleared_bids = offers, bids
 
 
     def _compute_costs(self, case, offers, bids):
@@ -487,7 +485,7 @@ class Auction(object):
         self.limits = limits
 
 
-    def clear(self, auction_type):
+    def clear_offers_and_bids(self, auction_type):
         """ Clears a set of bids and offers.
         """
         offers, bids = self.offers, self.bids
