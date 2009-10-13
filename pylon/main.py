@@ -53,7 +53,7 @@ class PylonApplication(object):
     #--------------------------------------------------------------------------
 
     def __init__(self, file_name="", type="any", routine="acpf",
-            algorithm="newton", output_type="rst"):
+            algorithm="newton", output_type="rst", gui=False):
         """ Initialises a new PylonApplication instance.
         """
         # Name of the input file.
@@ -70,6 +70,8 @@ class PylonApplication(object):
         # Output format type. Possible values are: 'rst', 'matpower', 'excel'
         # and 'csv'.
         self.output_type = output_type
+        # Use the portiable graphical interface to Pylon.
+        self.gui = gui
 
     #--------------------------------------------------------------------------
     #  Runs the application:
@@ -83,7 +85,11 @@ class PylonApplication(object):
         case = read_case(input, self.type, self.file_name)
 
         if case is not None:
-            if self.routine != "none":
+            # Portable graphical interface.
+            if self.gui:
+                from pylon.tk import main
+                main(case)
+            elif self.routine != "none":
                 # Get the routine and pass the case to it.
                 routine = self._get_routine(self.routine)
 
@@ -233,6 +239,9 @@ def main():
 #    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
 #        default=False, help="Print debug information.")
 
+    parser.add_option("-g", "--gui", action="store_true", dest="gui",
+        default=False, help="Use the portable graphical interface to Pylon.")
+
     parser.add_option("-n", "--no-report", action="store_true",
         dest="no_report", default=False, help="Suppress report output.")
 
@@ -306,7 +315,8 @@ def main():
                            type        = options.type,
                            routine     = options.routine,
                            algorithm   = options.algorithm,
-                           output_type = options.otype)
+                           output_type = options.otype,
+                           gui         = options.gui)
 
     app(input=infile, output=outfile)
 

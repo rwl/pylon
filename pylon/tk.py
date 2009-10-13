@@ -47,7 +47,7 @@ CASE_30   = os.path.dirname(__file__) + "/test/data/case30pwl.pkl"
 
 
 class PylonTk(object):
-    def __init__(self, master):
+    def __init__(self, master, case=None):
         self.root = master
 
         frame = self.frame = Frame(master)
@@ -57,7 +57,7 @@ class PylonTk(object):
 
         nameframe = Frame(frame)
 
-        n_name = self.n_name = StringVar()
+        n_name = self.case_name = StringVar()
         n_name_label = Label(nameframe, textvariable=n_name, relief=SUNKEN,
             anchor=W, padx=3, pady=3, justify=LEFT)
         n_name_label.pack(side=LEFT, expand=YES, fill=X)
@@ -94,7 +94,10 @@ class PylonTk(object):
         status_label.bind('<Enter>', self.on_status_enter)
         status_label.bind('<Leave>', self.on_status_leave)
 
-        self.on_new()
+        if case is not None: # Initialise the singleton case.
+            self.set_case(case)
+        else:
+            self.on_new()
 
 
     def _init_menubar(self):
@@ -254,14 +257,14 @@ class PylonTk(object):
         self.ui_log.level.set(logger.getEffectiveLevel())
 
 
-    def set_case(self, n):
-        self.n = n
-        e = one_for_one(n)
+    def set_case(self, case):
+        self.case = case
+        e = one_for_one(case)
         self.set_experiment(e)
 
-        self.root.title("PylonTk:  %s" % self.n.name)
-        self.n_name.set("Current Case:  %s" % self.n.name)
-#        self.ui_log.n_name.set(n.name)
+        self.root.title("PylonTk:  %s" % self.case.name)
+        self.case_name.set("Current Case:  %s" % self.case.name)
+#        self.ui_log.n_name.set(case.name)
 
 
     def set_experiment(self, e):
@@ -320,11 +323,11 @@ class PylonTk(object):
     def on_save_as(self):
         filename = asksaveasfilename(filetypes=[("MATPOWER file", ".m")])
         if filename:
-            MATPOWERWriter().write(self.n, filename)
+            MATPOWERWriter().write(self.case, filename)
 
 
     def on_properties(self, event=None):
-        CaseProperties(self.root, self.n)
+        CaseProperties(self.root, self.case)
 
     # Import handlers ---------------------------------------------------------
 
@@ -353,31 +356,31 @@ class PylonTk(object):
     def on_pickle(self):
         filename = asksaveasfilename(filetypes=[("Pickle file", ".pkl")])
         if filename:
-            PickleWriter().write(self.n, filename)
+            PickleWriter().write(self.case, filename)
 
 
     def on_excel(self):
         filename = asksaveasfilename(filetypes=[("Excel file", ".xls")])
         if filename:
-            ExcelWriter().write(self.n, filename)
+            ExcelWriter().write(self.case, filename)
 
 
     def on_csv(self):
         filename = asksaveasfilename(filetypes=[("CSV file", ".csv")])
         if filename:
-            CSVWriter().write(self.n, filename)
+            CSVWriter().write(self.case, filename)
 
 
     def on_rest(self):
         ftypes = [("ReStructuredText file", ".rst")]
         filename = asksaveasfilename(filetypes=ftypes)
         if filename:
-            ReSTWriter().write(self.n, filename)
+            ReSTWriter().write(self.case, filename)
 
     # View --------------------------------------------------------------------
 
     def on_graph(self):
-        GraphView(self.root, self.n, self.e)
+        GraphView(self.root, self.case, self.e)
 
     # UI Log ------------------------------------------------------------------
 
@@ -390,7 +393,7 @@ class PylonTk(object):
         if self.alwaysclear.get():
             self.ui_log.clear()
         writer = self.writer_map[self.writer_type.get()]
-        writer.write_header(self.n, self.ui_log)
+        writer.write_header(self.case, self.ui_log)
         del writer
 
 
@@ -398,7 +401,7 @@ class PylonTk(object):
         if self.alwaysclear.get():
             self.ui_log.clear()
         writer = self.writer_map[self.writer_type.get()]
-        writer.write_bus_data(self.n, self.ui_log)
+        writer.write_bus_data(self.case, self.ui_log)
         del writer
 
 
@@ -406,7 +409,7 @@ class PylonTk(object):
         if self.alwaysclear.get():
             self.ui_log.clear()
         writer = self.writer_map[self.writer_type.get()]
-        writer.write_branch_data(self.n, self.ui_log)
+        writer.write_branch_data(self.case, self.ui_log)
         del writer
 
 
@@ -414,7 +417,7 @@ class PylonTk(object):
         if self.alwaysclear.get():
             self.ui_log.clear()
         writer = self.writer_map[self.writer_type.get()]
-        writer.write_generator_data(self.n, self.ui_log)
+        writer.write_generator_data(self.case, self.ui_log)
         del writer
 
 
@@ -457,31 +460,31 @@ class PylonTk(object):
     # -------------------------------------------------------------------------
 
     def on_dcpf(self):
-        DCPF().solve(self.n)
+        DCPF().solve(self.case)
 
 
     def on_newton(self):
-        NewtonRaphson().solve(self.n)
+        NewtonRaphson().solve(self.case)
 
 
     def on_fd(self):
-        FastDecoupled().solve(self.n)
+        FastDecoupled().solve(self.case)
 
 
     def on_dcopf(self):
-        DCOPF().solve(self.n)
+        DCOPF().solve(self.case)
 
 
     def on_acopf(self):
-        ACOPF().solve(self.n)
+        ACOPF().solve(self.case)
 
 
     def on_duopf(self):
-        UDOPF(dc=True).solve(self.n)
+        UDOPF(dc=True).solve(self.case)
 
 
     def on_uopf(self):
-        UDOPF(dc=False).solve(self.n)
+        UDOPF(dc=False).solve(self.case)
 
 
     def on_exit(self, event=None):
@@ -503,7 +506,7 @@ class CaseProperties(tkSimpleDialog.Dialog):
     def __init__(self, parent, case, title="Case Properties"):
         """ Initialises the font dialog.
         """
-        self.n = case
+        self.case = case
         tkSimpleDialog.Dialog.__init__(self, parent, title)
 
 
@@ -520,7 +523,7 @@ class CaseProperties(tkSimpleDialog.Dialog):
         bus_lb = self.bus_lb = Listbox(master, selectmode=SINGLE, width=10)
         bus_lb.pack(side=LEFT)
 
-        for bus in self.n.buses:
+        for bus in self.case.buses:
             bus_lb.insert(END, bus.name)
 
         bus_lb.bind("<<ListboxSelect>>", self.on_bus)
@@ -531,7 +534,7 @@ class CaseProperties(tkSimpleDialog.Dialog):
 
 
     def on_bus(self, event=None):
-        bus = self.n.buses[int(self.bus_lb.curselection()[0])]
+        bus = self.case.buses[int(self.bus_lb.curselection()[0])]
 
         self.excluded = ["zone", "v_base", "v_magnitude_guess",
                          "v_angle_guess", "v_magnitude", "v_angle", "g_shunt",
@@ -552,7 +555,7 @@ class CaseProperties(tkSimpleDialog.Dialog):
         ''' Process the data. This method is called automatically to process
             the data, *after* the dialog is destroyed.
         '''
-        bus = self.n.buses[int(self.bus_lb.curselection()[0])]
+        bus = self.case.buses[int(self.bus_lb.curselection()[0])]
 
         for attr in [a for a in bus_attrs if a not in self.excluded+['mode']]:
             value = getattr(self.bus_params, attr).get()
@@ -599,7 +602,7 @@ class GraphView(tkSimpleDialog.Dialog):
     def __init__(self, parent, case, experiment):
         """ Initialises the font dialog.
         """
-        self.n = case
+        self.case = case
         self.e = experiment
 
         tkSimpleDialog.Dialog.__init__(self, parent, title="Graph")
@@ -608,7 +611,7 @@ class GraphView(tkSimpleDialog.Dialog):
     def draw_graph(self):
         """ Creates a representation of the graph and draws it on the canvas.
         """
-        case = self.n
+        case = self.case
         prog    = self.prog.get()
         format  = self.format.get()
 
@@ -904,7 +907,7 @@ class UILog(object):
 
         level.set(logger.getEffectiveLevel())
 
-#        n_name = self.n_name = StringVar()
+#        n_name = self.case_name = StringVar()
 #        Label(loglevels, textvariable=n_name).pack(side=RIGHT, padx=5)
 
 
@@ -944,12 +947,12 @@ class AboutDialog(object):
         self.top.destroy()
 
 
-def main():
+def main(case=None):
     root = Tk()
     root.minsize(300, 300)
 #    root.geometry("666x666")
     root.title('PylonTk')
-    app = PylonTk(root)
+    app = PylonTk(root, case)
     root.mainloop()
 
 
