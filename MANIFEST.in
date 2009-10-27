@@ -1,2 +1,2 @@
-recursive-include pylon *.png *.ico *.m *.raw *.ini
+recursive-include pylon *.m *.raw *.pkl
 recursive-include doc *
