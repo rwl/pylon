@@ -25,6 +25,8 @@
 
 import logging
 
+from pybrain.rl.experiments import Experiment
+
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -32,10 +34,42 @@ import logging
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
+#  "GraphicalExperiment" class:
+#------------------------------------------------------------------------------
+
+class GraphicalExperiment(Experiment):
+    """ Defines an experiment with graphical output.
+    """
+
+    def __init__(self, task, agent):
+        """ Constructs a new GraphicalExperiment.
+        """
+        super(GraphicalExperiment, self).__init__(task, agent)
+        self.renderer = None
+
+
+    def setRenderer(self, renderer):
+        """ Set the renderer, which is an object of or inherited from Renderer.
+        """
+        self.renderer = renderer
+
+
+    def getRenderer(self):
+        """ Returns the current renderer.
+        """
+        return self.renderer
+
+
+    def hasRenderer(self):
+        """ Returns true if a Renderer has been previously set.
+        """
+        return (self.getRenderer() != None)
+
+#------------------------------------------------------------------------------
 #  "MarketExperiment" class:
 #------------------------------------------------------------------------------
 
-class MarketExperiment(object):
+class MarketExperiment(GraphicalExperiment):
     """ Defines an experiment that matches up agents with tasks and handles
         their interaction.
     """
@@ -46,6 +80,8 @@ class MarketExperiment(object):
     def __init__(self, tasks, agents, market):
         """ Initialises the market experiment.
         """
+        super(MarketExperiment, self).__init__(None, None)
+
         assert len(tasks) == len(agents)
 
         # Tasks associate and agent with its environment.
@@ -59,6 +95,47 @@ class MarketExperiment(object):
 
         self.stepid = 0
 
+
+    def _oneInteraction(self):
+        """ Coordinates one interaction between each agent and its environment.
+        """
+        self.stepid += 1
+
+        # Initialise the market.
+        self.market.init()
+
+        # Get an action from each agent and perform it.
+        for task, agent in zip(self.tasks, self.agents):
+            observation = task.getObservation()
+            agent.integrateObservation(observation)
+
+            action = agent.getAction()
+            task.performAction(action)
+
+
+        # Clear the market.
+        self.market.clear_offers_and_bids()
+
+
+        # Reward each agent appropriately.
+        for task, agent in zip(self.tasks, self.agents):
+            reward = task.getReward()
+            agent.giveReward(reward)
+
+        # Instruct each agent to learn from it's actions.
+        for agent in self.agents:
+            agent.learn()
+
+        # Update environment rendering data.
+#        for task, agent in zip(self.tasks, self.agents):
+#            if task.env.hasRenderer():
+#                numseq = agent.history.getNumSequences()
+#                seq = agent.history.getSequence(numseq - 1)
+#                states = seq[0][-1]
+#                actions = seq[1][-1]
+#                rewards = seq[2][-1]
+#                task.env.getRenderer().updateData(states, actions, rewards)
+
     #--------------------------------------------------------------------------
     #  "Experiment" interface:
     #--------------------------------------------------------------------------
@@ -66,43 +143,24 @@ class MarketExperiment(object):
     def doInteractions(self, number=1):
         """ Directly maps the agents and the tasks.
         """
-        for interaction in range(number):
-            self.stepid += 1
+#        if self.hasRenderer():
+#            self.getRenderer().start()
 
-            # Initialise the market.
-            self.market.init()
+        for _ in range(number):
+            self._oneInteraction()
 
-            # Get an action from each agent and perform it.
-            for task, agent in zip(self.tasks, self.agents):
-                observation = task.getObservation()
-                agent.integrateObservation(observation)
-
-                action = agent.getAction()
-                task.performAction(action)
-
-
-            # Clear the market.
-            self.market.clear_offers_and_bids()
-
-
-            # Reward each agent appropriately.
-            for task, agent in zip(self.tasks, self.agents):
-                reward = task.getReward()
-                agent.giveReward(reward)
-
-            # Instruct each agent to learn from it's actions.
+        # Update experiment rendering data.
+        if self.hasRenderer():
+            data = []
             for agent in self.agents:
-                agent.learn()
+                nseq = agent.history.getNumSequences()
+                seq = agent.history.getSequence(nseq - 1)
+                data.append(seq)
 
-            # Update environment rendering data.
-            for task, agent in zip(self.tasks, self.agents):
-                if task.env.hasRenderer():
-                    numseq = agent.history.getNumSequences()
-                    seq = agent.history.getSequence(numseq - 1)
-                    states = seq[0][-1]
-                    actions = seq[1][-1]
-                    rewards = seq[2][-1]
-                    task.env.getRenderer().updateData(states, actions, rewards)
+            self.getRenderer().updateData(data)
+
+#        if self.hasRenderer():
+#            self.getRenderer().stop()
 
     #--------------------------------------------------------------------------
     #  Set initial conditions for the experiment:

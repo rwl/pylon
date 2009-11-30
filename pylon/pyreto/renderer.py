@@ -27,12 +27,90 @@ import time
 import threading
 
 import matplotlib
-matplotlib.use('WXAgg')
+#matplotlib.use('WXAgg')
 
 import numpy
 import pylab
 
 from pybrain.rl.environments.renderer import Renderer
+
+#------------------------------------------------------------------------------
+#  "ExperimentRenderer" class:
+#------------------------------------------------------------------------------
+
+class ExperimentRenderer(Renderer):
+    """ Defines a renderer that displays aspects of a market experiment.
+    """
+
+    def __init__(self):
+        """ Constructs a new ExperimentRenderer.
+        """
+        super(ExperimentRenderer, self).__init__()
+
+    #--------------------------------------------------------------------------
+    #  "Renderer" interface:
+    #--------------------------------------------------------------------------
+
+    def updateData(self, data):
+        """ Updates the data used by the renderer.
+        """
+#        pylab.ion()
+        fig = pylab.figure(1)
+
+        n_agent = len(data)
+
+        idx = 1
+        for i, adata in enumerate(data):
+            saxis = fig.add_subplot(3, n_agent, i + 1)
+            saxis.plot(adata[0])
+            idx += 1
+
+            aaxis = fig.add_subplot(3, n_agent, i + 1 + n_agent)
+            aaxis.plot(adata[1])
+            idx += 1
+
+            raxis = fig.add_subplot(3, n_agent, i + 1 + (n_agent * 2))
+            raxis.plot(adata[2])
+            idx += 1
+
+        pylab.show()
+
+#        self._render()
+
+
+    def start(self):
+        """ Wrapper for Thread.start().
+        """
+        self.draw_plot()
+        super(ExperimentRenderer, self).start()
+
+
+    def _render(self):
+        """ Calls the render methods.
+        """
+#        self.reward_line.set_ydata(self.reward_data)
+
+
+    def stop(self):
+        """ Stops the current rendering thread.
+        """
+        pass
+
+    #--------------------------------------------------------------------------
+    #  "ExperimentRenderer" interface:
+    #--------------------------------------------------------------------------
+
+    def draw_plot(self):
+        """ Initialises plots of the environment.
+        """
+        pylab.ion()
+        fig = pylab.figure(1)
+
+        reward_axis = fig.add_subplot(1, 1, 1)
+        reward_lines = reward_axis.plot([0.0, 1.0], [0.0, 1.0], "mx-")
+#        self.reward_line = reward_lines[0]
+
+        pylab.draw()
 
 #------------------------------------------------------------------------------
 #  "ParticipantRenderer" class:

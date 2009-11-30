@@ -36,7 +36,7 @@ from pylon.readwrite import PickleReader
 from pylon.pyreto import \
     MarketExperiment, ParticipantEnvironment, ProfitTask, SmartMarket
 
-from pylon.pyreto.renderer import ParticipantRenderer
+from pylon.pyreto.renderer import ParticipantRenderer, ExperimentRenderer
 
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.rl.agents import LearningAgent
@@ -102,8 +102,8 @@ class MarketExperimentTest(unittest.TestCase):
         for g in self.case.all_generators:
             # Create an environment for the agent with an asset and a market.
             env = ParticipantEnvironment(g, mkt, n_offbids=2)
-            env.setRenderer(ParticipantRenderer(env.outdim, env.indim))
-            env.getRenderer().start()
+#            env.setRenderer(ParticipantRenderer(env.outdim, env.indim))
+#            env.getRenderer().start()
 
             # Create a task for the agent to achieve.
             task = ProfitTask(env)
@@ -127,6 +127,7 @@ class MarketExperimentTest(unittest.TestCase):
             tasks.append(task)
 
         experiment = MarketExperiment(tasks, agents, mkt)
+        experiment.setRenderer(ExperimentRenderer())
 
         # Experiment event sequence:
         #   task.getObservation()
