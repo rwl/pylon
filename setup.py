@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2009 Richard W. Lincoln
+# Copyright (C) 2009 Richard Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 from setuptools import setup, find_packages
 
-setup(author="Richard W. Lincoln",
+setup(author="Richard Lincoln",
       author_email="r.w.lincoln@gmail.com",
       description="Power system and energy market simulator.",
       url="http://rwl.github.com/pylon",

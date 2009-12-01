@@ -37,7 +37,7 @@ Refer to the documentation for detailed usage information.
 Credits
 -------
 
-Pylon is developed by Richard W. Lincoln (r.w.lincoln@gmail.com).
+Pylon is developed by Richard Lincoln (r.w.lincoln@gmail.com).
 
 The power flow and optimal power flow routines provided with Pylon are
 translated from MATPOWER_ by R. D. Zimmerman, C. E. Murillo-Sanchez & D. Gan.

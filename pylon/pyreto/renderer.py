@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2009 Richard W. Lincoln
+# Copyright (C) 2009 Richard Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import time
 import threading
 
 import matplotlib
-#matplotlib.use('WXAgg')
+matplotlib.use('WXAgg')
 
 import numpy
 import pylab

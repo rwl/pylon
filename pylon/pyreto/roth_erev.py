@@ -1,4 +1,4 @@
-__author__ = 'Richard W. Lincoln, r.w.lincoln@gmail.com'
+__author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 import random
 

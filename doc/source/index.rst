@@ -7,7 +7,7 @@ PYLON
 	:Release: |version|
 	:Date: April 1, 2009
 
-	**Richard W. Lincoln**
+	**Richard Lincoln**
 
 	Download `PDF <http://pylon.eee.strath.ac.uk/site/doc/manual/pylon.pdf>`_
 
