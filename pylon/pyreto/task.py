@@ -107,7 +107,7 @@ class ContinuousTask(Task):
         self.actor_limits = self.getActorLimits()
 
     #--------------------------------------------------------------------------
-    #  "StatelessTask" interface:
+    #  "ContinuousTask" interface:
     #--------------------------------------------------------------------------
 
     def getSensorLimits(self):

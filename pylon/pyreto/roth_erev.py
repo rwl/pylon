@@ -2,7 +2,7 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 import random
 
-from pybrain.rl.learners.rllearner import RLLearner
+from pybrain.rl.learners.valuebased.valuebased import ValueBasedLearner
 from pybrain.structure.modules.module import Module
 
 #class Action:
@@ -211,7 +211,7 @@ class PropensityTable(Module):
 #        self.eventGenerator.setState(self.probDistFunction)
 
 
-class RothErev(RLLearner):
+class RothErev(ValueBasedLearner):
     """ For classes that implement reinforcement learning algorithms. Classes
         implementing this interface are responsible for driving the learning
         process of specific algorithms.

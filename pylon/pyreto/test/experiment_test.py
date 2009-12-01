@@ -34,13 +34,17 @@ from pylon import Case, Bus, Generator, Load
 from pylon.readwrite import PickleReader
 
 from pylon.pyreto import \
-    MarketExperiment, ParticipantEnvironment, ProfitTask, SmartMarket
+    MarketExperiment, ParticipantEnvironment, SmartMarket, StatelessTask, \
+    DiscreteTask, ContinuousTask, RothErev, PropensityTable
 
 from pylon.pyreto.renderer import ParticipantRenderer, ExperimentRenderer
 
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners import ENAC
+from pybrain.rl.learners.valuebased import ActionValueTable
+from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
+from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -92,8 +96,39 @@ class MarketExperimentTest(unittest.TestCase):
         self.case = get_pickled_case()
 
 
-    def test_learning(self):
-        """ Test maximisation of marginal generator offer.
+    def test_stateless(self):
+        """ Test learning without state information.
+        """
+        mkt = SmartMarket(self.case)
+        exp = MarketExperiment([], [], mkt)
+        for g in self.case.all_generators:
+            env = ParticipantEnvironment(g, mkt)
+            exp.tasks.append(StatelessTask(env))
+            table = ActionValueTable(1, 4)
+#            table = PropensityTable(4, actionDomain)
+            table.initialize(1.0)
+            exp.agents.append(LearningAgent(table, RothErev()))
+        exp.doInteractions(3)
+
+
+    def test_valuebased(self):
+        """ Test value-based learner.
+        """
+        mkt = SmartMarket(self.case)
+        exp = MarketExperiment([], [], mkt)
+        for g in self.case.all_generators:
+            env = ParticipantEnvironment(g, mkt)
+            exp.tasks.append(DiscreteTask(env))
+            table = ActionValueTable(1, 4)
+            table.initialize(1.0)
+            learner = SARSA() #Q() QLambda()
+#            learner.explorer = BoltzmannExplorer() # default is e-greedy.
+            exp.agents.append(LearningAgent(table, learner))
+        exp.doInteractions(3)
+
+
+    def test_continuous(self):
+        """ Test learning with continous sensor and action spaces.
         """
         mkt = SmartMarket(self.case)
 
@@ -106,7 +141,7 @@ class MarketExperimentTest(unittest.TestCase):
 #            env.getRenderer().start()
 
             # Create a task for the agent to achieve.
-            task = ProfitTask(env)
+            task = ContinuousTask(env)
 
             # Build an artificial neural network for the agent.
             net = buildNetwork(task.outdim, task.indim, bias=False,
