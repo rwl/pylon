@@ -32,7 +32,7 @@ from pyparsing \
     import Literal, Word, restOfLine, alphanums, printables, quotedString, \
     White, OneOrMore, ZeroOrMore, Optional, alphas
 
-from pylon import Case, Bus, Branch, Generator, Load
+from pylon import Case, Bus, Branch, Generator
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -415,11 +415,11 @@ class PSSEReader(object):
             if bus._bus_id == tokens["Bus"]:
                 break
         else:
-            pass
             logger.error("Bus [%d] for load not found." % tokens["Bus"])
+            return
 
-        load = Load(p=tokens["LP"], q=tokens["LQ"])
-        bus.loads.append(load)
+        bus.p_demand += tokens["LP"]
+        bus.q_demand += tokens["LQ"]
 
 
     def _push_generator(self, tokens):

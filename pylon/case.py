@@ -97,17 +97,17 @@ class Case(Named):
         """
         return [g for g in self.all_generators if g.online]
 
-    @property
-    def all_loads(self):
-        """ All system loads.
-        """
-        return [l for v in self.buses for l in v.loads]
+#    @property
+#    def all_loads(self):
+#        """ All system loads.
+#        """
+#        return [l for v in self.buses for l in v.loads]
 
-    @property
-    def online_loads(self):
-        """ All in-service loads.
-        """
-        return [l for l in self.all_loads if l.online]
+#    @property
+#    def online_loads(self):
+#        """ All in-service loads.
+#        """
+#        return [l for l in self.all_loads if l.online]
 
     @property
     def online_branches(self):
@@ -125,7 +125,8 @@ class Bus(Named):
 
     def __init__(self, name=None, slack=False, v_base=100.0,
             v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
-            g_shunt=0.0, b_shunt=0.0, generators=None, loads=None):
+            p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0,
+            generators=None):#, loads=None):
         """ Initialises a new Bus instance.
         """
         # Unique name.
@@ -142,6 +143,12 @@ class Bus(Named):
         self.v_max = v_max
         # Minimum voltage magnitude (pu).
         self.v_min = v_min
+
+        # Total fixed active power load at this bus.
+        self.p_demand = p_demand
+        # Total fixed reactive power load at this bus.
+        self.q_demand = q_demand
+
         # Shunt conductance (MW (demanded) at V = 1.0 p.u.).
         self.g_shunt = g_shunt
         # Shunt susceptance (MVAr (injected) at V = 1.0 p.u.).
@@ -154,10 +161,10 @@ class Bus(Named):
             self.generators = generators
 
         # Loads that specify real and reactive power demand.
-        if loads is None:
-            self.loads = []
-        else:
-            self.loads = loads
+#        if loads is None:
+#            self.loads = []
+#        else:
+#            self.loads = loads
 
         # Voltage magnitude, typically determined by a routine.
         self.v_magnitude = 0.0
@@ -191,11 +198,11 @@ class Bus(Named):
         """
         return sum([g.p for g in self.generators])
 
-    @property
-    def p_demand(self):
-        """ Total active power load.
-        """
-        return sum([l.p for l in self.loads])
+#    @property
+#    def p_demand(self):
+#        """ Total active power load.
+#        """
+#        return sum([l.p for l in self.loads])
 
     @property
     def p_surplus(self):
@@ -209,11 +216,11 @@ class Bus(Named):
         """
         return sum([g.q for g in self.generators])
 
-    @property
-    def q_demand(self):
-        """ Total reactive power load.
-        """
-        return sum([l.q for l in self.loads])
+#    @property
+#    def q_demand(self):
+#        """ Total reactive power load.
+#        """
+#        return sum([l.q for l in self.loads])
 
     @property
     def q_surplus(self):
@@ -646,72 +653,72 @@ class Generator(Named):
 #  "Load" class:
 #------------------------------------------------------------------------------
 
-class Load(Named):
-    """ Defines a PQ load component.
-    """
-
-    def __init__(self, name=None, online=True, p=1.0, q=0.1, p_max=1.0,
-            p_min=0.0, p_profile=None):
-        """ Initialises a new Load instance.
-        """
-        # Is the load in service?
-        self.online = online
-        # Active power demand (MW).
-        self.p = p
-        # Reactive power demand (MVAr).
-        self.q = q
-        # Maximum active power (MW).
-        self.p_max = p_max
-        # Minimum active power (MW).
-        self.p_min = p_min
-
-        self._p_profile = []
-        # Active power profile (%).
-        if p_profile is None:
-            self.p_profile = [100.0]
-        else:
-            self.p_profile = p_profile
-
-        self._p_cycle = cycle(self.p_profile)
-
-
-    def __getstate__(self):
-        """ Prevents the 'cycle' from being pickled.
-        """
-        result = self.__dict__.copy()
-        del result['_p_cycle']
-        return result
-
-
-    def __setstate__(self, dict):
-        """ Sets the load profile cycle when unpickling.
-        """
-        self.__dict__ = dict
-        self._p_cycle = cycle(self.p_profile)
-
-    @property
-    def p_profiled(self):
-        """ Active power demand scaled between 'p_max' and 'p_min'
-            according to the 'p_profile' percentages.
-        """
-        percent = self._p_cycle.next()
-        return (percent / 100) * (self.p_max - self.p_min)
-
-
-    def get_p_profile(self):
-        """ Returns the active power profile for the load.
-        """
-        return self._p_profile
-
-
-    def set_p_profile(self, profile):
-        """ Sets the active power profile, updating the cycle iterator.
-        """
-        self._p_cycle = cycle(profile)
-        self._p_profile = profile
-
-
-    p_profile = property(get_p_profile, set_p_profile)
+#class Load(Named):
+#    """ Defines a PQ load component.
+#    """
+#
+#    def __init__(self, name=None, online=True, p=1.0, q=0.1, p_max=1.0,
+#            p_min=0.0, p_profile=None):
+#        """ Initialises a new Load instance.
+#        """
+#        # Is the load in service?
+#        self.online = online
+#        # Active power demand (MW).
+#        self.p = p
+#        # Reactive power demand (MVAr).
+#        self.q = q
+#        # Maximum active power (MW).
+#        self.p_max = p_max
+#        # Minimum active power (MW).
+#        self.p_min = p_min
+#
+#        self._p_profile = []
+#        # Active power profile (%).
+#        if p_profile is None:
+#            self.p_profile = [100.0]
+#        else:
+#            self.p_profile = p_profile
+#
+#        self._p_cycle = cycle(self.p_profile)
+#
+#
+#    def __getstate__(self):
+#        """ Prevents the 'cycle' from being pickled.
+#        """
+#        result = self.__dict__.copy()
+#        del result['_p_cycle']
+#        return result
+#
+#
+#    def __setstate__(self, dict):
+#        """ Sets the load profile cycle when unpickling.
+#        """
+#        self.__dict__ = dict
+#        self._p_cycle = cycle(self.p_profile)
+#
+#    @property
+#    def p_profiled(self):
+#        """ Active power demand scaled between 'p_max' and 'p_min'
+#            according to the 'p_profile' percentages.
+#        """
+#        percent = self._p_cycle.next()
+#        return (percent / 100) * (self.p_max - self.p_min)
+#
+#
+#    def get_p_profile(self):
+#        """ Returns the active power profile for the load.
+#        """
+#        return self._p_profile
+#
+#
+#    def set_p_profile(self, profile):
+#        """ Sets the active power profile, updating the cycle iterator.
+#        """
+#        self._p_cycle = cycle(profile)
+#        self._p_profile = profile
+#
+#
+#    p_profile = property(get_p_profile, set_p_profile)
 
 #------------------------------------------------------------------------------
 #  "CaseReport" class:
@@ -773,14 +780,14 @@ class CaseReport(object):
     def n_loads(self):
         """ Total number of loads.
         """
-        return len(self.case.all_loads)
+        return self.n_fixed + self.n_despatchable
 
 
-    @property
-    def n_online_loads(self):
-        """ Number of active loads.
-        """
-        return len(self.case.online_loads)
+#    @property
+#    def n_online_loads(self):
+#        """ Number of active loads.
+#        """
+#        return len(self.case.online_loads)
 
 
     @property
@@ -794,14 +801,14 @@ class CaseReport(object):
     def n_fixed(self):
         """ Total number of fixed loads.
         """
-        return len(self.fixed)
+        return len([bus for bus in self.case.buses if bus.p_demand > 0.0])
 
 
     @property
     def despatchable(self):
         """ Generators with negative output.
         """
-        return [g for g in self.case.all_generators if g.p < 0.0]
+        return [vl for vl in self.case.all_generators if vl.is_load]
 
 
     @property
@@ -876,18 +883,15 @@ class CaseReport(object):
     def load(self):
         """ Total system load.
         """
-        p = sum([l.p for l in self.case.all_loads])
-        q = sum([l.q for l in self.case.all_loads])
-
-        return complex(p, q)
+        return self.fixed_load + self.despatchable_load
 
 
     @property
     def fixed_load(self):
         """ Total fixed system load.
         """
-        p = sum([l.p for l in self.fixed])
-        q = sum([l.q for l in self.fixed])
+        p = sum([bus.p_demand for bus in self.case.buses])
+        q = sum([bus.q_demand for bus in self.case.buses])
 
         return complex(p, q)
 
@@ -896,8 +900,8 @@ class CaseReport(object):
     def despatchable_load(self):
         """ Total volume of despatchable load.
         """
-        p = sum([l.p for l in self.despatchable])
-        q = sum([l.q for l in self.despatchable])
+        p = sum([vl.p for vl in self.despatchable])
+        q = sum([vl.q for vl in self.despatchable])
 
         return complex(p, q)
 

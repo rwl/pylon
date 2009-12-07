@@ -469,7 +469,7 @@ class RothErev(ValueBasedLearner):
         return valid
 
 
-class VRELearner(RELearner):
+class VRELearner(RothErev):
     """ Variant Roth-Erev Learner
 
         This ReinforcementLearner implements a variation of the Roth-Ere'ev
@@ -518,7 +518,7 @@ class VRELearner(RELearner):
         return experience
 
 
-class AREParameters(REParameters):
+class AREParameters:#(REParameters):
     """ Parameters required for the Advanced version of the Roth-Erev
         reinforcement learning algorithm. These parameters include setting for
         features extended from the standard Roth-Erev algorithm. This includes:
@@ -556,7 +556,7 @@ class AREParameters(REParameters):
             self.spilloverList.append(standard)
 
 
-class ARELearner(RELearner):
+class ARELearner(RothErev):
     """ An extension of the VRELearner. This engine implements the same
         modified version of the Roth-Erev reinforcement learning algorithm with
         added features.
@@ -626,7 +626,7 @@ class ARELearner(RELearner):
         return responseValue
 
 
-class AdvancedRothErevLearner(RELearner):
+class AdvancedRothErevLearner(RothErev):
     """ An extension of the MRELearner. This engine implements the same
         modified version of the Roth-Erev reinforcement learning algorithm with
         added features.

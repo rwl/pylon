@@ -24,7 +24,7 @@
 
 from pyExcelerator import Workbook, Font, XFStyle, Borders
 
-from common import bus_attrs, branch_attrs, generator_attrs, load_attrs
+from common import bus_attrs, branch_attrs, generator_attrs
 
 #------------------------------------------------------------------------------
 #  "ExcelWriter" class:
@@ -51,7 +51,7 @@ class ExcelWriter(object):
         self.write_generator_data(case, file)
         self.write_branch_data(case, file)
         self.write_generator_data(case, file)
-        self.write_load_data(case, file)
+#        self.write_load_data(case, file)
 
         book.save(file_or_filename)
 
@@ -94,19 +94,19 @@ class ExcelWriter(object):
 #                    generator_sheet.write(j, k+1, getattr(generator, attr))
 
 
-    def write_load_data(self, case, file):
-        """ Writes load data to file.
-        """
-        load_sheet = book.add_sheet("Loads")
-
-        for i, attr in enumerate(load_attrs):
-            load_sheet.write(0, i, attr)
-
-        for i, bus, in enumerate(case.buses):
-            for j, load in enumerate(bus.loads):
-                for k, attr in enumerate(load_attrs):
-                    load_sheet.write(j+1, 0, i)
-                    load_sheet.write(j+1, k+1, getattr(load, attr))
+#    def write_load_data(self, case, file):
+#        """ Writes load data to file.
+#        """
+#        load_sheet = book.add_sheet("Loads")
+#
+#        for i, attr in enumerate(load_attrs):
+#            load_sheet.write(0, i, attr)
+#
+#        for i, bus, in enumerate(case.buses):
+#            for j, load in enumerate(bus.loads):
+#                for k, attr in enumerate(load_attrs):
+#                    load_sheet.write(j+1, 0, i)
+#                    load_sheet.write(j+1, k+1, getattr(load, attr))
 
 
     def write_generator_cost_data(self, case, file):

@@ -30,7 +30,7 @@ from os.path import dirname, join
 
 from scipy import array
 
-from pylon import Case, Bus, Generator, Load
+from pylon import Case, Bus, Generator
 from pylon.readwrite import PickleReader
 
 from pylon.pyreto import \
@@ -69,12 +69,9 @@ def get_1bus():
     g1 = Generator(name="G1", p_max=60.0, p_min=0.0)
     g2 = Generator(name="G2", p_max=100.0, p_min=0.0)
 
-    l1 = Load(name="L1", p=80.0, q=0.0)
-
-    bus1 = Bus(name="Bus1")
+    bus1 = Bus(name="Bus1", p_demand=80.0)
     bus1.generators.append(g1)
     bus1.generators.append(g2)
-    bus1.loads.append(l1)
 
     case = Case(name="1Bus")
     case.buses.append(bus1)

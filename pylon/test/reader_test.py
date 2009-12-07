@@ -58,7 +58,7 @@ class ReaderTest(TestCase):
         self.assertEqual(c.base_mva, base_mva)
 
 
-    def _validate_object_numbers(self, n_buses, n_branches, n_gen, n_loads):
+    def _validate_object_numbers(self, n_buses, n_branches, n_gen):
         """ Validates the expected number of objects.
         """
         c = self.case
@@ -71,9 +71,6 @@ class ReaderTest(TestCase):
 
         self.assertEqual(len(c.all_generators), n_gen,
             "%d generators expected, %d found" % (n_gen,len(c.all_generators)))
-
-        self.assertEqual(len(c.all_loads), n_loads,
-            "%d loads expected, %d found" % (n_loads, len(c.all_loads)))
 
 
     def _validate_slack_bus(self, slack_idx):
@@ -138,8 +135,7 @@ class MatpowerReaderTest(ReaderTest):
         self._validate_base(base_mva=100.0)
 
         # Network structure validation.
-        self._validate_object_numbers(n_buses=6, n_branches=11, n_gen=3,
-                                      n_loads=3)
+        self._validate_object_numbers(n_buses=6, n_branches=11, n_gen=3)
 
         self._validate_slack_bus(slack_idx=0)
 
@@ -167,9 +163,7 @@ class MatpowerReaderTest(ReaderTest):
 
         self._validate_base(base_mva=100.0)
 
-        self._validate_object_numbers(n_buses=30, n_branches=41, n_gen=6,
-                                      n_loads=20)
-
+        self._validate_object_numbers(n_buses=30, n_branches=41, n_gen=6)
 
         self._validate_slack_bus(slack_idx=0)
 
@@ -215,8 +209,7 @@ class PSSEReaderTest(ReaderTest):
         """
         self._validate_base(100.0)
 
-        self._validate_object_numbers(n_buses=56, n_branches=67, n_gen=24,
-            n_loads=30)
+        self._validate_object_numbers(n_buses=56, n_branches=67, n_gen=24)
 
 
     def test_ukgds(self):
@@ -232,8 +225,7 @@ class PSSEReaderTest(ReaderTest):
         self._validate_object_numbers(n_buses=102,
                                       # 75 lines + 67 transformers = 142
                                       n_branches=142,
-                                      n_gen=3,
-                                      n_loads=26)
+                                      n_gen=3)
 
         self._validate_slack_bus(slack_idx=0)
 

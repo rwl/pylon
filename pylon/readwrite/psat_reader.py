@@ -29,7 +29,7 @@ from os.path import basename, splitext
 from parsing_util import integer, boolean, real, scolon, matlab_comment
 from pyparsing import Optional, Literal, ZeroOrMore
 
-from pylon import Case, Bus, Branch, Generator, Load
+from pylon import Case, Bus, Branch, Generator
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -470,15 +470,9 @@ class PSATReader(object):
         """
         logger.debug("Pushing PQ data: %s" % tokens)
 
-        l = Load()
-        l.p = tokens["p"]
-        l.q = tokens["q"]
-        # Optional parameter
-#        if tokens.has_key("status"):
-#            l.online = tokens["status"]
-
-        bus = self.case.buses[tokens["bus_no"]-1]
-        bus.loads.append(l)
+        bus = self.case.buses[tokens["bus_no"] - 1]
+        bus.p_demand = tokens["p"]
+        bus.q_demand = tokens["q"]
 
 
     def push_demand(self, tokens):
@@ -486,20 +480,20 @@ class PSATReader(object):
         """
         logger.debug("Pushing demand data: %s" % tokens)
 
-        bus = self.case.buses[tokens["bus_no"]-1]
-        n_loads = len(bus.loads)
-
-        if n_loads == 0:
-            logger.error("No load at bus [%s] for matching demand" % bus)
-            return
-        elif n_loads > 1:
-            l = bus.loads[0]
-            logger.warning(
-                "More than one load at bus [%s] for demand. Using the "
-                "first one [%s]." % (bus, l)
-            )
-        else:
-            l = bus.loads[0]
+#        bus = self.case.buses[tokens["bus_no"] - 1]
+#        n_loads = len(bus.loads)
+#
+#        if n_loads == 0:
+#            logger.error("No load at bus [%s] for matching demand" % bus)
+#            return
+#        elif n_loads > 1:
+#            l = bus.loads[0]
+#            logger.warning(
+#                "More than one load at bus [%s] for demand. Using the "
+#                "first one [%s]." % (bus, l)
+#            )
+#        else:
+#            l = bus.loads[0]
 
         # Optional parameter
 #        if tokens.has_key("status"):

@@ -114,8 +114,8 @@ class MATPOWERWriter(object):
             else:
                 raise ValueError
             v_data["type"] = type
-            v_data["Pd"] = sum([l.p for l in v.loads]) * base_mva
-            v_data["Qd"] = sum([l.q for l in v.loads]) * base_mva
+            v_data["Pd"] = v.p_demand * base_mva
+            v_data["Qd"] = v.q_demand * base_mva
             v_data["Gs"] = v.g_shunt
             v_data["Bs"] = v.b_shunt
             # TODO: Implement areas

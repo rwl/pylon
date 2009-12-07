@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_BUS_ATTR = {"color": "blue"}
 DEFAULT_BRANCH_ATTR = {"color": "green"}
 DEFAULT_GENERATOR_ATTR = {}
-DEFAULT_LOAD_ATTR = {}
+#DEFAULT_LOAD_ATTR = {}
 
 #------------------------------------------------------------------------------
 #  "DOTWriter" class:
@@ -58,7 +58,7 @@ class DotWriter(object):
 
         self.branch_attr = DEFAULT_BRANCH_ATTR
         self.generator_attr = DEFAULT_GENERATOR_ATTR
-        self.load_attr = DEFAULT_LOAD_ATTR
+#        self.load_attr = DEFAULT_LOAD_ATTR
 
 
     def __call__(self, case, file_or_filename):
@@ -127,7 +127,7 @@ class DotWriter(object):
             file.write("\n")
 
 
-    def write_generator_data(self, case, file):
+    def write_generator_data(self, case, file, padding="    "):
         """ Write generator data to file.
         """
         for bus in case.buses:
@@ -143,20 +143,19 @@ class DotWriter(object):
                 file.write("\n")
 
 
-    def write_load_data(self, case, file):
-        """ Writes load data to file.
-        """
-        for bus in case.buses:
-            for load in bus.loads:
-                # Load node.
-                file.write("%s%s [%s];" % \
-                           (padding, id(load), attr_str))
-                file.write("\n")
-
-                # Edge connecting load and bus.
-                file.write("%s%s -> %s [%s];" % \
-                           (padding, id(bus), id(load), edge_attr_str))
-                file.write("\n")
+#    def write_load_data(self, case, file, padding="    "):
+#        """ Writes load data to file.
+#        """
+#        for bus in [b for b in case.buses if b.p_demand > 0.0]:
+#            # Load node.
+#            file.write("%s%s [%s];" % \
+#                       (padding, id(load), attr_str))
+#            file.write("\n")
+#
+#            # Edge connecting load and bus.
+#            file.write("%s%s -> %s [%s];" % \
+#                       (padding, id(bus), id(load), edge_attr_str))
+#            file.write("\n")
 
 
     def write_generator_cost_data(self, case, file):

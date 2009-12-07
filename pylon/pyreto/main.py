@@ -30,11 +30,11 @@ from os.path import dirname, join
 from numpy import array
 
 from pybrain.tools.shortcuts import buildNetwork
-from pybrain.rl.agents import LearningAgent, PolicyGradientAgent
-from pybrain.rl.learners import SPLA, ENAC
+from pybrain.rl.agents import LearningAgent
+from pybrain.rl.learners import ENAC
 from pybrain.structure.modules import SigmoidLayer
 
-from pylon import Case, Bus, Generator, Load
+from pylon import Case, Bus, Generator
 from pylon import DCOPF
 
 from pylon.main import read_case
@@ -44,7 +44,8 @@ from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
 from environment import ParticipantEnvironment
 from experiment import MarketExperiment
-from task import ProfitTask
+from task import ContinuousTask
+from smart_market import SmartMarket
 
 #------------------------------------------------------------------------------
 #  "PyretoApplication" class:
@@ -90,20 +91,23 @@ class PyretoApplication(object):
 #  Associate one agent with each generator in the network:
 #------------------------------------------------------------------------------
 
-def one_for_one(smart_market):
+def one_for_one(case):
     """ Associates an agent and a task with each generator in the network.
     """
     tasks = []
     agents = []
 
-    for generator in smart_market.case.online_generators:
+    mkt = SmartMarket(case)
+    experiment = MarketExperiment([], [], mkt)
+
+    for generator in mkt.case.online_generators:
         # Create the world in which the trading agent acts.
-        env = ParticipantEnvironment(asset=generator, market=smart_market)
+        env = ParticipantEnvironment(asset=generator, market=mkt)
 
         # Create a task that connects each agent to it's environment. The task
         # defines what the goal is for an agent and how the agent is rewarded
         # for it's actions.
-        task = ProfitTask(env)
+        task = ContinuousTask(env)
 
         # Create a linear controller network. Each agent needs a controller
         # that maps the current state to an action.
@@ -117,7 +121,7 @@ def one_for_one(smart_market):
         # module (network) and a learner, that modifies the module.
 #        agent = LearningAgent( module = net, learner = ENAC() )
 #        agent.name = "LearningAgent-%s" % generator.name
-        agent = PolicyGradientAgent(module=net, learner=ENAC())
+        agent = LearningAgent(module=net, learner=ENAC())
         agent.name = "PolicyGradientAgent-%s" % generator.name
 
         # Backpropagation parameters.
@@ -140,10 +144,8 @@ def one_for_one(smart_market):
 #        gradient_descent.deltamin = 0.01
 
         # Collect tasks and agents.
-        tasks.append(task)
-        agents.append(agent)
-
-    experiment = MarketExperiment(tasks, agents, power_sys)
+        experiment.tasks.append(task)
+        experiment.agents.append(agent)
 
     return experiment
 

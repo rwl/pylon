@@ -17,7 +17,7 @@
 
 __version__ = "0.3.0"
 
-from case import Case, Bus, Branch, Generator, Load, CaseReport
+from case import Case, Bus, Branch, Generator, CaseReport
 
 from dc_pf import DCPF
 from ac_pf import NewtonRaphson, FastDecoupled

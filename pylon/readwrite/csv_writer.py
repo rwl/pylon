@@ -24,7 +24,7 @@
 
 import csv
 
-from common import bus_attrs, branch_attrs, generator_attrs, load_attrs
+from common import bus_attrs, branch_attrs, generator_attrs
 
 #------------------------------------------------------------------------------
 #  "CSVWriter" class:
@@ -102,16 +102,16 @@ class CSVWriter(object):
                 del values
 
 
-    def write_load_data(self, case, file):
-        """ Writes load data to file.
-        """
-        writer.writerow(["bus"] + load_attrs)
-
-        for i, bus in enumerate(case.buses):
-            for load in bus.loads:
-                values = [getattr(load, attr) for attr in load_attrs]
-                writer.writerow([i] + values)
-                del values
+#    def write_load_data(self, case, file):
+#        """ Writes load data to file.
+#        """
+#        writer.writerow(["bus"] + load_attrs)
+#
+#        for i, bus in enumerate(case.buses):
+#            for load in bus.loads:
+#                values = [getattr(load, attr) for attr in load_attrs]
+#                writer.writerow([i] + values)
+#                del values
 
 
     def write_generator_cost_data(self, case, file):

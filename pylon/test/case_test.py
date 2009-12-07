@@ -25,7 +25,7 @@
 from os.path import join, dirname
 import unittest
 
-from pylon import Case, Bus, Branch, Generator, Load
+from pylon import Case, Bus, Branch, Generator
 from pylon.readwrite import PickleReader
 from pylon.pyreto import Offer, Bid
 
@@ -98,7 +98,7 @@ class BusTest(unittest.TestCase):
     def test_surplus(self):
         """ Test the power surplus properties.
         """
-        v = Bus()
+        v = Bus(p_demand=80.0, q_demand=35.0)
         g1 = Generator(p=100.0, q=50.0)
         g2 = Generator(p=30.0, q=10.0)
 
@@ -106,11 +106,6 @@ class BusTest(unittest.TestCase):
         v.generators.extend([g1, g2])
         self.assertEqual(v.p_supply, 130.0)
         self.assertEqual(v.q_supply, 60.0)
-
-        # Demand
-        v.loads.extend([Load(p=60.0, q=30.0), Load(p=20.0, q=5.0)])
-        self.assertEqual(v.p_demand, 80.0)
-        self.assertEqual(v.q_demand, 35.0)
 
         # Surplus
         self.assertEqual(v.p_surplus, 50.0)
@@ -552,32 +547,32 @@ class OfferBidToPWLTest(unittest.TestCase):
 #  "LoadTest" class:
 #------------------------------------------------------------------------------
 
-class LoadTest(unittest.TestCase):
-    """ Defines a test case for the Load class.
-    """
-
-    def test_profile(self):
-        """ Test profiled active power output.
-        """
-        profile = [100.0, 50.0, 20.0, 90.0]
-
-        load = Load(p_min=10.0, p_max=90.0, p_profile=profile)
-
-        places = 2
-
-        self.assertAlmostEqual(load.p_profiled, 80.0, places)
-        self.assertAlmostEqual(load.p_profiled, 40.0, places)
-        self.assertAlmostEqual(load.p_profiled, 16.0, places)
-        self.assertAlmostEqual(load.p_profiled, 72.0, places)
-        self.assertAlmostEqual(load.p_profiled, 80.0, places)
-
-        # Set new profile.
-        profile2 = [10.0, 20.0]
-        load.p_profile = profile2
-
-        self.assertAlmostEqual(load.p_profiled, 8.0, places)
-        self.assertAlmostEqual(load.p_profiled, 16.0, places)
-        self.assertAlmostEqual(load.p_profiled, 8.0, places)
+#class LoadTest(unittest.TestCase):
+#    """ Defines a test case for the Load class.
+#    """
+#
+#    def test_profile(self):
+#        """ Test profiled active power output.
+#        """
+#        profile = [100.0, 50.0, 20.0, 90.0]
+#
+#        load = Load(p_min=10.0, p_max=90.0, p_profile=profile)
+#
+#        places = 2
+#
+#        self.assertAlmostEqual(load.p_profiled, 80.0, places)
+#        self.assertAlmostEqual(load.p_profiled, 40.0, places)
+#        self.assertAlmostEqual(load.p_profiled, 16.0, places)
+#        self.assertAlmostEqual(load.p_profiled, 72.0, places)
+#        self.assertAlmostEqual(load.p_profiled, 80.0, places)
+#
+#        # Set new profile.
+#        profile2 = [10.0, 20.0]
+#        load.p_profile = profile2
+#
+#        self.assertAlmostEqual(load.p_profiled, 8.0, places)
+#        self.assertAlmostEqual(load.p_profiled, 16.0, places)
+#        self.assertAlmostEqual(load.p_profiled, 8.0, places)
 
 
 if __name__ == "__main__":

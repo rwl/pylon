@@ -33,7 +33,7 @@ from pyparsing import \
     Literal, Word, ZeroOrMore, Optional, OneOrMore, alphanums, delimitedList, \
     alphas, Combine, printables
 
-from pylon.case import Case, Bus, Branch, Generator, Load
+from pylon.case import Case, Bus, Branch, Generator
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -310,7 +310,7 @@ class MATPOWERReader(object):
 
 
     def _push_bus(self, tokens):
-        """ Adds a bus to the case and a load (if any).
+        """ Adds a bus to the case.
         """
         logger.debug("Parsing bus data: %s" % tokens)
 
@@ -335,12 +335,14 @@ class MATPOWERReader(object):
         if tokens["bus_type"] == 3:
             self.slack_idx = tokens["bus_id"]-1
 
+        bus.p_demand = tokens["Pd"]
+        bus.q_demand = tokens["Qd"]
         # Loads are included in bus data with MATPOWER
-        if (tokens["Pd"] > 0) or (tokens["Qd"] > 0):
-            l   = Load()
-            l.p = tokens["Pd"]
-            l.q = tokens["Qd"]
-            bus.loads.append(l)
+#        if (tokens["Pd"] > 0) or (tokens["Qd"] > 0):
+#            l   = Load()
+#            l.p = tokens["Pd"]
+#            l.q = tokens["Qd"]
+#            bus.loads.append(l)
 
         bus.zone = tokens["zone"]
 

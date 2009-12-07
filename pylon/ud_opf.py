@@ -138,7 +138,7 @@ class UDOPF(object):
         # Total dispatchable load capacity.
         vload_capacity = sum([g.p_min for g in online_vload])
         # Total load capacity.
-        load_capacity = sum([l.p for l in loads]) - vload_capacity
+        load_capacity = sum([b.p_demand for b in case.buses]) - vload_capacity
 
         # Minimum total online generation capacity.
         p_min_tot = sum([g.p_min for g in online])

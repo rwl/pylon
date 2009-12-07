@@ -24,7 +24,7 @@
 
 import unittest
 
-from pylon.test.case_test import CaseTest, BusTest, BranchTest, GeneratorTest, LoadTest
+from pylon.test.case_test import CaseTest, BusTest, BranchTest, GeneratorTest
 
 from y_test import BTest, YTest
 from dcpf_test import DCPFTest
@@ -48,7 +48,6 @@ def suite():
     suite.addTest(unittest.makeSuite(BusTest))
     suite.addTest(unittest.makeSuite(BranchTest))
     suite.addTest(unittest.makeSuite(GeneratorTest))
-    suite.addTest(unittest.makeSuite(LoadTest))
 
     # Routine test cases.
     suite.addTest(unittest.makeSuite(BTest))
