@@ -14,9 +14,11 @@ from StringIO import StringIO
 from matplotlib.backends.backend_tkagg \
     import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 import matplotlib.image
 import matplotlib.figure
+
+import networkx as nx
 
 from Tkinter import *
 from tkFileDialog import askopenfilename, asksaveasfilename
@@ -380,7 +382,21 @@ class PylonTk(object):
     # View --------------------------------------------------------------------
 
     def on_graph(self):
-        GraphView(self.root, self.case, self.e)
+#        GraphView(self.root, self.case, self.e)
+        graph = nx.Graph()
+        for edge in self.case.branches:
+            graph.add_edge(self.case.buses.index(edge.source_bus),
+                           self.case.buses.index(edge.target_bus))
+        for i, bus in enumerate(self.case.buses):
+            for generator in bus.generators:
+                graph.add_edge(i, generator.name)
+            if bus.p_demand > 0.0:
+                graph.add_edge(i, "l" + str(i))
+
+        plt.figure(1,figsize=(8,8))
+        pos = nx.graphviz_layout(graph, prog="dot")
+        nx.draw(graph, pos)#, node_size=40)
+        plt.show()
 
     # UI Log ------------------------------------------------------------------
 
@@ -634,13 +650,13 @@ class GraphView(tkSimpleDialog.Dialog):
         imagefd.write(imagedata) # DOT language.
         imagefd.close()
 
-        im = matplotlib.pyplot.imread(tmp_name)
+        im = plt.imread(tmp_name)
 
         fig = matplotlib.figure.Figure(figsize=(6, 6), dpi=100)
-        ax = matplotlib.pyplot.axes([0, 0, 1, 1], frameon=False)
+        ax = plt.axes([0, 0, 1, 1], frameon=False)
         ax.set_axis_off()
-        img = matplotlib.pyplot.imshow(im)
-        matplotlib.pyplot.show()
+        img = plt.imshow(im)
+        plt.show()
 
         # Remove the temporary file.
         os.remove(tmp_name)
