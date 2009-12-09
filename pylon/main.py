@@ -22,6 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import os
 import sys
 import logging
 import optparse
@@ -29,7 +30,7 @@ import optparse
 from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader, \
     MATPOWERWriter, ReSTWriter, CSVWriter, PickleReader, PickleWriter
 
-from pylon import DCPF, DCOPF, NewtonRaphson, ACOPF, FastDecoupled
+from pylon import DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -38,146 +39,36 @@ from pylon import DCPF, DCOPF, NewtonRaphson, ACOPF, FastDecoupled
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
     format="%(levelname)s: %(message)s")
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("pylon")
 
 #------------------------------------------------------------------------------
-#  "PylonApplication" class:
+#  Read data file:
 #------------------------------------------------------------------------------
 
-class PylonApplication(object):
-    """ Simulates power systems.
+def read_case(input, format=None):
+    """ Returns a case object from the given input file object. The data
+        format may be optionally specified.
     """
-
-    #--------------------------------------------------------------------------
-    #  "object" interface:
-    #--------------------------------------------------------------------------
-
-    def __init__(self, file_name="", type="any", routine="acpf",
-            algorithm="newton", output_type="rst", gui=False):
-        """ Initialises a new PylonApplication instance.
-        """
-        # Name of the input file.
-        self.file_name = file_name
-        # Format in which the case is stored.  Possible values are: 'any',
-        # 'matpower', 'psat', 'matlab' and 'psse'.
-        self.type = type
-        # Routine type used to solve the case. Possible values are: 'acpf',
-        # 'dcpf', 'acopf' and 'dcopf'.
-        self.routine = routine
-        # Algorithm to be used in the routine. Possible values are: 'newton'
-        # and decoupled
-        self.algorithm = algorithm
-        # Output format type. Possible values are: 'rst', 'matpower', 'excel'
-        # and 'csv'.
-        self.output_type = output_type
-        # Use the portiable graphical interface to Pylon.
-        self.gui = gui
-
-    #--------------------------------------------------------------------------
-    #  Runs the application:
-    #--------------------------------------------------------------------------
-
-    def __call__(self, input, output):
-        """ Forms a case from the input text, obtains a solution using the
-            specified routine and writes a report to the output.
-        """
-        # Get the case from the input.
-        case = read_case(input, self.type, self.file_name)
-
-        if case is not None:
-            # Portable graphical interface.
-            if self.gui:
-                from pylon.tk import main
-                main(case)
-            elif self.routine != "none":
-                # Get the routine and pass the case to it.
-                routine = self._get_routine(self.routine)
-
-                if routine is None:
-                    logger.critical("Unrecognised routine type [%s]." %
-                        self.routine)
-                    return False
-
-                success = routine(case)
-
-            # Solution output.
-            writer = None
-            if self.output_type == "matpower":
-                writer = MATPOWERWriter()
-            elif self.output_type == "rst":
-                writer = ReSTWriter()
-            elif self.output_type == "csv":
-                writer = CSVWriter()
-            elif self.output_type == "excel":
-                from pylon.readwrite.excel_writer import ExcelWriter
-                writer = ExcelWriter()
-            elif self.output_type == "pickle":
-                writer = PickleWriter()
-            else:
-                logger.critical("Unrecognised output type")
-                return False
-
-            # Write the solution.
-            if writer is not None:
-                writer(case, output)
-
-            return True
-        else:
-            logger.critical("Unrecognised data file.")
-            return False
-
-
-    def _get_routine(self, routine):
-        """ Returns the routine to which to pass the case.
-        """
-        if routine == "dcpf":
-            r = DCPF()
-        elif routine == "acpf":
-            if self.algorithm == "newton":
-                r = NewtonRaphson()
-            elif self.algorithm == "decoupled":
-                r = FastDecoupled()
-            else:
-                r = None
-        elif routine == "dcopf":
-            r = DCOPF()
-        elif routine == "acopf":
-            r = ACOPF()
-        else:
-            r = None
-
-        return r
-
-
-def read_case(input, type, file_name):
-    """ Returns a case object from the given input and file name.
-    """
-    case = None
-
-    if type == "any":
-        type = detect_data_file(input, file_name)
-
-    readers = {"matpower": MATPOWERReader,
-               "psat": PSATReader,
-               "psse": PSSEReader,
-               "pickle": PickleReader}
+    # Map of data file types to readers.
+    format_map = {"matpower": MATPOWERReader, "psat": PSATReader,
+        "psse": PSSEReader, "pickle": PickleReader}
 
     # Read case data.
-    if readers.has_key(type):
-        reader_klass = readers[type]
+    if format_map.has_key(format):
+        reader_klass = format_map[format]
         reader = reader_klass()
-        case = reader(input)
+        case = reader.read(input)
     else:
-        for reader_klass in readers.values():
+        # Try each of the readers at random.
+        for reader_klass in format_map.values():
             reader = reader_klass()
             try:
-                case = reader(input)
+                case = reader.read(input)
                 if case is not None:
                     break
             except:
                 pass
         else:
-            case = input.read()
             case = None
 
     return case
@@ -190,34 +81,30 @@ def detect_data_file(input, file_name=""):
     """ Detects the format of a network data file according to the
         file extension and the header.
     """
-    if file_name.endswith(".m"):
-        # Read the first line.
-        line = input.readline()
+    _, ext = os.path.splitext(file_name)
 
+    if ext == ".m":
+        line = input.readline() # first line
         if line.startswith("function"):
             type = "matpower"
             logger.info("Recognised MATPOWER data file.")
-
         elif line.startswith("Bus.con" or line.startswith("%")):
             type = "psat"
             logger.info("Recognised PSAT data file.")
-
         else:
             type = "unrecognised"
+        input.seek(0) # reset buffer for parsing
 
-        # Seek to buffer start for correct parsing.
-        input.seek(0)
-
-    elif file_name.endswith((".raw", ".psse")):
+    elif (ext == ".raw") or (ext == ".psse"):
         type = "psse"
         logger.info("Recognised PSS/E data file.")
 
-    elif file_name.endswith(".pkl"):
+    elif (ext == ".pkl") or (ext == ".pickle"):
         type = "pickle"
         logger.info("Recognised pickled case.")
 
     else:
-        type = "unrecognised"
+        type = None
 
     return type
 
@@ -228,7 +115,8 @@ def detect_data_file(input, file_name=""):
 def main():
     """ Parses the command line and call Pylon with the correct data.
     """
-    parser = optparse.OptionParser("usage: pylon [options] input_file")
+    parser = optparse.OptionParser(usage="usage: pylon [options] input_file",
+                                   version="%prog 0.3.2")
 
     parser.add_option("-o", "--output", dest="output", metavar="FILE",
         help="Write the solution report to FILE.")
@@ -239,8 +127,8 @@ def main():
 #    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
 #        default=False, help="Print debug information.")
 
-    parser.add_option("-g", "--gui", action="store_true", dest="gui",
-        default=False, help="Use the portable graphical interface to Pylon.")
+#    parser.add_option("-g", "--gui", action="store_true", dest="gui",
+#        default=False, help="Use the portable graphical interface to Pylon.")
 
     parser.add_option("-n", "--no-report", action="store_true",
         dest="no_report", default=False, help="Suppress report output.")
@@ -251,24 +139,26 @@ def main():
     parser.add_option("-t", "--input-type", dest="type", metavar="TYPE",
         default="any", help="The argument following the -t is used to "
         "indicate the format type of the input data file. The types which are "
-        "currently supported include: matpower, psat, psse.  If not "
-        "specified Pylon will try to determine the type according to the "
-        "file name extension and the file header.")
+        "currently supported include: matpower, psat, psse [default: %default]"
+        " If not specified Pylon will try to determine the type according to "
+        "the file name extension and the file header.")
 
     parser.add_option("-r", "--routine", dest="routine", metavar="ROUTINE",
         default="acpf", help="The argument following the -r is used to"
         "indicate the type of routine to use in solving. The types which are "
-        "currently supported are: 'dcpf', 'acpf', 'dcopf', 'acopf' 'none'.")
+        "currently supported are: 'dcpf', 'acpf', 'dcopf', 'acopf', 'udopf' "
+        "and 'none' [default: %default].")
 
     parser.add_option("-a", "--algorithm", action="store_true",
         metavar="ALGORITHM", dest="algorithm", default="newton",
         help="Indicates the algorithm type to be used for AC power flow. The "
-        "types which are currently supported are: 'newton' and 'decoupled'.")
+        "types which are currently supported are: 'newton' and 'decoupled' "
+        "[default: %default].")
 
     parser.add_option("-T", "--output-type", dest="otype",
         metavar="OUTPUT_TYPE", default="rst", help="Indicates the output "
         "format type.  The type swhich are currently supported include: rst, "
-        "matpower, csv and excel.")
+        "matpower, csv and excel [default: %default].")
 
     (options, args) = parser.parse_args()
 
@@ -281,22 +171,21 @@ def main():
 
     # Output.
     if options.output:
-        outfile = options.output
-        if outfile == "-":
+        if options.output == "-":
             outfile = sys.stdout
-            logger.setLevel(logging.CRITICAL) # we must stay quiet
-
+            logger.setLevel(logging.CRITICAL) # must stay quiet
+        else:
+            outfile = open(options.output, "wb")
     else:
         outfile = sys.stdout
         if not options.no_report:
-            logger.setLevel(logging.CRITICAL) # we must stay quiet
+            logger.setLevel(logging.CRITICAL) # must stay quiet
 
     # Input.
     if len(args) > 1:
         parser.print_help()
         sys.exit(1)
-
-    elif len(args) == 0 or args[0] == "-":
+    elif (len(args) == 0) or (args[0] == "-"):
         filename = ""
         if sys.stdin.isatty():
             # True if the file is connected to a tty device, and False
@@ -306,24 +195,66 @@ def main():
         else:
             # Handle piped input ($ cat ehv3.raw | pylon | rst2pdf -o ans.pdf).
             infile = sys.stdin
-
     else:
         filename = args[0]
-        infile   = open(filename)
+        infile = open(filename, "rb")
 
-    app = PylonApplication(file_name   = filename,
-                           type        = options.type,
-                           routine     = options.routine,
-                           algorithm   = options.algorithm,
-                           output_type = options.otype,
-                           gui         = options.gui)
+    if options.type == "any":
+        type = detect_data_file(input, filename)
+    else:
+        type = options.type
 
-    app(input=infile, output=outfile)
+    # Get the case from the input file-like object.
+    case = read_case(input, type)
 
-    try:
-        infile.close() # Clean-up
-    except:
-        pass
+    if case is not None:
+        # Routine (and algorithm) selection.
+        if options.routine == "dcpf":
+            routine = DCPF(case)
+        elif options.routine == "acpf":
+            if options.algorithm == "newton":
+                routine = NewtonRaphson(case)
+            elif options.algorithm == "decoupled":
+                routine = FastDecoupled(case)
+            else:
+                logger.critical("Invalid algorithm [%s]." % options.algorithm)
+                sys.exit(1)
+        elif options.routine == "dcopf":
+            routine = DCOPF(case)
+        elif options.routine == "acopf":
+            routine = ACOPF(case)
+        elif options.routine == "udopf":
+            routine = UDOPF(case)
+        else:
+            logger.critical("Invalid routine [%s]." % options.routine)
+            sys.exit(1)
+
+        # Output writer selection.
+        if options.output_type == "matpower":
+            writer = MATPOWERWriter(case, outfile)
+        elif options.output_type == "rst":
+            writer = ReSTWriter(case, outfile)
+        elif options.output_type == "csv":
+            writer = CSVWriter(case, outfile)
+        elif options.output_type == "excel":
+            from pylon.readwrite.excel_writer import ExcelWriter
+            writer = ExcelWriter(case, outfile)
+        elif options.output_type == "pickle":
+            writer = PickleWriter(case, outfile)
+        else:
+            logger.critical("Invalid output type [%s]." % options.output_type)
+            sys.exit(1)
+
+        routine.solve()
+        writer.write()
+    else:
+        logger.critical("Unable to read case data.")
+
+    # Don't close stdin or stdout.
+    if len(args) == 1:
+        infile.close()
+    if options.output and not (options.output == "-"):
+        outfile.close()
 
 if __name__ == "__main__":
     main()
