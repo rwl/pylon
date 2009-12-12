@@ -1,0 +1,16 @@
+:mod:`task` -- Market Tasks
+===========================
+
+.. automodule:: pylon.pyreto.task
+
+.. autoclass:: StatelessTask
+   :members: __init__
+   :show-inheritance:
+
+.. autoclass:: DiscreteTask
+   :members: __init__
+   :show-inheritance:
+
+.. autoclass:: ContinuousTask
+   :members: __init__
+   :show-inheritance:

@@ -1,0 +1,8 @@
+:mod:`matpower_reader` -- MATPOWER Reader
+=========================================
+
+.. automodule:: pylon.readwrite.matpower_reader
+
+.. autoclass:: MATPOWERReader
+   :members: __init__
+   :show-inheritance:

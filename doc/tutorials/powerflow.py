@@ -1,10 +1,16 @@
-__author__ = "Richard Lincoln, r.w.lincoln@gmail.com"
+#------------------------------------------------------------------------------
+# Pylon Tutorial "Power Flow"
+#
+# Author: Richard Lincoln, r.w.lincoln@gmail.com
+#------------------------------------------------------------------------------
+
+__author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 import sys
 
 """ The "pylon" package contains the power system model classes and the
 routines used to solve particular cases. """
-from pylon import Case, Bus, Branch, Generator, Load, NewtonRaphson
+from pylon import Case, Bus, Branch, Generator, NewtonRaphson
 
 """ The "readwrite" subpackage contains classes that will parse power system
 data files and return a populated Case object.  It also contains classes that
@@ -17,9 +23,8 @@ from pylon.readwrite import ReSTWriter
 g = Generator(p=80.0, q=10.0)
 bus1 = Bus(generators=[g])
 
-""" and a load at the other. """
-l = Load(p=60.0, q=4.0)
-bus2 = Bus(loads=[l])
+""" and fixed load at the other. """
+bus2 = Bus(p_demand=60.0, q_demand=4.0)
 
 """ Connect the two buses """
 line = Branch(bus1, bus2, r=0.05, x=0.01)

@@ -1,0 +1,8 @@
+:mod:`environment` -- Participant Environment
+=============================================
+
+.. automodule:: pylon.pyreto.environment
+
+.. autoclass:: ParticipantEnvironment
+   :members: __init__
+   :show-inheritance:

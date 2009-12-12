@@ -1,0 +1,8 @@
+:mod:`experiment` -- Market Experiment
+======================================
+
+.. automodule:: pylon.pyreto.experiment
+
+.. autoclass:: MarketExperiment
+   :members: __init__
+   :show-inheritance:

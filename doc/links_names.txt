@@ -24,6 +24,8 @@
 .. _MATPOWER: http://www.pserc.cornell.edu/matpower/
 .. _PSAT: http://www.power.uwaterloo.ca/~fmilano/psat.htm
 .. _ReStructuredText: http://docutils.sf.net/rst.html
+.. _Matplotlib: http://matplotlib.sourceforge.net/
+.. _NetworkX: http://networkx.lanl.gov/
 .. _Traits: http://code.enthought.com/projects/traits/
 .. _TraitsGUI: http://code.enthought.com/projects/traits_gui/
 .. _Chaco: http://code.enthought.com/projects/chaco/

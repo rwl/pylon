@@ -1,7 +1,7 @@
 # Makefile for Sphinx documentation
 #
 
-WWW=rwl@isap43.eee.strath.ac.uk:public_html
+WWW=rwl@thinker:public_html
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
@@ -11,7 +11,7 @@ PAPER         =
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+ALLSPHINXOPTS   = -d build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) sphinx
 
 .PHONY: help clean clean_web html all dist public_html web public_web pickle htmlhelp latex changes linkcheck
 

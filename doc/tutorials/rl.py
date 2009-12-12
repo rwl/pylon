@@ -1,7 +1,13 @@
-__author__ = "Richard Lincoln, r.w.lincoln@gmail.com"
+#------------------------------------------------------------------------------
+# Pylon Tutorial "Reinforcement Learning"
+#
+# Author: Richard Lincoln, r.w.lincoln@gmail.com
+#------------------------------------------------------------------------------
+
+__author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 import sys, logging
-from pylon import Case, Bus, Generator, Load
+from pylon import Case, Bus, Generator
 
 from pylon.pyreto import \
     MarketExperiment, ParticipantEnvironment, ProfitTask, SmartMarket
@@ -18,8 +24,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
 """ Create a simple case. """
 g1 = Generator(name="G1", p_max=60.0, p_min=0.0)
 g2 = Generator(name="G2", p_max=100.0, p_min=0.0)
-l1 = Load(name="L1", p=80.0, q=0.0)
-bus1 = Bus(name="Bus1", generators=[g1, g2], loads=[l1])
+bus1 = Bus(name="Bus1", generators=[g1, g2], p_demand=80.0, q_demand=0.0)
 case = Case(name="1Bus", buses=[bus1])
 
 """ The market will clear submitted offers/bids and return dispatch info. """

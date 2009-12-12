@@ -1,0 +1,84 @@
+.. _install:
+
+============
+Installation
+============
+
+Pylon is a package of Python modules that must be placed on the ``PYTHON_PATH``.
+
+Pylon dependencies
+------------------
+
+  Python_ 2.5 or 2.6
+
+  CVXOPT_ 1.0 or later
+    CVXOPT is a free software package for convex optimization based on the
+    Python programming language.
+
+  NumPy_ 1.2 or later
+    NumPy provides additional support for multi-dimentional arrays and
+    matrices.
+
+  Pyparsing_
+    Pyparsing is a versatile Python module for recursive descent parsing.
+
+Pyreto dependencies
+-------------------
+
+  PyBrain_
+    PyBrain is a modular Machine Learning Library for Python.
+
+  SciPy_
+    Packages for mathematics, science, and engineering
+
+PylonTk dependencies
+--------------------
+
+  Matplotlib_
+    A 2D plotting library for producing publication quality figures in a variety of formats and interactive environments across platforms.
+
+  NetworkX_
+    A package for the creation, manipulation, and study of the structure, dynamics, and functions of complex networks.
+
+Setuptools
+----------
+
+With Python_ and setuptools_ installed, simply::
+
+  $ easy_install pylon
+
+Users without root access may use Virtualenv_ to build a virtual Python environment::
+
+  $ virtualenv env
+  $ ./env/bin/easy_install pylon
+
+To upgrade to a newer version::
+
+  $ easy_install -U pylon
+
+Installation from source
+------------------------
+
+Run the ``setup.py`` script::
+
+  $ python setup.py install
+
+or::
+
+  $ python setup.py develop
+
+Working directory
+-----------------
+
+Change in to the source directory and run IPython_::
+
+  $ cd ~/path/to/pylon-X.X
+  $ ipython
+
+Access the ``pylon`` application programming inteface.
+
+.. sourcecode:: ipython
+
+  In [1]: from pylon import DCOPF
+
+.. include:: ../links_names.txt
