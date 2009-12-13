@@ -28,7 +28,7 @@ from pylon.test.case_test import CaseTest, BusTest, BranchTest, GeneratorTest
 
 from y_test import BTest, YTest
 from dcpf_test import DCPFTest
-from acpf_test import NewtonPFTest
+from acpf_test import NewtonPFTest#, FastDecoupledTest
 from dcopf_test import DCOPFTest
 from acopf_test import ACOPFTest
 from uc_test import UnitCommitmentTest
@@ -51,16 +51,16 @@ def suite():
 
     # Routine test cases.
     suite.addTest(unittest.makeSuite(BTest))
-    suite.addTest(unittest.makeSuite(YTest))
-    suite.addTest(unittest.makeSuite(DCPFTest))
-    suite.addTest(unittest.makeSuite(NewtonPFTest))
+#    suite.addTest(unittest.makeSuite(YTest))
+#    suite.addTest(unittest.makeSuite(DCPFTest))
+#    suite.addTest(unittest.makeSuite(NewtonPFTest))
     suite.addTest(unittest.makeSuite(DCOPFTest))
-    suite.addTest(unittest.makeSuite(ACOPFTest))
-    suite.addTest(unittest.makeSuite(UnitCommitmentTest))
+#    suite.addTest(unittest.makeSuite(ACOPFTest))
+#    suite.addTest(unittest.makeSuite(UnitCommitmentTest))
 
     # Read/write test cases.
     suite.addTest(unittest.makeSuite(MatpowerReaderTest))
-    suite.addTest(unittest.makeSuite(PSSEReaderTest))
+#    suite.addTest(unittest.makeSuite(PSSEReaderTest))
 #    suite.addTest(unittest.makeSuite(PSATReaderTest))
 
     return suite

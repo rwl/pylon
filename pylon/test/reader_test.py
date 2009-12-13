@@ -185,9 +185,9 @@ class MatpowerReaderTest(ReaderTest):
             self.assertEqual(len(g.pwl_points), 4)
             self.assertEqual(g.pwl_points[0], (0.0, 0.0))
 
-        self.assertEqual(generators[0].pwl_points[1], (0.12, 144.0))
-        self.assertEqual(generators[4].pwl_points[2], (0.36, 1296.0))
-        self.assertEqual(generators[5].pwl_points[3], (0.60, 2832.0))
+        self.assertEqual(generators[0].pwl_points[1], (12.0, 144.0))
+        self.assertEqual(generators[4].pwl_points[2], (36.0, 1296.0))
+        self.assertEqual(generators[5].pwl_points[3], (60.0, 2832.0))
 
 #------------------------------------------------------------------------------
 #  "PSSEReaderTest" class:
