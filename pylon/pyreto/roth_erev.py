@@ -1,5 +1,37 @@
-__author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
+#------------------------------------------------------------------------------
+# Copyright (C) 2006 Charles Gieseler
+# Copyright (C) 2009 Richard Lincoln
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 dated June, 1991.
+#
+# This software is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANDABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+#------------------------------------------------------------------------------
 
+""" Defines learner modules that use the Roth-Erev method.
+
+    A. E. Roth, I. Erev, D. Fudenberg, J. Kagel, J. Emilie and R. X. Xing,
+    "Learning in Extensive-Form Games: Experimental Data and Simple Dynamic
+    Models in the Intermediate Term", Games and Economic Behavior, 8-1,
+    pp 164-212, 1995
+
+    Erev, Ido and Roth, Alvin E., "Predicting How People Play Games:
+    Reinforcement Learning in Experimental Games with Unique, Mixed Strategy
+    Equilibria", The American Economic Review, 88-4, pp 848--881, 1998
+
+    Charles Gieseler, "A Java Reinforcement Learning Module for the Repast
+    Toolkit: Facilitating Study and Implementation with Reinforcement Learning
+    in Social Science Multi-Agent Simulations", MSc Thesis, Department of
+    Computer Science, Iowa State University, 2005
+"""
 import random
 
 from pybrain.rl.learners.valuebased.valuebased import ValueBasedLearner
