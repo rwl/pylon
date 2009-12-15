@@ -30,7 +30,7 @@ from parsing_util import \
     ToInteger, lbrack, rbrack
 
 from pyparsing import \
-    Literal, Word, ZeroOrMore, Optional, OneOrMore, alphanums, delimitedList, \
+    Literal, Word, ZeroOrMore, Optional, OneOrMore, delimitedList, \
     alphas, Combine, printables
 
 from pylon.case import Case, Bus, Branch, Generator
@@ -124,7 +124,7 @@ class MATPOWERReader(object):
             ZeroOrMore(matlab_comment) + Optional(generator_cost_array)
 
         # Parse the data file
-        data = parsing_case.parseFile(file_or_filename)
+        parsing_case.parseFile(file_or_filename)
 
         # Set the slack bus.
         case.buses[self.slack_idx].slack = True

@@ -96,7 +96,7 @@ def pickle_matpower_cases(case_paths):
         # Give the new file the same name, but with a different extension.
         dir_path = os.path.dirname(case_path)
         case_basename = os.path.basename(case_path)
-        root, extension = os.path.splitext(case_basename)
+        root, _ = os.path.splitext(case_basename)
         pickled_case_path = os.path.join(dir_path, root + '.pkl')
 
         # Pickle the resulting Pylon Case object.
