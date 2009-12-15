@@ -42,6 +42,16 @@ class StatelessTask(Task):
     #  "Task" interface:
     #--------------------------------------------------------------------------
 
+    def __init__(self, environment, num_actions=10):
+        """ The action space is divided into the given number of steps.
+        """
+        super(StatelessTask, self).__init__(environment)
+
+        # The number of steps that the action value should be divided into.
+#        self.action_steps = num_actions
+        self.action_space = self.getDiscreteActions(num_actions)
+
+
     def getObservation(self):
         """ The vector of sensor values is replaced by a single integer since
             there is only one state.
@@ -53,7 +63,9 @@ class StatelessTask(Task):
         """ The action vector is stripped and the only element is cast to
             integer and given to the super class.
         """
-        Task.performAction(self, int(action[0]))
+#        Task.performAction(self, int(action[0]))
+        idx = int(action[0])
+        Task.performAction(self, array([self.action_space[idx]]))
 
 
     def getReward(self):
@@ -63,6 +75,16 @@ class StatelessTask(Task):
         d = self.env.market.settlement[g]
         logger.debug("Profit task [%s] reward: %s" % (g.name, d.earnings))
         return d.earnings
+
+    #--------------------------------------------------------------------------
+    #  "StatelessTask" interface:
+    #--------------------------------------------------------------------------
+
+    def getDiscreteActions(self, num_actions):
+        """ Returns an array of action values.
+        """
+        limit = self.env.market.price_cap
+        return linspace(0.0, limit, num_actions)
 
 #------------------------------------------------------------------------------
 #  "DiscreteTask" class:
@@ -76,14 +98,28 @@ class DiscreteTask(StatelessTask):
     #  "Task" interface:
     #--------------------------------------------------------------------------
 
+    def __init__(self, environment, dim_state=100, num_actions=10):
+        """ The sensor space is divided into the given number of steps.
+        """
+        super(DiscreteTask, self).__init__(environment, num_actions)
+
+        # State dimentions.
+        self.dim_state = dim_state
+
+
     def getObservation(self):
-        """ The agent receives...
+        """ The agent receives a single non-negative integer indicating the
+            band of market clearing prices in which the price from the last
+            auction exists.
         """
         sensors = Task.getObservation(self)
-        band_limits = linspace(0.0, self.env.price_cap, self.env.outdim)
-        for i in range(len(band_limits) - 1):
-            if (band_limits[i] <= sensors[0] < band_limits[i + 1]):
-                return array(i)
+        # Divide the range of market prices in to discrete bands.
+        limit = self.env.market.price_cap
+        states = linspace(0.0, limit, self.dim_state)
+        for i in range(len(states) - 1):
+            mcp = sensors[2] # Discard all other sensor data.
+            if (states[i] <= mcp < states[i + 1]):
+                return array([i])
         else:
             raise ValueError
 

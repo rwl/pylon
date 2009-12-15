@@ -23,7 +23,7 @@
 #------------------------------------------------------------------------------
 
 import logging
-import scipy
+from scipy import array, zeros, r_, hstack
 
 #from pybrain.rl.environments import Environment
 from pybrain.rl.environments.graphical import GraphicalEnvironment
@@ -119,9 +119,9 @@ class ParticipantEnvironment(GraphicalEnvironment):
         case = market.case
         outdim = 0
         outdim += 6 # Dispatch sensors.
-        outdim += len(case.branches) * 2
-        outdim += len(case.buses) * 2
-        outdim += len(case.all_generators) * 3
+        outdim += len(case.branches) * 2 # Branch sensors.
+        outdim += len(case.buses) * 2 # Bus sensors.
+        outdim += len(case.all_generators) * 3 # Generator sensors.
         self.outdim = outdim
 
     #--------------------------------------------------------------------------
@@ -137,38 +137,34 @@ class ParticipantEnvironment(GraphicalEnvironment):
         case = mkt.case
 
         # Dispatch related sensors.
+        dispatch_sensors = zeros(6)
         if mkt.settlement.has_key(g):
-            dispatch_sensors = []
             dispatch = mkt.settlement[g]
-            dispatch_sensors.append(dispatch.f)
-            dispatch_sensors.append(dispatch.quantity)
-            dispatch_sensors.append(dispatch.price)
-            dispatch_sensors.append(dispatch.variable)
-            dispatch_sensors.append(dispatch.startup)
-            dispatch_sensors.append(dispatch.shutdown)
-        else:
-            dispatch_sensors = [0.0] * 6
+            dispatch_sensors[0] = dispatch.f
+            dispatch_sensors[1] = dispatch.quantity
+            dispatch_sensors[2] = dispatch.price
+            dispatch_sensors[3] = dispatch.variable
+            dispatch_sensors[4] = dispatch.startup
+            dispatch_sensors[5] = dispatch.shutdown
 
         # Case related sensors.
-        flows = [branch.p_source for branch in case.branches]
-        mu_flow = [branch.mu_s_source for branch in case.branches]
-        voltages = [bus.v_magnitude for bus in case.buses]
-        angles = [bus.v_angle for bus in case.buses]
-        nodal_prc = [bus.p_lambda for bus in case.buses]
-        v_max = [bus.mu_vmax for bus in case.buses]
-        v_min = [bus.mu_vmin for bus in case.buses]
-        pg = [g.p for g in case.all_generators]
-        g_max = [g.mu_pmax for g in case.all_generators]
-        g_min = [g.mu_pmin for g in case.all_generators]
+        flows = array([branch.p_source for branch in case.branches])
+        mu_flow = array([branch.mu_s_source for branch in case.branches])
+        voltages = array([bus.v_magnitude for bus in case.buses])
+        angles = array([bus.v_angle for bus in case.buses])
+        nodal_prc = array([bus.p_lambda for bus in case.buses])
+        v_max = array([bus.mu_vmax for bus in case.buses])
+        v_min = array([bus.mu_vmin for bus in case.buses])
+        pg = array([g.p for g in case.all_generators])
+        g_max = array([g.mu_pmax for g in case.all_generators])
+        g_min = array([g.mu_pmin for g in case.all_generators])
 
-        case_sensors = flows + mu_flow + \
-                       angles + nodal_prc + \
-                       pg + g_max + g_min
+        case_sensors = r_[flows, mu_flow, angles, nodal_prc, pg, g_max, g_min]
 
 #        if self.hasRenderer():
 #            renderer = self.getRenderer()
 
-        return scipy.array(dispatch_sensors + case_sensors)
+        return r_[dispatch_sensors, case_sensors]
 
 
     def performAction(self, action):
@@ -180,18 +176,18 @@ class ParticipantEnvironment(GraphicalEnvironment):
         mkt = self.market
         n_offbids = self.n_offbids
 
+        # Participants either submit prices, where the quantity is divided
+        # equally among the offers/bids, or tuples of quantity and price.
         if not self.offbid_qty:
-            # The rated capacity is divided equally among the offers/bids.
+            # Divide the rated capacity equally among the offers/bids.
             qty = asset.rated_pmax / n_offbids
             for prc in action:
                 if not asset.is_load:
-                    offer = Offer(asset, qty, prc)
-                    mkt.offers.append(offer)
+                    mkt.offers.append(Offer(asset, qty, prc))
                     logger.info("%.2fMW offered at %.2f$/MWh for %s." %
                                 (qty, prc, asset.name))
                 else:
-                    bid = Bid(asset, qty, prc)
-                    mkt.bids.append(bid)
+                    mkt.bids.append(Bid(asset, qty, prc))
                     logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
                                 (prc, qty, asset.name))
         else:
@@ -200,13 +196,11 @@ class ParticipantEnvironment(GraphicalEnvironment):
                 qty = action[i]
                 prc = action[i + 1]
                 if not asset.is_load:
-                    offer = Offer(asset, qty, prc)
-                    mkt.offers.append(offer)
+                    mkt.offers.append(Offer(asset, qty, prc))
                     logger.info("%.2fMW offered at %.2f$/MWh for %s." %
                                 (qty, prc, asset.name))
                 else:
-                    bid = Bid(asset, qty, prc)
-                    mkt.bids.append(bid)
+                    mkt.bids.append(Bid(asset, qty, prc))
                     logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
                                 (prc, qty, asset.name))
 

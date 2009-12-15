@@ -123,8 +123,8 @@ class MarketExperiment(GraphicalExperiment):
             agent.giveReward(reward)
 
         # Instruct each agent to learn from it's actions.
-        for agent in self.agents:
-            agent.learn()
+#        for agent in self.agents:
+#            agent.learn()
 
         # Update environment rendering data.
 #        for task, agent in zip(self.tasks, self.agents):

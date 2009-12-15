@@ -28,8 +28,6 @@ import unittest
 
 from os.path import dirname, join
 
-from scipy import array
-
 from pylon import Case, Bus, Generator
 from pylon.readwrite import PickleReader
 
@@ -42,7 +40,7 @@ from pylon.pyreto.renderer import ParticipantRenderer, ExperimentRenderer
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners import ENAC
-from pybrain.rl.learners.valuebased import ActionValueTable
+from pybrain.rl.learners.valuebased import ActionValueTable, ActionValueNetwork
 from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 
@@ -93,19 +91,19 @@ class MarketExperimentTest(unittest.TestCase):
         self.case = get_pickled_case()
 
 
-    def test_stateless(self):
-        """ Test learning without state information.
-        """
-        mkt = SmartMarket(self.case)
-        exp = MarketExperiment([], [], mkt)
-        for g in self.case.all_generators:
-            env = ParticipantEnvironment(g, mkt)
-            exp.tasks.append(StatelessTask(env))
-            table = ActionValueTable(1, 4)
-#            table = PropensityTable(4, actionDomain)
-            table.initialize(1.0)
-            exp.agents.append(LearningAgent(table, RothErev()))
-        exp.doInteractions(3)
+#    def test_stateless(self):
+#        """ Test learning without state information.
+#        """
+#        mkt = SmartMarket(self.case)
+#        exp = MarketExperiment([], [], mkt)
+#        for g in self.case.all_generators:
+#            env = ParticipantEnvironment(g, mkt)
+#            exp.tasks.append(StatelessTask(env))
+#            table = ActionValueTable(1, 4)
+##            table = PropensityTable(4, actionDomain)
+#            table.initialize(1.0)
+#            exp.agents.append(LearningAgent(table, RothErev()))
+#        exp.doInteractions(3)
 
 
     def test_valuebased(self):
@@ -115,72 +113,78 @@ class MarketExperimentTest(unittest.TestCase):
         exp = MarketExperiment([], [], mkt)
         for g in self.case.all_generators:
             env = ParticipantEnvironment(g, mkt)
-            exp.tasks.append(DiscreteTask(env))
-            table = ActionValueTable(1, 4)
-            table.initialize(1.0)
+            num_actions, dim_state = 10, 100
+            exp.tasks.append(DiscreteTask(env, dim_state, num_actions))
+            module = ActionValueTable(dim_state, num_actions)
+            module.initialize(1.0)
+#            module = ActionValueNetwork(dimState=1, numActions=4)
             learner = SARSA() #Q() QLambda()
 #            learner.explorer = BoltzmannExplorer() # default is e-greedy.
-            exp.agents.append(LearningAgent(table, learner))
-        exp.doInteractions(3)
+            exp.agents.append(LearningAgent(module, learner))
+        for _ in range(1000):
+            exp.doInteractions(24) # interact with the env in batch mode
+            for agent in exp.agents:
+                agent.learn()
+                agent.reset()
 
 
-    def test_continuous(self):
-        """ Test learning with continous sensor and action spaces.
-        """
-        mkt = SmartMarket(self.case)
-
-        agents = []
-        tasks = []
-        for g in self.case.all_generators:
-            # Create an environment for the agent with an asset and a market.
-            env = ParticipantEnvironment(g, mkt, n_offbids=2)
-#            env.setRenderer(ParticipantRenderer(env.outdim, env.indim))
-#            env.getRenderer().start()
-
-            # Create a task for the agent to achieve.
-            task = ContinuousTask(env)
-
-            # Build an artificial neural network for the agent.
-            net = buildNetwork(task.outdim, task.indim, bias=False,
-                               outputbias=False)
-#            net._setParameters(array([9]))
-
-            # Create a learning agent with a learning algorithm.
-            agent = LearningAgent(module=net, learner=ENAC())
-            # initialize parameters (variance)
-#            agent.setSigma([-1.5])
-            # learning options
-            agent.learner.alpha = 2.0
-            # agent.learner.rprop = True
-            agent.actaspg = False
-    #        agent.disableLearning()
-
-            agents.append(agent)
-            tasks.append(task)
-
-        experiment = MarketExperiment(tasks, agents, mkt)
-        experiment.setRenderer(ExperimentRenderer())
-
-        # Experiment event sequence:
-        #   task.getObservation()
-        #     env.getSensors()
-        #     task.normalize()
-        #   agent.integrateObservation()
-        #     Stores the observation received in a temporary variable until
-        #     action is called and reward is given.
-        #   agent.getAction()
-        #     module.activate(lastobs)
-        #   task.performAction()
-        #     task.denormalize(action)
-        #     env.performAction(action)
-        #   task.getReward()
-        #   agent.giveReward()
-        #   agent.learn()
-        experiment.doInteractions(3)
-
-#        env.getRenderer().stop()
-
-#        self.assertAlmostEqual(g1.cost_coeffs[1], 20.0, places=2)
+#    def test_continuous(self):
+#        """ Test learning with continous sensor and action spaces.
+#        """
+#        mkt = SmartMarket(self.case)
+#
+#        agents = []
+#        tasks = []
+#        for g in self.case.all_generators:
+#            # Create an environment for the agent with an asset and a market.
+#            env = ParticipantEnvironment(g, mkt, n_offbids=2)
+##            env.setRenderer(ParticipantRenderer(env.outdim, env.indim))
+##            env.getRenderer().start()
+#
+#            # Create a task for the agent to achieve.
+#            task = ContinuousTask(env)
+#
+#            # Build an artificial neural network for the agent.
+#            net = buildNetwork(task.outdim, task.indim, bias=False,
+#                               outputbias=False)
+##            net._setParameters(array([9]))
+#
+#            # Create a learning agent with a learning algorithm.
+#            agent = LearningAgent(module=net, learner=ENAC())
+#            # initialize parameters (variance)
+##            agent.setSigma([-1.5])
+#            # learning options
+#            agent.learner.alpha = 2.0
+#            # agent.learner.rprop = True
+#            agent.actaspg = False
+#    #        agent.disableLearning()
+#
+#            agents.append(agent)
+#            tasks.append(task)
+#
+#        experiment = MarketExperiment(tasks, agents, mkt)
+#        experiment.setRenderer(ExperimentRenderer())
+#
+#        # Experiment event sequence:
+#        #   task.getObservation()
+#        #     env.getSensors()
+#        #     task.normalize()
+#        #   agent.integrateObservation()
+#        #     Stores the observation received in a temporary variable until
+#        #     action is called and reward is given.
+#        #   agent.getAction()
+#        #     module.activate(lastobs)
+#        #   task.performAction()
+#        #     task.denormalize(action)
+#        #     env.performAction(action)
+#        #   task.getReward()
+#        #   agent.giveReward()
+#        #   agent.learn()
+#        experiment.doInteractions(3)
+#
+##        env.getRenderer().stop()
+#
+##        self.assertAlmostEqual(g1.cost_coeffs[1], 20.0, places=2)
 
 
 if __name__ == "__main__":
