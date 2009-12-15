@@ -38,10 +38,6 @@ class StatelessTask(Task):
     """ Defines a task that uses no state information.
     """
 
-    #--------------------------------------------------------------------------
-    #  "Task" interface:
-    #--------------------------------------------------------------------------
-
     def __init__(self, environment, num_actions=10):
         """ The action space is divided into the given number of steps.
         """
@@ -51,6 +47,9 @@ class StatelessTask(Task):
 #        self.action_steps = num_actions
         self.action_space = self.getDiscreteActions(num_actions)
 
+    #--------------------------------------------------------------------------
+    #  "Task" interface:
+    #--------------------------------------------------------------------------
 
     def getObservation(self):
         """ The vector of sensor values is replaced by a single integer since
@@ -116,12 +115,12 @@ class DiscreteTask(StatelessTask):
         # Divide the range of market prices in to discrete bands.
         limit = self.env.market.price_cap
         states = linspace(0.0, limit, self.dim_state)
+        mcp = abs(sensors[2]) # Discard all other sensor data.
         for i in range(len(states) - 1):
-            mcp = sensors[2] # Discard all other sensor data.
-            if (states[i] <= mcp < states[i + 1]):
+            if (states[i] <= mcp <= states[i + 1]):
                 return array([i])
         else:
-            raise ValueError
+            raise ValueError, "MCP: %f" % mcp
 
 #------------------------------------------------------------------------------
 #  "ContinuousTask" class:

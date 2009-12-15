@@ -113,7 +113,7 @@ class MarketExperimentTest(unittest.TestCase):
         exp = MarketExperiment([], [], mkt)
         for g in self.case.all_generators:
             env = ParticipantEnvironment(g, mkt)
-            num_actions, dim_state = 10, 100
+            dim_state, num_actions = (10, 10)
             exp.tasks.append(DiscreteTask(env, dim_state, num_actions))
             module = ActionValueTable(dim_state, num_actions)
             module.initialize(1.0)

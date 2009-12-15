@@ -109,19 +109,24 @@ class ParticipantEnvironment(GraphicalEnvironment):
 #            self.updateDone = True
 #            self.updateLock=threading.Lock()
 
+        #----------------------------------------------------------------------
         # Set the number of action values that the environment accepts.
+        #----------------------------------------------------------------------
+
         if offbid_qty:
             self.indim = n_offbids * 2
         else:
             self.indim = n_offbids
 
+        #----------------------------------------------------------------------
         # Set the number of sensor values that the environment produces.
-        case = market.case
+        #----------------------------------------------------------------------
+
         outdim = 0
         outdim += 6 # Dispatch sensors.
-        outdim += len(case.branches) * 2 # Branch sensors.
-        outdim += len(case.buses) * 2 # Bus sensors.
-        outdim += len(case.all_generators) * 3 # Generator sensors.
+        outdim += len(market.case.branches) * 2 # Branch sensors.
+        outdim += len(market.case.buses) * 2 # Bus sensors.
+        outdim += len(market.case.all_generators) * 3 # Generator sensors.
         self.outdim = outdim
 
     #--------------------------------------------------------------------------

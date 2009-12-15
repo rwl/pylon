@@ -25,7 +25,7 @@
 import time
 import logging
 
-from pylon import UDOPF, DCOPF
+from pylon import UDOPF, DCOPF #@UnusedImport
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -116,13 +116,12 @@ class SmartMarket(object):
 
 
         # Finish initialising the market.
-        self.init()
+#        self.init()
 
 
     def init(self):
         """ Initialises the market.
         """
-        pass
 #        generators = [g for g in self.case.all_generators if not g.is_load]
 #        vloads     = [g for g in self.case.all_generators if g.is_load]
 #
@@ -132,6 +131,8 @@ class SmartMarket(object):
 #
 #        if not self.bids:
 #            self.bids = [bid for vl in vloads for bid in vl.get_bids()]
+        self.offers = []
+        self.bids = []
 
 
     def clear_offers_and_bids(self):
