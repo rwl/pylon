@@ -388,10 +388,10 @@ class PylonTk(object):
             graph.add_edge(self.case.buses.index(edge.source_bus),
                            self.case.buses.index(edge.target_bus))
         for i, bus in enumerate(self.case.buses):
-            for generator in bus.generators:
-                graph.add_edge(i, generator.name)
             if bus.p_demand > 0.0:
                 graph.add_edge(i, "l" + str(i))
+        for g in self.case.generators:
+            graph.add_edge(self.case.buses.index(g.bus), g.name)
 
         plt.figure(1,figsize=(8,8))
         pos = nx.graphviz_layout(graph, prog="dot")
@@ -589,16 +589,16 @@ class BusProperties(object):
         nameentry = Entry(frame, textvariable=name)
         nameentry.grid(row=0, column=1)
 
-        mode = self.mode = StringVar()
+        bustype = self.type = StringVar()
         Label(frame, text="Type:").grid(row=1, sticky=W)
-        Label(frame, textvariable=mode).grid(row=1, column=1, sticky=W)
+        Label(frame, textvariable=bustype).grid(row=1, column=1, sticky=W)
 #        nameentry.grid(row=1, column=1)
-        mode.set("PV")
+        bustype.set("PV")
 
-        slack = self.slack = IntVar()
-        Checkbutton(frame, text="Slack", variable=slack, justify=LEFT,
-                    # command=self.on_clear
-                    ).grid(row=2, columnspan=2)
+#        slack = self.slack = IntVar()
+#        Checkbutton(frame, text="Slack", variable=slack, justify=LEFT,
+#                    # command=self.on_clear
+#                    ).grid(row=2, columnspan=2)
 
         v_max = self.v_max = StringVar()
         Label(frame, text="Vmax:").grid(row=3, sticky=W)

@@ -89,7 +89,7 @@ class DCPF(object):
 
         t0 = time.time()
 
-        if not self.case.slack_model == "single":
+        if not [bus for bus in self.case.buses if bus.type == "ref"]:
             logger.error("DC power flow requires a single slack bus")
             return False
 
@@ -131,11 +131,11 @@ class DCPF(object):
 
         # Remove the column and row from the susceptance matrix that
         # correspond to the slack bus
-        slack_idxs = [buses.index(v) for v in buses if v.slack]
+        slack_idxs = [buses.index(v) for v in buses if v.type == "ref"]
         slack_idx = slack_idxs[0]
 
-        pv_idxs = [buses.index(v) for v in buses if v.mode == "pv"]
-        pq_idxs = [buses.index(v) for v in buses if v.mode == "pq"]
+        pv_idxs = [buses.index(v) for v in buses if v.type == "PV"]
+        pq_idxs = [buses.index(v) for v in buses if v.type == "PQ"]
         pvpq_idxs = pv_idxs + pq_idxs
 
         B_pvpq = self.B[pvpq_idxs, pvpq_idxs]
@@ -148,7 +148,7 @@ class DCPF(object):
 
         # Bus active power injections (generation - load)
         # FIXME: Adjust for phase shifters and real shunts
-        p = matrix([v.p_surplus for v in buses])
+        p = matrix([self.case.p_surplus(v) for v in buses])
         p_slack = p[slack_idx]
         p_pvpq = p[pvpq_idxs]
         logger.debug("Active power injections:\n%s" % p_pvpq)

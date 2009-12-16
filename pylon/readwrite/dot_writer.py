@@ -130,17 +130,17 @@ class DotWriter(object):
     def write_generator_data(self, case, file, padding="    "):
         """ Write generator data to file.
         """
-        for bus in case.buses:
-            for generator in bus.generators:
-                # Generator node.
-                file.write("%s%s [%s];" % \
-                           (padding, id(generator), attr_str))
-                file.write("\n")
+        for generator in case.generators:
+            # Generator node.
+            file.write("%s%s [%s];" % \
+                       (padding, id(generator), attr_str))
+            file.write("\n")
 
-                # Edge connecting generator and bus.
-                file.write("%s%s -> %s [%s];" % \
-                           (padding, id(generator), id(bus), edge_attr_str))
-                file.write("\n")
+            # Edge connecting generator and bus.
+            file.write("%s%s -> %s [%s];" % \
+                       (padding, id(generator), id(generator.bus),
+                        edge_attr_str))
+            file.write("\n")
 
 
 #    def write_load_data(self, case, file, padding="    "):

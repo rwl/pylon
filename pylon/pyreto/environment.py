@@ -126,7 +126,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         outdim += 6 # Dispatch sensors.
         outdim += len(market.case.branches) * 2 # Branch sensors.
         outdim += len(market.case.buses) * 2 # Bus sensors.
-        outdim += len(market.case.all_generators) * 3 # Generator sensors.
+        outdim += len(market.case.generators) * 3 # Generator sensors.
         self.outdim = outdim
 
     #--------------------------------------------------------------------------
@@ -160,9 +160,9 @@ class ParticipantEnvironment(GraphicalEnvironment):
         nodal_prc = array([bus.p_lambda for bus in case.buses])
         v_max = array([bus.mu_vmax for bus in case.buses])
         v_min = array([bus.mu_vmin for bus in case.buses])
-        pg = array([g.p for g in case.all_generators])
-        g_max = array([g.mu_pmax for g in case.all_generators])
-        g_min = array([g.mu_pmin for g in case.all_generators])
+        pg = array([g.p for g in case.generators])
+        g_max = array([g.mu_pmax for g in case.generators])
+        g_min = array([g.mu_pmin for g in case.generators])
 
         case_sensors = r_[flows, mu_flow, angles, nodal_prc, pg, g_max, g_min]
 

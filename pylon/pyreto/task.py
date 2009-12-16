@@ -171,9 +171,9 @@ class ContinuousTask(Task):
 #        limits.extend([(b.v_min, b.v_max) for b in case.buses]) # mu_vmin
 #        limits.extend([(b.v_min, b.v_max) for b in case.buses]) # mu_vmax
 
-        limits.extend([(0., b.rated_pmax) for b in case.all_generators]) #pg
-        limits.extend([(-BIGNUM, BIGNUM) for g in case.all_generators]) #g_pmax
-        limits.extend([(-BIGNUM, BIGNUM) for g in case.all_generators]) #g_pmin
+        limits.extend([(0., b.rated_pmax) for b in case.generators]) #pg
+        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) #g_pmax
+        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) #g_pmin
 
         return limits
 

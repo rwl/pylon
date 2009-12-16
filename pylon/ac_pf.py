@@ -95,7 +95,7 @@ class _ACPF(object):
         self.pv_idxs = []
         self.pq_idxs = []
         self.pvpq_idxs = []
-        self.slack_idx = 0
+        self.ref_idx = 0
 
 
     def __call__(self, case):
@@ -129,18 +129,17 @@ class _ACPF(object):
         v_guess = mul(v_magnitude, exp(j * v_angle)) #element-wise product
 
         # Get generator set points.
-        for i, bus in enumerate(buses):
-            if bus.generators:
-                g = bus.generators[0]
-                #   V0(gbus) = gen(on, VG) ./ abs(V0(gbus)).* V0(gbus);
-                #            Vg
-                #   V0 = ---------
-                #        |V0| . V0
-#                v = mul(abs(v_guess[i]), v_guess[i])
-#                v_guess[i] = div(g.v_magnitude, v)
-#                v = abs(v_guess[i]) * v_guess[i]
-#                v_guess[i] = g.v_magnitude / v
-                v_guess[i] = g.v_magnitude
+        for g in self.case.generators:
+#            g = bus.generators[0]
+            #   V0(gbus) = gen(on, VG) ./ abs(V0(gbus)).* V0(gbus);
+            #            Vg
+            #   V0 = ---------
+            #        |V0| . V0
+#            v = mul(abs(v_guess[i]), v_guess[i])
+#            v_guess[i] = div(g.v_magnitude, v)
+#            v = abs(v_guess[i]) * v_guess[i]
+#            v_guess[i] = g.v_magnitude / v
+            v_guess[buses.index(g.bus)] = g.v_magnitude
 
         return v_guess
 
@@ -151,10 +150,11 @@ class _ACPF(object):
     def _get_power_injection_vector(self):
         """ Makes the vector of complex bus power injections (gen - load).
         """
+        case = self.case
         buses = self.case.connected_buses
 
-        return matrix(
-            [complex(bus.p_surplus, bus.q_surplus) for bus in buses], tc="z")
+        return matrix([complex(case.p_surplus(b), case.q_surplus(b))
+                       for b in buses], tc="z")
 
     #--------------------------------------------------------------------------
     #  Index buses for updating v:
@@ -166,18 +166,18 @@ class _ACPF(object):
         buses = self.case.connected_buses
 
         # Indexing for updating v
-        pv_idxs = [i for i, v in enumerate(buses) if v.mode is "pv"]
-        pq_idxs = [i for i, v in enumerate(buses) if v.mode is "pq"]
+        pv_idxs = [i for i, v in enumerate(buses) if v.type is "PV"]
+        pq_idxs = [i for i, v in enumerate(buses) if v.type is "PQ"]
         pvpq_idxs = pv_idxs + pq_idxs
 
-        slack_idxs = [i for i, v in enumerate(buses) if v.mode is "slack"]
-        if len(slack_idxs) > 0:
-            slack_idx = slack_idxs[0]
+        ref_idxs = [i for i, v in enumerate(buses) if v.type is "ref"]
+        if len(ref_idxs) > 0:
+            ref_idx = ref_idxs[0]
         else:
             logger.error("No reference/swing/slack bus specified.")
-            slack_idx = pv_idxs[0]
+            ref_idx = pv_idxs[0]
 
-        self.slack_idx = slack_idx
+        self.ref_idx = ref_idx
         self.pv_idxs = pv_idxs
         self.pq_idxs = pq_idxs
         self.pvpq_idxs = pvpq_idxs

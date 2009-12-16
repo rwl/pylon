@@ -440,7 +440,7 @@ class PSSEReader(object):
 
         base = tokens["MVAbase"]
 
-        g = Generator()
+        g = Generator(bus)
         g.base_mva = base
         g.p_max = tokens["Pmax"]
         g.p_min = tokens["Pmin"]
@@ -452,7 +452,7 @@ class PSSEReader(object):
 
         g.status = tokens["Stat"]
 
-        bus.generators.append(g)
+        self.case.generators.append(g)
 
 
     def _push_branch(self, tokens):

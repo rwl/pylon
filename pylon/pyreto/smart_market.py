@@ -97,7 +97,7 @@ class SmartMarket(object):
         if g_online:
             self.g_online = g_online
         else:
-            self.g_online = [True] * len(case.all_generators)
+            self.g_online = [True] * len(case.generators)
 
         # Time duration of the dispatch period in hours.
         self.period = period
@@ -122,8 +122,8 @@ class SmartMarket(object):
     def init(self):
         """ Initialises the market.
         """
-#        generators = [g for g in self.case.all_generators if not g.is_load]
-#        vloads     = [g for g in self.case.all_generators if g.is_load]
+#        generators = [g for g in self.case.generators if not g.is_load]
+#        vloads     = [g for g in self.case.generators if g.is_load]
 #
 #        if not self.offers:
 #            # Create offers from the generator cost functions.
@@ -143,9 +143,9 @@ class SmartMarket(object):
         offers = self.offers
         bids = self.bids
         limits = self.limits
-        all_generators = self.case.all_generators
-        generators = [g for g in all_generators if not g.is_load]
-        vloads     = [g for g in all_generators if g.is_load]
+        generators = self.case.generators
+        generators = [g for g in generators if not g.is_load]
+        vloads     = [g for g in generators if g.is_load]
 
         # Manage reactive power offers/bids.
         self._reactive_power_market(offers, bids)
@@ -345,24 +345,13 @@ class SmartMarket(object):
             guarantee_bid_price = True
 
             for offer in offers:
-                # Locate the bus to which the offer's generator is connected.
-                for bus in case.buses:
-                    if offer.generator in bus.generators:
-                        break # Go with the first one found.
-                else:
-                    logger.error("Generator bus not found.")
-
+                bus = offer.generator.bus
                 # Get nodal marginal price from OPF results.
                 offer.p_lambda = bus.p_lambda
                 offer.total_quantity = offer.generator.p
 
             for bid in bids:
-                # Locate the bus to which the dispatchable load is connected.
-                for bus in case.buses:
-                    if bid.vload in bus.generators:
-                        break
-                else:
-                    logger.error("Dispatchable load bus not found.")
+                bus = bid.vload.bus
 
                 if self.have_q:
                     # Use unbundled lambdas.
@@ -413,7 +402,7 @@ class SmartMarket(object):
         t = self.period
         settlement = self.settlement = {}
 
-        for i, g in enumerate(case.all_generators):
+        for i, g in enumerate(case.generators):
             g_offbids = [ob for ob in offers + bids if ob.generator == g]
 
             if not g_offbids: continue
@@ -490,8 +479,8 @@ class Auction(object):
         """ Clears a set of bids and offers.
         """
         offers, bids = self.offers, self.bids
-        generators = [g for g in self.case.all_generators if not g.is_load]
-        vloads     = [g for g in self.case.all_generators if g.is_load]
+        generators = [g for g in self.case.generators if not g.is_load]
+        vloads     = [g for g in self.case.generators if g.is_load]
 
         self._clear_quantities(generators, vloads, offers, bids)
         self._compute_shift_values(offers, bids)

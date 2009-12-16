@@ -64,17 +64,12 @@ def get_pickled_case():
 def get_1bus():
     """ Returns a simple one bus case.
     """
-    g1 = Generator(name="G1", p_max=60.0, p_min=0.0)
-    g2 = Generator(name="G2", p_max=100.0, p_min=0.0)
-
     bus1 = Bus(name="Bus1", p_demand=80.0)
-    bus1.generators.append(g1)
-    bus1.generators.append(g2)
 
-    case = Case(name="1Bus")
-    case.buses.append(bus1)
+    g1 = Generator(bus1, name="G1", p_max=60.0, p_min=0.0)
+    g2 = Generator(bus1, name="G2", p_max=100.0, p_min=0.0)
 
-    return case
+    return Case(name="1Bus", buses=[bus1], generators=[g1, g2])
 
 #------------------------------------------------------------------------------
 #  "MarketExperimentTest" class:
@@ -96,7 +91,7 @@ class MarketExperimentTest(unittest.TestCase):
 #        """
 #        mkt = SmartMarket(self.case)
 #        exp = MarketExperiment([], [], mkt)
-#        for g in self.case.all_generators:
+#        for g in self.case.generators:
 #            env = ParticipantEnvironment(g, mkt)
 #            exp.tasks.append(StatelessTask(env))
 #            table = ActionValueTable(1, 4)
@@ -111,7 +106,7 @@ class MarketExperimentTest(unittest.TestCase):
         """
         mkt = SmartMarket(self.case)
         exp = MarketExperiment([], [], mkt)
-        for g in self.case.all_generators:
+        for g in self.case.generators:
             env = ParticipantEnvironment(g, mkt)
             dim_state, num_actions = (10, 10)
             exp.tasks.append(DiscreteTask(env, dim_state, num_actions))
@@ -135,7 +130,7 @@ class MarketExperimentTest(unittest.TestCase):
 #
 #        agents = []
 #        tasks = []
-#        for g in self.case.all_generators:
+#        for g in self.case.generators:
 #            # Create an environment for the agent with an asset and a market.
 #            env = ParticipantEnvironment(g, mkt, n_offbids=2)
 ##            env.setRenderer(ParticipantRenderer(env.outdim, env.indim))

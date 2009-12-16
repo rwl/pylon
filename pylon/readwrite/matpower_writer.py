@@ -105,15 +105,15 @@ class MATPOWERWriter(object):
         for i, v in enumerate(buses):
             v_data = {}
             v_data["bus_id"] = i+1
-            if v.mode == "pq":
-                type = 1
-            elif v.mode == "pv":
-                type = 2
-            elif v.mode == "slack":
-                type = 3
+            if v.type == "PQ":
+                bustype = 1
+            elif v.type == "PV":
+                bustype = 2
+            elif v.type == "ref":
+                bustype = 3
             else:
                 raise ValueError
-            v_data["type"] = type
+            v_data["type"] = bustype
             v_data["Pd"] = v.p_demand * base_mva
             v_data["Qd"] = v.q_demand * base_mva
             v_data["Gs"] = v.g_shunt
@@ -161,7 +161,7 @@ class MATPOWERWriter(object):
             "Pmax", "Pmin"]
 
         buses = case.buses
-        generators = case.all_generators
+        generators = case.generators
 
         generators_data = []
         for g in generators:
@@ -169,10 +169,8 @@ class MATPOWERWriter(object):
             g_base = g.base_mva
             # FIXME: Need faster way to find generator bus index
             g_data["bus"] = 1 # Failsafe value
-            for v in buses:
-                if g in v.generators:
-                    g_data["bus"] = buses.index(v) + 1
-                    break
+            if g in case.generators:
+                g_data["bus"] = buses.index(g.bus) + 1
             g_data["Pg"] = g.p * g_base
             g_data["Qg"] = g.q * g_base
             g_data["Qmax"] = g.q_max * g_base

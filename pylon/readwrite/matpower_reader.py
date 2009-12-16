@@ -66,7 +66,7 @@ class MATPOWERReader(object):
         # Index of the slack bus. Bus objects can not be made slack until
         # at least one generator is attached so the attribute is set at the end
         # of the parsing operation.
-        self.slack_idx = -1
+#        self.slack_idx = -1
 
         # Maintain an ordered list of instantiated generators that may be
         # used in processing generator cost data since the structure gives
@@ -102,7 +102,7 @@ class MATPOWERReader(object):
 
         # Initialise:
         self.case = case = Case()
-        self.slack_idx = -1
+#        self.slack_idx = -1
         self.generators = []
 
         # Form array constructs
@@ -127,7 +127,7 @@ class MATPOWERReader(object):
         parsing_case.parseFile(file_or_filename)
 
         # Set the slack bus.
-        case.buses[self.slack_idx].slack = True
+#        case.buses[self.slack_idx].slack = True
 
         # Reset the list of instantiated generators if necessary
         if len(self.generators):
@@ -314,8 +314,8 @@ class MATPOWERReader(object):
         """
         logger.debug("Parsing bus data: %s" % tokens)
 
-        name = str(tokens["bus_id"])
-        bus  = Bus(name=name)
+        name = "Bus-" + str(tokens["bus_id"])
+        bus = Bus(name=name)
 
         # Assign a private id attribute for use when pushing generators and
         # branches.
@@ -323,17 +323,19 @@ class MATPOWERReader(object):
 
         base_kv = tokens["baseKV"]
 
-        bus.v_base      = base_kv
-        bus.g_shunt     = tokens["Gs"]
-        bus.b_shunt     = tokens["Bs"]
+        bus.v_base = base_kv
+        bus.g_shunt = tokens["Gs"]
+        bus.b_shunt = tokens["Bs"]
         bus.v_magnitude_guess = tokens["Vm"]
         bus.v_angle_guess = tokens["Va"]
         bus.v_magnitude = tokens["Vm"]
-        bus.v_angle     = tokens["Va"]
+        bus.v_angle = tokens["Va"]
 
         # Bus type 3 denotes a slack bus in MATPOWER
-        if tokens["bus_type"] == 3:
-            self.slack_idx = tokens["bus_id"]-1
+        bustype_map = {1: "PQ", 2: "PV", 3: "ref", 4: "isolated"}
+        bus.type = bustype_map[tokens["bus_type"]]
+#        if tokens["bus_type"] == 3:
+#            self.slack_idx = tokens["bus_id"]-1
 
         bus.p_demand = tokens["Pd"]
         bus.q_demand = tokens["Qd"]
@@ -358,40 +360,36 @@ class MATPOWERReader(object):
         logger.debug("Parsing generator data: %s" % tokens)
 
         base_mva = tokens["mBase"]
-        # Default to system base
         if base_mva == 0.0:
-            base_mva = self.base_mva
+            base_mva = self.base_mva # Default to system base.
 
-        # Locate the generator's bus.
-        for i, bus in enumerate(self.case.buses):
+        # Locate the generator bus.
+        for bus in self.case.buses:
             if bus._bus_id == tokens["bus_id"]:
                 break
         else:
             logger.error("Bus [%d] not found." % tokens["bus_id"])
             return
 
-        # Set unique name to ease identification.
+        generator = Generator(bus)
+
+        # Set an unique name to ease identification.
         g_names = [g.name for g in self.generators]
 
-        generator = Generator(name=make_unique_name("g", g_names))
-
-        generator.p           = tokens["Pg"]
-        generator.q_max       = tokens["Qmax"]
-        generator.q_min       = tokens["Qmin"]
+        generator.name = make_unique_name("Generator", g_names)
+        generator.p = tokens["Pg"]
+        generator.q_max = tokens["Qmax"]
+        generator.q_min = tokens["Qmin"]
         generator.v_magnitude = tokens["Vg"]
-        generator.base_mva    = tokens["mBase"]
-        generator.online      = tokens["status"]
-        generator.p_max       = tokens["Pmax"]
-        generator.p_min       = tokens["Pmin"]
+        generator.base_mva = tokens["mBase"]
+        generator.online = tokens["status"]
+        generator.p_max = tokens["Pmax"]
+        generator.p_min = tokens["Pmin"]
 
-#        generator.p_max_bid   = tokens["Pmax"]
-#        generator.p_min_bid   = tokens["Pmin"]
-
-#        bus.generators.append(generator)
-        self.case.buses[i].generators.append(generator)
+        self.case.generators.append(generator)
 
         # Maintain the list of instantiated generators for
-        # gen cost evaluation
+        # gen cost evaluation.
         self.generators.append(generator)
 
 
@@ -402,11 +400,11 @@ class MATPOWERReader(object):
 
         buses = self.case.buses
 
-        bus_names      = [ v.name for v in buses ]
-        source_bus_idx = bus_names.index( str( tokens["fbus"] ) )
-        target_bus_idx = bus_names.index( str( tokens["tbus"] ) )
-        source_bus     = buses[ source_bus_idx ]
-        target_bus     = buses[ target_bus_idx ]
+        bus_ids      = [bus._bus_id for bus in buses]
+        source_bus_idx = bus_ids.index(tokens["fbus"])
+        target_bus_idx = bus_ids.index(tokens["tbus"])
+        source_bus     = buses[source_bus_idx]
+        target_bus     = buses[target_bus_idx]
 
 #        source_bus = self.case.buses[tokens["fbus"]-1]
 #        target_bus = self.case.buses[tokens["tbus"]-1]
@@ -439,8 +437,8 @@ class MATPOWERReader(object):
         # Apply cost data to first generator in list and then remove it
         g = self.generators[0]
 
-        g.c_startup = float( tokens["startup"] )
-        g.c_shutdown = float( tokens["shutdown"] )
+        g.c_startup = tokens["startup"]
+        g.c_shutdown = tokens["shutdown"]
 
         # Piecewise linear cost data
         if tokens["model"] == 1:
@@ -457,12 +455,12 @@ class MATPOWERReader(object):
 
             points = []
             # Form as list of tuples
-            for i, coord in enumerate( coords ):
+            for i, coord in enumerate(coords):
                 if i % 2 == 0:
                     # FIXME: This should really use the machine MVA base
-                    x = float( coord )
-                    y = float( coords[i+1] )
-                    points.append( (x, y) )
+                    x = float(coord)
+                    y = float(coords[i + 1])
+                    points.append((x, y))
 #            print "Points:", points
 
             g.pwl_points = points
@@ -470,7 +468,7 @@ class MATPOWERReader(object):
 
         # Polynomial cost data
         elif tokens["model"] == 2:
-            coeffs = [ float(c) for c in tokens[4:] ]
+            coeffs = [float(c) for c in tokens[4:]]
 #            print "Coefficients:", coeffs
 
             n_coeffs = len(coeffs)

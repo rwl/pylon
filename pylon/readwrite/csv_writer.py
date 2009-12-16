@@ -95,11 +95,10 @@ class CSVWriter(object):
         """
         self.writer.writerow(["bus"] + generator_attrs)
 
-        for i, bus in enumerate(case.buses):
-            for generator in bus.generators:
-                values = [getattr(generator, attr) for attr in generator_attrs]
-                writer.writerow([i] + values)
-                del values
+        for generator in case.generators:
+            values = [getattr(generator, attr) for attr in generator_attrs]
+            writer.writerow([i] + values)
+            del values
 
 
 #    def write_load_data(self, case, file):

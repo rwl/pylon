@@ -49,24 +49,24 @@ class CaseTest(unittest.TestCase):
         self.case = PickleReader().read(DATA_FILE)
 
 
-    def test_slack_bus(self):
-        """ Test zero or one slack bus.
-        """
-        case = self.case
-
-        def get_slack_buses(case):
-            return [bus for bus in case.buses if bus.slack]
-
-        # Distributed slack bus model.
-        for bus in case.buses:
-            bus.slack = False
-        self.assertEqual(len(get_slack_buses(case)), 0)
-        self.assertEqual(case.slack_model, "distributed")
-
-        # Single slack bus model.
-        case.buses[0].slack = True
-        self.assertEqual(len(get_slack_buses(case)), 1)
-        self.assertEqual(case.slack_model, "single")
+#    def test_slack_bus(self):
+#        """ Test zero or one slack bus.
+#        """
+#        case = self.case
+#
+#        def get_slack_buses(case):
+#            return [bus for bus in case.buses if bus.slack]
+#
+#        # Distributed slack bus model.
+#        for bus in case.buses:
+#            bus.slack = False
+#        self.assertEqual(len(get_slack_buses(case)), 0)
+#        self.assertEqual(case.slack_model, "distributed")
+#
+#        # Single slack bus model.
+#        case.buses[0].slack = True
+#        self.assertEqual(len(get_slack_buses(case)), 1)
+#        self.assertEqual(case.slack_model, "single")
 
 #------------------------------------------------------------------------------
 #  "BusTest" class:
@@ -76,40 +76,40 @@ class BusTest(unittest.TestCase):
     """ Test case for the Bus class.
     """
 
-    def test_mode(self):
-        """ Test the mode property.
-        """
-        v = Bus()
-
-        # Should a bus be PQ by default?
-        self.assertEqual(v.mode, "pq")
-
-        g = Generator(q=1.0, q_max=10.0, q_min=-10.0)
-        v.generators.append(g)
-        self.assertEqual(v.mode, "pv")
-
-        g.q = 11.0
-        self.assertEqual(v.mode, "pq")
-
-        v.slack = True
-        self.assertEqual(v.mode, "slack")
+#    def test_mode(self):
+#        """ Test the mode property.
+#        """
+#        v = Bus()
+#
+#        # Should a bus be PQ by default?
+#        self.assertEqual(v.type, "PQ")
+#
+#        g = Generator(v, q=1.0, q_max=10.0, q_min=-10.0)
+#        v.generators.append(g)
+#        self.assertEqual(v.type, "PV")
+#
+#        g.q = 11.0
+#        self.assertEqual(v.type, "PQ")
+#
+#        v.slack = True
+#        self.assertEqual(v.type, "ref")
 
 
     def test_surplus(self):
         """ Test the power surplus properties.
         """
         v = Bus(p_demand=80.0, q_demand=35.0)
-        g1 = Generator(p=100.0, q=50.0)
-        g2 = Generator(p=30.0, q=10.0)
+        g1 = Generator(v, p=100.0, q=50.0)
+        g2 = Generator(v, p=30.0, q=10.0)
+        case = Case(buses=[v], generators=[g1, g2])
 
         # Supply
-        v.generators.extend([g1, g2])
-        self.assertEqual(v.p_supply, 130.0)
-        self.assertEqual(v.q_supply, 60.0)
+        self.assertEqual(case.p_supply(v), 130.0)
+        self.assertEqual(case.q_supply(v), 60.0)
 
         # Surplus
-        self.assertEqual(v.p_surplus, 50.0)
-        self.assertEqual(v.q_surplus, 25.0)
+        self.assertEqual(case.p_surplus(v), 50.0)
+        self.assertEqual(case.q_surplus(v), 25.0)
 
 #------------------------------------------------------------------------------
 #  "BranchTest" class:
@@ -206,7 +206,7 @@ class GeneratorTest(unittest.TestCase):
     def test_total_polynomial_cost(self):
         """ Test total cost calculation with polynomial cost model.
         """
-        g = Generator(cost_model="poly")
+        g = Generator(Bus(), cost_model="poly")
 
         g.p_max = 100.0
         g.p_min = 20.0
@@ -219,7 +219,7 @@ class GeneratorTest(unittest.TestCase):
     def test_total_piecewise_linear_cost(self):
         """ Test total cost calculation with piecewise linear cost model.
         """
-        g = Generator(cost_model="pwl")
+        g = Generator(Bus(), cost_model="pwl")
 
         p0 = (0.0, 0.0)
         p1 = (40.0, 100.0)
@@ -236,7 +236,7 @@ class GeneratorTest(unittest.TestCase):
     def test_poly_to_pwl(self):
         """ Test cost model conversion from polynomial to piece-wise linear.
         """
-        g = Generator(p_min=0.0, p_max=80.0, cost_model="poly")
+        g = Generator(Bus(), p_min=0.0, p_max=80.0, cost_model="poly")
         g.cost_coeffs=(0.02, 2.0, 0.0)
 
         g.poly_to_pwl(n_points=10)
@@ -301,7 +301,7 @@ class GeneratorTest(unittest.TestCase):
         """
         places = 4
 
-        g = Generator(p_min=50.0, p_max=200.0)
+        g = Generator(Bus(), p_min=50.0, p_max=200.0)
         g.cost_model="poly"
         g.cost_coeffs=(0.00533, 11.669, 213.1)
 
@@ -314,7 +314,7 @@ class GeneratorTest(unittest.TestCase):
         self.assertAlmostEqual(poly_offers[3].price, 13.2014, places)
 
 
-        g = Generator(p_min=0.0, p_max=80.0)
+        g = Generator(Bus(), p_min=0.0, p_max=80.0)
         g.cost_model="pwl"
         g.pwl_points=[(0, 0), (12, 144), (36, 1008), (60, 2832)]
 
@@ -337,25 +337,26 @@ class OfferBidToPWLTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         g0_points = [(0.0, 0.0), (12.0, 240.0), (36.0, 1200.0), (60.0, 2400.0)]
-        g0 = Generator(p=10.0, q=0.0, q_max=60.0, q_min=-15.0, p_max=60.0,
-                       p_min=10.0, pwl_points=g0_points)
+        g0 = Generator(Bus(), p=10.0, q=0.0, q_max=60.0, q_min=-15.0,
+                       p_max=60.0, p_min=10.0, pwl_points=g0_points)
 
         g1_points = [(0.0, 0.0), (12.0, 240.0), (36.0, 1200.0), (60.0, 2400.0)]
-        g1 = Generator(p=10.0, q=0.0, q_max=60.0, q_min=-15.0, p_max=60.0,
-                       p_min=12.0, c_startup=100.0, pwl_points=g1_points)
+        g1 = Generator(Bus(), p=10.0, q=0.0, q_max=60.0, q_min=-15.0,
+                       p_max=60.0, p_min=12.0, c_startup=100.0,
+                       pwl_points=g1_points)
 
         g2_points = [(-30.0, 0.0), (-20.0, 1000.0), (-10.0, 2000.0),
                      (0.0, 3000.0)]
-        g2 = Generator(p=-30.0, q=-15.0, q_max=0.0, q_min=-15.0, p_max=0.0,
-                       p_min=-30.0, pwl_points=g2_points) # vload
+        g2 = Generator(Bus(), p=-30.0, q=-15.0, q_max=0.0, q_min=-15.0,
+                       p_max=0.0, p_min=-30.0, pwl_points=g2_points) # vload
 
         g3_points = [(0.0, 0.0), (12.0, 240.0), (36.0, 1200.0), (60.0, 2400.0)]
-        g3 = Generator(p=10.0, q=0.0, q_max=60.0, q_min=-15.0, p_max=60.0,
-                       p_min=12.0, pwl_points=g3_points)
+        g3 = Generator(Bus(), p=10.0, q=0.0, q_max=60.0, q_min=-15.0,
+                       p_max=60.0, p_min=12.0, pwl_points=g3_points)
 
         g4_points = [(-30.0, 0.0), (-20.0, 1000.0), (-10.0, 2000.0),
                      (0.0, 3000.0)] # vload
-        g4 = Generator(p=-30.0, q=7.5, q_max=7.5, q_min=0.0, p_max=0.0,
+        g4 = Generator(Bus(), p=-30.0, q=7.5, q_max=7.5, q_min=0.0, p_max=0.0,
                        p_min=-30.0, c_shutdown=50.0, pwl_points=g4_points)
 
         self.all_generators = [g0, g1, g2, g3, g4]

@@ -24,8 +24,6 @@
 
 import logging
 
-from itertools import cycle
-
 from util import Named
 
 #------------------------------------------------------------------------------
@@ -43,7 +41,8 @@ class Case(Named):
         of Bus objects connected by Branches.
     """
 
-    def __init__(self, name=None, base_mva=100.0, buses=None, branches=None):
+    def __init__(self, name=None, base_mva=100.0, buses=None, branches=None,
+            generators=None):
         """ Initialises a new Case instance.
         """
         # Unique name.
@@ -52,15 +51,14 @@ class Case(Named):
         # Base apparent power (MVA).
         self.base_mva = base_mva
 
-        if buses is None:
-            self.buses = []
-        else:
-            self.buses = buses
+        # Busbars.
+        self.buses = buses if buses is not None else []
 
-        if branches is None:
-            self.branches = []
-        else:
-            self.branches = branches
+        # Transmission lines, transformers and phase shifters.
+        self.branches = branches if branches is not None else []
+
+        # Generating units and dispatchable loads.
+        self.generators = generators if generators is not None else []
 
     @property
     def connected_buses(self):
@@ -72,30 +70,21 @@ class Case(Named):
             target_buses = [e.target_bus for e in self.branches]
 
             return [v for v in self.buses if v in source_buses + target_buses]
+#            return [bus for bus in self.buses if bus.type != "isolated"]
         else:
             return self.buses[:1]
 
-    @property
-    def slack_model(self):
-        """ Slack/swing/reference bus model.
-        """
-        slack_buses = [v for v in self.buses if v.slack]
-        if slack_buses:
-            return "single"
-        else:
-            return "distributed"
-
-    @property
-    def all_generators(self):
-        """ All system generators.
-        """
-        return [g for v in self.buses for g in v.generators]
+#    @property
+#    def all_generators(self):
+#        """ All system generators.
+#        """
+#        return [g for v in self.buses for g in v.generators]
 
     @property
     def online_generators(self):
         """ All in-service generators.
         """
-        return [g for g in self.all_generators if g.online]
+        return [g for g in self.generators if g.online]
 
 #    @property
 #    def all_loads(self):
@@ -115,6 +104,46 @@ class Case(Named):
         """
         return [branch for branch in self.branches if branch.online]
 
+
+    def p_supply(self, bus):
+        """ Returns the total active power generation capacity at the given
+            bus.
+        """
+        return sum([g.p for g in self.generators if g.bus == bus])
+
+
+    def q_supply(self, bus):
+        """ Returns the total reactive power generation capacity at the given
+            bus.
+        """
+        return sum([g.q for g in self.generators if g.bus == bus])
+
+
+    def p_demand(self, bus):
+        """ Returns the total active power load at the given bus.
+        """
+        return sum([b.p_demand for b in self.buses if b == bus])
+
+
+    def q_demand(self, bus):
+        """ Returns the total reactive power load at the given bus.
+        """
+        return sum([b.q_demand for b in self.buses if b == bus])
+
+
+    def p_surplus(self, bus):
+        """ Returns the difference between active power supply and demand at
+            the given bus.
+        """
+        return self.p_supply(bus) - self.p_demand(bus)
+
+
+    def q_surplus(self, bus):
+        """ Returns the difference between reactive power supply and demand at
+            the given bus.
+        """
+        return self.p_supply(bus) - self.p_demand(bus)
+
 #------------------------------------------------------------------------------
 #  "Bus" class:
 #------------------------------------------------------------------------------
@@ -123,22 +152,25 @@ class Bus(Named):
     """ Defines a power system bus node.
     """
 
-    def __init__(self, name=None, slack=False, v_base=100.0,
+    def __init__(self, name=None, type="PQ", v_base=100.0,
             v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
-            p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0,
-            generators=None):#, loads=None):
+            p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0):
         """ Initialises a new Bus instance.
         """
         # Unique name.
         self.name = name
-        # Is the bus a reference/slack/swing bus?
-        self.slack = slack
+
+        # Bus type: 'PQ', 'PV', 'ref' and 'isolated' (default: 'PQ')
+        self.type = type
+
         # Base voltage
         self.v_base = v_base
+
         # Voltage magnitude initial guess (pu).
         self.v_magnitude_guess = v_magnitude_guess
         # Voltage angle initial guess (degrees).
         self.v_angle_guess = v_angle_guess
+
         # Maximum voltage magnitude (pu).
         self.v_max = v_max
         # Minimum voltage magnitude (pu).
@@ -155,10 +187,10 @@ class Bus(Named):
         self.b_shunt = b_shunt
 
         # Generators defined by their active power and voltage.
-        if generators is None:
-            self.generators = []
-        else:
-            self.generators = generators
+#        if generators is None:
+#            self.generators = []
+#        else:
+#            self.generators = generators
 
         # Loads that specify real and reactive power demand.
 #        if loads is None:
@@ -170,33 +202,35 @@ class Bus(Named):
         self.v_magnitude = 0.0
         # Voltage angle, typically determined by a routine.
         self.v_angle = 0.0
+
         # Lambda (GBP/MWh).
         self.p_lambda = 0.0
         # Lambda (GBP/MVAr-hr).
         self.q_lambda = 0.0
+
         # Lagrangian multiplier for voltage constraint.
         self.mu_vmin = 0.0
         self.mu_vmax = 0.0
 
-    @property
-    def mode(self):
-        """ Bus mode may be 'pv', 'pq' or 'slack'.
-        """
-        if self.slack:
-            return "slack"
-        elif self.generators:
-            for g in self.generators:
-                if g.q_limited:
-                    return "pq"
-            return "pv"
-        else:
-            return "pq"
+#    @property
+#    def mode(self):
+#        """ Bus mode may be 'pv', 'pq' or 'slack'.
+#        """
+#        if self.slack:
+#            return "slack"
+#        elif self.generators:
+#            for g in self.generators:
+#                if g.q_limited:
+#                    return "pq"
+#            return "pv"
+#        else:
+#            return "pq"
 
-    @property
-    def p_supply(self):
-        """ Total active power generation capacity.
-        """
-        return sum([g.p for g in self.generators])
+#    @property
+#    def p_supply(self):
+#        """ Total active power generation capacity.
+#        """
+#        return sum([g.p for g in self.generators])
 
 #    @property
 #    def p_demand(self):
@@ -204,17 +238,17 @@ class Bus(Named):
 #        """
 #        return sum([l.p for l in self.loads])
 
-    @property
-    def p_surplus(self):
-        """ Supply and demand difference.
-        """
-        return self.p_supply - self.p_demand
+#    @property
+#    def p_surplus(self):
+#        """ Supply and demand difference.
+#        """
+#        return self.p_supply - self.p_demand
 
-    @property
-    def q_supply(self):
-        """ Total reactive power generation capacity.
-        """
-        return sum([g.q for g in self.generators])
+#    @property
+#    def q_supply(self):
+#        """ Total reactive power generation capacity.
+#        """
+#        return sum([g.q for g in self.generators])
 
 #    @property
 #    def q_demand(self):
@@ -222,11 +256,11 @@ class Bus(Named):
 #        """
 #        return sum([l.q for l in self.loads])
 
-    @property
-    def q_surplus(self):
-        """ Supply and demand difference.
-        """
-        return self.q_supply - self.q_demand
+#    @property
+#    def q_surplus(self):
+#        """ Supply and demand difference.
+#        """
+#        return self.q_supply - self.q_demand
 
 #------------------------------------------------------------------------------
 #  "Branch" class:
@@ -311,7 +345,7 @@ class Generator(Named):
         power limit fixes active and reactive power injected at parent bus.
     """
 
-    def __init__(self, name=None, online=True, base_mva=100.0, p=100.0,
+    def __init__(self, bus, name=None, online=True, base_mva=100.0, p=100.0,
             p_max=200.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0,
             q_min=-30.0, c_startup=0.0,
             c_shutdown=0.0, cost_model="poly", pwl_points=None,
@@ -319,12 +353,18 @@ class Generator(Named):
             min_down=0, initial_up=1, initial_down=0):
         """ Initialises a new Generator instance.
         """
+        # Busbar to which the generator is connected.
+        self.bus = bus
+
         # Unique name.
         self.name = name
+
         # Is the generator in service?
         self.online = online
+
         # Machine MVA base.
         self.base_mva = base_mva
+
         # Active power output (MW).
         self.p = p
         # Maximum active power output (MW).
@@ -333,8 +373,10 @@ class Generator(Named):
         # Minimum active power output (MW).
         self.p_min = p_min
         self.rated_pmin = p_min
+
         # Voltage magnitude setpoint (pu).
         self.v_magnitude = v_magnitude
+
         # Reactive power output (MVAr).
         self.q = q
         # Maximum reactive power (MVAr).
@@ -358,8 +400,10 @@ class Generator(Named):
         self.c_startup = c_startup
         # Shut down cost.
         self.c_shutdown = c_shutdown
-        # Valid values are 'poly' and 'pwl'.
+
+        # Generator cost model: 'poly' or 'pwl' (default: 'poly')
         self.cost_model = cost_model
+
         # Polynomial cost curve coefficients.
         # (a, b, c) relates to: cost = c*p**3 + b*p**2 + a*p.
         if cost_coeffs:
@@ -377,9 +421,11 @@ class Generator(Named):
         # Ramp down rate (p.u./h).
         self.rate_down = rate_down
         # Minimum running time (h).
+
         self.min_up = min_up
         # Minimum shut down time (h).
         self.min_down = min_down
+
         # Initial number of periods up.
         self.initial_up = initial_up
         # Initial number of periods down.
@@ -487,7 +533,7 @@ class Generator(Named):
             step = (p_max - p_min) / (n_points - 1)
             x = 0.0
 
-        for i in range(n_points):
+        for _ in range(n_points):
             y = self.total_cost(x)
             self.pwl_points.append((x, y))
             x += step
@@ -752,7 +798,7 @@ class CaseReport(object):
     def n_generators(self):
         """ Total number of generators.
         """
-        return len(self.case.all_generators)
+        return len(self.case.generators)
 
 
     @property
@@ -766,7 +812,7 @@ class CaseReport(object):
     def committed_generators(self):
         """ Generators that have been despatched.
         """
-        return [g for g in self.case.all_generators if g.p > 0.0]
+        return [g for g in self.case.generators if g.p > 0.0]
 
 
     @property
@@ -808,7 +854,7 @@ class CaseReport(object):
     def despatchable(self):
         """ Generators with negative output.
         """
-        return [vl for vl in self.case.all_generators if vl.is_load]
+        return [vl for vl in self.case.generators if vl.is_load]
 
 
     @property
@@ -853,8 +899,8 @@ class CaseReport(object):
         """ Total generation capacity.
         """
         base_mva = self.case.base_mva
-        p = sum([g.p for g in self.case.all_generators])
-        q = sum([g.q for g in self.case.all_generators])
+        p = sum([g.p for g in self.case.generators])
+        q = sum([g.q for g in self.case.generators])
 
         return complex(p, q)
 
@@ -873,8 +919,8 @@ class CaseReport(object):
     def generation_actual(self):
         """ Total despatched generation.
         """
-        p = sum([g.p for g in self.case.all_generators])
-        q = sum([g.q for g in self.case.all_generators])
+        p = sum([g.p for g in self.case.generators])
+        q = sum([g.q for g in self.case.generators])
 
         return complex(p, q)
 

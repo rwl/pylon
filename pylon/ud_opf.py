@@ -191,7 +191,7 @@ class UDOPF(object):
         # previous stage as the base case for this stage, ...
 
         # Best case so far. A list of the on-line status of all generators.
-        overall_online = [g.online for g in case.all_generators]
+        overall_online = [g.online for g in case.generators]
         # The objective function value is the total system cost.
         overall_cost   = routine.f
 
@@ -205,7 +205,7 @@ class UDOPF(object):
             # generation limits binding.
 
             # Activate generators according to the stage best.
-            for i, generator in enumerate(case.all_generators):
+            for i, generator in enumerate(case.generators):
                 generator.online = stage_online[i]
 
             # Get candidates for shutdown. Lagrangian multipliers are often
@@ -226,7 +226,7 @@ class UDOPF(object):
                 # find the total system cost with this generator shut down.
 
                 # Activate generators according to the stage best.
-                for i, generator in enumerate(case.all_generators):
+                for i, generator in enumerate(case.generators):
                     generator.online = stage_online[i]
 
                 # Shutdown candidate generator.
@@ -242,7 +242,7 @@ class UDOPF(object):
                 if success and (routine.f < overall_cost):
                     # 6. Replace the current best solution with this one if it
                     # has a lower cost.
-                    overall_online = [g.online for g in case.all_generators]
+                    overall_online = [g.online for g in case.generators]
                     overall_cost   = routine.f
                     # Check for further decommitment.
                     done = False
@@ -261,7 +261,7 @@ class UDOPF(object):
                 stage_cost   = overall_cost
 
         # 8. Use the best overall solution as the final solution.
-        for i, generator in enumerate(case.all_generators):
+        for i, generator in enumerate(case.generators):
             generator.online = overall_online[i]
 
         # One final solve using the best case to ensure all results are

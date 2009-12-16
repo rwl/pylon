@@ -360,10 +360,10 @@ class ReSTWriter(object):
             file.write(bus.name[:col1_width].ljust(col1_width) + " ")
             file.write("%8.3f" % bus.v_magnitude + " ")
             file.write("%8.3f" % bus.v_angle + " ")
-            file.write("%8.2f" % bus.p_supply + " ")
-            file.write("%8.2f" % bus.q_supply + " ")
-            file.write("%8.2f" % bus.p_demand + " ")
-            file.write("%8.2f" % bus.q_demand + " ")
+            file.write("%8.2f" % case.p_supply(bus) + " ")
+            file.write("%8.2f" % case.q_supply(bus) + " ")
+            file.write("%8.2f" % case.p_demand(bus) + " ")
+            file.write("%8.2f" % case.q_demand(bus) + " ")
             file.write("\n")
 
         # Totals
@@ -476,7 +476,7 @@ class ReSTWriter(object):
 
         report = CaseReport(case)
 
-        generators = case.all_generators
+        generators = case.generators
 
         if file_or_filename is None:
             file_or_filename = self.file_or_filename

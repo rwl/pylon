@@ -432,18 +432,18 @@ class PSATReader(object):
         """
         logger.debug("Pushing slack data: %s" % tokens)
 
-        bus = self.case.buses[tokens["bus_no"]-1]
+        bus = self.case.buses[tokens["bus_no"] - 1]
 
-        g = Generator()
+        g = Generator(bus)
         g.q_max = tokens["q_max"]
         g.q_min = tokens["q_min"]
         # Optional parameter
 #        if tokens.has_key("status"):
 #        g.online = tokens["status"]
 
-        bus.generators.append(g)
+        self.case.generators.append(g)
 
-        bus.slack = True
+        bus.type = "ref"
 
 
     def push_pv(self, tokens):
@@ -452,7 +452,9 @@ class PSATReader(object):
         """
         logger.debug("Pushing PV data: %s" % tokens)
 
-        g = Generator()
+        bus = self.case.buses[tokens["bus_no"]-1]
+
+        g = Generator(bus)
         g.p = tokens["p"]
         g.q_max = tokens["q_max"]
         g.q_min = tokens["q_min"]
@@ -460,8 +462,7 @@ class PSATReader(object):
 #        if tokens.has_key("status"):
 #        g.online = tokens["status"]
 
-        bus = self.case.buses[tokens["bus_no"]-1]
-        bus.generators.append(g)
+        self.case.generators.append(g)
 
 
     def push_pq(self, tokens):
@@ -505,20 +506,20 @@ class PSATReader(object):
         """
         logger.debug("Pushing supply data: %s" % tokens)
 
-        bus = self.case.buses[tokens["bus_no"]-1]
-        n_generators = len(bus.generators)
+        bus = self.case.buses[tokens["bus_no"] - 1]
+        n_generators = len([g for g in self.case.generators if g.bus == bus])
 
         if n_generators == 0:
             logger.error("No generator at bus [%s] for matching supply" % bus)
             return
         elif n_generators > 1:
-            g = bus.generators[0]
+            g = [g for g in self.case.generators if g.bus == bus][0]
             logger.warning(
                 "More than one generator at bus [%s] for demand. Using the "
                 "first one [%s]." % (bus, g)
             )
         else:
-            g = bus.generators[0]
+            g = [g for g in self.case.generators if g.bus == bus][0]
 
         g.cost_model = "poly"
         g.poly_coeffs = (

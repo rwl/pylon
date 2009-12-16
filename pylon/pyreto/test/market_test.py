@@ -51,7 +51,7 @@ class MarketTestCase(unittest.TestCase):
         """
         self.case = PickleReader().read(DATA_FILE)
 
-        generators = self.case.all_generators
+        generators = self.case.generators
 
 #        for gen in generators:
 #            print gen.name, gen.is_load, gen.pwl_points
@@ -139,7 +139,7 @@ class MarketTestCase(unittest.TestCase):
 #        for dispatch in settlement:
 #            print dispatch.quantity, dispatch.price
 
-#        generators = self.case.all_generators
+#        generators = self.case.generators
 
 #        self.assertTrue(success)
 #        self.assertAlmostEqual(mkt.routine.f, 2802.19, places=2)

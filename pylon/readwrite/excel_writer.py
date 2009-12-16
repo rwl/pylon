@@ -87,11 +87,11 @@ class ExcelWriter(object):
         """
         generator_sheet = book.add_sheet("Generators")
 
-        for i, bus, in enumerate(case.buses):
-            for j, generator in enumerate(bus.generators):
-                for k, attr in enumerate(generator_attrs):
-                    generator_sheet.write(j, 0, i)
-#                    generator_sheet.write(j, k+1, getattr(generator, attr))
+        for j, generator in enumerate(case.generators):
+            i = case.buses.index(generator.bus)
+            for k, attr in enumerate(generator_attrs):
+                generator_sheet.write(j, 0, i)
+#                generator_sheet.write(j, k+1, getattr(generator, attr))
 
 
 #    def write_load_data(self, case, file):

@@ -58,7 +58,7 @@ class UOPFTestCase(unittest.TestCase):
         """ Test routine using DC formulation.
         """
         success = self.routine.solve()
-        generators = self.case.all_generators
+        generators = self.case.generators
 
         self.assertTrue(success)
         # Generator 1 gets shutdown.
@@ -75,7 +75,7 @@ class UOPFTestCase(unittest.TestCase):
         case = PickleReader().read(PWL_FILE)
         routine = UDOPF(case, dc=True)
         success = routine.solve()
-        generators = self.case.all_generators
+        generators = self.case.generators
 
         self.assertTrue(success)
         self.assertTrue(False not in [g.online for g in generators])

@@ -328,7 +328,7 @@ class DCOPF(object):
 
         v_angle = matrix([v.v_angle_guess * pi / 180 for v in buses])
 
-#        _g_buses = [v for v in buses if v.type == "pv" or v.type == "slack"]
+#        _g_buses = [v for v in buses if v.type == "pv" or v.type == "ref"]
 #        _g_buses = [v for v in buses if len(v.generators) > 0]
 
 #        p_supply = matrix([v.p_supply / base_mva for v in _g_buses])
@@ -434,14 +434,14 @@ class DCOPF(object):
         n_generators = len(generators)
 
         # Indices of slack buses
-        ref_idxs = [buses.index(v) for v in buses if v.slack]
+        ref_idxs = [buses.index(v) for v in buses if v.type == "ref"]
 
         if len(ref_idxs) == 0:
             ref_idx = 0 # Use the first bus
         elif len(ref_idxs) == 1:
             ref_idx = ref_idxs[0]
         else:
-            raise ValueError, "More than one slack/reference bus"
+            raise ValueError, "More than one reference bus"
 
         # Append zeros for piecewise linear cost constraints
         if self._solver_type == "linear":
@@ -479,11 +479,10 @@ class DCOPF(object):
         i_bus_generator = spmatrix([],[],[], size=(n_buses, n_generators))
 
         j = 0
-        for i, v in enumerate(buses):
-            for g in v.generators:
-                if g.online:
-                    i_bus_generator[i, j] = 1.0
-                    j += 1
+        for g in self.case.generators:
+            if g.online:
+                i_bus_generator[self.case.buses.index(g.bus), j] = 1.0
+                j += 1
 
         logger.debug("Bus generator incidence matrix:\n%s" %
             i_bus_generator)
@@ -779,7 +778,7 @@ class DCOPF(object):
         offline_branches = [
             e for e in self.case.branches if e not in branches]
         offline_generators = [
-            g for g in self.case.all_generators if g not in generators]
+            g for g in self.case.generators if g not in generators]
 
         # Bus voltage angles.
         v_angle = solution["x"][:n_buses]

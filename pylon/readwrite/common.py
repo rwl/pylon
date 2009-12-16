@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-bus_attrs = ["name", "mode", "slack", "v_base", "v_magnitude_guess",
+bus_attrs = ["name", "mode", "type", "v_base", "v_magnitude_guess",
     "v_angle_guess", "v_max", "v_min", "v_magnitude", "v_angle", "g_shunt",
     "b_shunt", "zone"]
 

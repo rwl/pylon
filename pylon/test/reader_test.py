@@ -69,16 +69,15 @@ class ReaderTest(TestCase):
         self.assertEqual(len(c.branches), n_branches,
             "%d branches expected, %d found" % (n_branches, len(c.branches)))
 
-        self.assertEqual(len(c.all_generators), n_gen,
-            "%d generators expected, %d found" % (n_gen,len(c.all_generators)))
+        self.assertEqual(len(c.generators), n_gen,
+            "%d generators expected, %d found" % (n_gen,len(c.generators)))
 
 
     def _validate_slack_bus(self, slack_idx):
         """ Validates the location and number of slack buses.
         """
         c = self.case
-
-        slack_idxs = [c.buses.index(v) for v in c.buses if v.slack]
+        slack_idxs = [c.buses.index(v) for v in c.buses if v.type == "ref"]
 
         self.assertEqual(slack_idxs, [slack_idx])
 
@@ -86,12 +85,9 @@ class ReaderTest(TestCase):
     def _validate_generator_connections(self, gbus_idxs):
         """ Validates that generators are connected to the expected buses.
         """
-        c = self.case
-
-        for idx in gbus_idxs:
-            bus = c.buses[idx]
-            self.assertTrue(len(bus.generators),
-                "No generators at bus: %s" % bus.name)
+        for i, g in enumerate(self.case.generators):
+            busidx = self.case.buses.index(g.bus)
+            self.assertEqual(busidx, gbus_idxs[i])
 
 
     def _validate_branch_connections(self, source_idxs, target_idxs):
@@ -146,13 +142,13 @@ class MatpowerReaderTest(ReaderTest):
             target_idxs=[1, 3, 4, 2, 3, 4, 5, 4, 5, 4, 5])
 
         # Generator costs.
-        for g in c.all_generators:
+        for g in c.generators:
             self.assertEqual(g.cost_model, "poly")
             self.assertEqual(len(g.cost_coeffs), 3)
 
-        self.assertEqual(c.all_generators[0].cost_coeffs[0], 0.00533)
-        self.assertEqual(c.all_generators[1].cost_coeffs[1], 10.333)
-        self.assertEqual(c.all_generators[2].cost_coeffs[2], 240)
+        self.assertEqual(c.generators[0].cost_coeffs[0], 0.00533)
+        self.assertEqual(c.generators[1].cost_coeffs[1], 10.333)
+        self.assertEqual(c.generators[2].cost_coeffs[2], 240)
 
 
 
@@ -178,7 +174,7 @@ class MatpowerReaderTest(ReaderTest):
                          23, 23, 24, 25, 26, 26, 28, 29, 29, 27, 27])
 
         # Generator costs.
-        generators = self.case.all_generators
+        generators = self.case.generators
 
         for g in generators:
             self.assertEqual(g.cost_model, "pwl")
