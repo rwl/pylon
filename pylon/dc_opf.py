@@ -188,12 +188,12 @@ class DCOPF(object):
 
         # Solve the problem.
         solution = self._solve_program()
-        self.x = solution["x"]
 
         # Compute elapsed time.
         self.t_elapsed = t_elapsed = time.time() - t0
 
         if solution["status"] == "optimal":
+            self.x = solution["x"]
             self._update_solution_data(solution)
             logger.info("DC OPF completed in %.3fs." % t_elapsed)
             return True
@@ -204,11 +204,15 @@ class DCOPF(object):
             #In some cases, the returned solution may be fairly accurate.  If
             #the primal and dual infeasibilities, the gap, and the relative gap
             #are small, then x, y, s, z are close to optimal.
+            self.x = solution["x"]
             self._update_solution_data(solution)
             logger.info("Unknown solution status found in %.3fs. The " \
                 "solution may be fairly accurate. Try using a different " \
                 "solver or relaxing the tolerances." % t_elapsed)
             return True
+        elif solution["status"] == "error":
+            logger.error("Exception occurred solving DC OPF.")
+            return False
         else:
             logger.error("Non-convergent DC OPF.")
             return False
@@ -628,7 +632,7 @@ class DCOPF(object):
             coeffs = [g.cost_coeffs for g in generators]
 
             # Quadratic cost coefficients in p.u.
-            c2_coeffs = matrix([c2 * base_mva**2 for c2, c1, c0 in coeffs])
+            c2_coeffs = matrix([c2 * base_mva**2 for c2, _, _ in coeffs])
 
     #        quad_coeffs = matrix([g.cost_function.c for g in generators])
             # TODO: Find explanation for multiplying by the square
@@ -669,7 +673,7 @@ class DCOPF(object):
             cost_coeffs = [g.cost_coeffs for g in generators]
 
             # Linear cost coefficients in p.u.
-            c1_coeffs = matrix([c1 * base_mva for c2, c1, c0 in cost_coeffs])
+            c1_coeffs = matrix([c1 * base_mva for _, c1, _ in cost_coeffs])
 
             c = matrix([v_zeros, c1_coeffs])
 
@@ -703,13 +707,14 @@ class DCOPF(object):
             G, h = self.Aieq, self.b_ieq,
             A, b = self.Aeq, self.b_eq,
             solver = self.solver
-            primalstart = {"x": self.x_init}
+#            primalstart = {"x": self.x_init}
 
-#            print "\n", G[:, -7:]
+            try:
+                solution = lp(c, G, h, A, b, solver)#, primalstart)
+            except ValueError:
+                solution = {"status": "error"}
 
-            solution = lp(c, G, h, A, b, solver)#, primalstart)
-
-            logger.debug("Linear solver returned:%s" % solution)
+            logger.debug("Linear solver returned: %s" % solution)
 
 
         #Solves a quadratic program
@@ -734,7 +739,7 @@ class DCOPF(object):
 
             solution = qp(P, q, G, h, A, b, solver, initvals)
 
-            logger.debug("Quadratic solver returned:%s" % solution)
+            logger.debug("Quadratic solver returned: %s" % solution)
 
         #Returns a dictionary with keys 'status', 'x', 's', 'y', 'z'.
         #

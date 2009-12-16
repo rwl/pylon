@@ -4,6 +4,9 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 Reinforcement Learning algorithms (SARSA, Q, Q(lambda)) in a partially
 observable MDP energy market task. """
 
+import sys
+import logging
+import time
 import pylab
 
 from pylon import Case, Bus, Generator
@@ -16,11 +19,20 @@ from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
 from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 
+# Set up the logger.
+logger = logging.getLogger()
+for handler in logger.handlers: logger.removeHandler(handler) #remove pybrain
+handler = logging.FileHandler("/tmp/pylon.log", mode="wb")
+handler.setFormatter(logging.Formatter("%(message)s"))
+logger.addHandler(handler)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.setLevel(logging.DEBUG)
+
 # Define a case with two generators of differing capacity and a fixed load.
-g1 = Generator(name="G1", p_max=60.0, p_min=0.0)
-g2 = Generator(name="G2", p_max=100.0, p_min=0.0)
-bus1 = Bus(name="Bus1", p_demand=80.0, generators=[g1, g2])
-case = Case(name="1Bus", buses=[bus1])
+g1 = Generator(p_max=60.0, p_min=0.0)
+g2 = Generator(p_max=100.0, p_min=0.0)
+bus1 = Bus(p_demand=80.0, generators=[g1, g2])
+case = Case(buses=[bus1])
 
 # Create the market and associate learning agents with each generator.
 mkt = SmartMarket(case)
@@ -38,9 +50,7 @@ env2 = ParticipantEnvironment(g2, mkt)
 task2 = DiscreteTask(env2, dim_state, num_actions)
 module2 = ActionValueTable(dim_state, num_actions)
 module2.initialize(1.0)
-learner2 = SARSA() #Q() QLambda()
-#learner2.explorer = BoltzmannExplorer() # default is e-greedy.
-agent2 = LearningAgent(module2, learner2)
+agent2 = LearningAgent(module2, SARSA())
 
 exp = MarketExperiment([task1, task2], [agent1, agent2], mkt)
 
@@ -54,8 +64,9 @@ pylab.ion()
 #pylab.draw()
 
 # Execute interactions with the enironment in batch mode.
-for _ in range(1000):
-    exp.doInteractions(5)
+t0 = time.time()
+for _ in range(10):
+    exp.doInteractions(24)
     agent1.learn()
     agent1.reset()
     agent2.learn()
@@ -65,6 +76,12 @@ for _ in range(1000):
     pylab.clf()
     pylab.plot(agent1.module.params, "mx-")
     pylab.plot(agent2.module.params, "ro-")
+
 #    line1.set_ydata(agent1.module.params)
 #    line2.set_ydata(agent2.module.params)
+
     pylab.draw()
+
+logger.info("Example completed in %.3fs" % (time.time() - t0))
+
+time.sleep(6)

@@ -23,6 +23,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import time
 import logging
 
 from pybrain.rl.experiments import Experiment
@@ -101,6 +102,8 @@ class MarketExperiment(GraphicalExperiment):
         """
         self.stepid += 1
 
+        logger.info("Entering period %d." % self.stepid)
+
         # Initialise the market.
         self.market.init()
 
@@ -136,6 +139,8 @@ class MarketExperiment(GraphicalExperiment):
 #                rewards = seq[2][-1]
 #                task.env.getRenderer().updateData(states, actions, rewards)
 
+        logger.info("")
+
     #--------------------------------------------------------------------------
     #  "Experiment" interface:
     #--------------------------------------------------------------------------
@@ -146,8 +151,13 @@ class MarketExperiment(GraphicalExperiment):
 #        if self.hasRenderer():
 #            self.getRenderer().start()
 
+        t0 = time.time()
+
         for _ in range(number):
             self._oneInteraction()
+
+        elapsed = time.time() - t0
+        logger.info("%d interactions executed in %.3fs." % (number, elapsed))
 
         # Update experiment rendering data.
         if self.hasRenderer():

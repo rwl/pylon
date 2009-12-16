@@ -117,7 +117,7 @@ class DiscreteTask(StatelessTask):
         states = linspace(0.0, limit, self.dim_state)
         mcp = abs(sensors[2]) # Discard all other sensor data.
         for i in range(len(states) - 1):
-            if (states[i] <= mcp <= states[i + 1]):
+            if (states[i] <= round(mcp, 4) <= states[i + 1]):
                 return array([i])
         else:
             raise ValueError, "MCP: %f" % mcp
