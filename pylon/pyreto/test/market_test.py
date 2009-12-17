@@ -28,7 +28,7 @@ import unittest
 
 from os.path import dirname, join
 
-from pylon import DCOPF
+from pylon import Case, Bus, Generator, DCOPF
 from pylon.readwrite import PickleReader
 from pylon.pyreto import SmartMarket, Bid, Offer
 
@@ -39,119 +39,195 @@ from pylon.pyreto import SmartMarket, Bid, Offer
 DATA_FILE = join(dirname(__file__), "data", "auction_case.pkl")
 
 #------------------------------------------------------------------------------
-#  "MarketTestCase" class:
+#  "SimpleMarketTestCase" class:
 #------------------------------------------------------------------------------
 
-class MarketTestCase(unittest.TestCase):
-    """ Defines a test case for the Pyreto market.
+class SimpleMarketTestCase(unittest.TestCase):
+    """ Defines a simple test case for the Pyreto market.
     """
 
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = PickleReader().read(DATA_FILE)
-
-        generators = self.case.generators
-
-#        for gen in generators:
-#            print gen.name, gen.is_load, gen.pwl_points
-
-        # NB: Pylon orders the generators according to bus number.
-        # Bus No:  1, 2, 3, 4, 5, 6, 7, 8, 9
-        # Index:   0, 1, 2, 3, 4, 5, 6, 7, 8
-        # MP No:   1, 2, 7, 6, 8, 3, 5, 4, 9
-
-        self.offers = [
-            Offer(generators[0], 12.0, 20.0),
-            Offer(generators[0], 24.0, 50.0),
-            Offer(generators[0], 24.0, 60.0),
-#            Offer(generators[0], 60.0, 0.0, reactive=True),
-
-            Offer(generators[1], 12.0, 20.0),
-            Offer(generators[1], 24.0, 40.0),
-            Offer(generators[1], 24.0, 70.0),
-#            Offer(generators[1], 60.0, 0.0, reactive=True),
-
-            Offer(generators[5], 12.0, 20.0),
-            Offer(generators[5], 24.0, 42.0),
-            Offer(generators[5], 24.0, 80.0),
-#            Offer(generators[5], 60.0, 0.0, reactive=True),
-
-            Offer(generators[7], 12.0, 20.0),
-            Offer(generators[7], 24.0, 44.0),
-            Offer(generators[7], 24.0, 90.0),
-#            Offer(generators[7], 60.0, 0.0, reactive=True),
-
-            Offer(generators[6], 12.0, 20.0),
-            Offer(generators[6], 24.0, 46.0),
-            Offer(generators[6], 24.0, 75.0),
-#            Offer(generators[6], 60.0, 0.0, reactive=True),
-
-            Offer(generators[3], 12.0, 20.0),
-            Offer(generators[3], 24.0, 48.0),
-            Offer(generators[3], 24.0, 60.0),
-#            Offer(generators[3], 60.0, 3.0, reactive=True),
-        ]
-
-        self.bids = [
-#            Bid(generators[0], 15.0, 0.0, reactive=True),
-#            Bid(generators[1], 15.0, 0.0, reactive=True),
-#            Bid(generators[5], 15.0, 0.0, reactive=True),
-#            Bid(generators[7], 15.0, 0.0, reactive=True),
-#            Bid(generators[6], 15.0, 0.0, reactive=True),
-#            Bid(generators[3], 15.0, 0.0, reactive=True),
-
-            Bid(generators[2], 10.0, 100.0),
-            Bid(generators[2], 10.0, 70.0),
-            Bid(generators[2], 10.0, 60.0),
-#            Bid(generators[2], 15.0, 0.0, reactive=True),
-
-            Bid(generators[4], 10.0, 100.0),
-            Bid(generators[4], 10.0, 50.0),
-            Bid(generators[4], 10.0, 20.0),
-##            Bid(generators[4], 12.0, 83.9056, reactive=True),
-#            Bid(generators[4], 12.0, 20.0, reactive=True),
-
-            Bid(generators[8], 10.0, 100.0),
-            Bid(generators[8], 10.0, 60.0),
-            Bid(generators[8], 10.0, 50.0),
-#            Bid(generators[8], 7.5, 0.0, reactive=True)
-        ]
+        bus1 = Bus(p_demand=80.0)
+        g1 = Generator(bus1, p_max=60.0, p_min=0.0)
+        g2 = Generator(bus1, p_max=100.0, p_min=0.0)
+        self.case = Case(buses=[bus1], generators=[g1, g2])
 
 
-    def test_dc_opf(self):
-        """ Test solving the auction case using DC OPF.
+    def test_offers(self):
+        """ Test market clearing of offers using results from DC OPF.
         """
-        routine = DCOPF(self.case, show_progress=False)
-        success = routine.solve()
-        self.assertTrue(success)
-        self.assertAlmostEqual(routine.f, -517.81, places=2)
+        offers = [Offer(self.case.generators[0], 60.0, 20.0),
+                  Offer(self.case.generators[1], 100.0, 10.0)]
+
+        SmartMarket(self.case, offers).clear_offers_and_bids()
+
+        places = 2
+        self.assertFalse(offers[0].accepted)
+        self.assertAlmostEqual(offers[0].cleared_quantity, 0.0, places)
+        self.assertAlmostEqual(offers[0].cleared_price, 10.0, places)
+        self.assertTrue(offers[1].accepted)
+        self.assertAlmostEqual(offers[1].cleared_quantity, 80.0, places)
+        self.assertAlmostEqual(offers[1].cleared_price, 10.0, places)
 
 
-    def test_dc(self):
-        """ Test market clearing using DC OPF routine.
+    def test_first_price(self):
+        """ Test marginal offer/bid setting price.
         """
-        mkt = SmartMarket(self.case, self.offers, self.bids,
-            loc_adjust='dc', auction_type="first price", price_cap=100.0)
+        offers = [Offer(self.case.generators[0], 60.0, 10.0),
+                  Offer(self.case.generators[1], 100.0, 20.0)]
 
-        settlement = mkt.clear_offers_and_bids()
+        SmartMarket(self.case, offers).clear_offers_and_bids()
 
-#        for dispatch in settlement:
-#            print dispatch.quantity, dispatch.price
+        places = 2
+        self.assertTrue(offers[0].accepted)
+        self.assertAlmostEqual(offers[0].cleared_quantity, 60.0, places)
+        self.assertAlmostEqual(offers[0].cleared_price, 20.0, places)
+        self.assertTrue(offers[1].accepted)
+        self.assertAlmostEqual(offers[1].cleared_quantity, 20.0, places)
+        self.assertAlmostEqual(offers[1].cleared_price, 20.0, places)
 
+
+    def test_price_cap(self):
+        """ Test price cap.
+        """
+        offers = [Offer(self.case.generators[0], 60.0, 10.0),
+                  Offer(self.case.generators[1], 100.0, 20.0)]
+
+        mkt = SmartMarket(self.case, offers, price_cap=15.0)
+        mkt.clear_offers_and_bids()
+
+        self.assertFalse(mkt.success) # Blackout.
+        self.assertFalse(offers[0].accepted)
+        self.assertFalse(offers[1].accepted)
+
+
+    def test_bids(self):
+        """ Test clearing offers and bids.
+        """
+        vl = Generator(self.case.buses[0], p_max=0.0, p_min=-30.0)
+
+#        self.case.buses[0].p_demand = 20.0
+
+        offers = [Offer(self.case.generators[0], 60.0, 10.0),
+                  Offer(self.case.generators[1], 100.0, 20.0)]
+
+        bids = [Bid(vl, 10.0, 30.0)]
+
+        SmartMarket(self.case, offers, bids).clear_offers_and_bids()
+
+        places = 2
+        self.assertTrue(bids[0].accepted)
+        self.assertAlmostEqual(bids[0].cleared_quantity, 20.0, places)
+        self.assertAlmostEqual(bids[0].cleared_price, 30.0, places)
+
+#------------------------------------------------------------------------------
+#  "MarketTestCase" class:
+#------------------------------------------------------------------------------
+
+#class MarketTestCase(unittest.TestCase):
+#    """ Defines a test case for the Pyreto market.
+#    """
+#
+#    def setUp(self):
+#        """ The test runner will execute this method prior to each test.
+#        """
+#        self.case = PickleReader().read(DATA_FILE)
+#
 #        generators = self.case.generators
-
+#
+#        self.offers = [
+#            Offer(generators[0], 12.0, 20.0),
+#            Offer(generators[0], 24.0, 50.0),
+#            Offer(generators[0], 24.0, 60.0),
+##            Offer(generators[0], 60.0, 0.0, reactive=True),
+#
+#            Offer(generators[1], 12.0, 20.0),
+#            Offer(generators[1], 24.0, 40.0),
+#            Offer(generators[1], 24.0, 70.0),
+##            Offer(generators[1], 60.0, 0.0, reactive=True),
+#
+#            Offer(generators[2], 12.0, 20.0),
+#            Offer(generators[2], 24.0, 42.0),
+#            Offer(generators[2], 24.0, 80.0),
+##            Offer(generators[2], 60.0, 0.0, reactive=True),
+#
+#            Offer(generators[3], 12.0, 20.0),
+#            Offer(generators[3], 24.0, 44.0),
+#            Offer(generators[3], 24.0, 90.0),
+##            Offer(generators[3], 60.0, 0.0, reactive=True),
+#
+#            Offer(generators[4], 12.0, 20.0),
+#            Offer(generators[4], 24.0, 46.0),
+#            Offer(generators[4], 24.0, 75.0),
+##            Offer(generators[4], 60.0, 0.0, reactive=True),
+#
+#            Offer(generators[5], 12.0, 20.0),
+#            Offer(generators[5], 24.0, 48.0),
+#            Offer(generators[5], 24.0, 60.0),
+##            Offer(generators[5], 60.0, 3.0, reactive=True),
+#        ]
+#
+#        self.bids = [
+##            Bid(generators[0], 15.0, 0.0, reactive=True),
+##            Bid(generators[1], 15.0, 0.0, reactive=True),
+##            Bid(generators[5], 15.0, 0.0, reactive=True),
+##            Bid(generators[7], 15.0, 0.0, reactive=True),
+##            Bid(generators[6], 15.0, 0.0, reactive=True),
+##            Bid(generators[3], 15.0, 0.0, reactive=True),
+#
+#            Bid(generators[6], 10.0, 100.0),
+#            Bid(generators[6], 10.0, 70.0),
+#            Bid(generators[6], 10.0, 60.0),
+##            Bid(generators[6], 15.0, 0.0, reactive=True),
+#
+#            Bid(generators[7], 10.0, 100.0),
+#            Bid(generators[7], 10.0, 50.0),
+#            Bid(generators[7], 10.0, 20.0),
+###            Bid(generators[7], 12.0, 83.9056, reactive=True),
+##            Bid(generators[7], 12.0, 20.0, reactive=True),
+#
+#            Bid(generators[8], 10.0, 100.0),
+#            Bid(generators[8], 10.0, 60.0),
+#            Bid(generators[8], 10.0, 50.0),
+##            Bid(generators[8], 7.5, 0.0, reactive=True)
+#        ]
+#
+#
+#    def test_dc_opf(self):
+#        """ Test solving the auction case using DC OPF.
+#        """
+#        routine = DCOPF(self.case, show_progress=False)
+#        success = routine.solve()
 #        self.assertTrue(success)
-#        self.assertAlmostEqual(mkt.routine.f, 2802.19, places=2)
-#        self.assertAlmostEqual(generators[0].p, 35.01, places=2)
-#        self.assertAlmostEqual(generators[1].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[2].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[3].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[4].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[5].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[6].p, -30.0, places=1)
-#        self.assertAlmostEqual(generators[7].p, -11.5, places=1)
-#        self.assertAlmostEqual(generators[8].p, -21.87, places=2)
+#        self.assertAlmostEqual(routine.f, -517.81, places=2)
+#
+#
+#    def test_dc(self):
+#        """ Test market clearing using DC OPF routine.
+#        """
+#        mkt = SmartMarket(self.case, self.offers, self.bids,
+#            loc_adjust='dc', auction_type="first price", price_cap=100.0)
+#
+#        mkt.clear_offers_and_bids()
+#
+#        for dispatch in mkt.settlement.values():
+#            print dispatch.quantity, dispatch.price
+#
+##        generators = self.case.generators
+#
+##        self.assertTrue(success)
+##        self.assertAlmostEqual(mkt.routine.f, 2802.19, places=2)
+##        self.assertAlmostEqual(generators[0].p, 35.01, places=2)
+##        self.assertAlmostEqual(generators[1].p, 36.0, places=1)
+##        self.assertAlmostEqual(generators[2].p, 36.0, places=1)
+##        self.assertAlmostEqual(generators[3].p, 36.0, places=1)
+##        self.assertAlmostEqual(generators[4].p, 36.0, places=1)
+##        self.assertAlmostEqual(generators[5].p, 36.0, places=1)
+##        self.assertAlmostEqual(generators[6].p, -30.0, places=1)
+##        self.assertAlmostEqual(generators[7].p, -11.5, places=1)
+##        self.assertAlmostEqual(generators[8].p, -21.87, places=2)
 
 
 if __name__ == "__main__":

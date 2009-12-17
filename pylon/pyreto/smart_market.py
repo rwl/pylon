@@ -47,29 +47,20 @@ class SmartMarket(object):
     """
 
     def __init__(self, case, offers=None, bids=None, limits=None,
-            loc_adjust="dc", auction_type="first price", price_cap=500,
+            loc_adjust="dc", auction_type="first price", price_cap=100.0,
             g_online=None, period=1.0):
         """ Initialises a new SmartMarket instance.
         """
         self.case = case
 
         # Offers to sell a quantity of power at a particular price.
-        if offers:
-            self.offers = offers
-        else:
-            self.offers = []
+        self.offers = offers if offers is not None else []
 
         # Bids to buy power.
-        if bids:
-            self.bids = bids
-        else:
-            self.bids = []
+        self.bids = bids if bids is not None else []
 
         # Offer/bid limits.
-        if limits:
-            self.limits = limits
-        else:
-            self.limits = {}
+        self.limits = limits if limits is not None else {}
 
         # Compute locational adjustments ('ignore', 'ac', 'dc').
         self.loc_adjust = loc_adjust
@@ -115,10 +106,6 @@ class SmartMarket(object):
         self.settlement = {}
 
 
-        # Finish initialising the market.
-#        self.init()
-
-
     def init(self):
         """ Initialises the market.
         """
@@ -131,6 +118,7 @@ class SmartMarket(object):
 #
 #        if not self.bids:
 #            self.bids = [bid for vl in vloads for bid in vl.get_bids()]
+
         self.offers = []
         self.bids = []
 
@@ -140,26 +128,23 @@ class SmartMarket(object):
         """
         t0 = time.time()
 
-        offers = self.offers
-        bids = self.bids
-        limits = self.limits
-        generators = self.case.generators
-        generators = [g for g in generators if not g.is_load]
-        vloads     = [g for g in generators if g.is_load]
+        all_generators = self.case.generators
+        generators = [g for g in all_generators if not g.is_load]
+        vloads = [g for g in all_generators if g.is_load]
 
         # Manage reactive power offers/bids.
-        self._reactive_power_market(offers, bids)
+        self._reactive_power_market(self.offers, self.bids)
 
         # Withhold offers/bids outwith optional price limits.
-        self._enforce_limits(offers, bids, limits)
+        self._enforce_limits(self.offers, self.bids, self.limits)
 
-        self._setup_opf(generators, vloads, offers, bids)
+        self._setup_opf(generators, vloads, self.offers, self.bids)
 
         self._run_opf(self.case)
 
-        self._run_auction(self.case, offers, bids)
+        self._run_auction(self.case, self.offers, self.bids)
 
-        self._compute_costs(self.case, offers, bids)
+        self._compute_costs(self.case, self.offers, self.bids)
 
         elapsed = self.elapsed = time.time() - t0
         logger.info("SmartMarket cleared in %.3fs" % elapsed)
