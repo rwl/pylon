@@ -803,8 +803,8 @@ class Dispatch(object):
         # Cost for the generator at zero output.
         self.fixed = fixed
 
-        # Cost for the generator at the dispatched output level minus any fixed
-        # costs.
+        # Cost for the generator at the dispatched output level minus
+        # any fixed costs.
         self.variable = variable
 
         # Cost incurred due to starting up the generator.
@@ -813,8 +813,8 @@ class Dispatch(object):
         # Cost incurred due to shutting down the generator.
         self.shutdown = shutdown
 
-        # Penalty costs incurred. Not currently used.
-        self.penalty = 0.0
+        # Penalty costs incurred.
+#        self.penalty = 0.0
 
     @property
     def revenue(self):

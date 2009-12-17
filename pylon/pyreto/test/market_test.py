@@ -149,20 +149,29 @@ class SimpleMarketTestCase(unittest.TestCase):
         self.assertAlmostEqual(bids[0].cleared_price, 30.0, places)
 
 
-    def test_quantity(self):
+    def test_settlement(self):
         """ Test dispatch orders.
         """
+        self.case.generators[0].c_startup = 1000.0
+        self.case.generators[0].c_shutdown = 500.0
+
         offers = [Offer(self.case.generators[0], 30.0, 5.0),
                   Offer(self.case.generators[0], 30.0, 10.0),
                   Offer(self.case.generators[1], 100.0, 20.0)]
 
-        s = SmartMarket(self.case, offers).clear_offers_and_bids()
+        mkt = SmartMarket(self.case, offers, g_online=[False, True])
+        settlement = mkt.clear_offers_and_bids()
 
-        d1 = s[self.case.generators[0]]
+        d1 = settlement[self.case.generators[0]]
         places = 2
         self.assertAlmostEqual(d1.f, 150.0 + 300.0 + 400.0, places=1)
         self.assertAlmostEqual(d1.quantity, 60.0, places)
         self.assertAlmostEqual(d1.price, 20.0, places)
+
+#        self.assertAlmostEqual(d1.fixed, 0.0, places)
+#        self.assertAlmostEqual(d1.variable, 0.0, places)
+#        self.assertAlmostEqual(d1.startup, 1000.0, places)
+#        self.assertAlmostEqual(d1.shutdown, 0.0, places)
 
 #------------------------------------------------------------------------------
 #  "MarketTestCase" class:
