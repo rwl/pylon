@@ -144,10 +144,12 @@ class SmartMarket(object):
 
         self._run_auction(self.case, self.offers, self.bids)
 
-        self._compute_costs(self.case, self.offers, self.bids)
+        s = self._compute_costs(self.case, self.offers, self.bids)
 
         elapsed = self.elapsed = time.time() - t0
         logger.info("SmartMarket cleared in %.3fs" % elapsed)
+
+        return s
 
 
     def _reactive_power_market(self, offers, bids):
@@ -233,6 +235,9 @@ class SmartMarket(object):
 
 
     def _setup_opf(self, generators, vloads, offers, bids):
+        """ Converts offers/bids to pwl functions and updates generator
+            limits.
+        """
         # Convert power offers into piecewise linear segments and update
         # generator limits.
         for g in generators:
@@ -406,11 +411,11 @@ class SmartMarket(object):
 
             variable_cost = (t * g.p_cost) - fixed_cost
 
-            if not self.g_online[i] and g.online:
+            if (not self.g_online[i]) and g.online:
                 startup_cost = g.total_cost(g.c_startup)
                 shutdown_cost = 0.0
 
-            elif self.g_online[i] and not g.online:
+            elif self.g_online[i] and (not g.online):
                 startup_cost = 0.0
                 shutdown_cost = g.total_cost(g.c_shutdown)
 

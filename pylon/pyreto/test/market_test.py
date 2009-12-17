@@ -72,6 +72,32 @@ class SimpleMarketTestCase(unittest.TestCase):
         self.assertAlmostEqual(offers[1].cleared_price, 10.0, places)
 
 
+    def test_multi_offers(self):
+        """ Test market clearing of multiple offers per generator.
+        """
+        offers = [Offer(self.case.generators[0], 30.0, 5.0),
+                  Offer(self.case.generators[0], 30.0, 6.0),
+                  Offer(self.case.generators[1], 40.0, 10.0),
+                  Offer(self.case.generators[1], 40.0, 12.0),
+                  Offer(self.case.generators[1], 20.0, 20.0)]
+
+        SmartMarket(self.case, offers).clear_offers_and_bids()
+
+        self.assertTrue(offers[0].accepted)
+        self.assertTrue(offers[1].accepted)
+        self.assertTrue(offers[2].accepted)
+        self.assertFalse(offers[3].accepted)
+        self.assertFalse(offers[4].accepted)
+
+        places = 2
+        self.assertAlmostEqual(offers[0].cleared_quantity, 30.0, places)
+        self.assertAlmostEqual(offers[1].cleared_quantity, 30.0, places)
+        self.assertAlmostEqual(offers[2].cleared_quantity, 20.0, places)
+        self.assertAlmostEqual(offers[0].cleared_price, 10.0, places)
+        self.assertAlmostEqual(offers[1].cleared_price, 10.0, places)
+        self.assertAlmostEqual(offers[2].cleared_price, 10.0, places)
+
+
     def test_first_price(self):
         """ Test marginal offer/bid setting price.
         """
@@ -99,6 +125,7 @@ class SimpleMarketTestCase(unittest.TestCase):
         mkt.clear_offers_and_bids()
 
         self.assertFalse(mkt.success) # Blackout.
+        self.assertTrue(offers[1].withheld)
         self.assertFalse(offers[0].accepted)
         self.assertFalse(offers[1].accepted)
 
@@ -106,21 +133,36 @@ class SimpleMarketTestCase(unittest.TestCase):
     def test_bids(self):
         """ Test clearing offers and bids.
         """
-        vl = Generator(self.case.buses[0], p_max=0.0, p_min=-30.0)
-
-#        self.case.buses[0].p_demand = 20.0
+        vl = Generator(self.case.buses[0], p_max=0.0, p_min=-50.0)
+        self.case.generators.append(vl)
 
         offers = [Offer(self.case.generators[0], 60.0, 10.0),
-                  Offer(self.case.generators[1], 100.0, 20.0)]
+                  Offer(self.case.generators[1], 60.0, 20.0)]
 
-        bids = [Bid(vl, 10.0, 30.0)]
+        bids = [Bid(vl, 50.0, 30.0)]
 
         SmartMarket(self.case, offers, bids).clear_offers_and_bids()
 
         places = 2
         self.assertTrue(bids[0].accepted)
-        self.assertAlmostEqual(bids[0].cleared_quantity, 20.0, places)
+        self.assertAlmostEqual(bids[0].cleared_quantity, 40.0, places)
         self.assertAlmostEqual(bids[0].cleared_price, 30.0, places)
+
+
+    def test_quantity(self):
+        """ Test dispatch orders.
+        """
+        offers = [Offer(self.case.generators[0], 30.0, 5.0),
+                  Offer(self.case.generators[0], 30.0, 10.0),
+                  Offer(self.case.generators[1], 100.0, 20.0)]
+
+        s = SmartMarket(self.case, offers).clear_offers_and_bids()
+
+        d1 = s[self.case.generators[0]]
+        places = 2
+        self.assertAlmostEqual(d1.f, 150.0 + 300.0 + 400.0, places=1)
+        self.assertAlmostEqual(d1.quantity, 60.0, places)
+        self.assertAlmostEqual(d1.price, 20.0, places)
 
 #------------------------------------------------------------------------------
 #  "MarketTestCase" class:
@@ -231,16 +273,15 @@ class SimpleMarketTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-#    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
-#        format="%(levelname)s: %(message)s")
-
-    logger = logging.getLogger('pylon.pyreto.smart_market')
+    logger = logging.getLogger()#'pylon.pyreto.smart_market')
+    dcopf_logger = logging.getLogger('pylon.dc_opf')
+    dcopf_logger.setLevel(logging.INFO)
+    y_logger = logging.getLogger('pylon.y')
+    y_logger.setLevel(logging.INFO)
 
     # Remove PyBrain handlers.
-    for handler in logger.handlers:
-        logger.removeHandler(handler)
-
-#    logger.addHandler(logging.StreamHandler(sys.stdout))
+    for handler in logger.handlers: logger.removeHandler(handler)
+    logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
     unittest.main()
