@@ -412,12 +412,12 @@ class SmartMarket(object):
             variable_cost = (t * g.p_cost) - fixed_cost
 
             if (not self.g_online[i]) and g.online:
-                startup_cost = g.total_cost(g.c_startup)
+                startup_cost = g.c_startup #g.total_cost(g.c_startup)
                 shutdown_cost = 0.0
 
             elif self.g_online[i] and (not g.online):
                 startup_cost = 0.0
-                shutdown_cost = g.total_cost(g.c_shutdown)
+                shutdown_cost = g.c_shutdown #g.total_cost(g.c_shutdown)
 
             else:
                 startup_cost = 0.0
@@ -443,8 +443,8 @@ class Auction(object):
             PSERC (Cornell), version 3.2, www.pserc.cornell.edu/matpower
     """
 
-    def __init__(self, case, offers, bids, guarantee_offer_price,
-                 guarantee_bid_price, limits):
+    def __init__(self, case, offers, bids, guarantee_offer_price=True,
+                 guarantee_bid_price=True, limits=None):
         """ Initialises an new Auction instance.
         """
         self.case = case
@@ -456,13 +456,13 @@ class Auction(object):
         self.bids = bids
 
         # Guarantee that cleared offers are >= offers.
-        self.guarantee_offer_price = True
+        self.guarantee_offer_price = guarantee_offer_price
 
         # Guarantee that cleared bids are <= bids.
-        self.guarantee_bid_price = True
+        self.guarantee_bid_price = guarantee_bid_price
 
         # Offer/bid price limits.
-        self.limits = limits
+        self.limits = limits if limits is not None else {}
 
 
     def clear_offers_and_bids(self, auction_type):
@@ -489,6 +489,47 @@ class Auction(object):
 
         for vl in vloads:
             self._clear_quantity(bids, vl)
+
+
+    def _clear_quantity(self, offbids, gen):
+        """ Computes the cleared bid quantity from total dispatched quantity.
+        """
+        # Filter out offers/bids not applicable to the generator in question.
+        offbids = [offer for offer in offbids if offer.generator == gen]
+
+        # Offers/bids within valid price limits (not withheld).
+        valid = [ob for ob in offbids if not ob.withheld]
+
+        # Sort offers by price in ascending order and bids in decending order.
+        valid.sort(key=lambda ob: ob.price, reverse=[False, True][gen.is_load])
+
+        accepted_qty = 0.0
+        for ob in valid:
+            # Compute the fraction of the block accepted.
+            accepted = (ob.total_quantity - accepted_qty) / ob.quantity
+
+            # Clip to the range 0-1.
+            if accepted > 1.0:
+                accepted = 1.0
+            elif accepted < 1.0e-05:
+                accepted = 0.0
+
+            ob.cleared_quantity = accepted * ob.quantity
+
+            ob.accepted = (accepted > 0.0)
+
+            # Log the event.
+            if ob.accepted:
+                logger.info("%s [%s, %.3f, %.3f] accepted at %.2f MW." %
+                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
+                     ob.price, ob.cleared_quantity))
+            else:
+                logger.info("%s [%s, %.3f, %.3f] rejected." %
+                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
+                     ob.price))
+
+            # Increment the accepted quantity.
+            accepted_qty += ob.quantity
 
 
     def _compute_shift_values(self, offers, bids):
@@ -634,53 +675,6 @@ class Auction(object):
 
         # Return offers and bids with cleared quantities and prices.
         return offers, bids
-
-
-    def _clear_quantity(self, offbids, gen):
-        """ Computes the cleared bid quantity from total dispatched quantity.
-        """
-        # Filter out offers/bids not applicable to the generator in question.
-        if gen.is_load:
-            offbids = [offer for offer in offbids if offer.vload == gen]
-        else:
-            offbids = [offer for offer in offbids if offer.generator == gen]
-
-        # Offers/bids within valid price limits (not withheld).
-        valid = [ob for ob in offbids if not ob.withheld]
-
-        # Sort offers by price in ascending order and bids in decending order.
-        valid.sort(key=lambda ob: ob.price, reverse=[False, True][gen.is_load])
-
-        accepted_qty = 0.0
-        for ob in valid:
-            # Compute the fraction of the block accepted.
-            accepted = (ob.total_quantity - accepted_qty) / ob.quantity
-
-            # Clip to the range 0-1.
-            if accepted > 1.0:
-                accepted = 1.0
-            elif accepted < 1.0e-05:
-                accepted = 0.0
-
-            ob.cleared_quantity = accepted * ob.quantity
-
-            if accepted > 0.0:
-                ob.accepted = True
-            else:
-                ob.accepted = False
-
-            # Log the event.
-            if ob.accepted:
-                logger.info("%s [%s, %.3f, %.3f] accepted at %.2f MW." %
-                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
-                     ob.price, ob.cleared_quantity))
-            else:
-                logger.info("%s [%s, %.3f, %.3f] rejected." %
-                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
-                     ob.price))
-
-            # Increment the accepted quantity.
-            accepted_qty += ob.quantity
 
 #------------------------------------------------------------------------------
 #  "_OfferBid" class:
