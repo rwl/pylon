@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 using namespace std;
 
 struct Named {
@@ -19,13 +20,15 @@ Named::~Named () {
 
 struct Case: public Named {
   float base_mva;
-  
-  Bus buses [];
-  
-  Branch branches [];
-  
+
+  vector<Bus> buses;
+
+  vector<Branch> branches;
+
+  vector<Generator> generators;
+
   public:
-    Bus [] connected_buses (void) {
+    vector<Bus> connected_buses (void) {
       return buses;
     }
 };
