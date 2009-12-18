@@ -23,7 +23,7 @@
 #------------------------------------------------------------------------------
 
 import logging
-from scipy import array, zeros, r_, hstack
+from scipy import array, zeros, r_
 
 #from pybrain.rl.environments import Environment
 from pybrain.rl.environments.graphical import GraphicalEnvironment
@@ -63,9 +63,6 @@ class ParticipantEnvironment(GraphicalEnvironment):
                  render=True):
         """ Initialises the environment.
         """
-#        assert isinstance(asset, Generator)
-#        assert isinstance(market, SmartMarket)
-
         super(ParticipantEnvironment, self).__init__()
 
         # Generator instance that the agent controls.
@@ -81,15 +78,18 @@ class ParticipantEnvironment(GraphicalEnvironment):
         self.offbid_qty = offbid_qty
 
         # A nonnegative amount of money.
-#        money = 100
+#        money = 1e6
 
-        # Positive production capacity.
-#        self.p_max = asset.p_max
-#        self.p_min = asset.p_min
-        # Total cost function proportional to current capacity.
-#        self.cost_coeffs = asset.cost_coeffs
-#        self.pwl_points  = asset.pwl_points
-        # Amortised fixed costs.
+        # Record capacity limits and the cost function on instantiation as the
+        # marginal cost function since these values are changed to reflect
+        # submitted offers and bids.
+        self.p_max = asset.p_max
+        self.p_min = asset.p_min
+        # Marginal cost function proportional to current capacity.  Agents may
+        # offer/bid above or below marginal cost.
+        assert asset.cost_model == "pwl"
+        self.marginal_cost = asset.pwl_points
+#        # Amortised fixed costs.
 #        self.c_startup = asset.c_startup
 #        self.c_shutdown = asset.c_shutdown
 
@@ -123,7 +123,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         #----------------------------------------------------------------------
 
         outdim = 0
-        outdim += 6 # Dispatch sensors.
+        outdim += 3 # Dispatch sensors.
         outdim += len(market.case.branches) * 2 # Branch sensors.
         outdim += len(market.case.buses) * 2 # Bus sensors.
         outdim += len(market.case.generators) * 3 # Generator sensors.
@@ -138,19 +138,24 @@ class ParticipantEnvironment(GraphicalEnvironment):
             of doubles.
         """
         g = self.asset
-        mkt = self.market
-        case = mkt.case
+        case = self.market.case
+
+        if not g.is_load:
+            offbids = [x for x in self.market.offers if x.generator == g]
+        else:
+            offbids = [x for x in self.market.bids if x.vload == g]
 
         # Dispatch related sensors.
-        dispatch_sensors = zeros(6)
-        if mkt.settlement.has_key(g):
-            dispatch = mkt.settlement[g]
-            dispatch_sensors[0] = dispatch.f
-            dispatch_sensors[1] = dispatch.quantity
-            dispatch_sensors[2] = dispatch.price
-            dispatch_sensors[3] = dispatch.variable
-            dispatch_sensors[4] = dispatch.startup
-            dispatch_sensors[5] = dispatch.shutdown
+        dispatch_sensors = zeros(3)
+
+        if self.market.routine is not None:
+            dispatch_sensors[0] = self.market.routine.f
+        dispatch_sensors[1] = sum([ob.cleared_quantity for ob in offbids])
+        if offbids:
+            dispatch_sensors[2] = offbids[0].cleared_price
+#        dispatch_sensors[3] = dispatch.variable
+#        dispatch_sensors[4] = dispatch.startup
+#        dispatch_sensors[5] = dispatch.shutdown
 
         # Case related sensors.
         flows = array([branch.p_source for branch in case.branches])

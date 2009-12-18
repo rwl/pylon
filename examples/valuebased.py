@@ -30,8 +30,10 @@ logger.setLevel(logging.DEBUG)
 
 # Define a case with two generators of differing capacity and a fixed load.
 bus1 = Bus(p_demand=80.0)
-g1 = Generator(bus1, p_max=60.0, p_min=0.0)
-g2 = Generator(bus1, p_max=100.0, p_min=0.0)
+g1 = Generator(bus1, p_max=60.0, p_min=0.0,
+               pwl_points=[(0.0, 0.0), (60.0, 600.0)])
+g2 = Generator(bus1, p_max=100.0, p_min=0.0,
+               pwl_points=[(0.0, 0.0), (100.0, 500.0)])
 case = Case(buses=[bus1], generators=[g1, g2])
 
 # Create the market and associate learning agents with each generator.

@@ -342,7 +342,7 @@ class OfferBidToPWLTest(unittest.TestCase):
 
         g1_points = [(0.0, 0.0), (12.0, 240.0), (36.0, 1200.0), (60.0, 2400.0)]
         g1 = Generator(Bus(), p=10.0, q=0.0, q_max=60.0, q_min=-15.0,
-                       p_max=60.0, p_min=12.0, c_startup=100.0,
+                       p_max=60.0, p_min=12.0,# c_startup=100.0,
                        pwl_points=g1_points)
 
         g2_points = [(-30.0, 0.0), (-20.0, 1000.0), (-10.0, 2000.0),

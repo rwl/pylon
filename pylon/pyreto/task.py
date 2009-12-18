@@ -71,9 +71,23 @@ class StatelessTask(Task):
         """ Returns the reward corresponding to the last action performed.
         """
         g = self.env.asset
-        d = self.env.market.settlement[g]
-        logger.debug("Profit task [%s] reward: %s" % (g.name, d.earnings))
-        return d.earnings
+        if not g.is_load:
+            offbids = [x for x in self.env.market.offers if x.generator == g]
+        else:
+            offbids = [x for x in self.env.market.bids if x.vload == g]
+        t = self.env.market.period
+
+        # Compute costs in $ (not $/hr).  Apply the marginal cost function for
+        # calculating fixed and variable marginal costs.
+        g.pwl_points = self.env.marginal_cost
+        fixed_cost = t * g.total_cost(0.0)
+        variable_cost = (t * g.p_cost) - fixed_cost
+
+        revenue = t * sum([ob.revenue for ob in offbids])
+        earnings = revenue - (fixed_cost + variable_cost)
+
+        logger.debug("Profit task [%s] reward: %s" % (g.name, earnings))
+        return earnings
 
     #--------------------------------------------------------------------------
     #  "StatelessTask" interface:
@@ -158,10 +172,10 @@ class ContinuousTask(Task):
         limits.append((0.0, g.rated_pmax)) # quantity
         limits.append((0.0, BIGNUM)) # price
         limits.append((0.0, g.total_cost(g.rated_pmax))) # variable
-        c_startup = 2.0 if g.c_startup == 0.0 else g.c_startup
-        limits.append((0.0, c_startup)) # startup
-        c_shutdown = 2.0 if g.c_shutdown == 0.0 else g.c_shutdown
-        limits.append((0.0, c_shutdown)) # shutdown
+#        c_startup = 2.0 if g.c_startup == 0.0 else g.c_startup
+#        limits.append((0.0, c_startup)) # startup
+#        c_shutdown = 2.0 if g.c_shutdown == 0.0 else g.c_shutdown
+#        limits.append((0.0, c_shutdown)) # shutdown
 
         limits.extend([(0.0, b.s_max) for b in case.branches])
         limits.extend([(-BIGNUM, BIGNUM) for b in case.branches]) # mu_flow

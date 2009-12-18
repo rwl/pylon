@@ -347,9 +347,8 @@ class Generator(Named):
 
     def __init__(self, bus, name=None, online=True, base_mva=100.0, p=100.0,
             p_max=200.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0,
-            q_min=-30.0, c_startup=0.0,
-            c_shutdown=0.0, cost_model="poly", pwl_points=None,
-            cost_coeffs=None, rate_up=1.0, rate_down=1.0, min_up=0,
+            q_min=-30.0, pwl_points=None, cost_coeffs=None,
+            rate_up=1.0, rate_down=1.0, min_up=0,
             min_down=0, initial_up=1, initial_down=0):
         """ Initialises a new Generator instance.
         """
@@ -396,13 +395,19 @@ class Generator(Named):
 #            self.p_min_bid = p_min
 #        else:
 #            self.p_min_bid = 0.0
-        # Start up cost.
-        self.c_startup = c_startup
-        # Shut down cost.
-        self.c_shutdown = c_shutdown
+
+#        # Start up cost.
+#        self.c_startup = c_startup
+#        # Shut down cost.
+#        self.c_shutdown = c_shutdown
 
         # Generator cost model: 'poly' or 'pwl' (default: 'poly')
-        self.cost_model = cost_model
+        if pwl_points is not None:
+            self.cost_model = "pwl"
+        elif cost_coeffs is not None:
+            self.cost_model = "poly"
+        else:
+            self.cost_model = "pwl"
 
         # Polynomial cost curve coefficients.
         # (a, b, c) relates to: cost = c*p**3 + b*p**2 + a*p.

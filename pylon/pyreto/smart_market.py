@@ -47,8 +47,8 @@ class SmartMarket(object):
     """
 
     def __init__(self, case, offers=None, bids=None, limits=None,
-            loc_adjust="dc", auction_type="first price", price_cap=100.0,
-            g_online=None, period=1.0):
+                 loc_adjust="dc", auction_type="first price",
+                 price_cap=100.0, period=1.0, decommit=False):
         """ Initialises a new SmartMarket instance.
         """
         self.case = case
@@ -85,10 +85,10 @@ class SmartMarket(object):
 
         # A list of the commitment status of each generator from the
         # previous period (for computing startup/shutdown costs).
-        if g_online:
-            self.g_online = g_online
-        else:
-            self.g_online = [True] * len(case.generators)
+#        if g_online:
+#            self.g_online = g_online
+#        else:
+#            self.g_online = [True] * len(case.generators)
 
         # Time duration of the dispatch period in hours.
         self.period = period
@@ -102,8 +102,14 @@ class SmartMarket(object):
         # Guarantee that cleared bids are <= bids.
 #        self.guarantee_bid_price = True
 
+        # Should the unit decommitment algorithm be used?
+        self.decommit = decommit
+
         # Results of the settlement process. A list of Dispatch objects.
-        self.settlement = {}
+#        self.settlement = {}
+
+        # Solver, the results from which are used to clear the offers/bids.
+        self.routine = None
 
 
     def init(self):
@@ -144,12 +150,12 @@ class SmartMarket(object):
 
         self._run_auction(self.case, self.offers, self.bids)
 
-        s = self._compute_costs(self.case, self.offers, self.bids)
+#        s = self._compute_costs(self.case, self.offers, self.bids)
 
         elapsed = self.elapsed = time.time() - t0
         logger.info("SmartMarket cleared in %.3fs" % elapsed)
 
-        return s
+        return self.offers, self.bids
 
 
     def _reactive_power_market(self, offers, bids):
@@ -318,9 +324,14 @@ class SmartMarket(object):
     def _run_opf(self, case):
         """ Solves the optimisation problem.
         """
-#        routine = self.routine = UDOPF(dc=self.loc_adjust == "dc")
-        routine = self.routine = DCOPF(show_progress=False)
-        success = self.success = routine(case)
+        if self.decommit:
+            routine = self.routine = UDOPF(dc=self.loc_adjust == "dc")
+        elif self.loc_adjust == "dc":
+            routine = self.routine = DCOPF(show_progress=False)
+        else:
+            raise NotImplementedError
+
+        success = self.success = routine.solve(case)
 
         return success
 
@@ -385,50 +396,50 @@ class SmartMarket(object):
                 offbid.cleared_quantity = offbid.cleared_price = 0.0
 
 
-    def _compute_costs(self, case, offers, bids):
-        """ Returns a map of generators to their dispatch info, which details
-            the units revenue and associated costs.
-        """
-        t = self.period
-        settlement = self.settlement = {}
-
-        for i, g in enumerate(case.generators):
-            g_offbids = [ob for ob in offers + bids if ob.generator == g]
-
-            if not g_offbids: continue
-
-            quantity = g.p
-
-            totclrqty = sum([offer.cleared_quantity for offer in g_offbids])
-            if totclrqty == 0.0:
-                price = totclrqty
-            else:
-                price = sum([of.cleared_quantity * of.cleared_price / totclrqty
-                             for of in g_offbids])
-
-            # Compute costs in $ (not $/hr).
-            fixed_cost = t * g.total_cost(0.0)
-
-            variable_cost = (t * g.p_cost) - fixed_cost
-
-            if (not self.g_online[i]) and g.online:
-                startup_cost = g.c_startup #g.total_cost(g.c_startup)
-                shutdown_cost = 0.0
-
-            elif self.g_online[i] and (not g.online):
-                startup_cost = 0.0
-                shutdown_cost = g.c_shutdown #g.total_cost(g.c_shutdown)
-
-            else:
-                startup_cost = 0.0
-                shutdown_cost = 0.0
-
-            d = Dispatch(g, t, self.routine.f, quantity, price, fixed_cost,
-                         variable_cost, startup_cost, shutdown_cost)
-
-            settlement[g] = d
-
-        return settlement
+#    def _compute_costs(self, case, offers, bids):
+#        """ Returns a map of generators to their dispatch info, which details
+#            the units revenue and associated costs.
+#        """
+#        t = self.period
+#        settlement = self.settlement = {}
+#
+#        for i, g in enumerate(case.generators):
+#            g_offbids = [ob for ob in offers + bids if ob.generator == g]
+#
+#            if not g_offbids: continue
+#
+#            quantity = g.p
+#
+#            totclrqty = sum([offer.cleared_quantity for offer in g_offbids])
+#            if totclrqty == 0.0:
+#                price = totclrqty
+#            else:
+#                price = sum([of.cleared_quantity * of.cleared_price / totclrqty
+#                             for of in g_offbids])
+#
+#            # Compute costs in $ (not $/hr).
+#            fixed_cost = t * g.total_cost(0.0)
+#
+#            variable_cost = (t * g.p_cost) - fixed_cost
+#
+#            if (not self.g_online[i]) and g.online:
+#                startup_cost = g.c_startup #g.total_cost(g.c_startup)
+#                shutdown_cost = 0.0
+#
+#            elif self.g_online[i] and (not g.online):
+#                startup_cost = 0.0
+#                shutdown_cost = g.c_shutdown #g.total_cost(g.c_shutdown)
+#
+#            else:
+#                startup_cost = 0.0
+#                shutdown_cost = 0.0
+#
+#            d = Dispatch(g, t, self.routine.f, quantity, price, fixed_cost,
+#                         variable_cost, startup_cost, shutdown_cost)
+#
+#            settlement[g] = d
+#
+#        return settlement
 
 #------------------------------------------------------------------------------
 #  "Auction" class:
@@ -689,13 +700,13 @@ class _OfferBid(object):
         # Generating unit (dispatchable load) to which the offer (bid) applies.
         self.generator = generator
 
-        # Quantity of power bidding to be bought.
+        # Quantity of power being offered for sale (or bid to be bought).
         self.quantity = qty
 
-        # Maximum price willing to be paid.
+        # Minimum (maximum) price for sale (willing to be paid).
         self.price = prc
 
-        # Does the bid concern active or reactive power?
+        # Does the offer/bid concern active or reactive power?
         self.reactive = reactive
 
         # Output at which the generator was dispatched.
@@ -709,6 +720,9 @@ class _OfferBid(object):
 
         # Has the bid been partially or fully accepted?
         self.accepted = False
+
+        # Has the offer/bid passed through the clearing process?
+        self.cleared = False
 
         # Quantity of bid cleared by the market.
         self.cleared_quantity = 0.0
@@ -733,6 +747,14 @@ class _OfferBid(object):
             lambda) and the offer/bid price in question.
         """
         return self.price - self.p_lambda
+
+
+    @property
+    def revenue(self):
+        """ Returns the value in dollars per unit time of producing the cleared
+            quantity at the cleared price.
+        """
+        return self.cleared_quantity * self.cleared_price
 
 #------------------------------------------------------------------------------
 #  "Offer" class:
@@ -771,64 +793,64 @@ class Bid(_OfferBid):
 #  "Dispatch" class:
 #------------------------------------------------------------------------------
 
-class Dispatch(object):
-    """ Defines a container for results from the SmartMarket.
-    """
-
-    def __init__(self, generator, period, f, quantity, price, fixed, variable,
-                 startup, shutdown):
-        """ Initialises a new Dispatch instance.
-        """
-        # Generator to which the dispatch applies.
-        self.generator = generator
-
-        # Time duration of the dispatch period in hours.
-        self.period = period
-
-        # Objective function value (total system cost).
-        self.f = f
-
-        # Output level at which the generator has been despatched.
-        self.quantity = quantity
-
-        # Value at which the generator's output has been priced.
-        self.price = price
-
-        # Cost for the generator at zero output.
-        self.fixed = fixed
-
-        # Cost for the generator at the dispatched output level minus
-        # any fixed costs.
-        self.variable = variable
-
-        # Cost incurred due to starting up the generator.
-        self.startup = startup
-
-        # Cost incurred due to shutting down the generator.
-        self.shutdown = shutdown
-
-        # Penalty costs incurred.
-#        self.penalty = 0.0
-
-    @property
-    def revenue(self):
-        """ Returns the value in dollars of producing the dispatched quantity
-            at the cleared price over the period of the auction.
-        """
-        return self.quantity * self.price * self.period
-
-    @property
-    def total_cost(self):
-        """ Returns the sum of the fixed, variable, startup and shutdown costs,
-            plus any incurred penalties.
-        """
-        return sum([self.fixed, self.variable, self.startup, self.shutdown,
-                    self.penalty])
-
-    @property
-    def earnings(self):
-        """ Returns the revenue minus incurred costs.
-        """
-        return self.revenue - self.total_cost
+#class Dispatch(object):
+#    """ Defines a container for results from the SmartMarket.
+#    """
+#
+#    def __init__(self, generator, period, f, quantity, price, fixed, variable,
+#                 startup, shutdown):
+#        """ Initialises a new Dispatch instance.
+#        """
+#        # Generator to which the dispatch applies.
+#        self.generator = generator
+#
+#        # Time duration of the dispatch period in hours.
+#        self.period = period
+#
+#        # Objective function value (total system cost).
+#        self.f = f
+#
+#        # Output level at which the generator has been despatched.
+#        self.quantity = quantity
+#
+#        # Value at which the generator's output has been priced.
+#        self.price = price
+#
+#        # Cost for the generator at zero output.
+#        self.fixed = fixed
+#
+#        # Cost for the generator at the dispatched output level minus
+#        # any fixed costs.
+#        self.variable = variable
+#
+#        # Cost incurred due to starting up the generator.
+#        self.startup = startup
+#
+#        # Cost incurred due to shutting down the generator.
+#        self.shutdown = shutdown
+#
+#        # Penalty costs incurred.
+##        self.penalty = 0.0
+#
+#    @property
+#    def revenue(self):
+#        """ Returns the value in dollars of producing the dispatched quantity
+#            at the cleared price over the period of the auction.
+#        """
+#        return self.quantity * self.price * self.period
+#
+#    @property
+#    def total_cost(self):
+#        """ Returns the sum of the fixed, variable, startup and shutdown costs,
+#            plus any incurred penalties.
+#        """
+#        return sum([self.fixed, self.variable, self.startup, self.shutdown,
+#                    self.penalty])
+#
+#    @property
+#    def earnings(self):
+#        """ Returns the revenue minus incurred costs.
+#        """
+#        return self.revenue - self.total_cost
 
 # EOF -------------------------------------------------------------------------
