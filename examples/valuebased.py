@@ -8,6 +8,7 @@ import sys
 import logging
 import time
 import pylab
+import scipy
 
 from pylon import Case, Bus, Generator
 
@@ -18,6 +19,7 @@ from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
 from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
+from pybrain.tools.plotting import MultilinePlotter
 
 # Set up the logger.
 logger = logging.getLogger()
@@ -57,32 +59,36 @@ agent2 = LearningAgent(module2, SARSA())
 exp = MarketExperiment([task1, task2], [agent1, agent2], mkt)
 
 # Prepare for plotting.
+pylab.figure()
 pylab.ion()
-#fig = pylab.figure(1)
-#axis1 = fig.add_subplot(2, 1, 1)
-#line1 = axis1.plot([0.0], "mx-")[0]
-#axis2 = fig.add_subplot(2, 1, 2)
-#line2 = axis2.plot([0.0], "ro-")[0]
-#pylab.draw()
+pl = MultilinePlotter(autoscale=1.2, xlim=[0, 24], ylim=[0, 1])
+pl.setLineStyle(linewidth=2)
+pl.setLegend([agent1.name], loc='upper right')
 
 # Execute interactions with the enironment in batch mode.
 t0 = time.time()
-for _ in range(10):
-    exp.doInteractions(24)
+x = 0
+batch = 24
+while x < 240:
+    x += batch
+    exp.doInteractions(batch)
+
+    # Plot the progress of the agents.
+#    pylab.clf()
+#    pylab.plot(agent1.module.params, "mx-")
+#    pylab.plot(agent2.module.params, "ro-")
+#    pylab.draw()
+
+    reward = scipy.mean(agent1.history.getSumOverSequences('reward'))
+    pl.addData(0, x, reward)
+    pl.update()
+
     agent1.learn()
     agent1.reset()
     agent2.learn()
     agent2.reset()
 
-    # Plot the progress of the agents.
-    pylab.clf()
-    pylab.plot(agent1.module.params, "mx-")
-    pylab.plot(agent2.module.params, "ro-")
-
-#    line1.set_ydata(agent1.module.params)
-#    line2.set_ydata(agent2.module.params)
-
-    pylab.draw()
+pl.show("Periods", "Reward", "Value-based Reward", popup=True)
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
 
