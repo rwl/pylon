@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Copyright (C) 2009 Richard Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
@@ -13,32 +13,32 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 """ Test case for the DC Power Flow routine.
 """
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Imports:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
+import unittest
 from os.path import join, dirname
-from unittest import TestCase, main
 
 from pylon.readwrite import PickleReader
 from pylon import DCPF
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Constants:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  "DCPFTest" class:
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
-class DCPFTest(TestCase):
+class DCPFTest(unittest.TestCase):
     """ Uses a MATPOWER data file and validates the results against those
         obtained from running the MATPOWER rundcpf.m script with the same
         data file. See filter_test_case.py for validation of MATPOWER data
@@ -54,8 +54,8 @@ class DCPFTest(TestCase):
 
 
     def test_v_angle_guess_vector(self):
-        """ Test the voltage phase guess trait of a bus """
-
+        """ Test the voltage phase guess trait of a bus.
+        """
         guesses = self.routine.v_angle_guess
 
         self.assertEqual(guesses.size, (6, 1))
@@ -149,11 +149,13 @@ class DCPFTest(TestCase):
         self.assertAlmostEqual(p_6, branches[6].p_source, places)
         self.assertAlmostEqual(p_9, branches[9].p_source, places)
 
+        # FIXME: Test swing generator set-point.
+
 
 if __name__ == "__main__":
     import logging, sys
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-    main()
+    unittest.main()
 
-# EOF -------------------------------------------------------------------------
+# EOF ------------------------------------------------------------------------

@@ -28,9 +28,9 @@
 
 import time
 import logging
+import math
 
-from math import pi
-from cvxopt import matrix, spmatrix, sparse, umfpack, cholmod
+from cvxopt import matrix, umfpack, cholmod
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -58,16 +58,21 @@ class DCPF(object):
         """ Initialises a DCPF instance.
         """
         # CVXOPT offers interfaces to two routines for solving sets of sparse
-        # linear equations.  Possible values are 'UMFPACK' and 'CHOLMOD'.
+        # linear equations: 'UMFPACK' and 'CHOLMOD'.(default: 'UMFPACK')
         self.library = library
-        # The case on which the routine is performed
+
+        # The case on which the routine is performed.
         self.case = None
+
         # Branch susceptance matrix
         self.B = None
+
         # Branch source bus susceptance matrix
         self.B_source = None
+
         # Vector of voltage angle guesses
         self.v_angle_guess = None
+
         # Vector of voltage phase angles
         self.v_angle = None
 
@@ -75,7 +80,7 @@ class DCPF(object):
     def __call__(self, case):
         """ Calls the routine with the given case.
         """
-        self.solve(case)
+        return self.solve(case)
 
 
     def solve(self, case):
@@ -92,7 +97,7 @@ class DCPF(object):
             return False
 
         self.B, self.B_source = case.B
-        self._make_v_angle_guess_vector()
+        self._make_v_angle_guess_vector(case)
 
         # Calculate the voltage phase angles.
         self._make_v_angle_vector()
@@ -108,70 +113,74 @@ class DCPF(object):
     #  Build voltage phase angle guess vector:
     #--------------------------------------------------------------------------
 
-    def _make_v_angle_guess_vector(self):
-        """ Make the vector of voltage phase guesses """
+    def _make_v_angle_guess_vector(self, case):
+        """ Make the vector of voltage phase guesses.
+        """
+        buses = case.connected_buses
+        self.v_angle_guess = matrix([bus.v_angle_guess for bus in buses])
 
-        if self.case is not None:
-            buses = self.case.connected_buses
-            guesses = [v.v_angle_guess for v in buses]
-            self.v_angle_guess = matrix(guesses)
-            logger.debug("Vector of voltage phase guesses:\n%s" % guesses)
+        logger.debug("Voltage phase guesses:\n%s" % self.v_angle_guess)
+
+        return self.v_angle_guess
 
     #--------------------------------------------------------------------------
     #  Calculate voltage angles:
     #--------------------------------------------------------------------------
 
     def _make_v_angle_vector(self):
-        """ Caluclates the voltage phase angles.
+        """ Calculates the voltage phase angles.
         """
         buses = self.case.connected_buses
 
         # Remove the column and row from the susceptance matrix that
-        # correspond to the slack bus
-        slack_idxs = [buses.index(v) for v in buses if v.type == "ref"]
-        slack_idx = slack_idxs[0]
+        # corresponds to the slack bus.
+        self.refidx = [buses.index(v) for v in buses if v.type == "ref"][0]
 
-        pv_idxs = [buses.index(v) for v in buses if v.type == "PV"]
-        pq_idxs = [buses.index(v) for v in buses if v.type == "PQ"]
-        pvpq_idxs = pv_idxs + pq_idxs
+        pv_idxs = matrix([buses.index(v) for v in buses if v.type == "PV"])
+        pq_idxs = matrix([buses.index(v) for v in buses if v.type == "PQ"])
+        pvpq_idxs = matrix([pv_idxs, pq_idxs])
 
-        B_pvpq = self.B[pvpq_idxs, pvpq_idxs]
+        Bpvpq = self.B[pvpq_idxs, pvpq_idxs]
+
         logger.debug("Susceptance matrix with the row and column "
-            "corresponding to the slack bus removed:\n%s" % B_pvpq)
+            "corresponding to the slack bus removed:\n%s" % Bpvpq)
 
-        B_slack = self.B[pvpq_idxs, slack_idx]
+        Bref = self.B[pvpq_idxs, self.refidx]
+
         logger.debug("Susceptance matrix column corresponding to the slack "
-            "bus:\n%s" % B_slack)
+            "bus:\n%s" % Bref)
 
         # Bus active power injections (generation - load)
-        # FIXME: Adjust for phase shifters and real shunts
-        p = matrix([self.case.p_surplus(v) for v in buses])
-        p_slack = p[slack_idx]
+        # FIXME: Adjust for phase shifters and real shunts.
+        # Pbus = real(makeSbus(baseMVA, bus, gen)) - Pbusinj - bus(:, GS) / baseMVA;
+        p = matrix([self.case.p_surplus(v) / self.case.base_mva for v in buses])
+        self.p_ref = p[self.refidx]
         p_pvpq = p[pvpq_idxs]
+
         logger.debug("Active power injections:\n%s" % p_pvpq)
 
-        v_angle_slack = self.v_angle_guess[slack_idx]
-        logger.debug("Slack bus voltage angle:\n%s" % v_angle_slack)
+        v_angle_ref = self.v_angle_guess[self.refidx]
+
+        logger.debug("Slack bus voltage angle:\n%s" % v_angle_ref)
 
         # Solves the sparse set of linear equations Ax=b where A is a
         # sparse matrix and B is a dense matrix of the same type ('d'
-        # or 'z') as A. On exit B contains the solution.
-        A = B_pvpq
-        b = p_pvpq - p_slack * v_angle_slack
+        # or 'z') as A. On exit b contains the solution.
+        A = Bpvpq
+        b = p_pvpq - self.p_ref * v_angle_ref
 
         if self.library == "UMFPACK":
             umfpack.linsolve(A, b)
         elif self.library == "CHOLMOD":
             cholmod.splinsolve(A, b)
         else:
-            raise ValueError, "'library' must be either 'UMFPACK' of 'CHOLMOD'"
+            raise ValueError
 
         logger.debug("Solution to linear equations:\n%s" % b)
 
-#        v_angle = matrix([b[:slack_idx], [v_angle_slack], b[slack_idx:]])
-        import numpy # FIXME: remove numpy dependency
         # Insert the reference voltage angle of the slack bus
-        v_angle = matrix(numpy.insert(b, slack_idx, v_angle_slack))
+        v_angle = matrix([b[:self.refidx], v_angle_ref, b[self.refidx:]])
+
         logger.debug("Bus voltage phase angles:\n%s" % v_angle)
 
         self.v_angle = v_angle
@@ -190,7 +199,7 @@ class DCPF(object):
         buses    = self.case.connected_buses
         branches = self.case.online_branches
 
-        p_source = self.B_source * self.v_angle * base_mva
+        p_source = (self.B_source * self.v_angle) * base_mva
         p_target = -p_source
 
         for i in range(len(branches)):
@@ -200,8 +209,12 @@ class DCPF(object):
             branches[i].q_target = 0.0
 
         for i in range(len(buses)):
-            v_angle = self.v_angle[i]
-            buses[i].v_angle = v_angle*(180/pi)
+            buses[i].v_angle = self.v_angle[i] * (180 / math.pi)
             buses[i].v_magnitude = 1.0
+
+        # Update Pg for swing generator.
+        refbus = buses[self.refidx]
+        refgen = [gen for gen in self.case.generators if gen.bus == refbus][0]
+        refgen.p += (self.B[self.refidx] * self.v_angle - self.p_ref) * base_mva
 
 # EOF -------------------------------------------------------------------------
