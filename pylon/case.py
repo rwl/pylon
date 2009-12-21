@@ -24,7 +24,7 @@
 
 import logging
 
-from util import Named
+from util import Named, Serializable
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 #  "Case" class:
 #------------------------------------------------------------------------------
 
-class Case(Named):
+class Case(Named, Serializable):
     """ Defines representation of an electric power system as a graph
         of Bus objects connected by Branches.
     """
@@ -143,6 +143,76 @@ class Case(Named):
             the given bus.
         """
         return self.p_supply(bus) - self.p_demand(bus)
+
+    #--------------------------------------------------------------------------
+    #  "Serializable" interface:
+    #--------------------------------------------------------------------------
+
+    def save_matpower(self, fd):
+        """ Serialize the case as a MATPOWER data file.
+        """
+        from pylon.readwrite import MATPOWERWriter
+        MATPOWERWriter().write(self, fd)
+
+
+    @classmethod
+    def load_matpower(cls, fd):
+        """ Returns a case from the given MATPOWER file object.
+        """
+        from pylon.readwrite import MATPOWERReader
+        return MATPOWERReader().read(fd)
+
+
+    def save_psse(self, fd):
+        raise NotImplementedError
+
+
+    @classmethod
+    def load_psse(cls, fd):
+        """ Returns a case from the given PSS/E file object.
+        """
+        from pylon.readwrite import PSSEReader
+        return PSSEReader().read(fd)
+
+
+    def save_psat(self, fd):
+        raise NotImplementedError
+
+
+    @classmethod
+    def load_psat(cls, fd):
+        """ Returns a case object from the given PSAT data file.
+        """
+        from pylon.readwrite import PSATReader
+        return PSATReader().read(fd)
+
+
+    def save_rest(self, fd):
+        """ Save a reStructuredText representation of the case.
+        """
+        from pylon.readwrite import ReSTWriter
+        ReSTWriter().write(self, fd)
+
+
+    def save_csv(self, fd):
+        """ Saves the case as a series of Comma-Separated Values.
+        """
+        from pylon.readwrite import CSVWriter
+        CSVWriter().write(self, fd)
+
+
+    def save_excel(self, fd):
+        """ Saves the case as an Excel spreadsheet.
+        """
+        from pylon.readwrite.excel_writer import ExcelWriter
+        ExcelWriter().write(self, fd)
+
+
+    def save_dot(self, fd):
+        """ Saves a representation of the case in the Graphviz DOT language.
+        """
+        from pylon.readwrite import DotWriter
+        DotWriter().write(self, fd)
 
 #------------------------------------------------------------------------------
 #  "Bus" class:

@@ -22,8 +22,10 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os.path import join, dirname
+import os
+from os.path import join, dirname, exists, getsize
 import unittest
+import tempfile
 
 from pylon import Case, Bus, Branch, Generator
 from pylon.readwrite import PickleReader
@@ -33,6 +35,7 @@ from pylon.pyreto import Offer, Bid
 #  Constants:
 #-------------------------------------------------------------------------------
 
+MP_DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
 DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 
 #------------------------------------------------------------------------------
@@ -47,6 +50,32 @@ class CaseTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         self.case = PickleReader().read(DATA_FILE)
+
+
+    def test_load_matpower(self):
+        """ Test loading a MATPOWER data file.
+        """
+        case = Case.load(MP_DATA_FILE, "matpower")
+        self.assertTrue(isinstance(case, Case))
+
+
+    def test_infer_matpower_format(self):
+        """ Test inference of MATPOWER format from file extension.
+        """
+        case = Case.load(MP_DATA_FILE) # Format not specified.
+        self.assertTrue(isinstance(case, Case))
+
+
+    def test_save_matpower(self):
+        """ Test saving a case in MATPOWER format.
+        """
+        _, tmp_name = tempfile.mkstemp(".m")
+        os.remove(tmp_name)
+
+        self.case.save(tmp_name)
+
+        self.assertTrue(exists(tmp_name))
+        self.assertTrue(getsize(tmp_name) > 0)
 
 
 #    def test_slack_bus(self):

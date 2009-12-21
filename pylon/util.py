@@ -22,18 +22,35 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+from __future__ import with_statement
+
 import os.path
+import pickle
 
 from itertools import count
 
 #from pylon.readwrite import MATPOWERReader, PickleWriter
 
 #------------------------------------------------------------------------------
+#  File extension for load/save protocol mapping:
+#------------------------------------------------------------------------------
+
+known_extensions = {
+    'm': 'matpower',
+    'pkl': 'pickle',
+    'raw': 'psse',
+    'rst': 'rest',
+    'csv': 'csv',
+    'xls': 'excel',
+    'dot': 'dot'}
+
+#------------------------------------------------------------------------------
 #  "Named" class:
 #------------------------------------------------------------------------------
 
 class Named(object):
-    """ Base class for objects guaranteed to have a unique name.
+    """ Base class taken from PyBrain for objects guaranteed to have a
+        unique name.
     """
 
     _name_ids = count(0)
@@ -66,6 +83,86 @@ class Named(object):
 #        """ The default representation of a named object is its name.
 #        """
 #        return "<%s '%s'>" % (self.__class__.__name__, self.name)
+
+#------------------------------------------------------------------------------
+#  "Serializable" class:
+#------------------------------------------------------------------------------
+
+class Serializable(object):
+    """ Defines shortcuts to serialize an object.  Taken from PyBrain.
+    """
+
+    def save_to_file_object(self, fd, format=None, **kwargs):
+        """ Save the object to a given file like object in the given format.
+        """
+        format = 'pickle' if format is None else format
+        save = getattr(self, "save_%s" % format, None)
+        if save is None:
+            raise ValueError("Unknown format '%s'." % format)
+        save(fd, **kwargs)
+
+
+    @classmethod
+    def load_from_file_object(cls, fd, format=None):
+        """ Load the object from a given file like object in the given format.
+        """
+        format = 'pickle' if format is None else format
+        load = getattr(cls, "load_%s" % format, None)
+        if load is None:
+            raise ValueError("Unknown format '%s'." % format)
+        return load(fd)
+
+
+    def save(self, filename, format=None, **kwargs):
+        """ Save the object to file given by filename.
+        """
+        if format is None:
+            # try to derive protocol from file extension
+            format = format_from_extension(filename)
+        with file(filename, 'wb') as fp:
+            self.save_to_file_object(fp, format, **kwargs)
+
+
+    @classmethod
+    def load(cls, filename, format=None):
+        """ Return an instance of the class that is saved in the file with the
+            given filename in the specified format.
+        """
+        if format is None:
+            # try to derive protocol from file extension
+            format = format_from_extension(filename)
+        with file(filename, 'rbU') as fp:
+            obj = cls.load_from_file_object(fp, format)
+            obj.filename = filename
+            return obj
+
+
+    def save_pickle(self, fd, protocol=0):
+        """ Create portable serialized representation of the object.
+        """
+        pickle.dump(self, fd, protocol)
+
+
+    @classmethod
+    def load_pickle(cls, fd):
+        """ Load portable serialized representation of the object.
+        """
+        return pickle.load(fd)
+
+#------------------------------------------------------------------------------
+#  Infer format from file extension:
+#------------------------------------------------------------------------------
+
+def format_from_extension(fname):
+    """ Tries to infer a protocol from the file extension."""
+    _base, ext = os.path.splitext(fname)
+    if not ext:
+        return None
+    try:
+        format = known_extensions[ext.replace('.', '')]
+    except KeyError:
+        format = None
+    return format
 
 #------------------------------------------------------------------------------
 #  Return the complex conjugate:

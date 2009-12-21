@@ -55,10 +55,10 @@ class MATPOWERWriter(object):
 
         if isinstance(file_or_filename, basestring):
             file = open(file_or_filename, "wb")
-            f_name, ext = splitext(basename(file_or_filename))
+            self.f_name, ext = splitext(basename(file_or_filename))
         else:
             file = file_or_filename
-            f_name, ext = splitext(file.name)
+            self.f_name, ext = splitext(file.name)
 
         self.write_header(case, file)
 
@@ -81,7 +81,7 @@ class MATPOWERWriter(object):
         """ Writes the header to the given file.
         """
         file.write("function [baseMVA, bus, gen, branch, areas, gencost] = ")
-        file.write(f_name + "\n")
+        file.write(self.f_name + "\n")
 
         file.write("\n")
 
