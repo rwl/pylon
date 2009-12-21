@@ -88,7 +88,7 @@ pl = MultilinePlotter(autoscale=1.1, xlim=[0, 24], ylim=[0, 1])
 pl.setLineStyle(linewidth=2)
 pl.setLegend([agent1.name], loc='upper right')
 
-# Execute interactions with the enironment in batch mode.
+# Execute interactions with the environment in batch mode.
 t0 = time.time()
 x = 0
 batch = 5

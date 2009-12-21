@@ -35,8 +35,6 @@ from util import conj, zero2one
 #  Constants:
 #------------------------------------------------------------------------------
 
-j = 0 + 1j
-
 BIGNUM = 1e12#numpy.Inf
 
 #------------------------------------------------------------------------------
@@ -348,6 +346,7 @@ class Case(Named, Serializable):
     def dSbus_dV(self, Y, v):
         """ Computes the partial derivative of power injection w.r.t. voltage.
         """
+        j = 0 + 1j
         i = Y * v
 
         diag_v = spdiag(v)
@@ -367,6 +366,7 @@ class Case(Named, Serializable):
         """ Computes the branch power flow vector and the partial derivative of
             branch power flow w.r.t voltage.
         """
+        j = 0 + 1j
         n_branch = len(self.branches)
         n_bus = len(v)
 
