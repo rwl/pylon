@@ -34,7 +34,6 @@ from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, exp, div
 from cvxopt import solvers
 
 from pylon.util import conj
-from pylon.y import AdmittanceMatrix
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -272,7 +271,7 @@ class ACOPF(object):
             v = mul(v_magnitude, exp(j * v_angle)) #element-wise product
 
             # Evaluate the power flow equations.
-            Y, Ysource, Ytarget = AdmittanceMatrix().build(case)
+            Y, Ysource, Ytarget = case.Y
             mismatch = mul(v, conj(Y * v)) - s
 
             # Evaluate power balance equality constraint function values.

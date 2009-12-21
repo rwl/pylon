@@ -32,8 +32,6 @@ import logging
 from math import pi
 from cvxopt import matrix, spmatrix, sparse, umfpack, cholmod
 
-from pylon.y import SusceptanceMatrix
-
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -93,8 +91,7 @@ class DCPF(object):
             logger.error("DC power flow requires a single slack bus")
             return False
 
-        susceptance = SusceptanceMatrix()
-        self.B, self.B_source = susceptance(case)
+        self.B, self.B_source = case.B
         self._make_v_angle_guess_vector()
 
         # Calculate the voltage phase angles.

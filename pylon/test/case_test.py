@@ -95,7 +95,7 @@ class CaseTest(unittest.TestCase):
                 0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i   4.4821 -17.0047i
 
         """
-        Y, Ysrc, Ytgt = self.case.Y
+        Y, _, _ = self.case.Y
 
         self.assertEqual(Y.size, (6, 6))
 
@@ -163,7 +163,7 @@ class CaseTest(unittest.TestCase):
                      0   -5.0000  -10.0000         0   -3.3333   18.3333
 
         """
-        B, B_source = self.case.B
+        B, _ = self.case.B
 
         self._validate_susceptance_diagonal_values(B)
         self._validate_susceptance_off_diagonal_values(B)

@@ -35,8 +35,6 @@ from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul
 from cvxopt import solvers
 from cvxopt.solvers import qp, lp
 
-from pylon.y import SusceptanceMatrix
-
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -151,8 +149,7 @@ class DCOPF(object):
         solvers.options["feastol"] = self.feasibility_tol
 #        solvers.options["refinement"] = self.refinement
 
-        susceptance_matrix = SusceptanceMatrix()
-        self.B, self.Bsrc = susceptance_matrix(self.case)
+        self.B, self.Bsrc = self.case.B
 
         self._theta_inj_source = self._get_theta_inj_source()
         self._theta_inj_bus = self._get_theta_inj_bus()

@@ -27,7 +27,6 @@ import unittest
 
 from pylon.readwrite import PickleReader
 from pylon import DCOPF
-from pylon.y import SusceptanceMatrix
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -293,8 +292,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
     def test_power_balance_constraint(self):
         """ Test piecewise linear power balance (mismatch) constraint.
         """
-        susceptance = SusceptanceMatrix()
-        self.routine.B, self.routine.Bsrc = susceptance(self.case)
+        self.routine.B, self.routine.Bsrc = self.case.B
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -560,8 +558,7 @@ class DCOPFTest(unittest.TestCase):
                -0.7000
                -0.7000
         """
-        susceptance = SusceptanceMatrix()
-        self.routine.B, self.routine.Bsrc = susceptance(self.case)
+        self.routine.B, self.routine.Bsrc = self.case.B
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -715,8 +712,7 @@ class DCOPFTest(unittest.TestCase):
                 0.2000
                 0.4000
         """
-        susceptance = SusceptanceMatrix()
-        self.routine.B, self.routine.Bsrc = susceptance(self.case)
+        self.routine.B, self.routine.Bsrc = self.case.B
 
         self.routine._solver_type = self.routine._get_solver_type()
 

@@ -26,7 +26,6 @@ from os.path import join, dirname
 from unittest import TestCase, main
 
 from pylon.readwrite import PickleReader
-from pylon.y import AdmittanceMatrix
 from pylon import NewtonRaphson
 
 #------------------------------------------------------------------------------
@@ -141,7 +140,7 @@ class NewtonPFTest(TestCase):
         routine.case = self.case
 
         # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.case)
+        routine.Y, Ysrc, Ytgt = self.case.Y
 
         routine.v = routine._get_initial_voltage_vector()
         routine.s_surplus = routine._get_power_injection_vector()
@@ -171,7 +170,7 @@ class NewtonPFTest(TestCase):
         routine.case = self.case
 
         # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.case)
+        routine.Y, Ysrc, Ytgt = self.case.Y
 
         routine.v = self.routine._get_initial_voltage_vector()
         routine.s_surplus = self.routine._get_power_injection_vector()
@@ -333,7 +332,7 @@ class NewtonPFTest(TestCase):
         routine.case = self.case
 
         # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.case)
+        routine.Y, Ysrc, Ytgt = self.case.Y
 
         routine.v = self.routine._get_initial_voltage_vector()
         routine.s_surplus = self.routine._get_power_injection_vector()
@@ -397,7 +396,7 @@ class NewtonPFTest(TestCase):
         routine.case = self.case
 
         # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = AdmittanceMatrix().build(self.case)
+        routine.Y, Ysrc, Ytgt = self.case.Y
 
         routine.v = self.routine._get_initial_voltage_vector()
         routine.s_surplus = self.routine._get_power_injection_vector()

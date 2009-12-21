@@ -41,7 +41,6 @@ from cvxopt.lapack import getrf
 from cvxopt.umfpack import symbolic, numeric, linsolve
 import cvxopt.blas
 
-from pylon.y import AdmittanceMatrix
 from pylon.util import conj
 
 #------------------------------------------------------------------------------
@@ -221,8 +220,7 @@ class NewtonRaphson(_ACPF):
 
         t0 = time.time()
 
-        admittance_matrix = AdmittanceMatrix()
-        self.Y = admittance_matrix(case)
+        self.Y, _, _ = case.Y
 
         self.v = self._get_initial_voltage_vector()
         self.s_surplus = self._get_power_injection_vector()
@@ -652,9 +650,8 @@ class FastDecoupled(_ACPF):
         else:
             r_line = True
 
-        am = AdmittanceMatrix(bus_shunts=False, line_shunts=False,
-                              taps=False, line_resistance=r_line)
-        Y, Ysrc, Ytgt = am(self.case)
+        Y, _, _ = self.case.get_admittance_matrix(bus_shunts=False,
+            line_shunts=False, tap_positions=False, line_resistance=r_line)
 
         self.Bp = Bp = -Y.imag()
 
@@ -676,9 +673,8 @@ class FastDecoupled(_ACPF):
         else:
             r_line = True
 
-        am = AdmittanceMatrix(line_resistance=r_line, phase_shift=False)
-
-        Y = am(self.case)
+        Y, _, _ = self.case.get_admittance_matrix(line_resistance=r_line,
+                                                  phase_shift=False)
 
         self.Bp = Bpp = -Y.imag()
 
