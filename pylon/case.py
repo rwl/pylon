@@ -23,8 +23,21 @@
 #------------------------------------------------------------------------------
 
 import logging
+from math import pi
 
 from util import Named, Serializable
+
+from cvxopt.base import matrix, spmatrix, spdiag, exp, mul, div
+
+from util import conj
+
+#------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+j = 0 + 1j
+
+BIGNUM = 1e12#numpy.Inf
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -60,6 +73,7 @@ class Case(Named, Serializable):
         # Generating units and dispatchable loads.
         self.generators = generators if generators is not None else []
 
+
     @property
     def connected_buses(self):
         """ Returns a list of buses that are connected to one or more branches
@@ -74,11 +88,6 @@ class Case(Named, Serializable):
         else:
             return self.buses[:1]
 
-#    @property
-#    def all_generators(self):
-#        """ All system generators.
-#        """
-#        return [g for v in self.buses for g in v.generators]
 
     @property
     def online_generators(self):
@@ -86,17 +95,6 @@ class Case(Named, Serializable):
         """
         return [g for g in self.generators if g.online]
 
-#    @property
-#    def all_loads(self):
-#        """ All system loads.
-#        """
-#        return [l for v in self.buses for l in v.loads]
-
-#    @property
-#    def online_loads(self):
-#        """ All in-service loads.
-#        """
-#        return [l for l in self.all_loads if l.online]
 
     @property
     def online_branches(self):
@@ -143,6 +141,204 @@ class Case(Named, Serializable):
             the given bus.
         """
         return self.p_supply(bus) - self.p_demand(bus)
+
+    #--------------------------------------------------------------------------
+    #  Admittance matrix:
+    #--------------------------------------------------------------------------
+
+    def get_admittance_matrix(self, bus_shunts=True, line_shunts=True,
+            tap_positions=True, line_resistance=True, phase_shift=True):
+        """ Returns the bus and branch admittance matrices, Ysrc and Ytgt, such
+            that Ysrc * V is the vector of complex branch currents injected at
+            each branch's "source" bus.
+
+            References:
+                Ray Zimmerman, "makeYbus.m", MATPOWER, PSERC Cornell,
+                http://www.pserc.cornell.edu/matpower/, version 1.8, June 2007
+        """
+        n_bus = len(self.buses)
+        n_branch = len(self.branches)
+
+        online = matrix([e.online for e in self.branches])
+
+        #----------------------------------------------------------------------
+        #  Series admittance.
+        #----------------------------------------------------------------------
+
+        # Ys = stat ./ (branch(:, BR_R) + j * branch(:, BR_X))
+        if line_resistance:
+            r = matrix([e.r for e in self.branches])
+        else:
+            r = matrix(0.0, (n_branch, 1)) # Zero out line resistance.
+        x = matrix([e.x for e in self.branches])
+
+        Ys = div(online, (r + j * x))
+
+        #----------------------------------------------------------------------
+        #  Line charging susceptance.
+        #----------------------------------------------------------------------
+
+        # Bc = stat .* branch(:, BR_B);
+        if line_shunts:
+            b = matrix([e.b for e in self.branches])
+        else:
+            b = matrix(0.0, (n_branch, 1)) # Zero out line charging shunts.
+        Bc = mul(online, b)
+
+        #----------------------------------------------------------------------
+        #  Transformer tap ratios.
+        #----------------------------------------------------------------------
+
+        tap = matrix(1.0, (n_branch, 1), tc="d") # Default tap ratio = 1.0.
+        if tap_positions:
+            # Indices of branches with non-zero tap ratio.
+            idxs = [i for i, e in enumerate(self.branches) if e.ratio != 0.0]
+            # Transformer off nominal turns ratio ( = 0 for lines ) (taps at
+            # "from" bus, impedance at 'to' bus, i.e. ratio = Vf / Vt)"
+            ratio = matrix([e.ratio for e in self.branches])
+            # Set non-zero tap ratios.
+            tap[idxs] = ratio[idxs]
+
+        #----------------------------------------------------------------------
+        #  Phase shifters.
+        #----------------------------------------------------------------------
+
+        # tap = tap .* exp(j*pi/180 * branch(:, SHIFT));
+        # Convert branch attribute in degrees to radians
+        if phase_shift:
+            shift = matrix([e.phase_shift * pi / 180 for e in self.branches])
+        else:
+            phase_shift = matrix(0.0, (n_branch, 1))
+
+        tap = mul(tap, exp(j * shift))
+
+        #----------------------------------------------------------------------
+        #  Branch admittance matrix elements.
+        #----------------------------------------------------------------------
+
+        #  | If |   | Yff  Yft |   | Vf |
+        #  |    | = |          | * |    |
+        #  | It |   | Ytf  Ytt |   | Vt |
+        #
+        # Ytt = Ys + j*Bc/2;
+        # Yff = Ytt ./ (tap .* conj(tap));
+        # Yft = - Ys ./ conj(tap);
+        # Ytf = - Ys ./ tap;
+        Ytt = Ys + j * Bc / 2
+        Yff = div(Ytt, (mul(tap, conj(tap))))
+        Yft = div(-Ys, conj(tap))
+        Ytf = div(-Ys, tap)
+
+        #----------------------------------------------------------------------
+        #  Shunt admittance.
+        #----------------------------------------------------------------------
+
+        # Ysh = (bus(:, GS) + j * bus(:, BS)) / baseMVA;
+        g_shunt = matrix([v.g_shunt for v in self.buses])
+        if bus_shunts:
+            b_shunt = matrix([v.b_shunt for v in self.buses])
+        else:
+            b_shunt = matrix(0.0, (n_bus, 1)) # Zero out shunts at buses.
+        Ysh = (g_shunt + j * b_shunt) / self.base_mva
+
+        #----------------------------------------------------------------------
+        #  Connection matrices.
+        #----------------------------------------------------------------------
+
+        src = matrix([self.buses.index(e.source_bus) for e in self.branches])
+        tgt = matrix([self.buses.index(e.target_bus) for e in self.branches])
+        Cf = spmatrix(1.0, src, range(n_branch))
+        Ct = spmatrix(1.0, tgt, range(n_branch))
+
+        # Build bus admittance matrix
+        # Ybus = spdiags(Ysh, 0, nb, nb) + ...            %% shunt admittance
+        # Cf * spdiags(Yff, 0, nl, nl) * Cf' + ...    %% Yff term of branch admittance
+        # Cf * spdiags(Yft, 0, nl, nl) * Ct' + ...    %% Yft term of branch admittance
+        # Ct * spdiags(Ytf, 0, nl, nl) * Cf' + ...    %% Ytf term of branch admittance
+        # Ct * spdiags(Ytt, 0, nl, nl) * Ct';         %% Ytt term of branch admittance
+
+        ff = Cf * spdiag(Yff) * Cf.T
+        ft = Cf * spdiag(Yft) * Ct.T
+        tf = Ct * spdiag(Ytf) * Cf.T
+        tt = Ct * spdiag(Ytt) * Ct.T
+
+        # Resize otherwise all-zero rows/columns are lost.
+        Y = spdiag(Ysh) + \
+            spmatrix(ff.V, ff.I, ff.J, (n_bus, n_bus), tc="z") + \
+            spmatrix(ft.V, ft.I, ft.J, (n_bus, n_bus), tc="z") + \
+            spmatrix(tf.V, tf.I, tf.J, (n_bus, n_bus), tc="z") + \
+            spmatrix(tt.V, tt.I, tt.J, (n_bus, n_bus), tc="z")
+
+        n_branch = len(self.branches)
+        i = matrix(range(n_branch) + range(n_branch))
+        j = matrix([src, tgt])
+        Ysrc = spmatrix(matrix([Yff, Yft]), i, j, (n_branch, len(self.buses)))
+        Ytgt = spmatrix(matrix([Ytf, Ytt]), i, j, (n_branch, len(self.buses)))
+
+        return Y, Ysrc, Ytgt
+
+    Y = property(get_admittance_matrix)
+
+    #--------------------------------------------------------------------------
+    #  Susceptance matrix:
+    #--------------------------------------------------------------------------
+
+    @property
+    def B(self):
+        """ Returns the sparse susceptance matrices.
+
+            The bus real power injections are related to bus voltage angles by
+                P = Bbus * Va + Pbusinj
+
+            The real power flows at the from end the lines are related to the
+            bus voltage angles by
+                Pf = Bf * Va + Pfinj
+
+            References:
+                Ray Zimmerman, "makeBdc.m", MATPOWER, PSERC Cornell,
+                http://www.pserc.cornell.edu/matpower/, version 1.10, June 2007
+        """
+        buses = self.connected_buses
+        branches = self.online_branches
+        n_bus = len(buses)
+        n_branch = len(branches)
+
+        # Create empty sparse susceptance matrices.
+        # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node32.html
+        b = spmatrix([], [], [], (n_bus, n_bus))
+        b_source = spmatrix([], [], [], (n_branch, n_bus))
+
+        for e_idx, e in enumerate(branches):
+            # Find the indexes of the buses at either end of the branch
+            src_idx = buses.index(e.source_bus)
+            dst_idx = buses.index(e.target_bus)
+
+            # B = 1/X
+            if e.x != 0.0: # Avoid zero division error.
+                b_branch = 1 / e.x
+            else:
+                # Infinite susceptance for zero reactance branch.
+                b_branch = BIGNUM
+
+            # Divide by the branch tap ratio
+            if e.ratio != 0.0:
+                b_branch /= e.ratio
+
+            # Off-diagonal matrix elements (i, j) are the negative
+            # susceptance of branches between buses[i] and buses[j]
+            b[src_idx, dst_idx] += -b_branch
+            b[dst_idx, src_idx] += -b_branch
+            # Diagonal matrix elements (k, k) are the sum of the
+            # susceptances of the branches connected to buses[k]
+            b[src_idx, src_idx] += b_branch
+            b[dst_idx, dst_idx] += b_branch
+
+            # Build Bf such that Bf * Va is the vector of real branch
+            # powers injected at each branch's "source" bus
+            b_source[e_idx, src_idx] = b_branch
+            b_source[e_idx, dst_idx] = -b_branch
+
+        return b, b_source
 
     #--------------------------------------------------------------------------
     #  "Serializable" interface:
