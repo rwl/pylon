@@ -51,6 +51,9 @@ class CaseTest(unittest.TestCase):
         """
         self.case = PickleReader().read(DATA_FILE)
 
+    #--------------------------------------------------------------------------
+    #  Serialization tests.
+    #--------------------------------------------------------------------------
 
     def test_load_matpower(self):
         """ Test loading a MATPOWER data file.
@@ -76,6 +79,135 @@ class CaseTest(unittest.TestCase):
 
         self.assertTrue(exists(tmp_name))
         self.assertTrue(getsize(tmp_name) > 0)
+
+    #--------------------------------------------------------------------------
+    #  Admittance matrix tests.
+    #--------------------------------------------------------------------------
+
+    def test_admittance(self):
+        """ Test the values of the admittance matrix.
+
+           4.0063 -11.7479i  -2.0000 + 4.0000i        0            -1.1765 + 4.7059i  -0.8299 + 3.1120i        0
+          -2.0000 + 4.0000i   9.3283 -23.1955i  -0.7692 + 3.8462i  -4.0000 + 8.0000i  -1.0000 + 3.0000i  -1.5590 + 4.4543i
+                0            -0.7692 + 3.8462i   4.1557 -16.5673i        0            -1.4634 + 3.1707i  -1.9231 + 9.6154i
+          -1.1765 + 4.7059i  -4.0000 + 8.0000i        0             6.1765 -14.6359i  -1.0000 + 2.0000i        0
+          -0.8299 + 3.1120i  -1.0000 + 3.0000i  -1.4634 + 3.1707i  -1.0000 + 2.0000i   5.2933 -14.1378i  -1.0000 + 3.0000i
+                0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i   4.4821 -17.0047i
+
+        """
+        Y, Ysrc, Ytgt = self.case.Y
+
+        self.assertEqual(Y.size, (6, 6))
+
+        self._validate_diagonal_admittance_values(Y)
+        self._validate_off_diagonal_admittance_values(Y)
+        self._validate_off_diagonal_equality(Y)
+
+
+    def _validate_diagonal_admittance_values(self, Y):
+        """ Assert that the diagonal values of the admittance matrix are
+            equal to those calculated by MATPOWER.
+        """
+        places = 4
+
+        Y_0_0 = 4.0063-11.7479j
+        Y_2_2 = 4.1557-16.5673j
+        Y_5_5 = 4.4821-17.0047j
+
+        self.assertAlmostEqual(abs(Y[0, 0]), abs(Y_0_0), places)
+        self.assertAlmostEqual(abs(Y[2, 2]), abs(Y_2_2), places)
+        self.assertAlmostEqual(abs(Y[5, 5]), abs(Y_5_5), places)
+
+
+    def _validate_off_diagonal_admittance_values(self, Y):
+        """ Assert that the off-diagonal values of the admittance matrix are
+            equal to those calculated by MATPOWER.
+        """
+        places = 4
+
+        Y_0_1 = -2.0000+4.0000j
+        Y_2_0 = 0.0000
+        Y_4_1 = -1.0000+3.0000j
+        Y_2_5 = -1.9231+9.6154j
+
+        self.assertAlmostEqual(abs(Y[0, 1]), abs(Y_0_1), places)
+        self.assertAlmostEqual(abs(Y[2, 0]), abs(Y_2_0), places)
+        self.assertAlmostEqual(abs(Y[4, 1]), abs(Y_4_1), places)
+        self.assertAlmostEqual(abs(Y[2, 5]), abs(Y_2_5), places)
+
+
+    def _validate_off_diagonal_equality(self, Y):
+        """ Validate that elements [i, j] and [j, i] are equal.
+        """
+        w, h = Y.size
+
+        for i in range(w):
+            for j in range(h):
+                if (i != j) and (i < j):
+                    self.assertEqual(abs(Y[i, j]), abs(Y[j, i]))
+
+    #--------------------------------------------------------------------------
+    #  Susceptance matrix tests.
+    #--------------------------------------------------------------------------
+
+    def test_susceptance(self):
+        """ Test the values of the susceptance matrix.
+
+            B =
+
+               13.3333   -5.0000         0   -5.0000   -3.3333         0
+               -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000
+                     0   -4.0000   17.8462         0   -3.8462  -10.0000
+               -5.0000  -10.0000         0   17.5000   -2.5000         0
+               -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333
+                     0   -5.0000  -10.0000         0   -3.3333   18.3333
+
+        """
+        B, B_source = self.case.B
+
+        self._validate_susceptance_diagonal_values(B)
+        self._validate_susceptance_off_diagonal_values(B)
+        self._validate_off_diagonal_equality(B)
+
+
+    def _validate_susceptance_diagonal_values(self, B):
+        """ Assert that the susceptance matrix diagonal values are the same as
+            those computed by MATPOWER.
+        """
+        places = 4
+
+        B_0_0 = 13.3333
+        B_2_2 = 17.8462
+        B_4_4 = 16.3462
+
+        self.assertAlmostEqual(B_0_0, B[0, 0], places,
+            "B element [0, 0] expected %d, %d found)" % (B_0_0, B[0, 0]))
+
+        self.assertAlmostEqual(B_2_2, B[2, 2], places,
+            "B element [1, 1] expected %d, %d found)" % (B_2_2, B[2, 2]))
+
+        self.assertAlmostEqual(B_4_4, B[4, 4], places,
+            "B element [2, 2] expected %d, %d found)" % (B_4_4, B[4, 4]))
+
+
+    def _validate_susceptance_off_diagonal_values(self, B):
+        """ Assert that the susceptance matrix off-diagonal values are the same
+            as those computed by MATPOWER.
+        """
+        places = 4
+
+        B_0_1 = -5.0000
+        B_0_4 = -3.3333
+        B_5_2 = -10.0000
+
+        self.assertAlmostEqual(B_0_1, B[0, 1], places,
+            "B element [0, 1] expected %d, %d found)" % (B_0_1, B[0, 1]))
+
+        self.assertAlmostEqual(B_0_4, B[0, 4], places,
+            "B element [0, 2] expected %d, %d found)" % (B_0_4, B[0, 4]))
+
+        self.assertAlmostEqual(B_5_2, B[5, 2], places,
+            "B element [1, 2] expected %d, %d found)" % (B_5_2, B[5, 2]))
 
 
 #    def test_slack_bus(self):
@@ -235,11 +367,8 @@ class GeneratorTest(unittest.TestCase):
     def test_total_polynomial_cost(self):
         """ Test total cost calculation with polynomial cost model.
         """
-        g = Generator(Bus(), cost_model="poly")
-
-        g.p_max = 100.0
-        g.p_min = 20.0
-        g.cost_coeffs = (0.06, 0.6, 6.0)
+        g = Generator(Bus(), p_max=100.0, p_min=20.0,
+                      cost_coeffs=(0.06, 0.6, 6.0))
 
         self.assertEqual(g.total_cost(5.0), 10.5)
         self.assertEqual(g.total_cost(6.0), 11.76)
@@ -248,15 +377,11 @@ class GeneratorTest(unittest.TestCase):
     def test_total_piecewise_linear_cost(self):
         """ Test total cost calculation with piecewise linear cost model.
         """
-        g = Generator(Bus(), cost_model="pwl")
-
         p0 = (0.0, 0.0)
         p1 = (40.0, 100.0)
         p2 = (100.0, 400.0)
 
-        g.p_max = 100.0
-        g.p_min = 20.0
-        g.pwl_points = [p0, p1, p2]
+        g = Generator(Bus(), p_max=100.0, p_min=20.0, pwl_points=[p0, p1, p2])
 
         self.assertAlmostEqual(g.total_cost(30.0), 75.0, places=4)
         self.assertAlmostEqual(g.total_cost(60.0), 200.0, places=4)
@@ -265,8 +390,8 @@ class GeneratorTest(unittest.TestCase):
     def test_poly_to_pwl(self):
         """ Test cost model conversion from polynomial to piece-wise linear.
         """
-        g = Generator(Bus(), p_min=0.0, p_max=80.0, cost_model="poly")
-        g.cost_coeffs=(0.02, 2.0, 0.0)
+        g = Generator(Bus(), p_min=0.0, p_max=80.0,
+                      cost_coeffs=(0.02, 2.0, 0.0))
 
         g.poly_to_pwl(n_points=10)
 
@@ -386,7 +511,7 @@ class OfferBidToPWLTest(unittest.TestCase):
         g4_points = [(-30.0, 0.0), (-20.0, 1000.0), (-10.0, 2000.0),
                      (0.0, 3000.0)] # vload
         g4 = Generator(Bus(), p=-30.0, q=7.5, q_max=7.5, q_min=0.0, p_max=0.0,
-                       p_min=-30.0, c_shutdown=50.0, pwl_points=g4_points)
+                       p_min=-30.0, pwl_points=g4_points)
 
         self.all_generators = [g0, g1, g2, g3, g4]
         self.generators = [g for g in self.all_generators if not g.is_load]

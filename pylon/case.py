@@ -140,7 +140,7 @@ class Case(Named, Serializable):
         """ Returns the difference between reactive power supply and demand at
             the given bus.
         """
-        return self.p_supply(bus) - self.p_demand(bus)
+        return self.q_supply(bus) - self.q_demand(bus)
 
     #--------------------------------------------------------------------------
     #  Admittance matrix:
@@ -156,6 +156,7 @@ class Case(Named, Serializable):
                 Ray Zimmerman, "makeYbus.m", MATPOWER, PSERC Cornell,
                 http://www.pserc.cornell.edu/matpower/, version 1.8, June 2007
         """
+        j = 0 + 1j
         n_bus = len(self.buses)
         n_branch = len(self.branches)
 
