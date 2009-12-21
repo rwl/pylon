@@ -29,7 +29,7 @@ from util import Named, Serializable
 
 from cvxopt.base import matrix, spmatrix, spdiag, exp, mul, div
 
-from util import conj
+from util import conj, zero2one
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -251,11 +251,11 @@ class Case(Named, Serializable):
         Ct = spmatrix(1.0, tgt, range(n_branch))
 
         # Build bus admittance matrix
-        # Ybus = spdiags(Ysh, 0, nb, nb) + ...            %% shunt admittance
-        # Cf * spdiags(Yff, 0, nl, nl) * Cf' + ...    %% Yff term of branch admittance
-        # Cf * spdiags(Yft, 0, nl, nl) * Ct' + ...    %% Yft term of branch admittance
-        # Ct * spdiags(Ytf, 0, nl, nl) * Cf' + ...    %% Ytf term of branch admittance
-        # Ct * spdiags(Ytt, 0, nl, nl) * Ct';         %% Ytt term of branch admittance
+        # Ybus = spdiags(Ysh, 0, nb, nb) + ... %% shunt admittance
+        # Cf * spdiags(Yff, 0, nl, nl) * Cf' + ...
+        # Cf * spdiags(Yft, 0, nl, nl) * Ct' + ...
+        # Ct * spdiags(Ytf, 0, nl, nl) * Cf' + ...
+        # Ct * spdiags(Ytt, 0, nl, nl) * Ct';
 
         ff = Cf * spdiag(Yff) * Cf.T
         ft = Cf * spdiag(Yft) * Ct.T
@@ -339,6 +339,114 @@ class Case(Named, Serializable):
             b_source[e_idx, dst_idx] = -b_branch
 
         return b, b_source
+
+    #--------------------------------------------------------------------------
+    #  Partial derivative of power injection w.r.t. voltage:
+    #--------------------------------------------------------------------------
+
+    def dSbus_dV(self, Y, v):
+        """ Computes the partial derivative of power injection w.r.t. voltage.
+        """
+        i = Y * v
+
+        diag_v = spdiag(v)
+        diag_i = spdiag(i)
+        diag_vnorm = spdiag(div(v, abs(v))) # Element-wise division.
+
+        dS_dVm = diag_v * conj(Y * diag_vnorm) + conj(diag_i) * diag_vnorm
+        dS_dVa = j * diag_v * conj(diag_i - Y * diag_v)
+
+        return dS_dVm, dS_dVa
+
+    #--------------------------------------------------------------------------
+    #  Partial derivative of branch power flow w.r.t voltage:
+    #--------------------------------------------------------------------------
+
+    def dSbr_dV(self, Ysrc, Ytgt, v):
+        """ Computes the branch power flow vector and the partial derivative of
+            branch power flow w.r.t voltage.
+        """
+        n_branch = len(self.branches)
+        n_bus = len(v)
+
+        source_idxs = matrix([self.buses.index(branch.source_bus)
+                              for branch in self.branches])
+        target_idxs = matrix([self.buses.index(branch.target_bus)
+                              for branch in self.branches])
+
+        # Compute currents.
+        i_source = Ysrc * v
+        i_target = Ytgt * v
+
+        # dV/dVm = diag(V./abs(V))
+        v_norm = div(v, abs(v))
+
+        diagVsource = spdiag(v[source_idxs])
+        diagIsource = spdiag(i_source)
+        diagVtarget = spdiag(v[target_idxs])
+        diagItarget = spdiag(i_target)
+        diagV = spdiag(v)
+        diagVnorm = spdiag(v_norm)
+
+        br_idx = range(n_branch)
+        size = (n_branch, n_bus)
+        # Partial derivative of S w.r.t voltage phase angle.
+        dSf_dVa = j * (conj(diagIsource) *
+            spmatrix(v[source_idxs], br_idx, source_idxs, size) - \
+            diagVsource * conj(Ysrc * diagV))
+
+        dSt_dVa = j * (conj(diagItarget) *
+            spmatrix(v[target_idxs], br_idx, target_idxs, size) - \
+            diagVtarget * conj(Ytgt * diagV))
+
+        # Partial derivative of S w.r.t. voltage amplitude.
+        dSf_dVm = diagVsource * conj(Ysrc * diagVnorm) + conj(diagIsource) * \
+            spmatrix(v_norm[source_idxs], br_idx, source_idxs, size)
+
+        dSt_dVm = diagVtarget * conj(Ytgt * diagVnorm) + conj(diagItarget) * \
+            spmatrix(v_norm[target_idxs], br_idx, target_idxs, size)
+
+        # Compute power flow vectors.
+        s_source = mul(v[source_idxs], conj(i_source))
+        s_target = mul(v[target_idxs], conj(i_target))
+
+        return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target
+
+    #--------------------------------------------------------------------------
+    #  Partial derivative of apparent power flow w.r.t voltage:
+    #--------------------------------------------------------------------------
+
+    def dAbr_dV(self, dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
+        """ Computes the partial derivatives of apparent power flow w.r.t
+            voltage.
+        """
+        # Compute apparent powers.
+        a_source = abs(s_source)
+        a_target = abs(s_target)
+
+        # Compute partial derivative of apparent power w.r.t active and
+        # reactive power flows.  Partial derivative must equal 1 for lines with
+        # zero flow to avoid division by zero errors (1 comes from L'Hopital).
+        p_source = div(s_source.real(), map(zero2one, a_source))
+        q_source = div(s_target.imag(), map(zero2one, a_source))
+        p_target = div(s_target.real(), map(zero2one, a_target))
+        q_target = div(s_target.imag(), map(zero2one, a_target))
+
+        dAf_dPf = spdiag(p_source)
+        dAf_dQf = spdiag(q_source)
+        dAt_dPt = spdiag(p_target)
+        dAt_dQt = spdiag(q_target)
+
+        # Partial derivative of apparent power magnitude w.r.t voltage
+        # phase angle.
+        dAf_dVa = dAf_dPf * dSf_dVa.real() + dAf_dQf * dSf_dVa.imag()
+        dAt_dVa = dAt_dPt * dSt_dVa.real() + dAt_dQt * dSt_dVa.imag()
+        # Partial derivative of apparent power magnitude w.r.t. voltage
+        # amplitude.
+        dAf_dVm = dAf_dPf * dSf_dVm.real() + dAf_dQf * dSf_dVm.imag()
+        dAt_dVm = dAt_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
+
+        return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
 
     #--------------------------------------------------------------------------
     #  "Serializable" interface:
