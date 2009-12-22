@@ -162,8 +162,8 @@ class DCPF(object):
         iref = self.ref_idx
         buses = case.connected_buses
 
-        pv_idxs = matrix([buses.index(v) for v in buses if v.type == "PV"])
-        pq_idxs = matrix([buses.index(v) for v in buses if v.type == "PQ"])
+        pv_idxs = matrix([i for i, b in enumerate(buses) if b.type == "PV"])
+        pq_idxs = matrix([i for i, b in enumerate(buses) if b.type == "PQ"])
         pvpq_idxs = matrix([pv_idxs, pq_idxs])
 
         # Get the susceptance matrix with the column and row corresponding to
@@ -229,8 +229,7 @@ class DCPF(object):
             bus.v_magnitude = 1.0
 
         # Update Pg for swing generator.
-        ref_bus = buses[iref]
-        g_ref = [g for g in case.generators if g.bus == ref_bus][0]
+        g_ref = [g for g in case.generators if g.bus == buses[iref]][0]
         # Pg = Pinj + Pload + Gs
         # newPg = oldPg + newPinj - oldPinj
         p_inj = (self.B[iref, :] * self.v_angle - self.p_ref) * base_mva
