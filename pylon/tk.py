@@ -32,7 +32,7 @@ from pylon import \
 
 from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
-    CSVWriter, ExcelWriter, DotWriter, PickleReader, PickleWriter
+    CSVWriter, DotWriter, PickleReader, PickleWriter
 
 from pylon.readwrite.dot_writer import create_graph
 
@@ -186,10 +186,10 @@ class PylonTk(object):
         Button(buttonbar, text="Generator",
                command=self.on_generator_info).pack(fill=X)
 
-        self.writer_map = {"ReST": ReSTWriter(),
-                           "MATPOWER": MATPOWERWriter(),
-                           "CSV": CSVWriter(),
-                           "DOT": DotWriter()}
+        self.writer_map = {"ReST": ReSTWriter,
+                           "MATPOWER": MATPOWERWriter,
+                           "CSV": CSVWriter,
+                           "DOT": DotWriter}
 
         writer_type = self.writer_type = StringVar(buttonbar)
         writer_type.set("ReST") # default value
@@ -408,33 +408,29 @@ class PylonTk(object):
     def on_summary(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
-        writer = self.writer_map[self.writer_type.get()]
-        writer.write_header(self.case, self.ui_log)
-        del writer
+        writer_klass = self.writer_map[self.writer_type.get()]
+        writer_klass().write_header(self.case, self.ui_log)
 
 
     def on_bus_info(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
-        writer = self.writer_map[self.writer_type.get()]
-        writer.write_bus_data(self.case, self.ui_log)
-        del writer
+        writer_klass = self.writer_map[self.writer_type.get()]
+        writer_klass().write_bus_data(self.case, self.ui_log)
 
 
     def on_branch_info(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
-        writer = self.writer_map[self.writer_type.get()]
-        writer.write_branch_data(self.case, self.ui_log)
-        del writer
+        writer_klass = self.writer_map[self.writer_type.get()]
+        writer_klass().write_branch_data(self.case, self.ui_log)
 
 
     def on_generator_info(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
-        writer = self.writer_map[self.writer_type.get()]
-        writer.write_generator_data(self.case, self.ui_log)
-        del writer
+        writer_klass = self.writer_map[self.writer_type.get()]
+        writer_klass().write_generator_data(self.case, self.ui_log)
 
 
     def on_state_info(self):

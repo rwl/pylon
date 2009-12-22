@@ -54,7 +54,7 @@ class DCPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, solver="UMFPACK"):
+    def __init__(self, case, solver="UMFPACK"):
         """ Initialises a DCPF instance.
         """
         # CVXOPT offers interfaces to two routines for solving sets of sparse
@@ -62,7 +62,7 @@ class DCPF(object):
         self.solver = solver
 
         # Solved case.
-        self.case = None
+        self.case = case
 
         # Branch susceptance matrix.
         self.B = None
@@ -95,10 +95,10 @@ class DCPF(object):
         return self.solve(case)
 
 
-    def solve(self, case):
+    def solve(self):
         """ Solves DC power flow for the given case.
         """
-        self.case = case
+        case = self.case
 
         logger.info("Starting DC power flow [%s]." % case.name)
 

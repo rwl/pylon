@@ -50,7 +50,7 @@ class NewtonPFTest(TestCase):
         """
         case = self.case = PickleReader().read(DATA_FILE)
 
-        self.solver = NewtonRaphson(case)
+        self.solver = NewtonRaphson(case)#, solver='CHOLMOD')
 
 
     def test_voltage_vector(self):

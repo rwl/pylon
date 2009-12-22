@@ -116,7 +116,7 @@ def main():
     """ Parses the command line and call Pylon with the correct data.
     """
     parser = optparse.OptionParser(usage="usage: pylon [options] input_file",
-                                   version="%prog 0.3.2")
+                                   version="%prog 0.3.3")
 
     parser.add_option("-o", "--output", dest="output", metavar="FILE",
         help="Write the solution report to FILE.")
@@ -143,8 +143,8 @@ def main():
         " If not specified Pylon will try to determine the type according to "
         "the file name extension and the file header.")
 
-    parser.add_option("-r", "--routine", dest="routine", metavar="ROUTINE",
-        default="acpf", help="The argument following the -r is used to"
+    parser.add_option("-s", "--solver", dest="solver", metavar="SOLVER",
+        default="acpf", help="The argument following the -s is used to"
         "indicate the type of routine to use in solving. The types which are "
         "currently supported are: 'dcpf', 'acpf', 'dcopf', 'acopf', 'udopf' "
         "and 'none' [default: %default].")
@@ -155,7 +155,7 @@ def main():
         "types which are currently supported are: 'newton' and 'decoupled' "
         "[default: %default].")
 
-    parser.add_option("-T", "--output-type", dest="otype",
+    parser.add_option("-T", "--output-type", dest="output_type",
         metavar="OUTPUT_TYPE", default="rst", help="Indicates the output "
         "format type.  The type swhich are currently supported include: rst, "
         "matpower, csv and excel [default: %default].")
@@ -200,33 +200,33 @@ def main():
         infile = open(filename, "rb")
 
     if options.type == "any":
-        type = detect_data_file(input, filename)
+        type = detect_data_file(infile, filename)
     else:
         type = options.type
 
     # Get the case from the input file-like object.
-    case = read_case(input, type)
+    case = read_case(infile, type)
 
     if case is not None:
         # Routine (and algorithm) selection.
-        if options.routine == "dcpf":
-            routine = DCPF(case)
-        elif options.routine == "acpf":
+        if options.solver == "dcpf":
+            solver = DCPF(case)
+        elif options.solver == "acpf":
             if options.algorithm == "newton":
-                routine = NewtonRaphson(case)
+                solver = NewtonRaphson(case)
             elif options.algorithm == "decoupled":
-                routine = FastDecoupled(case)
+                solver = FastDecoupled(case)
             else:
                 logger.critical("Invalid algorithm [%s]." % options.algorithm)
                 sys.exit(1)
-        elif options.routine == "dcopf":
-            routine = DCOPF(case)
-        elif options.routine == "acopf":
-            routine = ACOPF(case)
-        elif options.routine == "udopf":
-            routine = UDOPF(case)
+        elif options.solver == "dcopf":
+            solver = DCOPF(case)
+        elif options.solver == "acopf":
+            solver = ACOPF(case)
+        elif options.solver == "udopf":
+            solver = UDOPF(case)
         else:
-            logger.critical("Invalid routine [%s]." % options.routine)
+            logger.critical("Invalid solver [%s]." % options.solver)
             sys.exit(1)
 
         # Output writer selection.
@@ -245,7 +245,7 @@ def main():
             logger.critical("Invalid output type [%s]." % options.output_type)
             sys.exit(1)
 
-        routine.solve()
+        solver.solve()
         writer.write()
     else:
         logger.critical("Unable to read case data.")

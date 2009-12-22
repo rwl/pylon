@@ -32,32 +32,32 @@ class ReSTWriter(object):
     """ Write case data to a file in ReStructuredText format.
     """
 
-    def __init__(self, include_title=True, include_summary=True,
-            include_bus_data=True, include_branch_data=True,
-            include_generator_data=True):
+    def __init__(self, case, file_or_filename, include_title=True,
+                 include_summary=True, include_bus_data=True,
+                 include_branch_data=True, include_generator_data=True):
         """ Initialises new ReSTWriter instance.
         """
+        self.case = case
+        self.file_or_filename = file_or_filename
+
         self.include_title = include_title
         self.include_summary = include_summary
         self.include_bus_data = include_bus_data
         self.include_branch_data = include_branch_data
         self.include_generator_data = include_generator_data
 
-        self.case = None
-        self.file_or_filename = ""
-
 
     def __call__(self, case, file_or_filename):
         """ Calls the writer with the given case.
         """
-        self.write(case, file_or_filename)
+        self.write()
 
 
-    def write(self, case, file_or_filename):
+    def write(self):
         """ Writes case data to file in ReStructuredText format.
         """
-        self.case = case
-        self.file_or_filename = file_or_filename
+        case = self.case
+        file_or_filename = self.file_or_filename
 
         file = _get_file(file_or_filename)
 
@@ -522,7 +522,7 @@ class ReSTWriter(object):
         file.write("(MW)".center(col_width) + " ")
         file.write("(MVAr)".center(col_width) + " ")
         file.write("Pmax".center(col_width) + " ")
-        file.write("Pmax bid".center(col_width) + " ")
+        file.write("Pmin".center(col_width) + " ")
         file.write("c2".center(col_width_poly) + " ")
         file.write("c1".center(col_width_poly) + " ")
         file.write("c0".center(col_width_poly) + " ")
@@ -544,7 +544,7 @@ class ReSTWriter(object):
 #            file.write("..".ljust(col_width) + " ")
 #            file.write("..".ljust(col_width) + " ")
             file.write("%8.2f" % each.p_max + " ")
-            file.write("%8.2f" % each.p_max_bid + " ")
+            file.write("%8.2f" % each.p_min + " ")
             n2, n1, n = each.cost_coeffs
             file.write("%4.2f" % n2 + " ")
             file.write("%4.1f" % n1 + " ")
