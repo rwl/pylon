@@ -163,7 +163,7 @@ class CaseTest(unittest.TestCase):
                      0   -5.0000  -10.0000         0   -3.3333   18.3333
 
         """
-        B, _ = self.case.B
+        B, _, _, _ = self.case.B
 
         self._validate_susceptance_diagonal_values(B)
         self._validate_susceptance_off_diagonal_values(B)
@@ -180,14 +180,9 @@ class CaseTest(unittest.TestCase):
         B_2_2 = 17.8462
         B_4_4 = 16.3462
 
-        self.assertAlmostEqual(B_0_0, B[0, 0], places,
-            "B element [0, 0] expected %d, %d found)" % (B_0_0, B[0, 0]))
-
-        self.assertAlmostEqual(B_2_2, B[2, 2], places,
-            "B element [1, 1] expected %d, %d found)" % (B_2_2, B[2, 2]))
-
-        self.assertAlmostEqual(B_4_4, B[4, 4], places,
-            "B element [2, 2] expected %d, %d found)" % (B_4_4, B[4, 4]))
+        self.assertAlmostEqual(B_0_0, B[0, 0], places)
+        self.assertAlmostEqual(B_2_2, B[2, 2], places)
+        self.assertAlmostEqual(B_4_4, B[4, 4], places)
 
 
     def _validate_susceptance_off_diagonal_values(self, B):
@@ -200,14 +195,9 @@ class CaseTest(unittest.TestCase):
         B_0_4 = -3.3333
         B_5_2 = -10.0000
 
-        self.assertAlmostEqual(B_0_1, B[0, 1], places,
-            "B element [0, 1] expected %d, %d found)" % (B_0_1, B[0, 1]))
-
-        self.assertAlmostEqual(B_0_4, B[0, 4], places,
-            "B element [0, 2] expected %d, %d found)" % (B_0_4, B[0, 4]))
-
-        self.assertAlmostEqual(B_5_2, B[5, 2], places,
-            "B element [1, 2] expected %d, %d found)" % (B_5_2, B[5, 2]))
+        self.assertAlmostEqual(B_0_1, B[0, 1], places)
+        self.assertAlmostEqual(B_0_4, B[0, 4], places)
+        self.assertAlmostEqual(B_5_2, B[5, 2], places)
 
 
 #    def test_slack_bus(self):

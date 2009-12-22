@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
+from gnome_sudoku.sudoku_thumber import N_BOXES
 
 """ Defines the Pylon network model.
 """
@@ -284,7 +285,8 @@ class Case(Named, Serializable):
 
     @property
     def B(self):
-        """ Returns the sparse susceptance matrices.
+        """ Returns the sparse susceptance matrices and phase shift injection
+            vectors needed for a DC power flow.
 
             The bus real power injections are related to bus voltage angles by
                 P = Bbus * Va + Pbusinj
@@ -292,6 +294,10 @@ class Case(Named, Serializable):
             The real power flows at the from end the lines are related to the
             bus voltage angles by
                 Pf = Bf * Va + Pfinj
+
+            | Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
+            |    | = |          | * |     | + |       |
+            | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
 
             References:
                 Ray Zimmerman, "makeBdc.m", MATPOWER, PSERC Cornell,
@@ -302,42 +308,80 @@ class Case(Named, Serializable):
         n_bus = len(buses)
         n_branch = len(branches)
 
-        # Create empty sparse susceptance matrices.
-        # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node32.html
-        b = spmatrix([], [], [], (n_bus, n_bus))
-        b_source = spmatrix([], [], [], (n_branch, n_bus))
+        # Ones at in-service branches.
+        online = matrix([br.online for br in branches])
+        # Series susceptance.
+        b = div(online, matrix([br.x for br in branches]))
 
-        for e_idx, e in enumerate(branches):
-            # Find the indexes of the buses at either end of the branch
-            src_idx = buses.index(e.source_bus)
-            dst_idx = buses.index(e.target_bus)
+        # Default tap ratio = 1.0.
+        tap = matrix(1.0, (n_branch, 1))
+        # Transformer off nominal turns ratio (equals 0 for lines) (taps at
+        # "source" bus, impedance at 'target' bus, i.e. ratio = Vsrc / Vtgt)
+        for i, branch in enumerate(branches):
+            if branch.ratio != 0.0:
+                tap[i] = branch.ratio
+        b = div(b, tap)
 
-            # B = 1/X
-            if e.x != 0.0: # Avoid zero division error.
-                b_branch = 1 / e.x
-            else:
-                # Infinite susceptance for zero reactance branch.
-                b_branch = BIGNUM
+        src_idx = matrix([buses.index(br.source_bus) for br in branches])
+        tgt_idx = matrix([buses.index(br.target_bus) for br in branches])
+        Cf = spmatrix(1.0, src_idx, range(n_branch), (n_bus, n_branch))
+        Ct = spmatrix(1.0, tgt_idx, range(n_branch), (n_bus, n_branch))
 
-            # Divide by the branch tap ratio
-            if e.ratio != 0.0:
-                b_branch /= e.ratio
+        ff = Cf * spdiag(b) * Cf.T
+        ft = Cf * spdiag(-b) * Ct.T
+        tf = Ct * spdiag(-b) * Cf.T
+        tt = Ct * spdiag(b) * Ct.T
 
-            # Off-diagonal matrix elements (i, j) are the negative
-            # susceptance of branches between buses[i] and buses[j]
-            b[src_idx, dst_idx] += -b_branch
-            b[dst_idx, src_idx] += -b_branch
-            # Diagonal matrix elements (k, k) are the sum of the
-            # susceptances of the branches connected to buses[k]
-            b[src_idx, src_idx] += b_branch
-            b[dst_idx, dst_idx] += b_branch
+        # Resize otherwise all-zero rows/columns are lost.
+        B = spmatrix(ff.V, ff.I, ff.J, (n_bus, n_bus), tc="d") + \
+            spmatrix(ft.V, ft.I, ft.J, (n_bus, n_bus), tc="d") + \
+            spmatrix(tf.V, tf.I, tf.J, (n_bus, n_bus), tc="d") + \
+            spmatrix(tt.V, tt.I, tt.J, (n_bus, n_bus), tc="d")
 
-            # Build Bf such that Bf * Va is the vector of real branch
-            # powers injected at each branch's "source" bus
-            b_source[e_idx, src_idx] = b_branch
-            b_source[e_idx, dst_idx] = -b_branch
+        # Build Bsrc such that Bsrc * Va is the vector of real branch powers
+        # injected at each branch's "from" bus.
+        Bsrc = spmatrix(matrix([b, -b]),
+                        matrix([range(n_branch), range(n_branch)]),
+                        matrix([src_idx, tgt_idx]), (n_branch, n_bus))
 
-        return b, b_source
+        # Build phase shift injection vectors.
+        shifts = matrix([br.phase_shift * pi / 180.0 for br in branches])
+        p_srcinj = mul(b, shifts)
+        #p_tgtinj = -p_srcinj
+        # p_businj = Cf * p_srcinj + Ct * p_tgtinj
+        p_businj = (Cf - Ct) * p_srcinj
+
+#        for e_idx, e in enumerate(branches):
+#            # Find the indexes of the buses at either end of the branch
+#            src_idx = buses.index(e.source_bus)
+#            dst_idx = buses.index(e.target_bus)
+#
+#            # B = 1/X
+#            if e.x != 0.0: # Avoid zero division error.
+#                b_branch = 1 / e.x
+#            else:
+#                # Infinite susceptance for zero reactance branch.
+#                b_branch = BIGNUM
+#
+#            # Divide by the branch tap ratio
+#            if e.ratio != 0.0:
+#                b_branch /= e.ratio
+#
+#            # Off-diagonal matrix elements (i, j) are the negative
+#            # susceptance of branches between buses[i] and buses[j]
+#            b[src_idx, dst_idx] += -b_branch
+#            b[dst_idx, src_idx] += -b_branch
+#            # Diagonal matrix elements (k, k) are the sum of the
+#            # susceptances of the branches connected to buses[k]
+#            b[src_idx, src_idx] += b_branch
+#            b[dst_idx, dst_idx] += b_branch
+#
+#            # Build Bf such that Bf * Va is the vector of real branch
+#            # powers injected at each branch's "source" bus
+#            b_source[e_idx, src_idx] = b_branch
+#            b_source[e_idx, dst_idx] = -b_branch
+
+        return B, Bsrc, p_businj, p_srcinj
 
     #--------------------------------------------------------------------------
     #  Partial derivative of power injection w.r.t. voltage:
@@ -660,16 +704,20 @@ class Branch(Named):
         self.name = name
         # Is the branch in service?
         self.online = online
+
         # Positive sequence resistance (pu).
         self.r = r
         # Positive sequence reactance (pu).
         self.x = x
         # Total positive sequence line charging susceptance (pu).
         self.b = b
+
         # General purpose maximum MVA rating (MVA).
         self.s_max = s_max
+
         # Transformer off nominal turns ratio.
         self.ratio = ratio
+
         # Phase shift angle (degrees).
         self.phase_shift = phase_shift
 
