@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Test case for the AC Power Flow routine.
+""" Defines a test case for AC power flow.
 """
 
 #------------------------------------------------------------------------------
@@ -48,10 +48,9 @@ class NewtonPFTest(TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        # See 'reader_test_case.py' for MATPOWER reader tests.
-        self.case = PickleReader().read(DATA_FILE)
+        case = self.case = PickleReader().read(DATA_FILE)
 
-        self.routine = NewtonRaphson()
+        self.solver = NewtonRaphson(case)
 
 
     def test_voltage_vector(self):
@@ -66,10 +65,7 @@ class NewtonPFTest(TestCase):
                 1.0000
                 1.0000
         """
-        self.routine.case = self.case
-        v_initial = self.routine._get_initial_voltage_vector()
-
-#        print v_initial
+        v_initial = self.solver._build_initial_voltage_vector()
 
         self.assertEqual(v_initial.typecode, "z")
         self.assertEqual(v_initial.size, (6, 1))
@@ -99,8 +95,7 @@ class NewtonPFTest(TestCase):
               -0.7000 - 0.7000i
               -0.7000 - 0.7000i
         """
-        self.routine.case = self.case
-        s_surplus = self.routine._get_power_injection_vector()
+        s_surplus = self.solver._build_power_injection_vector()
 
         self.assertEqual(s_surplus.typecode, "z")
         self.assertEqual(s_surplus.size, (6, 1))
@@ -134,19 +129,15 @@ class NewtonPFTest(TestCase):
                -0.2608
         """
         places = 4
-        routine = self.routine
-
-        # Perform preliminary steps.
-        routine.case = self.case
 
         # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = self.case.Y
+        self.solver._build_admittance_matrix()
 
-        routine.v = routine._get_initial_voltage_vector()
-        routine.s_surplus = routine._get_power_injection_vector()
-        routine._index_buses()
+        self.solver._build_initial_voltage_vector()
+        self.solver._build_power_injection_vector()
+        self.solver._index_buses()
 
-        f = routine._evaluate_function()
+        f = self.solver._evaluate_function(self.solver.v)
 
         self.assertEqual(f.size, (8, 1))
 
@@ -164,28 +155,24 @@ class NewtonPFTest(TestCase):
 
                 0.5061
         """
-        routine = self.routine
+        solver = self.solver
 
-        # Perform preliminary steps.
-        routine.case = self.case
+        solver._build_admittance_matrix()
 
-        # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = self.case.Y
-
-        routine.v = self.routine._get_initial_voltage_vector()
-        routine.s_surplus = self.routine._get_power_injection_vector()
-        routine._index_buses()
-        routine.f = routine._evaluate_function()
+        v = solver._build_initial_voltage_vector()
+        solver._build_power_injection_vector()
+        solver._index_buses()
+        f = solver._evaluate_function(v)
 
         # True negative
-        routine.converged = False
-        routine.tolerance = 0.500
-        self.assertFalse(routine._check_convergence())
+        solver.converged = False
+        solver.tolerance = 0.500
+        self.assertFalse(solver._check_convergence(f))
 
         # True positive
-        routine.converged = False
-        routine.tolerance = 0.510
-        self.assertTrue(routine._check_convergence())
+        solver.converged = False
+        solver.tolerance = 0.510
+        self.assertTrue(solver._check_convergence(f))
 
 
     def test_bus_indexing(self):
@@ -207,21 +194,20 @@ class NewtonPFTest(TestCase):
 
                 2  3  4  5  6
         """
-        routine = self.routine
-        routine.case = self.case
-        routine._index_buses()
+        solver = self.solver
+        solver._index_buses()
 
-        self.assertEqual(len(routine.pv_idxs), 2)
-        self.assertEqual(len(routine.pq_idxs), 3)
-        self.assertEqual(len(routine.pvpq_idxs), 5)
+        self.assertEqual(len(solver.pv_idx), 2)
+        self.assertEqual(len(solver.pq_idx), 3)
+        self.assertEqual(len(solver.pvpq_idx), 5)
 
         pv_0 = 1
         pq_2 = 5
         pvpq_3 = 4
 
-        self.assertEqual(routine.pv_idxs[0], pv_0)
-        self.assertEqual(routine.pq_idxs[2], pq_2)
-        self.assertEqual(routine.pvpq_idxs[3], pvpq_3)
+        self.assertEqual(solver.pv_idx[0], pv_0)
+        self.assertEqual(solver.pq_idx[2], pq_2)
+        self.assertEqual(solver.pvpq_idx[3], pvpq_3)
 
 
     def test_jacobian(self):
@@ -327,18 +313,15 @@ class NewtonPFTest(TestCase):
             [ 1.05e+00  1.57e+00  1.00e+00 -5.49e+00  1.00e+00 -1.00e+00  4.62e+00 ... ]
             [ 1.64e+00  2.06e+00     0      1.00e+00 -4.69e+00     0     -1.00e+00 ... ]
         """
-        routine = self.routine
+        solver = self.solver
 
-        routine.case = self.case
+        solver._build_admittance_matrix()
 
-        # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = self.case.Y
+        solver._build_initial_voltage_vector()
+        solver._build_power_injection_vector()
+        solver._index_buses()
 
-        routine.v = self.routine._get_initial_voltage_vector()
-        routine.s_surplus = self.routine._get_power_injection_vector()
-        routine._index_buses()
-
-        J = routine._get_jacobian()
+        J = solver._build_jacobian()
 
         self.assertEqual(J.size, (8, 8))
 
@@ -391,41 +374,36 @@ class NewtonPFTest(TestCase):
                0.9813 - 0.0906i
                0.9990 - 0.1041i
         """
-        routine = self.routine
+        solver = self.solver
 
-        routine.case = self.case
+        solver._build_admittance_matrix()
 
-        # See 'y_test_case.py' for admittance matrix tests.
-        routine.Y, Ysrc, Ytgt = self.case.Y
-
-        routine.v = self.routine._get_initial_voltage_vector()
-        routine.s_surplus = self.routine._get_power_injection_vector()
-        routine._index_buses()
+        solver._build_initial_voltage_vector()
+        solver._build_power_injection_vector()
+        solver._index_buses()
 
         # Initial evaluation of f(x0) and convergency check
-#        routine.converged = False
-        routine.f = routine._evaluate_function()
-#        routine._check_convergence()
+#        solver.converged = False
+        solver._evaluate_function(solver.v)
+#        solver._check_convergence()
 
         # First iteration.
-        routine._iterate()
-        v = routine.v
+        solver._one_iteration()
 
-        self.assertEqual(v.size, (6, 1))
+        self.assertEqual(solver.v.size, (6, 1))
 
         places = 4
 
         v0_2 = abs(1.0672-0.0767j)
         v0_4 = abs(0.9832-0.0884j)
 
-        self.assertAlmostEqual(abs(v[2]), v0_2, places)
-        self.assertAlmostEqual(abs(v[4]), v0_4, places)
+        self.assertAlmostEqual(abs(solver.v[2]), v0_2, places)
+        self.assertAlmostEqual(abs(solver.v[4]), v0_4, places)
 
         # Second iteration.
-        routine._iterate()
-        v = routine.v
+        solver._one_iteration()
 
-        self.assertEqual(v.size, (6, 1))
+        self.assertEqual(solver.v.size, (6, 1))
 
         v1_1 = abs(1.0478-0.0672j)
         v1_5 = abs(0.9990-0.1041j)

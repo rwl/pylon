@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Defines a base class for many AC power flow routines.
+""" Defines solvers for AC power flow.
 
     References:
         Ray Zimmerman, "acpf.m", MATPOWER, PSERC Cornell,
@@ -26,20 +26,15 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-import time
 import math
-import cmath
 import logging
-from os import path
-
 import numpy
-from numpy import dot
-from numpy import angle as numpy_angle
+from time import time
 
-from cvxopt.base import matrix, spmatrix, sparse, spdiag, gemv, exp, mul, div
-from cvxopt.lapack import getrf
-from cvxopt.umfpack import symbolic, numeric, linsolve
-import cvxopt.blas
+from cvxopt import matrix, spmatrix, sparse, exp, mul, div, umfpack, cholmod
+#from cvxopt.lapack import getrf
+from cvxopt.umfpack import symbolic, numeric
+#import cvxopt.blas
 
 from pylon.util import conj
 
@@ -54,6 +49,7 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 j  = 0 + 1j
+
 pi = math.pi
 
 #------------------------------------------------------------------------------
@@ -61,7 +57,7 @@ pi = math.pi
 #------------------------------------------------------------------------------
 
 class _ACPF(object):
-    """ Base class for many AC power flow routines.
+    """ Defines a base class for AC power flow solvers.
 
         References:
             Ray Zimmerman, "acpf.m", MATPOWER, PSERC Cornell,
@@ -72,64 +68,76 @@ class _ACPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, tolerance=1e-08, iter_max=10):
+    def __init__(self, case, solver="UMFPACK", tolerance=1e-08, iter_max=10):
         """ Initialises a new ACPF instance.
         """
-        self.case = None
+        # CVXOPT offers interfaces to two libraries for solving sets of sparse
+        # linear equations: 'UMFPACK' and 'CHOLMOD' (default: 'UMFPACK')
+        self.solver = solver
+
         # Convergence tolerance.
         self.tolerance = tolerance
+
         # Maximum number of iterations.
         self.iter_max = iter_max
 
+        # Solved case.
+        self.case = case
+
         # Vector of bus voltages.
         self.v = None
-        # Sparse admittance matrix.
-        self.Y = None
+
         # Complex bus power injections.
-        self.s_surplus = matrix
+        self.s_surplus = None
+
         # Flag indicating if the solution converged:
         self.converged = False
 
         # Bus indexes for updating v.
-        self.pv_idxs = []
-        self.pq_idxs = []
-        self.pvpq_idxs = []
-        self.ref_idx = 0
+        self.pv_idx = None
+        self.pq_idx = None
+        self.pvpq_idx = None
+        self.ref_idx = -1
 
-
-    def __call__(self, case):
-        """ Calls the routine with the given case.
-        """
-        self.solve(case)
-
+    #--------------------------------------------------------------------------
+    #  "_ACPF" interface:
+    #--------------------------------------------------------------------------
 
     def solve(self):
         """ Override this method in subclasses.
         """
-        raise NotImplementedError
+        # Build the vector of initial complex bus voltages.
+        self._build_initial_voltage_vector()
+
+        # Build the vector of complex bus power injections.
+        self._build_power_injection_vector()
+
+        # Index the buses for updating the voltage vector.
+        self._index_buses()
 
     #--------------------------------------------------------------------------
     #  Make vector of initial node voltages:
     #--------------------------------------------------------------------------
 
-    def _get_initial_voltage_vector(self):
-        """ Makes the initial vector of complex bus voltages.  The bus voltage
-            vector contains the set point for generator (including ref bus)
-            buses, and the reference angle of the swing bus, as well as an
-            initial guess for remaining magnitudes and angles.
+    def _build_initial_voltage_vector(self):
+        """ Returns the initial vector of complex bus voltages.
+
+            The bus voltage vector contains the set point for generator
+            (including ref bus) buses, and the reference angle of the swing
+            bus, as well as an initial guess for remaining magnitudes and
+            angles.
         """
         buses = self.case.connected_buses
 
         v_magnitude = matrix([bus.v_magnitude_guess for bus in buses])
 
         # Initial bus voltage angles in radians.
-        v_angle = matrix([bus.v_angle_guess * pi / 180.0 for bus in buses])
+        v_angle = matrix([bus.v_angle_guess * (pi / 180.0) for bus in buses])
 
-        v_guess = mul(v_magnitude, exp(j * v_angle)) #element-wise product
+        v_guess = self.v = mul(v_magnitude, exp(j * v_angle))
 
         # Get generator set points.
         for g in self.case.generators:
-#            g = bus.generators[0]
             #   V0(gbus) = gen(on, VG) ./ abs(V0(gbus)).* V0(gbus);
             #            Vg
             #   V0 = ---------
@@ -146,14 +154,16 @@ class _ACPF(object):
     #  Make vector of apparent power injected at each bus:
     #--------------------------------------------------------------------------
 
-    def _get_power_injection_vector(self):
-        """ Makes the vector of complex bus power injections (gen - load).
+    def _build_power_injection_vector(self):
+        """ Returns the vector of complex bus power injections (gen - load).
         """
         case = self.case
         buses = self.case.connected_buses
 
-        return matrix([complex(case.p_surplus(b), case.q_surplus(b))
-                       for b in buses], tc="z")
+        self.s_surplus = matrix([complex(case.p_surplus(b) / case.base_mva,
+                                         case.q_surplus(b) / case.base_mva)
+                                 for b in buses], tc="z")
+        return self.s_surplus
 
     #--------------------------------------------------------------------------
     #  Index buses for updating v:
@@ -164,22 +174,22 @@ class _ACPF(object):
         """
         buses = self.case.connected_buses
 
-        # Indexing for updating v
-        pv_idxs = [i for i, v in enumerate(buses) if v.type is "PV"]
-        pq_idxs = [i for i, v in enumerate(buses) if v.type is "PQ"]
-        pvpq_idxs = pv_idxs + pq_idxs
+        pv_idx = self.pv_idx = matrix([i for i,b in enumerate(buses)
+                                       if b.type == "PV"])
+        pq_idx = self.pq_idx = matrix([i for i,b in enumerate(buses)
+                                       if b.type == "PQ"])
 
-        ref_idxs = [i for i, v in enumerate(buses) if v.type is "ref"]
-        if len(ref_idxs) > 0:
-            ref_idx = ref_idxs[0]
+        pvpq_idx = self.pvpq_idx = matrix([self.pv_idx, self.pq_idx])
+
+        for ref_idx, bus in enumerate(buses):
+            if bus.type == "ref":
+                self.ref_idx = ref_idx
+                break
         else:
-            logger.error("No reference/swing/slack bus specified.")
-            ref_idx = pv_idxs[0]
+            logger.error("Swing bus required for DCPF.")
+            ref_idx = self.ref_idx = -1
 
-        self.ref_idx = ref_idx
-        self.pv_idxs = pv_idxs
-        self.pq_idxs = pq_idxs
-        self.pvpq_idxs = pvpq_idxs
+        return ref_idx, pv_idx, pq_idx, pvpq_idx
 
 #------------------------------------------------------------------------------
 #  "NewtonRaphson" class:
@@ -192,61 +202,64 @@ class NewtonRaphson(_ACPF):
             Ray Zimmerman, "newton.m", MATPOWER, PSERC Cornell,
             http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
     """
+
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, tolerance=1e-08, iter_max=10):
+    def __init__(self, case, solver="UMFPACK", tolerance=1e-08, iter_max=10):
         """ Initialises a new ACPF instance.
         """
+        super(NewtonRaphson, self).__init__(case, solver, tolerance, iter_max)
+
+        # Sparse admittance matrix.
+        self.Y = None
+
         # Sparse Jacobian matrix (updated each iteration).
         self.J = None
+
         # Function of non-linear differential algebraic equations.
         self.f = None
-
-        super(NewtonRaphson, self).__init__(tolerance, iter_max)
 
     #--------------------------------------------------------------------------
     #  Solve power flow using full Newton's method:
     #--------------------------------------------------------------------------
 
-    def solve(self, case):
-        """ Solves the AC power flow for the referenced case using full
-            Newton's method.
+    def solve(self):
+        """ Solves the AC power flow using full Newton's method.
         """
-        self.case = case
+        t0 = time()
+        super(NewtonRaphson, self).solve()
 
         logger.info("Performing AC power flow using Newton-Raphson method.")
 
-        t0 = time.time()
+        self._build_admittance_matrix()
 
-        self.Y, _, _ = case.Y
-
-        self.v = self._get_initial_voltage_vector()
-        self.s_surplus = self._get_power_injection_vector()
-
-        self._index_buses()
-
-        # Initial evaluation of f(x0) and convergency check.
         self.converged = False
-        self.f = self._evaluate_function()
-        self.converged = self._check_convergence()
+        # Initial evaluation of f(x0)...
+        f0 = self._evaluate_function(self.v)
+        # ...and convergency check.
+        self.converged = self._check_convergence(f0)
 
-        iter = 0
-        while (not self.converged) and (iter < self.iter_max):
-            self._iterate()
-            self.f = self._evaluate_function()
-            self.converged = self._check_convergence()
-            iter += 1
-
-        t_elapsed = time.time() - t0
+        # Perform Newton iterations.
+        iter = self._iterate()
 
         if self.converged:
-            logger.info("AC power flow converged in %d iterations." % iter)
-            logger.info("AC power flow completed in %.3fs" % t_elapsed)
+            logger.info("AC power flow converged in %d iteration(s)." % iter)
+            logger.info("AC power flow completed in %.3fs" % (time() - t0))
         else:
-            logger.info("Routine failed to converge in %d iterations." % iter)
+            logger.info("ACPF failed to converge in %d iteration(s)." % iter)
 
+    #--------------------------------------------------------------------------
+    #  Build admittance matrix:
+    #--------------------------------------------------------------------------
+
+    def _build_admittance_matrix(self):
+        """ Returns the admittance matrix for the given case.
+        """
+        self.Y, _, _ = self.case.Y
+
+        return self.Y
 
     #--------------------------------------------------------------------------
     #  Newton iterations:
@@ -255,44 +268,49 @@ class NewtonRaphson(_ACPF):
     def _iterate(self):
         """ Performs Newton iterations.
         """
-        J = self._get_jacobian()
-        F = self.f
+        iter = 0
+        while (not self.converged) and (iter < self.iter_max):
+            self._one_iteration()
+            f = self._evaluate_function(self.v)
+            self._check_convergence(f)
+            iter += 1
+        return iter
 
-        v_angle = matrix(numpy_angle(self.v))
+
+    def _one_iteration(self):
+        """ Performs one Newton iteration.
+        """
+        J = self._build_jacobian()
+        f = self.f
+
+        if self.solver == "UMFPACK":
+            umfpack.linsolve(J, f)
+        elif self.solver == "CHOLMOD":
+            cholmod.linsolve(J, f)
+        else:
+            raise ValueError
+
+        v_angle = matrix(numpy.angle(self.v))
         v_magnitude = abs(self.v)
 
-        pv_idxs = self.pv_idxs
-        pq_idxs = self.pq_idxs
-        npv = len(pv_idxs)
-        npq = len(pq_idxs)
+        npv = len(self.pv_idx)
+        npq = len(self.pq_idx)
 
-        # Compute update step. Solves the sparse set of linear equations AX=B
-        # where A is a sparse matrix and B is a dense matrix of the same type
-        # ("d" or "z") as A. On exit B contains the solution.
-        linsolve(J, F)
+        dx = -1 * f # Update step.
 
-        dx = -1 * F # Update step.
-        logger.debug("dx =\n%s" % dx)
+        # Update voltage vector.
+        if self.pv_idx:
+            v_angle[self.pv_idx] += dx[range(npv)]
 
-        # Update voltage vector
-        if pv_idxs:
-            # Va(pv) = Va(pv) + dx(j1:j2);
-            v_angle[pv_idxs] = v_angle[pv_idxs] + dx[range(npv)]
+        if self.pq_idx:
+            v_angle[self.pq_idx] += dx[range(npv, npv + npq)]
+            v_magnitude[self.pq_idx] += dx[range(npv + npq, npv + npq + npq)]
 
-        if pq_idxs:
-            v_angle[pq_idxs] = v_angle[pq_idxs] + dx[range(npv, npv+npq)]
-
-            v_magnitude[pq_idxs] = v_magnitude[pq_idxs] + \
-                dx[range(npv+npq, npv+npq+npq)]
-
-        # V = Vm .* exp(j * Va);
-        self.v = v = mul(v_magnitude, exp(j * v_angle))
+        v = self.v = mul(v_magnitude, exp(j * v_angle))
 
         # Avoid wrapped round negative Vm
 #        Vm = abs(voltage)
-#        Va = angle(voltage)
-
-        logger.debug("V: =\n%s" % v)
+#        Va = numpy.angle(voltage)
 
         return v
 
@@ -300,137 +318,20 @@ class NewtonRaphson(_ACPF):
     #  Evaluate Jacobian:
     #--------------------------------------------------------------------------
 
-    def _get_jacobian(self):
-        """ Computes partial derivatives of power injection w.r.t. voltage.
-            The following explains the expressions used to form the matrices:
-
-            S = diag(V) * conj(Ibus) = diag(conj(Ibus)) * V
-
-            Partials of V & Ibus w.r.t. voltage magnitudes
-               dV/dVm = diag(V./abs(V))
-               dI/dVm = Ybus * dV/dVm = Ybus * diag(V./abs(V))
-
-            Partials of V & Ibus w.r.t. voltage angles
-               dV/dVa = j * diag(V)
-               dI/dVa = Ybus * dV/dVa = Ybus * j * diag(V)
-
-            Partials of S w.r.t. voltage magnitudes
-               dS/dVm = diag(V) * conj(dI/dVm) + diag(conj(Ibus)) * dV/dVm
-                      = diag(V) * conj(Ybus * diag(V./abs(V)))
-                                         + conj(diag(Ibus)) * diag(V./abs(V))
-
-            Partials of S w.r.t. voltage angles
-               dS/dVa = diag(V) * conj(dI/dVa) + diag(conj(Ibus)) * dV/dVa
-                      = diag(V) * conj(Ybus * j * diag(V))
-                                        + conj(diag(Ibus)) * j * diag(V)
-                      = -j * diag(V) * conj(Ybus * diag(V))
-                                        + conj(diag(Ibus)) * j * diag(V)
-                      = j * diag(V) * conj(diag(Ibus) - Ybus * diag(V))
-
-            References:
-                Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
-                PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+    def _build_jacobian(self):
+        """ Returns the Jacobian matrix.
         """
-        j = 0 + 1j
-        y = self.Y
-        v = self.v
-        n = len(self.case.buses)
+        dS_dVm, dS_dVa = self.case.dSbus_dV(self.Y, self.v)
 
-        pv_idxs = self.pv_idxs
-        pq_idxs = self.pq_idxs
-        pvpq_idxs = self.pvpq_idxs
+        J11 = dS_dVa[self.pvpq_idx, self.pvpq_idx].real()
+        J12 = dS_dVm[self.pvpq_idx, self.pq_idx].real()
+        J21 = dS_dVa[self.pq_idx, self.pvpq_idx].imag()
+        J22 = dS_dVm[self.pq_idx, self.pq_idx].imag()
 
-#        Ibus = cvxopt.blas.dot(matrix(self.Y), v)
-        i_bus = y * v
-#        Ibus = self.Y.trans() * v
-        logger.debug("i_bus =\n%s" % i_bus)
+        J1 = sparse([J11, J21])
+        J2 = sparse([J12, J22])
 
-        diag_v = spmatrix(v, range(n), range(n), tc="z")
-        logger.debug("diag_v =\n%s" % diag_v)
-
-        diag_ibus = spmatrix(i_bus, range(n), range(n), tc="z")
-        logger.debug("diag_ibus =\n%s" % diag_ibus)
-
-        # diagVnorm = spdiags(V./abs(V), 0, n, n);
-        diag_vnorm = spmatrix(div(v, abs(v)), range(n), range(n), tc="z")
-        logger.debug("diag_vnorm =\n%s" % diag_vnorm)
-
-        # From MATPOWER v3.2:
-        # dSbus_dVm = diagV * conj(Y * diagVnorm) + conj(diagIbus) * diagVnorm;
-        # dSbus_dVa = j * diagV * conj(diagIbus - Y * diagV);
-
-        s_vm = diag_v * conj(y * diag_vnorm) + conj(diag_ibus) * diag_vnorm
-#        dS_dVm = dot(
-#            dot(diagV, conj(dot(Y, diagVnorm))) + conj(diagIbus), diagVnorm
-#        )
-        #dS_dVm = dot(diagV, conj(dot(Y, diagVnorm))) + dot(conj(diagIbus), diagVnorm)
-        logger.debug("dS/dVm =\n%s" % s_vm)
-
-        s_va = j * diag_v * conj(diag_ibus - y * diag_v)
-#        dS_dVa = dot(dot(j, diagV), conj(dot(diagIbus - Y, diagV)))
-        #dS_dVa = dot(dot(j, diagV), conj(diagIbus - dot(Y, diagV)))
-        logger.debug("dS/dVa =\n%s" % s_va)
-
-
-#        dP_dVm = spmatrix(map(lambda x: x.real, dS_dVm), dS_dVm.I, dS_dVa.J, tc="d")
-
-#        dP_dVm = spmatrix(dS_dVm.real(), dS_dVm.I, dS_dVa.J, tc="d")
-#        logger.debug("dP_dVm =\n%s" % dP_dVm)
-#
-#        dP_dVa = spmatrix(dS_dVa.real(), dS_dVa.I, dS_dVa.J, tc="d")
-#        logger.debug("dP_dVa =\n%s" % dP_dVa)
-#
-#        dQ_dVm = spmatrix(dS_dVm.imag(), dS_dVm.I, dS_dVm.J, tc="d")
-#        logger.debug("dQ_dVm =\n%s" % dQ_dVm)
-#
-#        dQ_dVa = spmatrix(dS_dVa.imag(), dS_dVa.I, dS_dVa.J, tc="d")
-#        logger.debug("dQ_dVa" % dQ_dVa)
-
-        # From MATPOWER v3.2:
-        #    j11 = real(dSbus_dVa([pv; pq], [pv; pq]));
-        #    j12 = real(dSbus_dVm([pv; pq], pq));
-        #    j21 = imag(dSbus_dVa(pq, [pv; pq]));
-        #    j22 = imag(dSbus_dVm(pq, pq));
-
-#            J11 = dP_dVa[pvpq_idxs, pvpq_idxs]
-#            J12 = dP_dVm[pvpq_idxs, pq_idxs]
-#            J21 = dQ_dVa[pq_idxs, pvpq_idxs]
-#            J22 = dQ_dVm[pq_idxs, pq_idxs]
-
-        j11 = s_va[pvpq_idxs, pvpq_idxs].real()
-        j12 = s_vm[pvpq_idxs, pq_idxs].real()
-        j21 = s_va[pq_idxs, pvpq_idxs].imag()
-        j22 = s_vm[pq_idxs, pq_idxs].imag()
-
-        logger.debug("J12 =\n%s" % j12)
-        logger.debug("J22 =\n%s" % j22)
-
-        # The width and height of one quadrant of the Jacobian.
-#        w, h = J11.size
-#        print "w, h", J11.size, J12.size, J21.size, J22.size
-
-        # A single-column dense matrix containing the numerical values of
-        # the nonzero entries of the four quadrants of the Jacobian in
-        # column-major order.
-#        values = numpy.vstack((J11.V, J12.V, J21.V, J22.V))
-
-        # A single-column integer matrix with the row indices of the entries
-        # in "values" shifted appropriately by the width of one quadrant.
-#        row_idxs = numpy.vstack((J11.I, J12.I, J21.I+h, J22.I+h))
-
-        # A single-column integer matrix with the column indices of the
-        # entries in "values" shifted appropriately by the width of one
-        # quadrant.
-#        col_idxs = numpy.vstack((J11.J, J12.J+w, J21.J, J22.J+w))
-
-        # A deep copy of "values" is required for contiguity.
-#        J = spmatrix(values.copy(), row_idxs, col_idxs)
-
-        j1 = sparse([j11, j21])
-        j2 = sparse([j12, j22])
-
-        self.J = J = sparse([j1.T, j2.T]).T
-        logger.debug("J =\n%s" % J)
+        J = self.J = sparse([J1.T, J2.T]).T
 
         return J
 
@@ -438,34 +339,33 @@ class NewtonRaphson(_ACPF):
     #  Evaluate F(x):
     #--------------------------------------------------------------------------
 
-    def _evaluate_function(self):
+    def _evaluate_function(self, v):
         """ Evaluates F(x).
         """
-        # mis = V .* conj(Ybus * V) - Sbus;
-        mismatch = mul(self.v, conj(self.Y * self.v)) - self.s_surplus
+        mismatch = mul(v, conj(self.Y * v)) - self.s_surplus
 
-        real = mismatch[self.pvpq_idxs].real()
-        imag = mismatch[self.pq_idxs].imag()
+        real = mismatch[self.pvpq_idx].real()
+        imag = mismatch[self.pq_idx].imag()
 
-        return matrix([real, imag])
+        f = self.f = matrix([real, imag])
+
+        return f
 
     #--------------------------------------------------------------------------
     #  Check convergence:
     #--------------------------------------------------------------------------
 
-    def _check_convergence(self):
+    def _check_convergence(self, f):
         """ Checks if the solution has converged to within the specified
             tolerance.
         """
-        f = self.f
-
         normf = max(abs(f))
 
         if normf < self.tolerance:
-            converged = True
+            converged = self.converged = True
         else:
-            converged = False
-#            logger.info("Difference: %.3f" % normF-self.tolerance)
+            converged = self.converged = False
+#            logger.info("Difference: %.3f" % normf - self.tolerance)
 
         return converged
 

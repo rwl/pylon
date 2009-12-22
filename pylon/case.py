@@ -28,7 +28,7 @@ from math import pi
 
 from util import Named, Serializable
 
-from cvxopt.base import matrix, spmatrix, spdiag, exp, mul, div
+from cvxopt.base import matrix, spmatrix, sparse, spdiag, exp, mul, div
 
 from util import conj, zero2one
 
@@ -389,6 +389,34 @@ class Case(Named, Serializable):
 
     def dSbus_dV(self, Y, v):
         """ Computes the partial derivative of power injection w.r.t. voltage.
+            The following explains the expressions used to form the matrices:
+
+            S = diag(V) * conj(Ibus) = diag(conj(Ibus)) * V
+
+            Partials of V & Ibus w.r.t. voltage magnitudes
+               dV/dVm = diag(V./abs(V))
+               dI/dVm = Ybus * dV/dVm = Ybus * diag(V./abs(V))
+
+            Partials of V & Ibus w.r.t. voltage angles
+               dV/dVa = j * diag(V)
+               dI/dVa = Ybus * dV/dVa = Ybus * j * diag(V)
+
+            Partials of S w.r.t. voltage magnitudes
+               dS/dVm = diag(V) * conj(dI/dVm) + diag(conj(Ibus)) * dV/dVm
+                      = diag(V) * conj(Ybus * diag(V./abs(V)))
+                                         + conj(diag(Ibus)) * diag(V./abs(V))
+
+            Partials of S w.r.t. voltage angles
+               dS/dVa = diag(V) * conj(dI/dVa) + diag(conj(Ibus)) * dV/dVa
+                      = diag(V) * conj(Ybus * j * diag(V))
+                                        + conj(diag(Ibus)) * j * diag(V)
+                      = -j * diag(V) * conj(Ybus * diag(V))
+                                        + conj(diag(Ibus)) * j * diag(V)
+                      = j * diag(V) * conj(diag(Ibus) - Ybus * diag(V))
+
+            References:
+                Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
+                PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
         """
         j = 0 + 1j
         i = Y * v
