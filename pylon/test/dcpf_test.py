@@ -49,7 +49,7 @@ class DCPFTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         case = PickleReader().read(DATA_FILE)
-        self.routine = DCPF()
+        self.routine = DCPF()#"CHOLMOD")
         self.routine.solve(case)
 
 
@@ -76,7 +76,6 @@ class DCPFTest(unittest.TestCase):
            -0.1002
 
         """
-
         places = 4
 
         vp_0 = 0.0000
@@ -85,9 +84,9 @@ class DCPFTest(unittest.TestCase):
 
         v_angle = self.routine.v_angle
 
-        self.assertAlmostEqual(vp_0, v_angle[0], places)
-        self.assertAlmostEqual(vp_2, v_angle[2], places)
-        self.assertAlmostEqual(vp_5, v_angle[5], places)
+        self.assertAlmostEqual(v_angle[0], vp_0, places)
+        self.assertAlmostEqual(v_angle[2], vp_2, places)
+        self.assertAlmostEqual(v_angle[5], vp_5, places)
 
 
     def test_model_results(self):
@@ -117,23 +116,22 @@ class DCPFTest(unittest.TestCase):
             0.2999
 
         """
-
         places = 4
 
-        c        = self.routine.case
-        buses    = c.connected_buses
-        branches = c.online_branches
+        case = self.routine.case
+        buses = case.connected_buses
+        branches = case.online_branches
 
         # Buses
-        v_0 = 0.0000
+        v_0 =  0.0000
         v_3 = -4.7632
         v_5 = -5.7418
 
         for each_bus in buses:
             self.assertEqual(each_bus.v_magnitude, 1.0)
-        self.assertAlmostEqual(v_0, buses[0].v_angle, places)
-        self.assertAlmostEqual(v_3, buses[3].v_angle, places)
-        self.assertAlmostEqual(v_5, buses[5].v_angle, places)
+        self.assertAlmostEqual(buses[0].v_angle, v_0, places)
+        self.assertAlmostEqual(buses[3].v_angle, v_3, places)
+        self.assertAlmostEqual(buses[5].v_angle, v_5, places)
 
         # Branches
         p_2 = 33.1045
@@ -145,11 +143,12 @@ class DCPFTest(unittest.TestCase):
             self.assertEqual(branch.q_target, 0.0)
             # Source and target real powers are the negative of one and other
             self.assertAlmostEqual(branch.p_source, -branch.p_target, places)
-        self.assertAlmostEqual(p_2, branches[2].p_source, places)
-        self.assertAlmostEqual(p_6, branches[6].p_source, places)
-        self.assertAlmostEqual(p_9, branches[9].p_source, places)
+        self.assertAlmostEqual(branches[2].p_source, p_2, places)
+        self.assertAlmostEqual(branches[6].p_source, p_6, places)
+        self.assertAlmostEqual(branches[9].p_source, p_9, places)
 
-        # FIXME: Test swing generator set-point.
+        # Test swing bus generator set-point.
+        self.assertAlmostEqual(case.generators[0].p, 100.0, places)
 
 
 if __name__ == "__main__":

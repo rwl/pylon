@@ -149,7 +149,7 @@ class DCOPF(object):
         solvers.options["feastol"] = self.feasibility_tol
 #        solvers.options["refinement"] = self.refinement
 
-        self.B, self.Bsrc = self.case.B
+        self.B, self.Bsrc, _, _ = self.case.B
 
         self._theta_inj_source = self._get_theta_inj_source()
         self._theta_inj_bus = self._get_theta_inj_bus()
