@@ -15,97 +15,118 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-bus_attrs = ["name", "mode", "type", "v_base", "v_magnitude_guess",
+""" Defines common components for reading/writing cases.
+"""
+
+#------------------------------------------------------------------------------
+#  Imports:
+#------------------------------------------------------------------------------
+
+import logging
+
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
+
+#------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+BUS_ATTRS = ["name", "type", "v_base", "v_magnitude_guess",
     "v_angle_guess", "v_max", "v_min", "v_magnitude", "v_angle", "g_shunt",
     "b_shunt", "zone"]
 
-branch_attrs = ["name", "mode", "online", "r", "x", "b", "s_max",
-    "phase_shift", "phase_shift_max", "phase_shift_min", "online"]
+BRANCH_ATTRS = ["name", "mode", "online", "r", "x", "b", "s_max",
+    "phase_shift", "online"]
 
-generator_attrs = ["name", "base_mva", "v_magnitude", "p", "p_max", "p_min",
-    "q", "q_max", "q_min", "c_startup", "c_shutdown", "cost_model",
-    "cost_coeffs", "pwl_points", "p_cost", "u", "rate_up", "rate_down",
+GENERATOR_ATTRS = ["name", "base_mva", "v_magnitude", "p", "p_max", "p_min",
+    "q", "q_max", "q_min", "cost_model",
+    "cost_coeffs", "pwl_points", "p_cost", "rate_up", "rate_down",
     "min_up", "min_down", "initial_up", "initial_down", "online"]
-
-#load_attrs = ["name", "p", "q", "online"]
 
 #------------------------------------------------------------------------------
 #  "CaseWriter" class:
 #------------------------------------------------------------------------------
 
 class CaseWriter(object):
-    """ Defines a base class for many writers of case data.
+    """ Defines a base class for writers of case data.
     """
 
-    def __init__(self, case, file_or_filename):
+    def __init__(self, case):
+        """ Initialises a new CaseWriter instance.
+        """
         # Case to be written.
-        self.case
+        self.case = case
 
-        # File-like-object or name of the file to be written to.
-        self.file_or_filename = file_or_filename
 
-    def write(self):
+    def write(self, file_or_filename):
         """ Writes the case data to file.
         """
-        if isinstance(self.file_or_filename, basestring):
-            file = open(self.file_or_filename, "wb")
+        if isinstance(file_or_filename, basestring):
+            file = None
+            try:
+                file = open(file_or_filename, "wb")
+                self._write_data(file)
+            except Exception, detail:
+                logger.error("Error writing Dot data: %s" % detail)
+            finally:
+                if file is not None:
+                    file.close()
         else:
-            file = self.file_or_filename
+            file = file_or_filename
+            self._write_data(file)
 
-        self.write_header()
-        self.write_bus_data()
-        self.write_branch_data()
-        self.write_generator_data()
-        self.write_generator_cost_data()
-
-        file.close()
+        return file
 
 
-    def write_header(self):
-        """ Writes header data to file.
+    def _write_data(self, file):
+        self.write_case_data(file)
+        self.write_bus_data(file)
+        self.write_branch_data(file)
+        self.write_generator_data(file)
+        self.write_generator_cost_data(file)
+
+
+    def write_case_data(self, file):
+        """ Writes case data to file.
         """
-        raise NotImplementedError
+        pass
 
 
-    def write_bus_data(self):
+    def write_bus_data(self, file):
         """ Writes bus data to file.
         """
-        raise NotImplementedError
+        pass
 
 
-    def write_branch_data(self):
+    def write_branch_data(self, file):
         """ Writes branch data to file.
         """
-        raise NotImplementedError
+        pass
 
 
-    def write_generator_data(self):
+    def write_generator_data(self, file):
         """ Writes generator data to file.
         """
-        raise NotImplementedError
+        pass
 
 
-    def write_generator_cost_data(self):
+    def write_generator_cost_data(self, file):
         """ Writes generator cost data to file.
         """
-        raise NotImplementedError
+        pass
 
 #------------------------------------------------------------------------------
 #  "CaseReader" class:
 #------------------------------------------------------------------------------
 
 class CaseReader(object):
-    """ Defines a base class for many case readers.
+    """ Defines a base class for case readers.
     """
 
-    def __init__(self, file_or_filename):
-        """ Constructs a new CaseReader instance.
-        """
-        # Path to the data file or file object.
-        self.file_or_filename = None
-
-
-    def read(self):
+    def read(self, file_or_filename):
         """ Reads the data file and returns a case.
         """
         raise NotImplementedError

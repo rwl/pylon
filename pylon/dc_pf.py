@@ -89,12 +89,6 @@ class DCPF(object):
         self.p_ref = 0.0
 
 
-    def __call__(self, case):
-        """ Calls the solver with the given case.
-        """
-        return self.solve(case)
-
-
     def solve(self):
         """ Solves DC power flow for the given case.
         """

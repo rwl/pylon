@@ -31,6 +31,8 @@ from pyparsing import Optional, Literal, ZeroOrMore
 
 from pylon import Case, Bus, Branch, Generator
 
+from pylon.readwrite.common import CaseReader
+
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -41,33 +43,19 @@ logger = logging.getLogger(__name__)
 #  "PSATReader" class:
 #------------------------------------------------------------------------------
 
-class PSATReader(object):
+class PSATReader(CaseReader):
     """ Defines a method class for reading PSAT data files and
         returning a Case object.
     """
 
-    def __init__(self):
-        """ Initialises a new PSATReader instance.
-        """
-        # Path to the data file or file object.
-        self.file_or_filename = None
-        # The resulting case.
-        self.case = None
-
-
-    def __call__(self, file_or_filename):
-        """ Calls the reader with the given file or file name.
-        """
-        self.read(file_or_filename)
-
     #--------------------------------------------------------------------------
-    #  Parse a PSAT data file and return a case object
+    #  "CaseReader" interface:
     #--------------------------------------------------------------------------
 
     def read(self, file_or_filename):
         """ Parses a PSAT data file and returns a case object
 
-            file: File object or path to data file with PSAT format data
+            file_or_filename: File object or path to PSAT data file
             return: Case object
         """
         self.file_or_filename = file_or_filename
@@ -80,9 +68,9 @@ class PSATReader(object):
 
         # Name the case
         if isinstance(file_or_filename, basestring):
-            name, ext = splitext(basename(file_or_filename))
+            name, _ = splitext(basename(file_or_filename))
         else:
-            name, ext = splitext(file_or_filename.name)
+            name, _ = splitext(file_or_filename.name)
 
         self.case.name = name
 
@@ -106,7 +94,7 @@ class PSATReader(object):
             ZeroOrMore(matlab_comment) + demand_array + \
             ZeroOrMore(matlab_comment) + supply_array
 
-        data = case.parseFile(file_or_filename)
+        case.parseFile(file_or_filename)
 
         elapsed = time.time() - t0
         logger.info("PSAT case file parsed in %.3fs." % elapsed)
@@ -114,7 +102,7 @@ class PSATReader(object):
         return self.case
 
     #--------------------------------------------------------------------------
-    #  Construct getters:
+    #  "PSATReader" interface:
     #--------------------------------------------------------------------------
 
     def _get_bus_array_construct(self):

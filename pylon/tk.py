@@ -1,24 +1,23 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 import os
-import sys
 import logging
 import platform
 import webbrowser
-import tempfile
 
-import Image # PIL
-import PIL.Image, PIL.ImageTk
-from StringIO import StringIO
+#import Image # PIL
+#import PIL.Image, PIL.ImageTk
+#from StringIO import StringIO
 
-from matplotlib.backends.backend_tkagg \
-    import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-
-import matplotlib.pyplot as plt
-import matplotlib.image
-import matplotlib.figure
+#from matplotlib.backends.backend_tkagg \
+#    import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+#
+#import matplotlib.pyplot as plt
+#import matplotlib.image
+#import matplotlib.figure
 
 import networkx as nx
+import pylab
 
 from Tkinter import *
 from tkFileDialog import askopenfilename, asksaveasfilename
@@ -34,13 +33,11 @@ from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
     CSVWriter, DotWriter, PickleReader, PickleWriter
 
-from pylon.readwrite.dot_writer import create_graph
-
 from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
 from pylon.pyreto.main import one_for_one
 
-from pylon.readwrite.common import bus_attrs, branch_attrs, generator_attrs
+from pylon.readwrite.common import BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
 logger = logging.getLogger('pylon')
 
@@ -358,26 +355,27 @@ class PylonTk(object):
     def on_pickle(self):
         filename = asksaveasfilename(filetypes=[("Pickle file", ".pkl")])
         if filename:
-            PickleWriter().write(self.case, filename)
+            PickleWriter(self.case).write(filename)
 
 
     def on_excel(self):
+        from pylon.readwrite.excel_writer import ExcelWriter
         filename = asksaveasfilename(filetypes=[("Excel file", ".xls")])
         if filename:
-            ExcelWriter().write(self.case, filename)
+            ExcelWriter(self.case).write(filename)
 
 
     def on_csv(self):
         filename = asksaveasfilename(filetypes=[("CSV file", ".csv")])
         if filename:
-            CSVWriter().write(self.case, filename)
+            CSVWriter(self.case).write(filename)
 
 
     def on_rest(self):
         ftypes = [("ReStructuredText file", ".rst")]
         filename = asksaveasfilename(filetypes=ftypes)
         if filename:
-            ReSTWriter().write(self.case, filename)
+            ReSTWriter(self.case).write(filename)
 
     # View --------------------------------------------------------------------
 
@@ -393,10 +391,10 @@ class PylonTk(object):
         for g in self.case.generators:
             graph.add_edge(self.case.buses.index(g.bus), g.name)
 
-        plt.figure(1,figsize=(8,8))
+        pylab.figure(1,figsize=(8,8))
         pos = nx.graphviz_layout(graph, prog="dot")
         nx.draw(graph, pos)#, node_size=40)
-        plt.show()
+        pylab.show()
 
     # UI Log ------------------------------------------------------------------
 
@@ -409,46 +407,46 @@ class PylonTk(object):
         if self.alwaysclear.get():
             self.ui_log.clear()
         writer_klass = self.writer_map[self.writer_type.get()]
-        writer_klass().write_header(self.case, self.ui_log)
+        writer_klass(self.case).write_case_data(self.ui_log)
 
 
     def on_bus_info(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
         writer_klass = self.writer_map[self.writer_type.get()]
-        writer_klass().write_bus_data(self.case, self.ui_log)
+        writer_klass(self.case).write_bus_data(self.ui_log)
 
 
     def on_branch_info(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
         writer_klass = self.writer_map[self.writer_type.get()]
-        writer_klass().write_branch_data(self.case, self.ui_log)
+        writer_klass(self.case).write_branch_data(self.ui_log)
 
 
     def on_generator_info(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
         writer_klass = self.writer_map[self.writer_type.get()]
-        writer_klass().write_generator_data(self.case, self.ui_log)
+        writer_klass(self.case).write_generator_data(self.ui_log)
 
 
     def on_state_info(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
-        ReSTExperimentWriter().write_state_data(self.e, self.ui_log)
+        ReSTExperimentWriter(self.e).write_state_data(self.ui_log)
 
 
     def on_action_info(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
-        ReSTExperimentWriter().write_action_data(self.e, self.ui_log)
+        ReSTExperimentWriter(self.e).write_action_data(self.ui_log)
 
 
     def on_reward_info(self):
         if self.alwaysclear.get():
             self.ui_log.clear()
-        ReSTExperimentWriter().write_reward_data(self.e, self.ui_log)
+        ReSTExperimentWriter(self.e).write_reward_data(self.ui_log)
 
 
     def on_save_log(self):
@@ -472,31 +470,31 @@ class PylonTk(object):
     # -------------------------------------------------------------------------
 
     def on_dcpf(self):
-        DCPF().solve(self.case)
+        DCPF(self.case).solve()
 
 
     def on_newton(self):
-        NewtonRaphson().solve(self.case)
+        NewtonRaphson(self.case).solve()
 
 
     def on_fd(self):
-        FastDecoupled().solve(self.case)
+        FastDecoupled(self.case).solve()
 
 
     def on_dcopf(self):
-        DCOPF().solve(self.case)
+        DCOPF(self.case).solve()
 
 
     def on_acopf(self):
-        ACOPF().solve(self.case)
+        ACOPF(self.case).solve()
 
 
     def on_duopf(self):
-        UDOPF(dc=True).solve(self.case)
+        UDOPF(self.case, dc=True).solve()
 
 
     def on_uopf(self):
-        UDOPF(dc=False).solve(self.case)
+        UDOPF(self.case, dc=False).solve()
 
 
     def on_exit(self, event=None):
@@ -551,7 +549,7 @@ class CaseProperties(tkSimpleDialog.Dialog):
         self.excluded = ["zone", "v_base", "v_magnitude_guess",
                          "v_angle_guess", "v_magnitude", "v_angle", "g_shunt",
                          "b_shunt", "zone"]
-        for attr in [a for a in bus_attrs if a not in self.excluded]:
+        for attr in [a for a in BUS_ATTRS if a not in self.excluded]:
             value = getattr(bus, attr)
             getattr(self.bus_params, attr).set(value)
 
@@ -569,7 +567,7 @@ class CaseProperties(tkSimpleDialog.Dialog):
         '''
         bus = self.case.buses[int(self.bus_lb.curselection()[0])]
 
-        for attr in [a for a in bus_attrs if a not in self.excluded+['mode']]:
+        for attr in [a for a in BUS_ATTRS if a not in self.excluded+['mode']]:
             value = getattr(self.bus_params, attr).get()
             setattr(bus, attr, value)
 
@@ -607,214 +605,214 @@ class BusProperties(object):
         vminentry.grid(row=4, column=1)
 
 
-class GraphView(tkSimpleDialog.Dialog):
-    """ A dialog for graph viewing.
-    """
-
-    def __init__(self, parent, case, experiment):
-        """ Initialises the font dialog.
-        """
-        self.case = case
-        self.e = experiment
-
-        tkSimpleDialog.Dialog.__init__(self, parent, title="Graph")
-
-
-    def draw_graph(self):
-        """ Creates a representation of the graph and draws it on the canvas.
-        """
-        case = self.case
-        prog    = self.prog.get()
-        format  = self.format.get()
-
-        fig = self.fig
-
-        sbplt = fig.add_subplot(111)
-
-        dotdata = StringIO()
-        DotWriter().write(case, dotdata)
-        dotdata.seek(0) # rewind
-
-        imagedata = create_graph(dotdata.getvalue(), prog, format)
-
-        # Write the image data to a temporary file.
-        suffix = ".%s" % self.format.get()
-        # Matplotlib features native PNG support with '.png' suffix.
-        tmp_fd, tmp_name = tempfile.mkstemp(suffix=suffix)
-        os.close(tmp_fd)
-        imagefd = file(tmp_name, "w+b")
-        imagefd.write(imagedata) # DOT language.
-        imagefd.close()
-
-        im = plt.imread(tmp_name)
-
-        fig = matplotlib.figure.Figure(figsize=(6, 6), dpi=100)
-        ax = plt.axes([0, 0, 1, 1], frameon=False)
-        ax.set_axis_off()
-        img = plt.imshow(im)
-        plt.show()
-
-        # Remove the temporary file.
-        os.remove(tmp_name)
-
-#        stream = StringIO()
-#        stream.write(imagedata)
-#        stream.seek(0) # rewind
-#        pil_image = PIL.Image.open(stream) # Either a string or a file object.
-
-#        f = Figure(figsize=figsize)#, dpi=100)
-#        figure(figsize=figsize)
-
-#        ax = axes([0, 0, 1, 1], frameon=False)
+#class GraphView(tkSimpleDialog.Dialog):
+#    """ A dialog for graph viewing.
+#    """
+#
+#    def __init__(self, parent, case, experiment):
+#        """ Initialises the font dialog.
+#        """
+#        self.case = case
+#        self.e = experiment
+#
+#        tkSimpleDialog.Dialog.__init__(self, parent, title="Graph")
+#
+#
+#    def draw_graph(self):
+#        """ Creates a representation of the graph and draws it on the canvas.
+#        """
+#        case = self.case
+#        prog    = self.prog.get()
+#        format  = self.format.get()
+#
+#        fig = self.fig
+#
+#        sbplt = fig.add_subplot(111)
+#
+#        dotdata = StringIO()
+#        DotWriter().write(case, dotdata)
+#        dotdata.seek(0) # rewind
+#
+#        imagedata = create_graph(dotdata.getvalue(), prog, format)
+#
+#        # Write the image data to a temporary file.
+#        suffix = ".%s" % self.format.get()
+#        # Matplotlib features native PNG support with '.png' suffix.
+#        tmp_fd, tmp_name = tempfile.mkstemp(suffix=suffix)
+#        os.close(tmp_fd)
+#        imagefd = file(tmp_name, "w+b")
+#        imagefd.write(imagedata) # DOT language.
+#        imagefd.close()
+#
+#        im = plt.imread(tmp_name)
+#
+#        fig = matplotlib.figure.Figure(figsize=(6, 6), dpi=100)
+#        ax = plt.axes([0, 0, 1, 1], frameon=False)
 #        ax.set_axis_off()
-
-#        im = imshow(graphimage, origin='lower')
-#        im = matplotlib.image.frombuffer(graph_io)
-
-#        im = matplotlib.image.pil_to_array(pil_image)
-
-#        dpi = rcParams['figure.dpi']
-#        figsize = im.size[0] / dpi, im.size[1] / dpi
-
-        fig.figimage(im, 10, 10)
-
-
-#        import base64
-#        imagedata = base64.encodestring(imagedata)
+#        img = plt.imshow(im)
+#        plt.show()
 #
-#        if imagedata is not None:
-#            stream = StringIO()
-#            stream.write(imagedata)
-#            stream.seek(0) # rewind
+#        # Remove the temporary file.
+#        os.remove(tmp_name)
 #
-##            image = PIL.Image.open("/tmp/logo.png")
-##            photo = PIL.ImageTk.PhotoImage(image)
+##        stream = StringIO()
+##        stream.write(imagedata)
+##        stream.seek(0) # rewind
+##        pil_image = PIL.Image.open(stream) # Either a string or a file object.
 #
-##            imagedata = PIL.ImageTk.PhotoImage(data=imagedata)
+##        f = Figure(figsize=figsize)#, dpi=100)
+##        figure(figsize=figsize)
 #
-##            pil_image = PIL.Image.open(stream)
-##            photo = PIL.ImageTk.PhotoImage(pil_image)
+##        ax = axes([0, 0, 1, 1], frameon=False)
+##        ax.set_axis_off()
 #
-#            photo = self.photo = PhotoImage(data=imagedata)
+##        im = imshow(graphimage, origin='lower')
+##        im = matplotlib.image.frombuffer(graph_io)
 #
-#            self.canvas.create_image(50, 50, image=photo, anchor=NW)
-
-    # tkSimpleDialog.Dialog interface -----------------------------------------
-
-    def body(self, frame):
-        """ Creates the dialog body. Returns the widget that should have
-            initial focus.
-        """
-        master = Frame(self)
-#        master.pack(padx=5, pady=0, expand=1, fill=BOTH)
-
-        buttonbar = Frame(master, pady=1)
-        buttonbar.pack(side=LEFT, fill=Y, pady=1)
-
-        head = Label(buttonbar, text="Graphviz", bg="#FFA07A")
-        head.pack(fill=X, padx=1, pady=1)
-
-        refresh = Button(buttonbar, text="Refresh",
-                         command=self.draw_graph).pack(fill=X)
-
-        # Graphviz layout program.
-        prog = self.prog = StringVar(buttonbar)
-        prog.set("dot") # default value
-        OptionMenu(buttonbar, prog, "dot", "circo", "neato", "twopi",
-                   "fdp").pack(fill=X, pady=2)
-
-        # Image format.
-        format = self.format = StringVar(buttonbar)
-        format.set("png") # default value
-        OptionMenu(buttonbar, format, "png", "jpg", "gif").pack(fill=X, pady=2)
-
-        # Graph canvas frame.
-        fig = self.fig = matplotlib.figure.Figure(figsize=(6, 4), dpi=100)
-
-#        from numpy import arange, sin, pi
-#        a = fig.add_subplot(111)
-#        t = arange(0.0,3.0,0.01)
-#        s = sin(2*pi*t)
-#        a.plot(t,s)
-
-
-        self.draw_graph()
-
-        canvas = FigureCanvasTkAgg(fig, master=master)
-        canvas.show()
-        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
-
-        toolbar = NavigationToolbar2TkAgg(canvas, master)
-        toolbar.update()
-        canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
-
-
-
-#        drawframe = Frame(master)
+##        im = matplotlib.image.pil_to_array(pil_image)
 #
-#        drawframe.grid_rowconfigure(0, weight=1)
-#        drawframe.grid_columnconfigure(0, weight=1)
+##        dpi = rcParams['figure.dpi']
+##        figsize = im.size[0] / dpi, im.size[1] / dpi
 #
-#        xscrollbar = Scrollbar(drawframe, orient=HORIZONTAL)
-#        xscrollbar.grid(row=1, column=0, sticky=E+W)
-#
-#        yscrollbar = Scrollbar(drawframe)
-#        yscrollbar.grid(row=0, column=1, sticky=N+S)
-#
-#        canvas = self.canvas = Canvas(drawframe, width=600, height=400,
-#            bg='white',
-#            xscrollcommand=xscrollbar.set,
-#            yscrollcommand=yscrollbar.set)
-##        canvas.config(scrollregion=canvas.bbox(ALL))
-#        canvas.config(scrollregion=(-800, -600, 1600, 1200))
-#
-#        canvas.grid(row=0, column=0, sticky=N+S+E+W)
-#
-#        xscrollbar.config(command=canvas.xview)
-#        yscrollbar.config(command=canvas.yview)
+#        fig.figimage(im, 10, 10)
 #
 #
-#        xscrollbar.pack(side=BOTTOM, fill=X)
-#        yscrollbar.pack(side=RIGHT, fill=Y)
-#        canvas.pack(expand=YES, fill=BOTH)
+##        import base64
+##        imagedata = base64.encodestring(imagedata)
+##
+##        if imagedata is not None:
+##            stream = StringIO()
+##            stream.write(imagedata)
+##            stream.seek(0) # rewind
+##
+###            image = PIL.Image.open("/tmp/logo.png")
+###            photo = PIL.ImageTk.PhotoImage(image)
+##
+###            imagedata = PIL.ImageTk.PhotoImage(data=imagedata)
+##
+###            pil_image = PIL.Image.open(stream)
+###            photo = PIL.ImageTk.PhotoImage(pil_image)
+##
+##            photo = self.photo = PhotoImage(data=imagedata)
+##
+##            self.canvas.create_image(50, 50, image=photo, anchor=NW)
 #
-#        drawframe.pack(expand=YES, fill=BOTH)
-
+#    # tkSimpleDialog.Dialog interface -----------------------------------------
+#
+#    def body(self, frame):
+#        """ Creates the dialog body. Returns the widget that should have
+#            initial focus.
+#        """
+#        master = Frame(self)
+##        master.pack(padx=5, pady=0, expand=1, fill=BOTH)
+#
+#        buttonbar = Frame(master, pady=1)
+#        buttonbar.pack(side=LEFT, fill=Y, pady=1)
+#
+#        head = Label(buttonbar, text="Graphviz", bg="#FFA07A")
+#        head.pack(fill=X, padx=1, pady=1)
+#
+#        refresh = Button(buttonbar, text="Refresh",
+#                         command=self.draw_graph).pack(fill=X)
+#
+#        # Graphviz layout program.
+#        prog = self.prog = StringVar(buttonbar)
+#        prog.set("dot") # default value
+#        OptionMenu(buttonbar, prog, "dot", "circo", "neato", "twopi",
+#                   "fdp").pack(fill=X, pady=2)
+#
+#        # Image format.
+#        format = self.format = StringVar(buttonbar)
+#        format.set("png") # default value
+#        OptionMenu(buttonbar, format, "png", "jpg", "gif").pack(fill=X, pady=2)
+#
+#        # Graph canvas frame.
+#        fig = self.fig = matplotlib.figure.Figure(figsize=(6, 4), dpi=100)
+#
+##        from numpy import arange, sin, pi
+##        a = fig.add_subplot(111)
+##        t = arange(0.0,3.0,0.01)
+##        s = sin(2*pi*t)
+##        a.plot(t,s)
+#
+#
 #        self.draw_graph()
-
-        return refresh # Given initial focus.
-
-
-    def buttonbox(self):
-        ''' Adds a button box.
-        '''
-#        box = Frame(self)
 #
-#        w = Button(box, text="Cancel", width=10, command=self.cancel)
-#        w.pack(side=LEFT, padx=5, pady=5)
+#        canvas = FigureCanvasTkAgg(fig, master=master)
+#        canvas.show()
+#        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 #
-#        w = Button(box, text="Select", width=10, command=self.ok,
-#                   default=ACTIVE)
-#        w.pack(side=LEFT, padx=5, pady=5)
+#        toolbar = NavigationToolbar2TkAgg(canvas, master)
+#        toolbar.update()
+#        canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
 #
-#        self.bind("<Return>", self.ok)
-#        self.bind("<Escape>", self.cancel)
 #
-#        box.pack(side=RIGHT, padx=5, pady=5, anchor=S)
-
-
-    def validate(self):
-        ''' Validate the data. This method is called automatically to validate
-            the data before the dialog is destroyed.
-        '''
-        return 1
-
-
-    def apply(self):
-        ''' Process the data. This method is called automatically to process
-            the data, *after* the dialog is destroyed.
-        '''
-        pass
+#
+##        drawframe = Frame(master)
+##
+##        drawframe.grid_rowconfigure(0, weight=1)
+##        drawframe.grid_columnconfigure(0, weight=1)
+##
+##        xscrollbar = Scrollbar(drawframe, orient=HORIZONTAL)
+##        xscrollbar.grid(row=1, column=0, sticky=E+W)
+##
+##        yscrollbar = Scrollbar(drawframe)
+##        yscrollbar.grid(row=0, column=1, sticky=N+S)
+##
+##        canvas = self.canvas = Canvas(drawframe, width=600, height=400,
+##            bg='white',
+##            xscrollcommand=xscrollbar.set,
+##            yscrollcommand=yscrollbar.set)
+###        canvas.config(scrollregion=canvas.bbox(ALL))
+##        canvas.config(scrollregion=(-800, -600, 1600, 1200))
+##
+##        canvas.grid(row=0, column=0, sticky=N+S+E+W)
+##
+##        xscrollbar.config(command=canvas.xview)
+##        yscrollbar.config(command=canvas.yview)
+##
+##
+##        xscrollbar.pack(side=BOTTOM, fill=X)
+##        yscrollbar.pack(side=RIGHT, fill=Y)
+##        canvas.pack(expand=YES, fill=BOTH)
+##
+##        drawframe.pack(expand=YES, fill=BOTH)
+#
+##        self.draw_graph()
+#
+#        return refresh # Given initial focus.
+#
+#
+#    def buttonbox(self):
+#        ''' Adds a button box.
+#        '''
+##        box = Frame(self)
+##
+##        w = Button(box, text="Cancel", width=10, command=self.cancel)
+##        w.pack(side=LEFT, padx=5, pady=5)
+##
+##        w = Button(box, text="Select", width=10, command=self.ok,
+##                   default=ACTIVE)
+##        w.pack(side=LEFT, padx=5, pady=5)
+##
+##        self.bind("<Return>", self.ok)
+##        self.bind("<Escape>", self.cancel)
+##
+##        box.pack(side=RIGHT, padx=5, pady=5, anchor=S)
+#
+#
+#    def validate(self):
+#        ''' Validate the data. This method is called automatically to validate
+#            the data before the dialog is destroyed.
+#        '''
+#        return 1
+#
+#
+#    def apply(self):
+#        ''' Process the data. This method is called automatically to process
+#            the data, *after* the dialog is destroyed.
+#        '''
+#        pass
 
 
 class UILog(object):

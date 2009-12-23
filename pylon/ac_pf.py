@@ -384,9 +384,11 @@ class FastDecoupled(_ACPF):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, tolerance=1e-08, iter_max=10, method="XB"):
+    def __init__(self, case, tolerance=1e-08, iter_max=10, method="XB"):
         """ Initialises a new ACPF instance.
         """
+        super(_ACPF, self).__init__(case, tolerance, iter_max)
+
         # Use XB or BX method?
         self.method = method
         # Sparse FDPF matrix B prime.
@@ -397,21 +399,17 @@ class FastDecoupled(_ACPF):
         self.p = None
         self.q = None
 
-        super(_ACPF, self).__init__(tolerance, iter_max)
-
     #--------------------------------------------------------------------------
     #  Solve power flow using Fast Decoupled method:
     #--------------------------------------------------------------------------
 
-    def solve(self, case):
+    def solve(self):
         """ Solves the AC power flow for the referenced case using fast
             decoupled method.  Returns the final complex voltages, a flag which
             indicates whether it converged or not, and the number of iterations
             performed.
         """
-        self.case = case
-
-        logger.info("Performing AC power flow using Fast Decoupled method.")
+        logger.info("Performing Fast Decoupled AC power flow.")
 
         t0 = time.time()
 

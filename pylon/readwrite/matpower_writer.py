@@ -24,87 +24,72 @@
 
 from os.path import basename, splitext
 
+from pylon.readwrite.common import CaseWriter
+
 #------------------------------------------------------------------------------
 #  "MATPOWERWriter" class:
 #------------------------------------------------------------------------------
 
-class MATPOWERWriter(object):
+class MATPOWERWriter(CaseWriter):
     """ Write case data to a file in MATPOWER format.
     """
 
-    def __init__(self):
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __init__(self, case):
         """ Initialises a new MATPOWERWriter instance.
         """
-        # Path to the data file or file object.
-        self.file_or_filename = None
-        # It is written.
-        self.case = None
+        super(MATPOWERWriter, self).__init__(case)
 
+        # Function name must match the file name in MATLAB.
+        self.func_name = case.name
 
-    def __call__(self, case, file_or_filename):
-        """ Calls the writer with the given case.
-        """
-        self.write(case, file_or_filename)
+    #--------------------------------------------------------------------------
+    #  "CaseWriter" interface:
+    #--------------------------------------------------------------------------
 
-
-    def write(self, case, file_or_filename):
+    def write(self, file_or_filename):
         """ Writes case data to file in MATPOWER format.
         """
-        self.case = case
-        self.file_or_filename = file_or_filename
-
         if isinstance(file_or_filename, basestring):
-            file = open(file_or_filename, "wb")
-            self.f_name, ext = splitext(basename(file_or_filename))
+            self.func_name, _ = splitext(basename(file_or_filename))
         else:
-            file = file_or_filename
-            self.f_name, ext = splitext(file.name)
+            self.func_name = self.case.name
 
-        self.write_header(case, file)
-
-        self.write_bus_data(case, file)
-        file.write("\n")
-        self.write_generator_data(case, file)
-        file.write("\n")
-        self.write_branch_data(case, file)
-        file.write("\n")
-        file.write("%%-----  OPF Data  -----%%\n")
-        self.write_area_data(None, file)
-        file.write("\n")
-        self.write_generator_cost_data(case, file)
-
-        if isinstance(file_or_filename, basestring):
-            file.close()
+        super(MATPOWERWriter, self).write(file_or_filename)
 
 
-    def write_header(self, case, file):
-        """ Writes the header to the given file.
+    def _write_data(self, file):
+        super(MATPOWERWriter, self)._write_data(file)
+        self.write_area_data(file)
+        file.write("return;\n")
+
+
+    def write_case_data(self, file):
+        """ Writes the case data in MATPOWER format.
         """
         file.write("function [baseMVA, bus, gen, branch, areas, gencost] = ")
-        file.write(self.f_name + "\n")
-
-        file.write("\n")
+        file.write("%s\n\n" % self.func_name)
 
         file.write("%%-----  Power Flow Data  -----%%\n")
-        file.write("%% system MVA base\n")
-        file.write("baseMVA = %.1f;\n" % case.base_mva)
-
-        file.write("\n")
+        file.write("%% System MVA base\n")
+        file.write("baseMVA = %.1f;\n\n" % self.case.base_mva)
 
 
-    def write_bus_data(self, case, file):
-        """ Writes bus data to file.
+    def write_bus_data(self, file):
+        """ Writes bus data in MATPOWER format.
         """
         labels = ["bus_id", "type", "Pd", "Qd", "Gs", "Bs", "area", "Vm", "Va",
             "baseKV", "zone", "Vmax", "Vmin"]
 
-        buses = case.buses
-        base_mva = case.base_mva
+        base_mva = self.case.base_mva
 
-        buses_data = []
-        for i, v in enumerate(buses):
+        buses_data = [None] * len(self.case.buses)
+        for i, v in enumerate(self.case.buses):
             v_data = {}
-            v_data["bus_id"] = i+1
+            v_data["bus_id"] = i + 1
             if v.type == "PQ":
                 bustype = 1
             elif v.type == "PV":
@@ -131,7 +116,7 @@ class MATPOWERWriter(object):
             for key in v_data.keys():
                 v_data[key] = str(v_data[key])
 
-            buses_data.append(v_data)
+            buses_data[i] = v_data
 
         file.write("%% bus data" + "\n")
 
@@ -154,23 +139,20 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def write_generator_data(self, case, file):
-        """ Write generator data to file.
+    def write_generator_data(self, file):
+        """ Writes generator data in MATPOWER format.
         """
         labels = ["bus", "Pg", "Qg", "Qmax", "Qmin", "Vg", "mBase", "status",
             "Pmax", "Pmin"]
 
-        buses = case.buses
-        generators = case.generators
-
-        generators_data = []
-        for g in generators:
+        generators_data = [None] * len(self.case.generators)
+        for i, g in enumerate(self.case.generators):
             g_data = {}
             g_base = g.base_mva
             # FIXME: Need faster way to find generator bus index
             g_data["bus"] = 1 # Failsafe value
-            if g in case.generators:
-                g_data["bus"] = buses.index(g.bus) + 1
+            if g in self.case.generators:
+                g_data["bus"] = self.case.buses.index(g.bus) + 1
             g_data["Pg"] = g.p * g_base
             g_data["Qg"] = g.q * g_base
             g_data["Qmax"] = g.q_max * g_base
@@ -189,7 +171,7 @@ class MATPOWERWriter(object):
             for key in g_data.keys():
                 g_data[key] = str(g_data[key])
 
-            generators_data.append(g_data)
+            generators_data[i] = g_data
 
         file.write("%% generator data" + "\n")
 
@@ -212,21 +194,19 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def write_branch_data(self, case, file):
+    def write_branch_data(self, file):
         """ Writes branch data to file.
         """
         labels = ["fbus", "tbus", "r", "x", "b", "rateA", "rateB", "rateC",
             "ratio", "angle", "status"]
 
-        base_mva = case.base_mva
-        branches = case.branches
-        buses    = case.buses
+        base_mva = self.case.base_mva
 
         branches_data = []
-        for e in branches:
+        for e in self.case.branches:
             e_data = {}
-            e_data["fbus"] = buses.index(e.source_bus) + 1
-            e_data["tbus"] = buses.index(e.target_bus) + 1
+            e_data["fbus"] = self.case.buses.index(e.source_bus) + 1
+            e_data["tbus"] = self.case.buses.index(e.target_bus) + 1
             e_data["r"] = e.r
             e_data["x"] = e.x
             e_data["b"] = e.b
@@ -269,19 +249,7 @@ class MATPOWERWriter(object):
         file.write("];" + "\n")
 
 
-    def write_area_data(self, case, file):
-        """ Writes area data to file.
-        """
-        file.write("%% area data" + "\n")
-        file.write("%\tno.\tprice_ref_bus" + "\n")
-        file.write("areas = [" + "\n")
-        # TODO: Implement areas
-        file.write("\t1\t1;" + "\n")
-
-        file.write("];" + "\n")
-
-
-    def write_generator_cost_data(self, case, file):
+    def write_generator_cost_data(self, file):
         """ Writes generator cost data to file.
         """
         file.write("%% generator cost data" + "\n")
@@ -293,6 +261,21 @@ class MATPOWERWriter(object):
         file.write("%\t2\tstartup\tshutdwn\tn_coeff\tc(n-1)\t...\tc0\n")
 
         file.write("gencost = [" + "\n")
+        file.write("];" + "\n")
+
+    #--------------------------------------------------------------------------
+    #  "MatpowerWriter" interface:
+    #--------------------------------------------------------------------------
+
+    def write_area_data(self, file):
+        """ Writes area data to file.
+        """
+        file.write("%% area data" + "\n")
+        file.write("%\tno.\tprice_ref_bus" + "\n")
+        file.write("areas = [" + "\n")
+        # TODO: Implement areas
+        file.write("\t1\t1;" + "\n")
+
         file.write("];" + "\n")
 
 # EOF -------------------------------------------------------------------------

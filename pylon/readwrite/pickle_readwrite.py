@@ -26,6 +26,8 @@ import os.path
 import pickle
 import logging
 
+from pylon.readwrite.common import CaseReader, CaseWriter
+
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -36,15 +38,9 @@ logger = logging.getLogger(__name__)
 #  "PickleReader" class:
 #------------------------------------------------------------------------------
 
-class PickleReader(object):
+class PickleReader(CaseReader):
     """ Defines a reader for pickled cases.
     """
-
-    def __call__(self, file_or_filename):
-        """ Calls the reader with the given file or file name.
-        """
-        self.read(file_or_filename)
-
 
     def read(self, file_or_filename):
         """ Loads a pickled case.
@@ -57,8 +53,8 @@ class PickleReader(object):
             try:
                 file = open(file_or_filename, "rb")
                 case = pickle.load(file)
-            except:
-                logger.error("Error unpickling '%s'." % fname)
+            except Exception, detail:
+                logger.error("Error unpickling '%s': %s" % (fname, detail))
                 return None
             finally:
                 if file is not None:
@@ -73,17 +69,11 @@ class PickleReader(object):
 #  "PickleWriter" class:
 #------------------------------------------------------------------------------
 
-class PickleWriter(object):
+class PickleWriter(CaseWriter):
     """ Writes a case to file using pickle.
     """
 
-    def __call__(self, case, file_or_filename):
-        """ Calls the writer with the given file or file name.
-        """
-        self.write(case, file_or_filename)
-
-
-    def write(self, case, file_or_filename):
+    def write(self, file_or_filename):
         """ Writes the case to file using pickle.
         """
         if isinstance(file_or_filename, basestring):
@@ -93,16 +83,16 @@ class PickleWriter(object):
             file = None
             try:
                 file = open(file_or_filename, "wb")
-                pickle.dump(case, file)
-            except:
-                logger.error("Error writing to '%s'." % fname)
+                pickle.dump(self.case, file)
+            except Exception, detail:
+                logger.error("Error writing to '%s': %s" % (fname, detail))
                 return False
             finally:
                 if file is not None:
                     file.close()
         else:
             file = file_or_filename
-            pickle.dump(file, case)
+            pickle.dump(file, self.case)
 
         return True
 

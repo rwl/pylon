@@ -26,13 +26,15 @@ import time
 import logging
 
 from parsing_util \
-    import integer, boolean, real, scolon, psse_comment, comma_sep
+    import integer, boolean, real, psse_comment, comma_sep
 
 from pyparsing \
-    import Literal, Word, restOfLine, alphanums, printables, quotedString, \
-    White, OneOrMore, ZeroOrMore, Optional, alphas
+    import Literal, Word, restOfLine, printables, quotedString, OneOrMore, \
+    ZeroOrMore, Optional, alphas
 
 from pylon import Case, Bus, Branch, Generator
+
+from pylon.readwrite.common import CaseReader
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -44,24 +46,13 @@ logger = logging.getLogger(__name__)
 #  "PSSEReader" class:
 #-------------------------------------------------------------------------------
 
-class PSSEReader(object):
+class PSSEReader(CaseReader):
     """ Defines a reader of PSS/E data files that returns a case object.
     """
 
-    def __init__(self):
-        """ Initialises a new PSSEReader instance.
-        """
-        # Path to the data file or file object.
-        self.file_or_filename = None
-        # The resulting case.
-        self.case = None
-
-
-    def __call__(self, file_or_filename):
-        """ Calls the reader with the given file or file name.
-        """
-        self.read(file_or_filename)
-
+    #--------------------------------------------------------------------------
+    #  "CaseReader" interface:
+    #--------------------------------------------------------------------------
 
     def read(self, file_or_filename):
         """ Parses a PSS/E data file and returns a case object.
@@ -69,7 +60,6 @@ class PSSEReader(object):
         self.file_or_filename = file_or_filename
 
         logger.info("Parsing PSS/E case file [%s]." % file_or_filename)
-
         t0 = time.time()
 
         self.case = Case()
@@ -97,7 +87,7 @@ class PSSEReader(object):
                ZeroOrMore(psse_comment) + ZeroOrMore(transformer_data) + \
                ZeroOrMore(psse_comment)
 
-        data = case.parseFile(file_or_filename)
+        case.parseFile(file_or_filename)
 
         elapsed = time.time() - t0
         logger.info("PSS/E case file parsed in %.3fs." % elapsed)
@@ -105,7 +95,7 @@ class PSSEReader(object):
         return self.case
 
     #--------------------------------------------------------------------------
-    #  Construct getters:
+    #  "PSSEReader" interface:
     #--------------------------------------------------------------------------
 
     def _get_separator_construct(self):

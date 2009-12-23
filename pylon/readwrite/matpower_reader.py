@@ -34,19 +34,19 @@ from pyparsing import \
     alphas, Combine, printables
 
 from pylon.case import Case, Bus, Branch, Generator
+from pylon.readwrite.common import CaseReader
 
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
-#logger.setLevel(logging.INFO)
 
 #------------------------------------------------------------------------------
 #  "MATPOWERReader" class:
 #------------------------------------------------------------------------------
 
-class MATPOWERReader(object):
+class MATPOWERReader(CaseReader):
     """ Defines a method class for reading MATPOWER data files and
         returning a Case object.
     """
@@ -75,12 +75,6 @@ class MATPOWERReader(object):
         # when the cost data is processed. The presence of any left overs
         # is checked at the end of the parsing operation.
         self.generators = []
-
-
-    def __call__(self, file_or_filename):
-        """ Call the reader with something like reader(fd)
-        """
-        return self.read(file_or_filename)
 
     #--------------------------------------------------------------------------
     #  Parse a MATPOWER data file and return a case object

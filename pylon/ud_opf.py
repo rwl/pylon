@@ -70,7 +70,7 @@ class UDOPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, case=None, dc=True, solver=None, show_progress=False,
+    def __init__(self, case, dc=True, solver=None, show_progress=False,
             max_iterations=100, absolute_tol=1e-7, relative_tol=1e-6,
             feasibility_tol=1e-7):
         """ Initialises a new UDOPF instance.
@@ -102,11 +102,6 @@ class UDOPF(object):
         self.feasibility_tol = feasibility_tol
 
 
-    def __call__(self, case):
-        """ Calls the routine with the given case.
-        """
-        return self.solve(case)
-
     @property
     def f(self):
         """ Objective function value. Delegates to the routine used.
@@ -114,16 +109,14 @@ class UDOPF(object):
         return self.routine.f
 
 
-    def solve(self, case=None):
+    def solve(self):
         """ Solves the combined unit decommitment / optimal power flow problem.
         """
         t0 = time.time()
 
-        case = self.case if case is None else case
-        assert case is not None
+        case = self.case
 
         generators = case.online_generators
-        loads      = case.online_loads
 
         logger.info("Solving OPF with unit decommitment [%s]." % case.name)
 
@@ -152,7 +145,7 @@ class UDOPF(object):
             # Find generator with the maximum average cost at Pmin.
             avg_pmin_cost = [g.total_cost(g.p_min) / g.p_min for g in online]
             # Select at random from maximal generators with equal cost.
-            g_idx, value = fair_max(avg_pmin_cost)
+            g_idx, _ = fair_max(avg_pmin_cost)
             generator = online[g_idx]
 
             logger.info("Shutting down generator [%s] to satisfy all "
@@ -181,7 +174,7 @@ class UDOPF(object):
                                            abstol, reltol, feastol)
 
         # Initial solve fo the OPF problem.
-        success = routine(case)
+        success = routine.solve()
 
         if not success:
             logger.error("Non-convergent OPF [%s]." % routine)
@@ -266,7 +259,7 @@ class UDOPF(object):
 
         # One final solve using the best case to ensure all results are
         # up-to-date.
-        success = routine(case)
+        success = routine.solve()
 
         # Compute elapsed time and log it.
         elapsed = self.elapsed = time.time() - t0

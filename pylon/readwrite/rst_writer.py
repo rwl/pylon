@@ -22,315 +22,83 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pylon import Case, CaseReport
+from pylon import CaseReport
+from pylon.readwrite.common import CaseWriter
 
 #------------------------------------------------------------------------------
 #  "ReSTWriter" class:
 #------------------------------------------------------------------------------
 
-class ReSTWriter(object):
+class ReSTWriter(CaseWriter):
     """ Write case data to a file in ReStructuredText format.
     """
 
-    def __init__(self, case, file_or_filename, include_title=True,
-                 include_summary=True, include_bus_data=True,
-                 include_branch_data=True, include_generator_data=True):
-        """ Initialises new ReSTWriter instance.
-        """
-        self.case = case
-        self.file_or_filename = file_or_filename
+    #--------------------------------------------------------------------------
+    #  "CaseWriter" interface:
+    #--------------------------------------------------------------------------
 
-        self.include_title = include_title
-        self.include_summary = include_summary
-        self.include_bus_data = include_bus_data
-        self.include_branch_data = include_branch_data
-        self.include_generator_data = include_generator_data
-
-
-    def __call__(self, case, file_or_filename):
-        """ Calls the writer with the given case.
-        """
-        self.write()
-
-
-    def write(self):
+    def _write_data(self, file):
         """ Writes case data to file in ReStructuredText format.
         """
-        case = self.case
-        file_or_filename = self.file_or_filename
+        self.write_case_data(file)
 
-        file = _get_file(file_or_filename)
+        file.write("Bus Data\n")
+        file.write("-" * 8 + "\n")
+        self.write_bus_data(file)
+        file.write("\n")
 
-        self.write_header(case, file)
+        file.write("Branch Data\n")
+        file.write("-" * 11 + "\n")
+        self.write_branch_data(file)
+        file.write("\n")
 
-        # Section II.
-        if self.include_bus_data:
-            file.write("Bus Data\n")
-            file.write("-" * 8 + "\n")
-            self.write_bus_data(case, file)
-            file.write("\n")
-
-        # Section III.
-        if self.include_branch_data:
-            file.write("Branch Data\n")
-            file.write("-" * 11 + "\n")
-            self.write_branch_data(case, file)
-            file.write("\n")
-
-        # Section IV
-        if self.include_generator_data:
-            file.write("Generator Data\n")
-            file.write("-" * 14 + "\n")
-            self.write_generator_data(case, file)
-            file.write("\n")
-
-        # Close if passed the name of a file.
-        if isinstance(file_or_filename, basestring):
-            file.close()
+        file.write("Generator Data\n")
+        file.write("-" * 14 + "\n")
+        self.write_generator_data(file)
+        file.write("\n")
 
 
-    def write_header(self, case, file):
+    def write_case_data(self, file):
         """ Writes the header to file.
         """
-        # Document title.
-        if self.include_title:
-            title = "Power Flow Solution"
-            file.write("=" * len(title))
-            file.write("\n")
-            file.write(title)
-            file.write("\n")
-            file.write("=" * len(title))
-            file.write("\n")
-
-            # Document subtitle.
-            subtitle = case.name
-            file.write("-" * len(subtitle))
-            file.write("\n")
-            file.write(subtitle)
-            file.write("\n")
-            file.write("-" * len(subtitle))
-            file.write("\n")
-
-        # Section I.
-        if self.include_summary:
-            file.write("System Summary\n")
-            file.write("-" * 14)
-            file.write("\n")
-
-            self.write_how_many(case, file)
-            self.write_how_much(case, file)
-            self.write_min_max(case, file)
-
-
-    def write_how_many(self, case=None, file_or_filename=None):
-        """ Writes component numbers to a table.
-        """
-        case = self.case if case is None else case
-
-        report = CaseReport(case)
-
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
-
-        file = _get_file(file_or_filename)
-
-        # Map component labels to attribute names
-        components = [("Bus", "n_buses"), ("Generator", "n_generators"),
-            ("Committed Generator", "n_committed_generators"),
-            ("Load", "n_loads"), ("Fixed Load", "n_fixed"),
-            ("Despatchable Load", "n_despatchable"),# ("Shunt", "n_shunts"),
-            ("Branch", "n_branches"), ("Transformer", "n_transformers"),
-#            ("Inter-tie", "n_inter_ties"), ("Area", "n_areas")
-        ]
-
-        # Column 1 width
-        longest = max([len(c[0]) for c in components])
-
-        col1_header = "Object"
-        col1_width = longest
-        col2_header = "Quantity"
-        col2_width = len(col2_header)
-
-        # Row separator
-        sep = "="*col1_width + " " + "="*col2_width + "\n"
-
-        # Row headers
-        file.write(sep)
-
-        file.write(col1_header.center(col1_width))
-        file.write(" ")
-        file.write("%s\n" % col2_header.center(col2_width))
-
-        file.write(sep)
-
-        # Rows
-        for label, attr in components:
-            col2_value = str(getattr(report, attr))
-            file.write("%s %s\n" %
-                (label.ljust(col1_width), col2_value.rjust(col2_width)))
-        else:
-            file.write(sep)
-            file.write("\n")
-
-        if isinstance(file_or_filename, basestring):
-            file.close()
-
-        del report
-
-
-    def write_how_much(self, case=None, file_or_filename=None):
-        """ Write component quantities to a table.
-        """
-        case = self.case if case is None else case
-
-        report = CaseReport(case)
-
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
-
-        file = _get_file(file_or_filename)
-
-        col1_header = "Attribute"
-        col1_width  = 24
-        col2_header = "P (MW)"
-        col3_header = "Q (MVAr)"
-        col_width   = 8
-
-        sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
-
-        # Row headers
-        file.write(sep)
-
-        file.write("%s" % col1_header.center(col1_width))
-        file.write(" ")
-        file.write("%s" % col2_header.center(col_width))
-        file.write(" ")
-        file.write("%s" % col3_header.center(col_width))
+        title = "Power Flow Solution"
+        file.write("=" * len(title))
+        file.write("\n")
+        file.write(title)
+        file.write("\n")
+        file.write("=" * len(title))
         file.write("\n")
 
-        file.write(sep)
-
-        # Rows
-        val = getattr(report, "total_gen_capacity")
-        file.write("%s %8.1f %8.1f\n" %
-            ("Total Gen Capacity".ljust(col1_width), val.real, val.imag))
-
-        val = getattr(report, "online_capacity")
-        file.write("%s %8.1f %8.1f\n" %
-            ("On-line Capacity".ljust(col1_width), val.real, val.imag))
-
-        val = getattr(report, "generation_actual")
-        file.write("%s %8.1f %8.1f\n" %
-            ("Generation (actual)".ljust(col1_width), val.real, val.imag))
-
-        val = getattr(report, "load")
-        file.write("%s %8.1f %8.1f\n" %
-            ("Load".ljust(col1_width), val.real, val.imag))
-
-        val = getattr(report, "fixed_load")
-        file.write("%s %8.1f %8.1f\n" %
-            ("  Fixed".ljust(col1_width), val.real, val.imag))
-
-        val = getattr(report, "despatchable_load")
-        file.write("%s %8.1f %8.1f\n" %
-            ("  Despatchable".ljust(col1_width), val.real, val.imag))
-
-#        val = getattr(report, "shunt_injection")
-#        file.write("%s %8.1f %8.1f\n" %
-#            ("Shunt (inj)".ljust(col1_width), val.real, val.imag))
-
-        val = getattr(report, "losses")
-        file.write("%s %8.1f %8.1f\n" %
-            ("Losses".ljust(col1_width), val.real, val.imag))
-
-        val = getattr(report, "branch_charging")
-        file.write("%s %8.1f %8.1f\n" %
-            ("Branch Charging (inj)".ljust(col1_width), val.real, val.imag))
-
-#        val = getattr(report, "total_inter_tie_flow")
-#        file.write("%s %8.1f %8.1f\n" %
-#            ("Total Inter-tie Flow".ljust(col1_width), val.real, val.imag))
-
-        file.write(sep)
+        # Document subtitle.
+        subtitle = self.case.name
+        file.write("-" * len(subtitle))
+        file.write("\n")
+        file.write(subtitle)
+        file.write("\n")
+        file.write("-" * len(subtitle))
         file.write("\n")
 
-        if isinstance(file_or_filename, basestring):
-            file.close()
-
-        del report
-
-
-    def write_min_max(self, case=None, file_or_filename=None):
-        """ Writes minimum and maximum values to a table.
-        """
-        case = self.case if case is None else case
-
-        report = CaseReport(case)
-
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
-
-        file = _get_file(file_or_filename)
-
-        col1_header = "Attribute"
-        col1_width  = 19
-        col2_header = "Minimum"
-        col3_header = "Maximum"
-        col_width   = 16
-
-        sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
-
-        # Row headers
-        file.write(sep)
-
-        file.write("%s" % col1_header.center(col1_width))
-        file.write(" ")
-        file.write("%s" % col2_header.center(col_width))
-        file.write(" ")
-        file.write("%s" % col3_header.center(col_width))
+        file.write("System Summary\n")
+        file.write("-" * 14)
         file.write("\n")
 
-        file.write(sep)
-
-        # Rows
-        min_val = getattr(report, "min_voltage_amplitude")
-        max_val = getattr(report, "max_voltage_amplitude")
-        file.write("%s %16.1f %16.1f\n" %
-            ("Voltage Amplitude".ljust(col1_width), min_val, max_val))
-
-        min_val = getattr(report, "min_voltage_phase")
-        max_val = getattr(report, "max_voltage_phase")
-        file.write("%s %16.1f %16.1f\n" %
-            ("Voltage Phase Angle".ljust(col1_width), min_val, max_val))
-
-        file.write(sep)
-        file.write("\n")
-
-        if isinstance(file_or_filename, basestring):
-            file.close()
-
-        del report
+        self.write_how_many(file)
+        self.write_how_much(file)
+        self.write_min_max(file)
 
 
-    def write_bus_data(self, case=None, file_or_filename=None):
+    def write_bus_data(self, file):
         """ Writes bus data to a ReST table.
         """
-        case = self.case if case is None else case
+        report = CaseReport(self.case)
 
-        report = CaseReport(case)
-
-        buses = case.buses
-
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
-
-        file = _get_file(file_or_filename)
+        buses = self.case.buses
 
         col_width = 8
         col_width_2 = col_width*2+1
         col1_width = 6
 
-        sep = "="*6 + " " + ("="*col_width + " ")*6 + "\n"
+        sep = "=" * 6 + " " + ("=" * col_width + " ") * 6 + "\n"
 
         file.write(sep)
 
@@ -341,7 +109,7 @@ class ReSTWriter(object):
         file.write("Load".center(col_width_2) + " ")
         file.write("\n")
 
-        file.write("-"*col1_width +" "+ ("-"*col_width_2 +" ")*3 + "\n")
+        file.write("-" * col1_width +" "+ ("-" * col_width_2 + " ") * 3 + "\n")
 
         # Line two of column header
         file.write("..".ljust(col1_width) + " ")
@@ -360,10 +128,10 @@ class ReSTWriter(object):
             file.write(bus.name[:col1_width].ljust(col1_width) + " ")
             file.write("%8.3f" % bus.v_magnitude + " ")
             file.write("%8.3f" % bus.v_angle + " ")
-            file.write("%8.2f" % case.p_supply(bus) + " ")
-            file.write("%8.2f" % case.q_supply(bus) + " ")
-            file.write("%8.2f" % case.p_demand(bus) + " ")
-            file.write("%8.2f" % case.q_demand(bus) + " ")
+            file.write("%8.2f" % self.case.p_supply(bus) + " ")
+            file.write("%8.2f" % self.case.q_supply(bus) + " ")
+            file.write("%8.2f" % self.case.p_demand(bus) + " ")
+            file.write("%8.2f" % self.case.q_demand(bus) + " ")
             file.write("\n")
 
         # Totals
@@ -382,25 +150,15 @@ class ReSTWriter(object):
 
         file.write(sep)
 
-        if isinstance(file_or_filename, basestring):
-            file.close()
-
         del report
 
 
-    def write_branch_data(self, case=None, file_or_filename=None):
+    def write_branch_data(self, file):
         """ Writes branch data to a ReST table.
         """
-        case = self.case if case is None else case
+        report = CaseReport(self.case)
 
-        report = CaseReport(case)
-
-        branches = case.branches
-
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
-
-        file = _get_file(file_or_filename)
+        branches = self.case.branches
 
         col_width   = 8
         col_width_2 = col_width*2+1
@@ -463,25 +221,15 @@ class ReSTWriter(object):
 
         file.write(sep)
 
-        if isinstance(file_or_filename, basestring):
-            file.close()
-
         del report
 
 
-    def write_generator_data(self, case=None, file_or_filename=None):
+    def write_generator_data(self, file):
         """ Writes generator data to a ReST table.
         """
-        case = self.case if case is None else case
+        report = CaseReport(self.case)
 
-        report = CaseReport(case)
-
-        generators = case.generators
-
-        if file_or_filename is None:
-            file_or_filename = self.file_or_filename
-
-        file = _get_file(file_or_filename)
+        generators = self.case.generators
 
         col_width   = 8
         col_width_2 = col_width*2+1
@@ -564,8 +312,168 @@ class ReSTWriter(object):
 
         file.write(sep)
 
-        if isinstance(file_or_filename, basestring):
-            file.close()
+        del report
+
+    #--------------------------------------------------------------------------
+    #  "ReSTWriter" interface:
+    #--------------------------------------------------------------------------
+
+    def write_how_many(self, file):
+        """ Writes component numbers to a table.
+        """
+        report = CaseReport(self.case)
+
+        # Map component labels to attribute names
+        components = [("Bus", "n_buses"), ("Generator", "n_generators"),
+            ("Committed Generator", "n_committed_generators"),
+            ("Load", "n_loads"), ("Fixed Load", "n_fixed"),
+            ("Despatchable Load", "n_despatchable"),# ("Shunt", "n_shunts"),
+            ("Branch", "n_branches"), ("Transformer", "n_transformers"),
+#            ("Inter-tie", "n_inter_ties"), ("Area", "n_areas")
+        ]
+
+        # Column 1 width
+        longest = max([len(c[0]) for c in components])
+
+        col1_header = "Object"
+        col1_width = longest
+        col2_header = "Quantity"
+        col2_width = len(col2_header)
+
+        # Row separator
+        sep = "="*col1_width + " " + "="*col2_width + "\n"
+
+        # Row headers
+        file.write(sep)
+
+        file.write(col1_header.center(col1_width))
+        file.write(" ")
+        file.write("%s\n" % col2_header.center(col2_width))
+
+        file.write(sep)
+
+        # Rows
+        for label, attr in components:
+            col2_value = str(getattr(report, attr))
+            file.write("%s %s\n" %
+                (label.ljust(col1_width), col2_value.rjust(col2_width)))
+        else:
+            file.write(sep)
+            file.write("\n")
+
+        del report
+
+
+    def write_how_much(self, file):
+        """ Write component quantities to a table.
+        """
+        report = CaseReport(self.case)
+
+        col1_header = "Attribute"
+        col1_width  = 24
+        col2_header = "P (MW)"
+        col3_header = "Q (MVAr)"
+        col_width   = 8
+
+        sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
+
+        # Row headers
+        file.write(sep)
+
+        file.write("%s" % col1_header.center(col1_width))
+        file.write(" ")
+        file.write("%s" % col2_header.center(col_width))
+        file.write(" ")
+        file.write("%s" % col3_header.center(col_width))
+        file.write("\n")
+
+        file.write(sep)
+
+        # Rows
+        val = getattr(report, "total_gen_capacity")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Total Gen Capacity".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(report, "online_capacity")
+        file.write("%s %8.1f %8.1f\n" %
+            ("On-line Capacity".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(report, "generation_actual")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Generation (actual)".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(report, "load")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Load".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(report, "fixed_load")
+        file.write("%s %8.1f %8.1f\n" %
+            ("  Fixed".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(report, "despatchable_load")
+        file.write("%s %8.1f %8.1f\n" %
+            ("  Despatchable".ljust(col1_width), val.real, val.imag))
+
+#        val = getattr(report, "shunt_injection")
+#        file.write("%s %8.1f %8.1f\n" %
+#            ("Shunt (inj)".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(report, "losses")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Losses".ljust(col1_width), val.real, val.imag))
+
+        val = getattr(report, "branch_charging")
+        file.write("%s %8.1f %8.1f\n" %
+            ("Branch Charging (inj)".ljust(col1_width), val.real, val.imag))
+
+#        val = getattr(report, "total_inter_tie_flow")
+#        file.write("%s %8.1f %8.1f\n" %
+#            ("Total Inter-tie Flow".ljust(col1_width), val.real, val.imag))
+
+        file.write(sep)
+        file.write("\n")
+
+        del report
+
+
+    def write_min_max(self, file):
+        """ Writes minimum and maximum values to a table.
+        """
+        report = CaseReport(self.case)
+
+        col1_header = "Attribute"
+        col1_width  = 19
+        col2_header = "Minimum"
+        col3_header = "Maximum"
+        col_width   = 16
+
+        sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
+
+        # Row headers
+        file.write(sep)
+
+        file.write("%s" % col1_header.center(col1_width))
+        file.write(" ")
+        file.write("%s" % col2_header.center(col_width))
+        file.write(" ")
+        file.write("%s" % col3_header.center(col_width))
+        file.write("\n")
+
+        file.write(sep)
+
+        # Rows
+        min_val = getattr(report, "min_voltage_amplitude")
+        max_val = getattr(report, "max_voltage_amplitude")
+        file.write("%s %16.1f %16.1f\n" %
+            ("Voltage Amplitude".ljust(col1_width), min_val, max_val))
+
+        min_val = getattr(report, "min_voltage_phase")
+        max_val = getattr(report, "max_voltage_phase")
+        file.write("%s %16.1f %16.1f\n" %
+            ("Voltage Phase Angle".ljust(col1_width), min_val, max_val))
+
+        file.write(sep)
+        file.write("\n")
 
         del report
 
@@ -577,99 +485,38 @@ class ReSTExperimentWriter(object):
     """ Writes market experiment data to file in ReStructuredText format.
     """
 
-    def __init__(self, include_state=True, include_action=True,
-                                           include_reward=True):
+    def __init__(self, experiment):
         """ Initialises a new ReSTExperimentWriter instance.
         """
-        # Sections to include.
-        self.include_state  = include_state
-        self.include_action = include_action
-        self.include_reward = include_reward
-
         # Market experiment whose data is to be written.
         self.experiment = None
 
-        # File object or name of a file to be written to.
-        self.file_or_filename = None
 
-
-    def __call__(self, experiment, file_or_filename):
+    def write(self, file):
         """ Writes market experiment data to file in ReStructuredText format.
         """
-        self.experiment = experiment
-        self.file_or_filename = file_or_filename
-
-        file = _get_file(file_or_filename)
-
         # Write environment state data.
-        if self.include_state:
-            file.write("State\n")
-            file.write( ("-" * 5) + "\n")
-
-            self.write_state_data(experiment, file)
+        file.write("State\n")
+        file.write( ("-" * 5) + "\n")
+        self.write_data_table(file, type="state")
 
         # Write action data.
-        if self.include_action:
-            file.write("Action\n")
-            file.write( ("-" * 6) + "\n")
-
-            self.write_action_data(experiment, file)
+        file.write("Action\n")
+        file.write( ("-" * 6) + "\n")
+        self.write_data_table(file, type="action")
 
         # Write reward data.
-        if self.include_reward:
-            file.write("Reward\n")
-            file.write( ("-" * 6) + "\n")
-
-            self.write_reward_data(experiment, file)
-
-        if isinstance(file_or_filename, basestring):
-            file.close()
+        file.write("Reward\n")
+        file.write( ("-" * 6) + "\n")
+        self.write_data_table(file, type="reward")
 
 
-    def write_state_data(self, experiment, file_or_filename):
-        """ Writes the state history for each agent in a market experiment
-            to a ReST table.
-        """
-        file = _get_file(file_or_filename)
-
-        self._write_data_table(experiment, file, type="state")
-
-        if isinstance(file_or_filename, basestring):
-            file.close()
-
-
-    def write_action_data(self, experiment, file_or_filename):
-        """ Writes the action history for each agent in a market experiment
-            to a ReST table.
-        """
-        file = _get_file(file_or_filename)
-
-        self._write_data_table(experiment, file, type="action")
-
-        if isinstance(file_or_filename, basestring):
-            file.close()
-
-
-    def write_reward_data(self, experiment, file_or_filename):
-        """ Writes the reward history for each agent in a market experiment
-            to a ReST table.
-        """
-        file = _get_file(file_or_filename)
-
-        self._write_data_table(experiment, file, type="reward")
-
-        if isinstance(file_or_filename, basestring):
-            file.close()
-
-
-    def _write_data_table(self, experiment, file_or_filename, type):
+    def write_data_table(self, file, type):
         """ Writes agent data to an ReST table.  The 'type' argument may
             be 'state', 'action' or 'reward'.
         """
-        agents = experiment.agents
-        n_agents = len(experiment.agents)
-
-        file = _get_file(file_or_filename)
+        agents = self.experiment.agents
+        n_agents = len(self.experiment.agents)
 
         col_width = 8
         idx_col_width = 3
@@ -690,9 +537,9 @@ class ReSTExperimentWriter(object):
 
         # Table values.
         if agents:
-            rows, cols = agents[0].history.getField( type ).shape
+            rows, _ = agents[0].history.getField( type ).shape
         else:
-            rows, cols = (0, 0)
+            rows, _ = (0, 0)
 
         for sequence in range( min(rows, 999) ):
             file.write( str(sequence + 1).rjust(idx_col_width) + " " )
@@ -705,16 +552,5 @@ class ReSTExperimentWriter(object):
             file.write("\n")
 
         file.write(sep)
-
-
-def _get_file(file_or_filename):
-    """ Returns an open file from a file or a filename.
-    """
-    if isinstance(file_or_filename, basestring):
-        file = open(file_or_filename, "wb")
-    else:
-        file = file_or_filename
-
-    return file
 
 # EOF -------------------------------------------------------------------------

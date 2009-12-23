@@ -24,28 +24,35 @@
 
 import csv
 
-from common import bus_attrs, branch_attrs, generator_attrs
+from common import CaseWriter, BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
 #------------------------------------------------------------------------------
 #  "CSVWriter" class:
 #------------------------------------------------------------------------------
 
-class CSVWriter(object):
+class CSVWriter(CaseWriter):
     """ Writes case data to file as CSV.
     """
 
-    def __call__(self, case, file_or_filename):
-        """ Calls the writer with the given case.
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __init__(self, case):
+        """ Initialises a new CSVWriter instance.
         """
-        self.write(case, file_or_filename)
+        super(CSVWriter, self).__init__(case)
 
+        # For writing CSV files.
+        self.writer = None
 
-    def write(self, case, file_or_filename):
-        """ Writes case data to file as CSV.
+    #--------------------------------------------------------------------------
+    #  "CaseReader" interface:
+    #--------------------------------------------------------------------------
+
+    def write(self, file_or_filename):
+        """ Writes case data as CSV.
         """
-        self.case = case
-        self.file_or_filename = file_or_filename
-
         if isinstance(file_or_filename, basestring):
             file = open(file_or_filename, "wb")
         else:
@@ -53,69 +60,53 @@ class CSVWriter(object):
 
         self.writer = csv.writer(file)
 
-        self.write_generator_data(case, file)
-        self.write_branch_data(case, file)
-        self.write_generator_data(case, file)
-        self.write_load_data(case, file)
-        self.write_generator_cost_data(case, file)
-
-        file.close()
+        super(CSVWriter, self).write(file)
 
 
-    def write_header(self, case, file):
-        """ Writes the header to file.
+    def write_case_data(self, file):
+        """ Writes the case data as CSV.
         """
-        pass
+        writer = self._get_writer(file)
+        writer.writerow(["Name", "base_mva"])
+        writer.writerow([self.case.name, self.case.base_mva])
 
 
-    def write_bus_data(self, case, file):
-        """ Writes bus data to file.
+    def write_bus_data(self, file):
+        """ Writes bus data as CSV.
         """
-        self.writer.writerow(bus_attrs)
-
-        for bus in case.buses:
-            values = [getattr(bus, attr) for attr in bus_attrs]
-            writer.writerow(values)
-            del values
+        writer = self._get_writer(file)
+        writer.writerow(BUS_ATTRS)
+        for bus in self.case.buses:
+            writer.writerow([getattr(bus, attr) for attr in BUS_ATTRS])
 
 
-    def write_branch_data(self, case, file):
-        """ Writes branch data to file.
+    def write_branch_data(self, file):
+        """ Writes branch data as CSV.
         """
-        self.writer.writerow(branch_attrs)
-
-        for branch in case.branches:
-            values = [getattr(branch, attr) for attr in branch_attrs]
-            writer.writerow(values)
-            del values
+        writer = self._get_writer(file)
+        writer.writerow(BRANCH_ATTRS)
+        for branch in self.case.branches:
+            writer.writerow([getattr(branch, a) for a in BRANCH_ATTRS])
 
 
-    def write_generator_data(self, case, file):
-        """ Write generator data to file.
+    def write_generator_data(self, file):
+        """ Write generator data as CSV.
         """
-        self.writer.writerow(["bus"] + generator_attrs)
+        writer = self._get_writer(file)
+        writer.writerow(["bus"] + GENERATOR_ATTRS)
 
-        for generator in case.generators:
-            values = [getattr(generator, attr) for attr in generator_attrs]
-            writer.writerow([i] + values)
-            del values
+        for g in self.case.generators:
+            i = self.case.buses.index(g.bus)
+            writer.writerow([i] + [getattr(g,a) for a in GENERATOR_ATTRS])
 
+    #--------------------------------------------------------------------------
+    #  "CSVReader" interface:
+    #--------------------------------------------------------------------------
 
-#    def write_load_data(self, case, file):
-#        """ Writes load data to file.
-#        """
-#        writer.writerow(["bus"] + load_attrs)
-#
-#        for i, bus in enumerate(case.buses):
-#            for load in bus.loads:
-#                values = [getattr(load, attr) for attr in load_attrs]
-#                writer.writerow([i] + values)
-#                del values
-
-
-    def write_generator_cost_data(self, case, file):
-        """ Writes generator cost data to file.
-        """
-        pass
+    def _get_writer(self, file):
+        if self.writer is None:
+            return csv.writer(file)
+        else:
+            return self.writer
 
 # EOF -------------------------------------------------------------------------

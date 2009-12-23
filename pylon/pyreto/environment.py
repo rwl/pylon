@@ -87,7 +87,6 @@ class ParticipantEnvironment(GraphicalEnvironment):
         self.p_min = asset.p_min
         # Marginal cost function proportional to current capacity.  Agents may
         # offer/bid above or below marginal cost.
-        assert asset.cost_model == "pwl"
         self.marginal_cost = asset.pwl_points
 #        # Amortised fixed costs.
 #        self.c_startup = asset.c_startup

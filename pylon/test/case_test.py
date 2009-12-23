@@ -72,8 +72,12 @@ class CaseTest(unittest.TestCase):
     def test_save_matpower(self):
         """ Test saving a case in MATPOWER format.
         """
-        _, tmp_name = tempfile.mkstemp(".m")
+        tmp_fd, tmp_name = tempfile.mkstemp(".m")
+        os.close(tmp_fd)
         os.remove(tmp_name)
+#        os.unlink(tmp_name)
+
+        self.assertFalse(exists(tmp_name))
 
         self.case.save(tmp_name)
 

@@ -58,7 +58,7 @@ class DCOPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, case=None, solver=None, show_progress=True,
+    def __init__(self, case, solver=None, show_progress=True,
             max_iterations=100, absolute_tol=1e-7, relative_tol=1e-6,
             feasibility_tol=1e-7):
         """ Initialises the new DCOPF instance.
@@ -66,6 +66,7 @@ class DCOPF(object):
         # Choice of solver (May be None or "mosek" (or "glpk" for linear
         # formulation)). Specify None to use the Python solver from CVXOPT.
         self.solver = solver
+
         # Turns the output to the screen on or off.
         self.show_progress = show_progress
         # Maximum number of iterations.
@@ -125,20 +126,12 @@ class DCOPF(object):
         self.t_elapsed = 0.0
 
 
-    def __call__(self, case):
-        """ Call the routine using routine(n).
-        """
-        return self.solve(case)
-
-
-    def solve(self, case=None):
+    def solve(self):
         """ Solves a DC OPF.
         """
+        case = self.case
+
         t0 = time.time()
-
-        case = self.case if case is None else case
-        self.case = case
-
         logger.info("Solving DC OPF [%s]." % case.name)
 
         # Algorithm parameters.
@@ -204,7 +197,7 @@ class DCOPF(object):
             self.x = solution["x"]
             self._update_solution_data(solution)
             logger.info("Unknown solution status found in %.3fs. The " \
-                "solution may be fairly accurate. Try using a different " \
+                "solution may be fairly accurate. \nTry using a different " \
                 "solver or relaxing the tolerances." % t_elapsed)
             return True
         elif solution["status"] == "error":

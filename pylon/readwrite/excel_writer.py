@@ -22,96 +22,66 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pyExcelerator import Workbook, Font, XFStyle, Borders
+from pyExcelerator import Workbook
 
-from common import bus_attrs, branch_attrs, generator_attrs
+from common import CaseWriter, BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
 #------------------------------------------------------------------------------
 #  "ExcelWriter" class:
 #------------------------------------------------------------------------------
 
-class ExcelWriter(object):
+class ExcelWriter(CaseWriter):
     """ Writes case data to file in Excel format.
     """
 
-    def __call__(self, case, file_or_filename):
-        """ Calls the writer with the given case.
-        """
-        self.write(case, file_or_filename)
-
-
-    def write(self, case, file_or_filename):
+    def write(self, file_or_filename):
         """ Writes case data to file in Excel format.
         """
-        self.case = case
-        self.file_or_filename = file_or_filename
-
         self.book = Workbook()
-
-        self.write_generator_data(case, file)
-        self.write_branch_data(case, file)
-        self.write_generator_data(case, file)
-#        self.write_load_data(case, file)
-
-        book.save(file_or_filename)
+        self._write_data(None)
+        self.book.save(file_or_filename)
 
 
-    def write_header(self, case, file):
+    def write_case_data(self, file):
         """ Writes the header to file.
         """
-        pass
+        case_sheet = self.book.add_sheet("Case")
+        case_sheet.write(0, 0, "Name")
+        case_sheet.write(0, 1, self.case.name)
+        case_sheet.write(1, 0, "base_mva")
+        case_sheet.write(1, 1, self.case.base_mva)
 
 
-    def write_bus_data(self, case, file):
-        """ Writes bus data to file.
+    def write_bus_data(self, file):
+        """ Writes bus data to an Excel spreadsheet.
         """
-        bus_sheet = book.add_sheet("Buses")
+        bus_sheet = self.book.add_sheet("Buses")
 
-        for i, bus in enumerate(case.buses):
-            for j, attr in enumerate(bus_attrs):
+        for i, bus in enumerate(self.case.buses):
+            for j, attr in enumerate(BUS_ATTRS):
                 bus_sheet.write(i, j, getattr(bus, attr))
 
 
-    def write_branch_data(self, case, file):
-        """ Writes branch data to file.
+    def write_branch_data(self, file):
+        """ Writes branch data to an Excel spreadsheet.
         """
-        branch_sheet = book.add_sheet("Branches")
+        branch_sheet = self.book.add_sheet("Branches")
 
-        for i, branch in enumerate(case.branches):
-            for j, attr in enumerate(branch_attrs):
+        for i, branch in enumerate(self.case.branches):
+            for j, attr in enumerate(BRANCH_ATTRS):
                 branch_sheet.write(i, j, getattr(branch, attr))
 
 
-    def write_generator_data(self, case, file):
+    def write_generator_data(self, file):
         """ Write generator data to file.
         """
-        generator_sheet = book.add_sheet("Generators")
+        generator_sheet = self.book.add_sheet("Generators")
 
-        for j, generator in enumerate(case.generators):
-            i = case.buses.index(generator.bus)
-            for k, attr in enumerate(generator_attrs):
+        for j, generator in enumerate(self.case.generators):
+            i = self.case.buses.index(generator.bus)
+            for k, attr in enumerate(GENERATOR_ATTRS):
                 generator_sheet.write(j, 0, i)
-#                generator_sheet.write(j, k+1, getattr(generator, attr))
-
-
-#    def write_load_data(self, case, file):
-#        """ Writes load data to file.
-#        """
-#        load_sheet = book.add_sheet("Loads")
-#
-#        for i, attr in enumerate(load_attrs):
-#            load_sheet.write(0, i, attr)
-#
-#        for i, bus, in enumerate(case.buses):
-#            for j, load in enumerate(bus.loads):
-#                for k, attr in enumerate(load_attrs):
-#                    load_sheet.write(j+1, 0, i)
-#                    load_sheet.write(j+1, k+1, getattr(load, attr))
-
-
-    def write_generator_cost_data(self, case, file):
-        """ Writes generator cost data to file.
-        """
-        pass
+                # FIXME: Cast cost_coeffs tuple.
+#                generator_sheet.write(j, k + 1, getattr(generator, attr))
 
 # EOF -------------------------------------------------------------------------

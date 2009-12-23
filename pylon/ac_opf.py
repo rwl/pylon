@@ -75,34 +75,34 @@ class ACOPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, solver=None, show_progress=True, max_iterations=100,
-            absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
-            refinement=1):
+    def __init__(self, case, show_progress=True, max_iterations=100,
+                 absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
+                 refinement=1):
         """ Initialises a new ACOPF instance.
         """
-        # Choice of solver. Included to comply with OPF interface.
-        self.solver = solver
         # Turns the output to the screen on or off.
         self.show_progress = show_progress
+
         # Maximum number of iterations.
         self.max_iterations = max_iterations
+
         # Absolute accuracy.
         self.absolute_tol = absolute_tol
+
         # Relative accuracy.
         self.relative_tol = relative_tol
+
         # Tolerance for feasibility conditions.
         self.feasibility_tol = feasibility_tol
+
         # Number of iterative refinement steps when solving KKT equations.
         self.refinement = refinement
 
-
-    def __call__(self, case):
-        """ Calls the routine with the given case.
-        """
-        self.solve(case)
+        # Solved case.
+        self.case = case
 
 
-    def solve(self, case=None):
+    def solve(self):
         """ Solves AC OPF for the given case.
         """
         t0 = time.time()
@@ -405,128 +405,128 @@ class ACOPF(object):
 #  "dS_dV" function:
 #------------------------------------------------------------------------------
 
-def dSbus_dV(Y, v):
-    """ Computes the partial derivative of power injection w.r.t. voltage.
-
-        References:
-            Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
-            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
-    """
-    j = 0 + 1j
-    n = len(v)
-    i = Y * v
-
-    diag_v = spdiag(v)
-    diag_i = spdiag(i)
-    diag_vnorm = spdiag(div(v, abs(v))) # Element-wise division.
-
-    ds_dvm = diag_v * conj(Y * diag_vnorm) + conj(diag_i) * diag_vnorm
-    ds_dva = j * diag_v * conj(diag_i - Y * diag_v)
-
-    return ds_dvm, ds_dva
-
-#------------------------------------------------------------------------------
-#  "dSbr_dV" function:
-#------------------------------------------------------------------------------
-
-def dSbr_dV(buses, branches, Y_source, Y_target, v):
-    """ Computes the branch power flow vector and the partial derivative of
-        branch power flow w.r.t voltage.
-
-        References:
-            Ray Zimmerman, "dSbr_dV.m", MATPOWER, version 3.2,
-            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
-    """
-    j = 0 + 1j
-    n_branches = len(branches)
-    n_buses = len(v)
-
-    source_idxs = matrix([buses.index(e.source_bus) for e in branches])
-    target_idxs = matrix([buses.index(e.target_bus) for e in branches])
-
-    # Compute currents.
-    i_source = Y_source * v
-    i_target = Y_target * v
-
-    # dV/dVm = diag(V./abs(V))
-    v_norm = div(v, abs(v))
-
-    diagVsource = spdiag(v[source_idxs])
-    diagIsource = spdiag(i_source)
-    diagVtarget = spdiag(v[target_idxs])
-    diagItarget = spdiag(i_target)
-    diagV = spdiag(v)
-    diagVnorm = spdiag(v_norm)
-
-    # Partial derivative of S w.r.t voltage phase angle.
-    dSf_dVa = j * (conj(diagIsource) * spmatrix(v[source_idx],
-                                                range(n_branches),
-                                                source_idxs,
-                                                (n_branches, n_buses)) - \
-        diagVsource * conj(Y_source * diagV))
-
-    dSt_dVa = j * (conj(diagItarget) * spmatrix(v[target_idx],
-                                                range(n_branches),
-                                                target_idxs,
-                                                (n_branches, n_buses)) - \
-        diagVtarget * conj(Y_target * diagV))
-
-    # Partial derivative of S w.r.t. voltage amplitude.
-    dSf_dVm = diagVsource * conj(Y_source * diagVnorm) + conj(diagIsource) * \
-        spmatrix(v_norm[source_idxs], range(n_branches),
-            source_idxs, (n_branches, n_buses))
-
-    dSt_dVm = diagVtarget * conj(Y_target * diagVnorm) + conj(diagItarget) * \
-        spmatrix(v_norm[target_idxs], range(n_branches),
-            target_idxs, (n_branches, n_buses))
-
-    # Compute power flow vectors.
-    s_source = mul(v[source_idxs], conj(i_source))
-    s_target = mul(v[target_idxs], conj(i_target))
-
-    return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target
-
-#------------------------------------------------------------------------------
-#  "dAbr_dV" function:
-#------------------------------------------------------------------------------
-
-def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
-    """ Computes the partial derivatives of apparent power flow w.r.t voltage.
-
-        References:
-            Ray Zimmerman, "dAbr_dV.m", MATPOWER, version 3.2,
-            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
-    """
-#    n_branches = len(s_source)
-
-    # Compute apparent powers.
-    a_source = abs(s_source)
-    a_target = abs(s_target)
-
-    # Compute partial derivative of apparent power w.r.t active and
-    # reactive power flows.  Partial derivative must equal 1 for lines with
-    # zero flow to avoid division by zero errors (1 comes from L'Hopital).
-    def zero2one(x):
-        if x != 0: return x
-        else: return 1.0
-
-    p_source = div(s_source.real(), map(zero2one, a_source))
-    q_source = div(s_target.imag(), map(zero2one, a_source))
-    p_target = div(s_target.real(), map(zero2one, a_target))
-    q_target = div(s_target.imag(), map(zero2one, a_target))
-
-    dAf_dPf = spdiag(p_source)
-    dAf_dQf = spdiag(q_source)
-    dAt_dPt = spdiag(p_target)
-    dAt_dQt = spdiag(q_target)
-
-    # Partial derivative of apparent power magnitude w.r.t voltage phase angle.
-    dAf_dVa = dAf_dPf * dSf_dVa.real() + dAf_dQf * dSf_dVa.imag()
-    dAt_dVa = dAt_dPt * dSt_dVa.real() + dAt_dQt * dSt_dVa.imag()
-    # Partial derivative of apparent power magnitude w.r.t. voltage amplitude.
-    dAf_dVm = dAf_dPf * dSf_dVm.real() + dAf_dQf * dSf_dVm.imag()
-    dAt_dVm = dAt_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
-
-    return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
+#def dSbus_dV(Y, v):
+#    """ Computes the partial derivative of power injection w.r.t. voltage.
+#
+#        References:
+#            Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
+#            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+#    """
+#    j = 0 + 1j
+#    n = len(v)
+#    i = Y * v
+#
+#    diag_v = spdiag(v)
+#    diag_i = spdiag(i)
+#    diag_vnorm = spdiag(div(v, abs(v))) # Element-wise division.
+#
+#    ds_dvm = diag_v * conj(Y * diag_vnorm) + conj(diag_i) * diag_vnorm
+#    ds_dva = j * diag_v * conj(diag_i - Y * diag_v)
+#
+#    return ds_dvm, ds_dva
+#
+##------------------------------------------------------------------------------
+##  "dSbr_dV" function:
+##------------------------------------------------------------------------------
+#
+#def dSbr_dV(buses, branches, Y_source, Y_target, v):
+#    """ Computes the branch power flow vector and the partial derivative of
+#        branch power flow w.r.t voltage.
+#
+#        References:
+#            Ray Zimmerman, "dSbr_dV.m", MATPOWER, version 3.2,
+#            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+#    """
+#    j = 0 + 1j
+#    n_branches = len(branches)
+#    n_buses = len(v)
+#
+#    source_idxs = matrix([buses.index(e.source_bus) for e in branches])
+#    target_idxs = matrix([buses.index(e.target_bus) for e in branches])
+#
+#    # Compute currents.
+#    i_source = Y_source * v
+#    i_target = Y_target * v
+#
+#    # dV/dVm = diag(V./abs(V))
+#    v_norm = div(v, abs(v))
+#
+#    diagVsource = spdiag(v[source_idxs])
+#    diagIsource = spdiag(i_source)
+#    diagVtarget = spdiag(v[target_idxs])
+#    diagItarget = spdiag(i_target)
+#    diagV = spdiag(v)
+#    diagVnorm = spdiag(v_norm)
+#
+#    # Partial derivative of S w.r.t voltage phase angle.
+#    dSf_dVa = j * (conj(diagIsource) * spmatrix(v[source_idx],
+#                                                range(n_branches),
+#                                                source_idxs,
+#                                                (n_branches, n_buses)) - \
+#        diagVsource * conj(Y_source * diagV))
+#
+#    dSt_dVa = j * (conj(diagItarget) * spmatrix(v[target_idx],
+#                                                range(n_branches),
+#                                                target_idxs,
+#                                                (n_branches, n_buses)) - \
+#        diagVtarget * conj(Y_target * diagV))
+#
+#    # Partial derivative of S w.r.t. voltage amplitude.
+#    dSf_dVm = diagVsource * conj(Y_source * diagVnorm) + conj(diagIsource) * \
+#        spmatrix(v_norm[source_idxs], range(n_branches),
+#            source_idxs, (n_branches, n_buses))
+#
+#    dSt_dVm = diagVtarget * conj(Y_target * diagVnorm) + conj(diagItarget) * \
+#        spmatrix(v_norm[target_idxs], range(n_branches),
+#            target_idxs, (n_branches, n_buses))
+#
+#    # Compute power flow vectors.
+#    s_source = mul(v[source_idxs], conj(i_source))
+#    s_target = mul(v[target_idxs], conj(i_target))
+#
+#    return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target
+#
+##------------------------------------------------------------------------------
+##  "dAbr_dV" function:
+##------------------------------------------------------------------------------
+#
+#def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
+#    """ Computes the partial derivatives of apparent power flow w.r.t voltage.
+#
+#        References:
+#            Ray Zimmerman, "dAbr_dV.m", MATPOWER, version 3.2,
+#            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+#    """
+##    n_branches = len(s_source)
+#
+#    # Compute apparent powers.
+#    a_source = abs(s_source)
+#    a_target = abs(s_target)
+#
+#    # Compute partial derivative of apparent power w.r.t active and
+#    # reactive power flows.  Partial derivative must equal 1 for lines with
+#    # zero flow to avoid division by zero errors (1 comes from L'Hopital).
+#    def zero2one(x):
+#        if x != 0: return x
+#        else: return 1.0
+#
+#    p_source = div(s_source.real(), map(zero2one, a_source))
+#    q_source = div(s_target.imag(), map(zero2one, a_source))
+#    p_target = div(s_target.real(), map(zero2one, a_target))
+#    q_target = div(s_target.imag(), map(zero2one, a_target))
+#
+#    dAf_dPf = spdiag(p_source)
+#    dAf_dQf = spdiag(q_source)
+#    dAt_dPt = spdiag(p_target)
+#    dAt_dQt = spdiag(q_target)
+#
+#    # Partial derivative of apparent power magnitude w.r.t voltage phase angle.
+#    dAf_dVa = dAf_dPf * dSf_dVa.real() + dAf_dQf * dSf_dVa.imag()
+#    dAt_dVa = dAt_dPt * dSt_dVa.real() + dAt_dQt * dSt_dVa.imag()
+#    # Partial derivative of apparent power magnitude w.r.t. voltage amplitude.
+#    dAf_dVm = dAf_dPf * dSf_dVm.real() + dAf_dQf * dSf_dVm.imag()
+#    dAt_dVm = dAt_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
+#
+#    return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
 
 # EOF -------------------------------------------------------------------------
