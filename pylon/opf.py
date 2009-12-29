@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
+from pylon.case import POLYNOMIAL
 
 """ Defines a generalised OPF solver and an OPF model.
 
@@ -26,9 +27,13 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import logging
+
 from math import pi
 
-from cvxopt import matrix, spmatrix, sparse
+import numpy
+
+from cvxopt import matrix, spmatrix, sparse, div, mul
 
 from util import Named
 from case import REFERENCE, POLYNOMIAL, PIECEWISE_LINEAR
@@ -38,6 +43,13 @@ from case import REFERENCE, POLYNOMIAL, PIECEWISE_LINEAR
 #------------------------------------------------------------------------------
 
 INF = -1e10
+EPS =  2**-52
+
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  "OPF" class:
@@ -96,7 +108,11 @@ class OPF:
             self.power_mismatch()
             self.voltage_angle_reference()
         self.branch_voltage_angle_difference_limit()
-        self.construct_opf_model()
+        om = self.construct_opf_model()
+        if self.dc:
+            ret = DCOPFSolver(om).solve()
+#        else:
+#            ret = CVXOPTSolver(om).solve()
 
 
     def ref_check(self):
@@ -258,13 +274,38 @@ class OPF:
                 C. E. Murillo-Sanchez, "makeAy.m", MATPOWER, PSERC Cornell,
                 version 4.0b2, http://www.pserc.cornell.edu/matpower/, Dec 09
         """
+        if self.dc:
+            pgbas = 0
+#            qgbas = None
+            ybas = self.ng + 1
+        else:
+            pgbas = 0
+#            qgbas = self.ng + 1
+            ybas = self.ng + 1 + self.ng # nq = ng
+
         gpwl = [g for g in self.generators if g.cost_model == PIECEWISE_LINEAR]
-        ny = len(gpwl) # number of extra y variables.
+        ny = self.ny = len(gpwl) # number of extra y variables.
         if ny > 0:
             # Total number of cost points.
-            m = len([p for g in gpwl for p in g.p_cost])
-            Ay = spmatrix([], [], [], (m - ny, ybas + ny -1))
+            nc = len([p for g in gpwl for p in g.p_cost])
+            Ay = spmatrix([], [], [], (nc - ny, ybas + ny -1))
             by = matrix()
+
+            k = 0
+            for i, g in enumerate(gpwl):
+                ns = len(g.p_cost)
+                p = matrix([p / self.base_mva for p, c in g.p_cost])
+                c = matrix([c for p, c in g.p_cost])
+                m = div(numpy.diff(c), numpy.diff(p))
+                if 0.0 in numpy.diff(p):
+                    logger.error("Bad Pcost data: %s" % p)
+                b = mul(m, p[:ns - 1] - c[:ns - 1])
+                by = matrix([by, b.T])
+
+                Ay[k:k + ns - 2, pgbas + i]
+                Ay[k:k + ns - 2, ybas + i] = matrix(-1., (ns, 1))
+                k += (ns - 1)
+                # TODO: Repeat for Q cost.
         else:
             Ay = spmatrix([], [], [] (ybas + ny, 0))
             by = matrix()
@@ -277,6 +318,10 @@ class OPF:
         """
         if self.dc:
             om = OPFModel()
+
+            om._Bf = self.Bf
+            om._Pfinj = self.Pfinj
+
             om.add_var(Variable("Va", self.nb, self.Va, self.Val, self.Vau))
             om.add_var(Variable("Pg", self.ng, self.Pg, self.Pmin, self.Pmax))
 
@@ -288,8 +333,84 @@ class OPF:
                                            self.lpf, self.upt, ["Va"]))
             om.add_constr(LinearConstraint("ang", self.Aang,
                                            self.lang, self.uang, ["Va"]))
+            ycon_vars = ['Pg', 'y']
         else:
             raise NotImplementedError
+            ycon_vars = ['Pg', 'Qg', 'y']
+
+        if self.ny > 0:
+            om.add_var(Variable("y", self.ny))
+            om.add_constr(LinearConstraint("ycon", self.Ay, 0, self.by,
+                                           ycon_vars))
+
+        return om
+
+#------------------------------------------------------------------------------
+#  "DCOPFSolver" class:
+#------------------------------------------------------------------------------
+
+class DCOPFSolver:
+    """ Defines a solver for DC optimal power flow.
+    """
+
+    def __init__(self, om):
+        """ Initialises a new DCOPFSolver instance.
+        """
+        # Optimal power flow model.
+        self.om = om
+
+
+    def solve(self):
+        """ Solves DC optimal power flow and returns a results dict.
+        """
+        self.unpack_model()
+        self.dimension_data()
+        self.linear_constraints()
+
+
+    def unpack_model(self):
+        """ Returns data from the OPF model.
+        """
+        buses = self.buses = self.om.case.connected_buses
+        branches = self.branches = self.om.case.online_branches
+        gens = self.generators = self.om.case.online_generators
+
+        cp = self.om.get_cost_params()
+
+        self.Bf = self.om._Bf
+        self.Pfinj = self.om._Pfinj
+
+        return buses, branches, gens, cp
+
+
+    def dimension_data(self):
+        """ Returns the problem dimensions.
+        """
+        ipol = self.ipol = matrix([i for i, g in enumerate(self.generators)
+                                   if g.cost_model == POLYNOMIAL])
+        ipwl = self.ipwl = matrix([i for i, g in enumerate(self.generators)
+                                   if g.cost_model == PIECEWISE_LINEAR])
+        nb = self.nb = len(self.buses)
+        nl = self.nl = len(self.branches)
+        # Number of general cost vars, w.
+        nw = self.nw = self.N.size[0]
+        # Number of piece-wise linear costs.
+        ny = self.ny = self.om.get_var_N("y")
+        # Total number of control variables.
+        nxyz = self.nxyz = self.om.get_var_N()
+
+        return ipol, ipwl, nb, nl, nw, ny, nxyz
+
+
+    def linear_constraints(self):
+        """ Returns the linear problem constraints.
+        """
+        self.A, self.l, self.u = self.om.linear_constraints()
+
+        return self.A, self.l, self.u
+
+
+#    def pwl_costs(self):
 
 #------------------------------------------------------------------------------
 #  "Indexed" class:
