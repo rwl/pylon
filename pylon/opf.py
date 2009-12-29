@@ -43,7 +43,8 @@ class OPF:
     """
 
     def __init__(self, case, dc=True, show_progress=True, max_iterations=100,
-                 absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7):
+                 absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
+                 ignore_ang_lim=False):
         """ Initialises a new OPF instance.
         """
         # Case under optimisation.
@@ -66,6 +67,9 @@ class OPF:
 
         # Tolerance for feasibility conditions.
         self.feasibility_tol = feasibility_tol
+
+        # Ignore angle difference limits for branches even if specified.
+        self.ignore_ang_lim = ignore_ang_lim
 
 
     def solve(self):
@@ -134,13 +138,13 @@ class OPF:
         for g in self.generators:
             busidx = self.buses.index(g.bus)
             self.Vm[busidx] = g.v_magnitude
+        self.Pg = matrix([g.p / self.case.base_mva for g in self.generators])
+        self.Qg = matrix([g.q / self.case.base_mva for g in self.generators])
 
 
     def init_bounds(self):
         """ Sets-up the initial bounds.
         """
-        self.Pg = matrix([g.p / self.case.base_mva for g in self.generators])
-        self.Qg = matrix([g.q / self.case.base_mva for g in self.generators])
         self.Pmin = matrix([g.p_min / self.case.base_mva
                             for g in self.generators])
         self.Pmax = matrix([g.p_max / self.case.base_mva
@@ -198,7 +202,42 @@ class OPF:
     def branch_voltage_angle_difference_limit(self):
         """ Returns the constraint on the branch voltage angle differences.
         """
-        raise NotImplementedError
+        if not self.ignore_ang_lim:
+            iang = matrix([i for i, b in enumerate(self.branches)
+                           if (b.ang_min and (b.ang_min > -360.0))
+                           or (b.ang_max and (b.ang_max < 360.0))])
+            iangl = matrix([i for i, b in enumerate(self.branches[iang])
+                            if b.ang_min is not None])
+            iangh = matrix([i for i, b in enumerate(self.branches[iang])
+                            if b.ang_max is not None])
+            nang = len(iang)
+
+            if nang > 0:
+                ii = matrix([range(nang), range(nang)])
+                jj = matrix([[self.buses.index(b.from_bus)
+                              for b in self.branches[iang]],
+                             [self.buses.index(b.to_bus)
+                              for b in self.branches[iang]]])
+                Aang = spmatrix(matrix([matrix(1.0, (nang, 1)),
+                                        matrix(-1.0, (nang, 1))]),
+                                        ii, jj, (nang, self.nb))
+                uang = matrix(INF, (nang, 1))
+                lang = -uang
+                lang[iangl] = matrix([b.ang_min * (pi / 180.0)
+                                      for b in self.branches[iangl]])
+                uang[iangh] = matrix([b.ang_max * (pi / 180.0)
+                                      for b in self.branches[iangh]])
+            else:
+                Aang = spmatrix([], [], [], (0, self.nb))
+                lang = matrix()
+                uang = matrix()
+        else:
+            Aang = spmatrix([], [], [], (0, self.nb))
+            lang = matrix()
+            uang = matrix()
+            iang = matrix()
+
+        return Aang, lang, uang, iang
 
 #------------------------------------------------------------------------------
 #  "Indexed" class:
