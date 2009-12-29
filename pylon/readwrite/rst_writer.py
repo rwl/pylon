@@ -170,10 +170,10 @@ class ReSTWriter(CaseWriter):
 
         # Line one of column headers
         file.write("Name".center(col1_width) + " ")
-        file.write("Source".center(col1_width) + " ")
-        file.write("Target".center(col1_width) + " ")
-        file.write("Source Bus Inj".center(col_width_2) + " ")
-        file.write("Target Bus Inj".center(col_width_2) + " ")
+        file.write("From".center(col1_width) + " ")
+        file.write("To".center(col1_width) + " ")
+        file.write("From Bus Inj".center(col_width_2) + " ")
+        file.write("To Bus Inj".center(col_width_2) + " ")
         file.write("Loss (I^2 * Z)".center(col_width_2) + " ")
         file.write("\n")
 
@@ -197,12 +197,12 @@ class ReSTWriter(CaseWriter):
         # Branch rows
         for each in branches:
             file.write(each.name[:col1_width].ljust(col1_width) + " ")
-            file.write(each.source_bus.name[:col1_width].ljust(col1_width)+" ")
-            file.write(each.target_bus.name[:col1_width].ljust(col1_width)+" ")
-            file.write("%8.2f" % each.p_source + " ")
-            file.write("%8.2f" % each.q_source + " ")
-            file.write("%8.2f" % each.p_target + " ")
-            file.write("%8.2f" % each.p_target + " ")
+            file.write(each.from_bus.name[:col1_width].ljust(col1_width)+" ")
+            file.write(each.to_bus.name[:col1_width].ljust(col1_width)+" ")
+            file.write("%8.2f" % each.p_from + " ")
+            file.write("%8.2f" % each.q_from + " ")
+            file.write("%8.2f" % each.p_to + " ")
+            file.write("%8.2f" % each.p_to + " ")
             file.write("%8.2f" % each.p_losses + " ")
             file.write("%8.2f" % each.q_losses + " ")
             file.write("\n")
@@ -293,7 +293,7 @@ class ReSTWriter(CaseWriter):
 #            file.write("..".ljust(col_width) + " ")
             file.write("%8.2f" % each.p_max + " ")
             file.write("%8.2f" % each.p_min + " ")
-            n2, n1, n = each.cost_coeffs
+            n2, n1, n = each.p_cost
             file.write("%4.2f" % n2 + " ")
             file.write("%4.1f" % n1 + " ")
             file.write("%4.0f" % n + " ")

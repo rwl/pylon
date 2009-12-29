@@ -81,7 +81,7 @@ class ExcelWriter(CaseWriter):
             i = self.case.buses.index(generator.bus)
             for k, attr in enumerate(GENERATOR_ATTRS):
                 generator_sheet.write(j, 0, i)
-                # FIXME: Cast cost_coeffs tuple.
+                # FIXME: Cast p_cost tuple.
 #                generator_sheet.write(j, k + 1, getattr(generator, attr))
 
 # EOF -------------------------------------------------------------------------

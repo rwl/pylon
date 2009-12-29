@@ -47,7 +47,7 @@ of three values:
 
   * Default mode for a plain bus.
   * Set when one or more ``Load`` is present, but no ``Generator``.
-  * Set when the connected generation has reached one of it's reactive power 
+  * Set when the connected generation has reached one of it's reactive power
     limits.
   * Active and reactive power are the known variables.
 
@@ -74,7 +74,7 @@ total supply and demand of power at the node.
 .. class:: Branch
 
 Transmission lines and transformers are both defined by the ``Branch`` class
-which uses a standard pi-circuit model.  The ``source_bus`` and ``target_bus``
+which uses a standard pi-circuit model.  The ``from_bus`` and ``to_bus``
 must be specified when creating a ``Branch``.
 
 .. sourcecode:: ipython
@@ -92,10 +92,9 @@ switch to fixing active and reactive power at a node if a limit is violated.
 
 .. sourcecode:: ipython
 
-  In [1]: bus = Bus()
-  In [2]: g = Generator(p=6.0, v_amplitude=1.1)
-  In [3]: bus.generators.append(g)
-  In [4]: bus.mode
+  In [1]: bus = Bus(type="PV")
+  In [2]: g = Generator(bus, p=6.0, v_magnitude=1.1)
+  In [4]: bus.type
   Out[1]: 'PV'
 
 ``Generator`` objects define the despatchable units for the optimal power flow
@@ -108,28 +107,5 @@ definition of cost curves to quadratic functions.
 
 .. sourcecode:: ipython
 
-  In [1]: g = Generator(p_max=6.0, p_min=1.0, cost_coeffs=(0.0, 6.0, 0.0)
-                        p_max_bid=5.0, p_min_bid=1.0)
-
-.. class:: Load
-
-A load fixes active and reactive power demand at a the node.
-
-A ``Load`` may be configured to follow an output profile.  The attribute
-``p_profile`` specifies a list of percentages that define how the profile
-varies between the limits defined by ``p_max`` and ``p_min``.  ``p_profiled``
-is a property that uses a cycle iterator to return the next value in the
-profile sequence each time it is called.
-
-.. sourcecode:: ipython
-
-  In [1]: l = Load(p_min=1.0, p_max=2.0, p_profile=[100, 50])
-  In [2]: l.p_profiled
-  Out[1]: 2.0
-  
-  In [3]: l.p_profiled
-  Out[2]: 1.5
-  
-  In [4]: l.p_profiled
-  Out[3]: 2.0
+  In [1]: g = Generator(p_max=6.0, p_min=1.0, p_cost=(0.0, 6.0, 0.0))
 

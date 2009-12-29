@@ -197,7 +197,7 @@ def pickle_matpower_cases(case_paths):
         pickled_case_path = os.path.join(dir_path, root + '.pkl')
 
         # Pickle the resulting Pylon Case object.
-        pylon.readwrite.PickleWriter().write(case, pickled_case_path)
+        pylon.readwrite.PickleWriter(case).write(pickled_case_path)
 
 #------------------------------------------------------------------------------
 #  Change all zeros to ones:

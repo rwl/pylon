@@ -139,13 +139,13 @@ class DCPFTest(unittest.TestCase):
         p_9 = 4.0448
 
         for branch in branches:
-            self.assertEqual(branch.q_source, 0.0)
-            self.assertEqual(branch.q_target, 0.0)
-            # Source and target real powers are the negative of one and other
-            self.assertAlmostEqual(branch.p_source, -branch.p_target, places)
-        self.assertAlmostEqual(branches[2].p_source, p_2, places)
-        self.assertAlmostEqual(branches[6].p_source, p_6, places)
-        self.assertAlmostEqual(branches[9].p_source, p_9, places)
+            self.assertEqual(branch.q_from, 0.0)
+            self.assertEqual(branch.q_to, 0.0)
+            # From and to real powers are the negative of one and other
+            self.assertAlmostEqual(branch.p_from, -branch.p_to, places)
+        self.assertAlmostEqual(branches[2].p_from, p_2, places)
+        self.assertAlmostEqual(branches[6].p_from, p_6, places)
+        self.assertAlmostEqual(branches[9].p_from, p_9, places)
 
         # Test swing bus generator set-point.
         self.assertAlmostEqual(case.generators[0].p, 100.0, places)

@@ -42,9 +42,7 @@ BRANCH_ATTRS = ["name", "mode", "online", "r", "x", "b", "s_max",
     "phase_shift", "online"]
 
 GENERATOR_ATTRS = ["name", "base_mva", "v_magnitude", "p", "p_max", "p_min",
-    "q", "q_max", "q_min", "cost_model",
-    "cost_coeffs", "pwl_points", "p_cost", "rate_up", "rate_down",
-    "min_up", "min_down", "initial_up", "initial_down", "online"]
+    "q", "q_max", "q_min", "cost_model", "p_cost", "online"]
 
 #------------------------------------------------------------------------------
 #  "CaseWriter" class:

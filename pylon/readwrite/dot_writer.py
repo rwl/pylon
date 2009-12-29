@@ -131,7 +131,7 @@ class DotWriter(CaseWriter):
 
         for br in self.case.branches:
             file.write("%s%s -> %s [%s];\n" % \
-                (padding, br.source_bus.name, br.target_bus.name, attr_str))
+                (padding, br.from_bus.name, br.to_bus.name, attr_str))
 
 
     def write_generator_data(self, file, padding="    "):

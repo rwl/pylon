@@ -125,7 +125,7 @@ class UnitCommitmentRoutine(object):
         self.p_max = matrix( [ g.p_max for g in generators ] )
 
         # fixed generation costs.
-        self.cost = matrix( [ g.p_cost for g in generators ] )
+        self.cost = matrix( [ g.total_cost() for g in generators ] )
 
         # Minimum up/down times
         self.min_up = matrix( [ g.min_up for g in generators ] )

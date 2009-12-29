@@ -179,7 +179,7 @@ class MarketExperimentTest(unittest.TestCase):
 #
 ##        env.getRenderer().stop()
 #
-##        self.assertAlmostEqual(g1.cost_coeffs[1], 20.0, places=2)
+##        self.assertAlmostEqual(g1.p_cost[1], 20.0, places=2)
 
 
 if __name__ == "__main__":

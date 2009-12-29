@@ -248,12 +248,12 @@ class ACOPF(object):
             # Evaluate cost gradient ------------------------------------------
 
             # Partial derivative w.r.t. polynomial cost Pg and Qg.
-#            df_dPgQg = [polyval(polyder(g.cost_coeffs), g.p) * base_mva \
+#            df_dPgQg = [polyval(polyder(g.p_cost), g.p) * base_mva \
 #                        for g in generators]
             df_dPgQg = matrix(0.0, (n_gen * 2, 1))
 
             for i, g in enumerate(generators):
-                der = polyder( list(g.cost_coeffs) )
+                der = polyder( list(g.p_cost) )
                 df_dPgQg[i] = polyval(der, g.p) * base_mva
 
             df0= matrix([matrix(0.0, (v_end, 1)), df_dPgQg])
@@ -271,7 +271,7 @@ class ACOPF(object):
             v = mul(v_magnitude, exp(j * v_angle)) #element-wise product
 
             # Evaluate the power flow equations.
-            Y, Ysource, Ytarget = case.Y
+            Y, Yfrom, Yto = case.Y
             mismatch = mul(v, conj(Y * v)) - s
 
             # Evaluate power balance equality constraint function values.
@@ -280,18 +280,18 @@ class ACOPF(object):
             # Evaluate nonlinear inequality constraints -----------------------
 
             # Branch power flow limit inequality constraint function values.
-            source_idxs = matrix([buses.index(e.source_bus) for e in branches])
-            target_idxs = matrix([buses.index(e.target_bus) for e in branches])
-            # Complex power in p.u. injected at the source bus.
-            s_source = mul(v[source_idxs], conj(Ysource, v))
-            # Complex power in p.u. injected at the target bus.
-            s_target = mul(v[target_idxs], conj(Ytarget, v))
+            from_idxs = matrix([buses.index(e.from_bus) for e in branches])
+            to_idxs = matrix([buses.index(e.to_bus) for e in branches])
+            # Complex power in p.u. injected at the from bus.
+            s_from = mul(v[from_idxs], conj(Yfrom, v))
+            # Complex power in p.u. injected at the to bus.
+            s_to = mul(v[to_idxs], conj(Yto, v))
 
             # Apparent power flow limit in MVA, |S|.
             s_max = matrix([e.s_max for e in branches])
 
             # FIXME: Implement active power and current magnitude limits.
-            fk_ieq = matrix([abs(s_source) - s_max, abs(s_target) - s_max])
+            fk_ieq = matrix([abs(s_from) - s_max, abs(s_to) - s_max])
 
             # Evaluate partial derivatives of constraints ---------------------
 
@@ -312,12 +312,12 @@ class ACOPF(object):
             ]).T
 
             # Partial derivative of branch power flow w.r.t voltage.
-            dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target = \
-                dSbr_dV(branches, Ysource, Ytarget, v)
+            dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_from, s_to = \
+                dSbr_dV(branches, Yfrom, Yto, v)
 
             # Magnitude of complex power flow.
             df_dVa, dt_dVa, df_dVm, dt_dVm = \
-                dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target)
+                dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_from, s_to)
 
             # Transposed Jacobian of branch power flow inequality constraints.
             dfk_ieq = matrix([matrix([df_dVa, df_dVm]),
@@ -334,7 +334,7 @@ class ACOPF(object):
             d2f_d2Pg = spmatrix([], [], [], (n_gen, 1))
             d2f_d2Qg = spmatrix([], [], [], (n_gen, 1))
             for i, g in enumerate(generators):
-                der = polyder(list(g.cost_coeffs))
+                der = polyder(list(g.p_cost))
                 # TODO: Implement reactive power costs.
                 d2f_d2Pg[i] = polyval(der, g.p) * base_mva
 
@@ -429,7 +429,7 @@ class ACOPF(object):
 ##  "dSbr_dV" function:
 ##------------------------------------------------------------------------------
 #
-#def dSbr_dV(buses, branches, Y_source, Y_target, v):
+#def dSbr_dV(buses, branches, Y_from, Y_to, v):
 #    """ Computes the branch power flow vector and the partial derivative of
 #        branch power flow w.r.t voltage.
 #
@@ -441,67 +441,67 @@ class ACOPF(object):
 #    n_branches = len(branches)
 #    n_buses = len(v)
 #
-#    source_idxs = matrix([buses.index(e.source_bus) for e in branches])
-#    target_idxs = matrix([buses.index(e.target_bus) for e in branches])
+#    from_idxs = matrix([buses.index(e.from_bus) for e in branches])
+#    to_idxs = matrix([buses.index(e.to_bus) for e in branches])
 #
 #    # Compute currents.
-#    i_source = Y_source * v
-#    i_target = Y_target * v
+#    i_from = Y_from * v
+#    i_to = Y_to * v
 #
 #    # dV/dVm = diag(V./abs(V))
 #    v_norm = div(v, abs(v))
 #
-#    diagVsource = spdiag(v[source_idxs])
-#    diagIsource = spdiag(i_source)
-#    diagVtarget = spdiag(v[target_idxs])
-#    diagItarget = spdiag(i_target)
+#    diagVfrom = spdiag(v[from_idxs])
+#    diagIfrom = spdiag(i_from)
+#    diagVto = spdiag(v[to_idxs])
+#    diagIto = spdiag(i_to)
 #    diagV = spdiag(v)
 #    diagVnorm = spdiag(v_norm)
 #
 #    # Partial derivative of S w.r.t voltage phase angle.
-#    dSf_dVa = j * (conj(diagIsource) * spmatrix(v[source_idx],
+#    dSf_dVa = j * (conj(diagIfrom) * spmatrix(v[from_idx],
 #                                                range(n_branches),
-#                                                source_idxs,
+#                                                from_idxs,
 #                                                (n_branches, n_buses)) - \
-#        diagVsource * conj(Y_source * diagV))
+#        diagVfrom * conj(Y_from * diagV))
 #
-#    dSt_dVa = j * (conj(diagItarget) * spmatrix(v[target_idx],
+#    dSt_dVa = j * (conj(diagIto) * spmatrix(v[to_idx],
 #                                                range(n_branches),
-#                                                target_idxs,
+#                                                to_idxs,
 #                                                (n_branches, n_buses)) - \
-#        diagVtarget * conj(Y_target * diagV))
+#        diagVto * conj(Y_to * diagV))
 #
 #    # Partial derivative of S w.r.t. voltage amplitude.
-#    dSf_dVm = diagVsource * conj(Y_source * diagVnorm) + conj(diagIsource) * \
-#        spmatrix(v_norm[source_idxs], range(n_branches),
-#            source_idxs, (n_branches, n_buses))
+#    dSf_dVm = diagVfrom * conj(Y_from * diagVnorm) + conj(diagIfrom) * \
+#        spmatrix(v_norm[from_idxs], range(n_branches),
+#            from_idxs, (n_branches, n_buses))
 #
-#    dSt_dVm = diagVtarget * conj(Y_target * diagVnorm) + conj(diagItarget) * \
-#        spmatrix(v_norm[target_idxs], range(n_branches),
-#            target_idxs, (n_branches, n_buses))
+#    dSt_dVm = diagVto * conj(Y_to * diagVnorm) + conj(diagIto) * \
+#        spmatrix(v_norm[to_idxs], range(n_branches),
+#            to_idxs, (n_branches, n_buses))
 #
 #    # Compute power flow vectors.
-#    s_source = mul(v[source_idxs], conj(i_source))
-#    s_target = mul(v[target_idxs], conj(i_target))
+#    s_from = mul(v[from_idxs], conj(i_from))
+#    s_to = mul(v[to_idxs], conj(i_to))
 #
-#    return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target
+#    return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_from, s_to
 #
 ##------------------------------------------------------------------------------
 ##  "dAbr_dV" function:
 ##------------------------------------------------------------------------------
 #
-#def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
+#def dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_from, s_to):
 #    """ Computes the partial derivatives of apparent power flow w.r.t voltage.
 #
 #        References:
 #            Ray Zimmerman, "dAbr_dV.m", MATPOWER, version 3.2,
 #            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
 #    """
-##    n_branches = len(s_source)
+##    n_branches = len(s_from)
 #
 #    # Compute apparent powers.
-#    a_source = abs(s_source)
-#    a_target = abs(s_target)
+#    a_from = abs(s_from)
+#    a_to = abs(s_to)
 #
 #    # Compute partial derivative of apparent power w.r.t active and
 #    # reactive power flows.  Partial derivative must equal 1 for lines with
@@ -510,15 +510,15 @@ class ACOPF(object):
 #        if x != 0: return x
 #        else: return 1.0
 #
-#    p_source = div(s_source.real(), map(zero2one, a_source))
-#    q_source = div(s_target.imag(), map(zero2one, a_source))
-#    p_target = div(s_target.real(), map(zero2one, a_target))
-#    q_target = div(s_target.imag(), map(zero2one, a_target))
+#    p_from = div(s_from.real(), map(zero2one, a_from))
+#    q_from = div(s_to.imag(), map(zero2one, a_from))
+#    p_to = div(s_to.real(), map(zero2one, a_to))
+#    q_to = div(s_to.imag(), map(zero2one, a_to))
 #
-#    dAf_dPf = spdiag(p_source)
-#    dAf_dQf = spdiag(q_source)
-#    dAt_dPt = spdiag(p_target)
-#    dAt_dQt = spdiag(q_target)
+#    dAf_dPf = spdiag(p_from)
+#    dAf_dQf = spdiag(q_from)
+#    dAt_dPt = spdiag(p_to)
+#    dAt_dQt = spdiag(q_to)
 #
 #    # Partial derivative of apparent power magnitude w.r.t voltage phase angle.
 #    dAf_dVa = dAf_dPf * dSf_dVa.real() + dAf_dQf * dSf_dVa.imag()

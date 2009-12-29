@@ -132,8 +132,8 @@ class PSATReader(CaseReader):
     def _get_line_array_construct(self):
         """ Returns a construct for an array of line data.
         """
-        source_bus = integer.setResultsName("fbus")
-        target_bus = integer.setResultsName("tbus")
+        from_bus = integer.setResultsName("fbus")
+        to_bus = integer.setResultsName("tbus")
         s_rating = real.setResultsName("s_rating") # MVA
         v_rating = real.setResultsName("v_rating") # kV
         f_rating = real.setResultsName("f_rating") # Hz
@@ -149,7 +149,7 @@ class PSATReader(CaseReader):
         s_limit = Optional(real).setResultsName("s_limit") # p.u.
         status = Optional(boolean).setResultsName("status")
 
-        line_data = source_bus + target_bus + s_rating + v_rating + \
+        line_data = from_bus + to_bus + s_rating + v_rating + \
             f_rating + length + v_ratio + r + x + b + tap_ratio + \
             phase_shift + i_limit + p_limit + s_limit + status + scolon
 
@@ -393,10 +393,10 @@ class PSATReader(CaseReader):
         """
         logger.debug("Pushing line data: %s" % tokens)
 
-        source_bus = self.case.buses[tokens["fbus"]-1]
-        target_bus = self.case.buses[tokens["tbus"]-1]
+        from_bus = self.case.buses[tokens["fbus"]-1]
+        to_bus = self.case.buses[tokens["tbus"]-1]
 
-        e = Branch(source_bus=source_bus, target_bus=target_bus)
+        e = Branch(from_bus=from_bus, to_bus=to_bus)
         e.r = tokens["r"]
         e.x = tokens["x"]
         e.b = tokens["b"]

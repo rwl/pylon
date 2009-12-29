@@ -81,10 +81,10 @@ class StateEsimationRoutine(object):
         self.pf_routine.solve()
 
         # Save some values from the load flow solution.
-        plf_source = [branch.p_source for branch in branches]
-        qlf_source = [branch.q_source for branch in branches]
-        plf_target = [branch.p_target for branch in branches]
-        qlf_target = [branch.q_target for branch in branches]
+        plf_from = [branch.p_from for branch in branches]
+        qlf_from = [branch.q_from for branch in branches]
+        plf_to = [branch.p_to for branch in branches]
+        qlf_to = [branch.q_to for branch in branches]
 
         # Begin state estimation.
         Y = self.pf_routine.Y # Sparse admittance matrix.
@@ -92,7 +92,7 @@ class StateEsimationRoutine(object):
 
         # Evaluate the Hessian.
         dSbus_dVm, dSbus_dVa = dSbus_dV(Y, v)
-        dSbr_dVm, dSbr_dVa = dSbr_dV(branches, Ysource, Ytarget, v)
+        dSbr_dVm, dSbr_dVa = dSbr_dV(branches, Yfrom, Yto, v)
 
         H = spmatrix([
             dSf_dVa.real(),   dSf_dVm.real(),

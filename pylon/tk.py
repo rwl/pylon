@@ -383,8 +383,8 @@ class PylonTk(object):
 #        GraphView(self.root, self.case, self.e)
         graph = nx.Graph()
         for edge in self.case.branches:
-            graph.add_edge(self.case.buses.index(edge.source_bus),
-                           self.case.buses.index(edge.target_bus))
+            graph.add_edge(self.case.buses.index(edge.from_bus),
+                           self.case.buses.index(edge.to_bus))
         for i, bus in enumerate(self.case.buses):
             if bus.p_demand > 0.0:
                 graph.add_edge(i, "l" + str(i))

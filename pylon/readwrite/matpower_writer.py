@@ -205,8 +205,8 @@ class MATPOWERWriter(CaseWriter):
         branches_data = []
         for e in self.case.branches:
             e_data = {}
-            e_data["fbus"] = self.case.buses.index(e.source_bus) + 1
-            e_data["tbus"] = self.case.buses.index(e.target_bus) + 1
+            e_data["fbus"] = self.case.buses.index(e.from_bus) + 1
+            e_data["tbus"] = self.case.buses.index(e.to_bus) + 1
             e_data["r"] = e.r
             e_data["x"] = e.x
             e_data["b"] = e.b

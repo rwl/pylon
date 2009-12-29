@@ -14,7 +14,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
-from gnome_sudoku.sudoku_thumber import N_BOXES
 
 """ Defines the Pylon network model.
 """
@@ -28,13 +27,24 @@ from math import pi
 
 from util import Named, Serializable
 
-from cvxopt.base import matrix, spmatrix, sparse, spdiag, exp, mul, div
+from cvxopt.base import matrix, spmatrix, spdiag, exp, mul, div
 
 from util import conj, zero2one
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
+
+PV = "PV"
+PQ = "PQ"
+REFERENCE = "ref"
+ISOLATED = "isolated"
+LINE = "line"
+TRANSFORMER = "transformer"
+GENERATOR = "generator"
+DISPATCHABLE_LOAD = "vload"
+POLYNOMIAL = "poly"
+PIECEWISE_LINEAR = "pwl"
 
 BIGNUM = 1e12#numpy.Inf
 
@@ -78,14 +88,15 @@ class Case(Named, Serializable):
         """ Returns a list of buses that are connected to one or more branches
             or the first bus in a branchless system.
         """
-        if self.branches:
-            source_buses = [e.source_bus for e in self.branches]
-            target_buses = [e.target_bus for e in self.branches]
+#        if self.branches:
+#            from_buses = [e.from_bus for e in self.branches]
+#            to_buses = [e.to_bus for e in self.branches]
+#
+#            return [v for v in self.buses if v in from_buses + to_buses]
+#        else:
+#            return self.buses[:1]
 
-            return [v for v in self.buses if v in source_buses + target_buses]
-#            return [bus for bus in self.buses if bus.type != "isolated"]
-        else:
-            return self.buses[:1]
+        return [bus for bus in self.buses if bus.type != ISOLATED]
 
 
     @property
@@ -101,6 +112,9 @@ class Case(Named, Serializable):
         """
         return [branch for branch in self.branches if branch.online]
 
+    #--------------------------------------------------------------------------
+    #  Bus injections:
+    #--------------------------------------------------------------------------
 
     def p_supply(self, bus):
         """ Returns the total active power generation capacity at the given
@@ -149,7 +163,7 @@ class Case(Named, Serializable):
             tap_positions=True, line_resistance=True, phase_shift=True):
         """ Returns the bus and branch admittance matrices, Ysrc and Ytgt, such
             that Ysrc * V is the vector of complex branch currents injected at
-            each branch's "source" bus.
+            each branch's "from" bus.
 
             References:
                 Ray Zimmerman, "makeYbus.m", MATPOWER, PSERC Cornell,
@@ -245,8 +259,8 @@ class Case(Named, Serializable):
         #  Connection matrices.
         #----------------------------------------------------------------------
 
-        src = matrix([self.buses.index(e.source_bus) for e in self.branches])
-        tgt = matrix([self.buses.index(e.target_bus) for e in self.branches])
+        src = matrix([self.buses.index(e.from_bus) for e in self.branches])
+        tgt = matrix([self.buses.index(e.to_bus) for e in self.branches])
         Cf = spmatrix(1.0, src, range(n_branch))
         Ct = spmatrix(1.0, tgt, range(n_branch))
 
@@ -316,14 +330,14 @@ class Case(Named, Serializable):
         # Default tap ratio = 1.0.
         tap = matrix(1.0, (n_branch, 1))
         # Transformer off nominal turns ratio (equals 0 for lines) (taps at
-        # "source" bus, impedance at 'target' bus, i.e. ratio = Vsrc / Vtgt)
+        # "from" bus, impedance at 'to' bus, i.e. ratio = Vsrc / Vtgt)
         for i, branch in enumerate(branches):
             if branch.ratio != 0.0:
                 tap[i] = branch.ratio
         b = div(b, tap)
 
-        src_idx = matrix([buses.index(br.source_bus) for br in branches])
-        tgt_idx = matrix([buses.index(br.target_bus) for br in branches])
+        src_idx = matrix([buses.index(br.from_bus) for br in branches])
+        tgt_idx = matrix([buses.index(br.to_bus) for br in branches])
         Cf = spmatrix(1.0, src_idx, range(n_branch), (n_bus, n_branch))
         Ct = spmatrix(1.0, tgt_idx, range(n_branch), (n_bus, n_branch))
 
@@ -353,8 +367,8 @@ class Case(Named, Serializable):
 
 #        for e_idx, e in enumerate(branches):
 #            # Find the indexes of the buses at either end of the branch
-#            src_idx = buses.index(e.source_bus)
-#            dst_idx = buses.index(e.target_bus)
+#            src_idx = buses.index(e.from_bus)
+#            dst_idx = buses.index(e.to_bus)
 #
 #            # B = 1/X
 #            if e.x != 0.0: # Avoid zero division error.
@@ -377,9 +391,9 @@ class Case(Named, Serializable):
 #            b[dst_idx, dst_idx] += b_branch
 #
 #            # Build Bf such that Bf * Va is the vector of real branch
-#            # powers injected at each branch's "source" bus
-#            b_source[e_idx, src_idx] = b_branch
-#            b_source[e_idx, dst_idx] = -b_branch
+#            # powers injected at each branch's "from" bus
+#            b_from[e_idx, src_idx] = b_branch
+#            b_from[e_idx, dst_idx] = -b_branch
 
         return B, Bsrc, p_businj, p_srcinj
 
@@ -442,73 +456,73 @@ class Case(Named, Serializable):
         n_branch = len(self.branches)
         n_bus = len(v)
 
-        source_idxs = matrix([self.buses.index(branch.source_bus)
+        from_idxs = matrix([self.buses.index(branch.from_bus)
                               for branch in self.branches])
-        target_idxs = matrix([self.buses.index(branch.target_bus)
+        to_idxs = matrix([self.buses.index(branch.to_bus)
                               for branch in self.branches])
 
         # Compute currents.
-        i_source = Ysrc * v
-        i_target = Ytgt * v
+        i_from = Ysrc * v
+        i_to = Ytgt * v
 
         # dV/dVm = diag(V./abs(V))
         v_norm = div(v, abs(v))
 
-        diagVsource = spdiag(v[source_idxs])
-        diagIsource = spdiag(i_source)
-        diagVtarget = spdiag(v[target_idxs])
-        diagItarget = spdiag(i_target)
+        diagVfrom = spdiag(v[from_idxs])
+        diagIfrom = spdiag(i_from)
+        diagVto = spdiag(v[to_idxs])
+        diagIto = spdiag(i_to)
         diagV = spdiag(v)
         diagVnorm = spdiag(v_norm)
 
         br_idx = range(n_branch)
         size = (n_branch, n_bus)
         # Partial derivative of S w.r.t voltage phase angle.
-        dSf_dVa = j * (conj(diagIsource) *
-            spmatrix(v[source_idxs], br_idx, source_idxs, size) - \
-            diagVsource * conj(Ysrc * diagV))
+        dSf_dVa = j * (conj(diagIfrom) *
+            spmatrix(v[from_idxs], br_idx, from_idxs, size) - \
+            diagVfrom * conj(Ysrc * diagV))
 
-        dSt_dVa = j * (conj(diagItarget) *
-            spmatrix(v[target_idxs], br_idx, target_idxs, size) - \
-            diagVtarget * conj(Ytgt * diagV))
+        dSt_dVa = j * (conj(diagIto) *
+            spmatrix(v[to_idxs], br_idx, to_idxs, size) - \
+            diagVto * conj(Ytgt * diagV))
 
         # Partial derivative of S w.r.t. voltage amplitude.
-        dSf_dVm = diagVsource * conj(Ysrc * diagVnorm) + conj(diagIsource) * \
-            spmatrix(v_norm[source_idxs], br_idx, source_idxs, size)
+        dSf_dVm = diagVfrom * conj(Ysrc * diagVnorm) + conj(diagIfrom) * \
+            spmatrix(v_norm[from_idxs], br_idx, from_idxs, size)
 
-        dSt_dVm = diagVtarget * conj(Ytgt * diagVnorm) + conj(diagItarget) * \
-            spmatrix(v_norm[target_idxs], br_idx, target_idxs, size)
+        dSt_dVm = diagVto * conj(Ytgt * diagVnorm) + conj(diagIto) * \
+            spmatrix(v_norm[to_idxs], br_idx, to_idxs, size)
 
         # Compute power flow vectors.
-        s_source = mul(v[source_idxs], conj(i_source))
-        s_target = mul(v[target_idxs], conj(i_target))
+        s_from = mul(v[from_idxs], conj(i_from))
+        s_to = mul(v[to_idxs], conj(i_to))
 
-        return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_source, s_target
+        return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_from, s_to
 
     #--------------------------------------------------------------------------
     #  Partial derivative of apparent power flow w.r.t voltage:
     #--------------------------------------------------------------------------
 
-    def dAbr_dV(self, dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_source, s_target):
+    def dAbr_dV(self, dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_from, s_to):
         """ Computes the partial derivatives of apparent power flow w.r.t
             voltage.
         """
         # Compute apparent powers.
-        a_source = abs(s_source)
-        a_target = abs(s_target)
+        a_from = abs(s_from)
+        a_to = abs(s_to)
 
         # Compute partial derivative of apparent power w.r.t active and
         # reactive power flows.  Partial derivative must equal 1 for lines with
         # zero flow to avoid division by zero errors (1 comes from L'Hopital).
-        p_source = div(s_source.real(), map(zero2one, a_source))
-        q_source = div(s_target.imag(), map(zero2one, a_source))
-        p_target = div(s_target.real(), map(zero2one, a_target))
-        q_target = div(s_target.imag(), map(zero2one, a_target))
+        p_from = div(s_from.real(), map(zero2one, a_from))
+        q_from = div(s_to.imag(), map(zero2one, a_from))
+        p_to = div(s_to.real(), map(zero2one, a_to))
+        q_to = div(s_to.imag(), map(zero2one, a_to))
 
-        dAf_dPf = spdiag(p_source)
-        dAf_dQf = spdiag(q_source)
-        dAt_dPt = spdiag(p_target)
-        dAt_dQt = spdiag(q_target)
+        dAf_dPf = spdiag(p_from)
+        dAf_dQf = spdiag(q_from)
+        dAt_dPt = spdiag(p_to)
+        dAt_dQt = spdiag(q_to)
 
         # Partial derivative of apparent power magnitude w.r.t voltage
         # phase angle.
@@ -520,6 +534,28 @@ class Case(Named, Serializable):
         dAt_dVm = dAt_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
 
         return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
+
+
+    def reset(self):
+        """ Resets the result variables for all of the case componenets.
+        """
+        for bus in self.buses:
+            bus.reset()
+        for branch in self.branches:
+            branch.reset()
+        for generator in self.generators:
+            generator.reset()
+
+
+    def deactivate_isolated(self):
+        """ Deactivates branches and generators connected to isolated buses.
+        """
+        for l in self.branches:
+            if (l.from_bus.type == "isolated") or (l.to_bus.type == "isolated"):
+                l.online = False
+        for g in self.generators:
+            if g.bus.type == "isolated":
+                g.online = False
 
     #--------------------------------------------------------------------------
     #  "Serializable" interface:
@@ -564,7 +600,7 @@ class Case(Named, Serializable):
         return PSATReader().read(fd)
 
 
-    def save_rest(self, fd):
+    def save_rst(self, fd):
         """ Save a reStructuredText representation of the case.
         """
         from pylon.readwrite import ReSTWriter
@@ -599,7 +635,7 @@ class Bus(Named):
     """ Defines a power system bus node.
     """
 
-    def __init__(self, name=None, type="PQ", v_base=100.0,
+    def __init__(self, name=None, type=PQ, v_base=100.0,
             v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
             p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0):
         """ Initialises a new Bus instance.
@@ -610,7 +646,7 @@ class Bus(Named):
         # Bus type: 'PQ', 'PV', 'ref' and 'isolated' (default: 'PQ')
         self.type = type
 
-        # Base voltage
+        # Base voltage.
         self.v_base = v_base
 
         # Voltage magnitude initial guess (pu).
@@ -633,18 +669,6 @@ class Bus(Named):
         # Shunt susceptance (MVAr (injected) at V = 1.0 p.u.).
         self.b_shunt = b_shunt
 
-        # Generators defined by their active power and voltage.
-#        if generators is None:
-#            self.generators = []
-#        else:
-#            self.generators = generators
-
-        # Loads that specify real and reactive power demand.
-#        if loads is None:
-#            self.loads = []
-#        else:
-#            self.loads = loads
-
         # Voltage magnitude, typically determined by a routine.
         self.v_magnitude = 0.0
         # Voltage angle, typically determined by a routine.
@@ -659,55 +683,16 @@ class Bus(Named):
         self.mu_vmin = 0.0
         self.mu_vmax = 0.0
 
-#    @property
-#    def mode(self):
-#        """ Bus mode may be 'pv', 'pq' or 'slack'.
-#        """
-#        if self.slack:
-#            return "slack"
-#        elif self.generators:
-#            for g in self.generators:
-#                if g.q_limited:
-#                    return "pq"
-#            return "pv"
-#        else:
-#            return "pq"
 
-#    @property
-#    def p_supply(self):
-#        """ Total active power generation capacity.
-#        """
-#        return sum([g.p for g in self.generators])
-
-#    @property
-#    def p_demand(self):
-#        """ Total active power load.
-#        """
-#        return sum([l.p for l in self.loads])
-
-#    @property
-#    def p_surplus(self):
-#        """ Supply and demand difference.
-#        """
-#        return self.p_supply - self.p_demand
-
-#    @property
-#    def q_supply(self):
-#        """ Total reactive power generation capacity.
-#        """
-#        return sum([g.q for g in self.generators])
-
-#    @property
-#    def q_demand(self):
-#        """ Total reactive power load.
-#        """
-#        return sum([l.q for l in self.loads])
-
-#    @property
-#    def q_surplus(self):
-#        """ Supply and demand difference.
-#        """
-#        return self.q_supply - self.q_demand
+    def reset(self):
+        """ Resets the result variables.
+        """
+        self.v_magnitude = 0.0
+        self.v_angle = 0.0
+        self.p_lambda = 0.0
+        self.q_lambda = 0.0
+        self.mu_vmin = 0.0
+        self.mu_vmax = 0.0
 
 #------------------------------------------------------------------------------
 #  "Branch" class:
@@ -717,16 +702,16 @@ class Branch(Named):
     """ Defines a case edge that links two Bus objects.
     """
 
-    def __init__(self, source_bus, target_bus, name=None, online=True, r=0.001,
+    def __init__(self, from_bus, to_bus, name=None, online=True, r=0.001,
             x=0.001, b=0.001, s_max=2.0, ratio=1.0, phase_shift=0.0):
         """ Initialises a new Branch instance.
         """
-        # Source/from/start bus.
-        self.source_bus = source_bus
-#        self.source_bus_idx = 0
-        # Target/to/end bus.
-        self.target_bus = target_bus
-#        self.target_bus_idx = 0
+        # From/source/start bus.
+        self.from_bus = from_bus
+#        self.from_bus_idx = 0
+        # To/target/end bus.
+        self.to_bus = to_bus
+#        self.to_bus_idx = 0
 
         # Unique name.
         self.name = name
@@ -751,40 +736,52 @@ class Branch(Named):
 
         # Power flow results --------------------------------------------------
 
-        # Active power injected at the source bus (MW).
-        self.p_source = 0.0
-        # Active power injected at the target bus (MW).
-        self.p_target = 0.0
-        # Reactive power injected at the source bus (MVAr).
-        self.q_source = 0.0
-        # Reactive power injected at the target bus (MVAr).
-        self.q_target = 0.0
+        # Active power injected at the from bus (MW).
+        self.p_from = 0.0
+        # Active power injected at the to bus (MW).
+        self.p_to = 0.0
+        # Reactive power injected at the from bus (MVAr).
+        self.q_from = 0.0
+        # Reactive power injected at the to bus (MVAr).
+        self.q_to = 0.0
 
-        # |S_source| mu.
-        self.mu_s_source = 0.0
-        # |S_target| mu.
-        self.mu_s_target = 0.0
+        # |S_from| mu.
+        self.mu_s_from = 0.0
+        # |S_to| mu.
+        self.mu_s_to = 0.0
 
     @property
     def mode(self):
         """ Branch mode may be 'line' or 'transformer'.
         """
-        if self.source_bus.v_magnitude == self.target_bus.v_magnitude:
-            return "line"
+        if self.from_bus.v_magnitude == self.to_bus.v_magnitude:
+            return LINE
         else:
-            return "transformer"
+            return TRANSFORMER
 
     @property
     def p_losses(self):
         """ Active power losses.
         """
-        return self.p_source - self.p_target
+        return self.p_from - self.p_to
 
     @property
     def q_losses(self):
         """ Reactive power losses.
         """
-        return self.q_source - self.q_target
+        return self.q_from - self.q_to
+
+
+    def reset(self):
+        """ Resets the result variables.
+        """
+        self.p_from = 0.0
+        self.p_to = 0.0
+        self.q_from = 0.0
+        self.q_to = 0.0
+
+        self.mu_s_from = 0.0
+        self.mu_s_to = 0.0
 
 #------------------------------------------------------------------------------
 #  "Generator" class:
@@ -798,9 +795,7 @@ class Generator(Named):
 
     def __init__(self, bus, name=None, online=True, base_mva=100.0, p=100.0,
             p_max=200.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0,
-            q_min=-30.0, pwl_points=None, cost_coeffs=None,
-            rate_up=1.0, rate_down=1.0, min_up=0,
-            min_down=0, initial_up=1, initial_down=0):
+            q_min=-30.0, p_cost=None, cost_model=POLYNOMIAL):
         """ Initialises a new Generator instance.
         """
         # Busbar to which the generator is connected.
@@ -853,46 +848,58 @@ class Generator(Named):
 #        self.c_shutdown = c_shutdown
 
         # Generator cost model: 'poly' or 'pwl' (default: 'poly')
-        if pwl_points is not None:
-            self.cost_model = "pwl"
-        elif cost_coeffs is not None:
-            self.cost_model = "poly"
-        else:
-            self.cost_model = "pwl"
+#        if pwl_points is not None:
+#            self.cost_model = "pwl"
+#        elif p_cost is not None:
+#            self.cost_model = "poly"
+#        else:
+#            self.cost_model = "pwl"
+        self.cost_model = cost_model
 
         # Polynomial cost curve coefficients.
         # (a, b, c) relates to: cost = c*p**3 + b*p**2 + a*p.
-        if cost_coeffs:
-            self.cost_coeffs = cost_coeffs
-        else:
-            self.cost_coeffs = (0.01, 0.1, 10.0)
+#        if cost_coeffs:
+#            self.cost_coeffs = cost_coeffs
+#        else:
+#            self.cost_coeffs = (0.01, 0.1, 10.0)
         # Piecewise linear cost segment points.
-        if pwl_points:
-            self.pwl_points = pwl_points
+#        if pwl_points:
+#            self.pwl_points = pwl_points
+#        else:
+#            self.pwl_points = [(0.0, 0.0), (1.0, 10.0)]
+
+        # Active power cost represented either by a tuple of quadratic
+        # polynomial coefficients or a list of piece-wise linear coordinates
+        # according to the value of the 'cost_model' attribute.
+        if p_cost is not None:
+            self.p_cost = p_cost
         else:
-            self.pwl_points = [(0.0, 0.0), (1.0, 10.0)]
-
-        # Ramp up rate (p.u./h).
-        self.rate_up = rate_up
-        # Ramp down rate (p.u./h).
-        self.rate_down = rate_down
-        # Minimum running time (h).
-
-        self.min_up = min_up
-        # Minimum shut down time (h).
-        self.min_down = min_down
-
-        # Initial number of periods up.
-        self.initial_up = initial_up
-        # Initial number of periods down.
-        self.initial_down = initial_down
-
-        # The output power that the Generator is despatched to generate
-        # as a result of solving the OPF problem.
-#        self.p_despatch = 0.0
+            if cost_model == POLYNOMIAL:
+                self.p_cost = (0.01, 0.1, 10.0)
+            elif cost_model == PIECEWISE_LINEAR:
+                self.p_cost = [(0.0, 0.0), (p_max, 10.0)]
+            else:
+                raise ValueError
 
         self.mu_pmin = 0.0
         self.mu_pmax = 0.0
+
+        # Unit Commitment -----------------------------------------------------
+
+        # Ramp up rate (p.u./h).
+#        self.rate_up = rate_up
+        # Ramp down rate (p.u./h).
+#        self.rate_down = rate_down
+
+        # Minimum running time (h).
+#        self.min_up = min_up
+        # Minimum shut down time (h).
+#        self.min_down = min_down
+
+        # Initial number of periods up.
+#        self.initial_up = initial_up
+        # Initial number of periods down.
+#        self.initial_down = initial_down
 
     @property
     def q_limited(self):
@@ -903,24 +910,24 @@ class Generator(Named):
         else:
             return False
 
-    @property
-    def mode(self):
-        """ Does the machine represent a generator or a despatchable load.
-        """
-        raise DeprecationWarning, "Use .is_load instead."
+#    @property
+#    def mode(self):
+#        """ Does the machine represent a generator or a despatchable load.
+#        """
+#        raise DeprecationWarning, "Use .is_load instead."
+#
+#        if 0 <= self.p_min < self.p_max:
+#            return GENERATOR
+#        elif self.p_min < self.p_max <= 0.0:
+#            return DISPATCHABLE_LOAD
+#        else:
+#            return "unknown"
 
-        if 0 <= self.p_min < self.p_max:
-            return "generator"
-        elif self.p_min < self.p_max <= 0.0:
-            return "vload"
-        else:
-            return "unknown"
-
-    @property
-    def p_cost(self):
-        """ Active power cost at the current output.
-        """
-        return self.total_cost(self.p)
+#    @property
+#    def p_cost(self):
+#        """ Active power cost at the current output.
+#        """
+#        return self.total_cost(self.p)
 
     @property
     def is_load(self):
@@ -928,18 +935,27 @@ class Generator(Named):
             need to be revised to allow sensible specification of both elastic
             demand and pumped storage units.
         """
-        return self.p_min < 0.0 and self.p_max == 0.0
+        return (self.p_min < 0.0) and (self.p_max == 0.0)
 
 
-    def total_cost(self, p):
+    def reset(self):
+        """ Resets the result variables.
+        """
+        self.mu_pmin = 0.0
+        self.mu_pmax = 0.0
+
+
+    def total_cost(self, p=None):
         """ Computes total cost for the generator at the given output level.
         """
-        if self.cost_model == "pwl":
-            n_segments = len(self.pwl_points) - 1
+        p = self.p if p is None else p
+
+        if self.cost_model == PIECEWISE_LINEAR:
+            n_segments = len(self.p_cost) - 1
             # Iterate over the piece-wise linear segments.
             for i in range(n_segments):
-                x1, y1 = self.pwl_points[i]
-                x2, y2 = self.pwl_points[(i + 1)]
+                x1, y1 = self.p_cost[i]
+                x2, y2 = self.p_cost[(i + 1)]
 
                 m = (y2 - y1) / (x2 - x1)
                 c = y1 - m * x1
@@ -953,11 +969,11 @@ class Generator(Named):
 #                # Use the last segment for values outwith the cost curve.
 #                result = m*p + c
 
-        elif self.cost_model == "poly":
-            result = self.cost_coeffs[-1]
+        elif self.cost_model == POLYNOMIAL:
+            result = self.p_cost[-1]
 
-            for i in range(1, len(self.cost_coeffs)):
-                result += self.cost_coeffs[-(i + 1)] * p**i
+            for i in range(1, len(self.p_cost)):
+                result += self.p_cost[-(i + 1)] * p**i
 
         else:
             raise ValueError
@@ -972,16 +988,16 @@ class Generator(Named):
         """
         p_min = self.p_min
         p_max = self.p_max
-        self.pwl_points = []
+        self.p_cost = []
         # Ensure that the cost model is polynomial for calling total_cost.
-        self.cost_model = "poly"
+        self.cost_model = POLYNOMIAL
 
         if p_min > 0.0:
             # Make the first segment go from the origin to p_min.
             step = (p_max - p_min) / (n_points - 2)
 
             y0 = self.total_cost(0.0)
-            self.pwl_points.append((0.0, y0))
+            self.p_cost.append((0.0, y0))
 
             x = p_min
             n_points -= 1
@@ -991,7 +1007,7 @@ class Generator(Named):
 
         for _ in range(n_points):
             y = self.total_cost(x)
-            self.pwl_points.append((x, y))
+            self.p_cost.append((x, y))
             x += step
 
         # Change the cost model.
@@ -1004,7 +1020,6 @@ class Generator(Named):
         from pylon.pyreto.smart_market import Offer
 
         qtyprc = self._get_qtyprc(n_points)
-
         return [Offer(self, qty, prc) for qty, prc in qtyprc]
 
 
@@ -1014,7 +1029,6 @@ class Generator(Named):
         from pylon.pyreto.smart_market import Bid
 
         qtyprc = self._get_qtyprc(n_points)
-
         return [Bid(self, qty, prc) for qty, prc in qtyprc]
 
 
@@ -1023,17 +1037,17 @@ class Generator(Named):
             cost function.  If the cost function is polynomial it will be
             converted to piece-wise linear using poly_to_pwl(n_points).
         """
-        if self.cost_model == "poly":
+        if self.cost_model == POLYNOMIAL:
             # Convert polynomial cost function to piece-wise linear.
             self.poly_to_pwl(n_points)
 
-        n_segments = len(self.pwl_points) - 1
+        n_segments = len(self.p_cost) - 1
 
         qtyprc = []
 
         for i in range(n_segments):
-            x1, y1 = self.pwl_points[i]
-            x2, y2 = self.pwl_points[(i + 1)]
+            x1, y1 = self.p_cost[i]
+            x2, y2 = self.p_cost[(i + 1)]
 
             quantity = x2 - x1
             price = (y2 - y1) / quantity
@@ -1044,13 +1058,13 @@ class Generator(Named):
 
 
     def adjust_limits(self):
-        """ Sets the active power limits, 'p_max' and 'p_min', according to the
-            pwl cost function points.
+        """ Sets the active power limits, 'p_max' and 'p_min', according to
+            the pwl cost function points.
         """
         if not self.is_load:
-            self.p_max = max([point[0] for point in self.pwl_points])
+            self.p_max = max([point[0] for point in self.p_cost])
         else:
-            p_min = min([point[0] for point in self.pwl_points])
+            p_min = min([point[0] for point in self.p_cost])
             if self.rated_pmin <= p_min <= self.rated_pmax:
                 self.q_min = self.q_min * p_min / self.rated_pmin
                 self.q_max = self.q_max * p_min / self.rated_pmin
@@ -1082,7 +1096,7 @@ class Generator(Named):
         valid = [offer for offer in valid if not offer.withheld]
 
         if valid:
-            self.pwl_points = self._offbids_to_points(valid)
+            self.p_cost = self._offbids_to_points(valid)
 
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
@@ -1119,7 +1133,7 @@ class Generator(Named):
             x_end, y_end = points[-1]
             points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
 
-            self.pwl_points = points
+            self.p_cost = points
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
             self.cost_model = "pwl"

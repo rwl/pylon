@@ -79,9 +79,9 @@ class StatelessTask(Task):
 
         # Compute costs in $ (not $/hr).  Apply the marginal cost function for
         # calculating fixed and variable marginal costs.
-        g.pwl_points = self.env.marginal_cost
+        g.p_cost = self.env.marginal_cost
         fixed_cost = t * g.total_cost(0.0)
-        variable_cost = (t * g.p_cost) - fixed_cost
+        variable_cost = (t * g.total_cost()) - fixed_cost
 
         revenue = t * sum([ob.revenue for ob in offbids])
         earnings = revenue - (fixed_cost + variable_cost)

@@ -67,13 +67,13 @@ class DCPF(object):
         # Branch susceptance matrix.
         self.B = None
 
-        # Branch source bus susceptance matrix.
+        # Branch from bus susceptance matrix.
         self.Bsrc = None
 
         # Vector of bus phase shift injections.
         self.p_businj = None
 
-        # Vector of phase shift injections at the source buses.
+        # Vector of phase shift injections at the from buses.
         self.p_srcinj = None
 
         # Vector of voltage angle guesses.
@@ -209,14 +209,14 @@ class DCPF(object):
         buses = case.connected_buses
         branches = case.online_branches
 
-        p_source = (self.Bsrc * self.v_angle + self.p_srcinj) * base_mva
-        p_target = -p_source
+        p_from = (self.Bsrc * self.v_angle + self.p_srcinj) * base_mva
+        p_to = -p_from
 
         for i, branch in enumerate(branches):
-            branch.p_source = p_source[i]
-            branch.p_target = p_target[i]
-            branch.q_source = 0.0
-            branch.q_target = 0.0
+            branch.p_from = p_from[i]
+            branch.p_to = p_to[i]
+            branch.q_from = 0.0
+            branch.q_to = 0.0
 
         for j, bus in enumerate(buses):
             bus.v_angle = self.v_angle[j] * (180 / math.pi)

@@ -260,7 +260,7 @@ class SmartMarket(object):
             # Capacity offered for active power.
             if p_offers:
                 pass
-#                p_max = max([point[0] for point in g.pwl_points])
+#                p_max = max([point[0] for point in g.p_cost])
 #                if not g.p_min <= p_max <= g.p_max:
 #                    logger.error("Offer quantity (%.2f) must be between %.2f "
 #                        "and %.2f." % (p_max, max([0, g.p_min]), g.p_max))
@@ -292,7 +292,7 @@ class SmartMarket(object):
             # Capacity offered for active power.
             if p_bids:
                 pass
-#                p_min = min([point[0] for point in g.pwl_points])
+#                p_min = min([point[0] for point in g.p_cost])
 #                if vl.p_min <= p_min <= vl.p_max:
 #                    vl.q_min = vl.q_min * p_min / vl.p_min
 #                    vl.q_max = vl.q_max * p_min / vl.p_min
@@ -420,7 +420,7 @@ class SmartMarket(object):
 #            # Compute costs in $ (not $/hr).
 #            fixed_cost = t * g.total_cost(0.0)
 #
-#            variable_cost = (t * g.p_cost) - fixed_cost
+#            variable_cost = (t * g.total_cost) - fixed_cost
 #
 #            if (not self.g_online[i]) and g.online:
 #                startup_cost = g.c_startup #g.total_cost(g.c_startup)

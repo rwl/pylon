@@ -214,8 +214,8 @@ class MATPOWERReader(CaseReader):
     def _get_branch_array_construct(self):
         """ Returns a construct for an array of branch data.
         """
-        source_bus = integer.setResultsName("fbus")
-        target_bus = integer.setResultsName("tbus")
+        from_bus = integer.setResultsName("fbus")
+        to_bus = integer.setResultsName("tbus")
         resistance = real.setResultsName("r")
         reactance = real.setResultsName("x")
         susceptance = real.setResultsName("b")
@@ -226,7 +226,7 @@ class MATPOWERReader(CaseReader):
         angle = real.setResultsName("angle")
         status = boolean.setResultsName("status")
 
-        branch_data = source_bus + target_bus + resistance + reactance + \
+        branch_data = from_bus + to_bus + resistance + reactance + \
             susceptance + long_mva + short_mva + emerg_mva + ratio + angle + \
             status + scolon
 
@@ -395,16 +395,16 @@ class MATPOWERReader(CaseReader):
         buses = self.case.buses
 
         bus_ids      = [bus._bus_id for bus in buses]
-        source_bus_idx = bus_ids.index(tokens["fbus"])
-        target_bus_idx = bus_ids.index(tokens["tbus"])
-        source_bus     = buses[source_bus_idx]
-        target_bus     = buses[target_bus_idx]
+        from_bus_idx = bus_ids.index(tokens["fbus"])
+        to_bus_idx = bus_ids.index(tokens["tbus"])
+        from_bus     = buses[from_bus_idx]
+        to_bus     = buses[to_bus_idx]
 
-#        source_bus = self.case.buses[tokens["fbus"]-1]
-#        target_bus = self.case.buses[tokens["tbus"]-1]
+#        from_bus = self.case.buses[tokens["fbus"]-1]
+#        to_bus = self.case.buses[tokens["tbus"]-1]
 
         branch_names = [e.name for e in self.case.branches]
-        e = Branch(source_bus=source_bus, target_bus=target_bus)
+        e = Branch(from_bus=from_bus, to_bus=to_bus)
 
         e.name        = make_unique_name("e", branch_names)
         e.r           = tokens["r"]
@@ -457,7 +457,7 @@ class MATPOWERReader(CaseReader):
                     points.append((x, y))
 #            print "Points:", points
 
-            g.pwl_points = points
+            g.p_cost = points
             g.cost_model = "pwl"
 
         # Polynomial cost data
@@ -479,7 +479,7 @@ class MATPOWERReader(CaseReader):
                 for i in 3-n_coeffs:
                     coeffs.append(0)
 
-            g.cost_coeffs = tuple(coeffs)
+            g.p_cost = tuple(coeffs)
             g.cost_model  = "poly"
 
         else:

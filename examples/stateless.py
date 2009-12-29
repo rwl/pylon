@@ -25,7 +25,7 @@ logger.setLevel(logging.DEBUG)
 # Define a single generator case with a fixed load.
 bus = Bus(p_demand=80.0)
 g = Generator(bus, p_max=60.0, p_min=0.0,
-              pwl_points=[(0.0, 0.0), (60.0, 600.0)])
+              p_cost=[(0.0, 0.0), (60.0, 600.0)])
 case = Case(buses=[bus], generators=[g])
 
 # Create the market.

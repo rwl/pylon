@@ -87,14 +87,14 @@ class DCOPF(object):
         # related to bus voltage angles by P = Bbus * Va + Pbusinj
         self.B = None
 
-        # Sparse branch source bus susceptance matrix. The real power flows at
+        # Sparse branch from bus susceptance matrix. The real power flows at
         # the from end the lines are related to the bus voltage angles by
         # Pf = Bf * Va + Pfinj
         self.Bsrc = None
 
         # The real power flows at the from end the lines are related to the bus
         # voltage angles by Pf = Bf * Va + Pfinj
-        self._theta_inj_source = None
+        self._theta_inj_from = None
 
         # The bus real power injections are related to bus voltage angles by
         # P = Bbus * Va + Pbusinj
@@ -144,7 +144,7 @@ class DCOPF(object):
 
         self.B, self.Bsrc, _, _ = self.case.B
 
-        self._theta_inj_source = self._get_theta_inj_source()
+        self._theta_inj_from = self._get_theta_inj_from()
         self._theta_inj_bus = self._get_theta_inj_bus()
 
         # Use the same cost model for all generators.
@@ -211,7 +211,7 @@ class DCOPF(object):
     #  Phase shift injection vectors:
     #--------------------------------------------------------------------------
 
-    def _get_theta_inj_source(self):
+    def _get_theta_inj_from(self):
         """ Returns the phase shift "quiescent" injections.
 
             | Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
@@ -232,12 +232,12 @@ class DCOPF(object):
 
         # Element-wise multiply
         # http://abel.ee.ucla.edu/cvxopt/documentation/users-guide/node9.html
-        source_inj = mul(b, angle)
+        from_inj = mul(b, angle)
 
-        logger.debug("Source bus phase shift injection vector:\n%s" %
-            source_inj)
+        logger.debug("From bus phase shift injection vector:\n%s" %
+            from_inj)
 
-        return source_inj
+        return from_inj
 
 
     def _get_theta_inj_bus(self):
@@ -249,19 +249,19 @@ class DCOPF(object):
         n_branches = len(self.case.online_branches)
 
         # Build incidence matrices
-        source_incd = matrix(0, (n_buses, n_branches), tc="i")
-        target_incd = matrix(0, (n_buses, n_branches), tc="i")
+        from_incd = matrix(0, (n_buses, n_branches), tc="i")
+        to_incd = matrix(0, (n_buses, n_branches), tc="i")
         for branch_idx, branch in enumerate(branches):
             # Find the indexes of the buses at either end of the branch
-            source_idx = buses.index(branch.source_bus)
-            target_idx = buses.index(branch.target_bus)
+            from_idx = buses.index(branch.from_bus)
+            to_idx = buses.index(branch.to_bus)
 
-            source_incd[source_idx, branch_idx] = 1
-            target_incd[target_idx, branch_idx] = 1
+            from_incd[from_idx, branch_idx] = 1
+            to_incd[to_idx, branch_idx] = 1
 
         # Matrix multiply
-        source_inj = self._theta_inj_source
-        bus_inj = source_incd * source_inj + target_incd * -source_inj
+        from_inj = self._theta_inj_from
+        bus_inj = from_incd * from_inj + to_incd * -from_inj
 
         logger.debug("Bus phase shift injection vector:\n%s" % bus_inj)
 
@@ -330,9 +330,9 @@ class DCOPF(object):
             p_cost = []
 #            for v in _g_buses:
 #                for g in v.generators:
-#                    p_cost.append(g.p_cost)
+#                    p_cost.append(g.total_cost())
             for g in generators:
-                p_cost.append(g.p_cost)
+                p_cost.append(g.total_cost())
 
             pw_cost = matrix(p_cost)
             x = matrix([x, pw_cost])
@@ -364,7 +364,7 @@ class DCOPF(object):
 
         if self._solver_type == "linear": # pw cost constraints
             # A list of the number of cost constraints for each generator
-            n_segments = [len(g.pwl_points) - 1 for g in generators]
+            n_segments = [len(g.p_cost) - 1 for g in generators]
             # The total number of cost constraints (for matrix sizing)
             n_cc = sum(n_segments)
             # The total number of cost variables.
@@ -381,8 +381,8 @@ class DCOPF(object):
 #                g_idx = generators.index(g)
 
                 for j in range(n_segments[i]):
-                    x1, y1 = g.pwl_points[j]
-                    x2, y2 = g.pwl_points[j + 1]
+                    x1, y1 = g.p_cost[j]
+                    x2, y2 = g.p_cost[j + 1]
 
                     m = (y2 - y1) / (x2 - x1) # segment gradient
                     c = y1 - m * x1 # segment y-intercept
@@ -398,7 +398,7 @@ class DCOPF(object):
 
         elif self._solver_type == "quadratic":
             # The total number of cost variables
-#            n_cost = len([g.p_cost for g in generators])
+#            n_cost = len([g.total_cost() for g in generators])
 
             a_cost = spmatrix([], [], [], size=(0, n_buses + n_generators))
             b_cost = matrix([], size=(0, 1))
@@ -435,7 +435,7 @@ class DCOPF(object):
 
         # Append zeros for piecewise linear cost constraints
         if self._solver_type == "linear":
-            n_cost = len([g.p_cost for g in generators])
+            n_cost = len([g.total_cost() for g in generators])
         else:
             n_cost = 0
 
@@ -480,7 +480,7 @@ class DCOPF(object):
         # Include zero matrix for pw linear cost constraints.
         if self._solver_type == "linear":
             # Number of cost variables (n_generators or zero).
-            n_cost = len([g.p_cost for g in generators])
+            n_cost = len([g.total_cost() for g in generators])
         else:
             n_cost = 0
 
@@ -526,7 +526,7 @@ class DCOPF(object):
 
         if self._solver_type == "linear":
             # Number of cost variables (n_generators or zero).
-            n_cost = len([g.p_cost for g in generators])
+            n_cost = len([g.total_cost() for g in generators])
         else:
             n_cost = 0
 
@@ -567,29 +567,29 @@ class DCOPF(object):
 
         if self._solver_type == "linear":
             # Number of cost variables (n_gen or zero).
-            n_cost = len([g.p_cost for g in generators])
+            n_cost = len([g.total_cost() for g in generators])
         else:
             n_cost = 0
 
         # Exclude generation and cost variables from the constraint.
         A_gen = spmatrix([], [], [], (n_branch, n_gen + n_cost))
 
-        # Branch 'source' end flow limit.
-        A_source = sparse([self.Bsrc.T, A_gen.T]).T
-        # Branch 'target' flow limit.
-        A_target = sparse([-self.Bsrc.T, A_gen.T]).T
+        # Branch 'from' end flow limit.
+        A_from = sparse([self.Bsrc.T, A_gen.T]).T
+        # Branch 'to' flow limit.
+        A_to = sparse([-self.Bsrc.T, A_gen.T]).T
 
-        A_flow = sparse([A_source, A_target])
+        A_flow = sparse([A_from, A_to])
 
         logger.debug("Flow limit matrix:\n%s" % A_flow)
 
 
         s_max = matrix([e.s_max for e in branches])
-        # Source and target limits are both the same.
-        b_source = s_max / base_mva - self._theta_inj_source
-        b_target = s_max / base_mva + self._theta_inj_source
+        # From and to limits are both the same.
+        b_from = s_max / base_mva - self._theta_inj_from
+        b_to = s_max / base_mva + self._theta_inj_from
 
-        b_flow = matrix([b_source, b_target])
+        b_flow = matrix([b_from, b_to])
 
         logger.debug("Flow limit vector:\n%s" % b_flow)
 
@@ -618,7 +618,7 @@ class DCOPF(object):
             h = spmatrix([], [], [], (dim, dim))
 
         elif self._solver_type == "quadratic":
-            coeffs = [g.cost_coeffs for g in generators]
+            coeffs = [g.p_cost for g in generators]
 
             # Quadratic cost coefficients in p.u.
             c2_coeffs = matrix([c2 * base_mva**2 for c2, _, _ in coeffs])
@@ -659,7 +659,7 @@ class DCOPF(object):
         else:
             v_zeros = matrix(0.0, (n_buses, 1))
 
-            cost_coeffs = [g.cost_coeffs for g in generators]
+            cost_coeffs = [g.p_cost for g in generators]
 
             # Linear cost coefficients in p.u.
             c1_coeffs = matrix([c1 * base_mva for _, c1, _ in cost_coeffs])
@@ -784,13 +784,13 @@ class DCOPF(object):
 #            generator.p_despatch = p[i] * base_mva
 
         # Branch power flows.
-        p_source = self.Bsrc * v_angle * base_mva
-        p_target = -p_source
+        p_from = self.Bsrc * v_angle * base_mva
+        p_to = -p_from
         for j, branch in enumerate(branches):
-            branch.p_source = p_source[j]
-            branch.p_target = p_target[j]
-            branch.q_source = 0.0
-            branch.q_target = 0.0
+            branch.p_from = p_from[j]
+            branch.p_to = p_to[j]
+            branch.q_from = 0.0
+            branch.q_to = 0.0
 
         # Update lambda and mu.
         # A Lagrange multiplier is the increase in the value of the objective
@@ -806,8 +806,8 @@ class DCOPF(object):
 
         for j, branch in enumerate(branches):
             # TODO: Find multipliers for lower and upper bound constraints.
-            branch.mu_s_source = 0.0
-            branch.mu_s_target = 0.0
+            branch.mu_s_from = 0.0
+            branch.mu_s_to = 0.0
 
         for k, generator in enumerate(generators):
             generator.mu_pmin = ineqlin[k] / base_mva
@@ -817,8 +817,8 @@ class DCOPF(object):
 
         # Zero multipliers for all offline components.
         for branch in offline_branches:
-            branch.mu_s_source = 0.0
-            branch.mu_s_target = 0.0
+            branch.mu_s_from = 0.0
+            branch.mu_s_to = 0.0
 
         for generator in offline_generators:
             generator.mu_pmin = 0.0

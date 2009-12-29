@@ -494,7 +494,7 @@ class PSSEReader(CaseReader):
 #            print "More than on to bus for branch found", buses
 #            return
 
-        branch = Branch(source_bus=from_bus, target_bus=to_bus)
+        branch = Branch(from_bus=from_bus, to_bus=to_bus)
 
         branch.r = tokens["R"]
         branch.x = tokens["X"]
@@ -528,7 +528,7 @@ class PSSEReader(CaseReader):
             (tokens["From"], tokens["To"]))
             return
 
-        branch = Branch(source_bus=from_bus, target_bus=to_bus)
+        branch = Branch(from_bus=from_bus, to_bus=to_bus)
         branch.online = tokens["STAT"]
 
         self.case.branches.append(branch)

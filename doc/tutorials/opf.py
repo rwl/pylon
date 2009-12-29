@@ -7,16 +7,15 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 import sys
-from pylon import Case, Bus, Branch, Generator, Load, DCOPF
-from pylon.readwrite import ReSTWriter
+from pylon import Case, Bus, Branch, Generator, DCOPF
 
 """ This tutorial provides a guide for solving an Optimal Power
 Flow problem using Pylon.
 
 First create two generators with different costs: """
 
-g1 = Generator(p_min=0.0, p_max=80.0, cost_coeffs=(0.0, 6.0, 0.0))
-g2 = Generator(p_min=0.0, p_max=60.0, cost_coeffs=(0.0, 9.0, 0.0))
+g1 = Generator(p_min=0.0, p_max=80.0, p_cost=(0.0, 6.0, 0.0))
+g2 = Generator(p_min=0.0, p_max=60.0, p_cost=(0.0, 9.0, 0.0))
 
 
 """ Add these to a network with the desired connectivity. """
@@ -31,4 +30,4 @@ case = Case(buses=[bus1, bus2], branches=[line])
 DCOPF().solve(case)
 
 """ View the results as ReStructuredText tables. """
-ReSTWriter().write(case, sys.stdout)
+case.save_rst(sys.stdout)

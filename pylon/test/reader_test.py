@@ -90,24 +90,24 @@ class ReaderTest(TestCase):
             self.assertEqual(busidx, gbus_idxs[i])
 
 
-    def _validate_branch_connections(self, source_idxs, target_idxs):
+    def _validate_branch_connections(self, from_idxs, to_idxs):
         """ Validates that Branch objects are connected to the expected
-            source and target buses.
+            from and to buses.
         """
         c = self.case
 
         for e in c.branches:
-            source_idx = c.buses.index(e.source_bus)
-            source_expected = source_idxs[c.branches.index(e)]
-            self.assertEqual(source_idx, source_expected,
-                "Source bus %d expected, %d found" %
-                (source_expected, source_idx))
+            from_idx = c.buses.index(e.to_bus)
+            from_expected = from_idxs[c.branches.index(e)]
+            self.assertEqual(from_idx, from_expected,
+                "From bus %d expected, %d found" %
+                (from_expected, from_idx))
 
-            target_idx = c.buses.index(e.target_bus)
-            target_expected = target_idxs[c.branches.index(e)]
-            self.assertEqual(target_idx, target_expected,
-                "Target bus %d expected, %d found" %
-                (target_expected, target_idx))
+            to_idx = c.buses.index(e.to_bus)
+            to_expected = to_idxs[c.branches.index(e)]
+            self.assertEqual(to_idx, to_expected,
+                "To bus %d expected, %d found" %
+                (to_expected, to_idx))
 
 #------------------------------------------------------------------------------
 #  "MatpowerReaderTest" class:
@@ -138,17 +138,17 @@ class MatpowerReaderTest(ReaderTest):
         self._validate_generator_connections(gbus_idxs=[0, 1, 2])
 
         self._validate_branch_connections(
-            source_idxs=[0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4],
-            target_idxs=[1, 3, 4, 2, 3, 4, 5, 4, 5, 4, 5])
+            from_idxs=[0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4],
+            to_idxs=[1, 3, 4, 2, 3, 4, 5, 4, 5, 4, 5])
 
         # Generator costs.
         for g in c.generators:
             self.assertEqual(g.cost_model, "poly")
-            self.assertEqual(len(g.cost_coeffs), 3)
+            self.assertEqual(len(g.p_cost), 3)
 
-        self.assertEqual(c.generators[0].cost_coeffs[0], 0.00533)
-        self.assertEqual(c.generators[1].cost_coeffs[1], 10.333)
-        self.assertEqual(c.generators[2].cost_coeffs[2], 240)
+        self.assertEqual(c.generators[0].p_cost[0], 0.00533)
+        self.assertEqual(c.generators[1].p_cost[1], 10.333)
+        self.assertEqual(c.generators[2].p_cost[2], 240)
 
 
 
@@ -166,10 +166,10 @@ class MatpowerReaderTest(ReaderTest):
         self._validate_generator_connections(gbus_idxs=[0, 1, 21, 26, 22, 12])
 
         self._validate_branch_connections(
-            source_idxs=[0, 0, 1, 2, 1, 1, 3, 4, 5, 5, 5, 5, 8, 8, 3, 11, 11,
+            from_idxs=[0, 0, 1, 2, 1, 1, 3, 4, 5, 5, 5, 5, 8, 8, 3, 11, 11,
                          11, 11, 13, 15, 14, 17, 18, 9, 9, 9, 9, 20, 14, 21,
                          22, 23, 24, 24, 27, 26, 26, 28, 7, 5],
-            target_idxs=[1, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 9, 11, 12, 13,
+            to_idxs=[1, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 9, 11, 12, 13,
                          14, 15, 14, 16, 17, 18, 19, 19, 16, 20, 21, 21, 22,
                          23, 23, 24, 25, 26, 26, 28, 29, 29, 27, 27])
 
@@ -178,12 +178,12 @@ class MatpowerReaderTest(ReaderTest):
 
         for g in generators:
             self.assertEqual(g.cost_model, "pwl")
-            self.assertEqual(len(g.pwl_points), 4)
-            self.assertEqual(g.pwl_points[0], (0.0, 0.0))
+            self.assertEqual(len(g.p_cost), 4)
+            self.assertEqual(g.p_cost[0], (0.0, 0.0))
 
-        self.assertEqual(generators[0].pwl_points[1], (12.0, 144.0))
-        self.assertEqual(generators[4].pwl_points[2], (36.0, 1296.0))
-        self.assertEqual(generators[5].pwl_points[3], (60.0, 2832.0))
+        self.assertEqual(generators[0].p_cost[1], (12.0, 144.0))
+        self.assertEqual(generators[4].p_cost[2], (36.0, 1296.0))
+        self.assertEqual(generators[5].p_cost[3], (60.0, 2832.0))
 
 #------------------------------------------------------------------------------
 #  "PSSEReaderTest" class:
@@ -227,8 +227,8 @@ class PSSEReaderTest(ReaderTest):
 
         self._validate_generator_connections(gbus_idxs=[0, 1])
 
-        self._validate_branch_connections(source_idxs=[0, 0, 1],
-                                          target_idxs=[1, 2, 2])
+        self._validate_branch_connections(from_idxs=[0, 0, 1],
+                                          to_idxs=[1, 2, 2])
 
 #------------------------------------------------------------------------------
 #  "PSATReaderTest" class:

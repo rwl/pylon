@@ -296,7 +296,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
 
         self.routine._solver_type = self.routine._get_solver_type()
 
-        self.routine._theta_inj_source = self.routine._get_theta_inj_source()
+        self.routine._theta_inj_from = self.routine._get_theta_inj_from()
         self.routine._theta_inj_bus = self.routine._get_theta_inj_bus()
 
         A_mis, b_mis = self.routine._get_active_power_flow_equations()
@@ -431,7 +431,7 @@ class DCOPFTest(unittest.TestCase):
 #        success = self.routine(self.case)
 
 
-    def test_theta_injection_source(self):
+    def test_theta_injection_from(self):
         """ Test phase shift 'quiescent' injections, used for calculating
             branch real power flows at the from end.
 
@@ -439,7 +439,7 @@ class DCOPFTest(unittest.TestCase):
 
                  0  0  0  0  0  0  0  0  0  0  0
         """
-        theta_inj = self.routine._get_theta_inj_source()
+        theta_inj = self.routine._get_theta_inj_from()
 
         self.assertEqual(len(theta_inj), 11)
         # FIXME: Repeat for a case with transformers or shunt capacitors.
@@ -455,7 +455,7 @@ class DCOPFTest(unittest.TestCase):
 
                  0  0  0  0  0  0
         """
-        self.routine._theta_inj_source = self.routine._get_theta_inj_source()
+        self.routine._theta_inj_from = self.routine._get_theta_inj_from()
 
         theta_inj = self.routine._get_theta_inj_bus()
 
@@ -562,7 +562,7 @@ class DCOPFTest(unittest.TestCase):
 
         self.routine._solver_type = self.routine._get_solver_type()
 
-        self.routine._theta_inj_source = self.routine._get_theta_inj_source()
+        self.routine._theta_inj_from = self.routine._get_theta_inj_from()
         self.routine._theta_inj_bus = self.routine._get_theta_inj_bus()
 
         A_mis, b_mis = self.routine._get_active_power_flow_equations()
@@ -716,7 +716,7 @@ class DCOPFTest(unittest.TestCase):
 
         self.routine._solver_type = self.routine._get_solver_type()
 
-        self.routine._theta_inj_source = self.routine._get_theta_inj_source()
+        self.routine._theta_inj_from = self.routine._get_theta_inj_from()
 
         A_flow, b_flow = self.routine._get_branch_flow_limit_constraint()
 #        b_flow = self.routine._bb_flow

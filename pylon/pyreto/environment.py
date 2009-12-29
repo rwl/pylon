@@ -87,7 +87,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         self.p_min = asset.p_min
         # Marginal cost function proportional to current capacity.  Agents may
         # offer/bid above or below marginal cost.
-        self.marginal_cost = asset.pwl_points
+        self.marginal_cost = asset.p_cost
 #        # Amortised fixed costs.
 #        self.c_startup = asset.c_startup
 #        self.c_shutdown = asset.c_shutdown
@@ -157,8 +157,8 @@ class ParticipantEnvironment(GraphicalEnvironment):
 #        dispatch_sensors[5] = dispatch.shutdown
 
         # Case related sensors.
-        flows = array([branch.p_source for branch in case.branches])
-        mu_flow = array([branch.mu_s_source for branch in case.branches])
+        flows = array([branch.p_from for branch in case.branches])
+        mu_flow = array([branch.mu_s_from for branch in case.branches])
         voltages = array([bus.v_magnitude for bus in case.buses])
         angles = array([bus.v_angle for bus in case.buses])
         nodal_prc = array([bus.p_lambda for bus in case.buses])
