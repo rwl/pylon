@@ -16,6 +16,10 @@
 #------------------------------------------------------------------------------
 
 """ Defines a generalised OPF solver and an OPF model.
+
+    References:
+        Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b2,
+        http://www.pserc.cornell.edu/matpower/, December 2009
 """
 
 #------------------------------------------------------------------------------
@@ -26,7 +30,8 @@ from math import pi
 
 from cvxopt import matrix, spmatrix, sparse
 
-from case import REFERENCE, POLYNOMIAL
+from util import Named
+from case import REFERENCE, POLYNOMIAL, PIECEWISE_LINEAR
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -40,11 +45,15 @@ INF = -1e10
 
 class OPF:
     """ Defines a generalised OPF solver.
+
+        References:
+            Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b2,
+            http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
     def __init__(self, case, dc=True, show_progress=True, max_iterations=100,
                  absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
-                 ignore_ang_lim=False):
+                 ignore_ang_lim=True):
         """ Initialises a new OPF instance.
         """
         # Case under optimisation.
@@ -86,7 +95,8 @@ class OPF:
             self.B, _, self.Pbusinj, self.Pfinj = self.case.B
             self.power_mismatch()
             self.voltage_angle_reference()
-            self.branch_voltage_angle_difference_limit()
+        self.branch_voltage_angle_difference_limit()
+        self.construct_opf_model()
 
 
     def ref_check(self):
@@ -239,16 +249,69 @@ class OPF:
 
         return Aang, lang, uang, iang
 
+
+    def pwl_gen_costs(self):
+        """ Returns the basin constraints for piece-wise linear gen cost
+            variables.
+
+            References:
+                C. E. Murillo-Sanchez, "makeAy.m", MATPOWER, PSERC Cornell,
+                version 4.0b2, http://www.pserc.cornell.edu/matpower/, Dec 09
+        """
+        gpwl = [g for g in self.generators if g.cost_model == PIECEWISE_LINEAR]
+        ny = len(gpwl) # number of extra y variables.
+        if ny > 0:
+            # Total number of cost points.
+            m = len([p for g in gpwl for p in g.p_cost])
+            Ay = spmatrix([], [], [], (m - ny, ybas + ny -1))
+            by = matrix()
+        else:
+            Ay = spmatrix([], [], [] (ybas + ny, 0))
+            by = matrix()
+
+        return Ay, by
+
+
+    def construct_opf_model(self):
+        """ Returns an OPF model with variables and constraints.
+        """
+        if self.dc:
+            om = OPFModel()
+            om.add_var(Variable("Va", self.nb, self.Va, self.Val, self.Vau))
+            om.add_var(Variable("Pg", self.ng, self.Pg, self.Pmin, self.Pmax))
+
+            om.add_constr(LinearConstraint("Pmis", self.Amis,
+                                           self.bmis, self.bmis, ["Va", "Pg"]))
+            om.add_constr(LinearConstraint("Pf", self.Bf[self.il, :],
+                                           self.lpf, self.upf, ["Va"]))
+            om.add_constr(LinearConstraint("Pt", -self.Bf[self.il, :],
+                                           self.lpf, self.upt, ["Va"]))
+            om.add_constr(LinearConstraint("ang", self.Aang,
+                                           self.lang, self.uang, ["Va"]))
+        else:
+            raise NotImplementedError
+
 #------------------------------------------------------------------------------
 #  "Indexed" class:
 #------------------------------------------------------------------------------
 
-class Indexed:
-    def __init__(self):
+class Indexed(Named):
+    def __init__(self, name, N):
+        self.name = name
+
+        # Starting index.
         self.i0 = 0
+
+        # Ending index.
         self.iN = 0
+
+        # Number of variables.
         self.N = 0
+
+        # Number of variable sets.
         self.NS = 0
+
+        # Ordered list of variable sets.
         self.order = {}
 
 #------------------------------------------------------------------------------
@@ -256,10 +319,31 @@ class Indexed:
 #------------------------------------------------------------------------------
 
 class Variable(Indexed):
-    def __init__(self):
-        self.v0 = 0.0
-        self.vl = 0.0
-        self.vu = 0.0
+    """ Defines a set of variables.
+    """
+
+    def __init__(self, name, N, v0=None, vl=None , vu=None):
+        """ Initialises a new Variable instance.
+        """
+        super(Variable, self).__init__(name, N)
+
+        # Initial value of the variables. Zero by default.
+        if v0 is None:
+            self.v0 = matrix(0.0, (N, 1))
+        else:
+            self.v0 = v0
+
+        # Lower bound on the variables. Unbounded below be default.
+        if vl is None:
+            self.vl = matrix(-INF, (N, 1))
+        else:
+            self.vl = vl
+
+        # Upper bound on the variables. Unbounded above by default.
+        if vu is None:
+            self.vu = matrix(INF, (N, 1))
+        else:
+            self.vu = vu
 
 #------------------------------------------------------------------------------
 #  "NonLinearConstraint" class:
