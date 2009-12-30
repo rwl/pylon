@@ -33,7 +33,7 @@ from math import pi
 
 import numpy
 
-from cvxopt import matrix, spmatrix, sparse, div, mul
+from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul
 
 from util import Named
 from case import REFERENCE, POLYNOMIAL, PIECEWISE_LINEAR
@@ -365,7 +365,12 @@ class DCOPFSolver:
         """
         self.unpack_model()
         self.dimension_data()
-        self.linear_constraints()
+        self.split_constraints()
+        self.pwl_costs()
+        self.quadratic_costs()
+        self.combine_costs()
+        self.transform_coefficients()
+        self.var_bounds()
 
 
     def unpack_model(self):
@@ -402,15 +407,108 @@ class DCOPFSolver:
         return ipol, ipwl, nb, nl, nw, ny, nxyz
 
 
-    def linear_constraints(self):
+    def split_constraints(self):
         """ Returns the linear problem constraints.
         """
-        self.A, self.l, self.u = self.om.linear_constraints()
+        A, l, u = self.om.linear_constraints() # l <= A*x <= u
+        assert len(l) == len(u)
 
-        return self.A, self.l, self.u
+        # Indexes for equality, greater than (unbounded above), less than
+        # (unbounded below) and doubly-bounded constraints.
+        ieq = matrix([i for i, v in enumerate(abs(u - l)) if v < EPS])
+        igt = matrix([i for i in range(len(l)) if u[i] > 1e10 and l[i] > -1e10])
+        ilt = matrix([i for i in range(len(l)) if u[i] < -1e10 and l[i] < 1e10])
+        ibx = matrix([i for i in range(len(l))
+                      if (abs(u[i] - l[i]) > EPS) and
+                      (u[i] < 1e10) and (l[i] > -1e10)])
+
+        self.Aeq = A[ieq, :]
+        self.beq = u[ieq, :]
+        self.Aieq = sparse([A[ilt, :], -A[igt, :], A[ibx, :], -A[ibx, :]])
+        self.bieq = matrix([u[ilt], -l[igt], u[ibx], -l[ibx]])
+
+        return self.Aeq, self.beq, self.Aieq, self.bieq
 
 
-#    def pwl_costs(self):
+    def pwl_costs(self):
+        if self.ny > 0:
+            Npwl = self.Npwl = spmatrix(1.0, )
+            Hpwl = self.Hpwl = 0
+            Cpwl = self.Cpwl = 1
+            fparm_pwl = self.fparm_pwl = matrix([1, 0, 0, 1])
+        else:
+            Npwl = self.Npwl = spmatrix([], [], [], (0, self.nxyz))
+            Hpwl = self.Hpwl = matrix()
+            Cpwl = self.Cpwl = matrix()
+            fparm_pwl = self.fparm_pwl = matrix()
+
+        return Npwl, Hpwl, Cpwl, fparm_pwl
+
+
+    def quadratic_costs(self):
+        npol = len(self.ipol)
+
+        if [g for g in self.generators[self.ipol] if len(g.p_cost) > 3]:
+            logger.error("Order of polynomial cost greater than quadratic.")
+
+        iqdr = matrix([i for i, g in enumerate(self.generators[self.ipol])
+                       if len(g.p_cost) == 3])
+        ilin = matrix([i for i, g in enumerate(self.generators[self.ipol])
+                       if len(g.p_cost) == 2])
+
+        polycf = matrix(0.0, (npol, 3))
+        if len(iqdr) > 0:
+            polycf[iqdr, :] = matrix([g.p_cost for g in
+                                   self.generators[self.ipol[iqdr]]])
+
+        polycf[ilin, 1:2] = matrix([g.p_cost[:2] for g in
+                                   self.generators[self.ipol[iqdr]]])
+
+        # Convert to per-unit.
+        base_mva = self.base_mva
+        polycf *= spdiag([base_mva**2, base_mva, 1])
+
+        Pg = self.om.get_var("Pg")
+        Npol = spmatrix(1.0, range(npol), Pg-1 + self.ipol, (npol, self.nxyz))
+        Hpol = spmatrix(2 * polycf[:, 1], range(npol), range(npol))
+        Cpol = polycf[:, 2]
+        fparm_pol = matrix(1., (npol, 1)) * matrix([1, 0, 0, 1])
+
+        return Pg, Npol, Hpol, Cpol, fparm_pol
+
+
+    def combine_costs(self):
+        NN = sparse([self.Npwl, self.Npol, self.N])
+        HHw = sparse([self.Hpwl,
+                      spmatrix([], [], [], (self.any_pwl, self.npol +self.nw)),
+                      spmatrix([], [], [], (self.npol, self.any_pwl)),
+                      self.Hpol,
+                      spmatrix([], [], [], (self.npol, self.nw)),
+                      spmatrix([], [], [], (self.nw, self.any_pwl +self.npol)),
+                      self.H])
+        CCw = matrix([self.Cpwl, self.Cpol, self.Cw])
+        ffparm = matrix([self.fparm_pwl, self.fparm_pol, self.fparm])
+
+        return NN, HHw, CCw, ffparm
+
+
+    def transform_coefficients(self):
+        """ Transforms quadratic coefficients for w into coefficients for X.
+        """
+        nnw = self.any_pwl + self.npol + self.nw
+        M = spmatrix(self.ffparm[:, 3], range(nnw), range(nnw))
+        MR = M * self.ffparm[:, 2]
+        HMR = self.HHw * MR
+        MN = M * self.NN
+        HH = MN.T * self.HHw, MN
+        CC = MN.T * (self.CCw - HMR)
+        # Constant term of cost, apparently.
+        C0 = 1./2. * MR.T * HMR + sum(self.polycf[:, 3])
+
+
+    def var_bounds(self):
+        x0, LB, UB = self.om.getv()
+        return x0, LB, UB
 
 #------------------------------------------------------------------------------
 #  "Indexed" class:
