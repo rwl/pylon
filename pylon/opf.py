@@ -14,12 +14,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
-from pylon.case import POLYNOMIAL
 
 """ Defines a generalised OPF solver and an OPF model.
 
     References:
-        Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b2,
+        Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
         http://www.pserc.cornell.edu/matpower/, December 2009
 """
 
@@ -34,6 +33,7 @@ from math import pi
 import numpy
 
 from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul
+from cvxopt.solvers import qp, lp
 
 from util import Named
 from case import REFERENCE, POLYNOMIAL, PIECEWISE_LINEAR
@@ -59,7 +59,7 @@ class OPF:
     """ Defines a generalised OPF solver.
 
         References:
-            Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b2,
+            Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
             http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
@@ -272,7 +272,7 @@ class OPF:
 
             References:
                 C. E. Murillo-Sanchez, "makeAy.m", MATPOWER, PSERC Cornell,
-                version 4.0b2, http://www.pserc.cornell.edu/matpower/, Dec 09
+                version 4.0b1, http://www.pserc.cornell.edu/matpower/, Dec 09
         """
         if self.dc:
             pgbas = 0
@@ -353,11 +353,15 @@ class DCOPFSolver:
     """ Defines a solver for DC optimal power flow.
     """
 
-    def __init__(self, om):
+    def __init__(self, om, solver=None):
         """ Initialises a new DCOPFSolver instance.
         """
         # Optimal power flow model.
         self.om = om
+
+        # Specify an alternative solver ("mosek" (or "glpk" for linear
+        # formulation)). Specify None to use the CVXOPT solver..
+        self.solver = solver
 
 
     def solve(self):
@@ -502,13 +506,34 @@ class DCOPFSolver:
         MN = M * self.NN
         HH = MN.T * self.HHw, MN
         CC = MN.T * (self.CCw - HMR)
-        # Constant term of cost, apparently.
+        # Constant term of cost.
         C0 = 1./2. * MR.T * HMR + sum(self.polycf[:, 3])
+
+        return HH, CC, C0
 
 
     def var_bounds(self):
         x0, LB, UB = self.om.getv()
         return x0, LB, UB
+
+
+    def run_opf(self):
+        if len(self.HH) > 0:
+            P, q = self.HH, self.CC
+            G, h = self.Aieq, self.bieq,
+            A, b = self.Aeq, self.beq,
+#            initvals = {"x": self.x_init}
+
+            solution = qp(P, q, G, h, A, b, self.solver)#, initvals)
+        else:
+            c = self.CC
+            G, h = self.Aieq, self.b_ieq,
+            A, b = self.Aeq, self.b_eq,
+#            primalstart = {"x": self.x_init}
+
+            solution = lp(c, G, h, A, b, self.solver)#, primalstart)
+
+        return solution
 
 #------------------------------------------------------------------------------
 #  "Indexed" class:
