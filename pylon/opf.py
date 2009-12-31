@@ -35,7 +35,7 @@ import numpy
 from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul
 from cvxopt import solvers
 
-from util import Named
+from util import Named, conj
 from case import REFERENCE, POLYNOMIAL, PIECEWISE_LINEAR
 
 #------------------------------------------------------------------------------
@@ -63,9 +63,9 @@ class OPF:
             http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
-    def __init__(self, case, dc=True, show_progress=True, max_iterations=100,
-                 absolute_tol=1e-7, relative_tol=1e-6, feasibility_tol=1e-7,
-                 ignore_ang_lim=True):
+    def __init__(self, case, dc=True, ignore_ang_lim=True, show_progress=True,
+                 max_iterations=100, absolute_tol=1e-7, relative_tol=1e-6,
+                 feasibility_tol=1e-7):
         """ Initialises a new OPF instance.
         """
         # Case under optimisation.
@@ -73,6 +73,9 @@ class OPF:
 
         # Use DC power flow formulation.
         self.dc = dc
+
+        # Ignore angle difference limits for branches even if specified.
+        self.ignore_ang_lim = ignore_ang_lim
 
         # Turns the output to the screen on or off.
         self.show_progress = show_progress
@@ -89,52 +92,49 @@ class OPF:
         # Tolerance for feasibility conditions.
         self.feasibility_tol = feasibility_tol
 
-        # Ignore angle difference limits for branches even if specified.
-        self.ignore_ang_lim = ignore_ang_lim
-
 
     def solve(self):
         """ Solves an optimal power flow and returns a results dictionary.
         """
         base_mva = self.case.base_mva
         # Set algorithm parameters.
-        self.algorithm_parameters()
+        self._algorithm_parameters()
         # Check for one reference bus.
-        refs = self.ref_check(self.case)
+        refs = self._ref_check(self.case)
         # Remove isolated components.
-        buses, branches, gens = self.remove_isolated(self.case)
+        buses, branches, gens = self._remove_isolated(self.case)
         # Zero the case result attributes.
         self.case.reset()
         # Compute problem dimensions.
-        nb, nl, ng = self.dimension_data(buses, branches, gens)
+        nb, nl, ng = self._dimension_data(buses, branches, gens)
         # Convert single-block piecewise-linear costs into linear polynomial.
-        generators = self.pwl1_to_poly(gens)
+        generators = self._pwl1_to_poly(gens)
         # Set-up initial problem variables.
-        Va, Vm, Pg, Qg = self.init_vars(buses, generators, base_mva)
+        Va, Vm, Pg, Qg = self._init_vars(buses, generators, base_mva)
         # Set-up initial problem bounds.
-        Pmin, Pmax, Qmin, Qmax = self.init_bounds(generators, base_mva)
+        Pmin, Pmax, Qmin, Qmax = self._init_bounds(generators, base_mva)
 
         if self.dc: # DC model.
             # Get the susceptance matrices and phase shift injection vectors.
             B, Bf, Pbusinj, Pfinj = self.case.B
             # Power mismatch constraints (B*Va + Pg = Pd).
-            Amis, bmis = self.power_mismatch(buses, generators, nb, ng,
+            Amis, bmis = self._power_mismatch(buses, generators, nb, ng,
                                              B, Pbusinj, base_mva)
             # Branch flow limit constraints.
-            lpf, upf, upt, il = self.branch_flow(branches, Pfinj, base_mva)
+            lpf, upf, upt, il = self._branch_flow(branches, Pfinj, base_mva)
             # Reference, voltage angle constraint.
-            Vau, Val = self.voltage_angle_reference(Va, nb, refs)
+            Vau, Val = self._voltage_angle_reference(Va, nb, refs)
         else:
             raise NotImplementedError
 
         # Branch voltage angle difference limits.
-        Aang, lang, uang, iang = self.voltage_angle_diff_limit(buses, branches)
+        Aang, lang, uang, iang = self._voltage_angle_diff_limit(buses,branches)
 
         # Piece-wise linear gencost constraints.
-        Ay, by, ny = self.pwl_gen_costs(generators, ng, base_mva)
+        Ay, by, ny = self._pwl_gen_costs(generators, ng, base_mva)
 
         # Add variables and constraints to the OPF model object.
-        om = self.construct_opf_model(Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
+        om = self._construct_opf_model(Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
                                       Amis, bmis, lpf, upf, lpf, upt,
                                       Aang, lang, uang, Ay, by, ny,
                                       Bf, Pfinj, il)
@@ -167,7 +167,7 @@ class OPF:
 #            result = CVXOPTSolver(om).solve()
 
 
-    def algorithm_parameters(self):
+    def _algorithm_parameters(self):
         """ Sets the parameters of the CVXOPT solver algorithm.
         """
         solvers.options["show_progress"] = self.show_progress
@@ -177,7 +177,7 @@ class OPF:
         solvers.options["feastol"] = self.feasibility_tol
 
 
-    def ref_check(self, case):
+    def _ref_check(self, case):
         """ Checks that there is only one reference bus.
         """
         refs = matrix([i for i, bus in enumerate(case.buses)
@@ -189,7 +189,7 @@ class OPF:
         return refs
 
 
-    def remove_isolated(self, case):
+    def _remove_isolated(self, case):
         """ Returns non-isolated case components.
         """
         case.deactivate_isolated()
@@ -200,7 +200,7 @@ class OPF:
         return buses, branches, gens
 
 
-    def dimension_data(self, buses, branches, generators):
+    def _dimension_data(self, buses, branches, generators):
         """ Returns the number of buses, branches and generators in the
             given case, respectively.
         """
@@ -211,7 +211,7 @@ class OPF:
         return nb, nl, ng
 
 
-    def pwl1_to_poly(self, generators):
+    def _pwl1_to_poly(self, generators):
         """ Converts single-block piecewise-linear costs into linear
             polynomial.
         """
@@ -222,7 +222,7 @@ class OPF:
         return generators
 
 
-    def init_vars(self, buses, generators, base_mva):
+    def _init_vars(self, buses, generators, base_mva):
         """ Sets-up the initial variables.
         """
         Va = matrix([b.v_angle_guess * (pi / 180.0) for b in buses])
@@ -236,7 +236,7 @@ class OPF:
         return Va, Vm, Pg, Qg
 
 
-    def init_bounds(self, generators, base_mva):
+    def _init_bounds(self, generators, base_mva):
         """ Sets-up the initial bounds.
         """
         Pmin = matrix([g.p_min / base_mva for g in generators])
@@ -247,7 +247,7 @@ class OPF:
         return Pmin, Pmax, Qmin, Qmax
 
 
-    def power_mismatch(self, buses, generators, nb, ng, B, Pbusinj, base_mva):
+    def _power_mismatch(self, buses, generators, nb, ng, B, Pbusinj, base_mva):
         """ Returns the power mismatch constraint (B*Va + Pg = Pd).
         """
         # Negative bus-generator incidence matrix.
@@ -264,7 +264,7 @@ class OPF:
         return Amis, bmis
 
 
-    def branch_flow(self, branches, Pfinj, base_mva):
+    def _branch_flow(self, branches, Pfinj, base_mva):
         """ Returns the branch flow limit constraint.  The real power flows
             at the from end the lines are related to the bus voltage angles
             by Pf = Bf * Va + Pfinj.
@@ -279,7 +279,7 @@ class OPF:
         return lpf, upf, upt, il
 
 
-    def voltage_angle_reference(self, Va, nb, refs):
+    def _voltage_angle_reference(self, Va, nb, refs):
         """ Returns the voltage angle reference constraint.
         """
         Vau = matrix(INF, (nb, 1))
@@ -290,7 +290,7 @@ class OPF:
         return Vau, Val
 
 
-    def voltage_angle_diff_limit(self, buses, branches, nb):
+    def _voltage_angle_diff_limit(self, buses, branches, nb):
         """ Returns the constraint on the branch voltage angle differences.
         """
         if not self.ignore_ang_lim:
@@ -329,7 +329,7 @@ class OPF:
         return Aang, lang, uang, iang
 
 
-    def pwl_gen_costs(self, generators, ng, base_mva):
+    def _pwl_gen_costs(self, generators, ng, base_mva):
         """ Returns the basin constraints for piece-wise linear gen cost
             variables.
 
@@ -376,7 +376,7 @@ class OPF:
         return Ay, by, ny
 
 
-    def construct_opf_model(self, Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
+    def _construct_opf_model(self, Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
                             Amis, bmis, lpf, upf, lpf, upt, Aang, lang, uang,
                             Ay, by, ny, Bf, Pfinj, il):
         """ Returns an OPF model with variables and constraints.
@@ -390,7 +390,8 @@ class OPF:
             om.add_var(Variable("Va", nb, Va, Val, Vau))
             om.add_var(Variable("Pg", ng, Pg, Pmin, Pmax))
 
-            om.add_constr(LinearConstraint("Pmis", Amis, bmis, bmis, ["Va", "Pg"]))
+            om.add_constr(LinearConstraint("Pmis", Amis, bmis, bmis,
+                                           ["Va", "Pg"]))
             om.add_constr(LinearConstraint("Pf", Bf[il, :], lpf, upf, ["Va"]))
             om.add_constr(LinearConstraint("Pt", -Bf[il, :], lpf, upt, ["Va"]))
             om.add_constr(LinearConstraint("ang", Aang, lang, uang, ["Va"]))
@@ -406,61 +407,29 @@ class OPF:
         return om
 
 #------------------------------------------------------------------------------
-#  "DCOPFSolver" class:
+#  "Solver" class:
 #------------------------------------------------------------------------------
 
-class DCOPFSolver:
-    """ Defines a solver for DC optimal power flow.
+class Solver:
+    """ Defines a base class for many solvers.
 
         References:
             Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell, v4.0b1,
             http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
-    def __init__(self, om, solver=None):
-        """ Initialises a new DCOPFSolver instance.
-        """
+    def __init__(self, om):
         # Optimal power flow model.
         self.om = om
 
-        # Specify an alternative solver ("mosek" (or "glpk" for linear
-        # formulation)). Specify None to use the CVXOPT solver..
-        self.solver = solver
-
 
     def solve(self):
-        """ Solves DC optimal power flow and returns a results dict.
+        """ Solves optimal power flow and returns a results dict.
         """
-        # Unpack the OPF model.
-        buses, branches, generators = self.unpack_model(self.om)
-        base_mva = self.om.case.base_mva
-        # Compute problem dimensions.
-        ipol, ipwl, nb, nl, nw, ny, nxyz = self.data_dims(buses, branches,
-                                                          generators)
-        # Split the constraints in equality and inequality.
-        Aeq, beq, Aieq, bieq = self.split_constraints(self.om)
-        # Piece-wise linear components of the objective function.
-        Npwl, Hpwl, Cpwl, fparm_pwl = self.pwl_costs(nxyz)
-        # Quadratic components of the objective function.
-        Pg, Npol, Hpol, Cpol, fparm_pol = self.quadratic_costs(generators,
-                                                               ipol, nxyz,
-                                                               base_mva)
-        # Combine pwl, poly and user costs.
-        NN, HHw, CCw, ffparm = self.combine_costs(Npwl, Npol, N, Hpwl, Hpol, H,
-                                                  Cpwl, Cpol, Cw,
-                                                  fparm_pwl, fparm_pol, fparm,
-                                                  any_pwl, npol, nw)
-        # Transform quadratic coefficients for w into coefficients for X.
-        HH, CC, C0 = self.transform_coefficients(NN, HHw, CCw, ffparm, polycf,
-                                                 any_pwl, npol, nw)
-        # Bounds on the optimisation variables..
-#        self.var_bounds()
-
-        # Call the quadratic/linear solver.
-        solution = self.run_opf(HH, CC, Aieq, bieq, Aeq, beq)
+        raise NotImplementedError
 
 
-    def unpack_model(self, om):
+    def _unpack_model(self, om):
         """ Returns data from the OPF model.
         """
         buses = om.case.connected_buses
@@ -475,7 +444,7 @@ class DCOPFSolver:
         return buses, branches, gens, cp, Bf, Pfinj
 
 
-    def data_dims(self, buses, branches, generators):
+    def _dimension_data(self, buses, branches, generators):
         """ Returns the problem dimensions.
         """
         ipol = self.ipol = matrix([i for i, g in enumerate(generators)
@@ -494,7 +463,7 @@ class DCOPFSolver:
         return ipol, ipwl, nb, nl, nw, ny, nxyz
 
 
-    def split_constraints(self, om):
+    def _split_constraints(self, om):
         """ Returns the linear problem constraints.
         """
         A, l, u = om.linear_constraints() # l <= A*x <= u
@@ -503,8 +472,8 @@ class DCOPFSolver:
         # Indexes for equality, greater than (unbounded above), less than
         # (unbounded below) and doubly-bounded constraints.
         ieq = matrix([i for i, v in enumerate(abs(u - l)) if v < EPS])
-        igt = matrix([i for i in range(len(l)) if u[i] > 1e10 and l[i] > -1e10])
-        ilt = matrix([i for i in range(len(l)) if u[i] < -1e10 and l[i] < 1e10])
+        igt = matrix([i for i in range(len(l)) if u[i] > 1e10 and l[i] >-1e10])
+        ilt = matrix([i for i in range(len(l)) if u[i] < -1e10 and l[i] <1e10])
         ibx = matrix([i for i in range(len(l))
                       if (abs(u[i] - l[i]) > EPS) and
                       (u[i] < 1e10) and (l[i] > -1e10)])
@@ -516,8 +485,66 @@ class DCOPFSolver:
 
         return Aeq, beq, Aieq, bieq
 
+#------------------------------------------------------------------------------
+#  "DCOPFSolver" class:
+#------------------------------------------------------------------------------
 
-    def pwl_costs(self, nxyz):
+class DCOPFSolver(Solver):
+    """ Defines a solver for DC optimal power flow.
+
+        References:
+            Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell, v4.0b1,
+            http://www.pserc.cornell.edu/matpower/, December 2009
+    """
+
+    def __init__(self, om, solver=None):
+        """ Initialises a new DCOPFSolver instance.
+        """
+        super(DCOPFSolver, self).__init__(om)
+
+        # Specify an alternative solver ("mosek" (or "glpk" for linear
+        # formulation)). Specify None to use the CVXOPT solver..
+        self.solver = solver
+
+
+    def solve(self):
+        """ Solves DC optimal power flow and returns a results dict.
+        """
+        base_mva = self.om.case.base_mva
+        # Unpack the OPF model.
+        buses, branches, generators = self._unpack_model(self.om)
+        # Compute problem dimensions.
+        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(buses,
+                                                                branches,
+                                                                generators)
+        # Split the constraints in equality and inequality.
+        Aeq, beq, Aieq, bieq = self._split_constraints(self.om)
+        # Piece-wise linear components of the objective function.
+        Npwl, Hpwl, Cpwl, fparm_pwl = self._pwl_costs(nxyz)
+        # Quadratic components of the objective function.
+        Pg, Npol, Hpol, Cpol, fparm_pol = self._quadratic_costs(generators,
+                                                                ipol, nxyz,
+                                                                base_mva)
+        # Combine pwl, poly and user costs.
+        NN, HHw, CCw, ffparm = self._combine_costs(Npwl, Npol, N,
+                                                   Hpwl, Hpol, H,
+                                                   Cpwl, Cpol, Cw,
+                                                   fparm_pwl, fparm_pol, fparm,
+                                                   any_pwl, npol, nw)
+        # Transform quadratic coefficients for w into coefficients for X.
+        HH, CC, C0 = self._transform_coefficients(NN, HHw, CCw, ffparm, polycf,
+                                                  any_pwl, npol, nw)
+        # Bounds on the optimisation variables..
+#        self.var_bounds()
+
+        # Select an interior initial point for interior point solver.
+        x0 = self._initial_interior_point(self.om)
+
+        # Call the quadratic/linear solver.
+        solution = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, x0)
+
+
+    def _pwl_costs(self, nxyz):
         """ Returns the piece-wise linear components of the objective function.
         """
         if self.ny > 0:
@@ -534,7 +561,7 @@ class DCOPFSolver:
         return Npwl, Hpwl, Cpwl, fparm_pwl
 
 
-    def quadratic_costs(self, generators, ipol, nxyz, base_mva):
+    def _quadratic_costs(self, generators, ipol, nxyz, base_mva):
         """ Returns the quadratic cost components of the objective function.
         """
         npol = len(ipol)
@@ -567,7 +594,7 @@ class DCOPFSolver:
         return Pg, Npol, Hpol, Cpol, fparm_pol
 
 
-    def combine_costs(self, Npwl, Npol, N, Hpwl, Hpol, H, Cpwl, Cpol, Cw,
+    def _combine_costs(self, Npwl, Npol, N, Hpwl, Hpol, H, Cpwl, Cpol, Cw,
                       fparm_pwl, fparm_pol, fparm, any_pwl, npol, nw):
         NN = sparse([Npwl, Npol, N])
         HHw = sparse([Hpwl,
@@ -583,7 +610,7 @@ class DCOPFSolver:
         return NN, HHw, CCw, ffparm
 
 
-    def transform_coefficients(self, NN, HHw, CCw, ffparm, polycf,
+    def _transform_coefficients(self, NN, HHw, CCw, ffparm, polycf,
                                any_pwl, npol, nw):
         """ Transforms quadratic coefficients for w into coefficients for X.
         """
@@ -607,13 +634,234 @@ class DCOPFSolver:
 #        return x0, LB, UB
 
 
-    def run_opf(self, P, q, G, h, A, b):
+    def _initial_interior_point(self, om, buses, generators, base_mva):
+        """ Selects an interior initial point for interior point solver.
+        """
+#        x0 = matrix(0., (om.get_var_N(), 1))
+
+        xva = matrix([bus.v_angle_guess * pi / 180 for bus in buses])
+        # FIXME: Initialise V from any present generators.
+        xvm = matrix([bus.v_magnitude_guess for bus in buses])
+        xpg = matrix([g.p / base_mva for g in generators])
+        xqg = matrix([g.q / base_mva for g in generators])
+        x0 = matrix([xva, xvm, xpg, xqg])
+
+        return x0
+
+
+    def _run_opf(self, P, q, G, h, A, b, x0):
+        """ Solves the either quadratic or linear program.
+        """
         if len(P) > 0:
-#            initvals = {"x": self.x_init}
-            solution = solvers.qp(P, q, G, h, A, b, self.solver)#, initvals)
+            solution = solvers.qp(P, q, G, h, A, b, self.solver, {"x": x0})
         else:
-#            primalstart = {"x": self.x_init}
-            solution = solvers.lp(q, G, h, A, b, self.solver)#, primalstart)
+            solution = solvers.lp(q, G, h, A, b, self.solver, {"x": x0})
+
+        return solution
+
+#------------------------------------------------------------------------------
+#  "CVXOPTSolver" class:
+#------------------------------------------------------------------------------
+
+class CVXOPTSolver(Solver):
+    """ Solves AC optimal power flow using convex optimization.
+    """
+
+    def solve(self):
+        # Unpack the OPF model.
+        buses, branches, generators = self._unpack_model(self.om)
+        # Compute problem dimensions.
+        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(buses,
+                                                                branches,
+                                                                generators)
+        # Split the constraints in equality and inequality.
+        Aeq, beq, Aieq, bieq = self._split_constraints(self.om)
+
+        # Get the function that evaluates the objective and nonlinear
+        # constraint functions.
+        F = self._objective_and_nonlinear_constraint_function()
+
+        # Solve the convex optimization problem.
+        result = self._run_opf(F, Aieq, bieq, Aeq, beq)
+
+
+    def _objective_and_nonlinear_constraint_function(self, om, buses, branches,
+                                                     generators, nb, nl, ng,
+                                                     base_mva):
+        """ Returns a function that evaluates the objective and nonlinear
+            constraint functions.
+        """
+        j = 0 + 1j
+
+        # Optimisation variables.
+        Va = om.get_var("Va")
+        Vm = om.get_var("Vm")
+        Pg = om.get_var("Pg")
+        Qg = om.get_var("Qg")
+
+        # The number of non-linear equality constraints.
+        neq = 2 * nb
+        # The number of control variables.
+        nc = 2 * nb + 2 * ng
+
+        # Definition of indexes for the optimisation variable vector.
+        # Voltage phase angle.
+#        ph_base = 0
+#        ph_end  = ph_base + nb - 1;
+#        # Voltage amplitude.
+#        v_base  = ph_end + 1
+#        v_end   = v_base + nb - 1
+#        # Active generation.
+#        pg_base = v_end + 1
+#        pg_end  = pg_base + ng - 1
+#        # Reactive generation.
+#        qg_base = pg_end + 1
+#        qg_end  = qg_base + ng - 1
+
+
+        def F(x=None, z=None):
+            """ Evaluates the objective and nonlinear constraint functions.
+            """
+            if x is None:
+                # Number of non-linear constraints.
+                m = neq
+
+                x0 = matrix(0., (om.get_var_N(), 1))
+                x0[Va.i1:Va.iN] = 0.0
+                x0[Vm.i1:Vm.iN] = 1.0
+                x0[Pg.i1:Pg.iN] = [g.p_min + g.p_max / 2 / base_mva
+                                   for g in generators]
+                x0[Qg.i1:Qg.iN] = [g.q_min + g.q_max / 2 / base_mva
+                                   for g in generators]
+                return m, x0
+
+            # Evaluate objective function -------------------------------------
+
+            p_gen = x[Pg.i1:Pg.iN + 1] # Active generation in p.u.
+            q_gen = x[Qg.i1:Qg.iN + 1] # Reactive generation in p.u.
+
+            xx = matrix([p_gen, q_gen]) * base_mva
+
+            # Evaluate the objective function value.
+            if len(ipol) > 0:
+                # FIXME: Implement reactive power costs.
+                f0 = sum([g.total_cost(xx[i]) for i, g in
+                          enumerate(generators[ipol])])
+            else:
+                f0 = 0
+
+            # Evaluate cost gradient ------------------------------------------
+
+            # Partial derivative w.r.t. polynomial cost Pg and Qg.
+#            df_dPgQg = [polyval(polyder(g.p_cost), g.p) * base_mva \
+#                        for g in generators]
+            df_dPgQg = matrix(0.0, (ng * 2, 1))
+
+            for i, g in enumerate(generators):
+                der = polyder( list(g.p_cost) )
+                df_dPgQg[i] = polyval(der, g.p) * base_mva
+
+            df0= matrix([matrix(0.0, (v_end, 1)), df_dPgQg])
+
+            # Evaluate nonlinear equality constraints -------------------------
+
+            # Net complex bus power injection vector in p.u.
+            s = matrix([complex(case.p_surplus(v), case.q_surplus(v)) /base_mva
+                        for v in buses])
+
+            # Bus voltage vector.
+            v_angle = x[ph_base:ph_end + 1]
+            v_magnitude = x[v_base:v_end]
+#            Va0r = Va0 * pi / 180 #convert to radians
+            v = mul(v_magnitude, exp(j * v_angle)) #element-wise product
+
+            # Evaluate the power flow equations.
+            Y, Yfrom, Yto = case.Y
+            mismatch = mul(v, conj(Y * v)) - s
+
+            # Evaluate power balance equality constraint function values.
+            fk_eq = matrix([mismatch.real(), mismatch.imag()])
+
+            # Evaluate nonlinear inequality constraints -----------------------
+
+            # Branch power flow limit inequality constraint function values.
+            from_idxs = matrix([buses.index(e.from_bus) for e in branches])
+            to_idxs = matrix([buses.index(e.to_bus) for e in branches])
+            # Complex power in p.u. injected at the from bus.
+            s_from = mul(v[from_idxs], conj(Yfrom, v))
+            # Complex power in p.u. injected at the to bus.
+            s_to = mul(v[to_idxs], conj(Yto, v))
+
+            # Apparent power flow limit in MVA, |S|.
+            s_max = matrix([e.s_max for e in branches])
+
+            # FIXME: Implement active power and current magnitude limits.
+            fk_ieq = matrix([abs(s_from) - s_max, abs(s_to) - s_max])
+
+            # Evaluate partial derivatives of constraints ---------------------
+
+            # Partial derivative of injected bus power
+            dS_dVm, dS_dVa = dSbus_dV(Y, v) # w.r.t voltage
+            pv_idxs = matrix([buses.index(bus) for bus in buses])
+            dS_dPg = spmatrix(-1, pv_idxs, range(ng)) # w.r.t Pg
+            dS_dQg = spmatrix(-j, pv_idxs, range(ng)) # w.r.t Qg
+
+            # Transposed Jacobian of the power balance equality constraints.
+            dfk_eq = sparse([
+                sparse([
+                    dS_dVa.real(), dS_dVm.real(), dS_dPg.real(), dS_dQg.real()
+                ]),
+                sparse([
+                    dS_dVa.imag(), dS_dVm.imag(), dS_dPg.imag(), dS_dQg.imag()
+                ])
+            ]).T
+
+            # Partial derivative of branch power flow w.r.t voltage.
+            dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_from, s_to = \
+                dSbr_dV(branches, Yfrom, Yto, v)
+
+            # Magnitude of complex power flow.
+            df_dVa, dt_dVa, df_dVm, dt_dVm = \
+                dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_from, s_to)
+
+            # Transposed Jacobian of branch power flow inequality constraints.
+            dfk_ieq = matrix([matrix([df_dVa, df_dVm]),
+                              matrix([dt_dVa, dt_dVm])]).T
+
+            f = matrix([f0, fk_eq, fk_ieq])
+            df = matrix([df0, dfk_eq, dfk_ieq])
+
+            if z is None:
+                return f, df
+
+            # Evaluate cost Hessian -------------------------------------------
+
+            d2f_d2Pg = spmatrix([], [], [], (ng, 1))
+            d2f_d2Qg = spmatrix([], [], [], (ng, 1))
+            for i, g in enumerate(generators):
+                der = polyder(list(g.p_cost))
+                # TODO: Implement reactive power costs.
+                d2f_d2Pg[i] = polyval(der, g.p) * base_mva
+
+            i = matrix(range(pg_base, qg_end + 1)).T
+            H = spmatrix(matrix([d2f_d2Pg, d2f_d2Qg]), i, i)
+
+            return f, df, H
+
+        return F
+
+
+    def _run_opf(self, F, G, h, A, b):
+        """ Solves the convex optimal power flow problem.
+        """
+        # cp(F, G=None, h=None, dims=None, A=None, b=None, kktsolver=None)
+        #
+        #     minimize    f0(x)
+        #     subject to  fk(x) <= 0, k = 1, ..., mnl
+        #                 G*x   <= h
+        #                 A*x   =  b.
+        dims = None
+        solution = solvers.cp(F, G, h, dims, A, b)
 
         return solution
 
