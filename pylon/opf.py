@@ -28,9 +28,7 @@
 
 import logging
 
-from math import pi
-
-import numpy
+from numpy import pi, diff, polyder, polyval
 
 from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul
 from cvxopt import solvers
@@ -216,7 +214,7 @@ class OPF:
             polynomial.
         """
         for g in generators:
-            if (g.cost_model == POLYNOMIAL) and (len(g.p_cost == 2)):
+            if (g.pcost_model == POLYNOMIAL) and (len(g.p_cost == 2)):
                 g.pwl_to_poly()
 
         return generators
@@ -346,7 +344,7 @@ class OPF:
 #            qgbas = ng + 1
             ybas = ng + 1 + ng # nq = ng
 
-        gpwl = [g for g in generators if g.cost_model == PIECEWISE_LINEAR]
+        gpwl = [g for g in generators if g.pcost_model == PIECEWISE_LINEAR]
         ny = len(gpwl) # number of extra y variables.
         if ny > 0:
             # Total number of cost points.
@@ -359,8 +357,8 @@ class OPF:
                 ns = len(g.p_cost)
                 p = matrix([p / base_mva for p, c in g.p_cost])
                 c = matrix([c for p, c in g.p_cost])
-                m = div(numpy.diff(c), numpy.diff(p))
-                if 0.0 in numpy.diff(p):
+                m = div(diff(c), diff(p))
+                if 0.0 in diff(p):
                     logger.error("Bad Pcost data: %s" % p)
                 b = mul(m, p[:ns - 1] - c[:ns - 1])
                 by = matrix([by, b.T])
@@ -448,9 +446,9 @@ class Solver:
         """ Returns the problem dimensions.
         """
         ipol = self.ipol = matrix([i for i, g in enumerate(generators)
-                                   if g.cost_model == POLYNOMIAL])
+                                   if g.pcost_model == POLYNOMIAL])
         ipwl = self.ipwl = matrix([i for i, g in enumerate(generators)
-                                   if g.cost_model == PIECEWISE_LINEAR])
+                                   if g.pcost_model == PIECEWISE_LINEAR])
         nb = len(buses)
         nl = len(branches)
         # Number of general cost vars, w.
@@ -746,7 +744,7 @@ class CVXOPTSolver(Solver):
             if len(ipol) > 0:
                 # FIXME: Implement reactive power costs.
                 f0 = sum([g.total_cost(xx[i]) for i, g in
-                          enumerate(generators[ipol])])
+                          enumerate(generators)])
             else:
                 f0 = 0
 

@@ -131,7 +131,7 @@ class ACOPF(object):
         n_gen = len(case.online_generators)
 
         # FIXME: Implement piecewise linear cost constraints.
-        assert "pwl" not in [g.cost_model for g in generators]
+        assert "pwl" not in [g.pcost_model for g in generators]
         cost_model = "poly"
 
         # The number of non-linear equality constraints.
@@ -211,7 +211,7 @@ class ACOPF(object):
 #                logger.error("A matrix must have at least %d columns." %
 #                             n_control)
 #
-#        n_pwl = len([e for e in branches if e.cost_model == "pwl"])
+#        n_pwl = len([e for e in branches if e.pcost_model == "pwl"])
 #        # Total number of vars of all types.
 #        n_var = n_control + n_pwl + n_additional
 

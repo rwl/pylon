@@ -278,7 +278,7 @@ class DCOPF(object):
         """
         generators = self.case.online_generators
 
-        models = [g.cost_model for g in generators]
+        models = [g.pcost_model for g in generators]
 
         if ("poly" in models) and ("pwl" in models):
             logger.info("Not all generators use the same cost model, all will "

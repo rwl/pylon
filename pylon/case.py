@@ -800,9 +800,10 @@ class Generator(Named):
         power limit fixes active and reactive power injected at parent bus.
     """
 
-    def __init__(self, bus, name=None, online=True, base_mva=100.0, p=100.0,
-            p_max=200.0, p_min=0.0, v_magnitude=1.0, q=0.0, q_max=30.0,
-            q_min=-30.0, p_cost=None, cost_model=POLYNOMIAL):
+    def __init__(self, bus, name=None, online=True, base_mva=100.0,
+            p=100.0, p_max=200.0, p_min=0.0, v_magnitude=1.0,
+            q=0.0, q_max=30.0, q_min=-30.0,
+            p_cost=None, pcost_model=POLYNOMIAL, q_cost=None, qcost_model=None):
         """ Initialises a new Generator instance.
         """
         # Busbar to which the generator is connected.
@@ -854,14 +855,11 @@ class Generator(Named):
 #        # Shut down cost.
 #        self.c_shutdown = c_shutdown
 
-        # Generator cost model: 'poly' or 'pwl' (default: 'poly')
-#        if pwl_points is not None:
-#            self.cost_model = "pwl"
-#        elif p_cost is not None:
-#            self.cost_model = "poly"
-#        else:
-#            self.cost_model = "pwl"
-        self.cost_model = cost_model
+        # Active power cost model: 'poly' or 'pwl' (default: 'poly')
+        self.pcost_model = pcost_model
+
+        # Reactive power cost model: 'poly', 'pwl' or None (default: 'poly')
+        self.qcost_model = qcost_model
 
         # Polynomial cost curve coefficients.
         # (a, b, c) relates to: cost = c*p**3 + b*p**2 + a*p.
@@ -877,16 +875,19 @@ class Generator(Named):
 
         # Active power cost represented either by a tuple of quadratic
         # polynomial coefficients or a list of piece-wise linear coordinates
-        # according to the value of the 'cost_model' attribute.
+        # according to the value of the 'pcost_model' attribute.
         if p_cost is not None:
             self.p_cost = p_cost
         else:
-            if cost_model == POLYNOMIAL:
+            if pcost_model == POLYNOMIAL:
                 self.p_cost = (0.01, 0.1, 10.0)
-            elif cost_model == PIECEWISE_LINEAR:
+            elif pcost_model == PIECEWISE_LINEAR:
                 self.p_cost = [(0.0, 0.0), (p_max, 10.0)]
             else:
                 raise ValueError
+
+        # Reactive power cost.
+        self.q_cost = q_cost
 
         self.mu_pmin = 0.0
         self.mu_pmax = 0.0
@@ -957,7 +958,7 @@ class Generator(Named):
         """
         p = self.p if p is None else p
 
-        if self.cost_model == PIECEWISE_LINEAR:
+        if self.pcost_model == PIECEWISE_LINEAR:
             n_segments = len(self.p_cost) - 1
             # Iterate over the piece-wise linear segments.
             for i in range(n_segments):
@@ -976,7 +977,7 @@ class Generator(Named):
 #                # Use the last segment for values outwith the cost curve.
 #                result = m*p + c
 
-        elif self.cost_model == POLYNOMIAL:
+        elif self.pcost_model == POLYNOMIAL:
             result = self.p_cost[-1]
 
             for i in range(1, len(self.p_cost)):
@@ -997,7 +998,7 @@ class Generator(Named):
         p_max = self.p_max
         self.p_cost = []
         # Ensure that the cost model is polynomial for calling total_cost.
-        self.cost_model = POLYNOMIAL
+        self.pcost_model = POLYNOMIAL
 
         if p_min > 0.0:
             # Make the first segment go from the origin to p_min.
@@ -1018,7 +1019,7 @@ class Generator(Named):
             x += step
 
         # Change the cost model.
-        self.cost_model = "pwl"
+        self.pcost_model = "pwl"
 
 
     def get_offers(self, n_points=6):
@@ -1044,7 +1045,7 @@ class Generator(Named):
             cost function.  If the cost function is polynomial it will be
             converted to piece-wise linear using poly_to_pwl(n_points).
         """
-        if self.cost_model == POLYNOMIAL:
+        if self.pcost_model == POLYNOMIAL:
             # Convert polynomial cost function to piece-wise linear.
             self.poly_to_pwl(n_points)
 
@@ -1108,7 +1109,7 @@ class Generator(Named):
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
 
-            self.cost_model = "pwl"
+            self.pcost_model = "pwl"
             self.online = True
         elif not self.is_load:
             logger.info("No valid offers for generator, shutting down.")
@@ -1143,7 +1144,7 @@ class Generator(Named):
             self.p_cost = points
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
-            self.cost_model = "pwl"
+            self.pcost_model = "pwl"
         elif self.is_load:
             logger.info("No valid bids for dispatchable load, shutting down.")
             self.online = False

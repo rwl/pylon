@@ -143,7 +143,7 @@ class MatpowerReaderTest(ReaderTest):
 
         # Generator costs.
         for g in c.generators:
-            self.assertEqual(g.cost_model, "poly")
+            self.assertEqual(g.pcost_model, "poly")
             self.assertEqual(len(g.p_cost), 3)
 
         self.assertEqual(c.generators[0].p_cost[0], 0.00533)
@@ -177,7 +177,7 @@ class MatpowerReaderTest(ReaderTest):
         generators = self.case.generators
 
         for g in generators:
-            self.assertEqual(g.cost_model, "pwl")
+            self.assertEqual(g.pcost_model, "pwl")
             self.assertEqual(len(g.p_cost), 4)
             self.assertEqual(g.p_cost[0], (0.0, 0.0))
 

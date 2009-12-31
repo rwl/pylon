@@ -389,7 +389,7 @@ class GeneratorTest(unittest.TestCase):
 
         g.poly_to_pwl(n_points=10)
 
-        self.assertEqual(g.cost_model, "pwl")
+        self.assertEqual(g.pcost_model, "pwl")
         self.assertEqual(len(g.p_cost), 10)
 
         self.assertAlmostEqual(g.p_cost[2][0], 17.78, places=2)
@@ -450,7 +450,7 @@ class GeneratorTest(unittest.TestCase):
         places = 4
 
         g = Generator(Bus(), p_min=50.0, p_max=200.0)
-        g.cost_model="poly"
+        g.pcost_model="poly"
         g.p_cost=(0.00533, 11.669, 213.1)
 
         poly_offers = g.get_offers()
@@ -463,7 +463,7 @@ class GeneratorTest(unittest.TestCase):
 
 
         g = Generator(Bus(), p_min=0.0, p_max=80.0)
-        g.cost_model="pwl"
+        g.pcost_model="pwl"
         g.p_cost=[(0, 0), (12, 144), (36, 1008), (60, 2832)]
 
         pwl_offers = g.get_offers()
@@ -534,9 +534,9 @@ class OfferBidToPWLTest(unittest.TestCase):
         self.assertTrue(False not in [g.online for g in gens])
 
         # Price models should be piecewise linear.
-        self.assertEqual(gens[0].cost_model, "pwl")
-        self.assertEqual(gens[1].cost_model, "pwl")
-        self.assertEqual(gens[2].cost_model, "pwl")
+        self.assertEqual(gens[0].pcost_model, "pwl")
+        self.assertEqual(gens[1].pcost_model, "pwl")
+        self.assertEqual(gens[2].pcost_model, "pwl")
 
         # 'p_max' is adjusted to equal to total quantity offered.
         self.assertAlmostEqual(gens[0].p_max, 25.0, places=1)

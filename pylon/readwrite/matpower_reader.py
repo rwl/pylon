@@ -458,7 +458,7 @@ class MATPOWERReader(CaseReader):
 #            print "Points:", points
 
             g.p_cost = points
-            g.cost_model = "pwl"
+            g.pcost_model = "pwl"
 
         # Polynomial cost data
         elif tokens["model"] == 2:
@@ -480,7 +480,7 @@ class MATPOWERReader(CaseReader):
                     coeffs.append(0)
 
             g.p_cost = tuple(coeffs)
-            g.cost_model  = "poly"
+            g.pcost_model  = "poly"
 
         else:
             raise ValueError, "Invalid cost model number"

@@ -509,7 +509,7 @@ class PSATReader(CaseReader):
         else:
             g = [g for g in self.case.generators if g.bus == bus][0]
 
-        g.cost_model = "poly"
+        g.pcost_model = "poly"
         g.poly_coeffs = (
             tokens["p_fixed"],
             tokens["p_proportional"],
