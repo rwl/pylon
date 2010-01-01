@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2009 Richard Lincoln
+# Copyright (C) 2010 Richard Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -51,8 +51,22 @@ class CaseTest(unittest.TestCase):
         """
         self.case = PickleReader().read(DATA_FILE)
 
+
+    def test_reset(self):
+        """ Test zeroing of result attributes.
+        """
+        self.case.buses[5].p_lambda = 1.1
+        self.case.generators[2].mu_pmax = 1.1
+        self.case.branches[10].p_from = 1.1
+
+        self.case.reset()
+
+        self.assertEqual(self.case.buses[5].p_lambda, 0.0)
+        self.assertEqual(self.case.generators[2].mu_pmax, 0.0)
+        self.assertEqual(self.case.branches[10].p_from, 0.0)
+
     #--------------------------------------------------------------------------
-    #  Serialization tests.
+    #  Serialisation tests.
     #--------------------------------------------------------------------------
 
     def test_load_matpower(self):
@@ -500,7 +514,7 @@ class OfferBidToPWLTest(unittest.TestCase):
 
         g3_points = [(0.0, 0.0), (12.0, 240.0), (36.0, 1200.0), (60.0, 2400.0)]
         g3 = Generator(Bus(), p=10.0, q=0.0, q_max=60.0, q_min=-15.0,
-                       p_max=60.0, p_min=12.0, p_ost=g3_points)
+                       p_max=60.0, p_min=12.0, p_cost=g3_points)
 
         g4_points = [(-30.0, 0.0), (-20.0, 1000.0), (-10.0, 2000.0),
                      (0.0, 3000.0)] # vload

@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2009 Richard Lincoln
+# Copyright (C) 2010 Richard Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -565,7 +565,7 @@ class Case(Named, Serializable):
         """ Serialize the case as a MATPOWER data file.
         """
         from pylon.readwrite import MATPOWERWriter
-        MATPOWERWriter().write(self, fd)
+        MATPOWERWriter(self).write(fd)
 
 
     @classmethod
@@ -604,28 +604,28 @@ class Case(Named, Serializable):
         """ Save a reStructuredText representation of the case.
         """
         from pylon.readwrite import ReSTWriter
-        ReSTWriter().write(self, fd)
+        ReSTWriter(self).write(fd)
 
 
     def save_csv(self, fd):
         """ Saves the case as a series of Comma-Separated Values.
         """
         from pylon.readwrite import CSVWriter
-        CSVWriter().write(self, fd)
+        CSVWriter(self).write(fd)
 
 
     def save_excel(self, fd):
         """ Saves the case as an Excel spreadsheet.
         """
         from pylon.readwrite.excel_writer import ExcelWriter
-        ExcelWriter().write(self, fd)
+        ExcelWriter(self).write(fd)
 
 
     def save_dot(self, fd):
         """ Saves a representation of the case in the Graphviz DOT language.
         """
         from pylon.readwrite import DotWriter
-        DotWriter().write(self, fd)
+        DotWriter(self).write(fd)
 
 #------------------------------------------------------------------------------
 #  "Bus" class:
@@ -987,6 +987,24 @@ class Generator(Named):
             raise ValueError
 
         return result
+
+
+    def pwl_to_poly(self):
+        """ Converts the first segment of the pwl cost to linear quadratic.
+            FIXME: Curve-fit for all segments.
+        """
+        if self.pcost_model == PIECEWISE_LINEAR:
+            x0 = self.p_cost[0][0]
+            y0 = self.p_cost[0][1]
+            x1 = self.p_cost[1][0]
+            y1 = self.p_cost[1][1]
+            m = (y1 - y0) / (x1 - x0)
+            c = y0 - m * x0
+
+            self.pcost_model = POLYNOMIAL
+            self.p_cost = (m, c)
+        else:
+            return
 
 
     def poly_to_pwl(self, n_points=10):
