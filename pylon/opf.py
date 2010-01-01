@@ -123,7 +123,9 @@ class OPF:
             # Branch flow limit constraints.
             Pf, Pt = self._branch_flow_dc(branches, Bf, Pfinj, base_mva)
         else:
-            Pmis, Qmis = self._power_mismatch_ac()
+#            Pmis, Qmis = self._power_mismatch_ac()
+            # TODO: Dispatchable load, constant power factor constraints.
+            # TODO: Generator PQ capability curve constraints.
 
         # Branch voltage angle difference limits.
         ang = self._voltage_angle_diff_limit(buses, branches)
