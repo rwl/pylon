@@ -77,16 +77,12 @@ class OPF:
 
         # Turns the output to the screen on or off.
         self.show_progress = show_progress
-
         # Maximum number of iterations.
         self.max_iterations = max_iterations
-
         # Absolute accuracy.
         self.absolute_tol = absolute_tol
-
         # Relative accuracy.
         self.relative_tol = relative_tol
-
         # Tolerance for feasibility conditions.
         self.feasibility_tol = feasibility_tol
 
@@ -95,76 +91,61 @@ class OPF:
         """ Solves an optimal power flow and returns a results dictionary.
         """
         base_mva = self.case.base_mva
+
         # Set algorithm parameters.
         self._algorithm_parameters()
+
         # Check for one reference bus.
         oneref, refs = self._ref_check(self.case)
-        if not oneref: return {"status": "error"}
+        if not oneref:
+            return {"status": "error"}
+
         # Remove isolated components.
-        buses, branches, gens = self._remove_isolated(self.case)
+        buses, branches, generators = self._remove_isolated(self.case)
+
         # Zero the case result attributes.
         self.case.reset()
-        # Compute problem dimensions.
-        nb, nl, ng = self._dimension_data(buses, branches, gens)
+
         # Convert single-block piecewise-linear costs into linear polynomial.
-        generators = self._pwl1_to_poly(gens)
+        generators = self._pwl1_to_poly(generators)
+
         # Set-up initial problem variables.
-        Va, Vm, Pg, Qg = self._init_vars(buses, generators, base_mva)
-        # Set-up initial problem bounds.
-        Pmin, Pmax, Qmin, Qmax = self._init_bounds(generators, base_mva)
+        Va = self._voltage_angle_var(refs, buses)
+        Pg = self._p_gen_var(generators, base_mva)
 
         if self.dc: # DC model.
             # Get the susceptance matrices and phase shift injection vectors.
             B, Bf, Pbusinj, Pfinj = self.case.B
+
             # Power mismatch constraints (B*Va + Pg = Pd).
-            Amis, bmis = self._power_mismatch_dc(buses, generators, nb, ng,
-                                                 B, Pbusinj, base_mva)
+            Pmis = self._power_mismatch_dc(buses, generators, B, Pbusinj,
+                                           base_mva)
             # Branch flow limit constraints.
-            lpf, upf, upt, il = self._branch_flow_dc(branches, Pfinj, base_mva)
-            # Reference voltage angle constraint.
-            Vau, Val = self._voltage_angle_reference(Va, nb, refs)
+            Pf, Pt = self._branch_flow_dc(branches, Bf, Pfinj, base_mva)
         else:
-            raise NotImplementedError
+            Pmis, Qmis = self._power_mismatch_ac()
 
         # Branch voltage angle difference limits.
-        Aang, lang, uang, iang = self._voltage_angle_diff_limit(buses,
-                                                                branches, nb)
+        ang = self._voltage_angle_diff_limit(buses, branches)
 
         # Piece-wise linear generator cost constraints.
-        Ay, by, ny = self._pwl_gen_costs(generators, ng, base_mva)
+        ycon = self._pwl_gen_costs(generators, base_mva)
 
         # Add variables and constraints to the OPF model object.
-        om = self._construct_opf_model(Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
-                                       Amis, bmis, lpf, upf, lpf, upt,
-                                       Aang, lang, uang, Ay, by, ny,
-                                       Bf, Pfinj, il)
-
-        # Construct an OPF model object.
-#        if self.dc:
-#            om = OPFModel(
-#                variables=[
-#                    Variable("Va", nb, Va, Val, Vau),
-#                    Variable("Pg", ng, Pg, Pmin, Pmax)],
-#                constraints=[
-#                    LinearConstraint("Pmis", Amis, bmis, bmis, ["Va", "Pg"]),
-#                    LinearConstraint("Pf", Bf[il, :], lpf, upf, ["Va"]),
-#                    LinearConstraint("Pt", -Bf[il, :], lpf, upt, ["Va"]),
-#                    LinearConstraint("ang", Aang, lang, uang, ["Va"])]
-#            )
-#            if ny > 0:
-#                om.add_var(Variable("y", ny))
-#                om.add_constr(LinearConstraint("ycon", Ay, 0, by, ['Pg', 'y']))
-#            om._Bf = Bf
-#            om._Pfinj = Pfinj
-#        else:
-#            raise NotImplementedError
-#            ycon_vars = ['Pg', 'Qg', 'y']
+        if self.dc:
+            om = self._construct_opf_model([Va, Pg], [Pmis, Pf, Pt, ang, ycon],
+                                           Bf=Bf, Pfinj=Pfinj)
+        else:
+            om = self._construct_opf_model([Va, Vm, Pg, Qg],
+                                           [Pmis, Qmis, Sf, St, vl, ang])
 
         # Call the specific solver.
         if self.dc:
             result = DCOPFSolver(om).solve()
-#        else:
-#            result = CVXOPTSolver(om).solve()
+        else:
+            result = CVXOPTSolver(om).solve()
+
+        return result
 
 
     def _algorithm_parameters(self):
@@ -201,15 +182,15 @@ class OPF:
         return buses, branches, gens
 
 
-    def _dimension_data(self, buses, branches, generators):
-        """ Returns the number of buses, branches and generators in the
-            given case, respectively.
-        """
-        nb = len(buses)
-        nl = len(branches)
-        ng = len(generators)
-
-        return nb, nl, ng
+#    def _dimension_data(self, buses, branches, generators):
+#        """ Returns the number of buses, branches and generators in the
+#            given case, respectively.
+#        """
+#        nb = len(buses)
+#        nl = len(branches)
+#        ng = len(generators)
+#
+#        return nb, nl, ng
 
 
     def _pwl1_to_poly(self, generators):
@@ -223,36 +204,61 @@ class OPF:
         return generators
 
 
-    def _init_vars(self, buses, generators, base_mva):
-        """ Sets-up the initial variables.
+    def _voltage_angle_var(self, refs, buses):
+        """ Returns the voltage angle variable.
         """
         Va = matrix([b.v_angle_guess * (pi / 180.0) for b in buses])
-        Vm = matrix([b.v_magnitude for b in buses])
-        # For buses with generators initialise Vm from gen data.
-        for g in generators:
-            Vm[buses.index(g.bus)] = g.v_magnitude
-        Pg = matrix([g.p / base_mva for g in generators])
-        Qg = matrix([g.q / base_mva for g in generators])
 
-        return Va, Vm, Pg, Qg
+        Vau = matrix(INF, (len(buses), 1))
+        Val = -Vau
+        Vau[refs] = Va[refs]
+        Val[refs] = Va[refs]
+
+        return Variable("Va", len(buses), Va, Val, Vau)
 
 
-    def _init_bounds(self, generators, base_mva):
-        """ Sets-up the bounds.
+    def _p_gen_var(self, generators, base_mva):
+        """ Returns the generator active power set-point variable.
         """
+        Pg = matrix([g.p / base_mva for g in generators])
+
         Pmin = matrix([g.p_min / base_mva for g in generators])
         Pmax = matrix([g.p_max / base_mva for g in generators])
-        Qmin = matrix([g.q_min / base_mva for g in generators])
-        Qmax = matrix([g.q_max / base_mva for g in generators])
 
-        return Pmin, Pmax, Qmin, Qmax
+        return Variable("Pg", len(generators), Pg, Pmin, Pmax)
 
 
-    def _power_mismatch_dc(self, buses, gens, nb, ng, B, Pbusinj, base_mva):
+#    def _init_vars(self, buses, generators, base_mva):
+#        """ Sets-up the initial variables.
+#        """
+#        Va = matrix([b.v_angle_guess * (pi / 180.0) for b in buses])
+#        Vm = matrix([b.v_magnitude for b in buses])
+#        # For buses with generators initialise Vm from gen data.
+#        for g in generators:
+#            Vm[buses.index(g.bus)] = g.v_magnitude
+#        Pg = matrix([g.p / base_mva for g in generators])
+#        Qg = matrix([g.q / base_mva for g in generators])
+#
+#        return Va, Vm, Pg, Qg
+#
+#
+#    def _init_bounds(self, generators, base_mva):
+#        """ Sets-up the bounds.
+#        """
+#        Pmin = matrix([g.p_min / base_mva for g in generators])
+#        Pmax = matrix([g.p_max / base_mva for g in generators])
+#        Qmin = matrix([g.q_min / base_mva for g in generators])
+#        Qmax = matrix([g.q_max / base_mva for g in generators])
+#
+#        return Pmin, Pmax, Qmin, Qmax
+
+
+    def _power_mismatch_dc(self, buses, generators, B, Pbusinj, base_mva):
         """ Returns the power mismatch constraint (B*Va + Pg = Pd).
         """
+        nb, ng = len(buses), len(generators)
         # Negative bus-generator incidence matrix.
-        gen_bus = matrix([buses.index(g.bus) for g in gens])
+        gen_bus = matrix([buses.index(g.bus) for g in generators])
         neg_Cg = spmatrix(-1.0, gen_bus, range(ng), (nb, ng))
 
         Amis = sparse([B.T, neg_Cg.T]).T
@@ -262,10 +268,10 @@ class OPF:
 
         bmis = -(Pd - Gs) / base_mva - Pbusinj
 
-        return Amis, bmis
+        return LinearConstraint("Pmis", Amis, bmis, bmis, ["Va", "Pg"])
 
 
-    def _branch_flow_dc(self, branches, Pfinj, base_mva):
+    def _branch_flow_dc(self, branches, Bf, Pfinj, base_mva):
         """ Returns the branch flow limit constraint.  The real power flows
             at the from end the lines are related to the bus voltage angles
             by Pf = Bf * Va + Pfinj.
@@ -277,23 +283,28 @@ class OPF:
         upf = rate_a[il] - Pfinj[il]
         upt = rate_a[il] + Pfinj[il]
 
-        return lpf, upf, upt, il
+        Pf = LinearConstraint("Pf",  Bf[il, :], lpf, upf, ["Va"])
+        Pt = LinearConstraint("Pt", -Bf[il, :], lpf, upt, ["Va"])
+
+        return Pf, Pt
 
 
-    def _voltage_angle_reference(self, Va, nb, refs):
-        """ Returns the voltage angle reference constraint.
-        """
-        Vau = matrix(INF, (nb, 1))
-        Val = -Vau
-        Vau[refs] = Va[refs]
-        Val[refs] = Va[refs]
+#    def _voltage_angle_reference(self, Va, nb, refs):
+#        """ Returns the voltage angle reference constraint.
+#        """
+#        Vau = matrix(INF, (nb, 1))
+#        Val = -Vau
+#        Vau[refs] = Va[refs]
+#        Val[refs] = Va[refs]
+#
+#        return Vau, Val
 
-        return Vau, Val
 
-
-    def _voltage_angle_diff_limit(self, buses, branches, nb):
+    def _voltage_angle_diff_limit(self, buses, branches):
         """ Returns the constraint on the branch voltage angle differences.
         """
+        nb = len(buses)
+
         if not self.ignore_ang_lim:
             iang = matrix([i for i, b in enumerate(branches)
                            if (b.ang_min and (b.ang_min > -360.0))
@@ -328,10 +339,10 @@ class OPF:
             uang = matrix()
             iang = matrix()
 
-        return Aang, lang, uang, iang
+        return LinearConstraint("ang", Aang, lang, uang, ["Va"])
 
 
-    def _pwl_gen_costs(self, generators, ng, base_mva):
+    def _pwl_gen_costs(self, generators, base_mva):
         """ Returns the basin constraints for piece-wise linear gen cost
             variables.
 
@@ -339,6 +350,7 @@ class OPF:
                 C. E. Murillo-Sanchez, "makeAy.m", MATPOWER, PSERC Cornell,
                 version 4.0b1, http://www.pserc.cornell.edu/matpower/, Dec 09
         """
+        ng = len(generators)
         if self.dc:
             pgbas = 0
 #            qgbas = None
@@ -375,38 +387,59 @@ class OPF:
             Ay = spmatrix([], [], [], (ybas + ny, 0))
             by = matrix()
 
-        return Ay, by, ny
-
-
-    def _construct_opf_model(self, Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
-                             Amis, bmis, lpf, upf, upt, Aang, lang, uang,
-                             Ay, by, ny, Bf, Pfinj, il):
-        """ Returns an OPF model with variables and constraints.
-        """
         if self.dc:
-            om = OPFModel()
-
-            om._Bf = Bf
-            om._Pfinj = Pfinj
-
-            om.add_var(Variable("Va", nb, Va, Val, Vau))
-            om.add_var(Variable("Pg", ng, Pg, Pmin, Pmax))
-
-            om.add_constr(LinearConstraint("Pmis", Amis, bmis, bmis,
-                                           ["Va", "Pg"]))
-            om.add_constr(LinearConstraint("Pf", Bf[il, :], lpf, upf, ["Va"]))
-            om.add_constr(LinearConstraint("Pt", -Bf[il, :], lpf, upt, ["Va"]))
-            om.add_constr(LinearConstraint("ang", Aang, lang, uang, ["Va"]))
-            ycon_vars = ['Pg', 'y']
+            return LinearConstraint("ycon", Ay, 0, by, ["Pg", "y"])
         else:
-            raise NotImplementedError
-            ycon_vars = ['Pg', 'Qg', 'y']
+            return LinearConstraint("ycon", Ay, 0, by, ["Pg", "Qg", "y"])
 
-        if ny > 0:
-            om.add_var(Variable("y", ny))
-            om.add_constr(LinearConstraint("ycon", Ay, 0, by, ycon_vars))
 
-        return om
+    def _construct_opf_model(self, vars, constraints, *kw_args):
+        """ Returns an OPF model with the given variables, constraints and
+            user data.
+        """
+        opf = OPFModel()
+
+        for var in vars:
+            opf.add_var(var)
+
+        for constr in constraints:
+            opf.add_constr(constr)
+
+        for k, v in kw_args.iteritems():
+            setattr(opf, "_" + k, v)
+
+        return opf
+
+
+#    def _construct_opf_model(self, Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
+#                             Amis, bmis, lpf, upf, upt, Aang, lang, uang,
+#                             Ay, by, ny, Bf, Pfinj, il):
+#        """ Returns an OPF model with variables and constraints.
+#        """
+#        if self.dc:
+#            om = OPFModel()
+#
+#            om._Bf = Bf
+#            om._Pfinj = Pfinj
+#
+#            om.add_var(Variable("Va", nb, Va, Val, Vau))
+#            om.add_var(Variable("Pg", ng, Pg, Pmin, Pmax))
+#
+#            om.add_constr(LinearConstraint("Pmis", Amis, bmis, bmis,
+#                                           ["Va", "Pg"]))
+#            om.add_constr(LinearConstraint("Pf", Bf[il, :], lpf, upf, ["Va"]))
+#            om.add_constr(LinearConstraint("Pt", -Bf[il, :], lpf, upt, ["Va"]))
+#            om.add_constr(LinearConstraint("ang", Aang, lang, uang, ["Va"]))
+#            ycon_vars = ['Pg', 'y']
+#        else:
+#            raise NotImplementedError
+#            ycon_vars = ['Pg', 'Qg', 'y']
+#
+#        if ny > 0:
+#            om.add_var(Variable("y", ny))
+#            om.add_constr(LinearConstraint("ycon", Ay, 0, by, ycon_vars))
+#
+#        return om
 
 #------------------------------------------------------------------------------
 #  "Solver" class:
@@ -414,10 +447,6 @@ class OPF:
 
 class Solver:
     """ Defines a base class for many solvers.
-
-        References:
-            Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell, v4.0b1,
-            http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
     def __init__(self, om):
@@ -933,11 +962,12 @@ class NonLinearConstraint(Indexed):
 #------------------------------------------------------------------------------
 
 class LinearConstraint(Indexed):
-    def __init__(self):
-        self.A = None
-        self.l = None
-        self.u = None
-        self.vs = None
+    def __init__(self, name, A, l, u, vs):
+        super(LinearConstraint, self).__init__(name, 0)
+        self.A = A
+        self.l = l
+        self.u = u
+        self.vs = vs
 
 #------------------------------------------------------------------------------
 #  "Cost" class:

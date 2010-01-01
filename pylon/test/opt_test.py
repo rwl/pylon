@@ -97,15 +97,15 @@ class OPFTest(unittest.TestCase):
         self.assertEqual(len(generators), 3)
 
 
-    def test_dimension_data(self):
-        """ Test computation of problem dimensions.
-        """
-        buses, branches, generators = self.solver._remove_isolated(self.case)
-        nb, nl, ng = self.solver._dimension_data(buses, branches, generators)
-
-        self.assertEqual(nb, 6)
-        self.assertEqual(nl, 11)
-        self.assertEqual(ng, 3)
+#    def test_dimension_data(self):
+#        """ Test computation of problem dimensions.
+#        """
+#        buses, branches, generators = self.solver._remove_isolated(self.case)
+#        nb, nl, ng = self.solver._dimension_data(buses, branches, generators)
+#
+#        self.assertEqual(nb, 6)
+#        self.assertEqual(nl, 11)
+#        self.assertEqual(ng, 3)
 
 
     def test_pwl1_to_poly(self):
@@ -124,51 +124,57 @@ class OPFTest(unittest.TestCase):
         self.assertEqual(g2.pcost_model, PW_LINEAR)
 
 
-    def test_variables(self):
-        """ Test initial problem variables.
+    def test_voltage_angle_var(self):
+        """ Test the voltage angle variable.
         """
-        Va, Vm, Pg, Qg = self.solver._init_vars(self.case.buses,
-                                                self.case.generators,
-                                                self.case.base_mva)
+        _, refs = self.solver._ref_check(self.case)
+        Va = self.solver._voltage_angle_var(refs, self.case.buses)
 
-        self.assertEqual(len(Va), 6)
-        self.assertEqual(Va[0], 0.0)
-        self.assertEqual(Va[5], 0.0)
+        self.assertEqual(len(Va.v0), 6)
+        self.assertEqual(Va.v0[0], 0.0)
+        self.assertEqual(Va.v0[5], 0.0)
 
-        self.assertEqual(len(Vm), 6)
-        self.assertEqual(Vm[0], 1.05)
-        self.assertEqual(Vm[2], 1.07)
-        self.assertEqual(Vm[3], 1.00)
+        self.assertEqual(Va.vu.size, (6, 1))
+        self.assertEqual(Va.vu[0], 0.0)
+        self.assertEqual(Va.vu[1], INF)
 
-        self.assertEqual(len(Pg), 3)
-        self.assertEqual(Pg[0], 0.0)
-        self.assertEqual(Pg[1], 0.5)
-        self.assertEqual(Pg[2], 0.6)
+        self.assertEqual(Va.vl.size, (6, 1))
+        self.assertEqual(Va.vl[0], 0.0)
+        self.assertEqual(Va.vl[1], -INF)
 
-        self.assertEqual(len(Qg), 3)
-        self.assertEqual(Qg[0], 0.0)
-        self.assertEqual(Qg[2], 0.0)
+#        self.assertEqual(len(Vm.v0), 6)
+#        self.assertEqual(Vm.v0[0], 1.05)
+#        self.assertEqual(Vm.v0[2], 1.07)
+#        self.assertEqual(Vm.v0[3], 1.00)
 
 
-    def test_bounds(self):
-        """ Test problem bounds.
+    def test_p_gen_var(self):
+        """ Test active power variable.
         """
-        Pmin, Pmax, Qmin, Qmax = self.solver._init_bounds(self.case.generators,
-                                                          self.case.base_mva)
+        Pg = self.solver._p_gen_var(self.case.generators, self.case.base_mva)
 
-        self.assertEqual(Pmin[0], 0.5)
-        self.assertEqual(Pmin[1], 0.375)
-        self.assertEqual(Pmin[2], 0.45)
+        self.assertEqual(len(Pg.v0), 3)
+        self.assertEqual(Pg.v0[0], 0.0)
+        self.assertEqual(Pg.v0[1], 0.5)
+        self.assertEqual(Pg.v0[2], 0.6)
 
-        self.assertEqual(Pmax[0], 2.0)
-        self.assertEqual(Pmax[1], 1.5)
-        self.assertEqual(Pmax[2], 1.8)
+#        self.assertEqual(len(Qg.v0), 3)
+#        self.assertEqual(Qg.v0[0], 0.0)
+#        self.assertEqual(Qg.v0[2], 0.0)
 
-        self.assertEqual(Qmin[0], -1.0)
-        self.assertEqual(Qmin[2], -1.0)
+        self.assertEqual(Pg.vl[0], 0.5)
+        self.assertEqual(Pg.vl[1], 0.375)
+        self.assertEqual(Pg.vl[2], 0.45)
 
-        self.assertEqual(Qmax[0], 1.0)
-        self.assertEqual(Qmax[2], 1.0)
+        self.assertEqual(Pg.vu[0], 2.0)
+        self.assertEqual(Pg.vu[1], 1.5)
+        self.assertEqual(Pg.vu[2], 1.8)
+
+#        self.assertEqual(Qmin[0], -1.0)
+#        self.assertEqual(Qmin[2], -1.0)
+#
+#        self.assertEqual(Qmax[0], 1.0)
+#        self.assertEqual(Qmax[2], 1.0)
 
 
     def test_power_mismatch_dc(self):
@@ -205,102 +211,90 @@ class OPFTest(unittest.TestCase):
         """
         # See case_test.py for B test.
         B, _, Pbusinj, _ = self.case.B
-        nb, _, ng = self.solver._dimension_data(self.case.buses,
-                                                 self.case.branches,
-                                                 self.case.generators)
-        Amis, bmis = self.solver._power_mismatch_dc(self.case.buses,
-                                                    self.case.generators,
-                                                    nb, ng, B, Pbusinj,
-                                                    self.case.base_mva)
+        Pmis = self.solver._power_mismatch_dc(self.case.buses,
+                                              self.case.generators,
+                                              B, Pbusinj, self.case.base_mva)
+#        nb, _, ng = self.solver._dimension_data(self.case.buses,
+#                                                 self.case.branches,
+#                                                 self.case.generators)
+#        Amis, bmis = self.solver._power_mismatch_dc(self.case.buses,
+#                                                    self.case.generators,
+#                                                    nb, ng, B, Pbusinj,
+#                                                    self.case.base_mva)
 
-        self.assertEqual(Amis.size, (6, 9))
+        self.assertEqual(Pmis.A.size, (6, 9))
 
         places = 4
-        self.assertAlmostEqual(Amis[1, 1], 27.3333, places) # B diagonal
-        self.assertAlmostEqual(Amis[4, 2], -3.8462, places) # Off-diagonal
+        self.assertAlmostEqual(Pmis.A[1, 1], 27.3333, places) # B diagonal
+        self.assertAlmostEqual(Pmis.A[4, 2], -3.8462, places) # Off-diagonal
 
-        self.assertAlmostEqual(Amis[0, 6], -1.0, places)
-        self.assertAlmostEqual(Amis[2, 8], -1.0, places)
-        self.assertAlmostEqual(Amis[5, 8],  0.0, places)
+        self.assertAlmostEqual(Pmis.A[0, 6], -1.0, places)
+        self.assertAlmostEqual(Pmis.A[2, 8], -1.0, places)
+        self.assertAlmostEqual(Pmis.A[5, 8],  0.0, places)
 
-        self.assertEqual(bmis.size, (6, 1))
-        self.assertAlmostEqual(bmis[0], 0.0, places)
-        self.assertAlmostEqual(bmis[3], -0.7, places)
-        self.assertAlmostEqual(bmis[5], -0.7, places)
+        self.assertEqual(Pmis.l.size, (6, 1))
+        self.assertAlmostEqual(Pmis.l[0], 0.0, places)
+        self.assertAlmostEqual(Pmis.l[3], -0.7, places)
+        self.assertAlmostEqual(Pmis.l[5], -0.7, places)
 
 
     def test_branch_flow_dc(self):
         """ Test maximum branch flow limit constraints.
         """
-        B, _, Pbusinj, Pfinj = self.case.B
-        lpf, upf, upt, il = self.solver._branch_flow_dc(self.case.branches,
-                                                        Pfinj,
-                                                        self.case.base_mva)
-
-        self.assertEqual(lpf.size, (11,1))
-        self.assertEqual(lpf[0], -INF)
-        self.assertEqual(lpf[10], -INF)
-
-        self.assertEqual(upf.size, (11,1))
-        self.assertEqual(upf[0], 0.4)
-        self.assertEqual(upf[5], 0.3)
-        self.assertEqual(upf[6], 0.9)
-        self.assertEqual(upf[9], 0.2)
-
-        self.assertEqual(upt.size, (11,1))
-        self.assertEqual(upt[1], 0.6)
-        self.assertEqual(upt[4], 0.6)
-        self.assertEqual(upt[7], 0.7)
-        self.assertEqual(upt[8], 0.8)
-
-        self.assertEqual(il[0], 0)
-        self.assertEqual(il[9], 9)
-
-
-    def test_voltage_angle_reference(self):
-        """ Test reference voltage angle constraint.
-        """
-        _, refs = self.solver._ref_check(self.case)
-        nb, _, _ = self.solver._dimension_data(self.case.buses,
-                                               self.case.branches,
-                                               self.case.generators)
-        Va, _, _, _ = self.solver._init_vars(self.case.buses,
-                                             self.case.generators,
+        B, Bf, _, Pfinj = self.case.B
+        Pf, Pt = self.solver._branch_flow_dc(self.case.branches, Bf, Pfinj,
                                              self.case.base_mva)
-        Vau, Val = self.solver._voltage_angle_reference(Va, nb, refs)
+#        lpf, upf, upt, il = self.solver._branch_flow_dc(self.case.branches,
+#                                                        Pfinj,
+#                                                        self.case.base_mva)
 
-        self.assertEqual(Vau.size, (6, 1))
-        self.assertEqual(Vau[0], 0.0)
-        self.assertEqual(Vau[1], INF)
+        self.assertEqual(Pf.l.size, (11,1))
+        self.assertEqual(Pf.l[0],  -INF)
+        self.assertEqual(Pf.l[10], -INF)
 
-        self.assertEqual(Val.size, (6, 1))
-        self.assertEqual(Val[0], 0.0)
-        self.assertEqual(Val[1], -INF)
+        self.assertEqual(Pf.u.size, (11,1))
+        self.assertEqual(Pf.u[0], 0.4)
+        self.assertEqual(Pf.u[5], 0.3)
+        self.assertEqual(Pf.u[6], 0.9)
+        self.assertEqual(Pf.u[9], 0.2)
+
+        self.assertEqual(Pt.u.size, (11,1))
+        self.assertEqual(Pt.u[1], 0.6)
+        self.assertEqual(Pt.u[4], 0.6)
+        self.assertEqual(Pt.u[7], 0.7)
+        self.assertEqual(Pt.u[8], 0.8)
+
+#        self.assertEqual(il[0], 0)
+#        self.assertEqual(il[9], 9)
 
 
     def test_voltage_angle_difference_limit(self):
         """ Test branch voltage angle difference limit.
         """
         self.solver.ignore_ang_lim = False
-        Aang, lang, uang, iang = self.solver._voltage_angle_diff_limit(
-            self.case.buses, self.case.branches, len(self.case.buses))
+        ang = self.solver._voltage_angle_diff_limit(self.case.buses,
+                                                    self.case.branches)
+#        Aang, lang, uang, iang = self.solver._voltage_angle_diff_limit(
+#            self.case.buses, self.case.branches, len(self.case.buses))
 
-        self.assertEqual(Aang.size, (0, 6))
-        self.assertEqual(lang.size, (0, 0))
-        self.assertEqual(uang.size, (0, 0))
-        self.assertEqual(iang.size, (0, 1))
+        self.assertEqual(ang.A.size, (0, 6))
+        self.assertEqual(ang.l.size, (0, 0))
+        self.assertEqual(ang.u.size, (0, 0))
+#        self.assertEqual(iang.size, (0, 1))
 
 
     def test_pwl_gen_cost(self):
         """ Test piece-wise linear generator cost constraints.
         """
-        Ay, by, ny = self.solver._pwl_gen_costs(self.case.generators,
-                                                len(self.case.generators),
-                                                self.case.base_mva)
+        ycon = self.solver._pwl_gen_costs(self.case.generators,
+                                          self.case.base_mva)
+#        Ay, by, ny = self.solver._pwl_gen_costs(self.case.generators,
+#                                                len(self.case.generators),
+#                                                self.case.base_mva)
 
-        self.assertEqual(Ay.size, (3, 0))
-        self.assertEqual(by.size, (0, 0))
-        self.assertEqual(ny, 0)
+        self.assertEqual(ycon.A.size, (3, 0))
+        self.assertEqual(ycon.u.size, (0, 0))
+#        self.assertEqual(ny, 0)
 
 
 if __name__ == "__main__":
