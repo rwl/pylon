@@ -170,6 +170,64 @@ class OPFTest(unittest.TestCase):
         self.assertEqual(Qmax[2], 1.0)
 
 
+    def test_dc_power_mismatch(self):
+        """ Test power balance constraint with DC model.
+
+        Amis =
+
+          Columns 1 through 7
+
+           13.3333   -5.0000         0   -5.0000   -3.3333         0   -1.0000
+           -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000         0
+                 0   -4.0000   17.8462         0   -3.8462  -10.0000         0
+           -5.0000  -10.0000         0   17.5000   -2.5000         0         0
+           -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333         0
+                 0   -5.0000  -10.0000         0   -3.3333   18.3333         0
+
+          Columns 8 through 9
+
+                 0         0
+           -1.0000         0
+                 0   -1.0000
+                 0         0
+                 0         0
+                 0         0
+
+        bmis =
+
+                 0
+                 0
+                 0
+           -0.7000
+           -0.7000
+           -0.7000
+        """
+        # See case_test.py for B test.
+        B, _, Pbusinj, Pfinj = self.case.B
+        nb, _, ng = self.solver._dimension_data(self.case.buses,
+                                                 self.case.branches,
+                                                 self.case.generators)
+        Amis, bmis = self.solver._power_mismatch(self.case.buses,
+                                                 self.case.generators,
+                                                 nb, ng, B, Pbusinj,
+                                                 self.case.base_mva)
+
+        self.assertEqual(Amis.size, (6, 9))
+
+        places = 4
+        self.assertAlmostEqual(Amis[1, 1], 27.3333, places) # B diagonal
+        self.assertAlmostEqual(Amis[4, 2], -3.8462, places) # Off-diagonal
+
+        self.assertAlmostEqual(Amis[0, 6], -1.0, places)
+        self.assertAlmostEqual(Amis[2, 8], -1.0, places)
+        self.assertAlmostEqual(Amis[5, 8],  0.0, places)
+
+        self.assertEqual(bmis.size, (6, 1))
+        self.assertAlmostEqual(bmis[0], 0.0, places)
+        self.assertAlmostEqual(bmis[3], -0.7, places)
+        self.assertAlmostEqual(bmis[5], -0.7, places)
+
+
 if __name__ == "__main__":
     import logging, sys
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,

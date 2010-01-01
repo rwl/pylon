@@ -118,7 +118,7 @@ class OPF:
             B, Bf, Pbusinj, Pfinj = self.case.B
             # Power mismatch constraints (B*Va + Pg = Pd).
             Amis, bmis = self._power_mismatch(buses, generators, nb, ng,
-                                             B, Pbusinj, base_mva)
+                                              B, Pbusinj, base_mva)
             # Branch flow limit constraints.
             lpf, upf, upt, il = self._branch_flow(branches, Pfinj, base_mva)
             # Reference, voltage angle constraint.
@@ -254,7 +254,7 @@ class OPF:
         gen_bus = matrix([buses.index(g.bus) for g in generators])
         neg_Cg = spmatrix(-1.0, gen_bus, range(ng), (nb, ng))
 
-        Amis = sparse([B, neg_Cg])
+        Amis = sparse([B.T, neg_Cg.T]).T
 
         Pd = matrix([bus.p_demand for bus in buses])
         Gs = matrix([bus.g_shunt for bus in buses])
