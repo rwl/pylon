@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 # Copyright (C) 2006 Charles Gieseler
-# Copyright (C) 2009 Richard Lincoln
+# Copyright (C) 2010 Richard Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

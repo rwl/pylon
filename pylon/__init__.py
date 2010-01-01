@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2009 Richard Lincoln
+# Copyright (C) 2010 Richard Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,9 +18,13 @@
 __version__ = "0.3.0"
 
 from case import Case, Bus, Branch, Generator, CaseReport
+from case import REFERENCE, PV, PQ, ISOLATED
+from case import POLYNOMIAL, PIECEWISE_LINEAR
 
 from dc_pf import DCPF
 from ac_pf import NewtonRaphson, FastDecoupled
+
+from opf import OPF
 
 from dc_opf import DCOPF
 from ac_opf import ACOPF
