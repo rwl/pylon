@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2009 Richard Lincoln
+# Copyright (C) 2010 Richard Lincoln
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -98,7 +98,8 @@ class OPF:
         # Set algorithm parameters.
         self._algorithm_parameters()
         # Check for one reference bus.
-        refs = self._ref_check(self.case)
+        oneref, refs = self._ref_check(self.case)
+        if not oneref: return {"status": "error"}
         # Remove isolated components.
         buses, branches, gens = self._remove_isolated(self.case)
         # Zero the case result attributes.
@@ -181,10 +182,11 @@ class OPF:
         refs = matrix([i for i, bus in enumerate(case.buses)
                       if bus.type == REFERENCE])
 
-        if not (0 < len(refs) <= 1):
+        if not len(refs) == 1:
             logger.error("OPF requires a single reference bus.")
-
-        return refs
+            return False, refs
+        else:
+            return True, refs
 
 
     def _remove_isolated(self, case):
@@ -214,7 +216,7 @@ class OPF:
             polynomial.
         """
         for g in generators:
-            if (g.pcost_model == POLYNOMIAL) and (len(g.p_cost == 2)):
+            if (g.pcost_model == PIECEWISE_LINEAR) and (len(g.p_cost) == 2):
                 g.pwl_to_poly()
 
         return generators
@@ -224,7 +226,7 @@ class OPF:
         """ Sets-up the initial variables.
         """
         Va = matrix([b.v_angle_guess * (pi / 180.0) for b in buses])
-        Vm = matrix([b.v_magnitude for b in self.buses])
+        Vm = matrix([b.v_magnitude for b in buses])
         # For buses with generators initialise Vm from gen data.
         for g in generators:
             Vm[buses.index(g.bus)] = g.v_magnitude
@@ -235,7 +237,7 @@ class OPF:
 
 
     def _init_bounds(self, generators, base_mva):
-        """ Sets-up the initial bounds.
+        """ Sets-up the bounds.
         """
         Pmin = matrix([g.p_min / base_mva for g in generators])
         Pmax = matrix([g.p_max / base_mva for g in generators])
@@ -375,7 +377,7 @@ class OPF:
 
 
     def _construct_opf_model(self, Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
-                            Amis, bmis, lpf, upf, lpf, upt, Aang, lang, uang,
+                            Amis, bmis, lpf, upf, upt, Aang, lang, uang,
                             Ay, by, ny, Bf, Pfinj, il):
         """ Returns an OPF model with variables and constraints.
         """
