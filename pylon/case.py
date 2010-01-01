@@ -44,7 +44,7 @@ TRANSFORMER = "transformer"
 GENERATOR = "generator"
 DISPATCHABLE_LOAD = "vload"
 POLYNOMIAL = "poly"
-PIECEWISE_LINEAR = "pwl"
+PW_LINEAR = "pwl"
 
 BIGNUM = 1e12#numpy.Inf
 
@@ -739,7 +739,7 @@ class Branch(Named):
         self.ang_min = ang_min
 
         # Maximum voltage angle difference (angle(Vf) - angle(Vt)) (degrees).
-        self.ang_min = ang_min
+        self.ang_max = ang_max
 
         # Power flow results --------------------------------------------------
 
@@ -881,7 +881,7 @@ class Generator(Named):
         else:
             if pcost_model == POLYNOMIAL:
                 self.p_cost = (0.01, 0.1, 10.0)
-            elif pcost_model == PIECEWISE_LINEAR:
+            elif pcost_model == PW_LINEAR:
                 self.p_cost = [(0.0, 0.0), (p_max, 10.0)]
             else:
                 raise ValueError
@@ -958,7 +958,7 @@ class Generator(Named):
         """
         p = self.p if p is None else p
 
-        if self.pcost_model == PIECEWISE_LINEAR:
+        if self.pcost_model == PW_LINEAR:
             n_segments = len(self.p_cost) - 1
             # Iterate over the piece-wise linear segments.
             for i in range(n_segments):
@@ -993,7 +993,7 @@ class Generator(Named):
         """ Converts the first segment of the pwl cost to linear quadratic.
             FIXME: Curve-fit for all segments.
         """
-        if self.pcost_model == PIECEWISE_LINEAR:
+        if self.pcost_model == PW_LINEAR:
             x0 = self.p_cost[0][0]
             y0 = self.p_cost[0][1]
             x1 = self.p_cost[1][0]

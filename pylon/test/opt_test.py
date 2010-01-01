@@ -28,7 +28,8 @@ import unittest
 from cvxopt import solvers
 
 from pylon.readwrite import PickleReader
-from pylon import OPF, Generator, REFERENCE, POLYNOMIAL, PIECEWISE_LINEAR
+from pylon import OPF, Generator, REFERENCE, POLYNOMIAL, PW_LINEAR
+from pylon.opf import INF
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -110,9 +111,9 @@ class OPFTest(unittest.TestCase):
     def test_pwl1_to_poly(self):
         """ Test conversion of single-block pwl costs into linear polynomial.
         """
-        g1 = Generator(self.case.buses[1], pcost_model=PIECEWISE_LINEAR,
+        g1 = Generator(self.case.buses[1], pcost_model=PW_LINEAR,
             p_cost=[(0.0, 0.0), (100.0, 1000.0)])
-        g2 = Generator(self.case.buses[2], pcost_model=PIECEWISE_LINEAR,
+        g2 = Generator(self.case.buses[2], pcost_model=PW_LINEAR,
             p_cost=[(0.0, 0.0), (50.0, 500.0), (100.0, 1200.0)])
 
         self.solver._pwl1_to_poly([g1, g2])
@@ -120,7 +121,7 @@ class OPFTest(unittest.TestCase):
         self.assertEqual(g1.pcost_model, POLYNOMIAL)
         self.assertEqual(g1.p_cost[0], 10.0)
         self.assertEqual(g1.p_cost[1], 0.0)
-        self.assertEqual(g2.pcost_model, PIECEWISE_LINEAR)
+        self.assertEqual(g2.pcost_model, PW_LINEAR)
 
 
     def test_variables(self):
@@ -170,8 +171,8 @@ class OPFTest(unittest.TestCase):
         self.assertEqual(Qmax[2], 1.0)
 
 
-    def test_dc_power_mismatch(self):
-        """ Test power balance constraint with DC model.
+    def test_power_mismatch_dc(self):
+        """ Test power balance constraints using DC model.
 
         Amis =
 
@@ -203,14 +204,14 @@ class OPFTest(unittest.TestCase):
            -0.7000
         """
         # See case_test.py for B test.
-        B, _, Pbusinj, Pfinj = self.case.B
+        B, _, Pbusinj, _ = self.case.B
         nb, _, ng = self.solver._dimension_data(self.case.buses,
                                                  self.case.branches,
                                                  self.case.generators)
-        Amis, bmis = self.solver._power_mismatch(self.case.buses,
-                                                 self.case.generators,
-                                                 nb, ng, B, Pbusinj,
-                                                 self.case.base_mva)
+        Amis, bmis = self.solver._power_mismatch_dc(self.case.buses,
+                                                    self.case.generators,
+                                                    nb, ng, B, Pbusinj,
+                                                    self.case.base_mva)
 
         self.assertEqual(Amis.size, (6, 9))
 
@@ -226,6 +227,80 @@ class OPFTest(unittest.TestCase):
         self.assertAlmostEqual(bmis[0], 0.0, places)
         self.assertAlmostEqual(bmis[3], -0.7, places)
         self.assertAlmostEqual(bmis[5], -0.7, places)
+
+
+    def test_branch_flow_dc(self):
+        """ Test maximum branch flow limit constraints.
+        """
+        B, _, Pbusinj, Pfinj = self.case.B
+        lpf, upf, upt, il = self.solver._branch_flow_dc(self.case.branches,
+                                                        Pfinj,
+                                                        self.case.base_mva)
+
+        self.assertEqual(lpf.size, (11,1))
+        self.assertEqual(lpf[0], -INF)
+        self.assertEqual(lpf[10], -INF)
+
+        self.assertEqual(upf.size, (11,1))
+        self.assertEqual(upf[0], 0.4)
+        self.assertEqual(upf[5], 0.3)
+        self.assertEqual(upf[6], 0.9)
+        self.assertEqual(upf[9], 0.2)
+
+        self.assertEqual(upt.size, (11,1))
+        self.assertEqual(upt[1], 0.6)
+        self.assertEqual(upt[4], 0.6)
+        self.assertEqual(upt[7], 0.7)
+        self.assertEqual(upt[8], 0.8)
+
+        self.assertEqual(il[0], 0)
+        self.assertEqual(il[9], 9)
+
+
+    def test_voltage_angle_reference(self):
+        """ Test reference voltage angle constraint.
+        """
+        _, refs = self.solver._ref_check(self.case)
+        nb, _, _ = self.solver._dimension_data(self.case.buses,
+                                               self.case.branches,
+                                               self.case.generators)
+        Va, _, _, _ = self.solver._init_vars(self.case.buses,
+                                             self.case.generators,
+                                             self.case.base_mva)
+        Vau, Val = self.solver._voltage_angle_reference(Va, nb, refs)
+
+        self.assertEqual(Vau.size, (6, 1))
+        self.assertEqual(Vau[0], 0.0)
+        self.assertEqual(Vau[1], INF)
+
+        self.assertEqual(Val.size, (6, 1))
+        self.assertEqual(Val[0], 0.0)
+        self.assertEqual(Val[1], -INF)
+
+
+    def test_voltage_angle_difference_limit(self):
+        """ Test branch voltage angle difference limit.
+        """
+        self.solver.ignore_ang_lim = False
+        Aang, lang, uang, iang = self.solver._voltage_angle_diff_limit(
+            self.case.buses, self.case.branches, len(self.case.buses))
+
+        self.assertEqual(Aang.size, (0, 6))
+        self.assertEqual(lang.size, (0, 0))
+        self.assertEqual(uang.size, (0, 0))
+        self.assertEqual(iang.size, (0, 1))
+
+
+    def test_pwl_gen_cost(self):
+        """ Test piece-wise linear generator cost constraints.
+        """
+        Ay, by, ny = self.solver._pwl_gen_costs(self.case.generators,
+                                                len(self.case.generators),
+                                                self.case.base_mva)
+
+        self.assertEqual(Ay.size, (3, 0))
+        self.assertEqual(by.size, (0, 0))
+        self.assertEqual(ny, 0)
 
 
 if __name__ == "__main__":

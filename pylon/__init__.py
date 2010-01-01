@@ -19,7 +19,7 @@ __version__ = "0.3.0"
 
 from case import Case, Bus, Branch, Generator, CaseReport
 from case import REFERENCE, PV, PQ, ISOLATED
-from case import POLYNOMIAL, PIECEWISE_LINEAR
+from case import POLYNOMIAL, PW_LINEAR
 
 from dc_pf import DCPF
 from ac_pf import NewtonRaphson, FastDecoupled

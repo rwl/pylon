@@ -34,14 +34,14 @@ from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul
 from cvxopt import solvers
 
 from util import Named, conj
-from case import REFERENCE, POLYNOMIAL, PIECEWISE_LINEAR
+from case import REFERENCE, POLYNOMIAL, PW_LINEAR
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-INF = -1e10
-EPS =  2**-52
+INF = 1e10
+EPS = 2**-52
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -117,26 +117,27 @@ class OPF:
             # Get the susceptance matrices and phase shift injection vectors.
             B, Bf, Pbusinj, Pfinj = self.case.B
             # Power mismatch constraints (B*Va + Pg = Pd).
-            Amis, bmis = self._power_mismatch(buses, generators, nb, ng,
-                                              B, Pbusinj, base_mva)
+            Amis, bmis = self._power_mismatch_dc(buses, generators, nb, ng,
+                                                 B, Pbusinj, base_mva)
             # Branch flow limit constraints.
-            lpf, upf, upt, il = self._branch_flow(branches, Pfinj, base_mva)
-            # Reference, voltage angle constraint.
+            lpf, upf, upt, il = self._branch_flow_dc(branches, Pfinj, base_mva)
+            # Reference voltage angle constraint.
             Vau, Val = self._voltage_angle_reference(Va, nb, refs)
         else:
             raise NotImplementedError
 
         # Branch voltage angle difference limits.
-        Aang, lang, uang, iang = self._voltage_angle_diff_limit(buses,branches)
+        Aang, lang, uang, iang = self._voltage_angle_diff_limit(buses,
+                                                                branches, nb)
 
-        # Piece-wise linear gencost constraints.
+        # Piece-wise linear generator cost constraints.
         Ay, by, ny = self._pwl_gen_costs(generators, ng, base_mva)
 
         # Add variables and constraints to the OPF model object.
         om = self._construct_opf_model(Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
-                                      Amis, bmis, lpf, upf, lpf, upt,
-                                      Aang, lang, uang, Ay, by, ny,
-                                      Bf, Pfinj, il)
+                                       Amis, bmis, lpf, upf, lpf, upt,
+                                       Aang, lang, uang, Ay, by, ny,
+                                       Bf, Pfinj, il)
 
         # Construct an OPF model object.
 #        if self.dc:
@@ -216,7 +217,7 @@ class OPF:
             polynomial.
         """
         for g in generators:
-            if (g.pcost_model == PIECEWISE_LINEAR) and (len(g.p_cost) == 2):
+            if (g.pcost_model == PW_LINEAR) and (len(g.p_cost) == 2):
                 g.pwl_to_poly()
 
         return generators
@@ -247,11 +248,11 @@ class OPF:
         return Pmin, Pmax, Qmin, Qmax
 
 
-    def _power_mismatch(self, buses, generators, nb, ng, B, Pbusinj, base_mva):
+    def _power_mismatch_dc(self, buses, gens, nb, ng, B, Pbusinj, base_mva):
         """ Returns the power mismatch constraint (B*Va + Pg = Pd).
         """
         # Negative bus-generator incidence matrix.
-        gen_bus = matrix([buses.index(g.bus) for g in generators])
+        gen_bus = matrix([buses.index(g.bus) for g in gens])
         neg_Cg = spmatrix(-1.0, gen_bus, range(ng), (nb, ng))
 
         Amis = sparse([B.T, neg_Cg.T]).T
@@ -264,7 +265,7 @@ class OPF:
         return Amis, bmis
 
 
-    def _branch_flow(self, branches, Pfinj, base_mva):
+    def _branch_flow_dc(self, branches, Pfinj, base_mva):
         """ Returns the branch flow limit constraint.  The real power flows
             at the from end the lines are related to the bus voltage angles
             by Pf = Bf * Va + Pfinj.
@@ -272,9 +273,9 @@ class OPF:
         # Indexes of constrained lines.
         il = matrix([i for i,l in enumerate(branches) if 0.0 < l.s_max < 1e10])
         lpf = matrix(-INF, (len(il), 1))
-        rate_a = matrix([l.s_max / base_mva for l in branches[il]])
-        upf = rate_a - Pfinj[il]
-        upt = rate_a + Pfinj[il]
+        rate_a = matrix([l.s_max / base_mva for l in branches])
+        upf = rate_a[il] - Pfinj[il]
+        upt = rate_a[il] + Pfinj[il]
 
         return lpf, upf, upt, il
 
@@ -297,25 +298,26 @@ class OPF:
             iang = matrix([i for i, b in enumerate(branches)
                            if (b.ang_min and (b.ang_min > -360.0))
                            or (b.ang_max and (b.ang_max < 360.0))])
-            iangl = matrix([i for i, b in enumerate(branches[iang])
-                            if b.ang_min is not None])
-            iangh = matrix([i for i, b in enumerate(branches[iang])
-                            if b.ang_max is not None])
+            iangl = matrix([i for i, b in enumerate(branches)
+                            if b.ang_min is not None])[iang]
+            iangh = matrix([i for i, b in enumerate(branches)
+                            if b.ang_max is not None])[iang]
             nang = len(iang)
 
             if nang > 0:
                 ii = matrix([range(nang), range(nang)])
-                jj = matrix([[buses.index(b.from_bus) for b in branches[iang]],
-                             [buses.index(b.to_bus) for b in branches[iang]]])
+                jjf = matrix([buses.index(b.from_bus) for b in branches])[iang]
+                jjt = matrix([buses.index(b.to_bus) for b in branches])[iang]
+                jj = matrix([jjf, jjt])
                 Aang = spmatrix(matrix([matrix(1.0, (nang, 1)),
                                         matrix(-1.0, (nang, 1))]),
                                         ii, jj, (nang, nb))
                 uang = matrix(INF, (nang, 1))
                 lang = -uang
                 lang[iangl] = matrix([b.ang_min * (pi / 180.0)
-                                      for b in branches[iangl]])
+                                      for b in branches])[iangl]
                 uang[iangh] = matrix([b.ang_max * (pi / 180.0)
-                                      for b in branches[iangh]])
+                                      for b in branches])[iangh]
             else:
                 Aang = spmatrix([], [], [], (0, nb))
                 lang = matrix()
@@ -340,13 +342,13 @@ class OPF:
         if self.dc:
             pgbas = 0
 #            qgbas = None
-            ybas = ng + 1
+            ybas = ng
         else:
             pgbas = 0
 #            qgbas = ng + 1
-            ybas = ng + 1 + ng # nq = ng
+            ybas = ng + ng # nq = ng
 
-        gpwl = [g for g in generators if g.pcost_model == PIECEWISE_LINEAR]
+        gpwl = [g for g in generators if g.pcost_model == PW_LINEAR]
         ny = len(gpwl) # number of extra y variables.
         if ny > 0:
             # Total number of cost points.
@@ -370,15 +372,15 @@ class OPF:
                 k += (ns - 1)
                 # TODO: Repeat for Q cost.
         else:
-            Ay = spmatrix([], [], [] (ybas + ny, 0))
+            Ay = spmatrix([], [], [], (ybas + ny, 0))
             by = matrix()
 
         return Ay, by, ny
 
 
     def _construct_opf_model(self, Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
-                            Amis, bmis, lpf, upf, upt, Aang, lang, uang,
-                            Ay, by, ny, Bf, Pfinj, il):
+                             Amis, bmis, lpf, upf, upt, Aang, lang, uang,
+                             Ay, by, ny, Bf, Pfinj, il):
         """ Returns an OPF model with variables and constraints.
         """
         if self.dc:
@@ -450,7 +452,7 @@ class Solver:
         ipol = self.ipol = matrix([i for i, g in enumerate(generators)
                                    if g.pcost_model == POLYNOMIAL])
         ipwl = self.ipwl = matrix([i for i, g in enumerate(generators)
-                                   if g.pcost_model == PIECEWISE_LINEAR])
+                                   if g.pcost_model == PW_LINEAR])
         nb = len(buses)
         nl = len(branches)
         # Number of general cost vars, w.
