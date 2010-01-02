@@ -282,9 +282,9 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     mu[g < -feastol and mu < mu_threshold] = 0
 
     # un-scale cost and prices
-    f   = f   / cost_mult
+    f   = f / cost_mult
     lam = lam / cost_mult
-    mu  = mu  / cost_mult
+    mu  = mu / cost_mult
 
     # re-package multipliers into struct
     lam_lin = lam[neqnln:neq]              # lambda for linear constraints
@@ -307,5 +307,65 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         'lower': mu_l[1:nx], 'upper': mu_u[1:nx]}
 
     return x, f, info, output, lmbda
+
+#------------------------------------------------------------------------------
+#  "pdipm_qp" function:
+#------------------------------------------------------------------------------
+
+def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
+             verbose=True, cost_mult=1):
+    """ Wrapper function for a primal-dual interior point QP solver.
+    """
+    nx = len(c)
+
+    if VLB is None:
+        VLB = matrix(-Inf, (nx, 1))
+
+    if VUB is None:
+        VUB = matrix(Inf, (nx, 1))
+
+    if x0 is None:
+        x0 = matrix(0.0, (nx, 1))
+        k = nonzero(VUB < 1e10 and VLB > -1e10)
+        x0[k] ((VUB[k] + VLB[k]) / 2)
+        k = nonzero(VUB < 1e10 and VLB <= -1e10)
+        x0[k] = VUB[k] - 1
+        k = nonzero(VUB >= 1e10 and VLB > -1e10)
+        x0[k] = VLB[k] + 1
+
+    def qp_f(x, H=None, c=None):
+        f = 0.5 * x.T * H * x + c.T * x
+        df = H * x + c
+        return df, H
+
+    def qp_gh(x):
+        g = matrix()
+        h = matrix()
+        dg = matrix()
+        dh = matrix()
+        return g, h, dg, dh
+
+    def qp_hessian(x, lmbda, H, cost_mult):
+        Lxx = H * cost_mult
+        return Lxx
+
+
+    l = matrix(-Inf, b.size)
+    l[:N] = b[:N]
+
+    # run it
+    xout, f, info, output, lmbda = \
+      pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b)
+
+    success = (info > 0)
+    if success:
+        howout = 'success'
+    else:
+        howout = 'failure'
+
+    lmbdaout = matrix([-lmbda["mu_l"] + lmbda["mu_u"], lmbda["lower"],
+                       lmbda["upper"]])
+
+    return xout, lmbdaout, howout, success
 
 # EOF -------------------------------------------------------------------------

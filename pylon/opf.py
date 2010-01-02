@@ -35,6 +35,7 @@ from cvxopt import solvers
 
 from util import Named, conj
 from case import REFERENCE, POLYNOMIAL, PW_LINEAR
+from pdipm import pdipm, pdipm_qp
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -93,7 +94,7 @@ class OPF:
         base_mva = self.case.base_mva
 
         # Set algorithm parameters.
-        self._algorithm_parameters()
+        opts = self._algorithm_parameters()
 
         # Check for one reference bus.
         oneref, refs = self._ref_check(self.case)
@@ -145,7 +146,8 @@ class OPF:
         if self.dc:
             result = DCOPFSolver(om).solve()
         else:
-            result = CVXOPTSolver(om).solve()
+#            result = CVXOPTSolver(om).solve()
+            result = PDIPMSolver(om, opts).solve()
 
         return result
 
@@ -158,6 +160,18 @@ class OPF:
         solvers.options["abstol"] = self.absolute_tol
         solvers.options["reltol"] = self.relative_tol
         solvers.options["feastol"] = self.feasibility_tol
+
+        opts = {"verbose": self.show_progress,
+                "feastol": self.feasibility_tol,
+                "gradtol": 1e-6,
+                "comptol": 1e-6,
+                "costtol": 1e-6,
+                "max_it", self.max_iterations,
+                "max_red": 20,
+                "step_contol": False,
+                "cost_mult": 1e-4}
+
+        return opts
 
 
     def _ref_check(self, case):
@@ -568,13 +582,13 @@ class DCOPFSolver(Solver):
         HH, CC, C0 = self._transform_coefficients(NN, HHw, CCw, ffparm, polycf,
                                                   any_pwl, npol, nw)
         # Bounds on the optimisation variables..
-#        self.var_bounds()
+        x0, LB, UB = self.var_bounds()
 
         # Select an interior initial point for interior point solver.
         x0 = self._initial_interior_point(self.om)
 
         # Call the quadratic/linear solver.
-        solution = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, x0)
+        solution = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0)
 
 
     def _pwl_costs(self, nxyz):
@@ -660,11 +674,11 @@ class DCOPFSolver(Solver):
         return HH, CC, C0
 
 
-#    def var_bounds(self):
-#        """ Returns bounds on the optimisation variables.
-#        """
-#        x0, LB, UB = self.om.getv()
-#        return x0, LB, UB
+    def var_bounds(self):
+        """ Returns bounds on the optimisation variables.
+        """
+        x0, LB, UB = self.om.getv()
+        return x0, LB, UB
 
 
     def _initial_interior_point(self, om, buses, generators, base_mva):
@@ -682,11 +696,12 @@ class DCOPFSolver(Solver):
         return x0
 
 
-    def _run_opf(self, P, q, G, h, A, b, x0):
+    def _run_opf(self, P, q, G, h, A, b, LB, UB, x0):
         """ Solves the either quadratic or linear program.
         """
         if len(P) > 0:
             solution = solvers.qp(P, q, G, h, A, b, self.solver, {"x": x0})
+#            xout, lmbdaout, howout, success = pdipm_qp(H, C, A, b, LB, UB, x0)
         else:
             solution = solvers.lp(q, G, h, A, b, self.solver, {"x": x0})
 
@@ -895,6 +910,44 @@ class CVXOPTSolver(Solver):
         #                 A*x   =  b.
         dims = None
         solution = solvers.cp(F, G, h, dims, A, b)
+
+        return solution
+
+#------------------------------------------------------------------------------
+#  "PDIPMSolver" class:
+#------------------------------------------------------------------------------
+
+class PDIPMSolver(Solver):
+    """ Solves AC optimal power flow using a primal-dual interior point method.
+    """
+
+    def solve(self):
+        # Unpack the OPF model.
+        buses, branches, generators = self._unpack_model(self.om)
+        # Compute problem dimensions.
+        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(buses,
+                                                                branches,
+                                                                generators)
+        # Split the constraints in equality and inequality.
+        Aeq, beq, Aieq, bieq = self._split_constraints(self.om)
+
+        # Select an interior initial point for interior point solver.
+        x0 = self._initial_interior_point(self.om)
+
+        # Solve the convex optimization problem.
+        result = self._run_opf(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax)
+
+
+    def _initial_interior_point(self, om):
+        """ Selects an interior initial point for interior point solver.
+        """
+        pass
+
+
+    def _run_opf(self, ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax):
+        """ Solves the convex optimal power flow problem.
+        """
+        solution = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax)
 
         return solution
 
