@@ -91,18 +91,32 @@ class OPF:
     def solve(self):
         """ Solves an optimal power flow and returns a results dictionary.
         """
-        base_mva = self.case.base_mva
-
         # Set algorithm parameters.
         opts = self._algorithm_parameters()
 
+        # Build an OPF model with variables and constraints.
+        om = self._construct_opf_model(self.case)
+
+        # Call the specific solver.
+        if self.dc:
+            result = DCOPFSolver(om).solve()
+        else:
+#            result = CVXOPTSolver(om).solve()
+            result = PDIPMSolver(om, opts).solve()
+
+        return result
+
+
+    def _construct_opf_model(self, case):
+        base_mva = case.base_mva
+
         # Check for one reference bus.
-        oneref, refs = self._ref_check(self.case)
+        oneref, refs = self._ref_check(case)
         if not oneref:
             return {"status": "error"}
 
         # Remove isolated components.
-        buses, branches, generators = self._remove_isolated(self.case)
+        buses, branches, generators = self._remove_isolated(case)
 
         # Zero the case result attributes.
         self.case.reset()
@@ -124,7 +138,7 @@ class OPF:
             # Branch flow limit constraints.
             Pf, Pt = self._branch_flow_dc(branches, Bf, Pfinj, base_mva)
         else:
-#            Pmis, Qmis = self._power_mismatch_ac()
+            Pmis, Qmis = self._power_mismatch_ac()
             # TODO: Dispatchable load, constant power factor constraints.
             # TODO: Generator PQ capability curve constraints.
 
@@ -134,22 +148,24 @@ class OPF:
         # Piece-wise linear generator cost constraints.
         ycon = self._pwl_gen_costs(generators, base_mva)
 
+        if self.dc:
+            vars = [Va, Pg]
+            constraints = [Pmis, Pf, Pt, ang, ycon]
+
+        else:
+            vars = [Va, Vm, Pg, Qg]
+            constraints = [Pmis, Qmis, Sf, St, vl, ang]
+
         # Add variables and constraints to the OPF model object.
-        if self.dc:
-            om = self._construct_opf_model([Va, Pg], [Pmis, Pf, Pt, ang, ycon],
-                                           Bf=Bf, Pfinj=Pfinj)
-        else:
-            om = self._construct_opf_model([Va, Vm, Pg, Qg],
-                                           [Pmis, Qmis, Sf, St, vl, ang])
+        opf = OPFModel(case)
+        opf.add_vars(*vars)
+        opf.add_constraints(*constraints)
 
-        # Call the specific solver.
-        if self.dc:
-            result = DCOPFSolver(om).solve()
-        else:
-#            result = CVXOPTSolver(om).solve()
-            result = PDIPMSolver(om, opts).solve()
+        if self.dc: # user data
+            opf._Bf = Bf
+            opf._Pfinj = Pfinj
 
-        return result
+        return opf
 
 
     def _algorithm_parameters(self):
@@ -166,7 +182,7 @@ class OPF:
                 "gradtol": 1e-6,
                 "comptol": 1e-6,
                 "costtol": 1e-6,
-                "max_it", self.max_iterations,
+                "max_it": self.max_iterations,
                 "max_red": 20,
                 "step_contol": False,
                 "cost_mult": 1e-4}
@@ -409,22 +425,22 @@ class OPF:
             return LinearConstraint("ycon", Ay, 0, by, ["Pg", "Qg", "y"])
 
 
-    def _construct_opf_model(self, vars, constraints, *kw_args):
-        """ Returns an OPF model with the given variables, constraints and
-            user data.
-        """
-        opf = OPFModel()
-
-        for var in vars:
-            opf.add_var(var)
-
-        for constr in constraints:
-            opf.add_constr(constr)
-
-        for k, v in kw_args.iteritems():
-            setattr(opf, "_" + k, v)
-
-        return opf
+#    def _construct_opf_model(self, vars, constraints, *kw_args):
+#        """ Returns an OPF model with the given variables, constraints and
+#            user data.
+#        """
+#        opf = OPFModel()
+#
+#        for var in vars:
+#            opf.add_var(var)
+#
+#        for constr in constraints:
+#            opf.add_constr(constr)
+#
+#        for k, v in kw_args.iteritems():
+#            setattr(opf, "_" + k, v)
+#
+#        return opf
 
 
 #    def _construct_opf_model(self, Va, Val, Vau, nb, Pg, Pmin, Pmax, ng,
@@ -461,7 +477,7 @@ class OPF:
 #  "Solver" class:
 #------------------------------------------------------------------------------
 
-class Solver:
+class Solver(object):
     """ Defines a base class for many solvers.
     """
 
@@ -708,6 +724,44 @@ class DCOPFSolver(Solver):
         return solution
 
 #------------------------------------------------------------------------------
+#  "PDIPMSolver" class:
+#------------------------------------------------------------------------------
+
+class PDIPMSolver(Solver):
+    """ Solves AC optimal power flow using a primal-dual interior point method.
+    """
+
+    def solve(self):
+        # Unpack the OPF model.
+        buses, branches, generators = self._unpack_model(self.om)
+        # Compute problem dimensions.
+        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(buses,
+                                                                branches,
+                                                                generators)
+        # Split the constraints in equality and inequality.
+        Aeq, beq, Aieq, bieq = self._split_constraints(self.om)
+
+        # Select an interior initial point for interior point solver.
+        x0 = self._initial_interior_point(self.om)
+
+        # Solve the convex optimization problem.
+        result = self._run_opf(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax)
+
+
+    def _initial_interior_point(self, om):
+        """ Selects an interior initial point for interior point solver.
+        """
+        pass
+
+
+    def _run_opf(self, ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax):
+        """ Solves the convex optimal power flow problem.
+        """
+        solution = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax)
+
+        return solution
+
+#------------------------------------------------------------------------------
 #  "CVXOPTSolver" class:
 #------------------------------------------------------------------------------
 
@@ -914,44 +968,6 @@ class CVXOPTSolver(Solver):
         return solution
 
 #------------------------------------------------------------------------------
-#  "PDIPMSolver" class:
-#------------------------------------------------------------------------------
-
-class PDIPMSolver(Solver):
-    """ Solves AC optimal power flow using a primal-dual interior point method.
-    """
-
-    def solve(self):
-        # Unpack the OPF model.
-        buses, branches, generators = self._unpack_model(self.om)
-        # Compute problem dimensions.
-        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(buses,
-                                                                branches,
-                                                                generators)
-        # Split the constraints in equality and inequality.
-        Aeq, beq, Aieq, bieq = self._split_constraints(self.om)
-
-        # Select an interior initial point for interior point solver.
-        x0 = self._initial_interior_point(self.om)
-
-        # Solve the convex optimization problem.
-        result = self._run_opf(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax)
-
-
-    def _initial_interior_point(self, om):
-        """ Selects an interior initial point for interior point solver.
-        """
-        pass
-
-
-    def _run_opf(self, ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax):
-        """ Solves the convex optimal power flow problem.
-        """
-        solution = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax)
-
-        return solution
-
-#------------------------------------------------------------------------------
 #  "Indexed" class:
 #------------------------------------------------------------------------------
 
@@ -1006,23 +1022,28 @@ class Variable(Indexed):
             self.vu = vu
 
 #------------------------------------------------------------------------------
-#  "NonLinearConstraint" class:
-#------------------------------------------------------------------------------
-
-class NonLinearConstraint(Indexed):
-    pass
-
-#------------------------------------------------------------------------------
 #  "LinearConstraint" class:
 #------------------------------------------------------------------------------
 
 class LinearConstraint(Indexed):
+    """ Defines a set of linear constraints.
+    """
+
     def __init__(self, name, A, l, u, vs):
         super(LinearConstraint, self).__init__(name, 0)
         self.A = A
         self.l = l
         self.u = u
         self.vs = vs
+
+#------------------------------------------------------------------------------
+#  "NonLinearConstraint" class:
+#------------------------------------------------------------------------------
+
+class NonLinearConstraint(Indexed):
+    """ Defines a set of non-linear constraints.
+    """
+    pass
 
 #------------------------------------------------------------------------------
 #  "Cost" class:
@@ -1044,12 +1065,51 @@ class Cost(Indexed):
 #  "OPFModel" class:
 #------------------------------------------------------------------------------
 
-class OPFModel:
+class OPFModel(object):
+    """ Defines a model for optimal power flow.
+    """
+
     def __init__(self, case):
         self.case = case
         self.vars = []
-        self.nln_constraints = []
         self.lin_constraints = []
+        self.nln_constraints = []
         self.costs = []
+
+
+    def add_var(self, var):
+        """ Adds a variable to the model.
+        """
+        self.vars.append(var)
+
+
+    def add_vars(self, vars):
+        """ Adds a set of variables to the model.
+        """
+        for var in vars:
+            self.add_var(var)
+
+
+    def add_constraint(self, constr):
+        """ Adds a constraint to the model.
+        """
+        if isinstance(constr, LinearConstraint):
+            self.lin_constraints.append(constr)
+        elif isinstance(constr, NonLinearConstraint):
+            self.nln_constraints.append(constr)
+        else:
+            raise ValueError
+
+
+    def add_constraints(self, constraints):
+        """ Adds constraints to the model.
+        """
+        for constr in constraints:
+            self.add_constraint(constr)
+
+
+    def get_cost_params(self):
+        """ Returns the cost parameters.
+        """
 
 # EOF -------------------------------------------------------------------------

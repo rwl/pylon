@@ -29,7 +29,7 @@ from cvxopt import solvers
 
 from pylon.readwrite import PickleReader
 from pylon import OPF, Generator, REFERENCE, POLYNOMIAL, PW_LINEAR
-from pylon.opf import INF
+from pylon.opf import INF, DCOPFSolver#, PDIPMSolver, CVXOPTSolver
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -51,16 +51,16 @@ class OPFTest(unittest.TestCase):
         """
         self.case = PickleReader().read(DATA_FILE)
 
-        self.solver = OPF(self.case, show_progress=False)
+        self.opf = OPF(self.case, show_progress=False)
 
 
     def test_algorithm_parameters(self):
         """ Test setting of CVXOPT solver options.
         """
-        self.solver.max_iterations = 150
-        self.solver.absolute_tol = 1e-8
+        self.opf.max_iterations = 150
+        self.opf.absolute_tol = 1e-8
 
-        self.solver._algorithm_parameters()
+        self.opf._algorithm_parameters()
 
         self.assertFalse(solvers.options["show_progress"])
         self.assertEqual(solvers.options["maxiters"], 150)
@@ -70,7 +70,7 @@ class OPFTest(unittest.TestCase):
     def test_one_reference(self):
         """ Test the check for one reference bus.
         """
-        oneref, refs = self.solver._ref_check(self.case)
+        oneref, refs = self.opf._ref_check(self.case)
 
         self.assertTrue(oneref)
         self.assertEqual(refs[0], 0)
@@ -80,7 +80,7 @@ class OPFTest(unittest.TestCase):
         """ Test check for one reference bus.
         """
         self.case.buses[1].type = REFERENCE
-        oneref, refs = self.solver._ref_check(self.case)
+        oneref, refs = self.opf._ref_check(self.case)
 
         self.assertFalse(oneref)
         self.assertEqual(len(refs), 2)
@@ -90,22 +90,11 @@ class OPFTest(unittest.TestCase):
         """ Test deactivation of isolated branches and generators.
         """
         # TODO: Repeat for a case with isolated buses.
-        buses, branches, generators = self.solver._remove_isolated(self.case)
+        buses, branches, generators = self.opf._remove_isolated(self.case)
 
         self.assertEqual(len(buses), 6)
         self.assertEqual(len(branches), 11)
         self.assertEqual(len(generators), 3)
-
-
-#    def test_dimension_data(self):
-#        """ Test computation of problem dimensions.
-#        """
-#        buses, branches, generators = self.solver._remove_isolated(self.case)
-#        nb, nl, ng = self.solver._dimension_data(buses, branches, generators)
-#
-#        self.assertEqual(nb, 6)
-#        self.assertEqual(nl, 11)
-#        self.assertEqual(ng, 3)
 
 
     def test_pwl1_to_poly(self):
@@ -116,7 +105,7 @@ class OPFTest(unittest.TestCase):
         g2 = Generator(self.case.buses[2], pcost_model=PW_LINEAR,
             p_cost=[(0.0, 0.0), (50.0, 500.0), (100.0, 1200.0)])
 
-        self.solver._pwl1_to_poly([g1, g2])
+        self.opf._pwl1_to_poly([g1, g2])
 
         self.assertEqual(g1.pcost_model, POLYNOMIAL)
         self.assertEqual(g1.p_cost[0], 10.0)
@@ -127,8 +116,8 @@ class OPFTest(unittest.TestCase):
     def test_voltage_angle_var(self):
         """ Test the voltage angle variable.
         """
-        _, refs = self.solver._ref_check(self.case)
-        Va = self.solver._voltage_angle_var(refs, self.case.buses)
+        _, refs = self.opf._ref_check(self.case)
+        Va = self.opf._voltage_angle_var(refs, self.case.buses)
 
         self.assertEqual(len(Va.v0), 6)
         self.assertEqual(Va.v0[0], 0.0)
@@ -151,7 +140,7 @@ class OPFTest(unittest.TestCase):
     def test_p_gen_var(self):
         """ Test active power variable.
         """
-        Pg = self.solver._p_gen_var(self.case.generators, self.case.base_mva)
+        Pg = self.opf._p_gen_var(self.case.generators, self.case.base_mva)
 
         self.assertEqual(len(Pg.v0), 3)
         self.assertEqual(Pg.v0[0], 0.0)
@@ -211,16 +200,9 @@ class OPFTest(unittest.TestCase):
         """
         # See case_test.py for B test.
         B, _, Pbusinj, _ = self.case.B
-        Pmis = self.solver._power_mismatch_dc(self.case.buses,
+        Pmis = self.opf._power_mismatch_dc(self.case.buses,
                                               self.case.generators,
                                               B, Pbusinj, self.case.base_mva)
-#        nb, _, ng = self.solver._dimension_data(self.case.buses,
-#                                                 self.case.branches,
-#                                                 self.case.generators)
-#        Amis, bmis = self.solver._power_mismatch_dc(self.case.buses,
-#                                                    self.case.generators,
-#                                                    nb, ng, B, Pbusinj,
-#                                                    self.case.base_mva)
 
         self.assertEqual(Pmis.A.size, (6, 9))
 
@@ -242,11 +224,8 @@ class OPFTest(unittest.TestCase):
         """ Test maximum branch flow limit constraints.
         """
         B, Bf, _, Pfinj = self.case.B
-        Pf, Pt = self.solver._branch_flow_dc(self.case.branches, Bf, Pfinj,
+        Pf, Pt = self.opf._branch_flow_dc(self.case.branches, Bf, Pfinj,
                                              self.case.base_mva)
-#        lpf, upf, upt, il = self.solver._branch_flow_dc(self.case.branches,
-#                                                        Pfinj,
-#                                                        self.case.base_mva)
 
         self.assertEqual(Pf.l.size, (11,1))
         self.assertEqual(Pf.l[0],  -INF)
@@ -264,37 +243,58 @@ class OPFTest(unittest.TestCase):
         self.assertEqual(Pt.u[7], 0.7)
         self.assertEqual(Pt.u[8], 0.8)
 
-#        self.assertEqual(il[0], 0)
-#        self.assertEqual(il[9], 9)
-
 
     def test_voltage_angle_difference_limit(self):
         """ Test branch voltage angle difference limit.
         """
-        self.solver.ignore_ang_lim = False
-        ang = self.solver._voltage_angle_diff_limit(self.case.buses,
+        self.opf.ignore_ang_lim = False
+        ang = self.opf._voltage_angle_diff_limit(self.case.buses,
                                                     self.case.branches)
-#        Aang, lang, uang, iang = self.solver._voltage_angle_diff_limit(
-#            self.case.buses, self.case.branches, len(self.case.buses))
 
         self.assertEqual(ang.A.size, (0, 6))
         self.assertEqual(ang.l.size, (0, 0))
         self.assertEqual(ang.u.size, (0, 0))
-#        self.assertEqual(iang.size, (0, 1))
 
 
     def test_pwl_gen_cost(self):
         """ Test piece-wise linear generator cost constraints.
         """
-        ycon = self.solver._pwl_gen_costs(self.case.generators,
+        ycon = self.opf._pwl_gen_costs(self.case.generators,
                                           self.case.base_mva)
-#        Ay, by, ny = self.solver._pwl_gen_costs(self.case.generators,
-#                                                len(self.case.generators),
-#                                                self.case.base_mva)
 
         self.assertEqual(ycon.A.size, (3, 0))
         self.assertEqual(ycon.u.size, (0, 0))
 #        self.assertEqual(ny, 0)
+
+#------------------------------------------------------------------------------
+#  "DCOPFSolverTest" class:
+#------------------------------------------------------------------------------
+
+class DCOPFSolverTest(unittest.TestCase):
+    """ Test case for the DC OPF solver.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.case = PickleReader().read(DATA_FILE)
+        self.opf = OPF(self.case, show_progress=False)
+        self.om = self.opf._construct_opf_model(self.case)
+        self.solver = DCOPFSolver(self.om)
+
+
+    def test_unpack_model(self):
+        """ Test unpacking the OPF model.
+        """
+        buses, branches, generators = self.solver._unpack_model(self.om)
+
+        self.assertEqual(len(buses), 6)
+        self.assertEqual(len(branches), 11)
+        self.assertEqual(len(generators), 3)
+
+        self.assertEqual(generators[0].bus, buses[0])
+        self.assertEqual(generators[1].bus, buses[1])
+        self.assertEqual(generators[2].bus, buses[2])
 
 
 if __name__ == "__main__":
