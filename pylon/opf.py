@@ -1022,6 +1022,36 @@ class OPFModel(object):
         return len(self.lin_constraints)
 
 
+    def linear_constraints(self):
+        """ Returns the linear constraints.
+        """
+        A = spmatrix([], [], [], (self.lin_N, self.lin_N), tc='d')
+        l = matrix(-INF, (self.lin_N, 1))
+        u = -l
+
+        for lin in self.lin_constraints:
+            if lin.N:                   # non-zero number of rows to add
+                Ak = lin.A              # A for kth linear constrain set
+                i1 = lin.i1             # starting row index
+                iN = lin.iN             # ending row index
+                vsl = lin.vs            # var set list
+                kN = 0                  # initialize last col of Ak used
+                Ai = spmatrix([], [], [], (lin.N, self.var_N))
+                for v in vsl:
+                    var = self.vars[v]
+                    j1 = var.i1         # starting column in A
+                    jN = var.iN         # ending column in A
+                    k1 = kN + 1         # starting column in Ak
+                    kN = kN + var.N     # ending column in Ak
+                    Ai[:, j1:jN] = Ak[:, k1:kN]
+
+                A[i1:iN, :] = Ai
+                l[i1:iN] = lin.l
+                u[i1:iN] = lin.u
+
+        return A, l, u
+
+
     def add_constraint(self, constr):
         """ Adds a constraint to the model.
         """
@@ -1090,9 +1120,9 @@ class Set(Named):
         self.iN = 0
 
         # Number in set.
-        self.N = 0
+        self.N = N
 
-        # Number of  sets.
+        # Number of sets.
         self.NS = 0
 
         # Ordered list of sets.

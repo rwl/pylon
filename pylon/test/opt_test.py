@@ -313,6 +313,138 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertEqual(nxyz, 9)
 
 
+    def test_constraints(self):
+        """ Test equality and inequality constraints.
+
+        Aeq =
+
+          Columns 1 through 7
+
+           13.3333   -5.0000         0   -5.0000   -3.3333         0   -1.0000
+           -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000         0
+                 0   -4.0000   17.8462         0   -3.8462  -10.0000         0
+           -5.0000  -10.0000         0   17.5000   -2.5000         0         0
+           -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333         0
+                 0   -5.0000  -10.0000         0   -3.3333   18.3333         0
+
+          Columns 8 through 9
+
+                 0         0
+           -1.0000         0
+                 0   -1.0000
+                 0         0
+                 0         0
+                 0         0
+
+        Aieq =
+
+          Columns 1 through 7
+
+            5.0000   -5.0000         0         0         0         0         0
+            5.0000         0         0   -5.0000         0         0         0
+            3.3333         0         0         0   -3.3333         0         0
+                 0    4.0000   -4.0000         0         0         0         0
+                 0   10.0000         0  -10.0000         0         0         0
+                 0    3.3333         0         0   -3.3333         0         0
+                 0    5.0000         0         0         0   -5.0000         0
+                 0         0    3.8462         0   -3.8462         0         0
+                 0         0   10.0000         0         0  -10.0000         0
+                 0         0         0    2.5000   -2.5000         0         0
+                 0         0         0         0    3.3333   -3.3333         0
+           -5.0000    5.0000         0         0         0         0         0
+           -5.0000         0         0    5.0000         0         0         0
+           -3.3333         0         0         0    3.3333         0         0
+                 0   -4.0000    4.0000         0         0         0         0
+                 0  -10.0000         0   10.0000         0         0         0
+                 0   -3.3333         0         0    3.3333         0         0
+                 0   -5.0000         0         0         0    5.0000         0
+                 0         0   -3.8462         0    3.8462         0         0
+                 0         0  -10.0000         0         0   10.0000         0
+                 0         0         0   -2.5000    2.5000         0         0
+                 0         0         0         0   -3.3333    3.3333         0
+
+          Columns 8 through 9
+
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+                 0         0
+
+        beq =
+
+                 0
+                 0
+                 0
+           -0.7000
+           -0.7000
+           -0.7000
+
+        bieq =
+
+            0.4000
+            0.6000
+            0.4000
+            0.4000
+            0.6000
+            0.3000
+            0.9000
+            0.7000
+            0.8000
+            0.2000
+            0.4000
+            0.4000
+            0.6000
+            0.4000
+            0.4000
+            0.6000
+            0.3000
+            0.9000
+            0.7000
+            0.8000
+            0.2000
+            0.4000
+        """
+        Aeq, beq, Aieq, bieq = self.solver._split_constraints(self.om)
+
+        places = 4
+        self.assertEqual(Aeq.size, (22, 9))
+        self.assertAlmostEqual(Aeq[0, 0],  5.0000, places)
+        self.assertAlmostEqual(Aeq[2, 4], -3.3333, places)
+        self.assertAlmostEqual(Aeq[4, 1], 10.0000, places)
+        self.assertAlmostEqual(Aeq[7, 4], -3.8462, places)
+        self.assertAlmostEqual(Aeq[0, 6],  0.0000, places)
+        self.assertAlmostEqual(Aeq[9, 8],  0.0000, places)
+
+        self.assertAlmostEqual(Aeq[11, 0], -5.0000, places)
+        self.assertAlmostEqual(Aeq[13, 4],  3.3333, places)
+        self.assertAlmostEqual(Aeq[18, 4],  3.8462, places)
+        self.assertAlmostEqual(Aeq[20, 8],  0.0000, places)
+
+        self.assertEqual(beq.size, (22, 1))
+        self.assertAlmostEqual(beq[0],  0.4000, places)
+        self.assertAlmostEqual(beq[6],  0.9000, places)
+        self.assertAlmostEqual(beq[12], 0.6000, places)
+        self.assertAlmostEqual(beq[19], 0.8000, places)
+
+
 if __name__ == "__main__":
     import logging, sys
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
