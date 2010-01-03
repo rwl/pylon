@@ -286,7 +286,8 @@ class DCOPFSolverTest(unittest.TestCase):
     def test_unpack_model(self):
         """ Test unpacking the OPF model.
         """
-        buses, branches, generators = self.solver._unpack_model(self.om)
+        buses, branches, generators, cp, Bf, Pfinj = \
+                                            self.solver._unpack_model(self.om)
 
         self.assertEqual(len(buses), 6)
         self.assertEqual(len(branches), 11)
@@ -295,6 +296,21 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertEqual(generators[0].bus, buses[0])
         self.assertEqual(generators[1].bus, buses[1])
         self.assertEqual(generators[2].bus, buses[2])
+
+
+    def test_dimension_data(self):
+        """ Test problem dimensions.
+        """
+        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        ipol, ipwl, nb, nl, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
+
+        self.assertEqual(list(ipol), [0, 1, 2])
+        self.assertEqual(ipwl.size, (0, 1))
+        self.assertEqual(nb, 6)
+        self.assertEqual(nl, 11)
+        self.assertEqual(nw, 0)
+        self.assertEqual(ny, 0)
+        self.assertEqual(nxyz, 9)
 
 
 if __name__ == "__main__":

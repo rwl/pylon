@@ -150,7 +150,7 @@ class OPF:
 
         if self.dc:
             vars = [Va, Pg]
-            constraints = [Pmis, Pf, Pt, ang, ycon]
+            constraints = [Pmis, Pf, Pt, ang]#, ycon]
 
         else:
             vars = [Va, Vm, Pg, Qg]
@@ -158,8 +158,8 @@ class OPF:
 
         # Add variables and constraints to the OPF model object.
         opf = OPFModel(case)
-        opf.add_vars(*vars)
-        opf.add_constraints(*constraints)
+        opf.add_vars(vars)
+        opf.add_constraints(constraints)
 
         if self.dc: # user data
             opf._Bf = Bf
@@ -420,9 +420,9 @@ class OPF:
             by = matrix()
 
         if self.dc:
-            return LinearConstraint("ycon", Ay, 0, by, ["Pg", "y"])
+            return LinearConstraint("ycon", Ay, None, by, ["Pg", "y"])
         else:
-            return LinearConstraint("ycon", Ay, 0, by, ["Pg", "Qg", "y"])
+            return LinearConstraint("ycon", Ay, None, by, ["Pg", "Qg", "y"])
 
 
 #    def _construct_opf_model(self, vars, constraints, *kw_args):
@@ -517,11 +517,11 @@ class Solver(object):
         nb = len(buses)
         nl = len(branches)
         # Number of general cost vars, w.
-        nw = self.N.size[0]
+        nw = self.om.cost_N
         # Number of piece-wise linear costs.
-        ny = self.om.get_var_N("y")
+        ny = self.om.vars["y"].N if self.om.vars.has_key("y") else 0
         # Total number of control variables.
-        nxyz = self.om.get_var_N()
+        nxyz = self.om.var_N
 
         return ipol, ipwl, nb, nl, nw, ny, nxyz
 
@@ -968,11 +968,119 @@ class CVXOPTSolver(Solver):
         return solution
 
 #------------------------------------------------------------------------------
+#  "OPFModel" class:
+#------------------------------------------------------------------------------
+
+class OPFModel(object):
+    """ Defines a model for optimal power flow.
+    """
+
+    def __init__(self, case):
+        self.case = case
+        self.vars = {}
+        self.lin_constraints = {}
+        self.nln_constraints = {}
+        self.costs = {}
+
+
+    @property
+    def var_N(self):
+        return sum([v.N for v in self.vars.values()])
+
+
+    def add_var(self, var):
+        """ Adds a variable to the model.
+        """
+        if self.vars.has_key(var.name):
+            logger.error("Variable set named '%s' already exists." % var.name)
+            return
+
+        var.i1 = self.var_N + 1
+        var.iN = self.var_N + var.N
+        self.vars[var.name] = var
+
+
+    def add_vars(self, vars):
+        """ Adds a set of variables to the model.
+        """
+        for var in vars:
+            self.add_var(var)
+
+
+    @property
+    def nln_N(self):
+        return sum([c.N for c in self.nln_constraints.values()])
+
+
+    @property
+    def lin_N(self):
+        return sum([c.N for c in self.lin_constraints.values()])
+
+
+    @property
+    def lin_NS(self):
+        return len(self.lin_constraints)
+
+
+    def add_constraint(self, constr):
+        """ Adds a constraint to the model.
+        """
+        N, M = constr.A.size
+
+        if isinstance(constr, LinearConstraint):
+            if self.lin_constraints.has_key(constr.name):
+#                raise KeyError
+                return False
+            else:
+                constr.i1 = self.lin_N + 1
+                constr.iN = self.lin_N + N
+
+                nv = 0
+                for vs in constr.varsets:
+                    nv = nv + self.vars[vs].N
+                if M != nv:
+                    logger.error("Number of columns of A does not match number"
+                        " of variables, A is %d x %d, nv = %d", N, M, nv)
+                self.lin_constraints[constr] = constr
+        elif isinstance(constr, NonLinearConstraint):
+            if self.nln_constraints.has_key(constr.name):
+#                raise KeyError
+                return False
+            else:
+                constr.i1 = self.nln_N + 1
+                constr.iN = self.nln_N + N
+                self.nln_constraints[constr.name] = constr
+        else:
+            raise ValueError
+
+        return True
+
+
+    def add_constraints(self, constraints):
+        """ Adds constraints to the model.
+        """
+        for constr in constraints:
+            self.add_constraint(constr)
+
+
+    @property
+    def cost_N(self):
+        return sum([c.N for c in self.costs.values()])
+
+
+    def get_cost_params(self):
+        """ Returns the cost parameters.
+        """
+        return [c.params for c in self.costs]
+
+#------------------------------------------------------------------------------
 #  "Indexed" class:
 #------------------------------------------------------------------------------
 
-class Indexed(Named):
+class Set(Named):
+
     def __init__(self, name, N):
+
         self.name = name
 
         # Starting index.
@@ -981,20 +1089,20 @@ class Indexed(Named):
         # Ending index.
         self.iN = 0
 
-        # Number of variables.
+        # Number in set.
         self.N = 0
 
-        # Number of variable sets.
+        # Number of  sets.
         self.NS = 0
 
-        # Ordered list of variable sets.
-        self.order = {}
+        # Ordered list of sets.
+        self.order = []
 
 #------------------------------------------------------------------------------
 #  "Variable" class:
 #------------------------------------------------------------------------------
 
-class Variable(Indexed):
+class Variable(Set):
     """ Defines a set of variables.
     """
 
@@ -1025,22 +1133,30 @@ class Variable(Indexed):
 #  "LinearConstraint" class:
 #------------------------------------------------------------------------------
 
-class LinearConstraint(Indexed):
+class LinearConstraint(Set):
     """ Defines a set of linear constraints.
     """
 
-    def __init__(self, name, A, l, u, vs):
+    def __init__(self, name, AorN, l=None, u=None, vs=None):
         super(LinearConstraint, self).__init__(name, 0)
-        self.A = A
-        self.l = l
-        self.u = u
-        self.vs = vs
+
+        N, _ = AorN.size
+
+        self.A = AorN
+        self.l = matrix(-INF, (N, 1)) if l is None else l
+        self.u = matrix( INF, (N, 1)) if u is None else u
+
+        # Varsets.
+        self.varsets = [] if vs is None else vs
+
+        if (self.l.size[0] != N) or (self.u.size[0] != N):
+            logger.error("Sizes of A, l and u must match.")
 
 #------------------------------------------------------------------------------
 #  "NonLinearConstraint" class:
 #------------------------------------------------------------------------------
 
-class NonLinearConstraint(Indexed):
+class NonLinearConstraint(Set):
     """ Defines a set of non-linear constraints.
     """
     pass
@@ -1049,7 +1165,7 @@ class NonLinearConstraint(Indexed):
 #  "Cost" class:
 #------------------------------------------------------------------------------
 
-class Cost(Indexed):
+class Cost(Set):
     def __init__(self):
         self.N = None
         self.H = None
@@ -1060,56 +1176,5 @@ class Cost(Indexed):
         self.mm = None
         self.vs = None
         self.params = None
-
-#------------------------------------------------------------------------------
-#  "OPFModel" class:
-#------------------------------------------------------------------------------
-
-class OPFModel(object):
-    """ Defines a model for optimal power flow.
-    """
-
-    def __init__(self, case):
-        self.case = case
-        self.vars = []
-        self.lin_constraints = []
-        self.nln_constraints = []
-        self.costs = []
-
-
-    def add_var(self, var):
-        """ Adds a variable to the model.
-        """
-        self.vars.append(var)
-
-
-    def add_vars(self, vars):
-        """ Adds a set of variables to the model.
-        """
-        for var in vars:
-            self.add_var(var)
-
-
-    def add_constraint(self, constr):
-        """ Adds a constraint to the model.
-        """
-        if isinstance(constr, LinearConstraint):
-            self.lin_constraints.append(constr)
-        elif isinstance(constr, NonLinearConstraint):
-            self.nln_constraints.append(constr)
-        else:
-            raise ValueError
-
-
-    def add_constraints(self, constraints):
-        """ Adds constraints to the model.
-        """
-        for constr in constraints:
-            self.add_constraint(constr)
-
-
-    def get_cost_params(self):
-        """ Returns the cost parameters.
-        """
 
 # EOF -------------------------------------------------------------------------
