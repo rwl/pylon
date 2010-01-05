@@ -28,7 +28,7 @@
 
 import logging
 
-from numpy import pi, diff, polyder, polyval
+from numpy import pi, diff, polyder, polyval, array, nonzero
 
 from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul
 from cvxopt import solvers
@@ -540,13 +540,12 @@ class Solver(object):
         """ Returns the linear problem constraints.
         """
         A, l, u = om.linear_constraints() # l <= A*x <= u
-        assert len(l) == len(u)
 
         # Indexes for equality, greater than (unbounded above), less than
         # (unbounded below) and doubly-bounded constraints.
         ieq = matrix([i for i, v in enumerate(abs(u - l)) if v < EPS])
-        igt = matrix([i for i in range(len(l)) if u[i] > 1e10 and l[i] >-1e10])
-        ilt = matrix([i for i in range(len(l)) if u[i] < -1e10 and l[i] <1e10])
+        igt = matrix([i for i in range(len(l)) if u[i] >=  1e10 and l[i] > -1e10])
+        ilt = matrix([i for i in range(len(l)) if l[i] <= -1e10 and u[i] <  1e10])
         ibx = matrix([i for i in range(len(l))
                       if (abs(u[i] - l[i]) > EPS) and
                       (u[i] < 1e10) and (l[i] > -1e10)])
