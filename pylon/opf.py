@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 #  "OPF" class:
 #------------------------------------------------------------------------------
 
-class OPF:
+class OPF(object):
     """ Defines a generalised OPF solver.
 
         References:
@@ -146,12 +146,14 @@ class OPF:
         ang = self._voltage_angle_diff_limit(buses, branches)
 
         # Piece-wise linear generator cost constraints.
-        ycon = self._pwl_gen_costs(generators, base_mva)
+        y, ycon = self._pwl_gen_costs(generators, base_mva)
 
         if self.dc:
             vars = [Va, Pg]
-            constraints = [Pmis, Pf, Pt, ang]#, ycon]
-
+            constraints = [Pmis, Pf, Pt, ang]
+            if ycon is not None:
+                vars.append(y)
+                constraints.append(ycon)
         else:
             vars = [Va, Vm, Pg, Qg]
             constraints = [Pmis, Qmis, Sf, St, vl, ang]
@@ -415,14 +417,19 @@ class OPF:
                 Ay[k:k + ns - 2, ybas + i] = matrix(-1., (ns, 1))
                 k += (ns - 1)
                 # TODO: Repeat for Q cost.
-        else:
-            Ay = spmatrix([], [], [], (ybas + ny, 0))
-            by = matrix()
 
-        if self.dc:
-            return LinearConstraint("ycon", Ay, None, by, ["Pg", "y"])
+            y = Variable("y", ny)
+
+            if self.dc:
+                ycon = LinearConstraint("ycon", Ay, None, by, ["Pg", "y"])
+            else:
+                ycon = LinearConstraint("ycon", Ay, None, by, ["Pg", "Qg","y"])
         else:
-            return LinearConstraint("ycon", Ay, None, by, ["Pg", "Qg", "y"])
+#            Ay = spmatrix([], [], [], (ybas + ny, 0))
+#            by = matrix()
+            y = ycon = None
+
+        return y, ycon
 
 
 #    def _construct_opf_model(self, vars, constraints, *kw_args):
@@ -519,7 +526,10 @@ class Solver(object):
         # Number of general cost vars, w.
         nw = self.om.cost_N
         # Number of piece-wise linear costs.
-        ny = self.om.vars["y"].N if self.om.vars.has_key("y") else 0
+        if "y" in [v.name for v in self.om.vars]:
+            ny = self.om.get_var_N("y")
+        else:
+            ny = 0
         # Total number of control variables.
         nxyz = self.om.var_N
 
@@ -977,27 +987,27 @@ class OPFModel(object):
 
     def __init__(self, case):
         self.case = case
-        self.vars = {}
-        self.lin_constraints = {}
-        self.nln_constraints = {}
-        self.costs = {}
+        self.vars = []
+        self.lin_constraints = []
+        self.nln_constraints = []
+        self.costs = []
 
 
     @property
     def var_N(self):
-        return sum([v.N for v in self.vars.values()])
+        return sum([v.N for v in self.vars])
 
 
     def add_var(self, var):
         """ Adds a variable to the model.
         """
-        if self.vars.has_key(var.name):
+        if var.name in [v.name for v in self.vars]:
             logger.error("Variable set named '%s' already exists." % var.name)
             return
 
-        var.i1 = self.var_N + 1
-        var.iN = self.var_N + var.N
-        self.vars[var.name] = var
+        var.i1 = self.var_N
+        var.iN = self.var_N + var.N - 1
+        self.vars.append(var)
 
 
     def add_vars(self, vars):
@@ -1007,14 +1017,31 @@ class OPFModel(object):
             self.add_var(var)
 
 
+    def get_var(self, name):
+        """ Returns the variable set with the given name.
+        """
+        for var in self.vars:
+            if var.name == name:
+                return var
+        else:
+            raise ValueError
+
+
+
+    def get_var_N(self, name):
+        """ Return the number of variables in the named set.
+        """
+        return self.get_var(name).N
+
+
     @property
     def nln_N(self):
-        return sum([c.N for c in self.nln_constraints.values()])
+        return sum([c.N for c in self.nln_constraints])
 
 
     @property
     def lin_N(self):
-        return sum([c.N for c in self.lin_constraints.values()])
+        return sum([c.N for c in self.lin_constraints])
 
 
     @property
@@ -1025,7 +1052,7 @@ class OPFModel(object):
     def linear_constraints(self):
         """ Returns the linear constraints.
         """
-        A = spmatrix([], [], [], (self.lin_N, self.lin_N), tc='d')
+        A = spmatrix([], [], [], (self.lin_N, self.var_N), tc='d')
         l = matrix(-INF, (self.lin_N, 1))
         u = -l
 
@@ -1035,51 +1062,53 @@ class OPFModel(object):
                 i1 = lin.i1             # starting row index
                 iN = lin.iN             # ending row index
                 vsl = lin.vs            # var set list
-                kN = 0                  # initialize last col of Ak used
+                kN = -1                 # initialize last col of Ak used
                 Ai = spmatrix([], [], [], (lin.N, self.var_N))
                 for v in vsl:
-                    var = self.vars[v]
+                    var = self.get_var(v)
                     j1 = var.i1         # starting column in A
                     jN = var.iN         # ending column in A
                     k1 = kN + 1         # starting column in Ak
                     kN = kN + var.N     # ending column in Ak
-                    Ai[:, j1:jN] = Ak[:, k1:kN]
+                    Ai[:, j1:jN + 1] = Ak[:, k1:kN + 1]
 
-                A[i1:iN, :] = Ai
-                l[i1:iN] = lin.l
-                u[i1:iN] = lin.u
+                A[i1:iN + 1, :] = Ai
+                l[i1:iN + 1] = lin.l
+                u[i1:iN + 1] = lin.u
 
         return A, l, u
 
 
-    def add_constraint(self, constr):
+    def add_constraint(self, con):
         """ Adds a constraint to the model.
         """
-        N, M = constr.A.size
+        N, M = con.A.size
 
-        if isinstance(constr, LinearConstraint):
-            if self.lin_constraints.has_key(constr.name):
-#                raise KeyError
+        if isinstance(con, LinearConstraint):
+            if con.name in [c.name for c in self.lin_constraints]:
+                logger.error("Constraint set named '%s' already exists."
+                             % con.name)
                 return False
             else:
-                constr.i1 = self.lin_N + 1
-                constr.iN = self.lin_N + N
+                con.i1 = self.lin_N# + 1
+                con.iN = self.lin_N + N - 1
 
                 nv = 0
-                for vs in constr.varsets:
-                    nv = nv + self.vars[vs].N
+                for vs in con.vs:
+                    nv = nv + self.get_var_N(vs)
                 if M != nv:
                     logger.error("Number of columns of A does not match number"
                         " of variables, A is %d x %d, nv = %d", N, M, nv)
-                self.lin_constraints[constr] = constr
-        elif isinstance(constr, NonLinearConstraint):
-            if self.nln_constraints.has_key(constr.name):
-#                raise KeyError
+                self.lin_constraints.append(con)
+        elif isinstance(con, NonLinearConstraint):
+            if con.name in [c.name for c in self.nln_constraints]:
+                logger.error("Constraint set named '%s' already exists."
+                             % con.name)
                 return False
             else:
-                constr.i1 = self.nln_N + 1
-                constr.iN = self.nln_N + N
-                self.nln_constraints[constr.name] = constr
+                con.i1 = self.nln_N# + 1
+                con.iN = self.nln_N + N
+                self.nln_constraints.append(con)
         else:
             raise ValueError
 
@@ -1089,13 +1118,13 @@ class OPFModel(object):
     def add_constraints(self, constraints):
         """ Adds constraints to the model.
         """
-        for constr in constraints:
-            self.add_constraint(constr)
+        for con in constraints:
+            self.add_constraint(con)
 
 
     @property
     def cost_N(self):
-        return sum([c.N for c in self.costs.values()])
+        return sum([c.N for c in self.costs])
 
 
     def get_cost_params(self):
@@ -1168,16 +1197,16 @@ class LinearConstraint(Set):
     """
 
     def __init__(self, name, AorN, l=None, u=None, vs=None):
-        super(LinearConstraint, self).__init__(name, 0)
-
         N, _ = AorN.size
+
+        super(LinearConstraint, self).__init__(name, N)
 
         self.A = AorN
         self.l = matrix(-INF, (N, 1)) if l is None else l
         self.u = matrix( INF, (N, 1)) if u is None else u
 
         # Varsets.
-        self.varsets = [] if vs is None else vs
+        self.vs = [] if vs is None else vs
 
         if (self.l.size[0] != N) or (self.u.size[0] != N):
             logger.error("Sizes of A, l and u must match.")

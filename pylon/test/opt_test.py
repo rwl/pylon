@@ -259,12 +259,13 @@ class OPFTest(unittest.TestCase):
     def test_pwl_gen_cost(self):
         """ Test piece-wise linear generator cost constraints.
         """
-        ycon = self.opf._pwl_gen_costs(self.case.generators,
+        y, ycon = self.opf._pwl_gen_costs(self.case.generators,
                                           self.case.base_mva)
 
-        self.assertEqual(ycon.A.size, (3, 0))
-        self.assertEqual(ycon.u.size, (0, 0))
-#        self.assertEqual(ny, 0)
+        self.assertEqual(y, None)
+        self.assertEqual(ycon, None)
+#        self.assertEqual(ycon.A.size, (3, 0))
+#        self.assertEqual(ycon.u.size, (0, 0))
 
 #------------------------------------------------------------------------------
 #  "DCOPFSolverTest" class:
@@ -313,136 +314,179 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertEqual(nxyz, 9)
 
 
-    def test_constraints(self):
-        """ Test equality and inequality constraints.
+#    def test_constraints(self):
+#        """ Test equality and inequality constraints.
+#
+#        Aeq =
+#
+#          Columns 1 through 7
+#
+#           13.3333   -5.0000         0   -5.0000   -3.3333         0   -1.0000
+#           -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000         0
+#                 0   -4.0000   17.8462         0   -3.8462  -10.0000         0
+#           -5.0000  -10.0000         0   17.5000   -2.5000         0         0
+#           -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333         0
+#                 0   -5.0000  -10.0000         0   -3.3333   18.3333         0
+#
+#          Columns 8 through 9
+#
+#                 0         0
+#           -1.0000         0
+#                 0   -1.0000
+#                 0         0
+#                 0         0
+#                 0         0
+#
+#        Aieq =
+#
+#          Columns 1 through 7
+#
+#            5.0000   -5.0000         0         0         0         0         0
+#            5.0000         0         0   -5.0000         0         0         0
+#            3.3333         0         0         0   -3.3333         0         0
+#                 0    4.0000   -4.0000         0         0         0         0
+#                 0   10.0000         0  -10.0000         0         0         0
+#                 0    3.3333         0         0   -3.3333         0         0
+#                 0    5.0000         0         0         0   -5.0000         0
+#                 0         0    3.8462         0   -3.8462         0         0
+#                 0         0   10.0000         0         0  -10.0000         0
+#                 0         0         0    2.5000   -2.5000         0         0
+#                 0         0         0         0    3.3333   -3.3333         0
+#           -5.0000    5.0000         0         0         0         0         0
+#           -5.0000         0         0    5.0000         0         0         0
+#           -3.3333         0         0         0    3.3333         0         0
+#                 0   -4.0000    4.0000         0         0         0         0
+#                 0  -10.0000         0   10.0000         0         0         0
+#                 0   -3.3333         0         0    3.3333         0         0
+#                 0   -5.0000         0         0         0    5.0000         0
+#                 0         0   -3.8462         0    3.8462         0         0
+#                 0         0  -10.0000         0         0   10.0000         0
+#                 0         0         0   -2.5000    2.5000         0         0
+#                 0         0         0         0   -3.3333    3.3333         0
+#
+#          Columns 8 through 9
+#
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#                 0         0
+#
+#        beq =
+#
+#                 0
+#                 0
+#                 0
+#           -0.7000
+#           -0.7000
+#           -0.7000
+#
+#        bieq =
+#
+#            0.4000
+#            0.6000
+#            0.4000
+#            0.4000
+#            0.6000
+#            0.3000
+#            0.9000
+#            0.7000
+#            0.8000
+#            0.2000
+#            0.4000
+#            0.4000
+#            0.6000
+#            0.4000
+#            0.4000
+#            0.6000
+#            0.3000
+#            0.9000
+#            0.7000
+#            0.8000
+#            0.2000
+#            0.4000
+#        """
+#        Aeq, beq, Aieq, bieq = self.solver._split_constraints(self.om)
+#
+#        places = 4
+#        self.assertEqual(Aeq.size, (22, 9))
+#        self.assertAlmostEqual(Aeq[0, 0],  5.0000, places)
+#        self.assertAlmostEqual(Aeq[2, 4], -3.3333, places)
+#        self.assertAlmostEqual(Aeq[4, 1], 10.0000, places)
+#        self.assertAlmostEqual(Aeq[7, 4], -3.8462, places)
+#        self.assertAlmostEqual(Aeq[0, 6],  0.0000, places)
+#        self.assertAlmostEqual(Aeq[9, 8],  0.0000, places)
+#
+#        self.assertAlmostEqual(Aeq[11, 0], -5.0000, places)
+#        self.assertAlmostEqual(Aeq[13, 4],  3.3333, places)
+#        self.assertAlmostEqual(Aeq[18, 4],  3.8462, places)
+#        self.assertAlmostEqual(Aeq[20, 8],  0.0000, places)
+#
+#        self.assertEqual(beq.size, (22, 1))
+#        self.assertAlmostEqual(beq[0],  0.4000, places)
+#        self.assertAlmostEqual(beq[6],  0.9000, places)
+#        self.assertAlmostEqual(beq[12], 0.6000, places)
+#        self.assertAlmostEqual(beq[19], 0.8000, places)
 
-        Aeq =
+#------------------------------------------------------------------------------
+#  "OPFModelTest" class:
+#------------------------------------------------------------------------------
 
-          Columns 1 through 7
+class OPFModelTest(unittest.TestCase):
+    """ Test case for the OPF model.
+    """
 
-           13.3333   -5.0000         0   -5.0000   -3.3333         0   -1.0000
-           -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000         0
-                 0   -4.0000   17.8462         0   -3.8462  -10.0000         0
-           -5.0000  -10.0000         0   17.5000   -2.5000         0         0
-           -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333         0
-                 0   -5.0000  -10.0000         0   -3.3333   18.3333         0
-
-          Columns 8 through 9
-
-                 0         0
-           -1.0000         0
-                 0   -1.0000
-                 0         0
-                 0         0
-                 0         0
-
-        Aieq =
-
-          Columns 1 through 7
-
-            5.0000   -5.0000         0         0         0         0         0
-            5.0000         0         0   -5.0000         0         0         0
-            3.3333         0         0         0   -3.3333         0         0
-                 0    4.0000   -4.0000         0         0         0         0
-                 0   10.0000         0  -10.0000         0         0         0
-                 0    3.3333         0         0   -3.3333         0         0
-                 0    5.0000         0         0         0   -5.0000         0
-                 0         0    3.8462         0   -3.8462         0         0
-                 0         0   10.0000         0         0  -10.0000         0
-                 0         0         0    2.5000   -2.5000         0         0
-                 0         0         0         0    3.3333   -3.3333         0
-           -5.0000    5.0000         0         0         0         0         0
-           -5.0000         0         0    5.0000         0         0         0
-           -3.3333         0         0         0    3.3333         0         0
-                 0   -4.0000    4.0000         0         0         0         0
-                 0  -10.0000         0   10.0000         0         0         0
-                 0   -3.3333         0         0    3.3333         0         0
-                 0   -5.0000         0         0         0    5.0000         0
-                 0         0   -3.8462         0    3.8462         0         0
-                 0         0  -10.0000         0         0   10.0000         0
-                 0         0         0   -2.5000    2.5000         0         0
-                 0         0         0         0   -3.3333    3.3333         0
-
-          Columns 8 through 9
-
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-
-        beq =
-
-                 0
-                 0
-                 0
-           -0.7000
-           -0.7000
-           -0.7000
-
-        bieq =
-
-            0.4000
-            0.6000
-            0.4000
-            0.4000
-            0.6000
-            0.3000
-            0.9000
-            0.7000
-            0.8000
-            0.2000
-            0.4000
-            0.4000
-            0.6000
-            0.4000
-            0.4000
-            0.6000
-            0.3000
-            0.9000
-            0.7000
-            0.8000
-            0.2000
-            0.4000
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
         """
-        Aeq, beq, Aieq, bieq = self.solver._split_constraints(self.om)
+        self.case = PickleReader().read(DATA_FILE)
+        self.opf = OPF(self.case, show_progress=False)
+        self.om = self.opf._construct_opf_model(self.case)
 
-        places = 4
-        self.assertEqual(Aeq.size, (22, 9))
-        self.assertAlmostEqual(Aeq[0, 0],  5.0000, places)
-        self.assertAlmostEqual(Aeq[2, 4], -3.3333, places)
-        self.assertAlmostEqual(Aeq[4, 1], 10.0000, places)
-        self.assertAlmostEqual(Aeq[7, 4], -3.8462, places)
-        self.assertAlmostEqual(Aeq[0, 6],  0.0000, places)
-        self.assertAlmostEqual(Aeq[9, 8],  0.0000, places)
 
-        self.assertAlmostEqual(Aeq[11, 0], -5.0000, places)
-        self.assertAlmostEqual(Aeq[13, 4],  3.3333, places)
-        self.assertAlmostEqual(Aeq[18, 4],  3.8462, places)
-        self.assertAlmostEqual(Aeq[20, 8],  0.0000, places)
+    def test_linear_constraints(self):
+        """ Test linear OPF constraints.
+        """
+        A, l, u = self.om.linear_constraints()
 
-        self.assertEqual(beq.size, (22, 1))
-        self.assertAlmostEqual(beq[0],  0.4000, places)
-        self.assertAlmostEqual(beq[6],  0.9000, places)
-        self.assertAlmostEqual(beq[12], 0.6000, places)
-        self.assertAlmostEqual(beq[19], 0.8000, places)
+        self.assertEqual(A.size, (28, 9))
+        self.assertEqual(l.size, (28, 1))
+        self.assertEqual(u.size, (28, 1))
+
+        pl = 4
+        self.assertAlmostEqual(A[0, 0], 13.3333, pl)
+        self.assertAlmostEqual(A[4, 2], -3.8462, pl)
+        self.assertAlmostEqual(A[2, 8], -1.0000, pl)
+        self.assertAlmostEqual(A[9, 1],  4.0000, pl)
+        self.assertAlmostEqual(A[27, 5], 3.3333, pl)
+
+        self.assertAlmostEqual(l[0], 0.0000, pl)
+        self.assertAlmostEqual(l[3], -0.7000, pl)
+        self.assertAlmostEqual(l[6], -INF, pl)
+        self.assertAlmostEqual(l[27], -INF, pl)
+
+        self.assertAlmostEqual(u[0],  0.0000, pl)
+        self.assertAlmostEqual(u[3], -0.7000, pl)
+        self.assertAlmostEqual(u[6],  0.4000, pl)
+        self.assertAlmostEqual(u[7],  0.6000, pl)
+        self.assertAlmostEqual(u[23], 0.9000, pl)
 
 
 if __name__ == "__main__":
