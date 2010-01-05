@@ -223,7 +223,7 @@ class OPFTest(unittest.TestCase):
     def test_branch_flow_dc(self):
         """ Test maximum branch flow limit constraints.
         """
-        B, Bf, _, Pfinj = self.case.B
+        _, Bf, _, Pfinj = self.case.B
         Pf, Pt = self.opf._branch_flow_dc(self.case.branches, Bf, Pfinj,
                                              self.case.base_mva)
 
@@ -316,112 +316,6 @@ class DCOPFSolverTest(unittest.TestCase):
 
     def test_constraints(self):
         """ Test equality and inequality constraints.
-
-        Aeq =
-
-          Columns 1 through 7
-
-           13.3333   -5.0000         0   -5.0000   -3.3333         0   -1.0000
-           -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000         0
-                 0   -4.0000   17.8462         0   -3.8462  -10.0000         0
-           -5.0000  -10.0000         0   17.5000   -2.5000         0         0
-           -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333         0
-                 0   -5.0000  -10.0000         0   -3.3333   18.3333         0
-
-          Columns 8 through 9
-
-                 0         0
-           -1.0000         0
-                 0   -1.0000
-                 0         0
-                 0         0
-                 0         0
-
-        Aieq =
-
-          Columns 1 through 7
-
-            5.0000   -5.0000         0         0         0         0         0
-            5.0000         0         0   -5.0000         0         0         0
-            3.3333         0         0         0   -3.3333         0         0
-                 0    4.0000   -4.0000         0         0         0         0
-                 0   10.0000         0  -10.0000         0         0         0
-                 0    3.3333         0         0   -3.3333         0         0
-                 0    5.0000         0         0         0   -5.0000         0
-                 0         0    3.8462         0   -3.8462         0         0
-                 0         0   10.0000         0         0  -10.0000         0
-                 0         0         0    2.5000   -2.5000         0         0
-                 0         0         0         0    3.3333   -3.3333         0
-           -5.0000    5.0000         0         0         0         0         0
-           -5.0000         0         0    5.0000         0         0         0
-           -3.3333         0         0         0    3.3333         0         0
-                 0   -4.0000    4.0000         0         0         0         0
-                 0  -10.0000         0   10.0000         0         0         0
-                 0   -3.3333         0         0    3.3333         0         0
-                 0   -5.0000         0         0         0    5.0000         0
-                 0         0   -3.8462         0    3.8462         0         0
-                 0         0  -10.0000         0         0   10.0000         0
-                 0         0         0   -2.5000    2.5000         0         0
-                 0         0         0         0   -3.3333    3.3333         0
-
-          Columns 8 through 9
-
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-                 0         0
-
-        beq =
-
-                 0
-                 0
-                 0
-           -0.7000
-           -0.7000
-           -0.7000
-
-        bieq =
-
-            0.4000
-            0.6000
-            0.4000
-            0.4000
-            0.6000
-            0.3000
-            0.9000
-            0.7000
-            0.8000
-            0.2000
-            0.4000
-            0.4000
-            0.6000
-            0.4000
-            0.4000
-            0.6000
-            0.3000
-            0.9000
-            0.7000
-            0.8000
-            0.2000
-            0.4000
         """
         Aeq, beq, Aieq, bieq = self.solver._split_constraints(self.om)
 
@@ -429,6 +323,162 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertEqual(beq.size, (6, 1))
         self.assertEqual(Aieq.size, (22, 9))
         self.assertEqual(bieq.size, (22, 1))
+
+
+    def test_pwl_costs(self):
+        """ Test piecewise linear costs.
+        """
+        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        _, _, _, _, _, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
+
+        self.assertEqual(any_pwl, 0)
+        self.assertEqual(Npwl.size, (0, 9))
+        self.assertEqual(Hpwl.size, (0, 0))
+        self.assertEqual(Cpwl.size, (0, 1))
+        self.assertEqual(fparm_pwl.size, (0, 4))
+
+
+    def test_poly_costs(self):
+        """ Test quadratic costs.
+        """
+        base_mva = self.om.case.base_mva
+        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        ipol, _, _, _, _, _, nxyz = self.solver._dimension_data(b, l, g)
+        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
+            self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
+
+        self.assertEqual(npol, 3)
+
+        self.assertEqual(Npol.size, (3, 9))
+        self.assertEqual(Npol[0, 0], 0.0)
+        self.assertEqual(Npol[1, 7], 1.0)
+
+        self.assertEqual(Hpol.size, (3, 3))
+        self.assertEqual(Hpol[0, 0], 106.6)
+        self.assertEqual(Hpol[1, 1], 177.8)
+        self.assertEqual(Hpol[2, 2], 148.2)
+
+        self.assertEqual(Cpol.size, (3, 1))
+        self.assertEqual(Cpol[0], 1.1669e3)
+        self.assertEqual(Cpol[1], 1.0333e3)
+        self.assertEqual(Cpol[2], 1.0833e3)
+
+        self.assertEqual(fparm_pol.size, (3, 4))
+        self.assertEqual(fparm_pol[0, 0], 1.0)
+        self.assertEqual(fparm_pol[1, 0], 1.0)
+        self.assertEqual(fparm_pol[1, 1], 0.0)
+        self.assertEqual(fparm_pol[2, 3], 1.0)
+
+
+    def test_combine_costs(self):
+        """ Test combination of pwl and poly costs.
+
+            TODO: Repeat with combined pwl and poly costs.
+        """
+        base_mva = self.om.case.base_mva
+        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        ipol, _, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
+        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
+            self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
+        NN, HHw, CCw, ffparm = \
+            self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
+                                       Npol, Hpol, Cpol, fparm_pol, npol)
+
+        self.assertEqual(NN.size, (3, 9))
+        self.assertEqual(HHw.size, (3, 3))
+        self.assertEqual(CCw.size, (3, 1))
+        self.assertEqual(ffparm.size, (3, 4))
+
+
+    def test_coefficient_transformation(self):
+        """ Test transformation of quadratic coefficients for w into
+            coefficients for X.
+        """
+        base_mva = self.om.case.base_mva
+        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        ipol, _, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
+        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
+            self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
+        NN, HHw, CCw, ffparm = \
+            self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
+                                       Npol, Hpol, Cpol, fparm_pol, npol)
+        HH, CC, C0 = self.solver._transform_coefficients(NN, HHw, CCw, ffparm,
+                                                         polycf, any_pwl, npol,
+                                                         nw)
+
+        self.assertEqual(HH.size, (9, 9))
+        self.assertEqual(HH[0, 0], 0.0)
+        self.assertEqual(HH[8, 8], 148.2)
+
+        self.assertEqual(CC.size, (9, 1))
+        self.assertEqual(CC[0], 0.0)
+        self.assertEqual(CC[6], 1.1669e3)
+
+        self.assertEqual(C0[0], 653.1)
+
+
+    def test_var_bounds(self):
+        """ Test bounds on optimisation variables.
+        """
+        x0, LB, UB = self.solver.var_bounds()
+
+        self.assertEqual(x0.size, (9, 1))
+        self.assertEqual(x0[0], 0.0)
+        self.assertEqual(x0[7], 0.5)
+
+        self.assertEqual(LB.size, (9, 1))
+        self.assertEqual(LB[0], 0.0)
+        self.assertTrue(LB[1] == -INF)
+        self.assertEqual(LB[7], 0.375)
+
+        self.assertEqual(UB.size, (9, 1))
+        self.assertEqual(UB[0], 0.0)
+        self.assertTrue(UB[1] == INF)
+        self.assertEqual(UB[8], 1.8)
+
+
+    def test_initial_point(self):
+        """ Test selection of an initial interior point.
+        """
+        b, _, _, _, _, _ = self.solver._unpack_model(self.om)
+        _, LB, UB = self.solver.var_bounds()
+        x0 = self.solver._initial_interior_point(self.om, b, LB, UB)
+
+        self.assertEqual(x0.size, (9, 1))
+        self.assertEqual(x0[0], 0.0)
+        self.assertEqual(x0[8], 1.125)
+
+
+    def test_solution(self):
+        """ Test the solver's solution.
+        """
+        base_mva = self.om.case.base_mva
+#        self.opf._algorithm_parameters()
+        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        ipol, _, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Aeq, beq, Aieq, bieq = self.solver._split_constraints(self.om)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
+        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
+            self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
+        NN, HHw, CCw, ffparm = \
+            self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
+                                       Npol, Hpol, Cpol, fparm_pol, npol)
+        HH, CC, C0 = self.solver._transform_coefficients(NN, HHw, CCw, ffparm,
+                                                         polycf, any_pwl, npol,
+                                                         nw)
+        x0, LB, UB = self.solver.var_bounds()
+        sol = self.solver._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0)
+        x = sol["x"]
+
+        self.assertEqual(sol["status"], "optimal")
+        pl = 2
+        self.assertEqual(x[0], 0.0)
+        self.assertAlmostEqual(x[6], 0.5, pl)
+        self.assertAlmostEqual(x[7], 0.88, pl)
+        self.assertAlmostEqual(x[8], 0.72, pl)
 
 #------------------------------------------------------------------------------
 #  "OPFModelTest" class:

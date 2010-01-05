@@ -578,6 +578,12 @@ class DCOPFSolver(Solver):
         # formulation)). Specify None to use the CVXOPT solver..
         self.solver = solver
 
+        # User-defined costs.
+        self.N = spmatrix([], [], [], (0, self.om.var_N))
+        self.H = spmatrix([], [], [], (0, 0))
+        self.Cw = matrix(0.0, (0, 0))
+        self.fparm = matrix(0.0, (0, 0))
+
 
     def solve(self):
         """ Solves DC optimal power flow and returns a results dict.
@@ -592,92 +598,99 @@ class DCOPFSolver(Solver):
         # Split the constraints in equality and inequality.
         Aeq, beq, Aieq, bieq = self._split_constraints(self.om)
         # Piece-wise linear components of the objective function.
-        Npwl, Hpwl, Cpwl, fparm_pwl = self._pwl_costs(nxyz)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self._pwl_costs(ny, nxyz)
         # Quadratic components of the objective function.
-        Pg, Npol, Hpol, Cpol, fparm_pol = self._quadratic_costs(generators,
-                                                                ipol, nxyz,
-                                                                base_mva)
+        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
+            self._quadratic_costs(generators, ipol, nxyz, base_mva)
         # Combine pwl, poly and user costs.
-        NN, HHw, CCw, ffparm = self._combine_costs(Npwl, Npol, N,
-                                                   Hpwl, Hpol, H,
-                                                   Cpwl, Cpol, Cw,
-                                                   fparm_pwl, fparm_pol, fparm,
-                                                   any_pwl, npol, nw)
+        NN, HHw, CCw, ffparm = \
+            self._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
+                                Npol, Hpol, Cpol, fparm_pol, npol,
+                                self.N, self.H, self.Cw, self.fparm, nw)
         # Transform quadratic coefficients for w into coefficients for X.
         HH, CC, C0 = self._transform_coefficients(NN, HHw, CCw, ffparm, polycf,
                                                   any_pwl, npol, nw)
-        # Bounds on the optimisation variables..
-        x0, LB, UB = self.var_bounds()
+        # Bounds on the optimisation variables.
+        _, LB, UB = self.var_bounds()
 
         # Select an interior initial point for interior point solver.
-        x0 = self._initial_interior_point(self.om)
+        x0 = self._initial_interior_point(self.om, buses, LB, UB)
 
         # Call the quadratic/linear solver.
         solution = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0)
 
 
-    def _pwl_costs(self, nxyz):
+    def _pwl_costs(self, ny, nxyz):
         """ Returns the piece-wise linear components of the objective function.
         """
-        if self.ny > 0:
+        any_pwl = int(ny > 0)
+        if any_pwl:
             Npwl = spmatrix(1.0, )
             Hpwl = 0
             Cpwl = 1
             fparm_pwl = matrix([1, 0, 0, 1])
         else:
             Npwl = spmatrix([], [], [], (0, nxyz))
-            Hpwl = matrix()
-            Cpwl = matrix()
-            fparm_pwl = matrix()
+            Hpwl = spmatrix([], [], [], (0, 0))
+            Cpwl = matrix(0.0, (0, 1))
+            fparm_pwl = matrix(0.0, (0, 4))
 
-        return Npwl, Hpwl, Cpwl, fparm_pwl
+        return Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl
 
 
     def _quadratic_costs(self, generators, ipol, nxyz, base_mva):
         """ Returns the quadratic cost components of the objective function.
         """
         npol = len(ipol)
+        gpol = [g for g in generators if g.pcost_model == POLYNOMIAL]
 
-        if [g for g in generators[ipol] if len(g.p_cost) > 3]:
+        if [g for g in gpol if len(g.p_cost) > 3]:
             logger.error("Order of polynomial cost greater than quadratic.")
 
-        iqdr = matrix([i for i, g in enumerate(generators[ipol])
-                       if len(g.p_cost) == 3])
-        ilin = matrix([i for i, g in enumerate(generators[ipol])
-                       if len(g.p_cost) == 2])
+        iqdr = matrix([i for i, g in enumerate(generators)
+                       if g.pcost_model == POLYNOMIAL and len(g.p_cost) == 3])
+        ilin = matrix([i for i, g in enumerate(generators)
+                       if g.pcost_model == POLYNOMIAL and len(g.p_cost) == 2])
 
         polycf = matrix(0.0, (npol, 3))
         if len(iqdr) > 0:
-            polycf[iqdr, :] = matrix([g.p_cost for g in
-                                   generators[ipol[iqdr]]])
+            polycf[iqdr, :] = matrix([list(g.p_cost)
+                                      for g in generators]).T[iqdr, :]
 
-        polycf[ilin, 1:2] = matrix([g.p_cost[:2] for g in
-                                   generators[ipol[iqdr]]])
+        polycf[ilin, 1:] = matrix([list(g.p_cost[:2])
+                                    for g in generators]).T[ilin, :]
 
         # Convert to per-unit.
         polycf *= spdiag([base_mva**2, base_mva, 1])
-
         Pg = self.om.get_var("Pg")
-        Npol = spmatrix(1.0, range(npol), Pg - 1 + ipol, (npol, nxyz))
-        Hpol = spmatrix(2 * polycf[:, 1], range(npol), range(npol))
-        Cpol = polycf[:, 2]
-        fparm_pol = matrix(1., (npol, 1)) * matrix([1, 0, 0, 1])
+        Npol = spmatrix(1.0, range(npol), Pg.i1 + ipol, (npol, nxyz))
+        Hpol = spmatrix(2 * polycf[:, 0], range(npol), range(npol))
+        Cpol = polycf[:, 1]
+        fparm_pol = matrix(1.0, (npol, 1)) * matrix([1, 0, 0, 1]).T
 
-        return Pg, Npol, Hpol, Cpol, fparm_pol
+        return Npol, Hpol, Cpol, fparm_pol, polycf, npol
 
 
-    def _combine_costs(self, Npwl, Npol, N, Hpwl, Hpol, H, Cpwl, Cpol, Cw,
-                      fparm_pwl, fparm_pol, fparm, any_pwl, npol, nw):
-        NN = sparse([Npwl, Npol, N])
-        HHw = sparse([Hpwl,
-                      spmatrix([], [], [], (any_pwl, npol + nw)),
-                      spmatrix([], [], [], (npol, any_pwl)),
-                      Hpol,
-                      spmatrix([], [], [], (npol, nw)),
-                      spmatrix([], [], [], (nw, any_pwl + npol)),
-                      H])
-        CCw = matrix([Cpwl, Cpol, Cw])
-        ffparm = matrix([fparm_pwl, fparm_pol, fparm])
+    def _combine_costs(self, Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
+                       Npol, Hpol, Cpol, fparm_pol, npol,
+                       N=None, H=None, Cw=None, fparm=None, nw=0):
+        NN = sparse([Npwl, Npol])#, N])
+
+        HHw = sparse([
+            sparse([Hpwl, spmatrix([], [], [], (npol, any_pwl))]).T,
+            sparse([spmatrix([], [], [], (any_pwl, npol)), Hpol]).T
+        ]).T
+
+#        HHw = sparse([
+#            sparse([Hpwl, spmatrix([], [], [], (any_pwl, npol + nw))]).T,
+#            sparse([spmatrix([], [], [], (npol, any_pwl)),
+#                    Hpol,
+#                    spmatrix([], [], [], (npol, nw))]).T,
+#            sparse([spmatrix([], [], [], (nw, any_pwl + npol)), H]).T
+#        ]).T
+
+        CCw = matrix([Cpwl, Cpol])#, Cw])
+        ffparm = matrix([fparm_pwl, fparm_pol])#, fparm])
 
         return NN, HHw, CCw, ffparm
 
@@ -691,10 +704,10 @@ class DCOPFSolver(Solver):
         MR = M * ffparm[:, 2]
         HMR = HHw * MR
         MN = M * NN
-        HH = MN.T * HHw, MN
+        HH = MN.T * HHw * MN
         CC = MN.T * (CCw - HMR)
         # Constant term of cost.
-        C0 = 1./2. * MR.T * HMR + sum(polycf[:, 3])
+        C0 = 1./2. * MR.T * HMR + sum(polycf[:, 2])
 
         return HH, CC, C0
 
@@ -702,22 +715,27 @@ class DCOPFSolver(Solver):
     def var_bounds(self):
         """ Returns bounds on the optimisation variables.
         """
-        x0, LB, UB = self.om.getv()
+        x0 = matrix(0.0, (0, 1))
+        LB = matrix(0.0, (0, 1))
+        UB = matrix(0.0, (0, 1))
+
+        for var in self.om.vars:
+            x0 = matrix([x0, var.v0])
+            LB = matrix([LB, var.vl])
+            UB = matrix([UB, var.vu])
+
         return x0, LB, UB
 
 
-    def _initial_interior_point(self, om, buses, generators, base_mva):
+    def _initial_interior_point(self, om, buses, LB, UB):
         """ Selects an interior initial point for interior point solver.
         """
-#        x0 = matrix(0., (om.get_var_N(), 1))
-
-        xva = matrix([bus.v_angle_guess * pi / 180 for bus in buses])
-        # FIXME: Initialise V from any present generators.
-        xvm = matrix([bus.v_magnitude_guess for bus in buses])
-        xpg = matrix([g.p / base_mva for g in generators])
-        xqg = matrix([g.q / base_mva for g in generators])
-        x0 = matrix([xva, xvm, xpg, xqg])
-
+        Va = om.get_var("Va")
+        va_refs = [b.v_angle_guess * pi / 180.0 for b in buses
+                   if b.type == REFERENCE]
+        x0 = matrix((LB + UB) / 2.0)
+        x0[Va.i1:Va.iN + 1] = va_refs[0] # Angles set to first reference angle.
+        # TODO: PWL initial points.
         return x0
 
 
