@@ -90,17 +90,17 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     nA = A.size[0]             # number of original linear constraints
 
     # add var limits to linear constraints
-    AA = sparse([spmatrix(1., range(nx), range(nx)), A])
+    AA = sparse([spmatrix(1.0, range(nx), range(nx)), A])
     ll = matrix([xmin, l])
     uu = matrix([xmax, u])
 
     # split up linear constraints
-    ieq = matrix([i for i, v in enumerate(abs(uu - ll)) if v < EPS])
-    igt = matrix([i for i in range(len(l)) if uu[i] >  1e10 and ll[i] > -1e10])
-    ilt = matrix([i for i in range(len(l)) if uu[i] < -1e10 and ll[i] <  1e10])
-    ibx = matrix([i for i in range(len(l))
-                  if (abs(u[i] - l[i]) > EPS) and
-                  (uu[i] < 1e10) and (ll[i] > -1e10)])
+    ieq = matrix([j for j, v in enumerate(abs(uu - ll)) if v < EPS])
+    igt = matrix([j for j in range(len(ll)) if uu[j] >=  1e10 and ll[j]>-1e10])
+    ilt = matrix([j for j in range(len(ll)) if ll[j] <= -1e10 and uu[j]< 1e10])
+    ibx = matrix([j for j in range(len(ll))
+                  if (abs(uu[j] - ll[j]) > EPS) and
+                  (uu[j] < 1e10) and (ll[j] > -1e10)])
     Ae = AA[ieq, :]
     be = uu[ieq, :]
     Ai = sparse([AA[ilt, :], -AA[igt, :], AA[ibx, :], -AA[ibx, :]])
@@ -108,9 +108,9 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 
     # evaluate cost f(x0) and constraints g(x0), h(x0)
     x = x0
-    f, df = ipm_f(x)             # cost
-    f = f * cost_mult;
-    df = df * cost_mult;
+    f, df, _ = ipm_f(x)             # cost
+    f = f * cost_mult
+    df = df * cost_mult
     gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints
     g = matrix([gn, Ai * x - bi])          # inequality constraints
     h = matrix([hn, Ae * x - be])          # equality constraints
@@ -131,10 +131,13 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     lam = matrix(0.0, (neq, 1))
     z = z0 * matrix(1.0, (niq, 1))
     mu = z
-    k = nonzero(g < -z0)
+#    k = matrix(map(lambda x, y: x < y, g, -z0))
+    k = matrix([j for j in range(len(g)) if g[j] < -z0])
+#    k = nonzero(g < -z0)
     z[k] = -g[k]
-    k = nonzero(div(gamma, z) > z0);
-    mu[k] = div(gamma, z(k))
+    k = matrix([j for j in range(len(z)) if (gamma / z[j]) > z0])
+#    k = nonzero(div(gamma, z) > z0)
+    mu[k] = div(gamma, z[k])
     e = matrix(1.0, (niq, 1))
 
     # check tolerance
@@ -318,6 +321,9 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
     """
     nx = len(c)
 
+    if H is None:
+        H = spmatrix([], [], [], (nx, nx))
+
     if VLB is None:
         VLB = matrix(-Inf, (nx, 1))
 
@@ -333,16 +339,17 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
         k = nonzero(VUB >= 1e10 and VLB > -1e10)
         x0[k] = VLB[k] + 1
 
-    def qp_f(x, H=None, c=None):
+    def qp_f(x):
         f = 0.5 * x.T * H * x + c.T * x
         df = H * x + c
-        return df, H
+        return f, df, H
 
     def qp_gh(x):
-        g = matrix()
-        h = matrix()
-        dg = matrix()
-        dh = matrix()
+        g = matrix(0.0, (0, 1))
+        h = matrix(0.0, (0, 1))
+        n, _ = x.size
+        dg = spmatrix([], [], [], (n, 0))
+        dh = spmatrix([], [], [], (n, 0))
         return g, h, dg, dh
 
     def qp_hessian(x, lmbda, H, cost_mult):

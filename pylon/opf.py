@@ -31,6 +31,7 @@ import logging
 from numpy import pi, diff, polyder, polyval, array, nonzero
 
 from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul
+from cvxopt.solvers import qp, lp
 from cvxopt import solvers
 
 from util import Named, conj
@@ -569,13 +570,16 @@ class DCOPFSolver(Solver):
             http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
-    def __init__(self, om, solver=None):
+    def __init__(self, om, cvxopt=True, solver=None):
         """ Initialises a new DCOPFSolver instance.
         """
         super(DCOPFSolver, self).__init__(om)
 
+        # Use a solver from CVXOPT.
+        self.cvxopt = cvxopt
+
         # Specify an alternative solver ("mosek" (or "glpk" for linear
-        # formulation)). Specify None to use the CVXOPT solver..
+        # formulation)). Specify None to use the CVXOPT solver.
         self.solver = solver
 
         # User-defined costs.
@@ -590,7 +594,7 @@ class DCOPFSolver(Solver):
         """
         base_mva = self.om.case.base_mva
         # Unpack the OPF model.
-        buses, branches, generators = self._unpack_model(self.om)
+        buses, branches, generators, cp, Bf, Pfinj= self._unpack_model(self.om)
         # Compute problem dimensions.
         ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(buses,
                                                                 branches,
@@ -618,6 +622,8 @@ class DCOPFSolver(Solver):
 
         # Call the quadratic/linear solver.
         solution = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0)
+
+        return solution
 
 
     def _pwl_costs(self, ny, nxyz):
@@ -742,11 +748,25 @@ class DCOPFSolver(Solver):
     def _run_opf(self, P, q, G, h, A, b, LB, UB, x0):
         """ Solves the either quadratic or linear program.
         """
+        if not self.cvxopt:
+            AA = sparse([A, G]) # Combined equality and inequality constraints.
+            bb = matrix([b, h])
+            N = A.size[0]
+
         if len(P) > 0:
-            solution = solvers.qp(P, q, G, h, A, b, self.solver, {"x": x0})
-#            xout, lmbdaout, howout, success = pdipm_qp(H, C, A, b, LB, UB, x0)
+            if self.cvxopt:
+                solution = qp(P, q, G, h, A, b, self.solver, {"x": x0})
+            else:
+                retval = pdipm_qp(P, q, AA, bb, LB, UB, x0, N)
         else:
-            solution = solvers.lp(q, G, h, A, b, self.solver, {"x": x0})
+            if self.cvxopt:
+                solution = lp(q, G, h, A, b, self.solver, {"x": x0})
+            else:
+                retval = pdipm_qp(None, q, AA, bb, LB, UB, x0, N)
+
+        if not self.cvxopt:
+            solution = {"xout": retval[0], "lmbdaout": retval[1],
+                        "howout": retval[2], "success": retval[3]}
 
         return solution
 
