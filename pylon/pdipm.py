@@ -133,10 +133,8 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     mu = z
 #    k = matrix(map(lambda x, y: x < y, g, -z0))
     k = matrix([j for j in range(len(g)) if g[j] < -z0])
-#    k = nonzero(g < -z0)
     z[k] = -g[k]
     k = matrix([j for j in range(len(z)) if (gamma / z[j]) > z0])
-#    k = nonzero(div(gamma, z) > z0)
     mu[k] = div(gamma, z[k])
     e = matrix(1.0, (niq, 1))
 
@@ -153,10 +151,10 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     if verbose:
         logger.info("\n it    objective   step size   feascond     gradcond     compcond     costcond  ")
         logger.info("\n----  ------------ --------- ------------ ------------ ------------ ------------")
-        logger.info("\n%3d  %12.8g %10s %12g %12g %12g %12g" %
-            (i, f/cost_mult, "", feascond, gradcond, compcond, costcond))
+        logger.info("\n%3d  %12.8f %10s %12.f %12.f %12.f %12.f" %
+            (i, (f / cost_mult)[0], "", feascond, gradcond, compcond[0], costcond[0]))
     if feascond < feastol and gradcond < gradtol and \
-                    compcond < comptol and costcond < costtol:
+                    compcond[0] < comptol and costcond[0] < costtol:
         converged = True
         if verbose:
             logger.info("Converged!\n")
@@ -175,11 +173,13 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dg_zinv = dg * zinvdiag
         M = Lxx + dg_zinv * mudiag * dg.T
         N = Lx + dg_zinv * (mudiag * g + gamma * e)
-        Ab = sparse([sparse([M.T, dh.T]),
-                     sparse([dh, spmatrix([], [], [], (neq, neq)).T])])
-        dxdlam = linsolve(Ab, [-N, -h])
-        dx = dxdlam(range(nx))
-        dlam = dxdlam(nx + range(neq))
+        Ab = sparse([sparse([M, dh.T]).T,
+                     sparse([dh, spmatrix([], [], [], (neq, neq)).T]).T]).T
+        bb = matrix([-N, -h])
+        linsolve(Ab, bb)
+        dxdlam = bb
+        dx = dxdlam[:nx]
+        dlam = dxdlam[nx:nx + neq]
         dz = -g - z - dg.T * dx
         dmu = -mu + zinvdiag * (gamma * e - mudiag * dz)
 
@@ -217,7 +217,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
                 h1 = matrix([hn1, Ae * x1 - be])   # equality constraints
                 L1 = f1 + lam.T * h1 + mu.T * (g1 + z) - gamma * sum(log(z))
                 if verbose:
-                    logger.info("\n   %3d            %10g" % (-j, norm(dx1)))
+                    logger.info("\n   %3d            %10.f" % (-j, norm(dx1)))
                 rho = (L1 - L) / (Lx.T * dx1 + 0.5 * dx1.T * Lxx * dx1)
                 if rho > rho_min and rho < rho_max:
                     break
@@ -229,10 +229,10 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
             dmu = alpha * dmu
 
         # do the update
-        k = nonzero(dz < 0)
-        alphap = min( matrix([xi * min(div(z(k), -dz(k))), 1]) )
-        k = nonzero(dmu < 0)
-        alphad = min( matrix([xi * min(div(mu(k), -dmu(k))), 1]) )
+        k = matrix([j for j in range(len(dz)) if dz[j] < 0.0])
+        alphap = min( matrix([xi * min(div(z[k], -dz[k])), 1]) )
+        k = matrix([j for j in range(len(dz)) if dmu[j] < 0.0])
+        alphad = min( matrix([xi * min(div(mu[k], -dmu[k])), 1]) )
         x = x + alphap * dx
         z = z + alphap * dz
         lam = lam + alphad * dlam
@@ -240,7 +240,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         gamma = sigma * (z.T * mu) / niq
 
         # evaluate cost, constraints, derivatives
-        f, df = ipm_f(x);             # cost
+        f, df, _ = ipm_f(x)             # cost
         f = f * cost_mult
         df = df * cost_mult
         gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints
@@ -256,18 +256,18 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         compcond = (z.T * mu) / (1 + norm(x, Inf))
         costcond = abs(f - f0) / (1 + abs(f0))
         if verbose:
-            logger.info("\n%3d  %12.8g %10.5g %12g %12g %12g %12g" %
-                (i, f/cost_mult, norm(dx), feascond, gradcond, compcond, costcond))
+            logger.info("\n%3d  %12.8f %10.5f %12.f %12.f %12.f %12.f" %
+                (i, (f / cost_mult)[0], norm(dx), feascond, gradcond, compcond[0], costcond[0]))
         if feascond < feastol and gradcond < gradtol and \
-                        compcond < comptol and costcond < costtol:
+                        compcond[0] < comptol and costcond[0] < costtol:
             converged = True
             if verbose:
-                logger.info("\nConverged!\n")
+                logger.info("Converged!")
         else:
             if any(isnan(x)) or alphap < alpha_min or alphad < alpha_min or \
-                    gamma < EPS or gamma > 1 / EPS:
+                    gamma[0] < EPS or gamma[0] > 1.0 / EPS:
                 if verbose:
-                    logger.info("\nNumerically Failed\n")
+                    logger.info("Numerically failed.")
                 break
             f0 = f
             if step_control:
@@ -275,14 +275,15 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 
     if verbose:
         if not converged:
-            logger.info("\nDid not converge in %d iterations.\n" % i)
+            logger.info("Did not converge in %d iterations." % i)
 
     info = converged
     output = {"iterations": i, "feascond": feascond, "gradcond": gradcond,
-                    "compcond": compcond, "costcond": costcond}
+              "compcond": compcond, "costcond": costcond}
 
     # zero out multipliers on non-binding constraints
-    mu[g < -feastol and mu < mu_threshold] = 0
+    k = [j for j in range(len(mu)) if g[j] < -feastol and mu[j] < mu_threshold]
+    mu[k] = 0.0
 
     # un-scale cost and prices
     f   = f / cost_mult
@@ -291,23 +292,25 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 
     # re-package multipliers into struct
     lam_lin = lam[neqnln:neq]              # lambda for linear constraints
-    mu_lin  = mu[niqnln:niq]               # mu for linear constraints
-    kl = nonzero(lam_lin < 0)              # lower bound binding
-    ku = nonzero(lam_lin > 0)                # upper bound binding
+    mu_lin = mu[niqnln:niq]                # mu for linear constraints
+    kl = matrix([j for j, v in enumerate(lam_lin) if v < 0.0])
+#    kl = nonzero(lam_lin < 0)              # lower bound binding
+    ku = matrix([j for j, v in enumerate(lam_lin) if v > 0.0])
+#    ku = nonzero(lam_lin > 0)              # upper bound binding
 
     mu_l = matrix(0.0, (nx + nA, 1))
     mu_l[ieq[kl]] = -lam_lin[kl]
-    mu_l[igt] = mu_lin[nlt + range(ngt)]
-    mu_l[ibx] = mu_lin[nlt + ngt + nbx + range(nbx)]
+    mu_l[igt] = mu_lin[nlt:nlt + ngt]
+    mu_l[ibx] = mu_lin[nlt + ngt + nbx:nlt + ngt + nbx + nbx]
 
-    mu_u = matrix(0.0, (nx+nA, 1))
+    mu_u = matrix(0.0, (nx + nA, 1))
     mu_u[ieq[ku]] = lam_lin[ku]
-    mu_u[ilt] = mu_lin[1:nlt]
-    mu_u[ibx] = mu_lin[nlt + ngt + range(nbx)]
+    mu_u[ilt] = mu_lin[:nlt]
+    mu_u[ibx] = mu_lin[nlt + ngt:nlt + ngt + nbx]
 
-    lmbda = {"eqnonlin": lam[1:neqnln], 'ineqnonlin': mu[1:niqnln],
-        'mu_l': mu_l[nx + 1:], 'mu_u': mu_u[nx + 1:],
-        'lower': mu_l[1:nx], 'upper': mu_u[1:nx]}
+    lmbda = {"eqnonlin": lam[:neqnln], 'ineqnonlin': mu[:niqnln],
+        'mu_l': mu_l[nx:], 'mu_u': mu_u[nx:],
+        'lower': mu_l[:nx], 'upper': mu_u[:nx]}
 
     return x, f, info, output, lmbda
 
@@ -352,7 +355,7 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
         dh = spmatrix([], [], [], (n, 0))
         return g, h, dg, dh
 
-    def qp_hessian(x, lmbda, H, cost_mult):
+    def qp_hessian(x, lmbda):
         Lxx = H * cost_mult
         return Lxx
 
@@ -361,8 +364,9 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
     l[:N] = b[:N]
 
     # run it
-    xout, f, info, output, lmbda = \
-      pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b)
+    xout, _, info, _, lmbda = \
+      pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b,
+            verbose=verbose, cost_mult=cost_mult)
 
     success = (info > 0)
     if success:

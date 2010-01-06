@@ -752,12 +752,16 @@ class DCOPFSolver(Solver):
             AA = sparse([A, G]) # Combined equality and inequality constraints.
             bb = matrix([b, h])
             N = A.size[0]
+            if solvers.options.has_key("show_progress"):
+                verbose = solvers.options["show_progress"]
+            else:
+                verbose = False
 
         if len(P) > 0:
             if self.cvxopt:
                 solution = qp(P, q, G, h, A, b, self.solver, {"x": x0})
             else:
-                retval = pdipm_qp(P, q, AA, bb, LB, UB, x0, N)
+                retval = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, verbose=True)
         else:
             if self.cvxopt:
                 solution = lp(q, G, h, A, b, self.solver, {"x": x0})

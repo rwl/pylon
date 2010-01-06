@@ -481,13 +481,38 @@ class DCOPFSolverTest(unittest.TestCase):
 #        self.assertAlmostEqual(x[8], 0.72, pl)
 
 
-    def test_pdipm_solution(self):
+    def test_pdipm_qp_solution(self):
         """ Test the solution from the native PDIPM solver.
+
+            x =
+
+                 0
+           -0.0052
+           -0.0049
+           -0.0521
+           -0.0640
+           -0.0539
+            0.5000
+            0.8807
+            0.7193
         """
         self.solver.cvxopt = False
         solution = self.solver.solve()
+        x = solution["xout"]
+        lmbda = solution["lmbdaout"]
 
-        print solution
+        pl = 4
+        self.assertAlmostEqual(x[0], 0.0, pl)
+        self.assertAlmostEqual(x[6], 0.5, pl)
+        self.assertAlmostEqual(x[7], 0.8807, pl)
+        self.assertAlmostEqual(x[8], 0.7193, pl)
+
+        self.assertAlmostEqual(lmbda[0], 1.1899e03, places=1)
+        self.assertAlmostEqual(lmbda[1], 1.1899e03, places=1)
+        self.assertAlmostEqual(lmbda[34], 3.03e01, places=1)
+
+        self.assertEqual(solution["howout"], "success")
+        self.assertTrue(solution["success"])
 
 #------------------------------------------------------------------------------
 #  "OPFModelTest" class:
