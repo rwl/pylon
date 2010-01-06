@@ -29,7 +29,7 @@ from cvxopt import solvers
 
 from pylon.readwrite import PickleReader
 from pylon import OPF, Generator, REFERENCE, POLYNOMIAL, PW_LINEAR
-from pylon.opf import INF, DCOPFSolver#, PDIPMSolver, CVXOPTSolver
+from pylon.opf import INF, DCOPFSolver, PDIPMSolver#, CVXOPTSolver
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -452,49 +452,22 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertEqual(x0[8], 1.125)
 
 
-#    def test_cvxopt_solution(self):
-#        """ Test the solver's solution.
-#        """
-#        base_mva = self.om.case.base_mva
-##        self.opf._algorithm_parameters()
-#        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
-#        ipol, _, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
-#        Aeq, beq, Aieq, bieq = self.solver._split_constraints(self.om)
-#        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
-#        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
-#            self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
-#        NN, HHw, CCw, ffparm = \
-#            self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
-#                                       Npol, Hpol, Cpol, fparm_pol, npol)
-#        HH, CC, C0 = self.solver._transform_coefficients(NN, HHw, CCw, ffparm,
-#                                                         polycf, any_pwl, npol,
-#                                                         nw)
-#        x0, LB, UB = self.solver.var_bounds()
-#        sol = self.solver._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0)
-#        x = sol["x"]
-#
-#        self.assertEqual(sol["status"], "optimal")
-#        pl = 2
-#        self.assertEqual(x[0], 0.0)
-#        self.assertAlmostEqual(x[6], 0.5, pl)
-#        self.assertAlmostEqual(x[7], 0.88, pl)
-#        self.assertAlmostEqual(x[8], 0.72, pl)
+    def test_cvxopt_solution(self):
+        """ Test the solver's solution.
+        """
+        solution = self.solver.solve()
+        x = solution["x"]
+
+        self.assertEqual(solution["status"], "optimal")
+        pl = 2
+        self.assertEqual(x[0], 0.0)
+        self.assertAlmostEqual(x[6], 0.5, pl)
+        self.assertAlmostEqual(x[7], 0.88, pl)
+        self.assertAlmostEqual(x[8], 0.72, pl)
 
 
     def test_pdipm_qp_solution(self):
         """ Test the solution from the native PDIPM solver.
-
-            x =
-
-                 0
-           -0.0052
-           -0.0049
-           -0.0521
-           -0.0640
-           -0.0539
-            0.5000
-            0.8807
-            0.7193
         """
         self.solver.cvxopt = False
         solution = self.solver.solve()
@@ -513,6 +486,22 @@ class DCOPFSolverTest(unittest.TestCase):
 
         self.assertEqual(solution["howout"], "success")
         self.assertTrue(solution["success"])
+
+#------------------------------------------------------------------------------
+#  "PDIPMSolverTest" class:
+#------------------------------------------------------------------------------
+
+class PDIPMSolverTest(unittest.TestCase):
+    """ Test case for the PDIPM OPF solver.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.case = PickleReader().read(DATA_FILE)
+        self.opf = OPF(self.case, show_progress=False)
+        self.om = self.opf._construct_opf_model(self.case)
+        self.solver = PDIPMSolver(self.om)
 
 #------------------------------------------------------------------------------
 #  "OPFModelTest" class:

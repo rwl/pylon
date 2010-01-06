@@ -989,6 +989,39 @@ class Generator(Named):
         return result
 
 
+    def poly_cost(self, val=None, der=0, reactive=False):
+        """ Evaluates polynomial generator cost and derivatives.
+        """
+        cost_model = self.qcost_model if reactive else self.pcost_model
+        cost = self.q_cost if reactive else self.p_cost
+        if val is None:
+            val = self.q if reactive else self.p
+
+        if cost_model == PW_LINEAR:
+            logger.error("Cost must be polynomial.")
+            return
+
+        # Do derivatives.
+        for d in range(der):
+            if len(cost) >= 2:
+                c = cost[1:-d + 1]
+            else:
+                c = 0.0
+                break
+            for k in range(1, len(cost) - d):
+                c *= k
+
+        # Evaluate polynomial.
+        if c == 0.0:
+            f = 0.0
+        else:
+            f = c[0] # constant term
+            for k in range(1, len(cost)):
+                f += c[k] * val**(k-1)
+
+        return f
+
+
     def pwl_to_poly(self):
         """ Converts the first segment of the pwl cost to linear quadratic.
             FIXME: Curve-fit for all segments.
