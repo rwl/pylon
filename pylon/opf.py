@@ -30,7 +30,7 @@ import logging
 
 from numpy import pi, diff, polyder, polyval, array, nonzero
 
-from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul
+from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul, exp
 from cvxopt.solvers import qp, lp
 from cvxopt import solvers
 
@@ -493,7 +493,7 @@ class Solver(object):
             ny = self.om.get_var_N("y")
         else:
             ny = 0
-        # Total number of control variables.
+        # Total number of control variables of all types.
         nxyz = self.om.var_N
 
         return ipol, ipwl, nb, nl, nw, ny, nxyz
@@ -744,6 +744,15 @@ class PDIPMSolver(Solver):
     """ Solves AC optimal power flow using a primal-dual interior point method.
     """
 
+    def __init__(self, om, flow_lim="S"):
+        """ Initialises a new DCOPFSolver instance.
+        """
+        super(DCOPFSolver, self).__init__(om)
+
+        # Quantity to limit for branch flow constraints ("S", "P" or "I").
+        self.flow_lim = flow_lim
+
+
     def solve(self):
         # Unpack the OPF model.
         bs, ln, gn = self._unpack_model(self.om)
@@ -755,11 +764,136 @@ class PDIPMSolver(Solver):
         # Select an interior initial point for interior point solver.
         x0 = self._initial_interior_point(self.om)
 
+        Ybus, Yf, Yt = self.om.case.Y
+
         # Evaluates the objective function.
         ipm_f = self._ipm_f_func()
 
+        ipm_gh = self._ipm_gh_func()
+
         # Solve the convex optimization problem.
         result = self._run_opf(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax)
+
+
+    def _ipm_gh_func(self, buses, branches, generators, nb, nl, ng, nxyz,
+                     base_mva, Ybus, Yf, Yt):
+        """ Returns a function that computes constraint vectors and their
+            gradients.
+        """
+        j = 0 + 1j
+        Pg = self.om.get_var("Pg")
+        Qg = self.om.get_var("Qg")
+
+        def cons_fmin(x):
+            """ Evaluates nonlinear constraints and their Jacobian for OPF.
+            """
+            Pgen = x[Pg.i1:Pg.iN + 1] # Active generation in p.u.
+            Qgen = x[Qg.i1:Qg.iN + 1] # Reactive generation in p.u.
+
+            for i, g in enumerate(generators):
+                g.p = Pgen[i] * base_mva # active generation in MW
+                g.q = Qgen[i] * base_mva # reactive generation in MVAr
+
+            # Rebuild the net complex bus power injection vector in p.u.
+            Sbus = self.om.case.sbus
+
+            # Evaluate constraints.
+            Va = self.om.get_var("Va")
+            Vm = self.om.get_var("Vm")
+            Vang = x[Va.i1:Va.iN + 1]
+            Vmag = x[Vm.i1:Vm.iN + 1]
+            V = mul(Vmag, exp(j * Vang))
+
+            # Evaluate the power flow equations.
+            mis = mul(V, conj(Ybus * V)) - Sbus
+
+            # Evaluate constraint function values.
+
+            # Equality constraints (power flow).
+            h = matrix([mis.real(),  # active power mismatch for all buses
+                        mis.imag()]) # reactive power mismatch for all buses
+
+            # Inequality constraints (branch flow limits).
+            flow_max = matrix([(l.s_max / base_mva)**2 for l in branches])
+            # FIXME: There must be a more elegant method for this.
+            for i, v in enumerate(flow_max):
+                if v == 0.0:
+                    flow_max[i] = INF
+
+            if self.flow_lim == "I":
+                If = Yf * V
+                It = Yt * V
+                # Branch current limits.
+                g = matrix([(mul(If, conj(If)) - flow_max),
+                            (mul(If, conj(It)) - flow_max)])
+            else:
+                i_fbus = matrix([buses.index(e.from_bus) for e in branches])
+                i_tbus = matrix([buses.index(e.to_bus) for e in branches])
+                # Complex power injected at "from" bus (p.u.).
+                Sf = mul(V[i_fbus], conj(Yf * V))
+                # Complex power injected at "to" bus (p.u.).
+                St = mul(V[i_tbus], conj(Yt * V))
+                if self.flow_lim == "P": # active power limit, P (Pan Wei)
+                    # Branch real power limits.
+                    g = matrix([Sf.real()**2 - flow_max,
+                                St.real()**2 - flow_max])
+                elif self.flow_lim == "S": # apparent power limit, |S|
+                    # Branch apparent power limits.
+                    g = matrix([mul(Sf, conj(Sf)) - flow_max,
+                                mul(St, conj(St)) - flow_max])
+                else:
+                    raise ValueError
+
+            # Evaluate partials of constraints.
+
+            iVa = matrix(range(Va.i1, Va.iN + 1))
+            iVm = matrix(range(Vm.i1, Vm.iN + 1))
+            iPg = matrix(range(Pg.i1, Pg.iN + 1))
+            iQg = matrix(range(Qg.i1, Qg.iN + 1))
+            iVaVmPgQg = matrix([iVa, iVm, iPg, iQg])
+
+            # Compute partials of injected bus powers.
+            dSbus_dVm, dSbus_dVa = self.om.case.dSbus_dV(Ybus, V)
+            i_gbus = matrix([buses.index(g.bus) for g in generators])
+            neg_Cg = spmatrix(-1.0, i_gbus, range(ng), (nb, ng))
+
+            # P mismatch w.r.t Va, Vm, Pg, Qg.
+            dPmis_dVaVmPgQg = sparse([sparse([dSbus_dVa, dSbus_dVm]).real(),
+                                      neg_Cg, spmatrix([], [], [], (nb, ng))])
+            # Q mismatch w.r.t Va, Vm, Pg, Qg.
+            dQmis_dVaVmPgQg = sparse([sparse([dSbus_dVa, dSbus_dVm]).imag(),
+                                      spmatrix([], [], [], (nb, ng)), neg_Cg])
+
+            # Transposed Jacobian of the power balance equality constraints.
+            dh = spmatrix([], [], [], (nxyz, 2 * nb))
+            dh[iVaVmPgQg] = sparse([dPmis_dVaVmPgQg, dQmis_dVaVmPgQg]).T
+
+            # Compute partials of flows w.r.t V.
+            if self.flow_lim == "I":
+                dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
+                    self.om.case.dIbr_dV(Yf, Yt, V)
+            else:
+                dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
+                    self.om.case.dSbr_dV(Yf, Yt, V)
+            if self.flow_lim == "P":
+                dFf_dVa = dFf_dVa.real()
+                dFf_dVm = dFf_dVm.real()
+                dFt_dVa = dFt_dVa.real()
+                dFt_dVm = dFt_dVm.real()
+                Ff = Ff.real()
+                Ft = Ft.real()
+
+            # Squared magnitude of flow (complex power, current or real power).
+            df_dVa, df_dVm, dt_dVa, dt_dVm = \
+                self.om.case.dAbr_dV(dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft)
+
+            # Construct Jacobian of inequality constraints (branch limits) and
+            # transpose it.
+            dg = spmatrix([], [], [], (nxyz, 2 * nl))
+            dg[matrix([iVa, iVm])] = sparse([sparse([df_dVa, df_dVm]),
+                                             sparse([dt_dVa, dt_dVm])])
+
+            return g, h, dg, dh
 
 
     def _ipm_f_func(self, ipol, ny, nxyz, generators, base_mva):
@@ -794,6 +928,8 @@ class PDIPMSolver(Solver):
             else:
                 ccost = matrix(0.0, (1, nxyz))
 
+            # TODO: Generalised cost term.
+
             #------------------------------------------------------------------
             #  Evaluate cost gradient.
             #------------------------------------------------------------------
@@ -811,13 +947,17 @@ class PDIPMSolver(Solver):
             df[iQg] = df_dPgQg[ng:ng + ng]
 
             # Piecewise linear cost of P and Q.
-            df += ccost.T
+            df += ccost.T # linear cost row is additive wrt any nonlinear cost
+
+            # TODO: Generalised cost term.
 
             #------------------------------------------------------------------
             #  Evaluate cost Hessian.
             #------------------------------------------------------------------
 
-            return f, df#, d2f
+            d2f = None
+
+            return f, df, d2f
 
         return cost_fmin
 

@@ -112,6 +112,16 @@ class Case(Named, Serializable):
         """
         return [branch for branch in self.branches if branch.online]
 
+
+    @property
+    def s_bus(self):
+        """ Net complex bus power injection vector in p.u.
+        """
+        s = matrix([complex(self.p_surplus(v),
+                            self.q_surplus(v)) / self.base_mva
+                            for v in self.buses])
+        return s
+
     #--------------------------------------------------------------------------
     #  Bus injections:
     #--------------------------------------------------------------------------
