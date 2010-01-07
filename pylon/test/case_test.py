@@ -27,7 +27,7 @@ from os.path import join, dirname, exists, getsize
 import unittest
 import tempfile
 
-from pylon import Case, Bus, Branch, Generator
+from pylon import Case, Bus, Branch, Generator, POLYNOMIAL, PW_LINEAR
 from pylon.readwrite import PickleReader
 from pylon.pyreto import Offer, Bid
 
@@ -389,7 +389,8 @@ class GeneratorTest(unittest.TestCase):
         p1 = (40.0, 100.0)
         p2 = (100.0, 400.0)
 
-        g = Generator(Bus(), p_max=100.0, p_min=20.0, p_cost=[p0, p1, p2])
+        g = Generator(Bus(), p_max=100.0, p_min=20.0, p_cost=[p0, p1, p2],
+                      pcost_model=PW_LINEAR)
 
         self.assertAlmostEqual(g.total_cost(30.0), 75.0, places=4)
         self.assertAlmostEqual(g.total_cost(60.0), 200.0, places=4)
@@ -403,7 +404,7 @@ class GeneratorTest(unittest.TestCase):
 
         g.poly_to_pwl(n_points=10)
 
-        self.assertEqual(g.pcost_model, "pwl")
+        self.assertEqual(g.pcost_model, PW_LINEAR)
         self.assertEqual(len(g.p_cost), 10)
 
         self.assertAlmostEqual(g.p_cost[2][0], 17.78, places=2)
@@ -413,6 +414,9 @@ class GeneratorTest(unittest.TestCase):
         self.assertAlmostEqual(g.p_cost[6][1], 163.56, places=2)
 
         g.p_min = 10.0
+        g.pcost_model = POLYNOMIAL
+        g.p_cost = (0.02, 2.0, 0.0)
+
         g.poly_to_pwl(n_points=10)
 
         self.assertEqual(len(g.p_cost), 10)

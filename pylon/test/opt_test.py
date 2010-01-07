@@ -287,8 +287,7 @@ class DCOPFSolverTest(unittest.TestCase):
     def test_unpack_model(self):
         """ Test unpacking the OPF model.
         """
-        buses, branches, generators, cp, Bf, Pfinj = \
-                                            self.solver._unpack_model(self.om)
+        buses, branches, generators, cp = self.solver._unpack_model(self.om)
 
         self.assertEqual(len(buses), 6)
         self.assertEqual(len(branches), 11)
@@ -302,7 +301,7 @@ class DCOPFSolverTest(unittest.TestCase):
     def test_dimension_data(self):
         """ Test problem dimensions.
         """
-        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        b, l, g, _ = self.solver._unpack_model(self.om)
         ipol, ipwl, nb, nl, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
 
         self.assertEqual(list(ipol), [0, 1, 2])
@@ -328,7 +327,7 @@ class DCOPFSolverTest(unittest.TestCase):
     def test_pwl_costs(self):
         """ Test piecewise linear costs.
         """
-        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        b, l, g, _ = self.solver._unpack_model(self.om)
         _, _, _, _, _, ny, nxyz = self.solver._dimension_data(b, l, g)
         Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
 
@@ -343,7 +342,7 @@ class DCOPFSolverTest(unittest.TestCase):
         """ Test quadratic costs.
         """
         base_mva = self.om.case.base_mva
-        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        b, l, g, _ = self.solver._unpack_model(self.om)
         ipol, _, _, _, _, _, nxyz = self.solver._dimension_data(b, l, g)
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
             self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
@@ -377,7 +376,7 @@ class DCOPFSolverTest(unittest.TestCase):
             TODO: Repeat with combined pwl and poly costs.
         """
         base_mva = self.om.case.base_mva
-        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        b, l, g, _ = self.solver._unpack_model(self.om)
         ipol, _, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
         Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
@@ -397,7 +396,7 @@ class DCOPFSolverTest(unittest.TestCase):
             coefficients for X.
         """
         base_mva = self.om.case.base_mva
-        b, l, g, _, _, _ = self.solver._unpack_model(self.om)
+        b, l, g, _ = self.solver._unpack_model(self.om)
         ipol, _, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
         Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
@@ -423,7 +422,7 @@ class DCOPFSolverTest(unittest.TestCase):
     def test_var_bounds(self):
         """ Test bounds on optimisation variables.
         """
-        x0, LB, UB = self.solver.var_bounds()
+        x0, LB, UB = self.solver._var_bounds()
 
         self.assertEqual(x0.size, (9, 1))
         self.assertEqual(x0[0], 0.0)
@@ -443,8 +442,8 @@ class DCOPFSolverTest(unittest.TestCase):
     def test_initial_point(self):
         """ Test selection of an initial interior point.
         """
-        b, _, _, _, _, _ = self.solver._unpack_model(self.om)
-        _, LB, UB = self.solver.var_bounds()
+        b, _, _, _ = self.solver._unpack_model(self.om)
+        _, LB, UB = self.solver._var_bounds()
         x0 = self.solver._initial_interior_point(self.om, b, LB, UB)
 
         self.assertEqual(x0.size, (9, 1))
@@ -452,18 +451,18 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertEqual(x0[8], 1.125)
 
 
-    def test_cvxopt_solution(self):
-        """ Test the solver's solution.
-        """
-        solution = self.solver.solve()
-        x = solution["x"]
-
-        self.assertEqual(solution["status"], "optimal")
-        pl = 2
-        self.assertEqual(x[0], 0.0)
-        self.assertAlmostEqual(x[6], 0.5, pl)
-        self.assertAlmostEqual(x[7], 0.88, pl)
-        self.assertAlmostEqual(x[8], 0.72, pl)
+#    def test_cvxopt_solution(self):
+#        """ Test the solver's solution.
+#        """
+#        solution = self.solver.solve()
+#        x = solution["x"]
+#
+#        self.assertEqual(solution["status"], "optimal")
+#        pl = 2
+#        self.assertEqual(x[0], 0.0)
+#        self.assertAlmostEqual(x[6], 0.5, pl)
+#        self.assertAlmostEqual(x[7], 0.88, pl)
+#        self.assertAlmostEqual(x[8], 0.72, pl)
 
 
     def test_pdipm_qp_solution(self):

@@ -173,8 +173,8 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dg_zinv = dg * zinvdiag
         M = Lxx + dg_zinv * mudiag * dg.H
         N = Lx + dg_zinv * (mudiag * g + gamma * e)
-        Ab = sparse([sparse([M, dh]).T,
-                     sparse([dh.H, spmatrix([], [], [], (neq, neq)).T]).T]).T
+        Ab = sparse([sparse([M, dh.H]).T,
+                     sparse([dh, spmatrix([], [], [], (neq, neq)).T]).T]).T
         bb = matrix([-N, -h])
         linsolve(Ab, bb)
         dxdlam = bb

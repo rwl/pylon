@@ -271,8 +271,8 @@ class Case(Named, Serializable):
 
         f = matrix([self.buses.index(e.from_bus) for e in branches])
         t = matrix([self.buses.index(e.to_bus) for e in branches])
-        Cf = spmatrix(1.0, f, range(nl))
-        Ct = spmatrix(1.0, t, range(nl))
+        Cf = spmatrix(1.0, range(nl), f, (nl, nb))
+        Ct = spmatrix(1.0, range(nl), t, (nl, nb))
 
         # Build bus admittance matrix
         # Ybus = spdiags(Ysh, 0, nb, nb) + ... %% shunt admittance
@@ -293,10 +293,10 @@ class Case(Named, Serializable):
 #            spmatrix(tf.V, tf.I, tf.J, (nb, nb), tc="z") + \
 #            spmatrix(tt.V, tt.I, tt.J, (nb, nb), tc="z")
 
-        i = matrix([range(nl), range(nl)]).H
+        i = matrix([range(nl), range(nl)])
         j = matrix([f, t])
-        Yf = spmatrix(sparse([Yff, Yft]), i, j, (nl, nb))
-        Yt = spmatrix(sparse([Ytf, Ytt]), i, j, (nl, nb))
+        Yf = spmatrix(matrix([Yff, Yft]), i, j, (nl, nb))
+        Yt = spmatrix(matrix([Ytf, Ytt]), i, j, (nl, nb))
 
         # Branch admittances plus shunt admittances.
         Ybus = Cf.H * Yf + Ct.H * Yt + spdiag(Ysh)
@@ -351,7 +351,7 @@ class Case(Named, Serializable):
 
         f = matrix([buses.index(br.from_bus) for br in branches])
         t = matrix([buses.index(br.to_bus) for br in branches])
-        i = matrix([matrix(range(nl)).T, matrix(range(nl)).T])
+        i = matrix([matrix(range(nl)), matrix(range(nl))])
         one = matrix(1.0, (nl, 1))
         Cft = spmatrix(matrix([one, -one]), i, matrix([f, t]), (nl, nb))
 #        Cf = spmatrix(1.0, f, range(nl), (nb, nl))
@@ -1121,18 +1121,17 @@ class Generator(Named):
             polynomial cost variable by evaluating at zero and then at
             n_points evenly spaced points between p_min and p_max.
         """
+        assert self.pcost_model == POLYNOMIAL
         p_min = self.p_min
         p_max = self.p_max
-        self.p_cost = []
-        # Ensure that the cost model is polynomial for calling total_cost.
-        self.pcost_model = POLYNOMIAL
+        p_cost = []
 
         if p_min > 0.0:
             # Make the first segment go from the origin to p_min.
             step = (p_max - p_min) / (n_points - 2)
 
             y0 = self.total_cost(0.0)
-            self.p_cost.append((0.0, y0))
+            p_cost.append((0.0, y0))
 
             x = p_min
             n_points -= 1
@@ -1142,11 +1141,12 @@ class Generator(Named):
 
         for _ in range(n_points):
             y = self.total_cost(x)
-            self.p_cost.append((x, y))
+            p_cost.append((x, y))
             x += step
 
-        # Change the cost model.
-        self.pcost_model = "pwl"
+        # Change the cost model and set the new cost.
+        self.pcost_model = PW_LINEAR
+        self.p_cost = p_cost
 
 
     def get_offers(self, n_points=6):
