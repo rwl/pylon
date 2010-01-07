@@ -292,7 +292,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
     def test_power_balance_constraint(self):
         """ Test piecewise linear power balance (mismatch) constraint.
         """
-        self.routine.B, self.routine.Bsrc = self.case.B
+        self.routine.B, self.routine.Bsrc = self.case.Bdc
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -558,7 +558,7 @@ class DCOPFTest(unittest.TestCase):
                -0.7000
                -0.7000
         """
-        self.routine.B, self.routine.Bsrc = self.case.B
+        self.routine.B, self.routine.Bsrc = self.case.Bdc
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -712,7 +712,7 @@ class DCOPFTest(unittest.TestCase):
                 0.2000
                 0.4000
         """
-        self.routine.B, self.routine.Bsrc = self.case.B
+        self.routine.B, self.routine.Bsrc = self.case.Bdc
 
         self.routine._solver_type = self.routine._get_solver_type()
 

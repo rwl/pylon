@@ -137,7 +137,7 @@ class OPF(object):
 
         if self.dc: # DC model.
             # Get the susceptance matrices and phase shift injection vectors.
-            B, Bf, Pbusinj, Pfinj = self.case.B
+            B, Bf, Pbusinj, Pfinj = self.case.makeBdc(bs, ln)
 
             # Power mismatch constraints (B*Va + Pg = Pd).
             Pmis = self._power_mismatch_dc(bs, gn, B, Pbusinj, base_mva)

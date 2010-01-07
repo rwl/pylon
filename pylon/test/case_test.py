@@ -181,7 +181,7 @@ class CaseTest(unittest.TestCase):
                      0   -5.0000  -10.0000         0   -3.3333   18.3333
 
         """
-        B, _, _, _ = self.case.B
+        B, _, _, _ = self.case.Bdc
 
         self._validate_susceptance_diagonal_values(B)
         self._validate_susceptance_off_diagonal_values(B)

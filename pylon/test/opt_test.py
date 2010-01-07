@@ -199,7 +199,7 @@ class OPFTest(unittest.TestCase):
            -0.7000
         """
         # See case_test.py for B test.
-        B, _, Pbusinj, _ = self.case.B
+        B, _, Pbusinj, _ = self.case.Bdc
         Pmis = self.opf._power_mismatch_dc(self.case.buses,
                                               self.case.generators,
                                               B, Pbusinj, self.case.base_mva)
@@ -223,7 +223,7 @@ class OPFTest(unittest.TestCase):
     def test_branch_flow_dc(self):
         """ Test maximum branch flow limit constraints.
         """
-        _, Bf, _, Pfinj = self.case.B
+        _, Bf, _, Pfinj = self.case.Bdc
         Pf, Pt = self.opf._branch_flow_dc(self.case.branches, Bf, Pfinj,
                                              self.case.base_mva)
 

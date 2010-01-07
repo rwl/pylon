@@ -105,7 +105,7 @@ class DCPF(object):
             return False
 
         # Build the susceptance matrices.
-        self.B, self.Bsrc, self.p_businj, self.p_srcinj = case.B
+        self.B, self.Bsrc, self.p_businj, self.p_srcinj = case.Bdc
 
         # Get the vector of initial voltage angles.
         self.v_angle_guess = self._get_v_angle_guess(case)
