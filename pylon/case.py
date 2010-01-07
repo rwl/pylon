@@ -171,15 +171,14 @@ class Case(Named, Serializable):
 
     def get_admittance_matrix(self, bus_shunts=True, line_shunts=True,
             tap_positions=True, line_resistance=True, phase_shift=True):
-        """ Returns the bus and branch admittance matrices, Ysrc and Ytgt, such
-            that Ysrc * V is the vector of complex branch currents injected at
+        """ Returns the bus and branch admittance matrices, Yf and Yt, such
+            that Yf * V is the vector of complex branch currents injected at
             each branch's "from" bus.
 
             References:
                 Ray Zimmerman, "makeYbus.m", MATPOWER, PSERC Cornell,
                 http://www.pserc.cornell.edu/matpower/, version 1.8, June 2007
         """
-        j = 0 + 1j
         n_bus = len(self.buses)
         n_branch = len(self.branches)
 
@@ -189,14 +188,14 @@ class Case(Named, Serializable):
         #  Series admittance.
         #----------------------------------------------------------------------
 
-        # Ys = stat ./ (branch(:, BR_R) + j * branch(:, BR_X))
+        # Ys = stat ./ (branch(:, BR_R) + 1j * branch(:, BR_X))
         if line_resistance:
             r = matrix([e.r for e in self.branches])
         else:
             r = matrix(0.0, (n_branch, 1)) # Zero out line resistance.
         x = matrix([e.x for e in self.branches])
 
-        Ys = div(online, (r + j * x))
+        Ys = div(online, (r + 1j * x))
 
         #----------------------------------------------------------------------
         #  Line charging susceptance.
@@ -227,14 +226,14 @@ class Case(Named, Serializable):
         #  Phase shifters.
         #----------------------------------------------------------------------
 
-        # tap = tap .* exp(j*pi/180 * branch(:, SHIFT));
+        # tap = tap .* exp(1j*pi/180 * branch(:, SHIFT));
         # Convert branch attribute in degrees to radians
         if phase_shift:
             shift = matrix([e.phase_shift * pi / 180 for e in self.branches])
         else:
             phase_shift = matrix(0.0, (n_branch, 1))
 
-        tap = mul(tap, exp(j * shift))
+        tap = mul(tap, exp(1j * shift))
 
         #----------------------------------------------------------------------
         #  Branch admittance matrix elements.
@@ -248,7 +247,7 @@ class Case(Named, Serializable):
         # Yff = Ytt ./ (tap .* conj(tap));
         # Yft = - Ys ./ conj(tap);
         # Ytf = - Ys ./ tap;
-        Ytt = Ys + j * Bc / 2
+        Ytt = Ys + 1j * Bc / 2
         Yff = div(Ytt, (mul(tap, conj(tap))))
         Yft = div(-Ys, conj(tap))
         Ytf = div(-Ys, tap)
@@ -263,7 +262,7 @@ class Case(Named, Serializable):
             b_shunt = matrix([v.b_shunt for v in self.buses])
         else:
             b_shunt = matrix(0.0, (n_bus, 1)) # Zero out shunts at buses.
-        Ysh = (g_shunt + j * b_shunt) / self.base_mva
+        Ysh = (g_shunt + 1j * b_shunt) / self.base_mva
 
         #----------------------------------------------------------------------
         #  Connection matrices.
@@ -296,10 +295,10 @@ class Case(Named, Serializable):
         n_branch = len(self.branches)
         i = matrix(range(n_branch) + range(n_branch))
         j = matrix([src, tgt])
-        Ysrc = spmatrix(matrix([Yff, Yft]), i, j, (n_branch, len(self.buses)))
-        Ytgt = spmatrix(matrix([Ytf, Ytt]), i, j, (n_branch, len(self.buses)))
+        Yf = spmatrix(matrix([Yff, Yft]), i, j, (n_branch, len(self.buses)))
+        Yt = spmatrix(matrix([Ytf, Ytt]), i, j, (n_branch, len(self.buses)))
 
-        return Y, Ysrc, Ytgt
+        return Y, Yf, Yt
 
     Y = property(get_admittance_matrix)
 
@@ -375,164 +374,132 @@ class Case(Named, Serializable):
         # p_businj = Cf * p_srcinj + Ct * p_tgtinj
         p_businj = (Cf - Ct) * p_srcinj
 
-#        for e_idx, e in enumerate(branches):
-#            # Find the indexes of the buses at either end of the branch
-#            src_idx = buses.index(e.from_bus)
-#            dst_idx = buses.index(e.to_bus)
-#
-#            # B = 1/X
-#            if e.x != 0.0: # Avoid zero division error.
-#                b_branch = 1 / e.x
-#            else:
-#                # Infinite susceptance for zero reactance branch.
-#                b_branch = BIGNUM
-#
-#            # Divide by the branch tap ratio
-#            if e.ratio != 0.0:
-#                b_branch /= e.ratio
-#
-#            # Off-diagonal matrix elements (i, j) are the negative
-#            # susceptance of branches between buses[i] and buses[j]
-#            b[src_idx, dst_idx] += -b_branch
-#            b[dst_idx, src_idx] += -b_branch
-#            # Diagonal matrix elements (k, k) are the sum of the
-#            # susceptances of the branches connected to buses[k]
-#            b[src_idx, src_idx] += b_branch
-#            b[dst_idx, dst_idx] += b_branch
-#
-#            # Build Bf such that Bf * Va is the vector of real branch
-#            # powers injected at each branch's "from" bus
-#            b_from[e_idx, src_idx] = b_branch
-#            b_from[e_idx, dst_idx] = -b_branch
-
         return B, Bsrc, p_businj, p_srcinj
 
     #--------------------------------------------------------------------------
     #  Partial derivative of power injection w.r.t. voltage:
     #--------------------------------------------------------------------------
 
-    def dSbus_dV(self, Y, v):
+    def dSbus_dV(self, Y, V):
         """ Computes the partial derivative of power injection w.r.t. voltage.
-            The following explains the expressions used to form the matrices:
-
-            S = diag(V) * conj(Ibus) = diag(conj(Ibus)) * V
-
-            Partials of V & Ibus w.r.t. voltage magnitudes
-               dV/dVm = diag(V./abs(V))
-               dI/dVm = Ybus * dV/dVm = Ybus * diag(V./abs(V))
-
-            Partials of V & Ibus w.r.t. voltage angles
-               dV/dVa = j * diag(V)
-               dI/dVa = Ybus * dV/dVa = Ybus * j * diag(V)
-
-            Partials of S w.r.t. voltage magnitudes
-               dS/dVm = diag(V) * conj(dI/dVm) + diag(conj(Ibus)) * dV/dVm
-                      = diag(V) * conj(Ybus * diag(V./abs(V)))
-                                         + conj(diag(Ibus)) * diag(V./abs(V))
-
-            Partials of S w.r.t. voltage angles
-               dS/dVa = diag(V) * conj(dI/dVa) + diag(conj(Ibus)) * dV/dVa
-                      = diag(V) * conj(Ybus * j * diag(V))
-                                        + conj(diag(Ibus)) * j * diag(V)
-                      = -j * diag(V) * conj(Ybus * diag(V))
-                                        + conj(diag(Ibus)) * j * diag(V)
-                      = j * diag(V) * conj(diag(Ibus) - Ybus * diag(V))
 
             References:
                 Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
                 PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
         """
-        j = 0 + 1j
-        i = Y * v
+        I = Y * V
 
-        diag_v = spdiag(v)
-        diag_i = spdiag(i)
-        diag_vnorm = spdiag(div(v, abs(v))) # Element-wise division.
+        diag_v = spdiag(V)
+        diag_i = spdiag(I)
+        diag_vnorm = spdiag(div(V, abs(V))) # Element-wise division.
 
         dS_dVm = diag_v * conj(Y * diag_vnorm) + conj(diag_i) * diag_vnorm
-        dS_dVa = j * diag_v * conj(diag_i - Y * diag_v)
+        dS_dVa = 1j * diag_v * conj(diag_i - Y * diag_v)
 
         return dS_dVm, dS_dVa
+
+    #--------------------------------------------------------------------------
+    #  Partial derivatives of branch currents w.r.t. voltage.
+    #--------------------------------------------------------------------------
+
+    def dIbr_dV(self, Yf, Yt, V):
+        """ Computes partial derivatives of branch currents w.r.t. voltage.
+
+            Ray Zimmerman, "dIbr_dV.m", MATPOWER, version 4.0b1,
+            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+        """
+#        nb = len(V)
+
+        Vnorm = div(V, abs(V))
+        diagV = spdiag(V)
+        diagVnorm = spdiag(Vnorm)
+        dIf_dVa = Yf * 1j * diagV
+        dIf_dVm = Yf * diagVnorm
+        dIt_dVa = Yt * 1j * diagV
+        dIt_dVm = Yt * diagVnorm
+
+        # Compute currents.
+        If = Yf * V
+        It = Yt * V
+
+        return dIf_dVa, dIf_dVm, dIt_dVa, dIt_dVm, If, It
 
     #--------------------------------------------------------------------------
     #  Partial derivative of branch power flow w.r.t voltage:
     #--------------------------------------------------------------------------
 
-    def dSbr_dV(self, Ysrc, Ytgt, v):
+    def dSbr_dV(self, Yf, Yt, V, buses=None, branches=None):
         """ Computes the branch power flow vector and the partial derivative of
             branch power flow w.r.t voltage.
         """
-        j = 0 + 1j
-        n_branch = len(self.branches)
-        n_bus = len(v)
+        buses = self.buses if buses is None else buses
+        branches = self.branches if branches is None else branches
 
-        from_idxs = matrix([self.buses.index(branch.from_bus)
-                              for branch in self.branches])
-        to_idxs = matrix([self.buses.index(branch.to_bus)
-                              for branch in self.branches])
+        nl = len(branches)
+        nb = len(V)
+
+        f = matrix([buses.index(l.from_bus) for l in branches])
+        t = matrix([buses.index(l.to_bus) for l in branches])
 
         # Compute currents.
-        i_from = Ysrc * v
-        i_to = Ytgt * v
+        If = Yf * V
+        It = Yt * V
 
-        # dV/dVm = diag(V./abs(V))
-        v_norm = div(v, abs(v))
+        Vnorm = div(V, abs(V))
 
-        diagVfrom = spdiag(v[from_idxs])
-        diagIfrom = spdiag(i_from)
-        diagVto = spdiag(v[to_idxs])
-        diagIto = spdiag(i_to)
-        diagV = spdiag(v)
-        diagVnorm = spdiag(v_norm)
+        diagVf = spdiag(V[f])
+        diagIf = spdiag(If)
+        diagVt = spdiag(V[t])
+        diagIt = spdiag(It)
+        diagV = spdiag(V)
+        diagVnorm = spdiag(Vnorm)
 
-        br_idx = range(n_branch)
-        size = (n_branch, n_bus)
+        ibr = range(nl)
+        size = (nl, nb)
         # Partial derivative of S w.r.t voltage phase angle.
-        dSf_dVa = j * (conj(diagIfrom) *
-            spmatrix(v[from_idxs], br_idx, from_idxs, size) - \
-            diagVfrom * conj(Ysrc * diagV))
+        dSf_dVa = 1j * (conj(diagIf) *
+            spmatrix(V[f], ibr, f, size) - diagVf * conj(Yf * diagV))
 
-        dSt_dVa = j * (conj(diagIto) *
-            spmatrix(v[to_idxs], br_idx, to_idxs, size) - \
-            diagVto * conj(Ytgt * diagV))
+        dSt_dVa = 1j * (conj(diagIt) *
+            spmatrix(V[t], ibr, t, size) - diagVt * conj(Yt * diagV))
 
         # Partial derivative of S w.r.t. voltage amplitude.
-        dSf_dVm = diagVfrom * conj(Ysrc * diagVnorm) + conj(diagIfrom) * \
-            spmatrix(v_norm[from_idxs], br_idx, from_idxs, size)
+        dSf_dVm = diagVf * conj(Yf * diagVnorm) + conj(diagIf) * \
+            spmatrix(Vnorm[f], ibr, f, size)
 
-        dSt_dVm = diagVto * conj(Ytgt * diagVnorm) + conj(diagIto) * \
-            spmatrix(v_norm[to_idxs], br_idx, to_idxs, size)
+        dSt_dVm = diagVt * conj(Yt * diagVnorm) + conj(diagIt) * \
+            spmatrix(Vnorm[t], ibr, t, size)
 
         # Compute power flow vectors.
-        s_from = mul(v[from_idxs], conj(i_from))
-        s_to = mul(v[to_idxs], conj(i_to))
+        Sf = mul(V[f], conj(If))
+        St = mul(V[t], conj(It))
 
-        return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_from, s_to
+        return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, Sf, St
 
     #--------------------------------------------------------------------------
     #  Partial derivative of apparent power flow w.r.t voltage:
     #--------------------------------------------------------------------------
 
-    def dAbr_dV(self, dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_from, s_to):
+    def dAbr_dV(self, dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St):
         """ Computes the partial derivatives of apparent power flow w.r.t
             voltage.
         """
         # Compute apparent powers.
-        a_from = abs(s_from)
-        a_to = abs(s_to)
+        Af = abs(Sf)
+        At = abs(St)
 
         # Compute partial derivative of apparent power w.r.t active and
         # reactive power flows.  Partial derivative must equal 1 for lines with
         # zero flow to avoid division by zero errors (1 comes from L'Hopital).
-        p_from = div(s_from.real(), map(zero2one, a_from))
-        q_from = div(s_to.imag(), map(zero2one, a_from))
-        p_to = div(s_to.real(), map(zero2one, a_to))
-        q_to = div(s_to.imag(), map(zero2one, a_to))
+        Pf = div(Sf.real(), map(zero2one, Af))
+        Qf = div(St.imag(), map(zero2one, Af))
+        Pt = div(St.real(), map(zero2one, At))
+        Qt = div(St.imag(), map(zero2one, At))
 
-        dAf_dPf = spdiag(p_from)
-        dAf_dQf = spdiag(q_from)
-        dAt_dPt = spdiag(p_to)
-        dAt_dQt = spdiag(q_to)
+        dAf_dPf = spdiag(Pf)
+        dAf_dQf = spdiag(Qf)
+        dAt_dPt = spdiag(Pt)
+        dAt_dQt = spdiag(Qt)
 
         # Partial derivative of apparent power magnitude w.r.t voltage
         # phase angle.
@@ -545,6 +512,117 @@ class Case(Named, Serializable):
 
         return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
 
+    #--------------------------------------------------------------------------
+    #  Second derivative of power injection w.r.t voltage:
+    #--------------------------------------------------------------------------
+
+    def d2Sbus_dV2(self, Ybus, V, lam):
+        """ Computes 2nd derivatives of power injection w.r.t. voltage.
+        """
+        n = len(V)
+        Ibus = Ybus * V
+        diaglam = spdiag(lam)
+        diagV = spdiag(V)
+
+        A = spmatrix(mul(lam, V), range(n), range(n))
+        B = Ybus * diagV
+        C = A * conj(B)
+        D = Ybus.T * diagV
+        E = conj(diagV) * (D * diaglam - spmatrix(D*lam, range(n), range(n)))
+        F = C - A * spmatrix(conj(Ibus), range(n), range(n))
+        G = spmatrix(div(matrix(1.0, (n, 1)), abs(V)), range(n), range(n))
+
+        Haa = E + F
+        Hva = 1j * G * (E - F)
+        Hav = Hva.T
+        Hvv = G * (C + C.T) * G
+
+        return Haa, Hav, Hva, Hvv
+
+    #--------------------------------------------------------------------------
+    #  Second derivative of complex branch current w.r.t. voltage:
+    #--------------------------------------------------------------------------
+
+    def d2Ibr_dV2(self, Ybr, V, lam):
+        """ Computes 2nd derivatives of complex branch current w.r.t. voltage.
+        """
+        nb = len(V)
+        diaginvVm = spdiag(div(matrix(1.0, (nb, 1)), abs(V)))
+
+        Gaa = spdiag(mul(-(Ybr.T * lam), V))
+        Gva = -1j * Gaa * diaginvVm
+        Gav = Gva
+        Gvv = spmatrix([], [], [], (nb, nb))
+
+        return Gaa, Gav, Gva, Gvv
+
+    #--------------------------------------------------------------------------
+    #  Second derivative of complex power flow w.r.t. voltage:
+    #--------------------------------------------------------------------------
+
+    def d2Sbr_dV2(self, Cbr, Ybr, V, lam):
+        """ Computes 2nd derivatives of complex power flow w.r.t. voltage.
+        """
+        nb = len(V)
+
+        diaglam = spdiag(lam)
+        diagV = spdiag(V)
+
+        A = Ybr.H * diaglam * Cbr
+        B = conj(diagV) * A * diagV
+        D = spdiag(mul((A*V), conj(V)))
+        E = spdiag(mul((A.T * conj(V)), V))
+        F = B + B.T
+        G = spdiag(div(matrix(1.0, (nb, 1)), abs(V)))
+
+        Gaa = F - D - E
+        Gva = 1j * G * (B - B.T - D + E)
+        Gav = Gva.T
+        Gvv = G * F * G
+
+        return Gaa, Gav, Gva, Gvv
+
+    #--------------------------------------------------------------------------
+    #  Second derivative of |complex power flow|**2 w.r.t. voltage:
+    #--------------------------------------------------------------------------
+
+    def d2ASbr_dV2(self, dSbr_dVa, dSbr_dVm, Sbr, Cbr, Ybr, V, lam):
+        """ Computes 2nd derivatives of |complex power flow|**2 w.r.t. V.
+        """
+        diaglam = spdiag(lam)
+        diagSbr_conj = spdiag(conj(Sbr))
+
+        [Saa, Sav, Sva, Svv] = self.d2Sbr_dV2(Cbr, Ybr, V, diagSbr_conj * lam)
+
+        Gaa = 2 * ( Saa + dSbr_dVa.T * diaglam * conj(dSbr_dVa) ).real()
+        Gva = 2 * ( Sva + dSbr_dVm.T * diaglam * conj(dSbr_dVa) ).real()
+        Gav = 2 * ( Sav + dSbr_dVa.T * diaglam * conj(dSbr_dVm) ).real()
+        Gvv = 2 * ( Svv + dSbr_dVm.T * diaglam * conj(dSbr_dVm) ).real()
+
+        return Gaa, Gav, Gva, Gvv
+
+    #--------------------------------------------------------------------------
+    #  Second derivative of |complex current|**2 w.r.t. voltage:
+    #--------------------------------------------------------------------------
+
+    def d2AIbr_dV2(self, dIbr_dVa, dIbr_dVm, Ibr, Ybr, V, lam):
+        """ Computes 2nd derivatives of |complex current|**2 w.r.t. V.
+        """
+        diaglam = spdiag(lam)
+        diagIbr_conj = spdiag(conj(Ibr))
+
+        Iaa, Iav, Iva, Ivv = self.d2Ibr_dV2(Ybr, V, diagIbr_conj * lam)
+
+        Gaa = 2 * ( Iaa + dIbr_dVa.T * diaglam * conj(dIbr_dVa) ).real()
+        Gva = 2 * ( Iva + dIbr_dVm.T * diaglam * conj(dIbr_dVa) ).real()
+        Gav = 2 * ( Iav + dIbr_dVa.T * diaglam * conj(dIbr_dVm) ).real()
+        Gvv = 2 * ( Ivv + dIbr_dVm.T * diaglam * conj(dIbr_dVm) ).real()
+
+        return Gaa, Gav, Gva, Gvv
+
+    #--------------------------------------------------------------------------
+    #  Reset case results:
+    #--------------------------------------------------------------------------
 
     def reset(self):
         """ Resets the result variables for all of the case componenets.
@@ -556,6 +634,9 @@ class Case(Named, Serializable):
         for generator in self.generators:
             generator.reset()
 
+    #--------------------------------------------------------------------------
+    #  Deactivate isolated branches and generators:
+    #--------------------------------------------------------------------------
 
     def deactivate_isolated(self):
         """ Deactivates branches and generators connected to isolated buses.
@@ -811,9 +892,10 @@ class Generator(Named):
     """
 
     def __init__(self, bus, name=None, online=True, base_mva=100.0,
-            p=100.0, p_max=200.0, p_min=0.0, v_magnitude=1.0,
-            q=0.0, q_max=30.0, q_min=-30.0,
-            p_cost=None, pcost_model=POLYNOMIAL, q_cost=None, qcost_model=None):
+                 p=100.0, p_max=200.0, p_min=0.0, v_magnitude=1.0,
+                 q=0.0, q_max=30.0, q_min=-30.0,
+                 p_cost=None, pcost_model=POLYNOMIAL,
+                 q_cost=None, qcost_model=None):
         """ Initialises a new Generator instance.
         """
         # Busbar to which the generator is connected.
@@ -847,19 +929,6 @@ class Generator(Named):
         # Minimum reactive power (MVAr).
         self.q_min = q_min
 
-        # Maximum active power output bid. Used in OPF routines. Should be less
-        # than or equal to p_max.
-#        if p_max_bid is None:
-#            self.p_max_bid = p_max
-#        else:
-#            self.p_max_bid = 0.0
-        # Minimum active power bid. Used in OPF routines. Should be greater
-        # than or equal to p_min.
-#        if p_min_bid is None:
-#            self.p_min_bid = p_min
-#        else:
-#            self.p_min_bid = 0.0
-
 #        # Start up cost.
 #        self.c_startup = c_startup
 #        # Shut down cost.
@@ -870,18 +939,6 @@ class Generator(Named):
 
         # Reactive power cost model: 'poly', 'pwl' or None (default: 'poly')
         self.qcost_model = qcost_model
-
-        # Polynomial cost curve coefficients.
-        # (a, b, c) relates to: cost = c*p**3 + b*p**2 + a*p.
-#        if cost_coeffs:
-#            self.cost_coeffs = cost_coeffs
-#        else:
-#            self.cost_coeffs = (0.01, 0.1, 10.0)
-        # Piecewise linear cost segment points.
-#        if pwl_points:
-#            self.pwl_points = pwl_points
-#        else:
-#            self.pwl_points = [(0.0, 0.0), (1.0, 10.0)]
 
         # Active power cost represented either by a tuple of quadratic
         # polynomial coefficients or a list of piece-wise linear coordinates
@@ -1233,77 +1290,6 @@ class Generator(Named):
                     (n_segs, plural, points))
 
         return points
-
-#------------------------------------------------------------------------------
-#  "Load" class:
-#------------------------------------------------------------------------------
-
-#class Load(Named):
-#    """ Defines a PQ load component.
-#    """
-#
-#    def __init__(self, name=None, online=True, p=1.0, q=0.1, p_max=1.0,
-#            p_min=0.0, p_profile=None):
-#        """ Initialises a new Load instance.
-#        """
-#        # Is the load in service?
-#        self.online = online
-#        # Active power demand (MW).
-#        self.p = p
-#        # Reactive power demand (MVAr).
-#        self.q = q
-#        # Maximum active power (MW).
-#        self.p_max = p_max
-#        # Minimum active power (MW).
-#        self.p_min = p_min
-#
-#        self._p_profile = []
-#        # Active power profile (%).
-#        if p_profile is None:
-#            self.p_profile = [100.0]
-#        else:
-#            self.p_profile = p_profile
-#
-#        self._p_cycle = cycle(self.p_profile)
-#
-#
-#    def __getstate__(self):
-#        """ Prevents the 'cycle' from being pickled.
-#        """
-#        result = self.__dict__.copy()
-#        del result['_p_cycle']
-#        return result
-#
-#
-#    def __setstate__(self, dict):
-#        """ Sets the load profile cycle when unpickling.
-#        """
-#        self.__dict__ = dict
-#        self._p_cycle = cycle(self.p_profile)
-#
-#    @property
-#    def p_profiled(self):
-#        """ Active power demand scaled between 'p_max' and 'p_min'
-#            according to the 'p_profile' percentages.
-#        """
-#        percent = self._p_cycle.next()
-#        return (percent / 100) * (self.p_max - self.p_min)
-#
-#
-#    def get_p_profile(self):
-#        """ Returns the active power profile for the load.
-#        """
-#        return self._p_profile
-#
-#
-#    def set_p_profile(self, profile):
-#        """ Sets the active power profile, updating the cycle iterator.
-#        """
-#        self._p_cycle = cycle(profile)
-#        self._p_profile = profile
-#
-#
-#    p_profile = property(get_p_profile, set_p_profile)
 
 #------------------------------------------------------------------------------
 #  "CaseReport" class:

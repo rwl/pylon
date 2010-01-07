@@ -937,7 +937,7 @@ class PDIPMSolver(Solver):
                     case.dIbr_dV(Yf, Yt, V)
             else:
                 dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
-                    case.dSbr_dV(Yf, Yt, V)
+                    case.dSbr_dV(Yf, Yt, V, bs, ln)
             if self.flow_lim == "P":
                 dFf_dVa = dFf_dVa.real()
                 dFf_dVm = dFf_dVm.real()
