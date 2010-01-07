@@ -423,7 +423,7 @@ class OPF(object):
                 if 0.0 in diff(p):
                     logger.error("Bad Pcost data: %s" % p)
                 b = mul(m, p[:ns - 1] - c[:ns - 1])
-                by = matrix([by, b.T])
+                by = matrix([by, b.H])
 
                 Ay[k:k + ns - 2, pgbas + i]
                 Ay[k:k + ns - 2, ybas + i] = matrix(-1., (ns, 1))
@@ -687,10 +687,10 @@ class DCOPFSolver(Solver):
         MR = M * ffparm[:, 2]
         HMR = HHw * MR
         MN = M * NN
-        HH = MN.T * HHw * MN
-        CC = MN.T * (CCw - HMR)
+        HH = MN.H * HHw * MN
+        CC = MN.H * (CCw - HMR)
         # Constant term of cost.
-        C0 = 1./2. * MR.T * HMR + sum(polycf[:, 2])
+        C0 = 1./2. * MR.H * HMR + sum(polycf[:, 2])
 
         return HH, CC, C0
 
@@ -833,7 +833,7 @@ class PDIPMSolver(Solver):
             df[iQg] = df_dPgQg[ng:ng + ng]
 
             # Piecewise linear cost of P and Q.
-            df += ccost.T # linear cost row is additive wrt any nonlinear cost
+            df += ccost.H # linear cost row is additive wrt any nonlinear cost
 
             # TODO: Generalised cost term.
 
@@ -929,7 +929,7 @@ class PDIPMSolver(Solver):
 
             # Transposed Jacobian of the power balance equality constraints.
             dh = spmatrix([], [], [], (nxyz, 2 * nb))
-            dh[iVaVmPgQg] = sparse([dPmis_dVaVmPgQg, dQmis_dVaVmPgQg]).T
+            dh[iVaVmPgQg] = sparse([dPmis_dVaVmPgQg, dQmis_dVaVmPgQg]).H
 
             # Compute partials of flows w.r.t V.
             if self.flow_lim == "I":

@@ -280,10 +280,10 @@ class Case(Named, Serializable):
         # Ct * spdiags(Ytf, 0, nl, nl) * Cf' + ...
         # Ct * spdiags(Ytt, 0, nl, nl) * Ct';
 
-        ff = Cf * spdiag(Yff) * Cf.T
-        ft = Cf * spdiag(Yft) * Ct.T
-        tf = Ct * spdiag(Ytf) * Cf.T
-        tt = Ct * spdiag(Ytt) * Ct.T
+        ff = Cf * spdiag(Yff) * Cf.H
+        ft = Cf * spdiag(Yft) * Ct.H
+        tf = Ct * spdiag(Ytf) * Cf.H
+        tt = Ct * spdiag(Ytt) * Ct.H
 
         # Resize otherwise all-zero rows/columns are lost.
         Y = spdiag(Ysh) + \
@@ -350,10 +350,10 @@ class Case(Named, Serializable):
         Cf = spmatrix(1.0, src_idx, range(n_branch), (n_bus, n_branch))
         Ct = spmatrix(1.0, tgt_idx, range(n_branch), (n_bus, n_branch))
 
-        ff = Cf * spdiag(b) * Cf.T
-        ft = Cf * spdiag(-b) * Ct.T
-        tf = Ct * spdiag(-b) * Cf.T
-        tt = Ct * spdiag(b) * Ct.T
+        ff = Cf * spdiag(b) * Cf.H
+        ft = Cf * spdiag(-b) * Ct.H
+        tf = Ct * spdiag(-b) * Cf.H
+        tt = Ct * spdiag(b) * Ct.H
 
         # Resize otherwise all-zero rows/columns are lost.
         B = spmatrix(ff.V, ff.I, ff.J, (n_bus, n_bus), tc="d") + \
@@ -527,7 +527,7 @@ class Case(Named, Serializable):
         A = spmatrix(mul(lam, V), range(n), range(n))
         B = Ybus * diagV
         C = A * conj(B)
-        D = Ybus.T * diagV
+        D = Ybus.H * diagV
         E = conj(diagV) * (D * diaglam - spmatrix(D*lam, range(n), range(n)))
         F = C - A * spmatrix(conj(Ibus), range(n), range(n))
         G = spmatrix(div(matrix(1.0, (n, 1)), abs(V)), range(n), range(n))

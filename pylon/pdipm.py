@@ -114,8 +114,8 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints
     g = matrix([gn, Ai * x - bi])          # inequality constraints
     h = matrix([hn, Ae * x - be])          # equality constraints
-    dg = sparse([dgn.T, Ai]).T             # 1st derivative of inequalities
-    dh = sparse([dhn.T, Ae]).T             # 1st derivative of equalities
+    dg = sparse([dgn.T, Ai.H.T]).T             # 1st derivative of inequalities
+    dh = sparse([dhn.T, Ae.H.T]).T             # 1st derivative of equalities
 
     # some dimensions
     neq = h.size[0]           # number of equality constraints
@@ -141,12 +141,12 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     # check tolerance
     f0 = f
     if step_control:
-        L = f + lam.T * h + mu.T * (g + z) - gamma * sum(log(z))
+        L = f + lam.H * h + mu.H * (g + z) - gamma * sum(log(z))
 
     Lx = df + dh * lam + dg * mu
     feascond = max([norm(h, Inf), max(g)]) / (1 + max([ norm(x, Inf), norm(z, Inf) ]))
     gradcond = norm(Lx, Inf) / (1 + max([ norm(lam, Inf), norm(mu, Inf) ]))
-    compcond = (z.T * mu) / (1 + norm(x, Inf))
+    compcond = (z.H * mu) / (1 + norm(x, Inf))
     costcond = abs(f - f0) / (1 + abs(f0))
     if verbose:
         logger.info("\n it    objective   step size   feascond     gradcond     compcond     costcond  ")
@@ -171,16 +171,16 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         zinvdiag = spmatrix(div(1.0, z), range(niq), range(niq), (niq, niq))
         mudiag = spmatrix(mu, range(niq), range(niq), (niq, niq))
         dg_zinv = dg * zinvdiag
-        M = Lxx + dg_zinv * mudiag * dg.T
+        M = Lxx + dg_zinv * mudiag * dg.H
         N = Lx + dg_zinv * (mudiag * g + gamma * e)
-        Ab = sparse([sparse([M, dh.T]).T,
-                     sparse([dh, spmatrix([], [], [], (neq, neq)).T]).T]).T
+        Ab = sparse([sparse([M, dh]).T,
+                     sparse([dh.H, spmatrix([], [], [], (neq, neq)).T]).T]).T
         bb = matrix([-N, -h])
         linsolve(Ab, bb)
         dxdlam = bb
         dx = dxdlam[:nx]
         dlam = dxdlam[nx:nx + neq]
-        dz = -g - z - dg.T * dx
+        dz = -g - z - dg.H * dx
         dmu = -mu + zinvdiag * (gamma * e - mudiag * dz)
 
         # optional step-size control
@@ -195,8 +195,8 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
             gn1, hn1, dgn1, dhn1 = ipm_gh(x1) # non-linear constraints
             g1 = matrix([gn1, Ai * x1 - bi])  # inequality constraints
             h1 = matrix([hn1, Ae * x1 - be])  # equality constraints
-            dg1 = sparse([dgn1.T, Ai]).T      # 1st derivative of inequalities
-            dh1 = sparse([dhn1.T, Ae]).T      # 1st derivative of equalities
+            dg1 = sparse([dgn1.T, Ai.H.T]).T      # 1st derivative of inequalities
+            dh1 = sparse([dhn1.T, Ae.H.T]).T      # 1st derivative of equalities
 
             # check tolerance
             Lx1 = df1 + dh1 * lam + dg1 * mu
@@ -215,10 +215,10 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
                 gn1, hn1 = ipm_gh(x1)              # non-linear constraints
                 g1 = matrix([gn1, Ai * x1 - bi])   # inequality constraints
                 h1 = matrix([hn1, Ae * x1 - be])   # equality constraints
-                L1 = f1 + lam.T * h1 + mu.T * (g1 + z) - gamma * sum(log(z))
+                L1 = f1 + lam.H * h1 + mu.H * (g1 + z) - gamma * sum(log(z))
                 if verbose:
                     logger.info("\n   %3d            %10.f" % (-j, norm(dx1)))
-                rho = (L1 - L) / (Lx.T * dx1 + 0.5 * dx1.T * Lxx * dx1)
+                rho = (L1 - L) / (Lx.H * dx1 + 0.5 * dx1.H * Lxx * dx1)
                 if rho > rho_min and rho < rho_max:
                     break
                 else:
@@ -237,7 +237,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         z = z + alphap * dz
         lam = lam + alphad * dlam
         mu  = mu  + alphad * dmu
-        gamma = sigma * (z.T * mu) / niq
+        gamma = sigma * (z.H * mu) / niq
 
         # evaluate cost, constraints, derivatives
         f, df, _ = ipm_f(x)             # cost
@@ -246,14 +246,14 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints
         g = matrix([gn, Ai * x - bi])          # inequality constraints
         h = matrix([hn, Ae * x - be])          # equality constraints
-        dg = sparse([dgn.T, Ai]).T             # 1st derivative of inequalities
-        dh = sparse([dhn.T, Ae]).T             # 1st derivative of equalities
+        dg = sparse([dgn.T, Ai.H.T]).T             # 1st derivative of inequalities
+        dh = sparse([dhn.T, Ae.H.T]).T             # 1st derivative of equalities
 
         # check tolerance
         Lx = df + dh * lam + dg * mu
         feascond = max([norm(h, Inf), max(g)]) / (1 + max([ norm(x, Inf), norm(z, Inf) ]))
         gradcond = norm(Lx, Inf) / (1 + max([ norm(lam, Inf), norm(mu, Inf) ]))
-        compcond = (z.T * mu) / (1 + norm(x, Inf))
+        compcond = (z.H * mu) / (1 + norm(x, Inf))
         costcond = abs(f - f0) / (1 + abs(f0))
         if verbose:
             logger.info("\n%3d  %12.8f %10.5f %12.f %12.f %12.f %12.f" %
@@ -271,7 +271,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
                 break
             f0 = f
             if step_control:
-                L = f + lam.T * h + mu.T * (g + z) - gamma * sum(log(z))
+                L = f + lam.H * h + mu.H * (g + z) - gamma * sum(log(z))
 
     if verbose:
         if not converged:
@@ -343,7 +343,7 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
         x0[k] = VLB[k] + 1
 
     def qp_f(x):
-        f = 0.5 * x.T * H * x + c.T * x
+        f = 0.5 * x.H * H * x + c.H * x
         df = H * x + c
         return f, df, H
 
@@ -358,7 +358,6 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
     def qp_hessian(x, lmbda):
         Lxx = H * cost_mult
         return Lxx
-
 
     l = matrix(-Inf, b.size)
     l[:N] = b[:N]
