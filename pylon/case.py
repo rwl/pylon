@@ -483,32 +483,36 @@ class Case(Named, Serializable):
         Sf = mul(V[f], conj(If))
         St = mul(V[t], conj(It))
 
-        return dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, Sf, St
+        return dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St
 
     #--------------------------------------------------------------------------
     #  Partial derivative of apparent power flow w.r.t voltage:
     #--------------------------------------------------------------------------
 
     def dAbr_dV(self, dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St):
-        """ Computes the partial derivatives of apparent power flow w.r.t
-            voltage.
+        """ Partial derivatives of squared flow magnitudes w.r.t voltage.
         """
         # Compute apparent powers.
-        Af = abs(Sf)
-        At = abs(St)
+#        Af = abs(Sf)
+#        At = abs(St)
 
         # Compute partial derivative of apparent power w.r.t active and
         # reactive power flows.  Partial derivative must equal 1 for lines with
         # zero flow to avoid division by zero errors (1 comes from L'Hopital).
-        Pf = div(Sf.real(), map(zero2one, Af))
-        Qf = div(St.imag(), map(zero2one, Af))
-        Pt = div(St.real(), map(zero2one, At))
-        Qt = div(St.imag(), map(zero2one, At))
+#        Pf = div(Sf.real(), matrix(map(zero2one, Af)))
+#        Qf = div(St.imag(), matrix(map(zero2one, Af)))
+#        Pt = div(St.real(), matrix(map(zero2one, At)))
+#        Qt = div(St.imag(), matrix(map(zero2one, At)))
+#
+#        dAf_dPf = spdiag(Pf)
+#        dAf_dQf = spdiag(Qf)
+#        dAt_dPt = spdiag(Pt)
+#        dAt_dQt = spdiag(Qt)
 
-        dAf_dPf = spdiag(Pf)
-        dAf_dQf = spdiag(Qf)
-        dAt_dPt = spdiag(Pt)
-        dAt_dQt = spdiag(Qt)
+        dAf_dPf = spdiag(2 * Sf.real())
+        dAf_dQf = spdiag(2 * Sf.imag())
+        dAt_dPt = spdiag(2 * St.real())
+        dAt_dQt = spdiag(2 * St.imag())
 
         # Partial derivative of apparent power magnitude w.r.t voltage
         # phase angle.
@@ -519,7 +523,7 @@ class Case(Named, Serializable):
         dAf_dVm = dAf_dPf * dSf_dVm.real() + dAf_dQf * dSf_dVm.imag()
         dAt_dVm = dAt_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
 
-        return dAf_dVa, dAt_dVa, dAf_dVm, dAt_dVm
+        return dAf_dVa, dAf_dVm, dAt_dVa, dAt_dVm
 
     #--------------------------------------------------------------------------
     #  Second derivative of power injection w.r.t voltage:

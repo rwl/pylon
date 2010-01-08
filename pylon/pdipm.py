@@ -28,12 +28,12 @@
 
 import logging
 
-from numpy import nonzero, Inf, any, isnan
-from numpy.linalg import norm
+from numpy import nonzero, Inf, any, isnan, asarray
+from numpy.linalg import norm, solve
 
-from cvxopt import matrix, spmatrix, sparse, div, log
-from cvxopt.umfpack import linsolve
-#from cvxopt.cholmod import linsolve
+from cvxopt import matrix, spmatrix, sparse, spdiag, div, log
+from cvxopt import umfpack #@UnusedImport
+from cvxopt import cholmod #@UnusedImport
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -112,13 +112,10 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     f = f * cost_mult
     df = df * cost_mult
     gn, hn, dgn, dhn = ipm_gh(x)        # non-linear constraints
-
-    print "PDIPM:\n", gn
-
     g = matrix([gn, Ai * x - bi])       # inequality constraints
     h = matrix([hn, Ae * x - be])       # equality constraints
-    dg = sparse([dgn.T, Ai.H.T]).T      # 1st derivative of inequalities
-    dh = sparse([dhn.T, Ae.H.T]).T      # 1st derivative of equalities
+    dg = sparse([[dgn], [Ai.H]])      # 1st derivative of inequalities
+    dh = sparse([[dhn], [Ae.H]])      # 1st derivative of equalities
 
     # some dimensions
     neq = h.size[0]           # number of equality constraints
@@ -147,6 +144,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         L = f + lam.H * h + mu.H * (g + z) - gamma * sum(log(z))
 
     Lx = df + dh * lam + dg * mu
+
     feascond = max([norm(h, Inf), max(g)]) / (1 + max([ norm(x, Inf), norm(z, Inf) ]))
     gradcond = norm(Lx, Inf) / (1 + max([ norm(lam, Inf), norm(mu, Inf) ]))
     compcond = (z.H * mu) / (1 + norm(x, Inf))
@@ -163,7 +161,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
             logger.info("Converged!\n")
 
     # do Newton iterations
-    while (not converged and i < max_it):
+    while (not converged and i < 1):#max_it):
         # update iteration counter
         i += 1
 
@@ -171,16 +169,21 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         lmbda = {"eqnonlin": lam[range(neqnln)],
                  "ineqnonlin": mu[range(niqnln)]}
         Lxx = ipm_hess(x, lmbda)
-        zinvdiag = spmatrix(div(1.0, z), range(niq), range(niq), (niq, niq))
-        mudiag = spmatrix(mu, range(niq), range(niq), (niq, niq))
+
+        zinvdiag = spdiag(div(1.0, z))
+        mudiag = spdiag(mu)
         dg_zinv = dg * zinvdiag
         M = Lxx + dg_zinv * mudiag * dg.H
         N = Lx + dg_zinv * (mudiag * g + gamma * e)
-        Ab = sparse([sparse([M, dh.H]).T,
-                     sparse([dh, spmatrix([], [], [], (neq, neq)).T]).T]).T
+        Ab = sparse([[M, dh.H],
+                     [dh, spmatrix([], [], [], (neq, neq))]])
         bb = matrix([-N, -h])
-        linsolve(Ab, bb)
+        print "Ab\n", bb
+
+        umfpack.linsolve(Ab, bb)
         dxdlam = bb
+        print "\n", dxdlam
+
         dx = dxdlam[:nx]
         dlam = dxdlam[nx:nx + neq]
         dz = -g - z - dg.H * dx
@@ -234,16 +237,18 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         # do the update
         k = matrix([j for j in range(len(dz)) if dz[j] < 0.0])
         alphap = min( matrix([xi * min(div(z[k], -dz[k])), 1]) )
-        k = matrix([j for j in range(len(dz)) if dmu[j] < 0.0])
+
+        k = matrix([j for j in range(len(dmu)) if dmu[j] < 0.0])
         alphad = min( matrix([xi * min(div(mu[k], -dmu[k])), 1]) )
-        x = x + alphap * dx
-        z = z + alphap * dz
-        lam = lam + alphad * dlam
-        mu  = mu  + alphad * dmu
+        x += alphap * dx
+        z += alphap * dz
+        lam += alphad * dlam
+        mu += alphad * dmu
         gamma = sigma * (z.H * mu) / niq
 
         # evaluate cost, constraints, derivatives
         f, df, _ = ipm_f(x)             # cost
+
         f = f * cost_mult
         df = df * cost_mult
         gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints

@@ -914,7 +914,7 @@ class PDIPMSolver(Solver):
                 elif self.flow_lim == "S": # apparent power limit, |S|
                     # Branch apparent power limits.
                     g = matrix([mul(Sf, conj(Sf)) - flow_max,
-                                mul(St, conj(St)) - flow_max])
+                                mul(St, conj(St)) - flow_max]).real()
                 else:
                     raise ValueError
 
@@ -931,34 +931,18 @@ class PDIPMSolver(Solver):
             # Compute partials of injected bus powers.
             dSbus_dVm, dSbus_dVa = case.dSbus_dV(Ybus, V)
 
-            print "dS:\n", dSbus_dVm[:, -5:]
-
-            i_gbus = matrix([bs.index(g.bus) for g in gn])
+            i_gbus = matrix([bs.index(gen.bus) for gen in gn])
             neg_Cg = spmatrix(-1.0, i_gbus, range(ng), (nb, ng))
-
-            # P mismatch w.r.t Va, Vm, Pg, Qg.
-#            dPmis_dVaVmPgQg = sparse([sparse([dSbus_dVa, dSbus_dVm]).real(),
-#                                      neg_Cg, spmatrix([], [], [], (nb, ng))])
-            # Q mismatch w.r.t Va, Vm, Pg, Qg.
-#            dQmis_dVaVmPgQg = sparse([sparse([dSbus_dVa, dSbus_dVm]).imag(),
-#                                      spmatrix([], [], [], (nb, ng)), neg_Cg])
 
             # Transposed Jacobian of the power balance equality constraints.
             dh = spmatrix([], [], [], (nxyz, 2 * nb))
-#            dh[iVaVmPgQg] = sparse([dPmis_dVaVmPgQg, dQmis_dVaVmPgQg]).H
 
-            dSbus_dV = sparse([dSbus_dVa.T, dSbus_dVm.T]).T
-            z = spmatrix([], [], [], (nb, ng))
-
-#            print iVaVmPgQg
-#            print sparse([dSbus_dV.real(), dSbus_dV.imag()]).size
-#            print sparse([ sparse([neg_Cg, z]).T, sparse([z, neg_Cg]).T ]).T.size
-
-#            dh[iVaVmPgQg] =
-            DH = sparse([
-                sparse([dSbus_dV.real(), dSbus_dV.imag()]).T,
-                sparse([ sparse([neg_Cg, z]).T, sparse([z, neg_Cg]).T ])
-            ])
+            dh[iVaVmPgQg, :] = sparse([
+                [dSbus_dVa.real(), dSbus_dVa.imag()],
+                [dSbus_dVm.real(), dSbus_dVm.imag()],
+                [neg_Cg, spmatrix([], [], [], (nb, ng))],
+                [spmatrix([], [], [], (nb, ng)), neg_Cg]
+            ]).T
 
             # Compute partials of flows w.r.t V.
             if self.flow_lim == "I":
@@ -982,8 +966,8 @@ class PDIPMSolver(Solver):
             # Construct Jacobian of inequality constraints (branch limits) and
             # transpose it.
             dg = spmatrix([], [], [], (nxyz, 2 * nl))
-            dg[matrix([iVa, iVm])] = sparse([sparse([df_dVa, df_dVm]),
-                                             sparse([dt_dVa, dt_dVm])])
+            dg[matrix([iVa, iVm]).T, :] = sparse([[df_dVa, dt_dVa],
+                                                  [df_dVm, dt_dVm]]).T
 
             return g, h, dg, dh
 
@@ -1009,12 +993,21 @@ class PDIPMSolver(Solver):
 
             d2f_dPg2 = spmatrix([], [], [], (ng, 1)) # w.r.t p.u. Pg
             d2f_dQg2 = spmatrix([], [], [], (ng, 1)) # w.r.t p.u. Qg
-            d2f_dPg2[ipol] = matrix([g.poly_cost(Pg[i] * base_mva, 2)
-                                     for i, g in enumerate(gpol)])
-            d2f_dQg2[ipol] = matrix([g.poly_cost(Qg[i] * base_mva, 2)
-                                     for i, g in enumerate(gpol)
-                                     if g.qcost_model is not None])
-            i = matrix([range(Pg.i1, Pg.iN + 1), range(Qg.i1, Qg.iN + 1)])
+#            d2f_dPg2[ipol] = matrix([g.poly_cost(Pg[i] * base_mva, 2)
+#                                     for i, g in enumerate(gpol)])
+            for i, g in enumerate(gn):
+                der = polyder(list(g.p_cost), 2)
+                d2f_dPg2[i] = polyval(der, Pgen[i]) * base_mva
+#            d2f_dQg2[ipol] = matrix([g.poly_cost(Qg[i] * base_mva, 2)
+#                                     for i, g in enumerate(gpol)
+#                                     if g.qcost_model is not None])
+            for i, g in enumerate(gn):
+                if g.qcost_model == POLYNOMIAL:
+                    der = polyder(list(g.q_cost), 2)
+                    d2f_dQg2[i] = polyval(der, Qgen[i]) * base_mva
+
+            i = matrix([matrix(range(Pg.i1, Pg.iN + 1)),
+                        matrix(range(Qg.i1, Qg.iN + 1))])
             d2f = spmatrix(matrix([d2f_dPg2, d2f_dQg2]), i, i, (nxyz, nxyz))
 
             # TODO: Generalised cost model.
@@ -1025,23 +1018,27 @@ class PDIPMSolver(Solver):
             #  Evaluate Hessian of power balance constraints.
             #------------------------------------------------------------------
 
-            nlam = len(lmbda["eqnonlin"]) / 2,0
+            nlam = len(lmbda["eqnonlin"]) / 2
             lamP = lmbda["eqnonlin"][:nlam]
             lamQ = lmbda["eqnonlin"][nlam:nlam + nlam]
             Hpaa, Hpav, Hpva, Hpvv = case.d2Sbus_dV2(Ybus, V, lamP)
             Hqaa, Hqav, Hqva, Hqvv = case.d2Sbus_dV2(Ybus, V, lamQ)
 
             d2H = sparse([
-                sparse([sparse([Hpaa, Hpva]).T, sparse([Hpav, Hpvv]).T]).T.real(),
-                sparse([sparse([Hqaa, Hqva]).T, sparse([Hqav, Hqvv]).T]).T.imag(),
-                spmatrix([], [], [], (2 * nb, nxtra))
+                [sparse([[Hpaa.real(), Hpva.real()],
+                         [Hpav.real(), Hpvv.real()]]) + \
+                 sparse([[Hqaa.imag(), Hqva.imag()],
+                         [Hqav.imag(), Hqvv.imag()]]),
+                 spmatrix([], [], [], (nxtra, 2 * nb))],
+                [spmatrix([], [], [], (2 * nb, nxtra)),
+                 spmatrix([], [], [], (nxtra, nxtra))]
             ])
 
             #------------------------------------------------------------------
             #  Evaluate Hessian of flow constraints.
             #------------------------------------------------------------------
 
-            nmu = len(lmbda["ineqnonlin"]) / 2.0
+            nmu = len(lmbda["ineqnonlin"]) / 2
             muF = lmbda["ineqnonlin"][:nmu]
             muT = lmbda["ineqnonlin"][nmu:nmu + nmu]
             if self.flow_lim == "I":
@@ -1074,17 +1071,38 @@ class PDIPMSolver(Solver):
                 else:
                     raise ValueError
 
-                Gf = sparse([sparse([Gfaa, Gfva]).T, sparse([Gfav, Gfvv]).T]).T
-                Gt = sparse([sparse([Gtaa, Gtva]).T, sparse([Gtav, Gtvv]).T]).T
-                d2G1 = sparse([sparse([Gf + Gt]).T,
-                              spmatrix([], [], [], (2 * nb, nxtra)).T]).T
-                d2G2 = spmatrix([], [], [], (nxtra, 2 * nb + nxtra))
-                d2G = sparse([d2G1, d2G2])
+#            Gf = sparse([[Gfaa, Gfva], [Gfav, Gfvv]])
+#            Gt = sparse([[Gtaa, Gtva], [Gtav, Gtvv]])
+#            d2G1 = sparse([[Gf + Gt],
+#                           [spmatrix([], [], [], (2 * nb, nxtra))]])
+#            d2G2 = spmatrix([], [], [], (nxtra, 2 * nb + nxtra))
+#            d2G = sparse([d2G1, d2G2])
+
+            d2G = sparse([
+                [sparse([[Gfaa, Gfva], [Gfav, Gfvv]]) + \
+                 sparse([[Gtaa, Gtva], [Gtav, Gtvv]]),
+                 spmatrix([], [], [], (nxtra, 2 * nb))],
+                [spmatrix([], [], [], (2 * nb, nxtra)),
+                 spmatrix([], [], [], (nxtra, nxtra))]
+            ])
 
             return d2f + d2H + d2G
 
         # Solve using primal-dual interior point method.
-        solution = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u)
+        x, _, info, _, lmbda = \
+            pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u)
+
+        success = (info > 0)
+        if success:
+            howout = 'success'
+        else:
+            howout = 'failure'
+
+        lmbdaout = matrix([-lmbda["mu_l"] + lmbda["mu_u"],
+                           lmbda["lower"], lmbda["upper"]])
+
+        solution = {"xout": x, "lmbdaout": lmbdaout,
+                    "howout": howout, "success": success}
 
         return solution
 
