@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
+from pylon.case import REFERENCE
 
 """ Defines a generalised OPF solver and an OPF model.
 
@@ -535,6 +536,18 @@ class Solver(object):
 
         return x0, LB, UB
 
+
+    def _initial_interior_point(self, buses, LB, UB):
+        """ Selects an interior initial point for interior point solver.
+        """
+        Va = self.om.get_var("Va")
+        va_refs = [b.v_angle_guess * pi / 180.0 for b in buses
+                   if b.type == REFERENCE]
+        x0 = matrix((LB + UB) / 2.0)
+        x0[Va.i1:Va.iN + 1] = va_refs[0] # Angles set to first reference angle.
+        # TODO: PWL initial points.
+        return x0
+
 #------------------------------------------------------------------------------
 #  "DCOPFSolver" class:
 #------------------------------------------------------------------------------
@@ -595,7 +608,7 @@ class DCOPFSolver(Solver):
         _, LB, UB = self._var_bounds()
 
         # Select an interior initial point for interior point solver.
-        x0 = self._initial_interior_point(self.om, buses, LB, UB)
+        x0 = self._initial_interior_point(buses, LB, UB)
 
         # Call the quadratic/linear solver.
         solution = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0)
@@ -695,18 +708,6 @@ class DCOPFSolver(Solver):
         return HH, CC, C0
 
 
-    def _initial_interior_point(self, om, buses, LB, UB):
-        """ Selects an interior initial point for interior point solver.
-        """
-        Va = om.get_var("Va")
-        va_refs = [b.v_angle_guess * pi / 180.0 for b in buses
-                   if b.type == REFERENCE]
-        x0 = matrix((LB + UB) / 2.0)
-        x0[Va.i1:Va.iN + 1] = va_refs[0] # Angles set to first reference angle.
-        # TODO: PWL initial points.
-        return x0
-
-
     def _run_opf(self, P, q, G, h, A, b, LB, UB, x0):
         """ Solves the either quadratic or linear program.
         """
@@ -753,10 +754,16 @@ class PDIPMSolver(Solver):
         self.flow_lim = flow_lim
 
 
-    def _initial_interior_point(self, om):
-        """ Selects an interior initial point for interior point solver.
+    def _ref_bus_angle_constraint(self, buses, Va, xmin, xmax):
+        """ Adds a constraint on the reference bus angles.
         """
-        return None
+        refs = matrix([i for i, v in enumerate(buses) if v.type == REFERENCE])
+        Varefs = matrix([b.v_angle_guess for b in buses if b.type ==REFERENCE])
+
+        xmin[Va.i1 - 1 + refs] = Varefs
+        xmax[Va.iN - 1 + refs] = Varefs
+
+        return xmin, xmax
 
 
     def solve(self):
@@ -765,20 +772,20 @@ class PDIPMSolver(Solver):
         base_mva = case.base_mva
 
         # Unpack the OPF model.
-        bs, ln, gn = self._unpack_model(self.om)
+        bs, ln, gn, cp = self._unpack_model(self.om)
 
         # Compute problem dimensions.
         ng = len(gn)
         gpol = [g for g in gn if g.pcost_model == POLYNOMIAL]
         ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(bs, ln, gn)
 
-        # Split the constraints in equality and inequality.
-        Aeq, beq, Aieq, bieq = self._split_constraints(self.om)
+        # Linear constraints (l <= A*x <= u).
+        A, l, u = self.om.linear_constraints()
 
         _, xmin, xmax = self._var_bounds()
 
         # Select an interior initial point for interior point solver.
-        x0 = self._initial_interior_point(self.om)
+        x0 = self._initial_interior_point(bs, xmin, xmax)
 
         # Build admittance matrices.
         Ybus, Yf, Yt = case.Y
@@ -788,6 +795,9 @@ class PDIPMSolver(Solver):
         Vm = self.om.get_var("Vm")
         Pg = self.om.get_var("Pg")
         Qg = self.om.get_var("Qg")
+
+        # Adds a constraint on the reference bus angles.
+#        xmin, xmax = self._ref_bus_angle_constraint(bs, Va, xmin, xmax)
 
         def ipm_f(x):
             """ Evaluates the objective function, gradient and Hessian for OPF.
@@ -826,14 +836,17 @@ class PDIPMSolver(Solver):
 
             # Polynomial cost of P and Q.
             df_dPgQg = matrix(0.0, (2 * ng, 1))        # w.r.t p.u. Pg and Qg
-            df_dPgQg[ipol] = matrix([g.poly_cost(xx[i], 1) for g in gpol])
+#            df_dPgQg[ipol] = matrix([g.poly_cost(xx[i], 1) for g in gpol])
+            for i, g in enumerate(gn):
+                der = polyder(list(g.p_cost))
+                df_dPgQg[i] = polyval(der, xx[i]) * base_mva
 
             df = matrix(0.0, (nxyz, 1))
             df[iPg] = df_dPgQg[:ng]
             df[iQg] = df_dPgQg[ng:ng + ng]
 
             # Piecewise linear cost of P and Q.
-            df += ccost.H # linear cost row is additive wrt any nonlinear cost
+            df += ccost.T # linear cost row is additive wrt any nonlinear cost
 
             # TODO: Generalised cost term.
 
@@ -857,7 +870,7 @@ class PDIPMSolver(Solver):
                 g.q = Qgen[i] * base_mva # reactive generation in MVAr
 
             # Rebuild the net complex bus power injection vector in p.u.
-            Sbus = case.sbus
+            Sbus = case.s_bus
 
             Vang = x[Va.i1:Va.iN + 1]
             Vmag = x[Vm.i1:Vm.iN + 1]
@@ -913,23 +926,39 @@ class PDIPMSolver(Solver):
             iVm = matrix(range(Vm.i1, Vm.iN + 1))
             iPg = matrix(range(Pg.i1, Pg.iN + 1))
             iQg = matrix(range(Qg.i1, Qg.iN + 1))
-            iVaVmPgQg = matrix([iVa, iVm, iPg, iQg])
+            iVaVmPgQg = matrix([iVa, iVm, iPg, iQg]).T
 
             # Compute partials of injected bus powers.
             dSbus_dVm, dSbus_dVa = case.dSbus_dV(Ybus, V)
+
+            print "dS:\n", dSbus_dVm[:, -5:]
+
             i_gbus = matrix([bs.index(g.bus) for g in gn])
             neg_Cg = spmatrix(-1.0, i_gbus, range(ng), (nb, ng))
 
             # P mismatch w.r.t Va, Vm, Pg, Qg.
-            dPmis_dVaVmPgQg = sparse([sparse([dSbus_dVa, dSbus_dVm]).real(),
-                                      neg_Cg, spmatrix([], [], [], (nb, ng))])
+#            dPmis_dVaVmPgQg = sparse([sparse([dSbus_dVa, dSbus_dVm]).real(),
+#                                      neg_Cg, spmatrix([], [], [], (nb, ng))])
             # Q mismatch w.r.t Va, Vm, Pg, Qg.
-            dQmis_dVaVmPgQg = sparse([sparse([dSbus_dVa, dSbus_dVm]).imag(),
-                                      spmatrix([], [], [], (nb, ng)), neg_Cg])
+#            dQmis_dVaVmPgQg = sparse([sparse([dSbus_dVa, dSbus_dVm]).imag(),
+#                                      spmatrix([], [], [], (nb, ng)), neg_Cg])
 
             # Transposed Jacobian of the power balance equality constraints.
             dh = spmatrix([], [], [], (nxyz, 2 * nb))
-            dh[iVaVmPgQg] = sparse([dPmis_dVaVmPgQg, dQmis_dVaVmPgQg]).H
+#            dh[iVaVmPgQg] = sparse([dPmis_dVaVmPgQg, dQmis_dVaVmPgQg]).H
+
+            dSbus_dV = sparse([dSbus_dVa.T, dSbus_dVm.T]).T
+            z = spmatrix([], [], [], (nb, ng))
+
+#            print iVaVmPgQg
+#            print sparse([dSbus_dV.real(), dSbus_dV.imag()]).size
+#            print sparse([ sparse([neg_Cg, z]).T, sparse([z, neg_Cg]).T ]).T.size
+
+#            dh[iVaVmPgQg] =
+            DH = sparse([
+                sparse([dSbus_dV.real(), dSbus_dV.imag()]).T,
+                sparse([ sparse([neg_Cg, z]).T, sparse([z, neg_Cg]).T ])
+            ])
 
             # Compute partials of flows w.r.t V.
             if self.flow_lim == "I":
@@ -1054,8 +1083,8 @@ class PDIPMSolver(Solver):
 
             return d2f + d2H + d2G
 
-        # Solve using primal-dual interior point method..
-        solution = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax)
+        # Solve using primal-dual interior point method.
+        solution = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u)
 
         return solution
 
@@ -1346,9 +1375,8 @@ class OPFModel(object):
     def add_constraint(self, con):
         """ Adds a constraint to the model.
         """
-        N, M = con.A.size
-
         if isinstance(con, LinearConstraint):
+            N, M = con.A.size
             if con.name in [c.name for c in self.lin_constraints]:
                 logger.error("Constraint set named '%s' already exists."
                              % con.name)
@@ -1365,6 +1393,7 @@ class OPFModel(object):
                         " of variables, A is %d x %d, nv = %d", N, M, nv)
                 self.lin_constraints.append(con)
         elif isinstance(con, NonLinearConstraint):
+            N = con.N
             if con.name in [c.name for c in self.nln_constraints]:
                 logger.error("Constraint set named '%s' already exists."
                              % con.name)

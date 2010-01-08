@@ -165,7 +165,7 @@ def format_from_extension(fname):
     return format
 
 #------------------------------------------------------------------------------
-#  Return the complex conjugate:
+#  Complex conjugate:
 #------------------------------------------------------------------------------
 
 def conj(A):

@@ -378,6 +378,7 @@ class GeneratorTest(unittest.TestCase):
         g = Generator(Bus(), p_max=100.0, p_min=20.0,
                       p_cost=(0.06, 0.6, 6.0))
 
+        self.assertEqual(g.pcost_model, POLYNOMIAL)
         self.assertEqual(g.total_cost(5.0), 10.5)
         self.assertEqual(g.total_cost(6.0), 11.76)
 
@@ -389,11 +390,23 @@ class GeneratorTest(unittest.TestCase):
         p1 = (40.0, 100.0)
         p2 = (100.0, 400.0)
 
-        g = Generator(Bus(), p_max=100.0, p_min=20.0, p_cost=[p0, p1, p2],
-                      pcost_model=PW_LINEAR)
+        g = Generator(Bus(), p_max=100.0, p_min=20.0, p_cost=[p0, p1, p2])
 
+        self.assertEqual(g.pcost_model, PW_LINEAR)
         self.assertAlmostEqual(g.total_cost(30.0), 75.0, places=4)
         self.assertAlmostEqual(g.total_cost(60.0), 200.0, places=4)
+
+
+#    def test_poly_cost(self):
+#        """ Test evaluation of polynomial generator costs and derivatives.
+#        """
+#        g = Generator(Bus(), p_cost=(0.0053, 11.6690, 213.1000))
+#
+#        f0 = g.poly_cost(val=125.0, der=0)
+#        self.assertEqual(f0, 1.755e03)
+#
+#        f1 = g.poly_cost(val=125.0, der=1)
+#        self.assertEqual(f1, 13.0015)
 
 
     def test_poly_to_pwl(self):

@@ -70,9 +70,9 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     if xmax is None:
         xmax = matrix(Inf, x0.size)
     if A is None:
-        A = spmatrix([], [], [], (0, 0))
-        l = matrix()
-        u = matrix()
+        A = spmatrix([], [], [], (0, x0.size[0]))
+        l = matrix(0.0, (0, 1))
+        u = matrix(0.0, (0, 1))
 
     # constants
     xi = 0.99995
@@ -108,14 +108,17 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 
     # evaluate cost f(x0) and constraints g(x0), h(x0)
     x = x0
-    f, df, _ = ipm_f(x)             # cost
+    f, df, _ = ipm_f(x)                 # cost
     f = f * cost_mult
     df = df * cost_mult
-    gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints
-    g = matrix([gn, Ai * x - bi])          # inequality constraints
-    h = matrix([hn, Ae * x - be])          # equality constraints
-    dg = sparse([dgn.T, Ai.H.T]).T             # 1st derivative of inequalities
-    dh = sparse([dhn.T, Ae.H.T]).T             # 1st derivative of equalities
+    gn, hn, dgn, dhn = ipm_gh(x)        # non-linear constraints
+
+    print "PDIPM:\n", gn
+
+    g = matrix([gn, Ai * x - bi])       # inequality constraints
+    h = matrix([hn, Ae * x - be])       # equality constraints
+    dg = sparse([dgn.T, Ai.H.T]).T      # 1st derivative of inequalities
+    dh = sparse([dhn.T, Ae.H.T]).T      # 1st derivative of equalities
 
     # some dimensions
     neq = h.size[0]           # number of equality constraints

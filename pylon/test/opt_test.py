@@ -444,7 +444,7 @@ class DCOPFSolverTest(unittest.TestCase):
         """
         b, _, _, _ = self.solver._unpack_model(self.om)
         _, LB, UB = self.solver._var_bounds()
-        x0 = self.solver._initial_interior_point(self.om, b, LB, UB)
+        x0 = self.solver._initial_interior_point(b, LB, UB)
 
         self.assertEqual(x0.size, (9, 1))
         self.assertEqual(x0[0], 0.0)
@@ -498,9 +498,19 @@ class PDIPMSolverTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         self.case = PickleReader().read(DATA_FILE)
-        self.opf = OPF(self.case, show_progress=False)
+        self.opf = OPF(self.case, dc=False, show_progress=False)
         self.om = self.opf._construct_opf_model(self.case)
         self.solver = PDIPMSolver(self.om)
+
+
+    def test_solution(self):
+        """ Test solution to AC OPF using PDIPM.
+        """
+        solution = self.solver.solve()
+        x = solution["xout"]
+        lmbda = solution["lmbdaout"]
+
+        print "X:\n", x
 
 #------------------------------------------------------------------------------
 #  "OPFModelTest" class:

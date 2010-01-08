@@ -944,10 +944,20 @@ class Generator(Named):
 #        self.c_shutdown = c_shutdown
 
         # Active power cost model: 'poly' or 'pwl' (default: 'poly')
-        self.pcost_model = pcost_model
+        if isinstance(p_cost, tuple):
+            self.pcost_model = POLYNOMIAL
+        elif isinstance(p_cost, list):
+            self.pcost_model = PW_LINEAR
+        else:
+            self.pcost_model = pcost_model
 
         # Reactive power cost model: 'poly', 'pwl' or None (default: 'poly')
-        self.qcost_model = qcost_model
+        if isinstance(q_cost, tuple):
+            self.qcost_model = POLYNOMIAL
+        elif isinstance(q_cost, list):
+            self.qcost_model = PW_LINEAR
+        else:
+            self.qcost_model = qcost_model
 
         # Active power cost represented either by a tuple of quadratic
         # polynomial coefficients or a list of piece-wise linear coordinates
@@ -955,9 +965,9 @@ class Generator(Named):
         if p_cost is not None:
             self.p_cost = p_cost
         else:
-            if pcost_model == POLYNOMIAL:
+            if self.pcost_model == POLYNOMIAL:
                 self.p_cost = (0.01, 0.1, 10.0)
-            elif pcost_model == PW_LINEAR:
+            elif self.pcost_model == PW_LINEAR:
                 self.p_cost = [(0.0, 0.0), (p_max, 10.0)]
             else:
                 raise ValueError
@@ -1065,37 +1075,41 @@ class Generator(Named):
         return result
 
 
-    def poly_cost(self, val=None, der=0, reactive=False):
-        """ Evaluates polynomial generator cost and derivatives.
-        """
-        cost_model = self.qcost_model if reactive else self.pcost_model
-        cost = self.q_cost if reactive else self.p_cost
-        if val is None:
-            val = self.q if reactive else self.p
-
-        if cost_model == PW_LINEAR:
-            logger.error("Cost must be polynomial.")
-            return
-
-        # Do derivatives.
-        for d in range(der):
-            if len(cost) >= 2:
-                c = cost[1:-d + 1]
-            else:
-                c = 0.0
-                break
-            for k in range(1, len(cost) - d):
-                c *= k
-
-        # Evaluate polynomial.
-        if c == 0.0:
-            f = 0.0
-        else:
-            f = c[0] # constant term
-            for k in range(1, len(cost)):
-                f += c[k] * val**(k-1)
-
-        return f
+#    def poly_cost(self, val=None, der=0, reactive=False):
+#        """ Evaluates polynomial generator cost and derivatives.
+#        """
+#        cost_model = self.qcost_model if reactive else self.pcost_model
+#        cost = self.q_cost if reactive else self.p_cost
+#        if val is None: val = self.q if reactive else self.p
+#
+#        if cost_model == PW_LINEAR:
+#            logger.error("Cost must be polynomial.")
+#            return
+#
+#        # 1st column is constant term, 2nd linear, etc.
+#        c = list(reversed(cost))
+#
+#        print c
+#
+#        # Do derivatives.
+#        for d in range(der):
+#            if len(c) >= 2:
+#                c = c[1:len(c) - d + 1]
+#            else:
+#                c = 0.0
+#                break
+#            for k in range(1, len(c) - d):
+#                c[k] *= k
+#
+#        # Evaluate polynomial.
+#        if len(c) == 0:
+#            f = 0.0
+#        else:
+#            f = c[0] # constant term
+#            for k in range(1, len(c)):
+#                f += c[k] * val**(k-1)
+#
+#        return f
 
 
     def pwl_to_poly(self):
