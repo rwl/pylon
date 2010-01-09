@@ -716,15 +716,15 @@ class DCOPFSolver(Solver):
             bb = matrix([b, h])
             N = A.size[0]
             if solvers.options.has_key("show_progress"):
-                verbose = solvers.options["show_progress"]
+                opt = {"verbose": solvers.options["show_progress"]}
             else:
-                verbose = False
+                opt = {"verbose": False}
 
         if len(P) > 0:
             if self.cvxopt:
                 solution = qp(P, q, G, h, A, b, self.solver, {"x": x0})
             else:
-                retval = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, verbose=True)
+                retval = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, opt)
         else:
             if self.cvxopt:
                 solution = lp(q, G, h, A, b, self.solver, {"x": x0})
@@ -745,13 +745,16 @@ class PDIPMSolver(Solver):
     """ Solves AC optimal power flow using a primal-dual interior point method.
     """
 
-    def __init__(self, om, flow_lim="S"):
+    def __init__(self, om, flow_lim="S", opt=None):
         """ Initialises a new PDIPMSolver instance.
         """
         super(PDIPMSolver, self).__init__(om)
 
         # Quantity to limit for branch flow constraints ("S", "P" or "I").
         self.flow_lim = flow_lim
+
+        # Options for the PDIPM.
+        self.opt = {} if opt is None else opt
 
 
     def _ref_bus_angle_constraint(self, buses, Va, xmin, xmax):
@@ -770,6 +773,9 @@ class PDIPMSolver(Solver):
         j = 0 + 1j
         case = self.om.case
         base_mva = case.base_mva
+
+        # TODO: Find explanation for this value.
+        self.opt["cost_mult"] = 1e-4
 
         # Unpack the OPF model.
         bs, ln, gn, cp = self._unpack_model(self.om)
@@ -972,7 +978,7 @@ class PDIPMSolver(Solver):
             return g, h, dg, dh
 
 
-        def ipm_hess(x, lmbda, cost_mult=1):
+        def ipm_hess(x, lmbda):
             """ Evaluates Hessian of Lagrangian for AC OPF.
             """
             Pgen = x[Pg.i1:Pg.iN + 1] # Active generation in p.u.
@@ -1012,7 +1018,7 @@ class PDIPMSolver(Solver):
 
             # TODO: Generalised cost model.
 
-            d2f *= cost_mult
+            d2f *= self.opt["cost_mult"]
 
             #------------------------------------------------------------------
             #  Evaluate Hessian of power balance constraints.
@@ -1089,8 +1095,8 @@ class PDIPMSolver(Solver):
             return d2f + d2H + d2G
 
         # Solve using primal-dual interior point method.
-        x, _, info, _, lmbda = \
-            pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u)
+        x, _, info, output, lmbda = \
+            pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u, self.opt)
 
         success = (info > 0)
         if success:
@@ -1099,10 +1105,12 @@ class PDIPMSolver(Solver):
             howout = 'failure'
 
         lmbdaout = matrix([-lmbda["mu_l"] + lmbda["mu_u"],
-                           lmbda["lower"], lmbda["upper"]])
+                            lmbda["lower"], lmbda["upper"]])
 
         solution = {"xout": x, "lmbdaout": lmbdaout,
                     "howout": howout, "success": success}
+
+        solution.update(output)
 
         return solution
 

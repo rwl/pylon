@@ -505,12 +505,56 @@ class PDIPMSolverTest(unittest.TestCase):
 
     def test_solution(self):
         """ Test solution to AC OPF using PDIPM.
+
+            x =
+
+                     0
+               -0.0346
+               -0.0390
+               -0.0536
+               -0.0684
+               -0.0719
+                1.0500
+                1.0500
+                1.0700
+                0.9882
+                0.9851
+                1.0046
+                0.7722
+                0.6927
+                0.7042
+                0.2572
+                0.6465
+                0.8664
         """
+        self.solver.opt["max_it"] = 1
         solution = self.solver.solve()
         x = solution["xout"]
-        lmbda = solution["lmbdaout"]
+#        lmbda = solution["lmbdaout"]
 
-        print "X:\n", x
+        pl = 4
+        # Va
+        self.assertAlmostEqual(x[0], 0.0, pl)
+        self.assertAlmostEqual(x[1], -0.0346, pl)
+        self.assertAlmostEqual(x[2], -0.0390, pl)
+        self.assertAlmostEqual(x[3], -0.0536, pl)
+        self.assertAlmostEqual(x[4], -0.0684, pl)
+        self.assertAlmostEqual(x[5], -0.0719, pl)
+        # Vm
+        self.assertAlmostEqual(x[6], 1.05, pl)
+        self.assertAlmostEqual(x[7], 1.05, pl)
+        self.assertAlmostEqual(x[8], 1.07, pl)
+        self.assertAlmostEqual(x[9], 0.9882, pl)
+        self.assertAlmostEqual(x[10], 0.9851, pl)
+        self.assertAlmostEqual(x[11], 1.0046, pl)
+        # Pg
+        self.assertAlmostEqual(x[12], 0.7722, pl)
+        self.assertAlmostEqual(x[13], 0.6927, pl)
+        self.assertAlmostEqual(x[14], 0.7042, pl)
+        # Qg
+        self.assertAlmostEqual(x[15], 0.2572, pl)
+        self.assertAlmostEqual(x[16], 0.6465, pl)
+        self.assertAlmostEqual(x[17], 0.8664, pl)
 
 #------------------------------------------------------------------------------
 #  "OPFModelTest" class:

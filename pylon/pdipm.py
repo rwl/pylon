@@ -28,8 +28,8 @@
 
 import logging
 
-from numpy import nonzero, Inf, any, isnan, asarray
-from numpy.linalg import norm, solve
+from numpy import nonzero, Inf, any, isnan
+from numpy.linalg import norm
 
 from cvxopt import matrix, spmatrix, sparse, spdiag, div, log
 from cvxopt import umfpack #@UnusedImport
@@ -52,10 +52,8 @@ EPS = 2**-52
 #------------------------------------------------------------------------------
 
 def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
-          A=None, l=None, u=None, feastol=1e-6, gradtol=1e-6, comptol=1e-6,
-          costtol=1e-6, max_it=150, max_red=20, step_control=False,
-          cost_mult=1, verbose=False):
-    """ [x, f, info, Output, Lambda] = ...
+          A=None, l=None, u=None, opt=None):
+    """ x, f, info, output, lmbda = \
             pdipm(f, gh, hess, x0, xmin, xmax, A, l, u, opt)
 
         min f(x)
@@ -65,14 +63,32 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         l <= A*x <= u
         xmin <= x <= xmax
     """
-    if xmin is None:
-        xmin = matrix(-Inf, x0.size)
-    if xmax is None:
-        xmax = matrix(Inf, x0.size)
+    xmin = matrix(-Inf, x0.size) if xmin is None else xmin
+    xmax = matrix( Inf, x0.size) if xmax is None else xmax
     if A is None:
         A = spmatrix([], [], [], (0, x0.size[0]))
         l = matrix(0.0, (0, 1))
         u = matrix(0.0, (0, 1))
+
+    opt = {} if opt is None else opt
+    if not opt.has_key("feastol"):
+        opt["feastol"] = 1e-06
+    if not opt.has_key("gradtol"):
+        opt["gradtol"] = 1e-06
+    if not opt.has_key("comptol"):
+        opt["comptol"] = 1e-06
+    if not opt.has_key("costtol"):
+        opt["costtol"] = 1e-06
+    if not opt.has_key("max_it"):
+        opt["max_it"] = 150
+    if not opt.has_key("max_red"):
+        opt["max_red"] = 20
+    if not opt.has_key("step_control"):
+        opt["step_control"] = False
+    if not opt.has_key("cost_mult"):
+        opt["cost_mult"] = 1
+    if not opt.has_key("verbose"):
+        opt["verbose"] = False
 
     # constants
     xi = 0.99995
@@ -109,13 +125,13 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     # evaluate cost f(x0) and constraints g(x0), h(x0)
     x = x0
     f, df, _ = ipm_f(x)                 # cost
-    f = f * cost_mult
-    df = df * cost_mult
+    f = f * opt["cost_mult"]
+    df = df * opt["cost_mult"]
     gn, hn, dgn, dhn = ipm_gh(x)        # non-linear constraints
     g = matrix([gn, Ai * x - bi])       # inequality constraints
     h = matrix([hn, Ae * x - be])       # equality constraints
-    dg = sparse([[dgn], [Ai.H]])      # 1st derivative of inequalities
-    dh = sparse([[dhn], [Ae.H]])      # 1st derivative of equalities
+    dg = sparse([[dgn], [Ai.H]])        # 1st derivative of inequalities
+    dh = sparse([[dhn], [Ae.H]])        # 1st derivative of equalities
 
     # some dimensions
     neq = h.size[0]           # number of equality constraints
@@ -140,28 +156,33 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 
     # check tolerance
     f0 = f
-    if step_control:
+    if opt["step_control"]:
         L = f + lam.H * h + mu.H * (g + z) - gamma * sum(log(z))
 
     Lx = df + dh * lam + dg * mu
 
-    feascond = max([norm(h, Inf), max(g)]) / (1 + max([ norm(x, Inf), norm(z, Inf) ]))
-    gradcond = norm(Lx, Inf) / (1 + max([ norm(lam, Inf), norm(mu, Inf) ]))
+    feascond = \
+        max([norm(h, Inf), max(g)]) / (1 + max([norm(x, Inf), norm(z, Inf)]))
+    gradcond = \
+        norm(Lx, Inf) / (1 + max([norm(lam, Inf), norm(mu, Inf)]))
     compcond = (z.H * mu) / (1 + norm(x, Inf))
     costcond = abs(f - f0) / (1 + abs(f0))
-    if verbose:
-        logger.info("\n it    objective   step size   feascond     gradcond     compcond     costcond  ")
-        logger.info("\n----  ------------ --------- ------------ ------------ ------------ ------------")
-        logger.info("\n%3d  %12.8f %10s %12.f %12.f %12.f %12.f" %
-            (i, (f / cost_mult)[0], "", feascond, gradcond, compcond[0], costcond[0]))
-    if feascond < feastol and gradcond < gradtol and \
-                    compcond[0] < comptol and costcond[0] < costtol:
+    if opt["verbose"]:
+        logger.info(" it    objective   step size   feascond     gradcond     "
+                    "compcond     costcond  ")
+        logger.info("----  ------------ --------- ------------ ------------ "
+                    "------------ ------------")
+        logger.info("%3d  %12.8f %10s %12.f %12.f %12.f %12.f" %
+            (i, (f / opt["cost_mult"])[0], "", feascond, gradcond,
+             compcond[0], costcond[0]))
+    if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
+        compcond[0] < opt["comptol"] and costcond[0] < opt["costtol"]:
         converged = True
-        if verbose:
-            logger.info("Converged!\n")
+        if opt["verbose"]:
+            logger.info("Converged!")
 
     # do Newton iterations
-    while (not converged and i < 1):#max_it):
+    while (not converged and i < opt["max_it"]):
         # update iteration counter
         i += 1
 
@@ -175,15 +196,12 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dg_zinv = dg * zinvdiag
         M = Lxx + dg_zinv * mudiag * dg.H
         N = Lx + dg_zinv * (mudiag * g + gamma * e)
+
         Ab = sparse([[M, dh.H],
                      [dh, spmatrix([], [], [], (neq, neq))]])
         bb = matrix([-N, -h])
-        print "Ab\n", bb
-
         umfpack.linsolve(Ab, bb)
         dxdlam = bb
-        print "\n", dxdlam
-
         dx = dxdlam[:nx]
         dlam = dxdlam[nx:nx + neq]
         dz = -g - z - dg.H * dx
@@ -191,38 +209,40 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 
         # optional step-size control
         sc = False
-        if step_control:
+        if opt["step_control"]:
             x1 = x + dx
 
             # evaluate cost, constraints, derivatives at x1
             f1, df1 = ipm_f(x1)          # cost
-            f1 = f1 * cost_mult
-            df1 = df1 * cost_mult
+            f1 = f1 * opt["cost_mult"]
+            df1 = df1 * opt["cost_mult"]
             gn1, hn1, dgn1, dhn1 = ipm_gh(x1) # non-linear constraints
             g1 = matrix([gn1, Ai * x1 - bi])  # inequality constraints
             h1 = matrix([hn1, Ae * x1 - be])  # equality constraints
-            dg1 = sparse([dgn1.T, Ai.H.T]).T      # 1st derivative of inequalities
-            dh1 = sparse([dhn1.T, Ae.H.T]).T      # 1st derivative of equalities
+            dg1 = sparse([dgn1.T, Ai.H.T]).T  # 1st derivative of inequalities
+            dh1 = sparse([dhn1.T, Ae.H.T]).T  # 1st derivative of equalities
 
             # check tolerance
             Lx1 = df1 + dh1 * lam + dg1 * mu
-            feascond1 = max([norm(h1, Inf), max(g1)]) / (1 + max([ norm(x1, Inf), norm(z, Inf) ]))
-            gradcond1 = norm(Lx1, Inf) / (1 + max([ norm(lam, Inf), norm(mu, Inf) ]))
+            feascond1 = max([ norm(h1, Inf), max(g1) ]) / \
+                (1 + max([ norm(x1, Inf), norm(z, Inf) ]))
+            gradcond1 = norm(Lx1, Inf) / \
+                (1 + max([ norm(lam, Inf), norm(mu, Inf) ]))
 
             if feascond1 > feascond and gradcond1 > gradcond:
                 sc = True
         if sc:
             alpha = 1.0
-            for j in range(max_red):
+            for j in range(opt["max_red"]):
                 dx1 = alpha * dx
                 x1 = x + dx1
                 f1 = ipm_f(x1)             # cost
-                f1 = f1 * cost_mult
+                f1 = f1 * opt["cost_mult"]
                 gn1, hn1 = ipm_gh(x1)              # non-linear constraints
                 g1 = matrix([gn1, Ai * x1 - bi])   # inequality constraints
                 h1 = matrix([hn1, Ae * x1 - be])   # equality constraints
                 L1 = f1 + lam.H * h1 + mu.H * (g1 + z) - gamma * sum(log(z))
-                if verbose:
+                if opt["verbose"]:
                     logger.info("\n   %3d            %10.f" % (-j, norm(dx1)))
                 rho = (L1 - L) / (Lx.H * dx1 + 0.5 * dx1.H * Lxx * dx1)
                 if rho > rho_min and rho < rho_max:
@@ -239,49 +259,54 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         alphap = min( matrix([xi * min(div(z[k], -dz[k])), 1]) )
 
         k = matrix([j for j in range(len(dmu)) if dmu[j] < 0.0])
-        alphad = min( matrix([xi * min(div(mu[k], -dmu[k])), 1]) )
-        x += alphap * dx
-        z += alphap * dz
-        lam += alphad * dlam
-        mu += alphad * dmu
+
+        alphad = min(matrix([xi * min(matrix([div(mu[k], -dmu[k]), 1])), 1]))
+        x = x + alphap * dx
+        z = z + alphap * dz
+        lam = lam + alphad * dlam
+        mu = mu + alphad * dmu
         gamma = sigma * (z.H * mu) / niq
 
         # evaluate cost, constraints, derivatives
         f, df, _ = ipm_f(x)             # cost
+        f = f * opt["cost_mult"]
+        df = df * opt["cost_mult"]
 
-        f = f * cost_mult
-        df = df * cost_mult
         gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints
         g = matrix([gn, Ai * x - bi])          # inequality constraints
         h = matrix([hn, Ae * x - be])          # equality constraints
-        dg = sparse([dgn.T, Ai.H.T]).T             # 1st derivative of inequalities
-        dh = sparse([dhn.T, Ae.H.T]).T             # 1st derivative of equalities
+        dg = sparse([[dgn], [Ai.H]])           # 1st derivative of inequalities
+        dh = sparse([[dhn], [Ae.H]])           # 1st derivative of equalities
 
-        # check tolerance
         Lx = df + dh * lam + dg * mu
-        feascond = max([norm(h, Inf), max(g)]) / (1 + max([ norm(x, Inf), norm(z, Inf) ]))
-        gradcond = norm(Lx, Inf) / (1 + max([ norm(lam, Inf), norm(mu, Inf) ]))
+        print "Lx\n", Lx
+
+        feascond = \
+            max([norm(h, Inf), max(g)]) / (1 + max([norm(x,Inf), norm(z,Inf)]))
+        gradcond = \
+            norm(Lx, Inf) / (1 + max([norm(lam, Inf), norm(mu, Inf)]))
         compcond = (z.H * mu) / (1 + norm(x, Inf))
         costcond = abs(f - f0) / (1 + abs(f0))
-        if verbose:
-            logger.info("\n%3d  %12.8f %10.5f %12.f %12.f %12.f %12.f" %
-                (i, (f / cost_mult)[0], norm(dx), feascond, gradcond, compcond[0], costcond[0]))
-        if feascond < feastol and gradcond < gradtol and \
-                        compcond[0] < comptol and costcond[0] < costtol:
+        if opt["verbose"]:
+            logger.info("%3d  %12.8f %10.5f %12.f %12.f %12.f %12.f" %
+                (i, (f / opt["cost_mult"])[0], norm(dx), feascond, gradcond,
+                 compcond[0], costcond[0]))
+        if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
+            compcond[0] < opt["comptol"] and costcond[0] < opt["costtol"]:
             converged = True
-            if verbose:
+            if opt["verbose"]:
                 logger.info("Converged!")
         else:
             if any(isnan(x)) or alphap < alpha_min or alphad < alpha_min or \
                     gamma[0] < EPS or gamma[0] > 1.0 / EPS:
-                if verbose:
+                if opt["verbose"]:
                     logger.info("Numerically failed.")
                 break
             f0 = f
-            if step_control:
+            if opt["step_control"]:
                 L = f + lam.H * h + mu.H * (g + z) - gamma * sum(log(z))
 
-    if verbose:
+    if opt["verbose"]:
         if not converged:
             logger.info("Did not converge in %d iterations." % i)
 
@@ -290,13 +315,14 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
               "compcond": compcond, "costcond": costcond}
 
     # zero out multipliers on non-binding constraints
-    k = [j for j in range(len(mu)) if g[j] < -feastol and mu[j] < mu_threshold]
+    k = [j for j in range(len(mu))
+         if g[j] < -opt["feastol"] and mu[j] < mu_threshold]
     mu[k] = 0.0
 
     # un-scale cost and prices
-    f   = f / cost_mult
-    lam = lam / cost_mult
-    mu  = mu / cost_mult
+    f   = f / opt["cost_mult"]
+    lam = lam / opt["cost_mult"]
+    mu  = mu / opt["cost_mult"]
 
     # re-package multipliers into struct
     lam_lin = lam[neqnln:neq]              # lambda for linear constraints
@@ -326,8 +352,8 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 #  "pdipm_qp" function:
 #------------------------------------------------------------------------------
 
-def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
-             verbose=True, cost_mult=1):
+def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
+#             verbose=True, cost_mult=1):
     """ Wrapper function for a primal-dual interior point QP solver.
     """
     nx = len(c)
@@ -350,6 +376,10 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
         k = nonzero(VUB >= 1e10 and VLB > -1e10)
         x0[k] = VLB[k] + 1
 
+    opt = {} if opt is None else opt
+    if not opt.has_key("cost_mult"):
+        opt["cost_mult"] = 1
+
     def qp_f(x):
         f = 0.5 * x.H * H * x + c.H * x
         df = H * x + c
@@ -364,7 +394,7 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
         return g, h, dg, dh
 
     def qp_hessian(x, lmbda):
-        Lxx = H * cost_mult
+        Lxx = H * opt["cost_mult"]
         return Lxx
 
     l = matrix(-Inf, b.size)
@@ -372,8 +402,7 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0,
 
     # run it
     xout, _, info, _, lmbda = \
-      pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b,
-            verbose=verbose, cost_mult=cost_mult)
+      pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b, opt)
 
     success = (info > 0)
     if success:
