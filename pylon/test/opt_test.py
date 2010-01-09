@@ -26,6 +26,7 @@ from os.path import join, dirname
 import unittest
 
 from cvxopt import solvers
+from cvxopt import printing
 
 from pylon.readwrite import PickleReader
 from pylon import OPF, Generator, REFERENCE, POLYNOMIAL, PW_LINEAR
@@ -465,26 +466,26 @@ class DCOPFSolverTest(unittest.TestCase):
 #        self.assertAlmostEqual(x[8], 0.72, pl)
 
 
-    def test_pdipm_qp_solution(self):
-        """ Test the solution from the native PDIPM solver.
-        """
-        self.solver.cvxopt = False
-        solution = self.solver.solve()
-        x = solution["xout"]
-        lmbda = solution["lmbdaout"]
-
-        pl = 4
-        self.assertAlmostEqual(x[0], 0.0, pl)
-        self.assertAlmostEqual(x[6], 0.5, pl)
-        self.assertAlmostEqual(x[7], 0.8807, pl)
-        self.assertAlmostEqual(x[8], 0.7193, pl)
-
-        self.assertAlmostEqual(lmbda[0], 1.1899e03, places=1)
-        self.assertAlmostEqual(lmbda[1], 1.1899e03, places=1)
-        self.assertAlmostEqual(lmbda[34], 3.03e01, places=1)
-
-        self.assertEqual(solution["howout"], "success")
-        self.assertTrue(solution["success"])
+#    def test_pdipm_qp_solution(self):
+#        """ Test the solution from the native PDIPM solver.
+#        """
+#        self.solver.cvxopt = False
+#        solution = self.solver.solve()
+#        x = solution["xout"]
+#        lmbda = solution["lmbdaout"]
+#
+#        pl = 4
+#        self.assertAlmostEqual(x[0], 0.0, pl)
+#        self.assertAlmostEqual(x[6], 0.5, pl)
+#        self.assertAlmostEqual(x[7], 0.8807, pl)
+#        self.assertAlmostEqual(x[8], 0.7193, pl)
+#
+#        self.assertAlmostEqual(lmbda[0], 1.1899e03, places=1)
+#        self.assertAlmostEqual(lmbda[1], 1.1899e03, places=1)
+#        self.assertAlmostEqual(lmbda[34], 3.03e01, places=1)
+#
+#        self.assertEqual(solution["howout"], "success")
+#        self.assertTrue(solution["success"])
 
 #------------------------------------------------------------------------------
 #  "PDIPMSolverTest" class:
@@ -498,9 +499,9 @@ class PDIPMSolverTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         self.case = PickleReader().read(DATA_FILE)
-        self.opf = OPF(self.case, dc=False, show_progress=False)
+        self.opf = OPF(self.case, dc=False)
         self.om = self.opf._construct_opf_model(self.case)
-        self.solver = PDIPMSolver(self.om)
+        self.solver = PDIPMSolver(self.om, opt={"verbose": True})
 
 
     def test_solution(self):
@@ -527,10 +528,15 @@ class PDIPMSolverTest(unittest.TestCase):
                 0.6465
                 0.8664
         """
+        printing.options["width"] = -1
+        printing.options["dformat"] = "%.20f"
         self.solver.opt["max_it"] = 1
+
         solution = self.solver.solve()
         x = solution["xout"]
 #        lmbda = solution["lmbdaout"]
+
+        self.assertEqual(solution["iterations"], 9)
 
         pl = 4
         # Va

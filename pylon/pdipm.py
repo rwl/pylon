@@ -28,12 +28,14 @@
 
 import logging
 
-from numpy import nonzero, Inf, any, isnan
-from numpy.linalg import norm
+from numpy import nonzero, Inf, any, isnan, asarray
+from numpy.linalg import norm, solve
 
 from cvxopt import matrix, spmatrix, sparse, spdiag, div, log
+
 from cvxopt import umfpack #@UnusedImport
 from cvxopt import cholmod #@UnusedImport
+from cvxopt import lapack #@UnusedImport
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -160,7 +162,6 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         L = f + lam.H * h + mu.H * (g + z) - gamma * sum(log(z))
 
     Lx = df + dh * lam + dg * mu
-
     feascond = \
         max([norm(h, Inf), max(g)]) / (1 + max([norm(x, Inf), norm(z, Inf)]))
     gradcond = \
@@ -173,8 +174,8 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         logger.info("----  ------------ --------- ------------ ------------ "
                     "------------ ------------")
         logger.info("%3d  %12.8f %10s %12.f %12.f %12.f %12.f" %
-            (i, (f / opt["cost_mult"])[0], "", feascond, gradcond,
-             compcond[0], costcond[0]))
+            (i, (f / opt["cost_mult"]), "", feascond, gradcond,
+             compcond[0], costcond))
     if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
         compcond[0] < opt["comptol"] and costcond[0] < opt["costtol"]:
         converged = True
@@ -196,12 +197,17 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dg_zinv = dg * zinvdiag
         M = Lxx + dg_zinv * mudiag * dg.H
         N = Lx + dg_zinv * (mudiag * g + gamma * e)
-
         Ab = sparse([[M, dh.H],
                      [dh, spmatrix([], [], [], (neq, neq))]])
         bb = matrix([-N, -h])
-        umfpack.linsolve(Ab, bb)
+
+#        umfpack.linsolve(Ab, bb)
+        lapack.gesv(matrix(Ab), bb)
         dxdlam = bb
+#        xx = solve(asarray(matrix(Ab)), asarray(bb))
+
+        print "dxdlam\n", bb
+
         dx = dxdlam[:nx]
         dlam = dxdlam[nx:nx + neq]
         dz = -g - z - dg.H * dx
@@ -259,8 +265,9 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         alphap = min( matrix([xi * min(div(z[k], -dz[k])), 1]) )
 
         k = matrix([j for j in range(len(dmu)) if dmu[j] < 0.0])
+#        alphad = min( matrix([xi * min(div(mu[k], -dmu[k])), 1]) )
+        alphad = min( matrix([xi * min(matrix([div(mu[k], -dmu[k]), 1])), 1]) )
 
-        alphad = min(matrix([xi * min(matrix([div(mu[k], -dmu[k]), 1])), 1]))
         x = x + alphap * dx
         z = z + alphap * dz
         lam = lam + alphad * dlam
@@ -278,8 +285,10 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dg = sparse([[dgn], [Ai.H]])           # 1st derivative of inequalities
         dh = sparse([[dhn], [Ae.H]])           # 1st derivative of equalities
 
+#        print "\n", df
+
         Lx = df + dh * lam + dg * mu
-        print "Lx\n", Lx
+#        print "Lx\n", dh * lam, dg * mu, Lx
 
         feascond = \
             max([norm(h, Inf), max(g)]) / (1 + max([norm(x,Inf), norm(z,Inf)]))
@@ -289,8 +298,8 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         costcond = abs(f - f0) / (1 + abs(f0))
         if opt["verbose"]:
             logger.info("%3d  %12.8f %10.5f %12.f %12.f %12.f %12.f" %
-                (i, (f / opt["cost_mult"])[0], norm(dx), feascond, gradcond,
-                 compcond[0], costcond[0]))
+                (i, (f / opt["cost_mult"]), norm(dx), feascond, gradcond,
+                 compcond[0], costcond))
         if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
             compcond[0] < opt["comptol"] and costcond[0] < opt["costtol"]:
             converged = True
