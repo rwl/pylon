@@ -26,6 +26,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import sys
 import logging
 from time import time
 from numpy import pi, angle
@@ -304,9 +305,12 @@ class StateEstimator(object):
         error_sqrsum = sum(div((z - z_est)**2, sigma_squared))
 
         # Update case with solution.
+        case.pf_solution(Ybus, Yf, Yt, V)
 
         # Stop the clock.
         elapsed = time() - t0
+
+        self.output_solution(sys.stdout, z, z_est)
 
         return V, converged, i, z, z_est, error_sqrsum, elapsed
 
@@ -333,5 +337,17 @@ class StateEstimator(object):
         V0[gbus] = mul(div(Vg, abs(V0[gbus])), V0[gbus])
 
         return V0
+
+
+    def output_solution(self, fd, z, z_est):
+        """ Prints comparison of measurements and their estimations.
+        """
+        c = 0
+        for t in [PF, PT, QF, QT, PG, QG, VM, VA]:
+            for meas in self.measurements:
+                if meas.type == t:
+                    n = meas.b_l.name
+                    fd.write("%s\t%s\t%.3f\t%.3f\n" % (t, n, z[c], z_est[c]))
+                    c += 1
 
 # EOF -------------------------------------------------------------------------

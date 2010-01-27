@@ -25,6 +25,8 @@
 import logging
 from math import pi
 
+from numpy import angle
+
 from util import Named, Serializable
 
 from cvxopt.base import matrix, spmatrix, spdiag, sparse, exp, mul, div
@@ -632,6 +634,68 @@ class Case(Named, Serializable):
         Gvv = 2 * ( Ivv + dIbr_dVm.T * diaglam * conj(dIbr_dVm) ).real()
 
         return Gaa, Gav, Gva, Gvv
+
+    #--------------------------------------------------------------------------
+    #  Update with PF solution:
+    #--------------------------------------------------------------------------
+
+    def pf_solution(self, Ybus, Yf, Yt, V):
+        """ Updates buses, generators and branches to match power flow
+            solution.
+        """
+        buses = self.connected_buses
+        branches = self.online_branches
+        generators = self.online_generators
+
+        self.reset()
+
+        Va = matrix(angle(V))
+        Vm = abs(V)
+        for i, b in enumerate(buses):
+            b.v_angle = Va[i]
+            b.v_magnitude = Vm[i]
+
+        # Update Qg for all gens and Pg for swing bus.
+        gbus = matrix([buses.index(g.bus) for g in generators])
+        refgen = matrix([buses.index(g.bus) for g in generators if
+                         g.bus.type == REFERENCE])
+
+        # Compute total injected bus powers.
+        Sg = mul(V[gbus], conj(Ybus[gbus, :] * V))
+
+        # Update Qg for all generators.
+        for i in gbus:
+            # inj Q + local Qd
+            generators[i].q = Sg.imag()[i] * self.base_mva + g.bus.q_demand
+
+        # At this point any buses with more than one generator will have
+        # the total Q dispatch for the bus assigned to each generator. This
+        # must be split between them. We do it first equally, then in proportion
+        # to the reactive range of the generator.
+        if generators:
+            pass
+
+        # Update Pg for swing bus.
+        for i in refgen:
+            g = generators[i]
+            # inj P + local Pd
+            g.p = Sg.real()[i] * self.base_mva + g.bus.p_demand
+
+        # More than one generator at the ref bus subtract off what is generated
+        # by other gens at this bus.
+        if len(refgen) > 1:
+            pass
+
+        # Complex power at "from" bus.
+        for i, l in enumerate(branches):
+            idx_f = buses.index(l.from_bus)
+            idx_t = buses.index(l.to_bus)
+            Sf = mul(V[idx_f], conj(Yf[i, :] * V)) * self.base_mva
+            St = mul(V[idx_t], conj(Yt[i, :] * V)) * self.base_mva
+            l.p_source = Sf.real
+            l.q_source = Sf.imag
+            l.p_target = St.real
+            l.q_target = St.imag
 
     #--------------------------------------------------------------------------
     #  Reset case results:
