@@ -807,7 +807,7 @@ class Branch(Named):
     """
 
     def __init__(self, from_bus, to_bus, name=None, online=True, r=0.001,
-            x=0.001, b=0.001, s_max=2.0, ratio=1.0, phase_shift=0.0,
+            x=0.001, b=0.001, s_max=200.0, ratio=1.0, phase_shift=0.0,
             ang_min=None, ang_max=None):
         """ Initialises a new Branch instance.
         """
