@@ -93,7 +93,7 @@ class StateEstimator(object):
 
     def __init__(self, case, measurements, sigma=None, v_mag_guess=None,
                  max_iter=100, tolerance=1e-05, verbose=True):
-        """ Initialises a new StateEstimationRoutine instance.
+        """ Initialises a new StateEstimator instance.
         """
         self.case = case
 
@@ -123,21 +123,21 @@ class StateEstimator(object):
         """ Solves a state estimation problem.
         """
         case = self.case
-        baseMVA = case.baseMVA
+        baseMVA = case.base_mva
         buses = self.case.connected_buses
         branches = case.online_branches
         generators = case.online_generators
 
         # Index buses.
 #        ref = [buses.index(b) for b in buses if b.type == REFERENCE]
-        pv  = [buses.index(b) for b in buses if b.type == PV]
-        pq  = [buses.index(b) for b in buses if b.type == PQ]
+        pv  = matrix([buses.index(b) for b in buses if b.type == PV])
+        pq  = matrix([buses.index(b) for b in buses if b.type == PQ])
 
         # Build admittance matrices.
         Ybus, Yf, Yt = case.Y
 
         # Prepare initial guess.
-        V0 = self.get_v_mag_guess(self.v_mag_guess)
+        V0 = self.getV0(self.v_mag_guess, buses, generators)
 
         # Start the clock.
         t0 = time()
@@ -146,10 +146,10 @@ class StateEstimator(object):
         converged = False
         i = 0
         V = V0
-        Va = angle(V0)
+        Va = matrix(angle(V0))
         Vm = abs(V0)
 
-        nb = Ybus.size()[0]
+        nb = Ybus.size[0]
         f = matrix([buses.index(b.from_bus) for b in branches])
         t = matrix([buses.index(b.to_bus)   for b in branches])
         nonref = matrix([pv, pq])
@@ -197,20 +197,22 @@ class StateEstimator(object):
             self.sigma[4] * matrix(1.0, (idx_zPg.size[0], 1)),
             self.sigma[5] * matrix(1.0, (idx_zQg.size[0], 1)),
             self.sigma[6] * matrix(1.0, (idx_zVm.size[0], 1)),
+            self.sigma[7] * matrix(1.0, (idx_zVa.size[0], 1))
         ])
         sigma_squared = sigma_vector**2
+
         Rinv = spdiag(div(1.0, sigma_squared))
 
         # Do Newton iterations.
-        while (not converged) and (i < self.max_it):
+        while (not converged) and (i < self.max_iter):
             i += 1
 
             # Compute estimated measurement.
             Sfe = mul(V[f], conj(Yf * V))
             Ste = mul(V[t], conj(Yt * V))
             # Compute net injection at generator buses.
-            gbus = matrix([self.buses.index(g.bus) for g in generators])
-            Sgbus = mul(V(gbus), conj(Ybus[gbus, :] * V))
+            gbus = matrix([buses.index(g.bus) for g in generators])
+            Sgbus = mul(V[gbus], conj(Ybus[gbus, :] * V))
             # inj S + local Sd
             Sgen = (Sgbus * baseMVA + case.s_bus) / baseMVA
 
@@ -222,7 +224,7 @@ class StateEstimator(object):
                 Sgen[idx_zPg].real(),
                 Sgen[idx_zQg].imag(),
                 abs(V[idx_zVm]),
-                angle(V[idx_zVa])
+                matrix(angle(V[idx_zVa]))
             ])
 
             # Get H matrix.
@@ -244,11 +246,11 @@ class StateEstimator(object):
             dPG_dVm = dSbus_dVm[gbus, :].real()
             dQG_dVm = dSbus_dVm[gbus, :].imag()
             # Get sub-matrix of H relating to voltage angle.
-            dVa_dVa = matrix(1.0, range(nb), range(nb))
-            dVa_dVm = matrix(0.0, (nb, nb))
+            dVa_dVa = spmatrix(1.0, range(nb), range(nb))
+            dVa_dVm = spmatrix([], [], [], (nb, nb))
             # Get sub-matrix of H relating to voltage magnitude.
-            dVm_dVa = matrix(0.0, (nb, nb))
-            dVm_dVm = matrix(1.0, range(nb), range(nb))
+            dVm_dVa = spmatrix([], [], [], (nb, nb))
+            dVm_dVm = spmatrix(1.0, range(nb), range(nb))
             H = sparse([
                 [dPF_dVa[idx_zPf, nonref],
                  dQF_dVa[idx_zQf, nonref],
@@ -271,7 +273,11 @@ class StateEstimator(object):
             # Compute update step.
             J = H.T * Rinv * H
             F = H.T * Rinv * (z - z_est) # evalute F(x)
-            dx = linsolve(J, F)
+
+            print "H\n", z_est
+
+            linsolve(J, F)
+            dx = F
 
             # Check for convergence.
 #            normF = norm(F, inf)
@@ -284,9 +290,9 @@ class StateEstimator(object):
                 converged = True
 
             # Update voltage.
-            npvpq = nonref.size()[0]
+            npvpq = nonref.size[0]
             Va[nonref] = Va[nonref] + dx[:npvpq]
-            Vm[nonref] = Vm[nonref] + dx[npvpq:2 * npvpq]
+            Vm[nonref] = Vm[nonref] + dx[npvpq + 1:2 * npvpq]
             V = Vm * exp(1j * Va)
             Va = angle(V)
             Vm = abs(V)
@@ -302,24 +308,24 @@ class StateEstimator(object):
         return V, converged, i, z, z_est, error_sqrsum, elapsed
 
 
-    def getV0(self, v_mag_guess, type=CASE_GUESS):
+    def getV0(self, v_mag_guess, buses, generators, type=CASE_GUESS):
         """ Returns the initial voltage profile.
         """
         if type == CASE_GUESS:
-            Va = matrix([b.v_angle_guess * (pi / 180.0) for b in self.buses])
-            Vm = matrix([b.v_magnitude_guess for b in self.buses])
+            Va = matrix([b.v_angle_guess * (pi / 180.0) for b in buses])
+            Vm = matrix([b.v_magnitude_guess for b in buses])
             V0 = mul(Vm, exp(1j * Va))
         elif type == FLAT_START:
-            V0 = matrix(1.0, (len(self.buses), 1))
+            V0 = matrix(1.0, (len(buses), 1))
         elif type == FROM_INPUT:
             V0 = v_mag_guess
         else:
             raise ValueError
 
         # Set the voltages of PV buses and the reference bus in the guess.
-        online = [g for g in self.case.generators if g.online]
-        gbus = matrix([self.buses.index(g.bus) for g in online])
-        Vg = matrix([g.v_magnitude for g in online])
+#        online = [g for g in self.case.generators if g.online]
+        gbus = matrix([buses.index(g.bus) for g in generators])
+        Vg = matrix([g.v_magnitude for g in generators])
 
         V0[gbus] = mul(div(Vg, abs(V0[gbus])), V0[gbus])
 

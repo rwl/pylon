@@ -61,7 +61,7 @@ class StateEstimatorTest(unittest.TestCase):
             Measurement(case.buses[2], VM, 0.98),
         ]
 
-        self.sigma = matrix([0.02, 0.02, 0.015, 0, 0, 0, 0, 0.01])
+        self.sigma = matrix([0.02, 0.02, 0,0, 0.015, 0, 0.01, 0])
 
 
     def test_case(self):
@@ -75,7 +75,7 @@ class StateEstimatorTest(unittest.TestCase):
     def test_estimation(self):
         """ Test state estimation.
         """
-        se = StateEstimator(self.case, self.measurements)
-        solution = se.run()
+        se = StateEstimator(self.case, self.measurements, self.sigma)
+        se.run()
 
 # EOF -------------------------------------------------------------------------
