@@ -31,7 +31,9 @@ from time import time
 from numpy import pi, angle
 
 from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, div, exp
-from cvxopt.umfpack import linsolve
+from cvxopt import umfpack #@UnusedImport
+from cvxopt import cholmod #@UnusedImport
+from cvxopt import lapack #@UnusedImport
 
 from case import REFERENCE, PV, PQ
 from util import conj
@@ -214,7 +216,8 @@ class StateEstimator(object):
             gbus = matrix([buses.index(g.bus) for g in generators])
             Sgbus = mul(V[gbus], conj(Ybus[gbus, :] * V))
             # inj S + local Sd
-            Sgen = (Sgbus * baseMVA + case.s_bus) / baseMVA
+            Sd = matrix([complex(b.p_demand, b.q_demand) for b in buses])
+            Sgen = (Sgbus * baseMVA + Sd) / baseMVA
 
             z_est = matrix([
                 Sfe[idx_zPf].real(),
@@ -273,10 +276,8 @@ class StateEstimator(object):
             # Compute update step.
             J = H.T * Rinv * H
             F = H.T * Rinv * (z - z_est) # evalute F(x)
-
-            print "H\n", z_est
-
-            linsolve(J, F)
+            umfpack.linsolve(J, F)
+#            cholmod.linsolve(J, F)
             dx = F
 
             # Check for convergence.
@@ -291,10 +292,12 @@ class StateEstimator(object):
 
             # Update voltage.
             npvpq = nonref.size[0]
+
             Va[nonref] = Va[nonref] + dx[:npvpq]
-            Vm[nonref] = Vm[nonref] + dx[npvpq + 1:2 * npvpq]
-            V = Vm * exp(1j * Va)
-            Va = angle(V)
+            Vm[nonref] = Vm[nonref] + dx[npvpq:2 * npvpq]
+
+            V = mul(Vm, exp(1j * Va))
+            Va = matrix(angle(V))
             Vm = abs(V)
 
         # Weighted sum squares of error.
