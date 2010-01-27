@@ -78,4 +78,8 @@ class StateEstimatorTest(unittest.TestCase):
         se = StateEstimator(self.case, self.measurements, self.sigma)
         se.run()
 
+
+if __name__ == "__main__":
+    unittest.main()
+
 # EOF -------------------------------------------------------------------------
