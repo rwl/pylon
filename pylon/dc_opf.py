@@ -584,10 +584,10 @@ class DCOPF(object):
         logger.debug("Flow limit matrix:\n%s" % A_flow)
 
 
-        s_max = matrix([e.s_max for e in branches])
+        rate_a = matrix([e.rate_a for e in branches])
         # From and to limits are both the same.
-        b_from = s_max / base_mva - self._theta_inj_from
-        b_to = s_max / base_mva + self._theta_inj_from
+        b_from = rate_a / base_mva - self._theta_inj_from
+        b_to = rate_a / base_mva + self._theta_inj_from
 
         b_flow = matrix([b_from, b_to])
 

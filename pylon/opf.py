@@ -335,9 +335,9 @@ class OPF(object):
             by Pf = Bf * Va + Pfinj.
         """
         # Indexes of constrained lines.
-        il = matrix([i for i,l in enumerate(branches) if 0.0 < l.s_max < 1e10])
+        il = matrix([i for i,l in enumerate(branches) if 0.0 < l.rate_a < 1e10])
         lpf = matrix(-INF, (len(il), 1))
-        rate_a = matrix([l.s_max / base_mva for l in branches])
+        rate_a = matrix([l.rate_a / base_mva for l in branches])
         upf = rate_a[il] - Pfinj[il]
         upt = rate_a[il] + Pfinj[il]
 
@@ -894,7 +894,7 @@ class PDIPMSolver(Solver):
                         mis.imag()]) # reactive power mismatch for all buses
 
             # Inequality constraints (branch flow limits).
-            flow_max = matrix([(l.s_max / base_mva)**2 for l in ln])
+            flow_max = matrix([(l.rate_a / base_mva)**2 for l in ln])
             # FIXME: There must be a more elegant method for this.
             for i, v in enumerate(flow_max):
                 if v == 0.0:
@@ -1231,10 +1231,10 @@ class CVXOPTSolver(Solver):
             s_to = mul(v[to_idxs], conj(Yto, v))
 
             # Apparent power flow limit in MVA, |S|.
-            s_max = matrix([e.s_max for e in branches])
+            rate_a = matrix([e.rate_a for e in branches])
 
             # FIXME: Implement active power and current magnitude limits.
-            fk_ieq = matrix([abs(s_from) - s_max, abs(s_to) - s_max])
+            fk_ieq = matrix([abs(s_from) - rate_a, abs(s_to) - rate_a])
 
             # Evaluate partial derivatives of constraints ---------------------
 

@@ -124,8 +124,8 @@ class Branch(Named):
     """
 
     def __init__(self, from_bus, to_bus, name=None, online=True, r=0.001,
-            x=0.001, b=0.001, s_max=200.0, ratio=1.0, phase_shift=0.0,
-            ang_min=None, ang_max=None):
+            x=0.001, b=0.001, rate_a=999.0, rate_b=999.0, rate_c=999.0,
+            ratio=1.0, phase_shift=0.0, ang_min=None, ang_max=None):
         """ Initialises a new Branch instance.
         """
         # From/source/start bus.
@@ -148,7 +148,9 @@ class Branch(Named):
         self.b = b
 
         # General purpose maximum MVA rating (MVA).
-        self.s_max = s_max
+        self.rate_a = rate_a
+        self.rate_b = rate_b
+        self.rate_c = rate_c
 
         # Transformer off nominal turns ratio.
         self.ratio = ratio

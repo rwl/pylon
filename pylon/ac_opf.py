@@ -288,10 +288,10 @@ class ACOPF(object):
             s_to = mul(v[to_idxs], conj(Yto, v))
 
             # Apparent power flow limit in MVA, |S|.
-            s_max = matrix([e.s_max for e in branches])
+            rate_a = matrix([e.rate_a for e in branches])
 
             # FIXME: Implement active power and current magnitude limits.
-            fk_ieq = matrix([abs(s_from) - s_max, abs(s_to) - s_max])
+            fk_ieq = matrix([abs(s_from) - rate_a, abs(s_to) - rate_a])
 
             # Evaluate partial derivatives of constraints ---------------------
 

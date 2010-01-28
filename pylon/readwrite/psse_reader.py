@@ -499,9 +499,9 @@ class PSSEReader(CaseReader):
         branch.r = tokens["R"]
         branch.x = tokens["X"]
         branch.b = tokens["B"]
-        branch.s_max = tokens["RateA"]
-        branch.s_max_winter = tokens["RateB"]
-        branch.s_max_summer = tokens["RateC"]
+        branch.rate_a = tokens["RateA"]
+        branch.rate_b = tokens["RateB"]
+        branch.rate_c = tokens["RateC"]
         branch.online = tokens["Stat"]
 
         self.case.branches.append(branch)

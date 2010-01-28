@@ -210,10 +210,10 @@ class MATPOWERWriter(CaseWriter):
             e_data["r"] = e.r
             e_data["x"] = e.x
             e_data["b"] = e.b
-            e_data["rateA"] = e.s_max * base_mva
+            e_data["rateA"] = e.rate_a * base_mva
             # TODO: Implement short term and emergency ratings
-            e_data["rateB"] = e.s_max * base_mva
-            e_data["rateC"] = e.s_max * base_mva
+            e_data["rateB"] = e.rate_a * base_mva
+            e_data["rateC"] = e.rate_a * base_mva
             e_data["ratio"] = e.ratio
             e_data["angle"] = e.phase_shift
             if e.online:

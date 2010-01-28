@@ -177,7 +177,7 @@ class ContinuousTask(Task):
 #        c_shutdown = 2.0 if g.c_shutdown == 0.0 else g.c_shutdown
 #        limits.append((0.0, c_shutdown)) # shutdown
 
-        limits.extend([(0.0, b.s_max) for b in case.branches])
+        limits.extend([(0.0, b.rate_a) for b in case.branches])
         limits.extend([(-BIGNUM, BIGNUM) for b in case.branches]) # mu_flow
 
         limits.extend([(-180.0, 180.0) for b in case.buses]) # angle

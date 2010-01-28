@@ -38,7 +38,7 @@ BUS_ATTRS = ["name", "type", "v_base", "v_magnitude_guess",
     "v_angle_guess", "v_max", "v_min", "v_magnitude", "v_angle", "g_shunt",
     "b_shunt", "zone"]
 
-BRANCH_ATTRS = ["name", "mode", "online", "r", "x", "b", "s_max",
+BRANCH_ATTRS = ["name", "mode", "online", "r", "x", "b", "rate_a",
     "phase_shift", "online"]
 
 GENERATOR_ATTRS = ["name", "base_mva", "v_magnitude", "p", "p_max", "p_min",

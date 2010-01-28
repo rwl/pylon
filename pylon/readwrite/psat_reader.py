@@ -400,7 +400,9 @@ class PSATReader(CaseReader):
         e.r = tokens["r"]
         e.x = tokens["x"]
         e.b = tokens["b"]
-        e.s_max = tokens["s_limit"]
+        e.rate_a = tokens["s_limit"]
+        e.rate_b = tokens["p_limit"]
+        e.rate_c = tokens["i_limit"]
         # Optional parameter
         if tokens["tap"] == 0: #Transmission line
             e.ratio = 1.0
