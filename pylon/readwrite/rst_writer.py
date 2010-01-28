@@ -40,7 +40,7 @@ class ReSTWriter(CaseWriter):
     def _write_data(self, file):
         """ Writes case data to file in ReStructuredText format.
         """
-        self.write_case_data(file)
+#        self.write_case_data(file)
 
         file.write("Bus Data\n")
         file.write("-" * 8 + "\n")
@@ -202,7 +202,7 @@ class ReSTWriter(CaseWriter):
             file.write("%8.2f" % each.p_from + " ")
             file.write("%8.2f" % each.q_from + " ")
             file.write("%8.2f" % each.p_to + " ")
-            file.write("%8.2f" % each.p_to + " ")
+            file.write("%8.2f" % each.q_to + " ")
             file.write("%8.2f" % each.p_losses + " ")
             file.write("%8.2f" % each.q_losses + " ")
             file.write("\n")
@@ -328,7 +328,7 @@ class ReSTWriter(CaseWriter):
             ("Committed Generator", "n_committed_generators"),
             ("Load", "n_loads"), ("Fixed Load", "n_fixed"),
             ("Despatchable Load", "n_despatchable"),# ("Shunt", "n_shunts"),
-            ("Branch", "n_branches"), ("Transformer", "n_transformers"),
+            ("Branch", "n_branches"),# ("Transformer", "n_transformers"),
 #            ("Inter-tie", "n_inter_ties"), ("Area", "n_areas")
         ]
 

@@ -1,18 +1,22 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
-""" This example demonstrates how to use the state estimator using data from
+""" This example demonstrates how to use the state estimator by using data from
 Problem 6.7 in 'Computational Methods for Electric Power Systems' by Mariesa
 Crow."""
 
 import sys
+
+from pylon import Case, StateEstimator, Measurement, PF, PT, PG, VM
+from pylon.readwrite import ReSTWriter
+
 from cvxopt import matrix
 
-from pylon.readwrite import PickleReader, ReSTWriter
-from pylon.estimator import StateEstimator, Measurement, PF, PT, PG, VM
+DATA_FILE = "../pylon/test/data/case3bus_P6_6.pkl"
 
-DATA_FILE = "case3bus_P6_6.pkl"
+# Load the case file.
+case = Case.load(DATA_FILE)
 
-case = PickleReader().read(DATA_FILE)
+# Specify the measurements.
 measurements = [
     Measurement(case.branches[0], PF, 0.12),
     Measurement(case.branches[1], PF, 0.10),
@@ -24,10 +28,15 @@ measurements = [
     Measurement(case.buses[2], VM, 0.98)
 ]
 
-# Measurement variances.
-#sigma = {PF: 0.02, PT: 0.02, QF: 0.0, QT: 0.0, PG: 0.015, QG: 0.0, VM: 0.01, VA:0.0}
-sigma = matrix([0.02, 0.02, 0,0, 0.015, 0, 0.01, 0])
+# Specify measurement variances (ordered: PF, PT, QF, QT, PG, QG, VM, VA).
+sigma = matrix([0.02, 0.02, 0.0, 0.0, 0.015, 0.0, 0.01, 0.0])
 
-StateEstimator(case, measurements, sigma).run()
+# Create a state estimator...
+se = StateEstimator(case, measurements, sigma)
+# ...and run it.
+sol = se.run()
 
+# Write out the power flow solution...
 ReSTWriter(case).write(sys.stdout)
+# ...and a measurement comparison.
+se.output_solution(sys.stdout, sol["z"], sol["z_est"], sol["error_sqrsum"])

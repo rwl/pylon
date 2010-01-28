@@ -32,4 +32,7 @@ from ud_opf import UDOPF
 
 from uc import UnitCommitmentRoutine
 
+from estimator import StateEstimator, Measurement
+from estimator import PF, PT, QF, QT, PG, QG, VM, VA
+
 # EOF -------------------------------------------------------------------------

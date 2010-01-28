@@ -15,11 +15,11 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" State estimation (under construction) based on code from James S. Thorp.
+""" State estimation based on code by Rui Bo and James S. Thorp.
 
     References:
-        Ray Zimmerman, "state_est.m", MATPOWER, PSERC Cornell,
-        http://www.pserc.cornell.edu/matpower/, version 3.2, June 2007
+        Ray Zimmerman and Rui Bo, "extras/se", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 4.0b1, December 2009
 """
 
 #------------------------------------------------------------------------------
@@ -310,9 +310,16 @@ class StateEstimator(object):
         # Stop the clock.
         elapsed = time() - t0
 
-        self.output_solution(sys.stdout, z, z_est)
+        if self.verbose and converged:
+            print "State estimation converged in: %.3fs (%d iterations)" % \
+            (elapsed, i)
+#            self.output_solution(sys.stdout, z, z_est)
 
-        return V, converged, i, z, z_est, error_sqrsum, elapsed
+        solution = {"V": V, "success": converged, "iterations": i,
+                    "z": z, "z_est": z_est, "error_sqrsum": error_sqrsum,
+                    "elapsed": elapsed}
+
+        return solution
 
 
     def getV0(self, v_mag_guess, buses, generators, type=CASE_GUESS):
@@ -339,15 +346,34 @@ class StateEstimator(object):
         return V0
 
 
-    def output_solution(self, fd, z, z_est):
+    def output_solution(self, fd, z, z_est, error_sqrsum):
         """ Prints comparison of measurements and their estimations.
         """
+        col_width = 11
+        sep = ("=" * col_width + " ") * 4 + "\n"
+
+        fd.write("State Estimation\n")
+        fd.write("-" * 16 + "\n")
+        fd.write(sep)
+        fd.write("Type".center(col_width) + " ")
+        fd.write("Name".center(col_width) + " ")
+        fd.write("Measurement".center(col_width) + " ")
+        fd.write("Estimation".center(col_width) + " ")
+        fd.write("\n")
+        fd.write(sep)
+
         c = 0
         for t in [PF, PT, QF, QT, PG, QG, VM, VA]:
             for meas in self.measurements:
                 if meas.type == t:
-                    n = meas.b_l.name
-                    fd.write("%s\t%s\t%.3f\t%.3f\n" % (t, n, z[c], z_est[c]))
+                    n = meas.b_l.name[:col_width].ljust(col_width)
+                    fd.write(t.ljust(col_width) + " ")
+                    fd.write(n + " ")
+                    fd.write("%11.5f " % z[c])
+                    fd.write("%11.5f\n" % z_est[c])
+#                    fd.write("%s\t%s\t%.3f\t%.3f\n" % (t, n, z[c], z_est[c]))
                     c += 1
+
+        fd.write("\nWeighted sum of error squares = %.4f\n" % error_sqrsum)
 
 # EOF -------------------------------------------------------------------------

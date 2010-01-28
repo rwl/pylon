@@ -652,7 +652,7 @@ class Case(Named, Serializable):
         Va = matrix(angle(V))
         Vm = abs(V)
         for i, b in enumerate(buses):
-            b.v_angle = Va[i]
+            b.v_angle = Va[i] * 180.0 / pi
             b.v_magnitude = Vm[i]
 
         # Update Qg for all gens and Pg for swing bus.
@@ -665,8 +665,9 @@ class Case(Named, Serializable):
 
         # Update Qg for all generators.
         for i in gbus:
+            g = generators[i]
             # inj Q + local Qd
-            generators[i].q = Sg.imag()[i] * self.base_mva + g.bus.q_demand
+            g.q = Sg.imag()[i] * self.base_mva + g.bus.q_demand
 
         # At this point any buses with more than one generator will have
         # the total Q dispatch for the bus assigned to each generator. This
@@ -692,10 +693,11 @@ class Case(Named, Serializable):
             idx_t = buses.index(l.to_bus)
             Sf = mul(V[idx_f], conj(Yf[i, :] * V)) * self.base_mva
             St = mul(V[idx_t], conj(Yt[i, :] * V)) * self.base_mva
-            l.p_source = Sf.real
-            l.q_source = Sf.imag
-            l.p_target = St.real
-            l.q_target = St.imag
+
+            l.p_from = Sf.real()[0]
+            l.q_from = Sf.imag()[0]
+            l.p_to = St.real()[0]
+            l.q_to = St.imag()[0]
 
     #--------------------------------------------------------------------------
     #  Reset case results:
@@ -934,17 +936,19 @@ class Branch(Named):
         else:
             return TRANSFORMER
 
+
     @property
     def p_losses(self):
         """ Active power losses.
         """
-        return self.p_from - self.p_to
+        return self.p_from + self.p_to
+
 
     @property
     def q_losses(self):
         """ Reactive power losses.
         """
-        return self.q_from - self.q_to
+        return self.q_from + self.q_to
 
 
     def reset(self):
@@ -1499,7 +1503,7 @@ class CaseReport(object):
     def transformers(self):
         """ Branches operating as transformers.
         """
-        return [e for e in self.case.branches if e.mode == "transformer"]
+        return [e for e in self.case.branches if e.mode == TRANSFORMER]
 
 
     @property
