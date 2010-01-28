@@ -4,6 +4,8 @@
     xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="Pylon"
     nsURI="http://www.pylon.org/Pylon" nsPrefix="pylon">
   <eClassifiers xsi:type="ecore:EClass" name="Case">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        iD="true"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="baseMVA" lowerBound="1"
         eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat" defaultValueLiteral="100"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="buses" upperBound="-1"
@@ -14,24 +16,15 @@
         eType="#//Branch"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="onlineBranches" upperBound="-1"
         eType="#//Branch" transient="true"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="slackModel" eType="#//slackModel"/>
-    <eStructuralFeatures xsi:type="ecore:EReference" name="allGenerators" upperBound="-1"
-        eType="#//Generator" transient="true"/>
-    <eStructuralFeatures xsi:type="ecore:EReference" name="onlineGenerators" upperBound="-1"
-        eType="#//Generator" transient="true"/>
-    <eStructuralFeatures xsi:type="ecore:EReference" name="allLoads" upperBound="-1"
-        transient="true"/>
-    <eStructuralFeatures xsi:type="ecore:EReference" name="onlineLoads" upperBound="-1"
-        transient="true"/>
-  </eClassifiers>
-  <eClassifiers xsi:type="ecore:EEnum" name="slackModel">
-    <eLiterals name="single"/>
-    <eLiterals name="distributed" value="1"/>
-  </eClassifiers>
-  <eClassifiers xsi:type="ecore:EClass" name="Bus">
     <eStructuralFeatures xsi:type="ecore:EReference" name="generators" upperBound="-1"
         eType="#//Generator"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="slack" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="onlineGenerators" upperBound="-1"
+        eType="#//Generator" transient="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Bus">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        iD="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="#//busMode"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="vBase" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
         defaultValueLiteral="100.0"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="vMagnitudeGuess" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
@@ -42,31 +35,27 @@
         defaultValueLiteral="1.05"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="vMin" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
         defaultValueLiteral="0.95"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pDemand" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="qDemand" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="bShunt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="gShunt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="vMagnitude" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
         transient="true"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="vAngle" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="bShunt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="gShunt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="pLambda" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="qLambda" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="muVMin" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="muVMax" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mode" eType="#//busMode"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pSupply" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
-        transient="true"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="qSupply" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pDemand" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
-        transient="true"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="qDemand" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pSurplus" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="qSurplus" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Branch">
     <eStructuralFeatures xsi:type="ecore:EReference" name="sourceBus" lowerBound="1"
         eType="#//Bus"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="targetBus" lowerBound="1"
         eType="#//Bus"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="online" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        iD="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="online" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral=""/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="r" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="x" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="b" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
@@ -90,29 +79,45 @@
         transient="true"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="qLosses" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
   </eClassifiers>
-  <eClassifiers xsi:type="ecore:EEnum" name="busMode">
-    <eLiterals name="PV"/>
-    <eLiterals name="PQ" value="1"/>
-    <eLiterals name="Slack" value="2"/>
-  </eClassifiers>
-  <eClassifiers xsi:type="ecore:EEnum" name="branchMode">
-    <eLiterals name="line"/>
-    <eLiterals name="transformer" value="1"/>
-  </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Generator">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="bus" eType="#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        iD="true"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="online" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="baseMVA" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
         defaultValueLiteral="100.0"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="p" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="pMax" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ratedPMax" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
-        transient="true"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="pMin" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ratedPMin" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="vMagnitude" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="q" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="qMax" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="qMin" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="cStartup" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pcostModel" lowerBound="1"
+        eType="#//costModel"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pCost">
+      <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EEList">
+        <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+      </eGenericType>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="qcostModel" eType="#//costModel"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="qCost">
+      <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EEList">
+        <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+      </eGenericType>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="busMode">
+    <eLiterals name="PV"/>
+    <eLiterals name="PQ" value="1"/>
+    <eLiterals name="REFERENCE" value="2"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="branchMode">
+    <eLiterals name="line"/>
+    <eLiterals name="transformer" value="1"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="costModel">
+    <eLiterals name="POLYNOMIAL"/>
+    <eLiterals name="PW_LINEAR" value="1"/>
   </eClassifiers>
 </ecore:EPackage>
