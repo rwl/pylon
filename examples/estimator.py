@@ -7,7 +7,6 @@ Crow."""
 import sys
 
 from pylon import Case, StateEstimator, Measurement, PF, PT, PG, VM
-from pylon.readwrite import ReSTWriter
 
 from cvxopt import matrix
 
@@ -37,6 +36,7 @@ se = StateEstimator(case, measurements, sigma)
 sol = se.run()
 
 # Write out the power flow solution...
-ReSTWriter(case).write(sys.stdout)
+case.save_rst(sys.stdout)
+
 # ...and a measurement comparison.
 se.output_solution(sys.stdout, sol["z"], sol["z_est"], sol["error_sqrsum"])
