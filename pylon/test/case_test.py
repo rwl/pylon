@@ -355,7 +355,7 @@ class BranchTest(unittest.TestCase):
         """
         e = Branch(Bus(), Bus())
         e.p_from = 100.0
-        e.p_to = 90.0
+        e.p_to = -90.0
 
         self.assertAlmostEqual(e.p_losses, 10.0, places=4)
 

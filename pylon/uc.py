@@ -35,13 +35,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 #------------------------------------------------------------------------------
-#  "UnitCommitmentRoutine" class:
+#  "UnitCommitment" class:
 #------------------------------------------------------------------------------
 
-class UnitCommitmentRoutine(object):
+class UnitCommitment(object):
     """ Defines an implementation of the unit commitment problem.
     """
-    def __init__(self, n_periods=1, demand=None):
+    def __init__(self, case, n_periods=1, demand=None):
         """ Initialises a new UnitCommitmentRoutine instance.
         """
         # Time horizon
@@ -53,7 +53,7 @@ class UnitCommitmentRoutine(object):
             self.demand = demand
 
         # The case passed to the routine.
-        self.case = None
+        self.case = case
         # Selects one of three available LP solvers: the default solver written
         # in Python, the GLPK solver or the MOSEK LP solver.
         self.solver = None # "glpk" "mosek"
@@ -79,10 +79,9 @@ class UnitCommitmentRoutine(object):
         # A Result instance changes to which GenCos listen for.
 #        self.result = None
 
-    def __call__(self, case):
+    def run(self):
         """ Solves the unit commitment problem for the given case.
         """
-        self.case = case
 
         # Sanity checks -------------------------------------------------------
 
@@ -94,7 +93,7 @@ class UnitCommitmentRoutine(object):
 
         # Demand vector sanity check
         d = self.demand
-        w, h = d.size
+        w, _ = d.size
         if w != p:
             logger.warn("Demand vector length does not match time horizon.")
             if w > p:

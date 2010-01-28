@@ -3097,7 +3097,7 @@ sS'generators'
 p336
 (lp337
 g0
-(cpylon.case
+(cpylon.generator
 Generator
 p338
 g2

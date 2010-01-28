@@ -787,7 +787,7 @@ sS'generators'
 p120
 (lp121
 g0
-(cpylon.case
+(cpylon.generator
 Generator
 p122
 g2

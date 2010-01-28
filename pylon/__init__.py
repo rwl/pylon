@@ -15,11 +15,13 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-__version__ = "0.3.0"
+__version__ = "0.3.2"
 
-from case import Case, Bus, Branch, Generator, CaseReport
+from case import Case, Bus, Branch
 from case import REFERENCE, PV, PQ, ISOLATED
-from case import POLYNOMIAL, PW_LINEAR
+from generator import Generator, POLYNOMIAL, PW_LINEAR
+
+from util import CaseReport
 
 from dc_pf import DCPF
 from ac_pf import NewtonRaphson, FastDecoupled
@@ -30,7 +32,7 @@ from dc_opf import DCOPF
 from ac_opf import ACOPF
 from ud_opf import UDOPF
 
-from uc import UnitCommitmentRoutine
+from uc import UnitCommitment
 
 from estimator import StateEstimator, Measurement
 from estimator import PF, PT, QF, QT, PG, QG, VM, VA

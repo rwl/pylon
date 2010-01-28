@@ -323,7 +323,7 @@ sS'generators'
 p75
 (lp76
 g0
-(cpylon.case
+(cpylon.generator
 Generator
 p77
 g2

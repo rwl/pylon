@@ -33,7 +33,8 @@ from pyparsing import \
     Literal, Word, ZeroOrMore, Optional, OneOrMore, delimitedList, \
     alphas, Combine, printables
 
-from pylon.case import Case, Bus, Branch, Generator
+from pylon.case import Case, Bus, Branch
+from pylon.generator import Generator
 from pylon.readwrite.common import CaseReader
 
 #------------------------------------------------------------------------------

@@ -35,7 +35,8 @@ from cvxopt.solvers import qp, lp
 from cvxopt import solvers
 
 from util import Named, conj
-from case import REFERENCE, POLYNOMIAL, PW_LINEAR
+from case import REFERENCE
+from generator import POLYNOMIAL, PW_LINEAR
 from pdipm import pdipm, pdipm_qp
 
 #------------------------------------------------------------------------------
