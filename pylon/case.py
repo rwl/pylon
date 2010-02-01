@@ -125,7 +125,7 @@ class Branch(Named):
 
     def __init__(self, from_bus, to_bus, name=None, online=True, r=0.001,
             x=0.001, b=0.001, rate_a=999.0, rate_b=999.0, rate_c=999.0,
-            ratio=1.0, phase_shift=0.0, ang_min=None, ang_max=None):
+            ratio=1.0, phase_shift=0.0, ang_min=-360.0, ang_max=360.0):
         """ Initialises a new Branch instance.
         """
         # From/source/start bus.

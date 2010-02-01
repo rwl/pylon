@@ -177,7 +177,7 @@ def conj(A):
 #  Pickles MATPOWER case files:
 #------------------------------------------------------------------------------
 
-def pickle_matpower_cases(case_paths):
+def pickle_matpower_cases(case_paths, case_format=2):
     """ Parses the MATPOWER case files at the given paths and pickles the
         resulting Case objects to the same directory.
     """
@@ -188,7 +188,7 @@ def pickle_matpower_cases(case_paths):
 
     for case_path in case_paths:
         # Read the MATPOWER case file.
-        case = pylon.readwrite.MATPOWERReader().read(case_path)
+        case = pylon.readwrite.MATPOWERReader(case_format).read(case_path)
 
         # Give the new file the same name, but with a different extension.
         dir_path = os.path.dirname(case_path)

@@ -12,11 +12,10 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
 def pickle_cases():
     data_dir = os.path.dirname(__file__)
     case_paths = [os.path.join(data_dir, 'case30pwl.m'),
-                  os.path.join(data_dir, 'case6pwl.m'),
-                  os.path.join(data_dir, 'case6ww.m'),
-                  os.path.join(data_dir, 'case3bus_P6_6.m')]
+                  os.path.join(data_dir, 'case6ww.m')]
 
     pickle_matpower_cases(case_paths)
+    pickle_matpower_cases(os.path.join(data_dir, 'case3bus_P6_6.m'), 1)
 
 
 if __name__ == '__main__':

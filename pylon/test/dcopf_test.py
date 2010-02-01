@@ -36,7 +36,7 @@ DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 PWL_FILE  = join(dirname(__file__), "data", "case30pwl.pkl")
 
 #MP_HOME = "/home/rwl/tmp/matpower3.2"
-#PWL_FILE2 = join(MP_HOME, "case6pwl.pkl")
+#PWL_FILE2 = join(MP_HOME, "case30pwl.pkl")
 #
 #class PiecewiseLinearDCOPFTest2(unittest.TestCase):
 #
@@ -52,7 +52,7 @@ PWL_FILE  = join(dirname(__file__), "data", "case30pwl.pkl")
 #
 #
 #    def test_solver_output(self):
-#        """ Test the output from the solver with case6pwl input.
+#        """ Test the output from the solver with case30pwl input.
 #        """
 ##        self.routine.solver = "glpk"
 ##        self.routine.solver = "mosek"

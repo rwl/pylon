@@ -36,7 +36,7 @@ from pylon.pyreto import SmartMarket, Bid, Offer
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "auction_case.pkl")
+DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 
 #------------------------------------------------------------------------------
 #  "SimpleMarketTestCase" class:

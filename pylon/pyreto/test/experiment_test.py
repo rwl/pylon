@@ -48,7 +48,7 @@ from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "auction_case.pkl")
+DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 
 #------------------------------------------------------------------------------
 #  Returns a test power system:

@@ -53,7 +53,7 @@ class Generator(Named):
 
     def __init__(self, bus, name=None, online=True, base_mva=100.0,
                  p=100.0, p_max=200.0, p_min=0.0, v_magnitude=1.0,
-                 q=0.0, q_max=30.0, q_min=-30.0,
+                 q=0.0, q_max=30.0, q_min=-30.0, c_startup=0.0, c_shutdown=0.0,
                  p_cost=None, pcost_model=POLYNOMIAL,
                  q_cost=None, qcost_model=None):
         """ Initialises a new Generator instance.
@@ -74,10 +74,8 @@ class Generator(Named):
         self.p = p
         # Maximum active power output (MW).
         self.p_max = p_max
-        self.rated_pmax = p_max
         # Minimum active power output (MW).
         self.p_min = p_min
-        self.rated_pmin = p_min
 
         # Voltage magnitude setpoint (pu).
         self.v_magnitude = v_magnitude
@@ -89,10 +87,10 @@ class Generator(Named):
         # Minimum reactive power (MVAr).
         self.q_min = q_min
 
-#        # Start up cost.
-#        self.c_startup = c_startup
-#        # Shut down cost.
-#        self.c_shutdown = c_shutdown
+        # Start up cost.
+        self.c_startup = c_startup
+        # Shut down cost.
+        self.c_shutdown = c_shutdown
 
         # Active power cost model: 'poly' or 'pwl' (default: 'poly')
         if isinstance(p_cost, tuple):
@@ -154,25 +152,6 @@ class Generator(Named):
             return True
         else:
             return False
-
-#    @property
-#    def mode(self):
-#        """ Does the machine represent a generator or a despatchable load.
-#        """
-#        raise DeprecationWarning, "Use .is_load instead."
-#
-#        if 0 <= self.p_min < self.p_max:
-#            return GENERATOR
-#        elif self.p_min < self.p_max <= 0.0:
-#            return DISPATCHABLE_LOAD
-#        else:
-#            return "unknown"
-
-#    @property
-#    def p_cost(self):
-#        """ Active power cost at the current output.
-#        """
-#        return self.total_cost(self.p)
 
     @property
     def is_load(self):
@@ -362,22 +341,24 @@ class Generator(Named):
             the pwl cost function points.
         """
         if not self.is_load:
+            self.p_min = min([point[0] for point in self.p_cost])
             self.p_max = max([point[0] for point in self.p_cost])
         else:
             p_min = min([point[0] for point in self.p_cost])
-            if self.rated_pmin <= p_min <= self.rated_pmax:
-                self.q_min = self.q_min * p_min / self.rated_pmin
-                self.q_max = self.q_max * p_min / self.rated_pmin
+            if self.p_min <= p_min <= self.p_max:
+                self.q_min = self.q_min * p_min / self.p_min
+                self.q_max = self.q_max * p_min / self.p_min
             else:
                 logger.error("Active power limit outwith rating.")
             self.p_min = p_min
+            self.p_max = 0.0
 
 
-    def reset_limits(self):
-        """ Resets active power limits to the generator ratings.
-        """
-        self.p_max = self.rated_pmax
-        self.p_min = self.rated_pmin
+#    def reset_limits(self):
+#        """ Resets active power limits to the generator ratings.
+#        """
+#        self.p_max = self.rated_pmax
+#        self.p_min = self.rated_pmin
 
 
     def offers_to_pwl(self, offers):
@@ -386,14 +367,16 @@ class Generator(Named):
 
             @see: matpower3.2/extras/smartmarket/off2case.m
         """
+        assert not self.is_load
+
         # Only apply offers associated with this generator.
         g_offers = [offer for offer in offers if offer.generator == self]
 
         # Fliter out zero quantity offers.
-        valid = [offr for offr in g_offers if round(offr.quantity, 4) > 0.0]
+        gt_zero = [offr for offr in g_offers if round(offr.quantity, 4) > 0.0]
 
         # Ignore withheld offers.
-        valid = [offer for offer in valid if not offer.withheld]
+        valid = [offer for offer in gt_zero if not offer.withheld]
 
         if valid:
             self.p_cost = self._offbids_to_points(valid)
@@ -416,27 +399,30 @@ class Generator(Named):
 
             @see: matpower3.2/extras/smartmarket/off2case.m
         """
+        assert self.is_load
+
         # Apply only those bids associated with this dispatchable load.
         vl_bids = [bid for bid in bids if bid.vload == self]
 
         # Filter out zero quantity bids.
-        valid_bids = [bid for bid in vl_bids if round(bid.quantity, 4) > 0.0]
+        gt_zero = [bid for bid in vl_bids if round(bid.quantity, 4) > 0.0]
 
         # Ignore withheld offers.
-        valid_bids = [bid for bid in valid_bids if not bid.withheld]
+        valid_bids = [bid for bid in gt_zero if not bid.withheld]
 
         if valid_bids:
             points = self._offbids_to_points(valid_bids)
 
-            # Shift the points to represent bids by subtracting the maximum value
-            # from each.
+            # Shift the points to represent bids by subtracting the maximum
+            # value from each.
             x_end, y_end = points[-1]
             points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
 
             self.p_cost = points
+            self.pcost_model = "pwl"
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
-            self.pcost_model = "pwl"
+
         elif self.is_load:
             logger.info("No valid bids for dispatchable load, shutting down.")
             self.online = False
