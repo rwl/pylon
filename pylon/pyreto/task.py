@@ -31,40 +31,40 @@ logger = logging.getLogger(__name__)
 BIGNUM = 1e06
 
 #------------------------------------------------------------------------------
-#  "StatelessTask" class:
+#  "BaseProfitTask" class:
 #------------------------------------------------------------------------------
 
-class StatelessTask(Task):
-    """ Defines a task that uses no state information.
+class BaseProfitTask(Task):
+    """ Defines a base task where reward is profit (revenue - cost).
     """
 
-    def __init__(self, environment, num_actions=10):
-        """ The action space is divided into the given number of steps.
-        """
-        super(StatelessTask, self).__init__(environment)
-
-        # The number of steps that the action value should be divided into.
-#        self.action_steps = num_actions
-        self.action_space = self.getDiscreteActions(num_actions)
+#    def __init__(self, environment, num_actions=10):
+#        """ The action space is divided into the given number of steps.
+#        """
+#        super(ProfitTask, self).__init__(environment)
+#
+#        # The number of steps that the action value should be divided into.
+##        self.action_steps = num_actions
+#        self.action_space = self.getDiscreteActions(num_actions)
 
     #--------------------------------------------------------------------------
     #  "Task" interface:
     #--------------------------------------------------------------------------
 
-    def getObservation(self):
-        """ The vector of sensor values is replaced by a single integer since
-            there is only one state.
-        """
-        return 0
-
-
-    def performAction(self, action):
-        """ The action vector is stripped and the only element is cast to
-            integer and given to the super class.
-        """
-#        Task.performAction(self, int(action[0]))
-        idx = int(action[0])
-        Task.performAction(self, array([self.action_space[idx]]))
+#    def getObservation(self):
+#        """ The vector of sensor values is replaced by a single integer since
+#            there is only one state.
+#        """
+#        return 0
+#
+#
+#    def performAction(self, action):
+#        """ The action vector is stripped and the only element is cast to
+#            integer and given to the super class.
+#        """
+##        Task.performAction(self, int(action[0]))
+#        idx = int(action[0])
+#        Task.performAction(self, array([self.action_space[idx]]))
 
 
     def getReward(self):
@@ -89,8 +89,32 @@ class StatelessTask(Task):
         logger.debug("Profit task [%s] reward: %s" % (g.name, earnings))
         return earnings
 
+#------------------------------------------------------------------------------
+#  "DiscreteTask" class:
+#------------------------------------------------------------------------------
+
+class DiscreteTask(BaseProfitTask):
+    """ Defines a task with discrete observations of the clearing price.
+    """
+
     #--------------------------------------------------------------------------
-    #  "StatelessTask" interface:
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __init__(self, environment, dim_state=100, num_actions=10):
+        """ The sensor space is divided into the given number of steps.
+        """
+        super(DiscreteTask, self).__init__(environment, num_actions)
+
+        # State dimensions.
+        self.dim_state = dim_state
+
+        # The number of steps that the action value should be divided into.
+#        self.action_steps = num_actions
+        self.action_space = self.getDiscreteActions(num_actions)
+
+    #--------------------------------------------------------------------------
+    #  "DiscreteTask" interface:
     #--------------------------------------------------------------------------
 
     def getDiscreteActions(self, num_actions):
@@ -99,26 +123,9 @@ class StatelessTask(Task):
         limit = self.env.market.price_cap
         return linspace(0.0, limit, num_actions)
 
-#------------------------------------------------------------------------------
-#  "DiscreteTask" class:
-#------------------------------------------------------------------------------
-
-class DiscreteTask(StatelessTask):
-    """ Defines a task with discrete observations of the clearing price.
-    """
-
     #--------------------------------------------------------------------------
     #  "Task" interface:
     #--------------------------------------------------------------------------
-
-    def __init__(self, environment, dim_state=100, num_actions=10):
-        """ The sensor space is divided into the given number of steps.
-        """
-        super(DiscreteTask, self).__init__(environment, num_actions)
-
-        # State dimentions.
-        self.dim_state = dim_state
-
 
     def getObservation(self):
         """ The agent receives a single non-negative integer indicating the
@@ -140,7 +147,7 @@ class DiscreteTask(StatelessTask):
 #  "ContinuousTask" class:
 #------------------------------------------------------------------------------
 
-class ContinuousTask(Task):
+class ContinuousTask(BaseProfitTask):
     """ Defines a task for continuous sensor and action spaces.
     """
 
