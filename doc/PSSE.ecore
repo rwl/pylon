@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="PSSE"
+    nsURI="http://www.pti-us.com/pti/software/psse" nsPrefix="psse">
+  <eClassifiers xsi:type="ecore:EClass" name="Case">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="IC" lowerBound="1" eType="#//ChangeCode"
+        defaultValueLiteral="0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="SBase" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="100">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="System base MVA for per-unit calculations."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Heading" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Heading associated with the case, upto 60 characters in length."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Subheading" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Subheading associated with the case, upto 60 characters in length."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Bus">
+    <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+      <details key="documentation" value="Network busbar."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="number" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+        iD="true">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Bus number, between 1 and 99997."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral="        ">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Alphanumeric identifier upto 8 characters in length, enclosed in single quotes."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="baseKV" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="0">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Base voltage for Bus in kV."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="#//BusTypeCode"
+        defaultValueLiteral="1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Gs" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Shunt conductance (MW (demanded) at V = 1.0 p.u.)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Bs" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Shunt conductance (MVAr (injected) at V = 1.0 p.u.)."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="area" eType="#//Area"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="zone" eType="#//Zone"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Vm" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Voltage magnitude in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Va" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Voltage phase angle in degrees."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="owner" eType="#//Owner"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Load">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="bus" lowerBound="1" eType="#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Uppercase alphanumeric identifier upto two characters in length for distinguishing between loads at the same bus."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Is the load in-service?"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="area" eType="#//Area"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="zone" eType="#//Zone"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Pd" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Real power demand in MW."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Qd" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Reactive power demand in MVAr."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Pi" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Active power demand in MW for constant current load."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Qi" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Reactive power demand in MVAr for constant current load."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Py" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Active power demand in MW for constant admittance load."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Qy" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Reactive power demand in MVAr for constant admittance load."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="owner" eType="#//Owner"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Generator">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="bus" eType="#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Uppercase alphanumeric identifier upto two characters long for distinguishing between multiple generators at one bus."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Pg" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Real power output in MW."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Qg" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Reactive power output in MVAr."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Qmax" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="9999">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Upper reactive power output limit in MVAr."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Qmin" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="-9999">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Lower reactive power output limit in MVAr."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Vg" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Voltage magnitude setpoint in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="regulating" eType="#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mBase" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="100.0">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Total MVA base for this machine, default to system base MVA."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Rz" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Machine resistance in pu.u to mBase for fault analysis and dynamic simulation studies."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Xz" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Machine reactance in p.u. to mBase for fault analysis and dynamic simulation studies."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Rt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Step-up transformer resistance in p.u. to mBase."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Xt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Step-up transformer reactance in p.u. to mBase."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="tapRatio" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Step-up transformer off-nominal turns ration in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Is the generator in-service?"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Qpct" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="100"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Pmax" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="9999">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Upper active power output limit in MW."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Pmin" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="-9999">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Lower active power output limit in MW."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="owners" upperBound="4"
+        eType="#//Owner">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Machine owners the first of which defaults to the owner of the bus."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="fraction" upperBound="4"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat" defaultValueLiteral="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Fraction of ownership for each owner."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Branch">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="fromBus" lowerBound="1"
+        eType="#//Bus">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Assumed to be the metered end."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="toBus" lowerBound="1" eType="#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="circuit" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Uppercase alphanumeric identifier upto two characters in length for distinguishing between circuits between the same buses."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="R" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Line resistance in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="X" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Line reactance in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="B" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Total line charging susceptance in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rateA" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="First line current rating in MVA."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rateB" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Second line current rating in MVA."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rateC" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Third line current rating in MVA."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Gf" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Line shunt conductance at the from end in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Bf" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Line shunt susceptance at the from end in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Gt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Line shunt conductance at the to end in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="Bt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Line shunt susceptance at the to end in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Is the branch in-service?"/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="length" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Line length in user-selected units."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="owners" upperBound="4"
+        eType="#//Owner">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Line owners the first of which defaults to the owner of the from bus."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="fraction" upperBound="4"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Fraction of total ownership assigned to each owner."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Transformer">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="bus1" lowerBound="1" eType="#//Bus">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="The tap ratio and phase shift angle of the transformer winding connected to the from bus may be adjusted by the power flow solution activity."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="bus2" lowerBound="1" eType="#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="bus3" eType="#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="circuit" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Uppercase alphanumeric identifier upto two characters in length for distingduishing between parallel circuits."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="windingCode" eType="#//WindingCode"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ChangeCode">
+    <eLiterals name="BaseCase">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details value="Working case cleared before adding data."/>
+      </eAnnotations>
+    </eLiterals>
+    <eLiterals name="Add" value="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details value="Data added to working case."/>
+      </eAnnotations>
+    </eLiterals>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="BusTypeCode">
+    <eLiterals name="LoadBus" value="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Load bus with no generation."/>
+      </eAnnotations>
+    </eLiterals>
+    <eLiterals name="GeneratorBus" value="2">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Generator bus with fixed PV or PQ."/>
+      </eAnnotations>
+    </eLiterals>
+    <eLiterals name="SwingBus" value="3">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Reference bus."/>
+      </eAnnotations>
+    </eLiterals>
+    <eLiterals name="Isolated" value="4">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Disconnected bus."/>
+      </eAnnotations>
+    </eLiterals>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Area"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Zone"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Owner"/>
+  <eClassifiers xsi:type="ecore:EEnum" name="WindingCode">
+    <eLiterals name="turnsRatio" value="1"/>
+    <eLiterals name="windingVoltage" value="2"/>
+  </eClassifiers>
+</ecore:EPackage>
