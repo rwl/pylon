@@ -97,7 +97,7 @@ class ReaderTest(TestCase):
         c = self.case
 
         for e in c.branches:
-            from_idx = c.buses.index(e.to_bus)
+            from_idx = c.buses.index(e.from_bus)
             from_expected = from_idxs[c.branches.index(e)]
             self.assertEqual(from_idx, from_expected,
                 "From bus %d expected, %d found" %
@@ -155,7 +155,7 @@ class MatpowerReaderTest(ReaderTest):
     def test_case30pwl(self):
         """ Test parsing case30pwl.m.
         """
-        self.case = self.reader.read(PWL_MP_DATA_FILE)
+        case = self.case = self.reader.read(PWL_MP_DATA_FILE)
 
         self._validate_base(base_mva=100.0)
 
@@ -174,7 +174,7 @@ class MatpowerReaderTest(ReaderTest):
                      23, 23, 24, 25, 26, 26, 28, 29, 29, 27, 27])
 
         # Generator costs.
-        generators = self.case.generators
+        generators = case.generators
 
         for g in generators:
             self.assertEqual(g.pcost_model, "pwl")
@@ -189,45 +189,45 @@ class MatpowerReaderTest(ReaderTest):
 #  "PSSEReaderTest" class:
 #------------------------------------------------------------------------------
 
-class PSSEReaderTest(ReaderTest):
-    """ Defines a test case for the PSS/E data file reader.
-    """
-
-    def setUp(self):
-        """ The test runner will execute this method prior to each test.
-        """
-        self.case = PSSEReader().read(IPSA_DATA_FILE)
-
-
-    def test_ipsa(self):
-        """ Test parsing of a data file exported from IPSA.
-        """
-        self._validate_base(100.0)
-
-        self._validate_object_numbers(n_buses=56, n_branches=67, n_gen=24)
-
-
-    def test_ukgds(self):
-        """ Test parsing of PSS/E data file exported from the UKGDS.
-        """
-        # Parse the file.
-        reader = PSSEReader()
-        self.case = reader(UKGDS_DATA_FILE)
-
-        # Network structure validation
-        self._validate_base(100.0)
-
-        self._validate_object_numbers(n_buses=102,
-                                      # 75 lines + 67 transformers = 142
-                                      n_branches=142,
-                                      n_gen=3)
-
-        self._validate_slack_bus(slack_idx=0)
-
-        self._validate_generator_connections(gbus_idxs=[0, 1])
-
-        self._validate_branch_connections(from_idxs=[0, 0, 1],
-                                          to_idxs=[1, 2, 2])
+#class PSSEReaderTest(ReaderTest):
+#    """ Defines a test case for the PSS/E data file reader.
+#    """
+#
+#    def setUp(self):
+#        """ The test runner will execute this method prior to each test.
+#        """
+#        self.reader = PSSEReader()
+#
+#
+#    def test_ipsa(self):
+#        """ Test parsing of a data file exported from IPSA.
+#        """
+#        self.case = self.reader.read(IPSA_DATA_FILE)
+#
+#        self._validate_base(100.0)
+#        self._validate_object_numbers(n_buses=56, n_branches=67, n_gen=24)
+#
+#
+#    def test_ukgds(self):
+#        """ Test parsing of PSS/E data file exported from the UKGDS.
+#        """
+#        # Parse the file.
+#        self.case = self.reader(UKGDS_DATA_FILE)
+#
+#        # Network structure validation
+#        self._validate_base(100.0)
+#
+#        self._validate_object_numbers(n_buses=102,
+#                                      # 75 lines + 67 transformers = 142
+#                                      n_branches=142,
+#                                      n_gen=3)
+#
+#        self._validate_slack_bus(slack_idx=0)
+#
+#        self._validate_generator_connections(gbus_idxs=[0, 1])
+#
+#        self._validate_branch_connections(from_idxs=[0, 0, 1],
+#                                          to_idxs=[1, 2, 2])
 
 #------------------------------------------------------------------------------
 #  "PSATReaderTest" class:

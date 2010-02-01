@@ -243,16 +243,18 @@ class MATPOWERReader(CaseReader):
     def _get_area_array_construct(self):
         """ Returns a construct for an array of area data.
         """
+        area = integer.setResultsName("area_id")
+        price_ref_bus = integer.setResultsName("price_ref_bus")
+
+        area_data = area + price_ref_bus + scolon
+
         if self.case_format == 1:
-            area = integer.setResultsName("area_id")
-            price_ref_bus = integer.setResultsName("price_ref_bus")
-
-            area_data = area + price_ref_bus + scolon
-
             area_array = Literal('areas') + equals + lbrack + \
                 ZeroOrMore(area_data) + Optional(rbrack + scolon)
         elif self.case_format == 2:
-            area_array = Optional(matlab_comment)
+            area_array = Optional(Combine(Literal('mpc.areas')) + \
+                equals + lbrack + \
+                ZeroOrMore(area_data) + Optional(rbrack + scolon))
 
         return area_array
 
@@ -391,11 +393,12 @@ class MATPOWERReader(CaseReader):
 
         buses = self.case.buses
 
-        bus_ids      = [bus._bus_id for bus in buses]
+        bus_ids = [bus._bus_id for bus in buses]
+
         from_bus_idx = bus_ids.index(tokens["fbus"])
         to_bus_idx = bus_ids.index(tokens["tbus"])
-        from_bus     = buses[from_bus_idx]
-        to_bus     = buses[to_bus_idx]
+        from_bus = buses[from_bus_idx]
+        to_bus = buses[to_bus_idx]
 
 #        from_bus = self.case.buses[tokens["fbus"]-1]
 #        to_bus = self.case.buses[tokens["tbus"]-1]

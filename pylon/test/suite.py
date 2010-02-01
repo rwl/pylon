@@ -33,7 +33,7 @@ from acopf_test import ACOPFTest
 from opf_test import OPFTest, DCOPFSolverTest, PDIPMSolverTest, OPFModelTest
 from uc_test import UnitCommitmentTest
 
-from reader_test import MatpowerReaderTest, PSSEReaderTest#, PSATReaderTest
+from reader_test import MatpowerReaderTest#, PSSEReaderTest, PSATReaderTest
 
 #------------------------------------------------------------------------------
 #  "suite" function:

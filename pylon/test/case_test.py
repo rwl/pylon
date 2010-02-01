@@ -360,9 +360,9 @@ class BranchTest(unittest.TestCase):
         self.assertAlmostEqual(e.p_losses, 10.0, places=4)
 
         e.q_from = 30.0
-        e.q_to = 10.0
+        e.q_to = -20.0
 
-        self.assertAlmostEqual(e.q_losses, 20.0, places=4)
+        self.assertAlmostEqual(e.q_losses, 10.0, places=4)
 
 #------------------------------------------------------------------------------
 #  "GeneratorTest" class:
