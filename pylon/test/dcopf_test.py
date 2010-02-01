@@ -25,8 +25,7 @@
 from os.path import join, dirname
 import unittest
 
-from pylon.readwrite import PickleReader
-from pylon import DCOPF
+from pylon import Case, DCOPF
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -424,11 +423,9 @@ class DCOPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = PickleReader().read(DATA_FILE)
+        case = self.case = Case.load(DATA_FILE)
 
-        self.routine = DCOPF(show_progress=False)
-        self.routine.case = self.case
-#        success = self.routine(self.case)
+        self.routine = DCOPF(case, show_progress=False)
 
 
     def test_theta_injection_from(self):
@@ -558,7 +555,7 @@ class DCOPFTest(unittest.TestCase):
                -0.7000
                -0.7000
         """
-        self.routine.B, self.routine.Bsrc = self.case.Bdc
+        self.routine.B, self.routine.Bsrc, _, _ = self.case.Bdc
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -712,7 +709,7 @@ class DCOPFTest(unittest.TestCase):
                 0.2000
                 0.4000
         """
-        self.routine.B, self.routine.Bsrc = self.case.Bdc
+        self.routine.B, self.routine.Bsrc, _, _ = self.case.Bdc
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -836,7 +833,7 @@ class DCOPFTest(unittest.TestCase):
                 0.8807
                 0.7193
         """
-        self.routine(self.case)
+        self.routine.solve()
         x = self.routine.x
 
         places = 4
@@ -858,7 +855,7 @@ class DCOPFTest(unittest.TestCase):
     def test_model_update(self):
         """ Test update of the model with the results.
         """
-        self.routine(self.case)
+        self.routine.solve()
         self.assertAlmostEqual(self.routine.f, 3046.41, places=2)
 
 

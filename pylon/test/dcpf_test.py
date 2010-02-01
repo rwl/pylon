@@ -49,8 +49,8 @@ class DCPFTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         case = PickleReader().read(DATA_FILE)
-        self.routine = DCPF()#"CHOLMOD")
-        self.routine.solve(case)
+        self.routine = DCPF(case)#"CHOLMOD")
+        self.routine.solve()
 
 
     def test_v_angle_guess_vector(self):

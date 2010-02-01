@@ -126,7 +126,7 @@ class MatpowerReaderTest(ReaderTest):
     def test_case6ww(self):
         """ Test parsing case6ww.m file.
         """
-        self.case = c = self.reader(MATPOWER_DATA_FILE)
+        self.case = c = self.reader.read(MATPOWER_DATA_FILE)
 
         self._validate_base(base_mva=100.0)
 
@@ -155,7 +155,7 @@ class MatpowerReaderTest(ReaderTest):
     def test_case30pwl(self):
         """ Test parsing case30pwl.m.
         """
-        self.case = self.reader(PWL_MP_DATA_FILE)
+        self.case = self.reader.read(PWL_MP_DATA_FILE)
 
         self._validate_base(base_mva=100.0)
 
@@ -167,11 +167,11 @@ class MatpowerReaderTest(ReaderTest):
 
         self._validate_branch_connections(
             from_idxs=[0, 0, 1, 2, 1, 1, 3, 4, 5, 5, 5, 5, 8, 8, 3, 11, 11,
-                         11, 11, 13, 15, 14, 17, 18, 9, 9, 9, 9, 20, 14, 21,
-                         22, 23, 24, 24, 27, 26, 26, 28, 7, 5],
+                       11, 11, 13, 15, 14, 17, 18, 9, 9, 9, 9, 20, 14, 21,
+                       22, 23, 24, 24, 27, 26, 26, 28, 7, 5],
             to_idxs=[1, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 9, 11, 12, 13,
-                         14, 15, 14, 16, 17, 18, 19, 19, 16, 20, 21, 21, 22,
-                         23, 23, 24, 25, 26, 26, 28, 29, 29, 27, 27])
+                     14, 15, 14, 16, 17, 18, 19, 19, 16, 20, 21, 21, 22,
+                     23, 23, 24, 25, 26, 26, 28, 29, 29, 27, 27])
 
         # Generator costs.
         generators = self.case.generators
@@ -196,8 +196,7 @@ class PSSEReaderTest(ReaderTest):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        reader = PSSEReader()
-        self.case = reader(IPSA_DATA_FILE)
+        self.case = PSSEReader().read(IPSA_DATA_FILE)
 
 
     def test_ipsa(self):

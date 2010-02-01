@@ -25,7 +25,7 @@
 import unittest
 
 from pylon import Case
-from pylon import UnitCommitmentRoutine
+from pylon import UnitCommitment
 
 #------------------------------------------------------------------------------
 #  "UnitCommitmentTest" class:
@@ -38,7 +38,7 @@ class UnitCommitmentTest(unittest.TestCase):
     def test_time_horizon(self):
         """ Test that the number of periods is made > 0.
         """
-        r = UnitCommitmentRoutine(Case(), periods=0)
+        r = UnitCommitment(Case(), periods=0)
         r.solve()
 
         self.assertEqual(r.periods, 1)
@@ -50,7 +50,7 @@ class UnitCommitmentTest(unittest.TestCase):
         p = 2
         d = [10.0, 20.0, 30.0]
         rsrv = [1.0, 2.0, 3.0, 4.0]
-        r = UnitCommitmentRoutine(Case(), periods=p, demand=d, reserve=rsrv)
+        r = UnitCommitment(Case(), periods=p, demand=d, reserve=rsrv)
         r.solve()
 
         self.assertTrue(len(r.demand) == p)
@@ -63,7 +63,7 @@ class UnitCommitmentTest(unittest.TestCase):
         p = 6
         d = [10.0, 20.0]
         rsrv = []
-        r = UnitCommitmentRoutine(Case(), periods=p, demand=d, reserve=rsrv)
+        r = UnitCommitment(Case(), periods=p, demand=d, reserve=rsrv)
         r.solve()
 
         self.assertTrue(len(r.demand) == p)

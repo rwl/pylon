@@ -49,14 +49,14 @@ class ACOPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = PickleReader().read(DATA_FILE)
-        self.routine = ACOPF()
+        case = self.case = PickleReader().read(DATA_FILE)
+        self.routine = ACOPF(case)
 
 
     def test_mismatch(self):
         """ Test AC OPF.
         """
-        success = self.routine(self.case)
+        success = self.routine.solve()
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:
