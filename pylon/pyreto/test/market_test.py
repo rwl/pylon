@@ -130,6 +130,7 @@ class SimpleMarketTestCase(unittest.TestCase):
         mkt.clear_offers_and_bids()
 
         self.assertFalse(mkt.success) # Blackout.
+        self.assertFalse(self.case.generators[1].online)
         self.assertTrue(offers[1].withheld)
         self.assertFalse(offers[0].accepted)
         self.assertFalse(offers[1].accepted)

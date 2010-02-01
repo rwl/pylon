@@ -386,11 +386,9 @@ class Generator(Named):
 
             self.pcost_model = "pwl"
             self.online = True
-        elif not self.is_load:
+        else:
             logger.info("No valid offers for generator, shutting down.")
             self.online = False
-        else:
-            logger.info("No valid offers for generator.")
 
 
     def bids_to_pwl(self, bids):
@@ -423,7 +421,7 @@ class Generator(Named):
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
 
-        elif self.is_load:
+        else:
             logger.info("No valid bids for dispatchable load, shutting down.")
             self.online = False
 

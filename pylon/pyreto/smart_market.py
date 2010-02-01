@@ -251,8 +251,9 @@ class SmartMarket(object):
 
             g.offers_to_pwl(g_offers)
 
-            # Adjust generator limits.
-            g.adjust_limits()
+            if g.online:
+                # Adjust generator limits.
+                g.adjust_limits()
 
             p_offers = [of for of in g_offers if not of.reactive]
             q_offers = [of for of in g_offers if of.reactive]
@@ -285,6 +286,9 @@ class SmartMarket(object):
             vl_bids = [bid for bid in bids if bid.vload == vl]
 
             vl.bids_to_pwl(vl_bids)
+
+            if vl.online:
+                vl.adjust_limits()
 
             p_bids = [bid for bid in vl_bids if not bid.reactive]
             q_bids = [bid for bid in vl_bids if bid.reactive]
@@ -325,13 +329,13 @@ class SmartMarket(object):
         """ Solves the optimisation problem.
         """
         if self.decommit:
-            routine = self.routine = UDOPF(dc=self.loc_adjust == "dc")
+            routine = self.routine = UDOPF(case, dc=self.loc_adjust == "dc")
         elif self.loc_adjust == "dc":
-            routine = self.routine = DCOPF(show_progress=False)
+            routine = self.routine = DCOPF(case, show_progress=False)
         else:
             raise NotImplementedError
 
-        success = self.success = routine.solve(case)
+        success = self.success = routine.solve()
 
         return success
 

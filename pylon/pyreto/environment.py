@@ -77,7 +77,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         # Does a participant's offer/bid comprise quantity aswell as price.
         self.offbid_qty = offbid_qty
 
-        # A nonnegative amount of money.
+        # A non-negative amount of money.
 #        money = 1e6
 
         # Record capacity limits and the cost function on instantiation as the
@@ -85,9 +85,12 @@ class ParticipantEnvironment(GraphicalEnvironment):
         # submitted offers and bids.
         self.p_max = asset.p_max
         self.p_min = asset.p_min
+
         # Marginal cost function proportional to current capacity.  Agents may
         # offer/bid above or below marginal cost.
         self.marginal_cost = asset.p_cost
+        self.marginal_cost_model = asset.pcost_model
+
 #        # Amortised fixed costs.
 #        self.c_startup = asset.c_startup
 #        self.c_shutdown = asset.c_shutdown
