@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="OPF31"
+    nsURI="http://www.pti-us.com/pti/software/psse/opf" nsPrefix="opf">
+  <eClassifiers xsi:type="ecore:EClass" name="Data">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="modificationCode" eType="#//ModificationCode"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BusVoltageConstraint">
+    <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+      <details key="documentation" value="Defines upper and lower bus voltage limits."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Bus" eType="ecore:EClass PF31.ecore#//Bus">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Must correspond to a bus in the associated load flow case."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="vMaximumNormal" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="9999.0">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Maximum bus voltage magnitude in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="vMinimumNormal" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="-9999.0">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Minimum bus voltage magnitude in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="vMaximumEmergency" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="9999.0">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Emergency maximum bus voltage magnitude in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="vMinimumEmergency" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="-9999.0">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Emergency minimum bus voltage magnitude in p.u."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="limitType" eType="#//LimitType"
+        defaultValueLiteral="1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="softLimitPenaltyWeight"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat" defaultValueLiteral="1.0">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Weight of penalty for excursions outside of limits."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="AdjustableBusShunt">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Bus" lowerBound="1" eType="ecore:EClass PF31.ecore#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=" 1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="bInitial" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="bMaximum" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="bMinimum" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="bCost" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costType" eType="#//CostType"
+        defaultValueLiteral="1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="CostTable" eType="#//CostTable"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BusLoad">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Bus" eType="ecore:EClass PF31.ecore#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=" 1"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="BusLoadTable" eType="#//AdjustableBusLoadTable"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="AdjustableBusLoadTable">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="number" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="loadMultiplier" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maximumLoadMultiplier"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat" defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minimumLoadMultiplier"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat" defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="loadRatioMultiplier" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costScaleCoefficient" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costType" eType="#//CostType"
+        defaultValueLiteral="1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="CostTable" eType="#//CostTable"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="GeneratorDispatch">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Bus" eType="ecore:EClass PF31.ecore#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=" 1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="dispatchFraction" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="DispatchTable" eType="#//ActivePowerDispatchTable"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ActivePowerDispatchTable">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="number" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pMax" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="9999.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pMin" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="-9999.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="fuelCostScaleCoefficient"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat" defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costType" eType="#//CostType"
+        defaultValueLiteral="1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="CostTable" eType="#//CostTable"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="GenerationReserve">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Bus" eType="ecore:EClass PF31.ecore#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=" 1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rampRate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="9999.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maximumReserve" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="9999.0"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="GenerationReactiveCapability">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="Bus" eType="ecore:EClass PF31.ecore#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=" 1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="xDirect" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="iLimit" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="powerFactorLagging" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="powerFactorLeading" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="qLimit" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="limitStatus" eType="#//ReactiveCapabilityLimitStatus"
+        defaultValueLiteral="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="AdjustableBranch">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="FromBus" eType="ecore:EClass PF31.ecore#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ToBus" eType="ecore:EClass PF31.ecore#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=" 1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="xMultiplier" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="xMultiplierMaximum" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="xMultiplierMinimum" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costScaleCoefficient" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
+        defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costType" eType="#//CostType"
+        defaultValueLiteral="1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="CostTable" eType="#//CostTable"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PiecewiseLinearCostTable" eSuperTypes="#//CostTable">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="number" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="numberOfCoordinates" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="coordinatePairs" upperBound="-1">
+      <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EMap">
+        <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+        <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+      </eGenericType>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PiecewiseQuadraticCostTable" eSuperTypes="#//CostTable">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="number" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="cost" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="numberOfCoordinatePairs"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="coordinatePairs">
+      <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EMap">
+        <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+        <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+      </eGenericType>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PolynomialExponentialCostTable" eSuperTypes="#//CostTable">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="number" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="cost" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costLinear" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costQuadratic" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costExponential" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="costExponentialExponent"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PeriodReserve">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="number" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="pLimit" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="period" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="generatorReserveBuses">
+      <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EMap">
+        <eTypeArguments eClassifier="ecore:EClass PF31.ecore#//Bus"/>
+        <eTypeArguments eClassifier="ecore:EClass PF31.ecore#//Generator"/>
+      </eGenericType>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BranchFlowConstraint">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="FromBus" eType="ecore:EClass PF31.ecore#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ToBus" eType="ecore:EClass PF31.ecore#//Bus"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="branchFlowID" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maximumFlow" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minimumFlow" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="emergencyMaximumFlow" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="emergencyMinimumFlow" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="flowType" eType="#//FlowType"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="limitType" eType="#//LimitType"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="softLimitPenaltyWeight"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="LastBus" eType="ecore:EClass PF31.ecore#//Bus"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="InterfaceFlowConstraint">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="number" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maximumFlow" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minimumFlow" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="flowType" eType="#//FlowType"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="limitType" eType="#//LimitType"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="softLimitPenaltyWeight"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat" defaultValueLiteral="1.0"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="participatingBranches"
+        eType="ecore:EClass PF31.ecore#//Branch"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LinearConstraintDependency">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="number" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maximumSlack" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="minimumSlack" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="equationVariables">
+      <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EMap">
+        <eTypeArguments eClassifier="#//VariableTypeCode"/>
+        <eTypeArguments eClassifier="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EClass"/>
+      </eGenericType>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ModificationCode">
+    <eLiterals name="Overwrite">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Any exisitng OPF data is erased prior to reading the OPF raw data file."/>
+      </eAnnotations>
+    </eLiterals>
+    <eLiterals name="Surpercede" value="1">
+      <eAnnotations source="http://www.pti-us.com/pti/software/psse/documentation">
+        <details key="documentation" value="Data records are updated to reflect the values from the OPF raw data file."/>
+      </eAnnotations>
+    </eLiterals>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="LimitType">
+    <eLiterals name="Reporting"/>
+    <eLiterals name="Hard" value="1"/>
+    <eLiterals name="SoftLinear" value="2"/>
+    <eLiterals name="SoftQuadratic" value="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="CostType">
+    <eLiterals name="PolynomialExponential" value="1"/>
+    <eLiterals name="PiecewiseLinear" value="2"/>
+    <eLiterals name="PiecewiseQuadratic" value="3"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ReactiveCapabilityLimitStatus">
+    <eLiterals name="OutOfService"/>
+    <eLiterals name="WithoutQGen" value="1"/>
+    <eLiterals name="FieldVoltageIncrease" value="2"/>
+    <eLiterals name="FieldVoltageDecrease" value="3"/>
+    <eLiterals name="InvariantFieldVoltage" value="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="FlowType">
+    <eLiterals name="MW" value="1"/>
+    <eLiterals name="MVAr" value="2"/>
+    <eLiterals name="MVA" value="3"/>
+    <eLiterals name="Ampere" value="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="CostTable" abstract="true"/>
+  <eClassifiers xsi:type="ecore:EEnum" name="VariableTypeCode">
+    <eLiterals name="VoltageMagnitude" value="1"/>
+    <eLiterals name="VoltageAngle" value="2"/>
+    <eLiterals name="ActiveGeneration" value="3"/>
+    <eLiterals name="ReactiveGeneration" value="4"/>
+    <eLiterals name="TransformerValue" value="5"/>
+    <eLiterals name="BranchFlow" value="6"/>
+    <eLiterals name="InterfaceFlow" value="7"/>
+    <eLiterals name="AdjustableBusShunt" value="8"/>
+    <eLiterals name="SwitchedShunt" value="9"/>
+    <eLiterals name="LoadAdjustment" value="10"/>
+  </eClassifiers>
+</ecore:EPackage>
