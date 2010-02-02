@@ -383,7 +383,7 @@ class CaseReport(object):
     def transformers(self):
         """ Branches operating as transformers.
         """
-        return [e for e in self.case.branches if e.mode == TRANSFORMER]
+        return [e for e in self.case.branches if e.ratio != 0.0]
 
 
     @property
@@ -398,7 +398,6 @@ class CaseReport(object):
     def total_gen_capacity(self):
         """ Total generation capacity.
         """
-        base_mva = self.case.base_mva
         p = sum([g.p for g in self.case.generators])
         q = sum([g.q for g in self.case.generators])
 
