@@ -90,7 +90,7 @@ class DCOPF(object):
         # Sparse branch from bus susceptance matrix. The real power flows at
         # the from end the lines are related to the bus voltage angles by
         # Pf = Bf * Va + Pfinj
-        self.Bsrc = None
+        self.Bf = None
 
         # The real power flows at the from end the lines are related to the bus
         # voltage angles by Pf = Bf * Va + Pfinj
@@ -142,7 +142,7 @@ class DCOPF(object):
         solvers.options["feastol"] = self.feasibility_tol
 #        solvers.options["refinement"] = self.refinement
 
-        self.B, self.Bsrc, _, _ = self.case.Bdc
+        self.B, self.Bf, _, _ = self.case.Bdc
 
         self._theta_inj_from = self._get_theta_inj_from()
         self._theta_inj_bus = self._get_theta_inj_bus()
@@ -575,9 +575,9 @@ class DCOPF(object):
         A_gen = spmatrix([], [], [], (n_branch, n_gen + n_cost))
 
         # Branch 'from' end flow limit.
-        A_from = sparse([self.Bsrc.T, A_gen.T]).T
+        A_from = sparse([self.Bf.T, A_gen.T]).T
         # Branch 'to' flow limit.
-        A_to = sparse([-self.Bsrc.T, A_gen.T]).T
+        A_to = sparse([-self.Bf.T, A_gen.T]).T
 
         A_flow = sparse([A_from, A_to])
 
@@ -784,7 +784,7 @@ class DCOPF(object):
 #            generator.p_despatch = p[i] * base_mva
 
         # Branch power flows.
-        p_from = self.Bsrc * v_angle * base_mva
+        p_from = self.Bf * v_angle * base_mva
         p_to = -p_from
         for j, branch in enumerate(branches):
             branch.p_from = p_from[j]

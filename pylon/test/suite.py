@@ -29,7 +29,7 @@ from pylon.test.generator_test import GeneratorTest, OfferBidToPWLTest
 
 from dcpf_test import DCPFTest
 from acpf_test import NewtonPFTest#, FastDecoupledTest
-from dcopf_test import DCOPFTest
+from dcopf_test import DCOPFTest, PiecewiseLinearDCOPFTest
 from acopf_test import ACOPFTest
 from opf_test import OPFTest, DCOPFSolverTest, PDIPMSolverTest, OPFModelTest
 from uc_test import UnitCommitmentTest
@@ -56,6 +56,7 @@ def suite():
 #    suite.addTest(unittest.makeSuite(DCPFTest))
 #    suite.addTest(unittest.makeSuite(NewtonPFTest))
     suite.addTest(unittest.makeSuite(DCOPFTest))
+    suite.addTest(unittest.makeSuite(PiecewiseLinearDCOPFTest))
 #    suite.addTest(unittest.makeSuite(ACOPFTest))
 #    suite.addTest(unittest.makeSuite(OPFTest))
 #    suite.addTest(unittest.makeSuite(DCOPFSolverTest))

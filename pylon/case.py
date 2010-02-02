@@ -276,34 +276,6 @@ class Case(Named, Serializable):
     #  Bus injections:
     #--------------------------------------------------------------------------
 
-#    def p_supply(self, bus):
-#        """ Returns the total active power generation capacity at the given
-#            bus.
-#        """
-#        return sum([g.p for g in self.generators if g.bus == bus])
-#
-#
-#    def q_supply(self, bus):
-#        """ Returns the total reactive power generation capacity at the given
-#            bus.
-#        """
-#        return sum([g.q for g in self.generators if g.bus == bus])
-#
-#
-#    def p_surplus(self, bus):
-#        """ Returns the difference between active power supply and demand at
-#            the given bus.
-#        """
-#        return self.p_supply(bus) - bus.p_demand
-#
-#
-#    def q_surplus(self, bus):
-#        """ Returns the difference between reactive power supply and demand at
-#            the given bus.
-#        """
-#        return self.q_supply(bus) - bus.q_demand
-
-
     def s_supply(self, bus):
         """ Returns the total complex power generation capacity.
         """

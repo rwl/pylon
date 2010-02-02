@@ -34,31 +34,6 @@ from pylon import Case, DCOPF
 DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 PWL_FILE  = join(dirname(__file__), "data", "case30pwl.pkl")
 
-#MP_HOME = "/home/rwl/tmp/matpower3.2"
-#PWL_FILE2 = join(MP_HOME, "case30pwl.pkl")
-#
-#class PiecewiseLinearDCOPFTest2(unittest.TestCase):
-#
-#    def setUp(self):
-#        """ The test runner will execute this method prior to each test.
-#        """
-#        reader = MATPOWERReader()
-#        self.case = reader(PWL_FILE2)
-#
-#        self.routine = DCOPF(show_progress=False)
-##        success = self.routine(case)
-#        self.routine.case = self.case
-#
-#
-#    def test_solver_output(self):
-#        """ Test the output from the solver with case30pwl input.
-#        """
-##        self.routine.solver = "glpk"
-##        self.routine.solver = "mosek"
-#        self.routine.solve(self.case)
-#
-##        print "\n", self.routine.x
-
 #------------------------------------------------------------------------------
 #  "PiecewiseLinearDCOPFTest" class:
 #------------------------------------------------------------------------------
@@ -75,11 +50,9 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = PickleReader().read(PWL_FILE)
+        case = self.case = Case.load(PWL_FILE)
 
-        self.routine = DCOPF(show_progress=False)
-#        success = self.routine(case)
-        self.routine.case = self.case
+        self.routine = DCOPF(case, show_progress=False)
 
 
     def test_cost_model(self):
@@ -291,7 +264,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
     def test_power_balance_constraint(self):
         """ Test piecewise linear power balance (mismatch) constraint.
         """
-        self.routine.B, self.routine.Bsrc = self.case.Bdc
+        self.routine.B, self.routine.Bf, _, _ = self.case.Bdc
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -395,7 +368,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         """
 #        self.routine.solver = "glpk"
 #        self.routine.solver = "mosek"
-        self.routine.solve(self.case)
+        self.routine.solve()
         x = self.routine.x
 
         places = 4
@@ -555,7 +528,7 @@ class DCOPFTest(unittest.TestCase):
                -0.7000
                -0.7000
         """
-        self.routine.B, self.routine.Bsrc, _, _ = self.case.Bdc
+        self.routine.B, self.routine.Bf, _, _ = self.case.Bdc
 
         self.routine._solver_type = self.routine._get_solver_type()
 
@@ -709,7 +682,7 @@ class DCOPFTest(unittest.TestCase):
                 0.2000
                 0.4000
         """
-        self.routine.B, self.routine.Bsrc, _, _ = self.case.Bdc
+        self.routine.B, self.routine.Bf, _, _ = self.case.Bdc
 
         self.routine._solver_type = self.routine._get_solver_type()
 
