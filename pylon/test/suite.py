@@ -24,7 +24,8 @@
 
 import unittest
 
-from pylon.test.case_test import CaseTest, BusTest, BranchTest, GeneratorTest
+from pylon.test.case_test import CaseTest, BusTest, BranchTest
+from pylon.test.generator_test import GeneratorTest, OfferBidToPWLTest
 
 from dcpf_test import DCPFTest
 from acpf_test import NewtonPFTest#, FastDecoupledTest
@@ -47,7 +48,9 @@ def suite():
     suite.addTest(unittest.makeSuite(CaseTest))
     suite.addTest(unittest.makeSuite(BusTest))
     suite.addTest(unittest.makeSuite(BranchTest))
+
     suite.addTest(unittest.makeSuite(GeneratorTest))
+    suite.addTest(unittest.makeSuite(OfferBidToPWLTest))
 
     # Solver test cases.
 #    suite.addTest(unittest.makeSuite(DCPFTest))
