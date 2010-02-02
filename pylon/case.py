@@ -279,7 +279,12 @@ class Case(Named, Serializable):
     def s_supply(self, bus):
         """ Returns the total complex power generation capacity.
         """
-        return sum([complex(g.p, g.q) for g in self.generators if g.bus ==bus])
+        s = [complex(g.p, g.q) for g in self.generators if g.bus == bus]
+
+        if len(s):
+            return sum(s)
+        else:
+            return 0 + 0j
 
 
     def s_surplus(self, bus):
