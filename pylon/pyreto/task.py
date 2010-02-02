@@ -176,9 +176,9 @@ class ContinuousTask(BaseProfitTask):
 
         limits = []
         limits.append((0.0, BIGNUM)) # f
-        limits.append((0.0, g.rated_pmax)) # quantity
+        limits.append((0.0, self.env.p_max)) # quantity
         limits.append((0.0, BIGNUM)) # price
-        limits.append((0.0, g.total_cost(g.rated_pmax))) # variable
+        limits.append((0.0, g.total_cost(self.env.p_max))) # variable
 #        c_startup = 2.0 if g.c_startup == 0.0 else g.c_startup
 #        limits.append((0.0, c_startup)) # startup
 #        c_shutdown = 2.0 if g.c_shutdown == 0.0 else g.c_shutdown
@@ -192,7 +192,7 @@ class ContinuousTask(BaseProfitTask):
 #        limits.extend([(b.v_min, b.v_max) for b in case.buses]) # mu_vmin
 #        limits.extend([(b.v_min, b.v_max) for b in case.buses]) # mu_vmax
 
-        limits.extend([(0., b.rated_pmax) for b in case.generators]) #pg
+        limits.extend([(0., g.p_max) for g in case.generators]) #pg
         limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) #g_pmax
         limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) #g_pmin
 
