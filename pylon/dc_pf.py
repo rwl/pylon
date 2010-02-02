@@ -168,7 +168,7 @@ class DCPF(object):
 
         # Bus active power injections (generation - load) adjusted for phase
         # shifters and real shunts.
-        p_surplus = matrix([case.p_surplus(v) for v in buses])
+        p_surplus = matrix([case.s_surplus(v).real for v in buses])
         g_shunt = matrix([bus.g_shunt for bus in buses])
         p_bus = (p_surplus - self.p_businj - g_shunt) / case.base_mva
 

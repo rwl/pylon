@@ -28,7 +28,7 @@ from numpy import angle, pi
 
 from util import Named, Serializable, conj
 
-from cvxopt.base import matrix, spmatrix, spdiag, sparse, exp, mul, div
+from cvxopt.base import matrix, spmatrix, spdiag, exp, mul, div
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -180,15 +180,6 @@ class Branch(Named):
         # |S_to| mu.
         self.mu_s_to = 0.0
 
-    @property
-    def mode(self):
-        """ Branch mode may be 'line' or 'transformer'.
-        """
-        if self.from_bus.v_magnitude == self.to_bus.v_magnitude:
-            return LINE
-        else:
-            return TRANSFORMER
-
 
     @property
     def p_losses(self):
@@ -275,56 +266,54 @@ class Case(Named, Serializable):
 
 
     @property
-    def s_bus(self):
+    def Sbus(self):
         """ Net complex bus power injection vector in p.u.
         """
-        s = matrix([complex(self.p_surplus(v),
-                            self.q_surplus(v)) / self.base_mva
-                            for v in self.buses])
+        s = matrix([self.s_surplus(v) / self.base_mva for v in self.buses])
         return s
 
     #--------------------------------------------------------------------------
     #  Bus injections:
     #--------------------------------------------------------------------------
 
-    def p_supply(self, bus):
-        """ Returns the total active power generation capacity at the given
-            bus.
+#    def p_supply(self, bus):
+#        """ Returns the total active power generation capacity at the given
+#            bus.
+#        """
+#        return sum([g.p for g in self.generators if g.bus == bus])
+#
+#
+#    def q_supply(self, bus):
+#        """ Returns the total reactive power generation capacity at the given
+#            bus.
+#        """
+#        return sum([g.q for g in self.generators if g.bus == bus])
+#
+#
+#    def p_surplus(self, bus):
+#        """ Returns the difference between active power supply and demand at
+#            the given bus.
+#        """
+#        return self.p_supply(bus) - bus.p_demand
+#
+#
+#    def q_surplus(self, bus):
+#        """ Returns the difference between reactive power supply and demand at
+#            the given bus.
+#        """
+#        return self.q_supply(bus) - bus.q_demand
+
+
+    def s_supply(self, bus):
+        """ Returns the total complex power generation capacity.
         """
-        return sum([g.p for g in self.generators if g.bus == bus])
+        return sum([complex(g.p, g.q) for g in self.generators if g.bus ==bus])
 
 
-    def q_supply(self, bus):
-        """ Returns the total reactive power generation capacity at the given
-            bus.
+    def s_surplus(self, bus):
+        """ Return the difference between supply and demand.
         """
-        return sum([g.q for g in self.generators if g.bus == bus])
-
-
-    def p_demand(self, bus):
-        """ Returns the total active power load at the given bus.
-        """
-        return sum([b.p_demand for b in self.buses if b == bus])
-
-
-    def q_demand(self, bus):
-        """ Returns the total reactive power load at the given bus.
-        """
-        return sum([b.q_demand for b in self.buses if b == bus])
-
-
-    def p_surplus(self, bus):
-        """ Returns the difference between active power supply and demand at
-            the given bus.
-        """
-        return self.p_supply(bus) - self.p_demand(bus)
-
-
-    def q_surplus(self, bus):
-        """ Returns the difference between reactive power supply and demand at
-            the given bus.
-        """
-        return self.q_supply(bus) - self.q_demand(bus)
+        return self.s_supply(bus) - complex(bus.p_demand, bus.q_demand)
 
     #--------------------------------------------------------------------------
     #  Admittance matrix:

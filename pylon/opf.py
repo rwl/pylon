@@ -876,7 +876,7 @@ class PDIPMSolver(Solver):
                 g.q = Qgen[i] * base_mva # reactive generation in MVAr
 
             # Rebuild the net complex bus power injection vector in p.u.
-            Sbus = case.s_bus
+            Sbus = case.Sbus
 
             Vang = x[Va.i1:Va.iN + 1]
             Vmag = x[Vm.i1:Vm.iN + 1]
@@ -1204,8 +1204,7 @@ class CVXOPTSolver(Solver):
             # Evaluate nonlinear equality constraints -------------------------
 
             # Net complex bus power injection vector in p.u.
-            s = matrix([complex(case.p_surplus(v), case.q_surplus(v)) /base_mva
-                        for v in buses])
+            s = matrix([case.s_surplus(v) / base_mva for v in buses])
 
             # Bus voltage vector.
             v_angle = x[Va.i1:Va.iN + 1]

@@ -261,8 +261,7 @@ class ACOPF(object):
             # Evaluate nonlinear equality constraints -------------------------
 
             # Net complex bus power injection vector in p.u.
-            s = matrix([complex(case.p_surplus(v), case.q_surplus(v)) /base_mva
-                        for v in buses])
+            s = matrix([case.s_surplus(v) /base_mva for v in buses])
 
             # Bus voltage vector.
             v_angle = x[ph_base:ph_end + 1]

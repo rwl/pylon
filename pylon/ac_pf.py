@@ -160,8 +160,7 @@ class _ACPF(object):
         case = self.case
         buses = self.case.connected_buses
 
-        self.s_surplus = matrix([complex(case.p_surplus(b) / case.base_mva,
-                                         case.q_surplus(b) / case.base_mva)
+        self.s_surplus = matrix([case.s_surplus(b) / case.base_mva
                                  for b in buses], tc="z")
         return self.s_surplus
 
