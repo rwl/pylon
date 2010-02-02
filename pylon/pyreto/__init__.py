@@ -19,7 +19,7 @@ from smart_market import SmartMarket, Offer, Bid
 
 from experiment import MarketExperiment
 from environment import ParticipantEnvironment
-from task import StatelessTask, DiscreteTask, ContinuousTask
+from task import DiscreteTask, ContinuousTask
 from roth_erev import RothErev, PropensityTable
 
 # EOF -------------------------------------------------------------------------

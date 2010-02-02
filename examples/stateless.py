@@ -11,7 +11,7 @@ import scipy
 from pylon import Case, Bus, Generator
 
 from pylon.pyreto import MarketExperiment, ParticipantEnvironment, \
-    SmartMarket, StatelessTask, RothErev, PropensityTable
+    SmartMarket, DiscreteTask, RothErev, PropensityTable
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.tools.plotting import MultilinePlotter
@@ -34,7 +34,7 @@ mkt = SmartMarket(case)
 # Create an agent and place the generator in its environment.
 num_actions = 10
 env = ParticipantEnvironment(g, mkt)
-task = StatelessTask(env, num_actions)
+task = DiscreteTask(env, num_actions)
 module = PropensityTable(num_actions)
 module.initialize(1.0)
 learner = RothErev()

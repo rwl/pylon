@@ -32,7 +32,7 @@ from pylon import Case, Bus, Generator
 from pylon.readwrite import PickleReader
 
 from pylon.pyreto import \
-    MarketExperiment, ParticipantEnvironment, SmartMarket, StatelessTask, \
+    MarketExperiment, ParticipantEnvironment, SmartMarket, \
     DiscreteTask, ContinuousTask, RothErev, PropensityTable
 
 from pylon.pyreto.renderer import ParticipantRenderer, ExperimentRenderer
@@ -93,7 +93,7 @@ class MarketExperimentTest(unittest.TestCase):
 #        exp = MarketExperiment([], [], mkt)
 #        for g in self.case.generators:
 #            env = ParticipantEnvironment(g, mkt)
-#            exp.tasks.append(StatelessTask(env))
+#            exp.tasks.append(Discretetask(env))
 #            table = ActionValueTable(1, 4)
 ##            table = PropensityTable(4, actionDomain)
 #            table.initialize(1.0)
