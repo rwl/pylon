@@ -22,8 +22,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from os.path import join, dirname
 import unittest
+from os.path import join, dirname
 
 from pylon import Case, DCOPF
 
@@ -131,24 +131,6 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
 
     def test_cost_constraints(self):
         """ Test the piecewise linear DC OPF cost constaints.
-           1200           0           0           0           0           0          -1           0           0           0           0           0
-           3600           0           0           0           0           0          -1           0           0           0           0           0
-           7600           0           0           0           0           0          -1           0           0           0           0           0
-              0        2000           0           0           0           0           0          -1           0           0           0           0
-              0        4400           0           0           0           0           0          -1           0           0           0           0
-              0        8400           0           0           0           0           0          -1           0           0           0           0
-              0           0        2000           0           0           0           0           0          -1           0           0           0
-              0           0        4400           0           0           0           0           0          -1           0           0           0
-              0           0        8400           0           0           0           0           0          -1           0           0           0
-              0           0           0        1200           0           0           0           0           0          -1           0           0
-              0           0           0        3600           0           0           0           0           0          -1           0           0
-              0           0           0        7600           0           0           0           0           0          -1           0           0
-              0           0           0           0        2000           0           0           0           0           0          -1           0
-              0           0           0           0        4400           0           0           0           0           0          -1           0
-              0           0           0           0        8400           0           0           0           0           0          -1           0
-              0           0           0           0           0        1200           0           0           0           0           0          -1
-              0           0           0           0           0        3600           0           0           0           0           0          -1
-              0           0           0           0           0        7600           0           0           0           0           0          -1
 
             Acc =
 
@@ -222,10 +204,7 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         places = 1
 
         self.assertAlmostEqual(Acc[0, 30], 1200.0, places)
-        # FIXME: In MATPOWER generators are ordered according to how they
-        # appear in the data file. In PYLON they are ordered according to the
-        # order of the buses to which they are connected.
-#        self.assertAlmostEqual(Acc[8, 32], 8400.0, places)
+        self.assertAlmostEqual(Acc[8, 32], 8400.0, places)
         self.assertAlmostEqual(Acc[17, 35], 7600.0, places)
 
         self.assertAlmostEqual(Acc[0, 36], -1.0, places)
@@ -791,78 +770,99 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
         self.assertAlmostEqual(bflow[81], 0.3200, places)
 
 
-#    def test_objective_function(self):
-#        """ Test pwl objective function.
-#        """
-#        self.routine._solver_type = self.routine._get_solver_type()
-#
-#        H = self.routine._get_hessian()
-#        c = self.routine._get_c()
+    def test_objective_function(self):
+        """ Test pwl objective function.
+        """
+        _, _, g, nb, _, ng, base_mva = self.solver._unpack_case(self.case)
+        linear = self.solver._linear_formulation(g)
+
+        H, c = self.solver._objective_function(g, nb, ng, base_mva, linear)
+
+        self.assertEqual(H.size, (42, 42))
+        self.assertEqual(sum(H), 0.0)
+
+        self.assertEqual(c.size, (42, 1))
+        self.assertEqual(c[0], 0.0)
+        self.assertEqual(c[36], 1.0)
+        self.assertEqual(c[41], 1.0)
 
 
-#    def test_solver_output(self):
-#        """ Test the output from the solver.
-#
-#            x =
-#
-#            1.0e+03 *
-#
-#                0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#                0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0001
-#               -0.0001
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#                0.0000
-#               -0.0000
-#               -0.0000
-#               -0.0000
-#                0.0004
-#                0.0003
-#                0.0003
-#                0.0004
-#                0.0002
-#                0.0004
-#                1.0080
-#                1.0948
-#                1.0159
-#                1.0080
-#                0.5981
-#                1.0080
-#        """
-##        self.routine.solver = "glpk"
-##        self.routine.solver = "mosek"
-#        self.routine.solve()
-#        x = self.routine.x
-#
-#        places = 4
-#
-#        x_0 = 0.0000 # Va_ref
-#        x_30 = 0.0004
-#        x_37 = 1.0948 # Pg[1]
-#        x_41 = 1.0080
-#
-##        self.assertEqual(x.size, (42, 1))
+    def test_solver_output(self):
+        """ Test the output from the solver.
+
+            x =
+
+            1.0e+03 *
+
+                0.0000 # Va_ref
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+                0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0001
+               -0.0001
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+                0.0000
+               -0.0000
+               -0.0000
+               -0.0000
+                0.0004 # Pg[1]
+                0.0003
+                0.0003
+                0.0004
+                0.0002
+                0.0004
+                1.0080
+                1.0948
+                1.0159
+                1.0080
+                0.5981
+                1.0080
+        """
+#        self.solver.solver = "glpk"
+#        self.solver.solver = "mosek"
+        self.solver.solve()
+        x = self.solver._solution["x"]
+
+        # Total system cost ($/h).
+        self.assertAlmostEqual(self.solver._f, 5732.80, 2)
+
+        places = 1 # FIXME: Improve accuracy.
+        self.assertEqual(x.size, (42, 1))
+        self.assertAlmostEqual(x[0], 0.0000, places) # Va[0]
+        self.assertAlmostEqual(x[29], 0.0000, places)
+
+        self.assertAlmostEqual(x[30], 0.3600, places) # Pg[0]
+        self.assertAlmostEqual(x[31], 0.3143, places)
+        self.assertAlmostEqual(x[32], 0.2963, places)
+        self.assertAlmostEqual(x[33], 0.3600, places)
+        self.assertAlmostEqual(x[34], 0.2014, places)
+        self.assertAlmostEqual(x[35], 0.3600, places)
+
+        self.assertAlmostEqual(x[36], 1.0080e03, places) # y[0]
+#        self.assertAlmostEqual(x[37], 1.0948e03, places)
+#        self.assertAlmostEqual(x[38], 1.0159e03, places)
+        self.assertAlmostEqual(x[39], 1.0080e03, places)
+#        self.assertAlmostEqual(x[40], 0.5981e03, places)
+        self.assertAlmostEqual(x[41], 1.0080e03, places)
 
 #------------------------------------------------------------------------------
 #  "DCOPFTest" class:

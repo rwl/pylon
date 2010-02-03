@@ -89,11 +89,16 @@ class DCOPF(object):
         # Tolerance for feasibility conditions.
         self.feasibility_tol = feasibility_tol
 
+        # Solution dict from CVXOPT.
+        self._solution = {}
+
+        # Objective function value (total system cost $/h).
+        self._f = 0.0
+
 
     def solve(self):
         """ Solves a DC OPF.
         """
-        t0 = time()
         logger.info("Solving DC OPF [%s]." % self.case.name)
 
         # Set the parameters of the CVXOPT algorithm.
@@ -104,6 +109,9 @@ class DCOPF(object):
 
         # Zero result attributes.
         self.case.reset()
+
+        # Start the clock.
+        t0 = time()
 
         # Build the B matrices and phase shift injection vectors.
         B, Bf, Pbusinj, Pfinj = self.case.Bdc
@@ -463,10 +471,12 @@ class DCOPF(object):
             A, b = Aeq, b_eq,
             primalstart = {"x": x0}
 
-            try:
-                solution = lp(c, G, h, A, b, self.solver)#, primalstart)
-            except ValueError:
-                solution = {"status": "error"}
+            solution = lp(c, G, h, A, b, self.solver)#, primalstart)
+
+#            try:
+#                solution = lp(c, G, h, A, b, self.solver)#, primalstart)
+#            except ValueError:
+#                solution = {"status": "error"}
 
             logger.debug("Linear solver returned: %s" % solution)
 
@@ -523,6 +533,8 @@ class DCOPF(object):
         """ Sets bus voltages angles, generator output powers and branch
             power flows using the solution.
         """
+        self._solution = solution
+
         if solution["status"] == "optimal":
             logger.info("DC OPF completed in %.3fs." % t_elapsed)
         elif solution["status"] == "unknown":
@@ -583,7 +595,7 @@ class DCOPF(object):
             generator.mu_pmax = ineqlin[k + ng] / base_mva
 
         # Compute the objective function value.
-#        self.f = sum([g.total_cost(g.p) for g in generators])
+        self._f = sum([g.total_cost(g.p) for g in generators])
 
         return True
 
