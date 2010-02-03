@@ -22,7 +22,8 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pylon import CaseReport
+from pylon.util import CaseReport
+from pylon.generator import POLYNOMIAL
 from pylon.readwrite.common import CaseWriter
 
 #------------------------------------------------------------------------------
@@ -293,10 +294,11 @@ class ReSTWriter(CaseWriter):
 #            file.write("..".ljust(col_width) + " ")
             file.write("%8.2f" % each.p_max + " ")
             file.write("%8.2f" % each.p_min + " ")
-            n2, n1, n = each.p_cost
-            file.write("%4.2f" % n2 + " ")
-            file.write("%4.1f" % n1 + " ")
-            file.write("%4.0f" % n + " ")
+            if each.pcost_model == POLYNOMIAL:
+                n2, n1, n = each.p_cost
+                file.write("%4.2f" % n2 + " ")
+                file.write("%4.1f" % n1 + " ")
+                file.write("%4.0f" % n + " ")
             file.write("\n")
 
         # Totals.
