@@ -319,10 +319,6 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         if not converged:
             logger.info("Did not converge in %d iterations." % i)
 
-    info = converged
-    output = {"iterations": i, "feascond": feascond, "gradcond": gradcond,
-              "compcond": compcond, "costcond": costcond}
-
     # zero out multipliers on non-binding constraints
     k = [j for j in range(len(mu))
          if g[j] < -opt["feastol"] and mu[j] < mu_threshold]
@@ -355,7 +351,11 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         'mu_l': mu_l[nx:], 'mu_u': mu_u[nx:],
         'lower': mu_l[:nx], 'upper': mu_u[:nx]}
 
-    return x, f, info, output, lmbda
+    solution =  {"x": x, "f": f, "converged": converged, "lmbda": lmbda,
+                 "iterations": i, "feascond": feascond, "gradcond": gradcond,
+                 "compcond": compcond, "costcond": costcond}
+
+    return solution
 
 #------------------------------------------------------------------------------
 #  "pdipm_qp" function:
@@ -409,19 +409,8 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
     l = matrix(-Inf, b.size)
     l[:N] = b[:N]
 
-    # run it
-    xout, _, info, _, lmbda = \
-      pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b, opt)
+    solution = pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b, opt)
 
-    success = (info > 0)
-    if success:
-        howout = 'success'
-    else:
-        howout = 'failure'
-
-    lmbdaout = matrix([-lmbda["mu_l"] + lmbda["mu_u"], lmbda["lower"],
-                       lmbda["upper"]])
-
-    return xout, lmbdaout, howout, success
+    return solution
 
 # EOF -------------------------------------------------------------------------

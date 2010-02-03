@@ -37,12 +37,7 @@ from cvxopt.solvers import qp, lp
 
 from pylon import PW_LINEAR, POLYNOMIAL, REFERENCE
 
-#------------------------------------------------------------------------------
-#  Constants:
-#------------------------------------------------------------------------------
-
-QUADRATIC = "quadratic"
-LINEAR = "linear"
+from pylon.pdipm import pdipm_qp
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -66,13 +61,16 @@ class DCOPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, case, solver=None, show_progress=True,
+    def __init__(self, case, cvxopt=True, solver=None, show_progress=True,
             max_iterations=100, absolute_tol=1e-7, relative_tol=1e-6,
             feasibility_tol=1e-7):
         """ Initialises the new DCOPF instance.
         """
         # Case to be optimised.
         self.case = case
+
+        # Use a solver from CVXOPT.
+        self.cvxopt = cvxopt
 
         # Choice of solver (May be None or "mosek" (or "glpk" for linear
         # formulation)). Specify None to use the Python solver from CVXOPT.
@@ -446,84 +444,34 @@ class DCOPF(object):
         return H, c
 
 
-    def _solve_program(self, H, c, Aieq, b_ieq, Aeq, b_eq, x0, linear):
+    def _solve_program(self, H, c, Aieq, bieq, Aeq, beq, x0, linear):
         """ Solves the formulated program.
         """
-        # CVXOPT documentation.
-        #
-        #Solves the pair of primal and dual linear programs
-        #    minimize    c'x
-        #    subject to  Gx + s = h
-        #                Ax = b
-        #                s >= 0
-        #
-        #    maximize    -h'*z - b'*y
-        #    subject to  G'*z + A'*y + c = 0
-        #                z >= 0.
-        #
-        #Input arguments.
-        #    G is m x n, h is m x 1, A is p x n, b is p x 1.  G and A must be
-        #    dense or sparse 'd' matrices.   h and b are dense 'd' matrices
-        #    with one column.  The default values for A and b are empty
-        #    matrices with zero rows.
-        if linear:
-            G, h = Aieq, b_ieq,
-            A, b = Aeq, b_eq,
-            primalstart = {"x": x0}
+        if self.cvxopt and linear:
+#            primalstart = {"x": x0, "s": None
+            solution = lp(c, Aieq, bieq, Aeq, beq, self.solver)
 
-            solution = lp(c, G, h, A, b, self.solver)#, primalstart)
-
-#            try:
-#                solution = lp(c, G, h, A, b, self.solver)#, primalstart)
-#            except ValueError:
-#                solution = {"status": "error"}
-
-            logger.debug("Linear solver returned: %s" % solution)
-
-
-        #Solves a quadratic program
-        #    minimize    (1/2)*x'*P*x + q'*x
-        #    subject to  G*x <= h
-        #                A*x = b.
-        #
-        #initvals is a dictionary with optional primal and dual starting
-        #points initvals['x'], initvals['s'], initvals['y'], initvals['z'].
-        #- initvals['x'] is a dense 'd' matrix of size (n,1).
-        #- initvals['s'] is a dense 'd' matrix of size (K,1), representing
-        #  a vector that is strictly positive with respect to the cone C.
-        #- initvals['y'] is a dense 'd' matrix of size (p,1).
-        #- initvals['z'] is a dense 'd' matrix of size (K,1), representing
-        #  a vector that is strictly positive with respect to the cone C.
-        else:
-            P, q = H, c
-            G, h = Aieq, b_ieq,
-            A, b = Aeq, b_eq,
+            print "SOL:", solution
+        elif self.cvxopt and not linear:
             initvals = {"x": x0}
+            solution = qp(H, c, Aieq, bieq, Aeq, beq, self.solver, initvals)
+        elif not self.cvxopt:
+            HH = None if linear else H
+            # Combine equality and inequality constraints.
+            AA = sparse([Aeq, Aieq])
+            bb = matrix([beq, bieq])
+            N = Aeq.size[0]
 
-            solution = qp(P, q, G, h, A, b, self.solver, initvals)
+            LB, UB = None
 
-            logger.debug("Quadratic solver returned: %s" % solution)
+            ret = pdipm_qp(HH, c, AA, bb, LB, UB, x0, N)
 
-        #Returns a dictionary with keys 'status', 'x', 's', 'y', 'z'.
-        #
-        #The default solver returns with status 'optimal' or 'unknown'.
-        #The MOSEK solver can also return with status 'primal infeasible'
-        #or 'dual infeasible'.
-        #
-        #If status is 'optimal', x, s, y, z are the primal and dual
-        #optimal solutions.
-        #
-        #If status is 'primal infeasible', x = s = None and z, y are
-        #a proof of primal infeasibility:
-        #
-        #    G'*z + A'*y = 0,  h'*z + b'*y = -1,  z >= 0.
-        #
-        #If status is 'dual infeasible', z = y = None, and x, s are
-        #a proof of dual infeasibility:
-        #
-        #    P*x = 0,  q'*x = -1,  G*x + s = 0,  A*x = 0,  s >=0
-        #
-        #If status is 'unknown', x, y, s, z are None.
+            status = "optimal" if ret["converged"] else "error"
+
+            lmbdaout = matrix([-ret["lmbda"]["mu_l"] + ret["lmbda"]["mu_u"],
+                                ret["lmbda"]["lower"], ret["lmbda"]["upper"]])
+
+            solution = {"status": status, "x": ret["x"], "y": lmbdaout}
 
         return solution
 
