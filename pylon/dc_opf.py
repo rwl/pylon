@@ -93,48 +93,45 @@ class DCOPF(object):
     def solve(self):
         """ Solves a DC OPF.
         """
-        base_mva = self.case.base_mva
-        b = self.case.connected_buses
-        l = self.case.online_branches
-        g = self.case.online_generators
-        nb = len(b)
-        nl = len(l)
-        ng = len(g)
+        t0 = time()
+        logger.info("Solving DC OPF [%s]." % self.case.name)
+
+        # Set the parameters of the CVXOPT algorithm.
+        self._algorithm_parameters()
+
+        # Retrieve the contents of the case.
+        b, l, g, nb, nl, ng, base_mva = self._unpack_case(self.case)
 
         # Zero result attributes.
         self.case.reset()
 
-        t0 = time()
-        logger.info("Solving DC OPF [%s]." % self.case.name)
-
-        self._algorithm_parameters()
-
+        # Build the B matrices and phase shift injection vectors.
         B, Bf, Pbusinj, Pfinj = self.case.Bdc
 
-        # Use the same cost model for all generators.
-        fm = self._solver_type(g)
+        # Determine if a linear formulation of the problem may be used.
+        lin = self._linear_formulation(g)
 
-        # Get the vector x where, AA * x <= bb.
-        x0 = self._initial_x(b, g, base_mva, fm)
+        # Get the initial x vector where AA * x <= bb.
+        x0 = self._initial_x(b, g, base_mva, lin)
 
         # Problem constraints.
-        Ay, by = self._gen_cost(g, nb, ng, base_mva, fm)
-        Aref, bref = self._reference_angle(b, g, nb, ng, fm)
-        Amis, bmis = self._power_balance(B, Pbusinj, b, g, nb, ng, base_mva,fm)
-        Agen, bgen = self._generation_limit(g, nb, ng, base_mva, fm)
-        Aflow, bflow = self._branch_flow(Bf, Pfinj, g, ng, l, nl, base_mva, fm)
+        Acc, bcc = self._generator_cost(g, nb, ng, base_mva, lin)
+        Aref, bref = self._reference_angle(b, g, nb, ng, lin)
+        Amis, bmis = self._power_balance(B, Pbusinj, b, g, nb, ng,base_mva,lin)
+        Agen, bgen = self._generation_limit(g, nb, ng, base_mva, lin)
+        Aflow, bflow = self._branch_flow(Bf, Pfinj, g, ng, l, nl, base_mva,lin)
 
         # Combine the equality and inequality constraints.
         Aeq = sparse([Aref, Amis])
         beq = matrix([bref, bmis])
-        Aieq = sparse([Agen, Ay, Aflow])
-        bieq = matrix([bgen, by, bflow])
+        Aieq = sparse([Agen, Acc, Aflow])
+        bieq = matrix([bgen, bcc, bflow])
 
         # The objective function has the form 0.5 * x'*H*x + c'*x.
-        H, c = self._objective_function(g, nb, ng, base_mva, fm)
+        H, c = self._objective_function(g, nb, ng, base_mva, lin)
 
         # Solve the problem.
-        solution = self._solve_program(H, c, Aieq, bieq, Aeq, beq, x0, fm)
+        solution = self._solve_program(H, c, Aieq, bieq, Aeq, beq, x0, lin)
 
         # Compute elapsed time.
         t_elapsed = time() - t0
@@ -153,10 +150,22 @@ class DCOPF(object):
         solvers.options["feastol"] = self.feasibility_tol
 
 
-    def _solver_type(self, generators):
-        """ Checks the generator cost models. If they are not all polynomial
-            then those that are get converted to piecewise linear models. The
-            algorithm attribute is then set accordingly.
+    def _unpack_case(self, case):
+        """ Returns the contents of the case to be used in the OPF.
+        """
+        base_mva = self.case.base_mva
+        b = self.case.connected_buses
+        l = self.case.online_branches
+        g = self.case.online_generators
+        nb = len(b)
+        nl = len(l)
+        ng = len(g)
+
+        return b, l, g, nb, nl, ng, base_mva
+
+
+    def _linear_formulation(self, generators):
+        """ Returns true if a linear formulation of the problem may be used.
         """
         models = [g.pcost_model for g in generators]
 
@@ -165,18 +174,18 @@ class DCOPF(object):
                 "be converted to piece-wise linear.")
             for g in generators:
                 g.poly_to_pwl()
-            solver_type = LINEAR
+            linear = True
         elif POLYNOMIAL not in models:
-            solver_type = LINEAR
+            linear = True
         elif PW_LINEAR not in models:
-            solver_type = QUADRATIC
+            linear = False
         else:
             logger.error("Invalid cost models specified.")
 
-        return solver_type
+        return linear
 
 
-    def _initial_x(self, buses, generators, base_mva, solver_type):
+    def _initial_x(self, buses, generators, base_mva, linear):
         """ Returns the vector x where, AA * x <= bb.  Stack the initial
             voltage phases for each generator bus, the generator real power
             output and if using pw linear costs, the output cost.
@@ -188,7 +197,7 @@ class DCOPF(object):
         x = matrix([v_angle, p_supply])
 
         p_cost = matrix(0.0, (len(generators), 1))
-        if solver_type == LINEAR:
+        if linear:
             for i, g in enumerate(generators):
                 p_cost[i] = g.total_cost()
             x = matrix([x, p_cost])
@@ -197,59 +206,53 @@ class DCOPF(object):
         return x
 
 
-    def _gen_cost(self, generators, nb, ng, base_mva, formulation):
+    def _generator_cost(self, generators, nb, ng, base_mva, linear):
         """ Set up constraint matrix AA where, AA * x <= bb
 
             For pw linear cost models include a constraint for each
             segment of the function. For polynomial (quadratic) models
             just add an appropriately sized empty matrix.
         """
-        if formulation == LINEAR: # pw cost constraints
+        if linear: # pw cost constraints
             # A list of the number of cost constraints for each generator
-            n_segments = [len(g.p_cost) - 1 for g in generators]
+            n_seg = [len(g.p_cost) - 1 for g in generators]
             # The total number of cost constraints (for matrix sizing)
-            n_cc = sum(n_segments)
+            n_cc = sum(n_seg)
             # The total number of cost variables.
             n_cost = len(generators)
 
-            a_cost_size = (n_cc, nb + ng + n_cost)
-            a_cost = spmatrix([], [], [], size=a_cost_size, tc='d')
+            Asize = (n_cc, nb + ng + n_cost)
+            Acc = spmatrix([], [], [], size=Asize, tc='d')
 
-            b_cost = matrix(0.0, size=(n_cc, 1))
+            bcc = matrix(0.0, size=(n_cc, 1))
 
             i_segment = 0 # Counter of total segments processed.
-
             for i, g in enumerate(generators):
-                for j in range(n_segments[i]):
+                for j in range(n_seg[i]):
                     x1, y1 = g.p_cost[j]
                     x2, y2 = g.p_cost[j + 1]
 
                     m = (y2 - y1) / (x2 - x1) # segment gradient
                     c = y1 - m * x1 # segment y-intercept
 
-                    a_cost[i_segment + j, nb + i] = m * base_mva
-                    a_cost[i_segment + j, nb + ng + i] = -1.0
-                    b_cost[i_segment + j] = -c
+                    Acc[i_segment + j, nb + i] = m * base_mva
+                    Acc[i_segment + j, nb + ng + i] = -1.0
+                    bcc[i_segment + j] = -c
 
-                i_segment += n_segments[i]
+                i_segment += n_seg[i]
 
-#            a_cost[:, n_buses + n_generators:] = -1.0
-        elif formulation == QUADRATIC:
-            # The total number of cost variables
-#            n_cost = len([g.total_cost() for g in generators])
-
-            a_cost = spmatrix([], [], [], size=(0, nb + ng))
-            b_cost = matrix([], size=(0, 1))
+#            Acc[:, n_buses + n_generators:] = -1.0
         else:
-            raise ValueError
+            Acc = spmatrix([], [], [], size=(0, nb + ng))
+            bcc = matrix([], size=(0, 1))
 
-        logger.debug("Cost constraint matrix:\n%s" % a_cost)
-        logger.debug("Cost constraint vector:\n%s" % b_cost)
+        logger.debug("Cost constraint matrix:\n%s" % Acc)
+        logger.debug("Cost constraint vector:\n%s" % bcc)
 
-        return a_cost, b_cost
+        return Acc, bcc
 
 
-    def _reference_angle(self, buses, generators, nb, ng, formulation):
+    def _reference_angle(self, buses, generators, nb, ng, linear):
         """ Use the slack bus angle for reference or buses[0].
         """
         # Indices of slack buses
@@ -261,7 +264,7 @@ class DCOPF(object):
             return None
 
         # Append zeros for piecewise linear cost constraints
-        if formulation == LINEAR:
+        if linear:
             n_cost = ng#len([g.total_cost() for g in generators])
         else:
             n_cost = 0
@@ -281,133 +284,113 @@ class DCOPF(object):
     #--------------------------------------------------------------------------
 
     def _power_balance(self, B, Pbusinj, buses, generators, nb, ng,
-                                  base_mva, formulation):
+                       base_mva, linear):
         """ P mismatch (B*Va + Pg = Pd).
         """
         # Bus-(online)generator incidence matrix.
-        i_bus_generator = spmatrix([],[],[], size=(nb, ng))
+        i_busgen = spmatrix([],[],[], size=(nb, ng))
 
         j = 0
-        for g in self.case.generators:
-            if g.online:
-                i_bus_generator[self.case.buses.index(g.bus), j] = 1.0
-                j += 1
-
-        logger.debug("Bus generator incidence matrix:\n%s" %
-            i_bus_generator)
+        for g in generators:
+            i_busgen[buses.index(g.bus), j] = 1.0
+            j += 1
 
         # Include zero matrix for pw linear cost constraints.
-        if formulation == LINEAR:
-            # Number of cost variables (n_generators or zero).
-            n_cost = len([g.total_cost() for g in generators])
-        else:
-            n_cost = 0
+        nc = ng if linear else 0
 
-        cost_mismatch = spmatrix([], [], [], size=(nb, n_cost))
+        c_mis = spmatrix([], [], [], size=(nb, nc))
 
         # sparse() does vstack, to hstack we transpose.
-        a_mismatch = sparse([B.T, -i_bus_generator.T, cost_mismatch.T]).T
+        Amis = sparse([B.T, -i_busgen.T, c_mis.T]).T
 
-        logger.debug("Power balance matrix:\n%s" %
-            a_mismatch)
+        logger.debug("Power balance matrix:\n%s" % Amis)
 
-        p_demand = matrix([v.p_demand for v in buses])
-        g_shunt = matrix([v.g_shunt for v in buses])
+        Pd = matrix([v.p_demand for v in buses])
+        Gs = matrix([v.g_shunt for v in buses])
 
-        b_mismatch = -((p_demand + g_shunt) / base_mva) - Pbusinj
+        bmis = -((Pd + Gs) / base_mva) - Pbusinj
 
-        logger.debug("Power balance vector:\n%s" %
-            b_mismatch)
+        logger.debug("Power balance vector:\n%s" % bmis)
 
-        return a_mismatch, b_mismatch
+        return Amis, bmis
 
     #--------------------------------------------------------------------------
     #  Active power generation limit constraints:
     #--------------------------------------------------------------------------
 
-    def _generation_limit(self, generators, nb, ng, base_mva, formulation):
-        """ Returns the lower and upper limits on generator output. Note that
-            bid values are used and represent the volume each generator is
-            willing to produce and not the rated capacity of the machine.
+    def _generation_limit(self, generators, nb, ng, base_mva, linear):
+        """ Returns the lower and upper limits on generator output.
         """
-        # An all zero sparse matrix to exclude voltage angles from the
-        # constraint.
-        limit_zeros = spmatrix([], [], [], size=(ng, nb))
+        # All zero sparse matrix to exclude voltage angles.
+        Av = spmatrix([], [], [], size=(ng, nb))
 
-        # An identity matrix
-        limit_eye = spdiag([1.0] * ng)
+        Igen = spdiag(matrix(1.0, (ng, 1)))
 
-        if formulation == LINEAR:
-            # Number of cost variables (n_generators or zero).
-            n_cost = ng#len([g.total_cost() for g in generators])
-        else:
-            n_cost = 0
+        # Number of cost variables (n_generators or zero).
+        nc = ng if linear else 0
 
-        a_limit_cost = spmatrix([], [], [], (ng, n_cost))
+        Acost = spmatrix([], [], [], (ng, nc))
 
         # The identity matrix made negative to turn the inequality
-        # contraint into >=. sparse() does vstack. To hstack we transpose.
-        a_lower = sparse([limit_zeros.T, -limit_eye.T, a_limit_cost.T]).T
-        a_upper = sparse([limit_zeros.T, limit_eye.T, a_limit_cost.T]).T
+        # contraint into >=.
+        Al = sparse([[Av], [-Igen], [Acost]])
+        Au = sparse([[Av], [ Igen], [Acost]])
 
-        a_limit = sparse([a_lower, a_upper])
+        Agen = sparse([Al, Au])
 
-        logger.debug("Generator limit matrix:\n%s" % a_limit)
+        logger.debug("Generator limit matrix:\n%s" % Agen)
 
 
-        b_lower = matrix([-g.p_min / base_mva for g in generators])
-        b_upper = matrix([g.p_max / base_mva for g in generators])
+        bl = matrix([-g.p_min / base_mva for g in generators])
+        bu = matrix([ g.p_max / base_mva for g in generators])
 
-        b_limit = matrix([b_lower, b_upper])
+        bgen = matrix([bl, bu])
 
-        logger.debug("Generator limit vector:\n%s" % b_limit)
+        logger.debug("Generator limit vector:\n%s" % bgen)
 
-        return a_limit, b_limit
+        return Agen, bgen
 
     #--------------------------------------------------------------------------
     #  Active power flow limits:
     #--------------------------------------------------------------------------
 
-    def _branch_flow(self, Bf, Pfinj, generators, ng, branches, nl, base_mva,
-                     formulation):
+    def _branch_flow(self, Bf, Pfinj, generators, ng, branches, nl,
+                     base_mva, linear):
         """ The real power flows at the from end the lines are related to the
             bus voltage angles by Pf = Bf * Va + Pfinj.
         """
-        if formulation == LINEAR:
-            # Number of cost variables (n_gen or zero).
-            n_cost = len([g.total_cost() for g in generators])
-        else:
-            n_cost = 0
+        # Number of cost variables (n_generators or zero).
+        nc = ng if linear else 0
 
         # Exclude generation and cost variables from the constraint.
-        A_gen = spmatrix([], [], [], (nl, ng + n_cost))
+        Agen = spmatrix([], [], [], (nl, ng + nc))
 
         # Branch 'from' end flow limit.
-        A_from = sparse([Bf.T, A_gen.T]).T
+        Af = sparse([[Bf], [Agen]])
         # Branch 'to' flow limit.
-        A_to = sparse([-Bf.T, A_gen.T]).T
+        At = sparse([[-Bf], [Agen]])
 
-        A_flow = sparse([A_from, A_to])
+        Aflow = sparse([Af, At])
 
-        logger.debug("Flow limit matrix:\n%s" % A_flow)
+        logger.debug("Flow limit matrix:\n%s" % Aflow)
 
 
         rate_a = matrix([e.rate_a for e in branches])
         # From and to limits are both the same.
-        b_from = rate_a / base_mva - Pfinj
-        b_to = rate_a / base_mva + Pfinj
+        bf = rate_a / base_mva - Pfinj
+        bt = rate_a / base_mva + Pfinj
 
-        b_flow = matrix([b_from, b_to])
+        bflow = matrix([bf, bt])
 
-        logger.debug("Flow limit vector:\n%s" % b_flow)
+        logger.debug("Flow limit vector:\n%s" % bflow)
 
-        return A_flow, b_flow
+        return Aflow, bflow
 
     #--------------------------------------------------------------------------
     #  Objective function:
     #--------------------------------------------------------------------------
 
-    def _objective_function(self, generators, nb, ng, base_mva, formulation):
+    def _objective_function(self, generators, nb, ng, base_mva, linear):
         """ H is a sparse square matrix.
 
             The objective function has the form 0.5 * x'*H*x + c'*x
@@ -415,11 +398,11 @@ class DCOPF(object):
             Quadratic cost function coefficients: c0*x^2 + c1*x + c2
         """
         nc = ng
-        if formulation == LINEAR:
+        if linear:
             dim = nb + ng + nc
             H = spmatrix([], [], [], (dim, dim))
 
-        elif formulation == QUADRATIC:
+        else:
             coeffs = [g.p_cost for g in generators]
 
             # Quadratic cost coefficients in p.u.
@@ -434,12 +417,10 @@ class DCOPF(object):
             H = spmatrix(2 * c2_coeffs, matrix(range(ng)) + nb,
                                         matrix(range(ng)) + nb,
                                         size=(nb + ng, nb + ng))
-        else:
-            raise ValueError
 
         logger.debug("Hessian matrix:\n%s" % H)
 
-        if formulation == LINEAR:
+        if linear:
             c = matrix([matrix(0.0, (nb + ng, 1)),
                         matrix(1.0, (nc, 1))])
         else:
@@ -457,7 +438,7 @@ class DCOPF(object):
         return H, c
 
 
-    def _solve_program(self, H, c, Aieq, b_ieq, Aeq, b_eq, x0, formulation):
+    def _solve_program(self, H, c, Aieq, b_ieq, Aeq, b_eq, x0, linear):
         """ Solves the formulated program.
         """
         # CVXOPT documentation.
@@ -477,7 +458,7 @@ class DCOPF(object):
         #    dense or sparse 'd' matrices.   h and b are dense 'd' matrices
         #    with one column.  The default values for A and b are empty
         #    matrices with zero rows.
-        if formulation == LINEAR:
+        if linear:
             G, h = Aieq, b_ieq,
             A, b = Aeq, b_eq,
             primalstart = {"x": x0}
