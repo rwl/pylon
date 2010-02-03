@@ -25,7 +25,7 @@
 import time
 import logging
 
-from pylon import UDOPF, DCOPF #@UnusedImport
+from pylon import UDOPF, DCOPF, OPF #@UnusedImport
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -109,7 +109,10 @@ class SmartMarket(object):
 #        self.settlement = {}
 
         # Solver, the results from which are used to clear the offers/bids.
-        self.routine = None
+#        self.solver = None
+
+        # Solver solution dictionary.
+        self._solution = {}
 
 
     def init(self):
@@ -146,9 +149,9 @@ class SmartMarket(object):
 
         self._setup_opf(generators, vloads, self.offers, self.bids)
 
-        self._run_opf(self.case)
+        success = self._run_opf(self.case)
 
-        self._run_auction(self.case, self.offers, self.bids)
+        self._run_auction(success, self.case, self.offers, self.bids)
 
 #        s = self._compute_costs(self.case, self.offers, self.bids)
 
@@ -329,22 +332,23 @@ class SmartMarket(object):
         """ Solves the optimisation problem.
         """
         if self.decommit:
-            routine = self.routine = UDOPF(case, dc=self.loc_adjust == "dc")
+            solver = UDOPF(case, dc=(self.loc_adjust == "dc"))
         elif self.loc_adjust == "dc":
-            routine = self.routine = DCOPF(case, show_progress=False)
+            solver = DCOPF(case, show_progress=False)
+#            solver = OPF(case, dc=True, show_progress=False)
         else:
-            raise NotImplementedError
+            solver = OPF(case, show_progress=False)
 
-        success = self.success = routine.solve()
+        solution = self._solution = solver.solve()
 
-        return success
+        return solution
 
 
-    def _run_auction(self, case, offers, bids):
+    def _run_auction(self, solution, case, offers, bids):
         """ Clears an auction to determine the quantity and price for each
             offer/bid.
         """
-        if self.success:
+        if solution["converged"]:
             # Guarantee that cleared offers are >= offers.
             guarantee_offer_price = True
             guarantee_bid_price = True
@@ -438,7 +442,7 @@ class SmartMarket(object):
 #                startup_cost = 0.0
 #                shutdown_cost = 0.0
 #
-#            d = Dispatch(g, t, self.routine.f, quantity, price, fixed_cost,
+#            d = Dispatch(g, t, self.solver.f, quantity, price, fixed_cost,
 #                         variable_cost, startup_cost, shutdown_cost)
 #
 #            settlement[g] = d

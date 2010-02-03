@@ -75,9 +75,9 @@ class UDOPF(object):
             feasibility_tol=1e-7):
         """ Initialises a new UDOPF instance.
         """
-        # Use DC OPF routine?
+        # Use DC OPF solver?
         self.dc = dc
-        self.routine = None
+        self.solver = None
 
         # Optimised case.
         self.case = case
@@ -104,9 +104,9 @@ class UDOPF(object):
 
     @property
     def f(self):
-        """ Objective function value. Delegates to the routine used.
+        """ Objective function value. Delegates to the solver used.
         """
-        return self.routine.f
+        return self.solver.f
 
 
     def solve(self):
@@ -167,17 +167,17 @@ class UDOPF(object):
         feastol = self.feasibility_tol
 
         if self.dc:
-            routine = self.routine = DCOPF(case, solver, progress, itermax,
+            solver = self.solver = DCOPF(case, solver, progress, itermax,
                                            abstol, reltol, feastol)
         else:
-            routine = self.routine = ACOPF(case, solver, progress, itermax,
+            solver = self.solver = ACOPF(case, solver, progress, itermax,
                                            abstol, reltol, feastol)
 
         # Initial solve fo the OPF problem.
-        success = routine.solve()
+        solution = solver.solve()
 
-        if not success:
-            logger.error("Non-convergent OPF [%s]." % routine)
+        if not (solution["optimal"] or solution["unknown"]):
+            logger.error("Non-convergent OPF [%s]." % solver)
             return False
 
         # 3. Go to the next stage, N = N + 1. Using the best solution from the
@@ -186,7 +186,7 @@ class UDOPF(object):
         # Best case so far. A list of the on-line status of all generators.
         overall_online = [g.online for g in case.generators]
         # The objective function value is the total system cost.
-        overall_cost   = routine.f
+        overall_cost   = solver.f
 
         # Best case for this stage.
         stage_online = overall_online
@@ -229,14 +229,14 @@ class UDOPF(object):
                     candidate.name)
 
                 # Run OPF.
-                success = routine(case)
+                solution = solver(case)
 
                 # Compare total system costs for improvement.
-                if success and (routine.f < overall_cost):
+                if solution["status"]=="optimal" and (solver.f < overall_cost):
                     # 6. Replace the current best solution with this one if it
                     # has a lower cost.
                     overall_online = [g.online for g in case.generators]
-                    overall_cost   = routine.f
+                    overall_cost   = solver.f
                     # Check for further decommitment.
                     done = False
 
@@ -259,7 +259,7 @@ class UDOPF(object):
 
         # One final solve using the best case to ensure all results are
         # up-to-date.
-        success = routine.solve()
+        solution = solver.solve()
 
         # Compute elapsed time and log it.
         elapsed = self.elapsed = time.time() - t0

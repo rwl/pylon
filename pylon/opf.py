@@ -724,16 +724,12 @@ class DCOPFSolver(Solver):
             if self.cvxopt:
                 solution = qp(P, q, G, h, A, b, self.solver, {"x": x0})
             else:
-                retval = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, opt)
+                solution = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, opt)
         else:
             if self.cvxopt:
                 solution = lp(q, G, h, A, b, self.solver, {"x": x0})
             else:
-                retval = pdipm_qp(None, q, AA, bb, LB, UB, x0, N)
-
-        if not self.cvxopt:
-            solution = {"xout": retval[0], "lmbdaout": retval[1],
-                        "howout": retval[2], "success": retval[3]}
+                solution = pdipm_qp(None, q, AA, bb, LB, UB, x0, N)
 
         return solution
 
@@ -1095,22 +1091,19 @@ class PDIPMSolver(Solver):
             return d2f + d2H + d2G
 
         # Solve using primal-dual interior point method.
-        x, _, info, output, lmbda = \
-            pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u, self.opt)
+#        x, _, info, output, lmbda = \
+        solution = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u,
+                         self.opt)
 
-        success = (info > 0)
-        if success:
-            howout = 'success'
-        else:
-            howout = 'failure'
 
-        lmbdaout = matrix([-lmbda["mu_l"] + lmbda["mu_u"],
-                            lmbda["lower"], lmbda["upper"]])
-
-        solution = {"xout": x, "lmbdaout": lmbdaout,
-                    "howout": howout, "success": success}
-
-        solution.update(output)
+#        lmbda = matrix([-solution["lmbda"]["mu_l"] + solution["lmbda"]["mu_u"],
+#                         solution["lmbda"]["lower"],
+#                         solution["lmbda"]["upper"]])
+#
+#        solution = {"xout": x, "lmbdaout": lmbda,
+#                    "howout": howout, "success": success}
+#
+#        solution.update(output)
 
         return solution
 

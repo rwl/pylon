@@ -56,7 +56,7 @@ class ACOPFTest(unittest.TestCase):
     def test_mismatch(self):
         """ Test AC OPF.
         """
-        success = self.routine.solve()
+        solution = self.routine.solve()
 
 #------------------------------------------------------------------------------
 #  Stand-alone call:

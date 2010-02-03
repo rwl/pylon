@@ -142,8 +142,10 @@ class DCOPF(object):
         # Compute elapsed time.
         t_elapsed = time() - t0
 
-        return self._process_solution(Bf, b, l, g, nb, nl, ng, base_mva,
-                                      solution, t_elapsed)
+        self._process_solution(Bf, b, l, g, nb, nl, ng, base_mva, solution,
+                               t_elapsed)
+
+        return solution
 
 
     def _algorithm_parameters(self):
@@ -447,14 +449,21 @@ class DCOPF(object):
     def _solve_program(self, H, c, Aieq, bieq, Aeq, beq, x0, linear):
         """ Solves the formulated program.
         """
-        if self.cvxopt and linear:
-#            primalstart = {"x": x0, "s": None
-            solution = lp(c, Aieq, bieq, Aeq, beq, self.solver)
+        if self.cvxopt:
+            solver = self.solver
+            if linear:
+#                primalstart = {"x": x0, "s": None}
+                solution = lp(c, Aieq, bieq, Aeq, beq, solver)
+            else:
+                solution = qp(H, c, Aieq, bieq, Aeq, beq, solver, {"x": x0})
 
-            print "SOL:", solution
-        elif self.cvxopt and not linear:
-            initvals = {"x": x0}
-            solution = qp(H, c, Aieq, bieq, Aeq, beq, self.solver, initvals)
+            # Make CVXOPT solution conform to PDIPM solution structure.
+            solution["f"] = solution["primal objective"]
+            solution["output"] = {"iterations": solution["iterations"]}
+            solution["lmbda"] = {"eqnonlin": None, 'ineqnonlin': None,
+                'mu_l': None, 'mu_u': None, 'lower': None, 'upper': None}
+            solution["converged"] = (solution["status"] == "optimal" or
+                                     solution["status"] == "unknown")
         elif not self.cvxopt:
             HH = None if linear else H
             # Combine equality and inequality constraints.
@@ -462,16 +471,9 @@ class DCOPF(object):
             bb = matrix([beq, bieq])
             N = Aeq.size[0]
 
-            LB, UB = None
+            LB = UB = None
 
-            ret = pdipm_qp(HH, c, AA, bb, LB, UB, x0, N)
-
-            status = "optimal" if ret["converged"] else "error"
-
-            lmbdaout = matrix([-ret["lmbda"]["mu_l"] + ret["lmbda"]["mu_u"],
-                                ret["lmbda"]["lower"], ret["lmbda"]["upper"]])
-
-            solution = {"status": status, "x": ret["x"], "y": lmbdaout}
+            solution = pdipm_qp(HH, c, AA, bb, LB, UB, x0, N)
 
         return solution
 

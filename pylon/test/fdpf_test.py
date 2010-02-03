@@ -49,8 +49,8 @@ class FDPFTest(TestCase):
         """ The test runner will execute this method prior to each test.
         """
         case = PickleReader().read(DATA_FILE)
-        self.routine = FastDecoupled()
-        success = self.routine.solve(case)
+        self.solver = FastDecoupled()
+        solution = self.solver.solve(case)
 
 
     def test_mismatch(self):

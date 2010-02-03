@@ -351,9 +351,11 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         'mu_l': mu_l[nx:], 'mu_u': mu_u[nx:],
         'lower': mu_l[:nx], 'upper': mu_u[:nx]}
 
+    output = {"iterations": i, "feascond": feascond, "gradcond": gradcond,
+        "compcond": compcond, "costcond": costcond}
+
     solution =  {"x": x, "f": f, "converged": converged, "lmbda": lmbda,
-                 "iterations": i, "feascond": feascond, "gradcond": gradcond,
-                 "compcond": compcond, "costcond": costcond}
+                 "output": output}
 
     return solution
 
@@ -409,8 +411,6 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
     l = matrix(-Inf, b.size)
     l[:N] = b[:N]
 
-    solution = pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b, opt)
-
-    return solution
+    return pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b, opt)
 
 # EOF -------------------------------------------------------------------------

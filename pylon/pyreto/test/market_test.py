@@ -28,8 +28,7 @@ import unittest
 
 from os.path import dirname, join
 
-from pylon import Case, Bus, Generator, DCOPF
-from pylon.readwrite import PickleReader
+from pylon import Case, Bus, Generator, REFERENCE
 from pylon.pyreto import SmartMarket, Bid, Offer
 
 #------------------------------------------------------------------------------
@@ -49,7 +48,7 @@ class SimpleMarketTestCase(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        bus1 = Bus(p_demand=80.0)
+        bus1 = Bus(type=REFERENCE, p_demand=80.0)
         g1 = Generator(bus1, p_max=60.0, p_min=0.0)
         g2 = Generator(bus1, p_max=100.0, p_min=0.0)
         self.case = Case(buses=[bus1], generators=[g1, g2])
@@ -65,7 +64,7 @@ class SimpleMarketTestCase(unittest.TestCase):
         mkt.clear_offers_and_bids()
 
         places = 2
-        self.assertAlmostEqual(mkt.routine.f, 800.0, places=1)
+        self.assertAlmostEqual(mkt._solution["f"], 800.0, 1)
         self.assertFalse(offers[0].accepted)
         self.assertAlmostEqual(offers[0].cleared_quantity, 0.0, places)
         self.assertAlmostEqual(offers[0].cleared_price, 10.0, places)
@@ -86,7 +85,7 @@ class SimpleMarketTestCase(unittest.TestCase):
         mkt = SmartMarket(self.case, offers)
         mkt.clear_offers_and_bids()
 
-        self.assertAlmostEqual(mkt.routine.f, 150. + 180. + 200., places=1)
+        self.assertAlmostEqual(mkt._solution["f"], 150. + 180. + 200., 1)
 
         self.assertTrue(offers[0].accepted)
         self.assertTrue(offers[1].accepted)
@@ -129,7 +128,7 @@ class SimpleMarketTestCase(unittest.TestCase):
         mkt = SmartMarket(self.case, offers, price_cap=15.0)
         mkt.clear_offers_and_bids()
 
-        self.assertFalse(mkt.success) # Blackout.
+        self.assertFalse(mkt._solution["converged"]) # Blackout.
         self.assertFalse(self.case.generators[1].online)
         self.assertTrue(offers[1].withheld)
         self.assertFalse(offers[0].accepted)
