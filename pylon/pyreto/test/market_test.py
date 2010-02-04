@@ -29,7 +29,7 @@ import unittest
 from os.path import dirname, join
 
 from pylon import Case, Bus, Generator, REFERENCE, DCOPF
-from pylon.pyreto import SmartMarket, Bid, Offer
+from pylon.pyreto import SmartMarket, Bid, Offer, FIRST_PRICE
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -243,18 +243,30 @@ class MarketTestCase(unittest.TestCase):
         """
         mkt = SmartMarket(self.case, self.offers, self.bids,
                                                   loc_adjust='dc',
-                                                  auction_type="first price",
+                                                  auction_type=FIRST_PRICE,
                                                   price_cap=100.0)
-
         mkt.run()
 
         for offer in mkt.offers:
-            print "OFFER:", offer.quantity, offer.price
+            print "OFFER: %8.3f %8.3f %8.3f %8.3f %s" % \
+                (offer.quantity,
+                 offer.price,
+                 offer.cleared_quantity,
+                 offer.cleared_price,
+                 offer.reactive)
 
-        generators = self.case.generators
+        for bid in mkt.bids:
+            print "BID:   %8.3f %8.3f %8.3f %8.3f %s" % \
+                (bid.quantity,
+                 bid.price,
+                 bid.cleared_quantity,
+                 bid.cleared_price,
+                 bid.reactive)
 
         self.assertTrue(mkt._solution["status"] == "optimal" or "unknown")
         self.assertAlmostEqual(mkt._solution["primal objective"], 2802.19, 2)
+
+#        generators = self.case.generators
 #        self.assertAlmostEqual(generators[0].p, 35.01, places=2)
 #        self.assertAlmostEqual(generators[1].p, 36.0, places=1)
 #        self.assertAlmostEqual(generators[2].p, 36.0, places=1)

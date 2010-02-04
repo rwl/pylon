@@ -336,31 +336,6 @@ class Generator(Named):
         return qtyprc
 
 
-    def adjust_limits(self):
-        """ Sets the active power limits, 'p_max' and 'p_min', according to
-            the pwl cost function points.
-        """
-        if not self.is_load:
-            self.p_min = min([point[0] for point in self.p_cost])
-            self.p_max = max([point[0] for point in self.p_cost])
-        else:
-            p_min = min([point[0] for point in self.p_cost])
-            if self.p_min <= p_min <= self.p_max:
-                self.q_min = self.q_min * p_min / self.p_min
-                self.q_max = self.q_max * p_min / self.p_min
-            else:
-                logger.error("Active power limit outwith rating.")
-            self.p_min = p_min
-            self.p_max = 0.0
-
-
-#    def reset_limits(self):
-#        """ Resets active power limits to the generator ratings.
-#        """
-#        self.p_max = self.rated_pmax
-#        self.p_min = self.rated_pmin
-
-
     def offers_to_pwl(self, offers):
         """ Updates the piece-wise linear total cost function using the given
             offer blocks.
@@ -400,12 +375,14 @@ class Generator(Named):
                 self.p_max = 0.0
                 self.online = True
         else:
-            self.q_cost = [(0.0, 0.0), (self.p_max, 0.0)]
-            self.pcost_model = PW_LINEAR
+            self.q_cost = [(0.0, 0.0), (self.q_max, 0.0)]
+            self.qcost_model = PW_LINEAR
 
         if not len(p_offers) and not len(q_offers):
             logger.info("No valid offers for generator, shutting down.")
             self.online = False
+
+        self._adjust_limits()
 
 
     def bids_to_pwl(self, bids):
@@ -442,6 +419,8 @@ class Generator(Named):
             logger.info("No valid bids for dispatchable load, shutting down.")
             self.online = False
 
+        self._adjust_limits()
+
 
     def _offbids_to_points(self, offbids):
         """ Returns a list of points for a piece-wise linear function from the
@@ -465,5 +444,20 @@ class Generator(Named):
                     (n_segs, plural, points))
 
         return points
+
+
+    def _adjust_limits(self):
+        """ Sets the active power limits, 'p_max' and 'p_min', according to
+            the pwl cost function points.
+        """
+        if not self.is_load:
+            self.p_min = min([point[0] for point in self.p_cost])
+            self.p_max = max([point[0] for point in self.p_cost])
+        else:
+            p_min = min([point[0] for point in self.p_cost])
+            self.p_max = 0.0
+            self.q_min = self.q_min * p_min / self.p_min
+            self.q_max = self.q_max * p_min / self.p_min
+            self.p_min = p_min
 
 # EOF -------------------------------------------------------------------------

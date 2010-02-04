@@ -102,11 +102,11 @@ class UDOPF(object):
         self.feasibility_tol = feasibility_tol
 
 
-    @property
-    def f(self):
-        """ Objective function value. Delegates to the solver used.
-        """
-        return self.solver.f
+#    @property
+#    def f(self):
+#        """ Objective function value. Delegates to the solver used.
+#        """
+#        return self.solver.f
 
 
     def solve(self):
@@ -159,6 +159,7 @@ class UDOPF(object):
             p_min_tot = sum([g.p_min for g in online])
 
         # 2. Solve a normal OPF and save the solution as the current best.
+        cvxopt   = True
         solver   = self.solver
         progress = self.show_progress
         itermax  = self.max_iterations
@@ -167,18 +168,19 @@ class UDOPF(object):
         feastol = self.feasibility_tol
 
         if self.dc:
-            solver = self.solver = DCOPF(case, solver, progress, itermax,
-                                           abstol, reltol, feastol)
+            solver = self.solver = DCOPF(case, cvxopt, solver, progress,
+                                         itermax, abstol, reltol, feastol)
         else:
             solver = self.solver = ACOPF(case, solver, progress, itermax,
-                                           abstol, reltol, feastol)
+                                         abstol, reltol, feastol)
 
         # Initial solve fo the OPF problem.
         solution = solver.solve()
 
-        if not (solution["optimal"] or solution["unknown"]):
-            logger.error("Non-convergent OPF [%s]." % solver)
-            return False
+        status = solution["status"]
+        if not status == "optimal" or status == "unknown":
+            logger.error("Non-convergent OPF [%s]." % solution["status"])
+            return solution
 
         # 3. Go to the next stage, N = N + 1. Using the best solution from the
         # previous stage as the base case for this stage, ...
@@ -186,7 +188,7 @@ class UDOPF(object):
         # Best case so far. A list of the on-line status of all generators.
         overall_online = [g.online for g in case.generators]
         # The objective function value is the total system cost.
-        overall_cost   = solver.f
+        overall_cost = solution["primal objective"]
 
         # Best case for this stage.
         stage_online = overall_online
@@ -267,7 +269,7 @@ class UDOPF(object):
         logger.info("Unit decommitment OPF solved in %.3fs (%d decommitment "
                     "stage%s)." % (elapsed, i_stage, plural))
 
-        return True
+        return solution
 
 #------------------------------------------------------------------------------
 #  "fair_max" function:

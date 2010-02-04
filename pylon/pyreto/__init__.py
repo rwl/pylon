@@ -15,7 +15,9 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-from smart_market import SmartMarket, Offer, Bid
+from smart_market import \
+    SmartMarket, Offer, Bid, DISCRIMINATIVE, LAO, FRO, LAB, FRB, FIRST_PRICE, \
+    SECOND_PRICE, SPLIT, DUAL_LAOB
 
 from experiment import MarketExperiment
 from environment import ParticipantEnvironment
