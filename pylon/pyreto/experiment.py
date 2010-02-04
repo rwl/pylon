@@ -117,7 +117,7 @@ class MarketExperiment(GraphicalExperiment):
 
 
         # Clear the market.
-        self.market.clear_offers_and_bids()
+        self.market.run()
 
 
         # Reward each agent appropriately.

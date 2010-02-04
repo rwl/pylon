@@ -837,13 +837,15 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
                 0.5981
                 1.0080
         """
+#        self.solver.cvxopt = False
 #        self.solver.solver = "glpk"
 #        self.solver.solver = "mosek"
-        self.solver.solve()
-        x = self.solver._solution["x"]
 
-        # Total system cost ($/h).
-        self.assertAlmostEqual(self.solver._f, 5732.80, 2)
+        self.solver.solve()
+
+        self.assertAlmostEqual(self.solver._solution["f"], 5732.80, 2) # $/h
+
+        x = self.solver._solution["x"]
 
         places = 1 # FIXME: Improve accuracy.
         self.assertEqual(x.size, (42, 1))
@@ -864,11 +866,37 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
 #        self.assertAlmostEqual(x[40], 0.5981e03, places)
         self.assertAlmostEqual(x[41], 1.0080e03, places)
 
+        places = 3
+        buses = self.case.buses
+        self.assertAlmostEqual(buses[0].p_lambda, 44.0, places)
+        self.assertAlmostEqual(buses[1].p_lambda, 44.0, places)
+        self.assertAlmostEqual(buses[29].p_lambda, 44.0, places)
+
+
+#    def test_branch_limits(self):
+#        """ Test enforcement of branch limits.
+#        """
+#        # Reduce the rating of branch 28 (bus20-21).
+#        constrained = self.case.branches[28]
+#        constrained.rate_a = 16.0
+#
+#        self.solver.solve()
+#
+#        self.assertAlmostEqual(self.solver._solution["f"], 6171.60, 2)
+#
+#        places = 3
+#        buses = self.case.buses
+#        self.assertAlmostEqual(buses[0].p_lambda, 76.000, places)
+#        self.assertAlmostEqual(buses[20].p_lambda, 124.242, places)
+#        self.assertAlmostEqual(buses[23].p_lambda, 38.590, places)
+#
+#        self.assertAlmostEqual(constrained.mu_s_to, 115.127, 3)
+
 #------------------------------------------------------------------------------
-#  "DCOPFTest" class:
+#  "PolyDCOPFTest" class:
 #------------------------------------------------------------------------------
 
-#class DCOPFTest(unittest.TestCase):
+#class PolyDCOPFTest(unittest.TestCase):
 #    """ Uses a MATPOWER data file and validates the results against those
 #        obtained from running the MATPOWER rundcopf.m script with the same
 #        file.

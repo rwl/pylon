@@ -91,7 +91,7 @@ class DCOPF(object):
         self._solution = {}
 
         # Objective function value (total system cost $/h).
-        self._f = 0.0
+#        self._f = 0.0
 
 
     def solve(self):
@@ -138,12 +138,30 @@ class DCOPF(object):
 
         # Solve the problem.
         solution = self._solve_program(H, c, Aieq, bieq, Aeq, beq, x0, lin)
+        self._solution = solution
 
         # Compute elapsed time.
         t_elapsed = time() - t0
 
-        self._process_solution(Bf, b, l, g, nb, nl, ng, base_mva, solution,
-                               t_elapsed)
+        if solution["converged"]:
+            logger.info("DC OPF completed in %.3fs." % t_elapsed)
+            self._process_solution(Bf, b, l, g, nb, nl, ng, base_mva,
+                                   solution, t_elapsed)
+#        elif solution["status"] == "unknown":
+#            #From CVXOPT documentation:
+#            #Termination with status 'unknown' indicates that the algorithm
+#            #failed to find a solution that satisfies the specified tolerances.
+#            #In some cases, the returned solution may be fairly accurate.  If
+#            #the primal and dual infeasibilities, the gap, and the relative gap
+#            #are small, then x, y, s, z are close to optimal.
+#            logger.info("Unknown solution status found in %.3fs. The " \
+#                "solution may be fairly accurate. \nTry using a different " \
+#                "solver or relaxing the tolerances." % t_elapsed)
+#        elif solution["status"] == "error":
+#            logger.error("Exception occurred solving DC OPF.")
+#            return False
+        else:
+            logger.error("Non-convergent DC OPF.")
 
         return solution
 
@@ -457,11 +475,21 @@ class DCOPF(object):
             else:
                 solution = qp(H, c, Aieq, bieq, Aeq, beq, solver, {"x": x0})
 
+#            print "SOL:\n", solution
+#            print "s:\n", solution["s"]
+#            print "x:\n", solution["x"]
+#            print "y:\n", solution["y"]
+#            print "z:\n", solution["z"]
+
             # Make CVXOPT solution conform to PDIPM solution structure.
             solution["f"] = solution["primal objective"]
             solution["output"] = {"iterations": solution["iterations"]}
-            solution["lmbda"] = {"eqnonlin": None, 'ineqnonlin': None,
-                'mu_l': None, 'mu_u': None, 'lower': None, 'upper': None}
+            solution["lmbda"] = {"eqnonlin": matrix(0.0, (0,1)),
+                                 'ineqnonlin': matrix(0.0, (0,1)),
+                                 'mu_l': None,
+                                 'mu_u': None,
+                                 'lower': None,
+                                 'upper': None}
             solution["converged"] = (solution["status"] == "optimal" or
                                      solution["status"] == "unknown")
         elif not self.cvxopt:
@@ -483,27 +511,6 @@ class DCOPF(object):
         """ Sets bus voltages angles, generator output powers and branch
             power flows using the solution.
         """
-        self._solution = solution
-
-        if solution["status"] == "optimal":
-            logger.info("DC OPF completed in %.3fs." % t_elapsed)
-        elif solution["status"] == "unknown":
-            #From CVXOPT documentation:
-            #Termination with status 'unknown' indicates that the algorithm
-            #failed to find a solution that satisfies the specified tolerances.
-            #In some cases, the returned solution may be fairly accurate.  If
-            #the primal and dual infeasibilities, the gap, and the relative gap
-            #are small, then x, y, s, z are close to optimal.
-            logger.info("Unknown solution status found in %.3fs. The " \
-                "solution may be fairly accurate. \nTry using a different " \
-                "solver or relaxing the tolerances." % t_elapsed)
-        elif solution["status"] == "error":
-            logger.error("Exception occurred solving DC OPF.")
-            return False
-        else:
-            logger.error("Non-convergent DC OPF.")
-            return False
-
         x = solution["x"]
 
         # Bus voltage angles.
@@ -536,16 +543,18 @@ class DCOPF(object):
             bus.p_lambda = eqlin[i + 1] / base_mva
 
         for j, branch in enumerate(branches):
-            # TODO: Find multipliers for lower and upper bound constraints.
+
+            # FIXME: Find multipliers for lower and upper bound constraints.
+
             branch.mu_s_from = 0.0
             branch.mu_s_to = 0.0
 
         for k, generator in enumerate(generators):
             generator.mu_pmin = ineqlin[k] / base_mva
-            generator.mu_pmax = ineqlin[k + ng] / base_mva
+            generator.mu_pmax = ineqlin[ng + k] / base_mva
 
         # Compute the objective function value.
-        self._f = sum([g.total_cost(g.p) for g in generators])
+#        self._f = sum([g.total_cost(g.p) for g in generators])
 
         return True
 

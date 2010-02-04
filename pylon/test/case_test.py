@@ -292,6 +292,33 @@ class BranchTest(unittest.TestCase):
 
         self.assertAlmostEqual(e.q_losses, 10.0, places=4)
 
+
+    def test_reset(self):
+        """ Test initialisation of bus result attributes.
+        """
+        branch = Branch(Bus(), Bus())
+
+        branch.p_from = 25.0
+        branch.p_to = -25.0
+        branch.q_from = -9.0
+        branch.q_to = 9.0
+        branch.mu_s_from = 90.0
+        branch.mu_s_to = 0.0
+        branch.mu_angmin = 60.0
+        branch.mu_angmax = 0.0
+
+        branch.reset()
+
+        self.assertEqual(branch.p_from, 0.0)
+        self.assertEqual(branch.p_to, 0.0)
+        self.assertEqual(branch.q_from, 0.0)
+        self.assertEqual(branch.q_to, 0.0)
+        self.assertEqual(branch.mu_s_from, 0.0)
+        self.assertEqual(branch.mu_s_to, 0.0)
+        self.assertEqual(branch.mu_angmin, 0.0)
+        self.assertEqual(branch.mu_angmax, 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()
 

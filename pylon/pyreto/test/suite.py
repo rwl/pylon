@@ -26,7 +26,7 @@ import unittest
 
 from pylon.test.suite import suite as pylon_suite
 
-from market_test import SimpleMarketTestCase
+from market_test import OneBusMarketTestCase
 from experiment_test import MarketExperimentTest
 
 #------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ def suite():
     # Pyreto tests are in addition to the Pylon tests.
     suite = pylon_suite()
 
-    suite.addTest(unittest.makeSuite(SimpleMarketTestCase))
+    suite.addTest(unittest.makeSuite(OneBusMarketTestCase))
     suite.addTest(unittest.makeSuite(MarketExperimentTest))
 
     return suite

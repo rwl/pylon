@@ -378,15 +378,32 @@ class Generator(Named):
         # Ignore withheld offers.
         valid = [offer for offer in gt_zero if not offer.withheld]
 
-        if valid:
-            self.p_cost = self._offbids_to_points(valid)
+        p_offers = [v for v in valid if not v.reactive]
+        q_offers = [v for v in valid if v.reactive]
 
-            # FIXME: Convert reactive power bids into piecewise linear segments.
-            # FIXME: Set all reactive costs to zero if not provided.
-
-            self.pcost_model = "pwl"
+        if p_offers:
+            self.p_cost = self._offbids_to_points(p_offers)
+            self.pcost_model = PW_LINEAR
             self.online = True
         else:
+            self.p_cost = [(0.0, 0.0), (self.p_max, 0.0)]
+            self.pcost_model = PW_LINEAR
+
+        if q_offers:
+            self.q_cost = self._offbids_to_points(p_offers)
+            self.qcost_model = PW_LINEAR
+            self.online = True
+            if not p_offers:
+                # Dispatch at zero real power without shutting down
+                # if capacity offered for reactive power.
+                self.p_min = 0.0
+                self.p_max = 0.0
+                self.online = True
+        else:
+            self.q_cost = [(0.0, 0.0), (self.p_max, 0.0)]
+            self.pcost_model = PW_LINEAR
+
+        if not len(p_offers) and not len(q_offers):
             logger.info("No valid offers for generator, shutting down.")
             self.online = False
 
@@ -417,7 +434,7 @@ class Generator(Named):
             points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
 
             self.p_cost = points
-            self.pcost_model = "pwl"
+            self.pcost_model = PW_LINEAR
             # FIXME: Convert reactive power bids into piecewise linear segments.
             # FIXME: Set all reactive costs to zero if not provided.
 
