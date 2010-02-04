@@ -287,18 +287,30 @@ class Case(Named, Serializable):
     def s_supply(self, bus):
         """ Returns the total complex power generation capacity.
         """
-        s = [complex(g.p, g.q) for g in self.generators if g.bus == bus]
+        Sg = matrix([complex(g.p, g.q) for g in self.generators if
+                     (g.bus == bus) and not g.is_load], tc="z")
 
-        if len(s):
-            return sum(s)
+        if len(Sg):
+            return sum(Sg)
         else:
             return 0 + 0j
+
+
+    def s_demand(self, bus):
+        """ Returns the total complex power demand.
+        """
+        Svl = matrix([complex(g.p, g.q) for g in self.generators if
+                      (g.bus == bus) and g.is_load], tc="z")
+
+        Sd = complex(bus.p_demand, bus.q_demand)
+
+        return -sum(Svl) + Sd
 
 
     def s_surplus(self, bus):
         """ Return the difference between supply and demand.
         """
-        return self.s_supply(bus) - complex(bus.p_demand, bus.q_demand)
+        return self.s_supply(bus) - self.s_demand(bus)
 
     #--------------------------------------------------------------------------
     #  Admittance matrix:

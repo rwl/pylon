@@ -126,13 +126,13 @@ class ReSTWriter(CaseWriter):
 
         # Bus rows
         for bus in buses:
-            file.write(bus.name[:col1_width].ljust(col1_width) + " ")
-            file.write("%8.3f" % bus.v_magnitude + " ")
-            file.write("%8.3f" % bus.v_angle + " ")
-            file.write("%8.2f" % self.case.s_supply(bus).real + " ")
-            file.write("%8.2f" % self.case.s_supply(bus).imag + " ")
-            file.write("%8.2f" % bus.p_demand + " ")
-            file.write("%8.2f" % bus.q_demand + " ")
+            file.write(bus.name[:col1_width].ljust(col1_width))
+            file.write(" %8.3f" % bus.v_magnitude)
+            file.write(" %8.3f" % bus.v_angle)
+            file.write(" %8.2f" % self.case.s_supply(bus).real)
+            file.write(" %8.2f" % self.case.s_supply(bus).imag)
+            file.write(" %8.2f" % self.case.s_demand(bus).real)
+            file.write(" %8.2f" % self.case.s_demand(bus).imag)
             file.write("\n")
 
         # Totals

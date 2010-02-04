@@ -398,8 +398,8 @@ class CaseReport(object):
     def total_gen_capacity(self):
         """ Total generation capacity.
         """
-        p = sum([g.p for g in self.case.generators])
-        q = sum([g.q for g in self.case.generators])
+        p = sum([g.p_max for g in self.case.generators])
+        q = sum([g.q_max for g in self.case.generators])
 
         return complex(p, q)
 
@@ -408,8 +408,8 @@ class CaseReport(object):
     def online_capacity(self):
         """ Total online generation capacity.
         """
-        p = sum([g.p for g in self.case.online_generators])
-        q = sum([g.q for g in self.case.online_generators])
+        p = sum([g.p for g in self.case.online_generators if not g.is_load])
+        q = sum([g.q for g in self.case.online_generators if not g.is_load])
 
         return complex(p, q)
 
@@ -418,10 +418,9 @@ class CaseReport(object):
     def generation_actual(self):
         """ Total despatched generation.
         """
-        p = sum([g.p for g in self.case.generators])
-        q = sum([g.q for g in self.case.generators])
+        Sg = [complex(g.p, g.q) for g in self.case.generators if not g.is_load]
 
-        return complex(p, q)
+        return sum(Sg)
 
 
     @property
@@ -435,20 +434,18 @@ class CaseReport(object):
     def fixed_load(self):
         """ Total fixed system load.
         """
-        p = sum([bus.p_demand for bus in self.case.buses])
-        q = sum([bus.q_demand for bus in self.case.buses])
+        Sd = [complex(bus.p_demand, bus.q_demand) for bus in self.case.buses]
 
-        return complex(p, q)
+        return sum(Sd)
 
 
     @property
     def despatchable_load(self):
         """ Total volume of despatchable load.
         """
-        p = sum([vl.p for vl in self.despatchable])
-        q = sum([vl.q for vl in self.despatchable])
+        Svl = [complex(vl.p, vl.q) for vl in self.despatchable]
 
-        return complex(p, q)
+        return -sum(Svl)
 
 
 #    @property
