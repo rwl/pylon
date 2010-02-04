@@ -180,6 +180,11 @@ class Branch(Named):
         # |S_to| mu.
         self.mu_s_to = 0.0
 
+        # Lower bus voltage angle difference limit constraint multiplier.
+        self.mu_angmin = 0.0
+        # Upper bus voltage angle difference limit constraint multiplier.
+        self.mu_angmax = 0.0
+
 
     @property
     def p_losses(self):
@@ -205,6 +210,9 @@ class Branch(Named):
 
         self.mu_s_from = 0.0
         self.mu_s_to = 0.0
+
+        self.mu_angmin = 0.0
+        self.mu_angmax = 0.0
 
 #------------------------------------------------------------------------------
 #  "Case" class:
@@ -456,8 +464,8 @@ class Case(Named, Serializable):
                 Ray Zimmerman, "makeBdc.m", MATPOWER, PSERC Cornell,
                 http://www.pserc.cornell.edu/matpower/, version 1.10, June 2007
         """
-        buses = self.buses if buses is None else buses
-        branches = self.branches if branches is None else branches
+        buses = self.connected_buses if buses is None else buses
+        branches = self.online_branches if branches is None else branches
 
         nb = len(buses)
         nl = len(branches)
