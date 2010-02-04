@@ -206,7 +206,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dxdlam = bb
 #        xx = solve(asarray(matrix(Ab)), asarray(bb))
 
-        print "dxdlam\n", bb
+#        print "dxdlam\n", bb
 
         dx = dxdlam[:nx]
         dlam = dxdlam[nx:nx + neq]
