@@ -34,6 +34,20 @@ from pylon import UDOPF, DCOPF, OPF #@UnusedImport
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+DISCRIMINATIVE = "discriminative"
+LAO = "lao"
+FRO = "fro"
+LAB = "lab"
+FRB = "frb"
+FIRST_PRICE = "first price"
+SECOND_PRICE = "second price"
+SPLIT = "split"
+DUAL_LAOB = "dual laob"
+
+#------------------------------------------------------------------------------
 #  "SmartMarket" class:
 #------------------------------------------------------------------------------
 
@@ -47,8 +61,8 @@ class SmartMarket(object):
     """
 
     def __init__(self, case, offers=None, bids=None, limits=None,
-                 loc_adjust="dc", auction_type="first price",
-                 price_cap=100.0, period=1.0, decommit=False):
+                 loc_adjust="dc", auction_type=FIRST_PRICE,
+                 price_cap=100.0, period=1.0, decommit=True):
         """ Initialises a new SmartMarket instance.
         """
         self.case = case
@@ -105,157 +119,119 @@ class SmartMarket(object):
         # Should the unit decommitment algorithm be used?
         self.decommit = decommit
 
-        # Results of the settlement process. A list of Dispatch objects.
-#        self.settlement = {}
-
-        # Solver, the results from which are used to clear the offers/bids.
-#        self.solver = None
-
         # Solver solution dictionary.
         self._solution = {}
 
 
-    def init(self):
-        """ Initialises the market.
+    def reset(self):
+        """ Resets the market.
         """
-#        generators = [g for g in self.case.generators if not g.is_load]
-#        vloads     = [g for g in self.case.generators if g.is_load]
-#
-#        if not self.offers:
-#            # Create offers from the generator cost functions.
-#            self.offers = [off for g in generators for off in g.get_offers()]
-#
-#        if not self.bids:
-#            self.bids = [bid for vl in vloads for bid in vl.get_bids()]
-
         self.offers = []
         self.bids = []
 
 
-    def clear_offers_and_bids(self):
+    def run(self):
         """ Computes cleared offers and bids.
         """
+        # Start the clock.
         t0 = time.time()
 
-        all_generators = self.case.generators
-        generators = [g for g in all_generators if not g.is_load]
-        vloads = [g for g in all_generators if g.is_load]
-
         # Manage reactive power offers/bids.
-        self._reactive_power_market(self.offers, self.bids)
+#        haveQ = self._reactive_market()
 
         # Withhold offers/bids outwith optional price limits.
-        self._enforce_limits(self.offers, self.bids, self.limits)
+        self.offer, self.bids = self._withhold_offbids()
 
-        self._setup_opf(generators, vloads, self.offers, self.bids)
+        # Convert offers/bids to pwl functions and update limits.
+        self._offbids_to_case()
 
-        success = self._run_opf(self.case)
+        # Compute dispatch points and LMPs using OPF.
+        success = self._run_opf()
 
-        self._run_auction(success, self.case, self.offers, self.bids)
+        # Determine quantity and price for each offer/bid.
+        self._run_auction(success)
 
-#        s = self._compute_costs(self.case, self.offers, self.bids)
-
-        elapsed = self.elapsed = time.time() - t0
-        logger.info("SmartMarket cleared in %.3fs" % elapsed)
+        logger.info("SmartMarket cleared in %.3fs" % time.time() - t0)
 
         return self.offers, self.bids
 
 
-    def _reactive_power_market(self, offers, bids):
+    def _reactive_market(self, vloads):
         """ Returns a flag indicating the existance of offers/bids for reactive
             power.
         """
-#        offers, bids = self.offers, self.bids
-
-        if [offbid for offbid in offers + bids if offbid.reactive]:
-            have_q = self.have_q = True
-            raise NotImplementedError, "Combined active/reactive power " \
-                "market not yet implemented."
+        if [offbid for offbid in self.offers + self.bids if offbid.reactive]:
+            haveQ = True
+            logger.warning("Combined active/reactive power " \
+                "market not yet implemented.")
         else:
-            have_q = self.have_q = False
+            haveQ = False
 
-#        if have_q and vloads and self.auction_type not in ["discriminative",
-#                                                           "lao",
-#                                                           "first price"]:
-#            logger.error("Combined active/reactive power markets with "
-#                "constant power factor dispatchable loads are only "
-#                "implemented for 'discriminative', 'lao' and 'first price' "
-#                "auction types.")
+        combined_types = [DISCRIMINATIVE, LAO, FIRST_PRICE]
+        if haveQ and vloads and self.auction_type not in combined_types:
+            logger.error("Combined active/reactive power markets with "
+                "constant power factor dispatchable loads are only "
+                "implemented for 'discriminative', 'lao' and 'first price' "
+                "auction types.")
 
-        return have_q
+        return haveQ
 
 
-    def _enforce_limits(self, offers, bids, limits):
-        """ Returns a tuple of lists of offers and bids with their withheld
-            flags set if they represent invalid (<= 0.0) quantities or have
-            prices outwith the set limits.
+    def _withhold_offbids(self):
+        """ Withholds offers/bids with invalid (<= 0.0) quantities or prices
+            outwith the set limits.
         """
         limits = self.limits
 
         if not limits.has_key('max_offer'):
             # Eliminates offers (but not bids) above 'price_cap'.
             limits['max_offer'] = self.price_cap
-        if not limits.has_key('max_cleared_offer'):
-            limits['max_cleared_offer'] = self.price_cap
+#        if not limits.has_key('max_cleared_offer'):
+#            limits['max_cleared_offer'] = self.price_cap
 
-        # Strip zero quantities (rounded to 4 decimal places).
-#        if min([offbid.quantity for offbid in offers + bids]) < 0.0:
-#            logger.info("Ignoring offers/bids with negative quantities.")
-#
-#        if 0.0 in [round(offer, 4) for offer in offers + bids]:
-#            logger.info("Ignoring zero quantity offers/bids.")
-#
-#        offers = [offr for offr in offers if round(offr.quantity, 4) > 0.0]
-#        bids = [bid for bid in bids if round(bid.quantity, 4) > 0.0]
-
-        for offer in offers:
+        # Withhold invalid offers/bids.
+        for offer in self.offers:
             if round(offer.quantity, 4) <= 0.0:
                 logger.info("Withholding non-posistive quantity [%.2f] "
                             "offer." % offer.quantity)
                 offer.withheld = True
 
-        for bid in bids:
+        for bid in self.bids:
             if round(bid.quantity, 4) <= 0.0:
                 logger.info("Withholding non-posistive quantity [%.2f] "
                             "bid." % bid.quantity)
                 bid.withheld = True
 
-        # Optionally strip prices beyond limits.
-#        if limits.has_key('max_offer'):
-#            offers = [of for of in offers if of.price <= limits['max_offer']]
-#        if limits.has_key('min_bid'):
-#            bids = [bid for bid in bids if bid.price >= limits['min_bid']]
-
+        # Optionally, withhold offers/bids beyond price limits.
         if limits.has_key("max_offer"):
-            for offer in offers:
+            for offer in self.offers:
                 if offer.price > limits["max_offer"]:
                     logger.info("Offer price [%.2f] above limit [%.3f], "
                         "withholding." % (offer.price, limits["max_offer"]))
                     offer.withheld = True
 
         if limits.has_key("min_bid"):
-            for bid in bids:
+            for bid in self.bids:
                 if bid.price < limits["min_bid"]:
                     logger.info("Bid price [%.2f] below limit [%.2f], "
                         "withholding." % (bid.price, limits["min_bid"]))
                     bid.withheld = True
 
-        return offers, bids
 
-
-    def _setup_opf(self, generators, vloads, offers, bids):
-        """ Converts offers/bids to pwl functions and updates generator
-            limits.
+    def _offbids_to_case(self):
+        """ Converts offers/bids to pwl functions and updates limits.
         """
+        generators = [g for g in self.case.generators if not g.is_load]
+        vloads = [g for g in self.case.generators if g.is_load]
+
         # Convert power offers into piecewise linear segments and update
         # generator limits.
         for g in generators:
-            g_offers = [offer for offer in offers if offer.generator == g]
+            g_offers = [offer for offer in self.offers if offer.generator == g]
 
             g.offers_to_pwl(g_offers)
 
             if g.online:
-                # Adjust generator limits.
                 g.adjust_limits()
 
             p_offers = [of for of in g_offers if not of.reactive]
@@ -286,7 +262,7 @@ class SmartMarket(object):
         # Convert power bids into piecewise linear segments and update
         # dispatchable load limits.
         for vl in vloads:
-            vl_bids = [bid for bid in bids if bid.vload == vl]
+            vl_bids = [bid for bid in self.bids if bid.vload == vl]
 
             vl.bids_to_pwl(vl_bids)
 
@@ -325,11 +301,9 @@ class SmartMarket(object):
             g.p_min -= 100 * self.violation
             g.p_max += 100 * self.violation
 
-        return generators, vloads
-
 
     def _run_opf(self, case):
-        """ Solves the optimisation problem.
+        """ Computes dispatch points and LMPs using OPF.
         """
         if self.decommit:
             solver = UDOPF(case, dc=(self.loc_adjust == "dc"))
@@ -339,9 +313,7 @@ class SmartMarket(object):
         else:
             solver = OPF(case, show_progress=False)
 
-        solution = self._solution = solver.solve()
-
-        return solution
+        self._solution = solver.solve()
 
 
     def _run_auction(self, solution, case, offers, bids):
@@ -389,7 +361,7 @@ class SmartMarket(object):
             # Clear offer/bid quantities and prices.
             Auction(case, offers, bids,
                 guarantee_offer_price, guarantee_bid_price,
-                self.limits).clear_offers_and_bids(self.auction_type)
+                self.limits).run(self.auction_type)
 
         else:
             logger.error("Non-convergent UOPF.")
@@ -403,58 +375,12 @@ class SmartMarket(object):
             for offbid in offers + bids:
                 offbid.cleared_quantity = offbid.cleared_price = 0.0
 
-
-#    def _compute_costs(self, case, offers, bids):
-#        """ Returns a map of generators to their dispatch info, which details
-#            the units revenue and associated costs.
-#        """
-#        t = self.period
-#        settlement = self.settlement = {}
-#
-#        for i, g in enumerate(case.generators):
-#            g_offbids = [ob for ob in offers + bids if ob.generator == g]
-#
-#            if not g_offbids: continue
-#
-#            quantity = g.p
-#
-#            totclrqty = sum([offer.cleared_quantity for offer in g_offbids])
-#            if totclrqty == 0.0:
-#                price = totclrqty
-#            else:
-#                price = sum([of.cleared_quantity * of.cleared_price / totclrqty
-#                             for of in g_offbids])
-#
-#            # Compute costs in $ (not $/hr).
-#            fixed_cost = t * g.total_cost(0.0)
-#
-#            variable_cost = (t * g.total_cost) - fixed_cost
-#
-#            if (not self.g_online[i]) and g.online:
-#                startup_cost = g.c_startup #g.total_cost(g.c_startup)
-#                shutdown_cost = 0.0
-#
-#            elif self.g_online[i] and (not g.online):
-#                startup_cost = 0.0
-#                shutdown_cost = g.c_shutdown #g.total_cost(g.c_shutdown)
-#
-#            else:
-#                startup_cost = 0.0
-#                shutdown_cost = 0.0
-#
-#            d = Dispatch(g, t, self.solver.f, quantity, price, fixed_cost,
-#                         variable_cost, startup_cost, shutdown_cost)
-#
-#            settlement[g] = d
-#
-#        return settlement
-
 #------------------------------------------------------------------------------
 #  "Auction" class:
 #------------------------------------------------------------------------------
 
 class Auction(object):
-    """ Defines a power auction for clearing offers/bids, where the pricing is
+    """ Defines a power auction for clearing offers/bids, where pricing is
         adjusted for network losses and binding constraints.
 
         References:
@@ -484,7 +410,7 @@ class Auction(object):
         self.limits = limits if limits is not None else {}
 
 
-    def clear_offers_and_bids(self, auction_type):
+    def run(self, auction_type):
         """ Clears a set of bids and offers.
         """
         offers, bids = self.offers, self.bids

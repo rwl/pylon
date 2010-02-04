@@ -70,6 +70,37 @@ class BaseProfitTask(Task):
     def getReward(self):
         """ Returns the reward corresponding to the last action performed.
         """
+#        for i, g in enumerate(case.generators):
+#            g_offbids = [ob for ob in offers + bids if ob.generator == g]
+#
+#            if not g_offbids: continue
+#
+#            quantity = g.p
+#
+#            totclrqty = sum([offer.cleared_quantity for offer in g_offbids])
+#            if totclrqty == 0.0:
+#                price = totclrqty
+#            else:
+#                price = sum([of.cleared_quantity * of.cleared_price / totclrqty
+#                             for of in g_offbids])
+#
+#            # Compute costs in $ (not $/hr).
+#            fixed_cost = t * g.total_cost(0.0)
+#
+#            variable_cost = (t * g.total_cost) - fixed_cost
+#
+#            if (not self.g_online[i]) and g.online:
+#                startup_cost = g.c_startup #g.total_cost(g.c_startup)
+#                shutdown_cost = 0.0
+#
+#            elif self.g_online[i] and (not g.online):
+#                startup_cost = 0.0
+#                shutdown_cost = g.c_shutdown #g.total_cost(g.c_shutdown)
+#
+#            else:
+#                startup_cost = 0.0
+#                shutdown_cost = 0.0
+
         g = self.env.asset
         if not g.is_load:
             offbids = [x for x in self.env.market.offers if x.generator == g]
