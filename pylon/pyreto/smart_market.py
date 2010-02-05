@@ -143,14 +143,16 @@ class SmartMarket(object):
         self._withhold_offbids()
 
         # Convert offers/bids to pwl functions and update limits.
-        self._offbids_to_case()
+        self._offbid_to_case()
 
         # Compute dispatch points and LMPs using OPF.
         success = self._run_opf()
 
         if success:
+            # Get nodal marginal prices from OPF.
+            gtee_offer_prc, gtee_bid_prc = self._nodal_prices(haveQ)
             # Determine quantity and price for each offer/bid.
-            self._run_auction(haveQ)
+            self._run_auction(gtee_offer_prc, gtee_bid_prc, haveQ)
         else:
             for offbid in self.offers + self.bids:
                 offbid.cleared_quantity = 0.0
@@ -231,7 +233,7 @@ class SmartMarket(object):
                     bid.withheld = True
 
 
-    def _offbids_to_case(self):
+    def _offbid_to_case(self):
         """ Converts offers/bids to pwl functions and updates limits.
         """
         generators = [g for g in self.case.generators if not g.is_load]
@@ -239,7 +241,7 @@ class SmartMarket(object):
 
         # Convert offers into piecewise linear segments and update limits.
         for g in generators:
-#            print "G:", g.p_min, g.p_max, g.p_cost
+#            print "G: ", g.p_min, g.p_max, g.p_cost
 
             g.offers_to_pwl(self.offers)
 
@@ -263,14 +265,11 @@ class SmartMarket(object):
             solver = UDOPF(self.case, dc=(self.loc_adjust == "dc"))
         elif self.loc_adjust == "dc":
             solver = DCOPF(self.case, show_progress=False)
-#            solver = OPF(case, dc=True, show_progress=False)
+#            solver = OPF(self.case, dc=True, show_progress=False)
         else:
             solver = OPF(self.case, show_progress=False)
 
         solution = self._solution = solver.solve()
-
-        import sys
-        self.case.save_rst(sys.stdout)
 
         success = solution["status"] == "optimal" or \
                   solution["status"] == "unknown"
@@ -278,11 +277,10 @@ class SmartMarket(object):
         return success
 
 
-    def _run_auction(self, haveQ):
-        """ Clears an auction to determine the quantity and price for each
-            offer/bid.
+    def _nodal_prices(self, haveQ):
+        """ Sets the nodal prices associated with each offer/bid.
         """
-        # Guarantee that cleared offers are >= offers.
+        # Guarantee that cleared offer prices are >= offered prices.
         gtee_offer_prc = True
         gtee_bid_prc = True
 
@@ -293,18 +291,15 @@ class SmartMarket(object):
         for bid in self.bids:
             bus = bid.vload.bus
             if not haveQ:
-                # Compute fudge factor for p_lambda to include price of
-                # bundled reactive power. For loads Q = pf * P.
+                # Fudge factor to include price of bundled reactive power.
                 if bid.vload.q_max == 0.0:
                     pf = bid.vload.q_min / bid.vload.p_min
                 elif bid.vload.q_min == 0.0:
                     pf = bid.vload.q_max / bid.vload.p_min
                 else:
                     pf = 0.0
-
-                # Use bundled lambdas.
+                # Use bundled lambdas. For loads Q = pf * P.
                 bid.p_lambda = bus.p_lambda + pf * bus.q_lambda
-
                 # Guarantee that cleared bids are <= bids.
                 gtee_bid_prc = True
             else:
@@ -315,10 +310,29 @@ class SmartMarket(object):
 
             bid.total_quantity = -bid.vload.p
 
+        return gtee_offer_prc, gtee_bid_prc
+
+
+    def _run_auction(self, gtee_offer_prc, gtee_bid_prc, haveQ):
+        """ Clears an auction to determine the quantity and price for each
+            offer/bid.
+        """
+        p_offers = [offer for offer in self.offers if not offer.reactive]
+        p_bids = [bid for bid in self.bids if not bid.reactive]
+
         # Clear offer/bid quantities and prices.
-        auction = Auction(self.case, self.offers, self.bids, self.auction_type,
+        auction = Auction(self.case, p_offers, p_bids, self.auction_type,
                           gtee_offer_prc, gtee_bid_prc, self.limits)
         auction.run()
+
+        # Separate auction for reactive power.
+        if haveQ:
+            q_offers = [offer for offer in self.offers if offer.reactive]
+            q_bids = [bid for bid in self.bids if bid.reactive]
+
+            q_auction = Auction(self.case, q_offers, q_bids, self.auction_type,
+                                gtee_offer_prc, gtee_bid_prc, self.limits)
+            q_auction.run()
 
 #------------------------------------------------------------------------------
 #  "Auction" class:

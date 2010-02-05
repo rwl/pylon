@@ -336,6 +336,72 @@ class Generator(Named):
         return qtyprc
 
 
+#    def offers_bids_to_pwl(self, offers, bids):
+#        """ Updates the piece-wise linear total cost function using the given
+#            offer/bid blocks.
+#
+#            @see: matpower4.0b1/extras/smartmarket/off2case.m
+#        """
+##        offbids = offers + bids
+#        valid_offers = [offer for offer in offers if
+#                        offer.generator == self and
+#                        not offer.withheld and
+#                        round(offer.quantity, 4) > 0.0]
+#
+#        valid_bids = [bid for bid in bids if
+#                      bid.vload == self and
+#                      not bid.withheld and
+#                      round(offer.quantity, 4) > 0.0]
+#
+#        p_offers = [v for v in valid_offers if not v.reactive]
+#        q_offers = [v for v in valid_offers if v.reactive]
+#        p_bids = [v for v in valid_bids if not bid.reactive]
+#        q_bids = [v for v in valid_bids if bid.reactive]
+#
+#        if p_offers and not self.is_load:
+#            logger.warning("Offer no allowed for vload [%s]." % self.name)
+#            p_offers = []
+#        if q_offers and self.q_max <= 0.0:
+#            logger.warning("Q offer not allowed for gen [%s]." % self.name)
+#            q_offers = []
+#        if p_bids and self.is_load:
+#            logger.warning("Bid not allowed for generator [%s]." % self.name)
+#            p_bids = []
+#        if q_bids and self.q_min >= 0.0:
+#            logger.warning("Q bid not allowed for gen [%s]." % self.name)
+#            q_bids = []
+#
+#        if p_offers:
+#            self.p_cost = self._offbids_to_points(p_offers)
+#            self.pcost_model = PW_LINEAR
+#            self.online = True
+#        else:
+#            self.p_cost = [(0.0, 0.0), (self.p_max, 0.0)]
+#            self.pcost_model = PW_LINEAR
+#            if q_offers:
+#                # Dispatch at zero real power without shutting down
+#                # if capacity offered for reactive power.
+#                self.p_min = 0.0
+#                self.p_max = 0.0
+#                self.online = True
+#
+#        if q_offers or q_bids:
+#            offer_points = self._offbids_to_points(q_offers)
+#            bid_points = self._offbids_to_points(q_bids, True)
+#
+#            self.qcost_model = PW_LINEAR
+#            self.online = True
+#            if not p_offers:
+#                # Dispatch at zero real power without shutting down
+#                # if capacity offered for reactive power.
+#                self.p_min = 0.0
+#                self.p_max = 0.0
+#                self.online = True
+#        else:
+#            self.q_cost = [(0.0, 0.0), (self.q_max, 0.0)]
+#            self.qcost_model = PW_LINEAR
+
+
     def offers_to_pwl(self, offers):
         """ Updates the piece-wise linear total cost function using the given
             offer blocks.
@@ -343,13 +409,10 @@ class Generator(Named):
             @see: matpower3.2/extras/smartmarket/off2case.m
         """
         assert not self.is_load
-
         # Only apply offers associated with this generator.
         g_offers = [offer for offer in offers if offer.generator == self]
-
         # Fliter out zero quantity offers.
         gt_zero = [offr for offr in g_offers if round(offr.quantity, 4) > 0.0]
-
         # Ignore withheld offers.
         valid = [offer for offer in gt_zero if not offer.withheld]
 
@@ -365,7 +428,7 @@ class Generator(Named):
             self.pcost_model = PW_LINEAR
 
         if q_offers:
-            self.q_cost = self._offbids_to_points(p_offers)
+            self.q_cost = self._offbids_to_points(q_offers)
             self.qcost_model = PW_LINEAR
             self.online = True
             if not p_offers:
@@ -392,42 +455,51 @@ class Generator(Named):
             @see: matpower3.2/extras/smartmarket/off2case.m
         """
         assert self.is_load
-
         # Apply only those bids associated with this dispatchable load.
         vl_bids = [bid for bid in bids if bid.vload == self]
-
         # Filter out zero quantity bids.
         gt_zero = [bid for bid in vl_bids if round(bid.quantity, 4) > 0.0]
-
         # Ignore withheld offers.
         valid_bids = [bid for bid in gt_zero if not bid.withheld]
 
-        if valid_bids:
-            points = self._offbids_to_points(valid_bids)
+        p_bids = [v for v in valid_bids if not v.reactive]
+        q_bids = [v for v in valid_bids if v.reactive]
 
-            # Shift the points to represent bids by subtracting the maximum
-            # value from each.
-            x_end, y_end = points[-1]
-            points = [(pnt[0] - x_end, pnt[1] - y_end) for pnt in points]
-
-            self.p_cost = points
+        if p_bids:
+            p_cost = self._offbids_to_points(p_bids, True)
+            neg_pcost = [(-x, -y) for x, y in p_cost]
+            neg_pcost.reverse()
+            self.p_cost = neg_pcost
             self.pcost_model = PW_LINEAR
-            # FIXME: Convert reactive power bids into piecewise linear segments.
-            # FIXME: Set all reactive costs to zero if not provided.
-
+            self.online = True
         else:
+            self.p_cost = [(0.0, 0.0), (self.p_max, 0.0)]
+            self.pcost_model = PW_LINEAR
+            self.online = True
+
+        if q_bids:
+            q_cost = self._offbids_to_points(q_bids, True)
+            neg_qcost = [(-x, -y) for x, y in q_cost]
+            neg_qcost.reverse()
+            self.q_cost = neg_qcost
+
+            self.qcost_model = PW_LINEAR
+            self.online = True
+        else:
+#            self.q_cost = [(0.0, 0.0), (self.q_max, 0.0)]
+#            self.qcost_model = PW_LINEAR
             logger.info("No valid bids for dispatchable load, shutting down.")
             self.online = False
 
         self._adjust_limits()
 
 
-    def _offbids_to_points(self, offbids):
+    def _offbids_to_points(self, offbids, arebids=False):
         """ Returns a list of points for a piece-wise linear function from the
             given offer/bid blocks.
         """
         # Sort offers/bids by price in ascending order.
-        offbids.sort(key=lambda x: x.price)
+        offbids.sort(key=lambda x: x.price, reverse=arebids)
 
         points = [(0.0, 0.0)]
         # Form piece-wise linear total cost function.
@@ -451,7 +523,7 @@ class Generator(Named):
             the pwl cost function points.
         """
         if not self.is_load:
-            self.p_min = min([point[0] for point in self.p_cost])
+#            self.p_min = min([point[0] for point in self.p_cost])
             self.p_max = max([point[0] for point in self.p_cost])
         else:
             p_min = min([point[0] for point in self.p_cost])

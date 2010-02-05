@@ -54,6 +54,13 @@ class OneBusMarketTestCase(unittest.TestCase):
         self.case = Case(buses=[bus1], generators=[g1, g2])
 
 
+    def test_have_q(self):
+        """ Test reactive offers/bids.
+        """
+        mkt = SmartMarket(self.case)
+        self.assertFalse(mkt._reactive_market())
+
+
     def test_offers(self):
         """ Test market clearing of offers using results from DC OPF.
         """
@@ -228,6 +235,9 @@ class MarketTestCase(unittest.TestCase):
             Bid(generators[8], 7.5, 0.0, reactive=True)
         ]
 
+        self.mkt = SmartMarket(self.case, self.offers, self.bids,
+            loc_adjust='dc', auction_type=FIRST_PRICE, price_cap=100.0)
+
 
     def test_dc_opf(self):
         """ Test solving the auction case using DC OPF.
@@ -238,33 +248,152 @@ class MarketTestCase(unittest.TestCase):
         self.assertAlmostEqual(solution["primal objective"], -517.81, 2)
 
 
+    def test_reset(self):
+        """ Test resetting the market.
+        """
+        self.assertEqual(len(self.mkt.offers), 24)
+        self.assertEqual(len(self.mkt.bids), 18)
+        self.mkt.reset()
+        self.assertEqual(len(self.mkt.offers), 0)
+        self.assertEqual(len(self.mkt.bids), 0)
+
+
+    def test_have_q(self):
+        """ Test reactive offers/bids.
+        """
+        self.assertTrue(self.mkt._reactive_market())
+
+
+    def test_withhold(self):
+        """ Test witholding of invalid and limited offers/bids.
+        """
+        invalid_offer = Offer(self.case.generators[0], -10.0, 20.0)
+        self.mkt.offers.append(invalid_offer)
+        self.mkt.price_cap = 80.0
+
+        self.mkt._withhold_offbids()
+
+        self.assertFalse(self.offers[0].withheld)
+        self.assertFalse(self.offers[10].withheld)
+        self.assertTrue(self.offers[14].withheld)
+        self.assertTrue(invalid_offer.withheld)
+
+
+    def test_offbid_to_case(self):
+        """ Test conversion of offers/bids to pwl functions and limit updates.
+        """
+        self.mkt._withhold_offbids()
+        self.mkt._offbid_to_case()
+
+        places = 2
+        generators = self.case.generators
+
+        self.assertAlmostEqual(generators[0].p_min, 35.0, places)
+        self.assertAlmostEqual(generators[0].p_max, 60.0, places)
+        self.assertAlmostEqual(generators[1].p_min, 12.0, places)
+        self.assertAlmostEqual(generators[1].p_max, 60.0, places)
+        self.assertAlmostEqual(generators[6].p_min, -30.0, places)
+        self.assertAlmostEqual(generators[6].p_max, 0.0, places)
+
+        self.assertAlmostEqual(generators[0].p_cost[2][0], 36.0, places)
+        self.assertAlmostEqual(generators[0].p_cost[2][1], 1440.0, places)
+        self.assertAlmostEqual(generators[0].p_cost[3][0], 60.0, places)
+        self.assertAlmostEqual(generators[0].p_cost[3][1], 2880.0, places)
+
+        self.assertAlmostEqual(generators[2].p_cost[2][0], 36.0, places)
+        self.assertAlmostEqual(generators[2].p_cost[2][1], 1248.0, places)
+        self.assertAlmostEqual(generators[2].p_cost[3][0], 60.0, places)
+        self.assertAlmostEqual(generators[2].p_cost[3][1], 3168.0, places)
+
+        self.assertAlmostEqual(generators[6].p_cost[0][0], -30.0, places)
+        self.assertAlmostEqual(generators[6].p_cost[0][1], -2300.0, places)
+        self.assertAlmostEqual(generators[6].p_cost[1][0], -20.0, places)
+        self.assertAlmostEqual(generators[6].p_cost[1][1], -1700.0, places)
+
+
+        self.assertAlmostEqual(generators[2].q_min, -15.0, places)
+        self.assertAlmostEqual(generators[2].q_max, 60.0, places)
+        self.assertAlmostEqual(generators[5].q_min, -15.0, places)
+        self.assertAlmostEqual(generators[5].q_max, 60.0, places)
+        self.assertAlmostEqual(generators[7].q_min, -12.0, places)
+        self.assertAlmostEqual(generators[7].q_max, 0.0, places)
+
+#        self.assertAlmostEqual(generators[2].q_cost[0][0], -15.0, places)
+#        self.assertAlmostEqual(generators[2].q_cost[0][1], 0.0, places)
+#        self.assertAlmostEqual(generators[2].q_cost[2][0], 60.0, places)
+#        self.assertAlmostEqual(generators[2].q_cost[2][1], 0.0, places)
+#
+#        self.assertAlmostEqual(generators[5].q_cost[0][0], -15.0, places)
+#        self.assertAlmostEqual(generators[5].q_cost[0][1], 0.0, places)
+#        self.assertAlmostEqual(generators[5].q_cost[2][0], 60.0, places)
+#        self.assertAlmostEqual(generators[5].q_cost[2][1], 180.0, places)
+#
+#        self.assertAlmostEqual(generators[7].q_cost[0][0], -12.0, places)
+#        self.assertAlmostEqual(generators[7].q_cost[0][1], -240.0, places)
+#        self.assertAlmostEqual(generators[7].q_cost[2][0], 0.0, places)
+#        self.assertAlmostEqual(generators[7].q_cost[2][1], 0.0, places)
+
+
+    def test_run_opf(self):
+        """ Test generator dispatch points.
+        """
+        mkt = self.mkt
+        mkt._withhold_offbids()
+        mkt._offbid_to_case()
+        success = mkt._run_opf()
+
+        self.assertTrue(success)
+        self.assertAlmostEqual(mkt._solution["primal objective"], 2802.19, 2)
+
+
+    def test_nodal_marginal_prices(self):
+        """ Test nodal marginal prices from OPF.
+        """
+        self.mkt._withhold_offbids()
+        self.mkt._offbid_to_case()
+        _ = self.mkt._run_opf()
+        gtee_offer_prc, gtee_bid_prc = self.mkt._nodal_prices(haveQ=True)
+
+        self.assertTrue(gtee_offer_prc)
+        self.assertFalse(gtee_bid_prc)
+
+        for offbid in self.offers + self.bids:
+            self.assertAlmostEqual(offbid.p_lambda, 50.0, 4)
+
+#        places = 0 # TODO: Repeat using PDIPM.
+#        self.assertAlmostEqual(self.offers[0].total_quantity, 35.6103, places)
+#        self.assertAlmostEqual(self.offers[1].total_quantity, 36.0000, places)
+#        self.assertAlmostEqual(self.offers[5].total_quantity, 36.0000, places)
+#
+#        self.assertAlmostEqual(self.bids[0].total_quantity, 30.0000, places)
+#        self.assertAlmostEqual(self.bids[0].total_quantity, 11.1779, places)
+#        self.assertAlmostEqual(self.bids[0].total_quantity, 22.7885, places)
+
+
     def test_dc_market(self):
         """ Test market clearing using DC OPF routine.
         """
-        mkt = SmartMarket(self.case, self.offers, self.bids,
-                                                  loc_adjust='dc',
-                                                  auction_type=FIRST_PRICE,
-                                                  price_cap=100.0)
-        mkt.run()
+        self.mkt.run()
 
-        for offer in mkt.offers:
-            print "OFFER: %8.3f %8.3f %8.3f %8.3f %s" % \
-                (offer.quantity,
-                 offer.price,
-                 offer.cleared_quantity,
-                 offer.cleared_price,
-                 offer.reactive)
+#        for offer in self.mkt.offers:
+#            print "OFFER: %8.3f %8.3f %8.3f %8.3f %s" % \
+#                (offer.quantity,
+#                 offer.price,
+#                 offer.cleared_quantity,
+#                 offer.cleared_price,
+#                 offer.reactive)
+#
+#        for bid in self.mkt.bids:
+#            print "BID:   %8.3f %8.3f %8.3f %8.3f %s" % \
+#                (bid.quantity,
+#                 bid.price,
+#                 bid.cleared_quantity,
+#                 bid.cleared_price,
+#                 bid.reactive)
 
-        for bid in mkt.bids:
-            print "BID:   %8.3f %8.3f %8.3f %8.3f %s" % \
-                (bid.quantity,
-                 bid.price,
-                 bid.cleared_quantity,
-                 bid.cleared_price,
-                 bid.reactive)
-
-        self.assertTrue(mkt._solution["status"] == "optimal" or "unknown")
-        self.assertAlmostEqual(mkt._solution["primal objective"], 2802.19, 2)
+        self.assertTrue(self.mkt._solution["status"] == "optimal" or "unknown")
+        self.assertAlmostEqual(
+            self.mkt._solution["primal objective"], 2802.19, 2)
 
 #        generators = self.case.generators
 #        self.assertAlmostEqual(generators[0].p, 35.01, places=2)
