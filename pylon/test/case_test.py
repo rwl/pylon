@@ -206,12 +206,14 @@ class CaseTest(unittest.TestCase):
         """ Test totals of complex bus power injection.
         """
         bus = Bus(p_demand=200.0, q_demand=120.0)
-        g1 = Generator(bus, p=150.0, q=50.0)
+        g1 = Generator(bus, p=200.0, q=50.0)
         g2 = Generator(bus, p=100.0, q=50.0)
-        case = Case(buses=[bus], generators=[g1, g2])
+        g3 = Generator(bus, p=-50, q=-10, p_max=0.0, p_min=-100.0)
+        case = Case(buses=[bus], generators=[g1, g2, g3])
 
-        self.assertAlmostEqual(abs(case.s_supply(bus)), 269.2582, 4)
-        self.assertAlmostEqual(abs(case.s_surplus(bus)), 53.8516, 4)
+        self.assertAlmostEqual(abs(case.s_supply(bus)), 316.2278, 4)
+        self.assertAlmostEqual(abs(case.s_demand(bus)), 281.7801, 4)
+        self.assertAlmostEqual(abs(case.s_surplus(bus)), 58.3095, 4)
 
 #------------------------------------------------------------------------------
 #  "BusTest" class:
