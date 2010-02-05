@@ -164,7 +164,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         mu_flow = array([branch.mu_s_from for branch in case.branches])
         voltages = array([bus.v_magnitude for bus in case.buses])
         angles = array([bus.v_angle for bus in case.buses])
-        nodal_prc = array([bus.p_lambda for bus in case.buses])
+        nodal_prc = array([bus.p_lmbda for bus in case.buses])
         v_max = array([bus.mu_vmax for bus in case.buses])
         v_min = array([bus.mu_vmin for bus in case.buses])
         pg = array([g.p for g in case.generators])

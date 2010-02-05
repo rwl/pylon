@@ -868,9 +868,9 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
 
         places = 3
         buses = self.case.buses
-        self.assertAlmostEqual(buses[0].p_lambda, 44.0, places)
-        self.assertAlmostEqual(buses[1].p_lambda, 44.0, places)
-        self.assertAlmostEqual(buses[29].p_lambda, 44.0, places)
+        self.assertAlmostEqual(buses[0].p_lmbda, 44.0, places)
+        self.assertAlmostEqual(buses[1].p_lmbda, 44.0, places)
+        self.assertAlmostEqual(buses[29].p_lmbda, 44.0, places)
 
 
 #    def test_branch_limits(self):
@@ -886,9 +886,9 @@ class PiecewiseLinearDCOPFTest(unittest.TestCase):
 #
 #        places = 3
 #        buses = self.case.buses
-#        self.assertAlmostEqual(buses[0].p_lambda, 76.000, places)
-#        self.assertAlmostEqual(buses[20].p_lambda, 124.242, places)
-#        self.assertAlmostEqual(buses[23].p_lambda, 38.590, places)
+#        self.assertAlmostEqual(buses[0].p_lmbda, 76.000, places)
+#        self.assertAlmostEqual(buses[20].p_lmbda, 124.242, places)
+#        self.assertAlmostEqual(buses[23].p_lmbda, 38.590, places)
 #
 #        self.assertAlmostEqual(constrained.mu_s_to, 115.127, 3)
 

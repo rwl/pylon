@@ -540,7 +540,7 @@ class DCOPF(object):
         ineqlin = solution["z"]
 
         for i, bus in enumerate(buses):
-            bus.p_lambda = eqlin[i + 1] / base_mva
+            bus.p_lmbda = eqlin[i + 1] / base_mva
 
         for j, branch in enumerate(branches):
 

@@ -96,9 +96,9 @@ class Bus(Named):
         self.v_angle = 0.0
 
         # Lambda (GBP/MWh).
-        self.p_lambda = 0.0
+        self.p_lmbda = 0.0
         # Lambda (GBP/MVAr-hr).
-        self.q_lambda = 0.0
+        self.q_lmbda = 0.0
 
         # Lagrangian multiplier for voltage constraint.
         self.mu_vmin = 0.0
@@ -110,8 +110,8 @@ class Bus(Named):
         """
         self.v_magnitude = 0.0
         self.v_angle = 0.0
-        self.p_lambda = 0.0
-        self.q_lambda = 0.0
+        self.p_lmbda = 0.0
+        self.q_lmbda = 0.0
         self.mu_vmin = 0.0
         self.mu_vmax = 0.0
 

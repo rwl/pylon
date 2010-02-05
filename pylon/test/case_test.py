@@ -54,13 +54,13 @@ class CaseTest(unittest.TestCase):
     def test_reset(self):
         """ Test zeroing of result attributes.
         """
-        self.case.buses[5].p_lambda = 1.1
+        self.case.buses[5].p_lmbda = 1.1
         self.case.generators[2].mu_pmax = 1.1
         self.case.branches[10].p_from = 1.1
 
         self.case.reset()
 
-        self.assertEqual(self.case.buses[5].p_lambda, 0.0)
+        self.assertEqual(self.case.buses[5].p_lmbda, 0.0)
         self.assertEqual(self.case.generators[2].mu_pmax, 0.0)
         self.assertEqual(self.case.branches[10].p_from, 0.0)
 
@@ -229,8 +229,8 @@ class BusTest(unittest.TestCase):
         bus = Bus()
         bus.v_magnitude = 0.95
         bus.v_angle = 15.0
-        bus.p_lambda = 50.0
-        bus.q_lambda = 20.0
+        bus.p_lmbda = 50.0
+        bus.q_lmbda = 20.0
         bus.mu_vmin = 10.0
         bus.mu_vmax = 10.0
 
@@ -238,8 +238,8 @@ class BusTest(unittest.TestCase):
 
         self.assertEqual(bus.v_magnitude, 0.0)
         self.assertEqual(bus.v_angle, 0.0)
-        self.assertEqual(bus.p_lambda, 0.0)
-        self.assertEqual(bus.q_lambda, 0.0)
+        self.assertEqual(bus.p_lmbda, 0.0)
+        self.assertEqual(bus.q_lmbda, 0.0)
         self.assertEqual(bus.mu_vmin, 0.0)
         self.assertEqual(bus.mu_vmax, 0.0)
 

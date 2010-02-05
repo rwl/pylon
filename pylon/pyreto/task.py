@@ -219,7 +219,7 @@ class ContinuousTask(BaseProfitTask):
         limits.extend([(-BIGNUM, BIGNUM) for b in case.branches]) # mu_flow
 
         limits.extend([(-180.0, 180.0) for b in case.buses]) # angle
-        limits.extend([(0.0, BIGNUM) for b in case.buses]) # p_lambda
+        limits.extend([(0.0, BIGNUM) for b in case.buses]) # p_lmbda
 #        limits.extend([(b.v_min, b.v_max) for b in case.buses]) # mu_vmin
 #        limits.extend([(b.v_min, b.v_max) for b in case.buses]) # mu_vmax
 

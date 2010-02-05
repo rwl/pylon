@@ -521,41 +521,41 @@ class CaseReport(object):
 
 
     @property
-    def min_p_lambda(self):
+    def min_p_lmbda(self):
         """ Minimum bus active power Lagrangian multiplier.
         """
         if self.case.buses:
-            return min([v.p_lambda for v in self.case.buses])
+            return min([v.p_lmbda for v in self.case.buses])
         else:
             return 0.0
 
 
     @property
-    def max_p_lambda(self):
+    def max_p_lmbda(self):
         """ Maximum bus active power Lagrangian multiplier.
         """
         if self.case.buses:
-            return max([v.p_lambda for v in self.case.buses])
+            return max([v.p_lmbda for v in self.case.buses])
         else:
             return 0.0
 
 
     @property
-    def min_q_lambda(self):
+    def min_q_lmbda(self):
         """ Minimum bus reactive power Lagrangian multiplier.
         """
         if self.case.buses:
-            return min([v.q_lambda for v in self.case.buses])
+            return min([v.q_lmbda for v in self.case.buses])
         else:
             return 0.0
 
 
     @property
-    def max_q_lambda(self):
+    def max_q_lmbda(self):
         """ Maximum bus reactive power Lagrangian multiplier.
         """
         if self.case.buses:
-            return max([v.q_lambda for v in self.case.buses])
+            return max([v.q_lmbda for v in self.case.buses])
         else:
             return 0.0
 
