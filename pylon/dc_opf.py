@@ -524,7 +524,6 @@ class DCOPF(object):
         p = x[nb:nb + ng]
         for i, generator in enumerate(generators):
             generator.p = p[i] * base_mva
-#            generator.p_despatch = p[i] * base_mva
 
         # Branch power flows.
         p_from = Bf * v_angle * base_mva

@@ -245,10 +245,14 @@ class SmartMarket(object):
 
             g.offers_to_pwl(self.offers)
 
-#            print "GG:", g.p_min, g.p_max, g.p_cost
+#            print "GG:", g.p_min, g.p_max, g.q_min, g.q_max, g.p_cost
 
         for vl in vloads:
+#            print "L: ", vl.p_min, vl.p_max, vl.p_cost
+
             vl.bids_to_pwl(self.bids)
+
+#            print "VL:", vl.p_min, vl.p_max, g.q_min, g.q_max, vl.p_cost
 
         # Move p_min and p_max limits out slightly to avoid problems with
         # lambdas caused by rounding errors when corner point of cost function
@@ -271,6 +275,9 @@ class SmartMarket(object):
 
         solution = self._solution = solver.solve()
 
+#        for g in self.case.generators:
+#            print "G:", g.online, g.p, g.q_min, g.q_max, g.p_cost, g.q_cost
+
         success = solution["status"] == "optimal" or \
                   solution["status"] == "unknown"
 
@@ -285,12 +292,17 @@ class SmartMarket(object):
         gtee_bid_prc = True
 
         for offer in self.offers:
-            # Get nodal marginal price from OPF results.
-            offer.p_lambda = offer.generator.bus.p_lambda
-            offer.total_quantity = offer.generator.p
+            if not offer.reactive:
+                # Get nodal marginal price from OPF results.
+                offer.lmbda = offer.generator.bus.p_lmbda
+                offer.total_quantity = offer.generator.p
+            else:
+                offer.lmbda = offer.generator.bus.q_lmbda
+                offer.total_quantity = abs(offer.generator.q)
         for bid in self.bids:
             bus = bid.vload.bus
-            if not haveQ:
+
+            if not bid.reactive:
                 # Fudge factor to include price of bundled reactive power.
                 if bid.vload.q_max == 0.0:
                     pf = bid.vload.q_min / bid.vload.p_min
@@ -298,17 +310,20 @@ class SmartMarket(object):
                     pf = bid.vload.q_max / bid.vload.p_min
                 else:
                     pf = 0.0
+
                 # Use bundled lambdas. For loads Q = pf * P.
-                bid.p_lambda = bus.p_lambda + pf * bus.q_lambda
+                bid.lmbda = bus.p_lmbda + pf * bus.q_lmbda
+
+                bid.total_quantity = -bid.vload.p
                 # Guarantee that cleared bids are <= bids.
                 gtee_bid_prc = True
             else:
                 # Use unbundled lambdas.
-                bid.p_lambda = bus.p_lambda
+                bid.lmbda = bus.q_lmbda
+
+                bid.total_quantity = abs(bid.vload.q)
                 # Allow cleared bids to be above bid price.
                 gtee_bid_prc = False
-
-            bid.total_quantity = -bid.vload.p
 
         return gtee_offer_prc, gtee_bid_prc
 
@@ -511,30 +526,30 @@ class Auction(object):
             if self.auction_type == DISCRIMINATIVE:
                 offbid.cleared_price = offbid.price
             elif self.auction_type == LAO:
-                offbid.cleared_price = offbid.p_lambda + lao.price
+                offbid.cleared_price = offbid.lmbda + lao.price
             elif self.auction_type == FRO:
-                offbid.cleared_price = offbid.p_lambda + fro.price
+                offbid.cleared_price = offbid.lmbda + fro.price
             elif self.auction_type == LAB:
-                offbid.cleared_price = offbid.p_lambda + lab.price
+                offbid.cleared_price = offbid.lmbda + lab.price
             elif self.auction_type == FRB:
-                offbid.cleared_price = offbid.p_lambda + frb.price
+                offbid.cleared_price = offbid.lmbda + frb.price
             elif self.auction_type == FIRST_PRICE:
-                offbid.cleared_price = offbid.p_lambda
+                offbid.cleared_price = offbid.lmbda
             elif self.auction_type == SECOND_PRICE:
                 if abs(lao.price) < 1e-5:
-                    clr_prc = offbid.p_lambda + min(fro.price, lab.price)
+                    clr_prc = offbid.p_lmbda + min(fro.price, lab.price)
                     offbid.cleared_price = clr_prc
                 else:
-                    clr_prc = offbid.p_lambda + max(lao.price, frb.price)
+                    clr_prc = offbid.p_lmbda + max(lao.price, frb.price)
                     offbid.cleared_price = clr_prc
             elif self.auction_type == SPLIT:
                 split_price = (lao.price - lab.price) / 2.0
-                offbid.cleared_price = offbid.p_lambda + split_price
+                offbid.cleared_price = offbid.lmbda + split_price
             elif self.auction_type == DUAL_LAOB:
                 if isinstance(offbid, Offer):
-                    offbid.cleared_price = offbid.p_lambda + lao.price
+                    offbid.cleared_price = offbid.lmbda + lao.price
                 else:
-                    offbid.cleared_price = offbid.p_lambda + lab.price
+                    offbid.cleared_price = offbid.lmbda + lab.price
 
 
     def _clip_prices(self):
@@ -610,8 +625,8 @@ class _OfferBid(object):
         # Output at which the generator was dispatched.
         self.total_quantity = 0.0
 
-        # Nodal marginal price from OPF.
-        self.p_lambda = 0.0
+        # Nodal marginal active/reactive power price.
+        self.lmbda = 0.0
 
         # Is the bid valid?
         self.withheld = False
@@ -644,7 +659,7 @@ class _OfferBid(object):
             This diff represents the gap between the marginal unit (setting
             lambda) and the offer/bid price in question.
         """
-        return self.price - self.p_lambda
+        return self.price - self.lmbda
 
 
     @property

@@ -154,7 +154,7 @@ class OneBusMarketTestCase(unittest.TestCase):
         offers = [Offer(self.case.generators[0], 60.0, 10.0),
                   Offer(self.case.generators[1], 60.0, 20.0)]
 
-        bids = [Bid(vl, 50.0, 30.0)]
+        bids = [Bid(vl, 40.0, 30.0)]
 
         SmartMarket(self.case, offers, bids).run()
 
@@ -164,10 +164,10 @@ class OneBusMarketTestCase(unittest.TestCase):
         self.assertAlmostEqual(bids[0].cleared_price, 30.0, places)
 
 #------------------------------------------------------------------------------
-#  "MarketTestCase" class:
+#  "DCMarketTestCase" class:
 #------------------------------------------------------------------------------
 
-class MarketTestCase(unittest.TestCase):
+class DCMarketTestCase(unittest.TestCase):
     """ Defines a test case for the Pyreto market using data from t_runmarket.
     """
 
@@ -182,58 +182,64 @@ class MarketTestCase(unittest.TestCase):
             Offer(generators[0], 12.0, 20.0),
             Offer(generators[0], 24.0, 50.0),
             Offer(generators[0], 24.0, 60.0),
-            Offer(generators[0], 60.0, 0.0, reactive=True),
 
             Offer(generators[1], 12.0, 20.0),
             Offer(generators[1], 24.0, 40.0),
             Offer(generators[1], 24.0, 70.0),
-            Offer(generators[1], 60.0, 0.0, reactive=True),
 
             Offer(generators[2], 12.0, 20.0),
             Offer(generators[2], 24.0, 42.0),
             Offer(generators[2], 24.0, 80.0),
-            Offer(generators[2], 60.0, 0.0, reactive=True),
 
             Offer(generators[3], 12.0, 20.0),
             Offer(generators[3], 24.0, 44.0),
             Offer(generators[3], 24.0, 90.0),
-            Offer(generators[3], 60.0, 0.0, reactive=True),
 
             Offer(generators[4], 12.0, 20.0),
             Offer(generators[4], 24.0, 46.0),
             Offer(generators[4], 24.0, 75.0),
-            Offer(generators[4], 60.0, 0.0, reactive=True),
 
             Offer(generators[5], 12.0, 20.0),
             Offer(generators[5], 24.0, 48.0),
-            Offer(generators[5], 24.0, 60.0),
-            Offer(generators[5], 60.0, 3.0, reactive=True),
+            Offer(generators[5], 24.0, 60.0)
         ]
 
         self.bids = [
-            Bid(generators[0], 15.0, 0.0, reactive=True),
-            Bid(generators[1], 15.0, 0.0, reactive=True),
-            Bid(generators[2], 15.0, 0.0, reactive=True),
-            Bid(generators[3], 15.0, 0.0, reactive=True),
-            Bid(generators[4], 15.0, 0.0, reactive=True),
-            Bid(generators[5], 15.0, 0.0, reactive=True),
-
             Bid(generators[6], 10.0, 100.0),
             Bid(generators[6], 10.0, 70.0),
             Bid(generators[6], 10.0, 60.0),
-            Bid(generators[6], 15.0, 0.0, reactive=True),
 
             Bid(generators[7], 10.0, 100.0),
             Bid(generators[7], 10.0, 50.0),
             Bid(generators[7], 10.0, 20.0),
-#            Bid(generators[7], 12.0, 83.9056, reactive=True),
-            Bid(generators[7], 12.0, 20.0, reactive=True),
 
             Bid(generators[8], 10.0, 100.0),
             Bid(generators[8], 10.0, 60.0),
-            Bid(generators[8], 10.0, 50.0),
-            Bid(generators[8], 7.5, 0.0, reactive=True)
+            Bid(generators[8], 10.0, 50.0)
         ]
+
+#        self.offers.extend([
+#            Offer(generators[0], 60.0, 0.0, True),
+#            Offer(generators[1], 60.0, 0.0, True),
+#            Offer(generators[2], 60.0, 0.0, True),
+#            Offer(generators[3], 60.0, 0.0, True),
+#            Offer(generators[4], 60.0, 0.0, True),
+#            Offer(generators[5], 60.0, 3.0, True),
+#        ])
+
+        self.bids.extend([
+#            Bid(generators[0], 15.0, 0.0, True),
+#            Bid(generators[1], 15.0, 0.0, True),
+#            Bid(generators[2], 15.0, 0.0, True),
+#            Bid(generators[3], 15.0, 0.0, True),
+#            Bid(generators[4], 15.0, 0.0, True),
+#            Bid(generators[5], 15.0, 0.0, True),
+
+#            Bid(generators[6], 15.0, 0.0, reactive=True),
+##            Bid(generators[7], 12.0, 83.9056, reactive=True),
+#            Bid(generators[7], 12.0, 20.0, reactive=True),
+#            Bid(generators[8], 7.5, 0.0, reactive=True)
+        ])
 
         self.mkt = SmartMarket(self.case, self.offers, self.bids,
             loc_adjust='dc', auction_type=FIRST_PRICE, price_cap=100.0)
@@ -251,8 +257,8 @@ class MarketTestCase(unittest.TestCase):
     def test_reset(self):
         """ Test resetting the market.
         """
-        self.assertEqual(len(self.mkt.offers), 24)
-        self.assertEqual(len(self.mkt.bids), 18)
+        self.assertEqual(len(self.mkt.offers), 18)
+        self.assertEqual(len(self.mkt.bids), 9)
         self.mkt.reset()
         self.assertEqual(len(self.mkt.offers), 0)
         self.assertEqual(len(self.mkt.bids), 0)
@@ -261,7 +267,7 @@ class MarketTestCase(unittest.TestCase):
     def test_have_q(self):
         """ Test reactive offers/bids.
         """
-        self.assertTrue(self.mkt._reactive_market())
+        self.assertFalse(self.mkt._reactive_market())
 
 
     def test_withhold(self):
@@ -274,8 +280,8 @@ class MarketTestCase(unittest.TestCase):
         self.mkt._withhold_offbids()
 
         self.assertFalse(self.offers[0].withheld)
-        self.assertFalse(self.offers[10].withheld)
-        self.assertTrue(self.offers[14].withheld)
+        self.assertFalse(self.offers[8].withheld)
+        self.assertTrue(self.offers[11].withheld)
         self.assertTrue(invalid_offer.withheld)
 
 
@@ -355,56 +361,19 @@ class MarketTestCase(unittest.TestCase):
         gtee_offer_prc, gtee_bid_prc = self.mkt._nodal_prices(haveQ=True)
 
         self.assertTrue(gtee_offer_prc)
-        self.assertFalse(gtee_bid_prc)
+        self.assertTrue(gtee_bid_prc)
 
         for offbid in self.offers + self.bids:
-            self.assertAlmostEqual(offbid.p_lambda, 50.0, 4)
+            self.assertAlmostEqual(offbid.lmbda, 50.0, 4)
 
-#        places = 0 # TODO: Repeat using PDIPM.
-#        self.assertAlmostEqual(self.offers[0].total_quantity, 35.6103, places)
-#        self.assertAlmostEqual(self.offers[1].total_quantity, 36.0000, places)
-#        self.assertAlmostEqual(self.offers[5].total_quantity, 36.0000, places)
-#
-#        self.assertAlmostEqual(self.bids[0].total_quantity, 30.0000, places)
-#        self.assertAlmostEqual(self.bids[0].total_quantity, 11.1779, places)
-#        self.assertAlmostEqual(self.bids[0].total_quantity, 22.7885, places)
+        places = 0 # TODO: Repeat using PDIPM.
+        self.assertAlmostEqual(self.offers[0].total_quantity, 35.6103, places)
+        self.assertAlmostEqual(self.offers[3].total_quantity, 36.0000, places)
+        self.assertAlmostEqual(self.offers[6].total_quantity, 36.0000, places)
 
-
-    def test_dc_market(self):
-        """ Test market clearing using DC OPF routine.
-        """
-        self.mkt.run()
-
-#        for offer in self.mkt.offers:
-#            print "OFFER: %8.3f %8.3f %8.3f %8.3f %s" % \
-#                (offer.quantity,
-#                 offer.price,
-#                 offer.cleared_quantity,
-#                 offer.cleared_price,
-#                 offer.reactive)
-#
-#        for bid in self.mkt.bids:
-#            print "BID:   %8.3f %8.3f %8.3f %8.3f %s" % \
-#                (bid.quantity,
-#                 bid.price,
-#                 bid.cleared_quantity,
-#                 bid.cleared_price,
-#                 bid.reactive)
-
-        self.assertTrue(self.mkt._solution["status"] == "optimal" or "unknown")
-        self.assertAlmostEqual(
-            self.mkt._solution["primal objective"], 2802.19, 2)
-
-#        generators = self.case.generators
-#        self.assertAlmostEqual(generators[0].p, 35.01, places=2)
-#        self.assertAlmostEqual(generators[1].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[2].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[3].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[4].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[5].p, 36.0, places=1)
-#        self.assertAlmostEqual(generators[6].p, -30.0, places=1)
-#        self.assertAlmostEqual(generators[7].p, -11.5, places=1)
-#        self.assertAlmostEqual(generators[8].p, -21.87, places=2)
+        self.assertAlmostEqual(self.bids[0].total_quantity, 30.0000, places)
+#        self.assertAlmostEqual(self.bids[3].total_quantity, 11.1779, places)
+#        self.assertAlmostEqual(self.bids[6].total_quantity, 22.7885, places)
 
 
 #    def test_constrained_market(self):
@@ -412,6 +381,55 @@ class MarketTestCase(unittest.TestCase):
 #        """
 #        constrained = self.case.branches[15]
 #        constrained.rate_a = 30.0
+
+#------------------------------------------------------------------------------
+#  "AuctionTestCase" class:
+#------------------------------------------------------------------------------
+
+class AuctionTestCase(unittest.TestCase):
+    """ Defines a test case for the Pyreto market using data from t_runmarket.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+
+#------------------------------------------------------------------------------
+#  "ACMarketTestCase" class:
+#------------------------------------------------------------------------------
+
+class ACMarketTestCase(unittest.TestCase):
+    """ Defines a test case for the Pyreto market using data from t_runmarket.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.case = Case.load(DATA_FILE)
+
+        generators = self.case.generators
+
+        self.q_offers = [
+            Offer(generators[0], 60.0, 0.0, True),
+            Offer(generators[1], 60.0, 0.0, True),
+            Offer(generators[2], 60.0, 0.0, True),
+            Offer(generators[3], 60.0, 0.0, True),
+            Offer(generators[4], 60.0, 0.0, True),
+            Offer(generators[5], 60.0, 3.0, True),
+        ]
+
+        self.q_bids = [
+            Bid(generators[0], 15.0, 0.0, True),
+            Bid(generators[1], 15.0, 0.0, True),
+            Bid(generators[2], 15.0, 0.0, True),
+            Bid(generators[3], 15.0, 0.0, True),
+            Bid(generators[4], 15.0, 0.0, True),
+            Bid(generators[5], 15.0, 0.0, True),
+            Bid(generators[6], 15.0, 0.0, True),
+#            Bid(generators[7], 12.0, 83.9056, True),
+            Bid(generators[7], 12.0, 20.0, True),
+            Bid(generators[8], 7.5, 0.0, True)
+        ]
 
 
 if __name__ == "__main__":

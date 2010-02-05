@@ -426,19 +426,20 @@ class Generator(Named):
         else:
             self.p_cost = [(0.0, 0.0), (self.p_max, 0.0)]
             self.pcost_model = PW_LINEAR
-
-        if q_offers:
-            self.q_cost = self._offbids_to_points(q_offers)
-            self.qcost_model = PW_LINEAR
-            self.online = True
-            if not p_offers:
+            if q_offers:
                 # Dispatch at zero real power without shutting down
                 # if capacity offered for reactive power.
                 self.p_min = 0.0
                 self.p_max = 0.0
                 self.online = True
+            else:
+                self.online = False
+
+        if q_offers:
+            self.q_cost = self._offbids_to_points(q_offers)
+            self.qcost_model = PW_LINEAR
         else:
-            self.q_cost = [(0.0, 0.0), (self.q_max, 0.0)]
+            self.q_cost = None#[(0.0, 0.0), (self.q_max, 0.0)]
             self.qcost_model = PW_LINEAR
 
         if not len(p_offers) and not len(q_offers):
@@ -486,10 +487,10 @@ class Generator(Named):
             self.qcost_model = PW_LINEAR
             self.online = True
         else:
-#            self.q_cost = [(0.0, 0.0), (self.q_max, 0.0)]
-#            self.qcost_model = PW_LINEAR
+            self.q_cost = [(self.q_min, 0.0), (0.0, 0.0), (self.q_max, 0.0)]
+            self.qcost_model = PW_LINEAR
             logger.info("No valid bids for dispatchable load, shutting down.")
-            self.online = False
+#            self.online = False
 
         self._adjust_limits()
 
