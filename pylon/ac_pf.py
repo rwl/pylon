@@ -47,6 +47,13 @@ from pylon.case import PQ, PV, REFERENCE
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+BX = "BX"
+XB = "XB"
+
+#------------------------------------------------------------------------------
 #  "_ACPF" class:
 #------------------------------------------------------------------------------
 
@@ -63,7 +70,7 @@ class _ACPF(object):
     #--------------------------------------------------------------------------
 
     def __init__(self, case, solver="UMFPACK", qlimit=False, tolerance=1e-08,
-                 iter_max=10):
+                 iter_max=10, verbose=True):
         """ Initialises a new ACPF instance.
         """
         # Solved case.
@@ -81,11 +88,14 @@ class _ACPF(object):
         # Maximum number of iterations.
         self.iter_max = iter_max
 
+        # Print progress information.
+        self.verbose = verbose
+
     #--------------------------------------------------------------------------
     #  "_ACPF" interface:
     #--------------------------------------------------------------------------
 
-    def solve(self):
+    def solve(self, **kw_args):
         """ Override this method in subclasses.
         """
         # Zero result attributes.
@@ -124,7 +134,7 @@ class _ACPF(object):
             Sbus = self.case.Sbus
 
             # Run the power flow.
-            V, success, iterations = self._run_power_flow(Ybus, Sbus, V0)
+            V, success, i = self._run_power_flow(Ybus, Sbus, V0, **kw_args)
 
             # Update case with solution.
             self.case.pf_solution(Ybus, Yf, Yt, V)
@@ -137,8 +147,7 @@ class _ACPF(object):
 
         elapsed = time() - t0
 
-        return {"success": success, "elapsed": elapsed,
-                "iterations": iterations}
+        return {"success": success, "elapsed": elapsed, "iterations": i}
 
 
     def _unpack_case(self, case):
@@ -210,7 +219,7 @@ class NewtonRaphson(_ACPF):
             http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
     """
 
-    def _run_power_flow(self, Ybus, Sbus, V, pv, pq, pvpq):
+    def _run_power_flow(self, Ybus, Sbus, V, pv, pq, pvpq, **kw_args):
         """ Solves the power flow using a full Newton's method.
         """
         Va = angle(V)
@@ -337,150 +346,162 @@ class FastDecoupled(_ACPF):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, case, tolerance=1e-08, iter_max=10, method="XB"):
+    def __init__(self, case, tolerance=1e-08, iter_max=10, method=XB):
         """ Initialises a new ACPF instance.
         """
         super(_ACPF, self).__init__(case, tolerance, iter_max)
 
         # Use XB or BX method?
         self.method = method
-        # Sparse FDPF matrix B prime.
-        self.Bp = None
-        # Sparse FDPF matrix B double prime.
-        self.Bpp = None
 
-        self.p = None
-        self.q = None
 
-    #--------------------------------------------------------------------------
-    #  Solve power flow using Fast Decoupled method:
-    #--------------------------------------------------------------------------
-
-    def solve(self):
-        """ Solves the AC power flow for the referenced case using fast
-            decoupled method.  Returns the final complex voltages, a flag which
-            indicates whether it converged or not, and the number of iterations
-            performed.
+    def _run_power_flow(self, Ybus, Sbus, V, pv, pq, pvpq):
+        """ Solves the power flow using a full Newton's method.
         """
-        logger.info("Performing Fast Decoupled AC power flow.")
+        # FIXME: Do not repeat build for each Q limit loop.
+        Bp, Bpp = self.case.makeB(self.method)
 
-        t0 = time.time()
+        i = 0
+        Va = angle(V)
+        Vm = abs(V)
 
-        self._make_B_prime()
-        self._make_B_double_prime()
+        # Evaluate initial mismatch.
+        P, Q = self._evaluate_mismatch(Ybus, V, Sbus, pq, pvpq)
 
-        self._make_admittance_matrix()
-        self._initialise_voltage_vector()
-        self._make_power_injection_vector()
-        self._index_buses()
+        if self.verbose:
+            logger.info("iteration     max mismatch (p.u.)  \n")
+            logger.info("type   #        P            Q     \n")
+            logger.info("---- ----  -----------  -----------\n")
 
-        # Initial mismatch evaluation and convergency check.
-        self.converged = False
-        self._evaluate_mismatch()
-        self._check_convergence()
+        # Check tolerance.
+        converged = self._check_convergence(self, i, P, Q)
 
-#        iter = 0
-#        while (not self.converged) and (iter < self.iter_max):
-#            self.iterate()
-#            self._evaluate_mismatch()
-#            self._check_convergence()
-#            iter += 1
+        if converged and self.verbose:
+            logger.info("Converged!")
 
-        if self.converged:
-            logger.info("Routine converged in %d iterations." % iter)
-        else:
-            logger.info("Routine failed to converge in %d iterations." % iter)
+        # Reduce B matrices.
+        Bp = Bp[pvpq, pvpq]
+        Bpp = Bpp[pq, pq]
 
-        t_elapsed = time.time() - t0
-        logger.info("AC power flow completed in %.3fs" % t_elapsed)
+        # Perform Newton iterations.
+        while (not converged) and (i < self.iter_max):
+            i += 1
+            # Perform P iteration, update Va.
+            V, Vm, Va = self._p_iteration(P, Q, Ybus, V, Vm, Va, pv, pq, pvpq)
+
+            # Evalute mismatch.
+            P, Q = self._evaluate_mismatch(Ybus, V, Sbus, pq, pvpq)
+            # Check tolerance.
+            converged = self._check_convergence(self, i, P, Q, "P")
+
+            if self.verbose and converged:
+                logger.info("Fast-decoupled power flow converged in %d "
+                    "P-iterations and %d Q-iterations." % (i, i-1))
+                break
+
+            # Perform Q iteration, update Vm.
+            V, Vm, Va = self._q_iteration(P, Q, Ybus, V, Vm, Va, pv, pq, pvpq)
+
+            # Evalute mismatch.
+            P, Q = self._evaluate_mismatch(Ybus, V, Sbus, pq, pvpq)
+            # Check tolerance.
+            converged = self._check_convergence(self, i, P, Q, "Q")
+
+            if self.verbose and converged:
+                logger.info("Fast-decoupled power flow converged in %d "
+                    "P-iterations and %d Q-iterations." % (i, i))
+                break
+
+        if self.verbose and not converged:
+            logger.info("FDPF did not converge in %d iterations." % i)
 
     #--------------------------------------------------------------------------
-    #  P and Q iterations:
+    #  P iterations:
     #--------------------------------------------------------------------------
 
-    def iterate(self):
-        """ Performs P and Q iterations.
+    def _p_iteration(self, P, Ybus, Bp, Bpp, Sbus, Vm, Va, pq, pvpq):
+        """ Performs a P iteration, updates Va.
         """
-        pass
-
-
-    def _factor_B_matrices(self):
-        """ Perform symbolic and numeric LU factorisation of Bp and Bpp.
-        """
-        Bp = self.Bp
-        Bpp = self.Bpp
-
         # The numeric factorisation is returned as an opaque C object that
         # can be passed on to umfpack.solve().
-        opaqueBp = numeric(Bp, symbolic(Bp))
-        opaqueBpp = numeric(Bpp, symbolic(Bp))
+        Bps = symbolic(Bp)
+        Bpps = symbolic(Bp)
+        FBp = numeric(Bp, Bps)
+        FBpp = numeric(Bpp, Bpps)
+
+        umfpack.linsolve
+
+        # P iteration, update Va.
+        # dVa = -( Up \  (Lp \ (Pp * P)));
+        # L, U = Sci.linalg.lu(a)
+        # LU, P = Sci.linalg.lu_factor(a)
+        dVa = solve(Lp, (Pp * P))
+
+        # Update voltage.
+        Va[pvpq] = Va[pvpq] + dVa
+        V = mul(Vm, exp(1j * Va))
+
+        return V, Vm, Va
+
+    #--------------------------------------------------------------------------
+    #  Q iterations:
+    #--------------------------------------------------------------------------
+
+    def _q_iteration(self, Lpp, Upp, Ppp, Ybus, Bp, Bpp, Sbus, Vm, Va, pq, pvpq):
+        """ Performs a Q iteration, updates Vm.
+        """
+        dVm = None
+
+        # Update voltage.
+        Vm[pq] = Vm[pq] + dVm
+        V = mul(Vm, exp(1j * Va))
+
+        return V, Vm
+
+
+#    def _factor_B_matrices(self):
+#        """ Perform symbolic and numeric LU factorisation of Bp and Bpp.
+#        """
+#        Bp = self.Bp
+#        Bpp = self.Bpp
+#
+#        # The numeric factorisation is returned as an opaque C object that
+#        # can be passed on to umfpack.solve().
+#        opaqueBp = numeric(Bp, symbolic(Bp))
+#        opaqueBpp = numeric(Bpp, symbolic(Bp))
 
     #--------------------------------------------------------------------------
     #  Evaluate mismatch:
     #--------------------------------------------------------------------------
 
-    def _evaluate_mismatch(self):
-        """ Evaluates the mismatch between.
-
-          -4.0843 - 4.1177i
-           1.0738 - 0.2847i
-           0.2524 - 0.9024i
-           4.6380 - 0.6955i
-          -0.1939 + 0.6726i
-          -0.2126 + 0.9608i
-
-           4.0063 -11.7479i  -2.6642 + 3.5919i        0            -4.6636 + 1.3341i  -0.8299 + 3.1120i
-          -1.2750 + 4.2865i   9.3283 -23.1955i  -0.7692 + 3.8462i  -4.0000 + 8.0000i  -1.0000 + 3.0000i
-                0            -0.7692 + 3.8462i   4.1557 -16.5673i        0            -1.4634 + 3.1707i
-           3.4872 + 3.3718i  -4.0000 + 8.0000i        0             6.1765 -14.6359i  -1.0000 + 2.0000i
-          -0.8299 + 3.1120i  -1.0000 + 3.0000i  -1.4634 + 3.1707i  -1.0000 + 2.0000i   5.2933 -14.1378i
-                0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i
+    def _evaluate_mismatch(self, Ybus, V, Sbus, pq, pvpq):
+        """ Evaluates the mismatch.
         """
-        j = 0 + 1j
+        mis = div(mul(V, conj(Ybus * V)) - Sbus, abs(V))
 
-        # MATPOWER:
-        #   mis = (V .* conj(Ybus * V) - Sbus) ./ Vm;
-        v = self.v
-        Y = self.Y
-        s = self.s_surplus
+        P = mis[pvpq].real()
+        Q = mis[pq].imag()
 
-#        print "V:", v
-#        print "Y:", Y
-        print "S:", s
-
-#        mismatch = div(mul(v, conj(self.Y * v) - self.s_surplus), abs(v))
-        mismatch = div(mul(v, conj(Y * v)) - s, abs(v))
-
-        print "MIS:", mismatch
-
-        self.p = p = mismatch[self.pvpq_idxs].real()
-        self.q = q = mismatch[self.pq_idxs].imag()
-
-        print "P:", p
-        print "Q:", q
-
-        return p, q# + j*q
+        return P, Q
 
     #--------------------------------------------------------------------------
     #  Check convergence:
     #--------------------------------------------------------------------------
 
-    def _check_convergence(self):
+    def _check_convergence(self, i, P, Q, type):
         """ Checks if the solution has converged to within the specified
             tolerance.
         """
-        P = self.p
-        Q = self.q
-        tolerance = self.tolerance
-
         normP = max(abs(P))
         normQ = max(abs(Q))
 
-        if (normP < tolerance) and (normQ < tolerance):
-            self.converged = converged = True
+        if self.verbose:
+            logger.info("  -  %3d   %10.3e   %10.3e" % (i, normP, normQ))
+
+        if (normP < self.tolerance) and (normQ < self.tolerance):
+            converged = True
         else:
-            self.converged = converged = False
-#            logger.info("Difference: %.3f" % normF-self.tolerance)
+            converged = False
 
         return converged
 
@@ -488,59 +509,47 @@ class FastDecoupled(_ACPF):
     #  Make FDPF matrix B prime:
     #--------------------------------------------------------------------------
 
-    def _make_B_prime(self):
-        """ Builds the Fast Decoupled Power Flow matrix B prime.
-
-            References:
-            R. Zimmerman, "makeB.m", MATPOWER, PSERC (Cornell),
-            version 1.5, http://www.pserc.cornell.edu/matpower/, July 8, 2005
-
-        """
-        if self.method is "XB":
-            r_line = False
-        else:
-            r_line = True
-
-        Y, _, _ = self.case.get_admittance_matrix(bus_shunts=False,
-            line_shunts=False, tap_positions=False, line_resistance=r_line)
-
-        self.Bp = Bp = -Y.imag()
-
-        return Bp
+#    def _make_B_prime(self):
+#        """ Builds the Fast Decoupled Power Flow matrix B prime.
+#
+#            References:
+#            R. Zimmerman, "makeB.m", MATPOWER, PSERC (Cornell),
+#            version 1.5, http://www.pserc.cornell.edu/matpower/, July 8, 2005
+#
+#        """
+#        if self.method is "XB":
+#            r_line = False
+#        else:
+#            r_line = True
+#
+#        Y, _, _ = self.case.get_admittance_matrix(bus_shunts=False,
+#            line_shunts=False, tap_positions=False, line_resistance=r_line)
+#
+#        self.Bp = Bp = -Y.imag()
+#
+#        return Bp
 
     #--------------------------------------------------------------------------
     #  Make FDPF matrix B double prime:
     #--------------------------------------------------------------------------
 
-    def _make_B_double_prime(self):
-        """ Builds the Fast Decoupled Power Flow matrix B double prime.
-
-            References:
-            R. Zimmerman, "makeB.m", MATPOWER, PSERC (Cornell),
-            version 1.5, http://www.pserc.cornell.edu/matpower/, July 8, 2005
-        """
-        if self.method is "BX":
-            r_line = False
-        else:
-            r_line = True
-
-        Y, _, _ = self.case.get_admittance_matrix(line_resistance=r_line,
-                                                  phase_shift=False)
-
-        self.Bp = Bpp = -Y.imag()
-
-        return Bpp
-
-
-    def _reduce_B_matrices(self):
-        """ Reduces the FDPF matrices Bp and Bpp.
-        """
-        # Reduce Bp matrix
-        # Bp = Bp([pv; pq], [pv; pq]);
-        self.Bp = self.Bp[self.pvpq_idxs]
-
-        # Reduce Bpp matrix
-        # Bpp = Bpp(pq, pq);
-        self.Bpp = self.Bpp[self.pq_idxs]
+#    def _make_B_double_prime(self):
+#        """ Builds the Fast Decoupled Power Flow matrix B double prime.
+#
+#            References:
+#            R. Zimmerman, "makeB.m", MATPOWER, PSERC (Cornell),
+#            version 1.5, http://www.pserc.cornell.edu/matpower/, July 8, 2005
+#        """
+#        if self.method is "BX":
+#            r_line = False
+#        else:
+#            r_line = True
+#
+#        Y, _, _ = self.case.get_admittance_matrix(line_resistance=r_line,
+#                                                  phase_shift=False)
+#
+#        self.Bp = Bpp = -Y.imag()
+#
+#        return Bpp
 
 # EOF -------------------------------------------------------------------------
