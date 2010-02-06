@@ -36,6 +36,7 @@ from pylon.readwrite import PickleReader
 
 MP_DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
 DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
+PWL_FILE = join(dirname(__file__), "data", "case30pwl.pkl")
 
 #------------------------------------------------------------------------------
 #  "CaseTest" class:
@@ -63,6 +64,20 @@ class CaseTest(unittest.TestCase):
         self.assertEqual(self.case.buses[5].p_lmbda, 0.0)
         self.assertEqual(self.case.generators[2].mu_pmax, 0.0)
         self.assertEqual(self.case.branches[10].p_from, 0.0)
+
+
+    def test_sort_generators(self):
+        """ Test ordering of generators according to bus index.
+        """
+        case = PickleReader().read(PWL_FILE)
+
+        self.assertEqual(case.buses.index(case.generators[2].bus), 21)
+        self.assertEqual(case.buses.index(case.generators[5].bus), 12)
+
+        case.sort_generators()
+
+        self.assertEqual(case.buses.index(case.generators[2].bus), 12)
+        self.assertEqual(case.buses.index(case.generators[5].bus), 26)
 
     #--------------------------------------------------------------------------
     #  Serialisation tests.

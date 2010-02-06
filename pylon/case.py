@@ -280,6 +280,12 @@ class Case(Named, Serializable):
         s = matrix([self.s_surplus(v) / self.base_mva for v in self.buses])
         return s
 
+
+    def sort_generators(self):
+        """ Reorders the list of generators according to bus index.
+        """
+        self.generators.sort(key=lambda gn: self.buses.index(gn.bus))
+
     #--------------------------------------------------------------------------
     #  Bus injections:
     #--------------------------------------------------------------------------
