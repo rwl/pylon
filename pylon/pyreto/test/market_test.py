@@ -154,7 +154,7 @@ class OneBusMarketTestCase(unittest.TestCase):
         offers = [Offer(self.case.generators[0], 60.0, 10.0),
                   Offer(self.case.generators[1], 60.0, 20.0)]
 
-        bids = [Bid(vl, 40.0, 30.0)]
+        bids = [Bid(vl, 50.0, 30.0)] # Marginal bid.
 
         SmartMarket(self.case, offers, bids).run()
 
@@ -218,29 +218,6 @@ class DCMarketTestCase(unittest.TestCase):
             Bid(generators[8], 10.0, 50.0)
         ]
 
-#        self.offers.extend([
-#            Offer(generators[0], 60.0, 0.0, True),
-#            Offer(generators[1], 60.0, 0.0, True),
-#            Offer(generators[2], 60.0, 0.0, True),
-#            Offer(generators[3], 60.0, 0.0, True),
-#            Offer(generators[4], 60.0, 0.0, True),
-#            Offer(generators[5], 60.0, 3.0, True),
-#        ])
-
-        self.bids.extend([
-#            Bid(generators[0], 15.0, 0.0, True),
-#            Bid(generators[1], 15.0, 0.0, True),
-#            Bid(generators[2], 15.0, 0.0, True),
-#            Bid(generators[3], 15.0, 0.0, True),
-#            Bid(generators[4], 15.0, 0.0, True),
-#            Bid(generators[5], 15.0, 0.0, True),
-
-#            Bid(generators[6], 15.0, 0.0, reactive=True),
-##            Bid(generators[7], 12.0, 83.9056, reactive=True),
-#            Bid(generators[7], 12.0, 20.0, reactive=True),
-#            Bid(generators[8], 7.5, 0.0, reactive=True)
-        ])
-
         self.mkt = SmartMarket(self.case, self.offers, self.bids,
             loc_adjust='dc', auction_type=FIRST_PRICE, price_cap=100.0)
 
@@ -293,6 +270,9 @@ class DCMarketTestCase(unittest.TestCase):
 
         places = 2
         generators = self.case.generators
+
+        for g in generators:
+            self.assertTrue(g.online)
 
         self.assertAlmostEqual(generators[0].p_min, 35.0, places)
         self.assertAlmostEqual(generators[0].p_max, 60.0, places)
@@ -363,10 +343,12 @@ class DCMarketTestCase(unittest.TestCase):
         self.assertTrue(gtee_offer_prc)
         self.assertTrue(gtee_bid_prc)
 
+        # Nodal marginal prices.
         for offbid in self.offers + self.bids:
             self.assertAlmostEqual(offbid.lmbda, 50.0, 4)
 
         places = 0 # TODO: Repeat using PDIPM.
+        # Total dispatched quantity for associated generator.
         self.assertAlmostEqual(self.offers[0].total_quantity, 35.6103, places)
         self.assertAlmostEqual(self.offers[3].total_quantity, 36.0000, places)
         self.assertAlmostEqual(self.offers[6].total_quantity, 36.0000, places)
@@ -375,24 +357,75 @@ class DCMarketTestCase(unittest.TestCase):
 #        self.assertAlmostEqual(self.bids[3].total_quantity, 11.1779, places)
 #        self.assertAlmostEqual(self.bids[6].total_quantity, 22.7885, places)
 
+        # Results from CVXOPT not MATPOWER.
+        self.assertAlmostEqual(self.bids[3].total_quantity, 10.01828, places)
+        self.assertAlmostEqual(self.bids[6].total_quantity, 24.27777, places)
+
+
+    def test_active_power_auction(self):
+        """ Test auction for clearing offer/bid quantities and prices.
+        """
+        self.mkt._withhold_offbids()
+        self.mkt._offbid_to_case()
+        _ = self.mkt._run_opf()
+        gtee_offer_prc, gtee_bid_prc = self.mkt._nodal_prices(haveQ=True)
+        self.mkt._run_auction(gtee_offer_prc, gtee_bid_prc, haveQ=True)
+
+        places = 4
+
+        for offer in self.offers:
+            self.assertAlmostEqual(offer.cleared_price, 50.0, places)
+        for bid in self.bids:
+            self.assertAlmostEqual(bid.cleared_price, 50.0, places)
+
+        offers = self.offers
+        self.assertAlmostEqual(offers[0].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[1].cleared_quantity, 23.6103, places=0)
+        self.assertAlmostEqual(offers[2].cleared_quantity, 0.0, places)
+
+        self.assertAlmostEqual(offers[3].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[4].cleared_quantity, 24.0, places)
+        self.assertAlmostEqual(offers[5].cleared_quantity, 0.00, places)
+
+        self.assertAlmostEqual(offers[6].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[7].cleared_quantity, 24.0, places)
+        self.assertAlmostEqual(offers[8].cleared_quantity, 0.00, places)
+
+        self.assertAlmostEqual(offers[9].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[10].cleared_quantity, 24.0, places)
+        self.assertAlmostEqual(offers[11].cleared_quantity, 0.00, places)
+
+        self.assertAlmostEqual(offers[12].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[13].cleared_quantity, 24.0, places)
+        self.assertAlmostEqual(offers[14].cleared_quantity, 0.00, places)
+
+        self.assertAlmostEqual(offers[15].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[16].cleared_quantity, 24.0, places)
+        self.assertAlmostEqual(offers[17].cleared_quantity, 0.00, places)
+
+        bids = self.bids
+        self.assertAlmostEqual(bids[0].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[1].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[2].cleared_quantity, 10.0, places)
+
+        self.assertAlmostEqual(bids[3].cleared_quantity, 10.0, places)
+#        self.assertAlmostEqual(bids[4].cleared_quantity, 1.1779, places)
+        self.assertAlmostEqual(bids[5].cleared_quantity, 0.0, places)
+
+        self.assertAlmostEqual(bids[6].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[7].cleared_quantity, 10.0, places)
+#        self.assertAlmostEqual(bids[8].cleared_quantity, 2.7885, places)
+
+        # CVXOPT results.
+        self.assertAlmostEqual(bids[4].cleared_quantity, 0.01828, places)
+        self.assertAlmostEqual(bids[8].cleared_quantity, 4.27777, places)
+
 
 #    def test_constrained_market(self):
 #        """ Test cleared market prices in a constrained system.
 #        """
 #        constrained = self.case.branches[15]
 #        constrained.rate_a = 30.0
-
-#------------------------------------------------------------------------------
-#  "AuctionTestCase" class:
-#------------------------------------------------------------------------------
-
-class AuctionTestCase(unittest.TestCase):
-    """ Defines a test case for the Pyreto market using data from t_runmarket.
-    """
-
-    def setUp(self):
-        """ The test runner will execute this method prior to each test.
-        """
 
 #------------------------------------------------------------------------------
 #  "ACMarketTestCase" class:

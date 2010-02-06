@@ -16,8 +16,7 @@
 #------------------------------------------------------------------------------
 
 from smart_market import \
-    SmartMarket, Offer, Bid, DISCRIMINATIVE, LAO, FRO, LAB, FRB, FIRST_PRICE, \
-    SECOND_PRICE, SPLIT, DUAL_LAOB
+    SmartMarket, Offer, Bid, DISCRIMINATIVE, FIRST_PRICE
 
 from experiment import MarketExperiment
 from environment import ParticipantEnvironment

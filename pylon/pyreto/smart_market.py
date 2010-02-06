@@ -38,14 +38,14 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 DISCRIMINATIVE = "discriminative"
-LAO = "lao"
-FRO = "fro"
-LAB = "lab"
-FRB = "frb"
+#LAO = "lao"
+#FRO = "fro"
+#LAB = "lab"
+#FRB = "frb"
 FIRST_PRICE = "first price"
-SECOND_PRICE = "second price"
-SPLIT = "split"
-DUAL_LAOB = "dual laob"
+#SECOND_PRICE = "second price"
+#SPLIT = "split"
+#DUAL_LAOB = "dual laob"
 
 #------------------------------------------------------------------------------
 #  "SmartMarket" class:
@@ -176,10 +176,11 @@ class SmartMarket(object):
             haveQ = True
             logger.warning("Combined active/reactive power " \
                 "market not yet implemented.")
+            raise NotImplementedError
         else:
             haveQ = False
 
-        combined_types = [DISCRIMINATIVE, LAO, FIRST_PRICE]
+        combined_types = [DISCRIMINATIVE, FIRST_PRICE]#, LAO]
 
         if haveQ and vloads and self.auction_type not in combined_types:
             logger.error("Combined active/reactive power markets with "
@@ -394,10 +395,11 @@ class Auction(object):
         self._clear_quantities()
 
         # Compute shift values to add to lam to get desired pricing.
-        lao, fro, lab, frb = self._compute_shift_values()
+#        lao, fro, lab, frb = self._first_rejected_last_accepted()
 
         # Clear offer/bid prices according to auction type.
-        self._clear_prices(lao, fro, lab, frb)
+        self._clear_prices()
+#        self._clear_prices(lao, fro, lab, frb)
 
         # Clip cleared prices according to guarantees and limits.
         self._clip_prices()
@@ -460,96 +462,108 @@ class Auction(object):
             accepted_qty += ob.quantity
 
 
-    def _compute_shift_values(self):
-        """ Compute shift values to add to lam to get desired pricing.
-        """
-        accepted = [of for of in self.offers if of.accepted]
-        rejected = [of for of in self.offers if not of.accepted]
+#    def _first_rejected_last_accepted(self):
+#        """ Compute shift values to add to lam to get desired pricing.
+#        """
+#        accepted = [of for of in self.offers if of.accepted]
+#        rejected = [of for of in self.offers if not of.accepted]
+#
+#        # Sort according to the difference between the offer price and the
+#        # reference nodal marginal price in ascending order.
+#        accepted.sort(key=lambda x: x.difference)
+#        rejected.sort(key=lambda x: x.difference)
+#
+#        # lao + lambda is equal to the last accepted offer.
+#        lao = accepted[-1] if accepted else None
+#        # fro + lambda is equal to the first rejected offer.
+#        fro = rejected[0] if rejected else None
+#
+#        if lao is not None:
+#            logger.info("LAO: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
+#                        (lao.generator.name, lao.quantity,
+#                         lao.cleared_quantity, lao.price))
+#        elif self.offers:
+#            logger.info("No accepted offers.")
+#
+#        if fro is not None:
+#            logger.info("FRO: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
+#                        (fro.generator.name, fro.quantity,
+#                         fro.cleared_quantity, fro.price))
+#        elif self.offers:
+#            logger.info("No rejected offers.")
+#
+#
+#        # Determine last accepted bid and first rejected bid.
+#        accepted_bids = [bid for bid in self.bids if bid.accepted]
+#        accepted_bids.sort(key=lambda bid: bid.difference, reverse=True)
+#
+#        rejected_bids = [bid for bid in self.bids if not bid.accepted]
+#        rejected_bids.sort(key=lambda bid: bid.difference, reverse=True)
+#
+#        lab = self.lab = accepted_bids[-1] if accepted_bids else None
+#        frb = self.frb = rejected_bids[0] if rejected_bids else None
+#
+#        if lab is not None:
+#            logger.info("LAB: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
+#                        (lab.generator.name, lab.quantity,
+#                         lab.cleared_quantity, lab.price))
+#        elif self.bids:
+#            logger.info("No accepted bids.")
+#
+#        if frb is not None:
+#            logger.info("FRB: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
+#                        (frb.generator.name, frb.quantity,
+#                         frb.cleared_quantity, frb.price))
+#        elif self.bids:
+#            logger.info("No rejected bids.")
+#
+#        return lao, fro, lab, frb
 
-        # Sort according to the difference between the offer price and the
-        # reference nodal marginal price in ascending order.
-        accepted.sort(key=lambda x: x.difference)
-        rejected.sort(key=lambda x: x.difference)
 
-        # lao + lambda is equal to the last accepted offer.
-        lao = accepted[-1] if accepted else None
-        # fro + lambda is equal to the first rejected offer.
-        fro = rejected[0] if rejected else None
-
-        if lao is not None:
-            logger.info("LAO: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
-                        (lao.generator.name, lao.quantity,
-                         lao.cleared_quantity, lao.price))
-        elif self.offers:
-            logger.info("No accepted offers.")
-
-        if fro is not None:
-            logger.info("FRO: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
-                        (fro.generator.name, fro.quantity,
-                         fro.cleared_quantity, fro.price))
-        elif self.offers:
-            logger.info("No rejected offers.")
-
-
-        # Determine last accepted bid and first rejected bid.
-        accepted_bids = [bid for bid in self.bids if bid.accepted]
-        accepted_bids.sort(key=lambda bid: bid.difference, reverse=True)
-
-        rejected_bids = [bid for bid in self.bids if not bid.accepted]
-        rejected_bids.sort(key=lambda bid: bid.difference, reverse=True)
-
-        lab = self.lab = accepted_bids[-1] if accepted_bids else None
-        frb = self.frb = rejected_bids[0] if rejected_bids else None
-
-        if lab is not None:
-            logger.info("LAB: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
-                        (lab.generator.name, lab.quantity,
-                         lab.cleared_quantity, lab.price))
-        elif self.bids:
-            logger.info("No accepted bids.")
-
-        if frb is not None:
-            logger.info("FRB: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
-                        (frb.generator.name, frb.quantity,
-                         frb.cleared_quantity, frb.price))
-        elif self.bids:
-            logger.info("No rejected bids.")
-
-        return lao, fro, lab, frb
-
-
-    def _clear_prices(self, lao, fro, lab, frb):
-        """ Cleared offer/bid prices for different auction types.
+    def _clear_prices(self):
+        """ Clears prices according to auction type.
         """
         for offbid in self.offers + self.bids:
-
             if self.auction_type == DISCRIMINATIVE:
                 offbid.cleared_price = offbid.price
-            elif self.auction_type == LAO:
-                offbid.cleared_price = offbid.lmbda + lao.price
-            elif self.auction_type == FRO:
-                offbid.cleared_price = offbid.lmbda + fro.price
-            elif self.auction_type == LAB:
-                offbid.cleared_price = offbid.lmbda + lab.price
-            elif self.auction_type == FRB:
-                offbid.cleared_price = offbid.lmbda + frb.price
             elif self.auction_type == FIRST_PRICE:
                 offbid.cleared_price = offbid.lmbda
-            elif self.auction_type == SECOND_PRICE:
-                if abs(lao.price) < 1e-5:
-                    clr_prc = offbid.p_lmbda + min(fro.price, lab.price)
-                    offbid.cleared_price = clr_prc
-                else:
-                    clr_prc = offbid.p_lmbda + max(lao.price, frb.price)
-                    offbid.cleared_price = clr_prc
-            elif self.auction_type == SPLIT:
-                split_price = (lao.price - lab.price) / 2.0
-                offbid.cleared_price = offbid.lmbda + split_price
-            elif self.auction_type == DUAL_LAOB:
-                if isinstance(offbid, Offer):
-                    offbid.cleared_price = offbid.lmbda + lao.price
-                else:
-                    offbid.cleared_price = offbid.lmbda + lab.price
+            else:
+                raise ValueError
+
+
+#    def _clear_prices(self, lao, fro, lab, frb):
+#        """ Cleared offer/bid prices for different auction types.
+#        """
+#        for offbid in self.offers + self.bids:
+#
+#            if self.auction_type == DISCRIMINATIVE:
+#                offbid.cleared_price = offbid.price
+#            elif self.auction_type == LAO:
+#                offbid.cleared_price = offbid.lmbda + lao.price
+#            elif self.auction_type == FRO:
+#                offbid.cleared_price = offbid.lmbda + fro.price
+#            elif self.auction_type == LAB:
+#                offbid.cleared_price = offbid.lmbda + lab.price
+#            elif self.auction_type == FRB:
+#                offbid.cleared_price = offbid.lmbda + frb.price
+#            elif self.auction_type == FIRST_PRICE:
+#                offbid.cleared_price = offbid.lmbda
+#            elif self.auction_type == SECOND_PRICE:
+#                if abs(lao.price) < 1e-5:
+#                    clr_prc = offbid.p_lmbda + min(fro.price, lab.price)
+#                    offbid.cleared_price = clr_prc
+#                else:
+#                    clr_prc = offbid.p_lmbda + max(lao.price, frb.price)
+#                    offbid.cleared_price = clr_prc
+#            elif self.auction_type == SPLIT:
+#                split_price = (lao.price - lab.price) / 2.0
+#                offbid.cleared_price = offbid.lmbda + split_price
+#            elif self.auction_type == DUAL_LAOB:
+#                if isinstance(offbid, Offer):
+#                    offbid.cleared_price = offbid.lmbda + lao.price
+#                else:
+#                    offbid.cleared_price = offbid.lmbda + lab.price
 
 
     def _clip_prices(self):
@@ -558,13 +572,13 @@ class Auction(object):
         # Guarantee that cleared offer prices are >= offers.
         if self.guarantee_offer_price:
             for offer in self.offers:
-                if offer.cleared_price < offer.price:
+                if offer.accepted and offer.cleared_price < offer.price:
                     offer.cleared_price = offer.price
 
         # Guarantee that cleared bid prices are <= bids.
         if self.guarantee_bid_price:
             for bid in self.bids:
-                if bid.cleared_price > bid.price:
+                if bid.accepted and bid.cleared_price > bid.price:
                     bid.cleared_price = bid.price
 
         # Clip cleared offer prices.
