@@ -391,45 +391,56 @@ class OPF(object):
 
     def _pwl_gen_costs(self, generators, base_mva):
         """ Returns the basin constraints for piece-wise linear gen cost
-            variables.
+            variables.  CCV cost formulation expressed as Ay * x <= by.
 
             References:
                 C. E. Murillo-Sanchez, "makeAy.m", MATPOWER, PSERC Cornell,
                 version 4.0b1, http://www.pserc.cornell.edu/matpower/, Dec 09
         """
         ng = len(generators)
+        gpwl = [g for g in generators if g.pcost_model == PW_LINEAR]
+        nq = len([g for g in gpwl if g.qcost_model is not None])
+
         if self.dc:
-            pgbas = 0
-#            qgbas = None
-            ybas = ng
+            pgbas = 0 # starting index within x for active sources
+            qgbas = None
+            ybas = ng # starting index within x for y variables
         else:
             pgbas = 0
-#            qgbas = ng + 1
-            ybas = ng + ng # nq = ng
+            qgbas = ng + 1 # index of 1st Qg column in Ay
+            ybas = ng + nq
 
-        gpwl = [g for g in generators if g.pcost_model == PW_LINEAR]
-        ny = len(gpwl) # number of extra y variables.
+        # Number of extra y variables.
+        ny = len(gpwl) + nq
         if ny > 0:
             # Total number of cost points.
-            nc = len([p for g in gpwl for p in g.p_cost])
+            nc = len([co for gn in gpwl for co in gn.p_cost])
             Ay = spmatrix([], [], [], (nc - ny, ybas + ny -1))
-            by = matrix()
+            by = matrix(0.0, (0, 1))
 
             k = 0
             for i, g in enumerate(gpwl):
+                # Number of cost points: segments = ns-1
                 ns = len(g.p_cost)
-                p = matrix([p / base_mva for p, c in g.p_cost])
-                c = matrix([c for p, c in g.p_cost])
-                m = div(diff(c), diff(p))
+
+                p = matrix([x / base_mva for x, c in g.p_cost])
+                c = matrix([c for x, c in g.p_cost])
+                # Slopes for Pg (or Qg).
+                m = div(matrix(diff(c.T)), matrix(diff(p.T)))
+
                 if 0.0 in diff(p):
                     logger.error("Bad Pcost data: %s" % p)
-                b = mul(m, p[:ns - 1] - c[:ns - 1])
-                by = matrix([by, b.H])
 
-                Ay[k:k + ns - 2, pgbas + i]
-                Ay[k:k + ns - 2, ybas + i] = matrix(-1., (ns, 1))
+                b = mul(m.T, p[:ns-1]) - c[:ns-1] # rhs
+                by = matrix([by, b])
+
+                print "B:\n", by
+
+#                Ay[k:k + ns - 2, pgbas + i]
+                Ay[k:k + ns - 2, ybas + i] = m.T#matrix(-1., (ns, 1))
                 k += (ns - 1)
-                # TODO: Repeat for Q cost.
+
+                # FIXME: Repeat for Q cost.
 
             y = Variable("y", ny)
 
