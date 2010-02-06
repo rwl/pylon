@@ -421,11 +421,82 @@ class DCMarketTestCase(unittest.TestCase):
         self.assertAlmostEqual(bids[8].cleared_quantity, 4.27777, places)
 
 
-#    def test_constrained_market(self):
-#        """ Test cleared market prices in a constrained system.
-#        """
-#        constrained = self.case.branches[15]
-#        constrained.rate_a = 30.0
+    def test_constrained_market(self):
+        """ Test cleared prices & quantities in a constrained system.
+        """
+        mkt = self.mkt
+        offers = self.offers
+        bids = self.bids
+
+        # Introduce a constraint on the 16th branch by lowering the rating.
+        constrained = self.case.branches[15]
+        constrained.rate_a = 30.0
+
+        mkt.run()
+
+        places = 4
+
+        self.assertAlmostEqual(mkt._solution["primal objective"], 2949.10, 2)
+
+        # Cleared offer prices.
+        for i in range(0, 3):
+            self.assertAlmostEqual(offers[i].cleared_price, 50.0, places)
+        for i in range(3, 6):
+            self.assertAlmostEqual(offers[i].cleared_price, 41.0442, places)
+        for i in range(6, 9):
+            self.assertAlmostEqual(offers[i].cleared_price, 52.3954, places)
+        for i in range(9, 12):
+            self.assertAlmostEqual(offers[i].cleared_price, 50.0, places)
+        for i in range(12, 15):
+            self.assertAlmostEqual(offers[i].cleared_price, 75.0, places)
+        for i in range(15, 18):
+            self.assertAlmostEqual(offers[i].cleared_price, 48.0, places)
+
+        # Cleared offer quantities.
+        self.assertAlmostEqual(offers[0].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[1].cleared_quantity, 22.9995, places)
+        self.assertAlmostEqual(offers[2].cleared_quantity, 0.0, places)
+
+        self.assertAlmostEqual(offers[3].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[4].cleared_quantity, 24.0, places)
+        self.assertAlmostEqual(offers[5].cleared_quantity, 0.00, places)
+
+        self.assertAlmostEqual(offers[6].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[7].cleared_quantity, 24.0, places)
+        self.assertAlmostEqual(offers[8].cleared_quantity, 0.00, places)
+
+        self.assertAlmostEqual(offers[9].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[10].cleared_quantity, 24.0, places)
+        self.assertAlmostEqual(offers[11].cleared_quantity, 0.00, places)
+
+        self.assertAlmostEqual(offers[12].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[13].cleared_quantity, 24.0, places)
+        self.assertAlmostEqual(offers[14].cleared_quantity, 5.3963, places)
+
+        self.assertAlmostEqual(offers[15].cleared_quantity, 12.0, places)
+        self.assertAlmostEqual(offers[16].cleared_quantity, 18.0, places)
+        self.assertAlmostEqual(offers[17].cleared_quantity, 0.00, places)
+
+        # Cleared bid prices.
+        for i in range(0, 3):
+            self.assertAlmostEqual(bids[i].cleared_price, 41.8831, places)
+        for i in range(3, 6):
+            self.assertAlmostEqual(bids[i].cleared_price, 86.4585, places)
+        for i in range(6, 9):
+            self.assertAlmostEqual(bids[i].cleared_price, 50.0000, places)
+
+        # Cleared bid quantities.
+        self.assertAlmostEqual(bids[0].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[1].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[2].cleared_quantity, 10.0, places)
+
+        self.assertAlmostEqual(bids[3].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[4].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(bids[5].cleared_quantity, 0.00, places)
+
+        self.assertAlmostEqual(bids[6].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[7].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[8].cleared_quantity, 2.7519, places)
 
 #------------------------------------------------------------------------------
 #  "ACMarketTestCase" class:

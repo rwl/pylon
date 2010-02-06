@@ -277,7 +277,7 @@ class SmartMarket(object):
         solution = self._solution = solver.solve()
 
 #        for g in self.case.generators:
-#            print "G:", g.online, g.p, g.q_min, g.q_max, g.p_cost, g.q_cost
+#            print "G:", g.online, g.p, g.q_min, g.q_max, g.bus.p_lmbda
 
         success = solution["status"] == "optimal" or \
                   solution["status"] == "unknown"
@@ -604,15 +604,15 @@ class Auction(object):
             for g in self.case.generators:
                 g_offers = [of for of in self.offers if of.generator == g]
                 if g_offers:
-                    uniform_price = max([of.price for of in g_offers])
+                    uniform_price = max([of.cleared_price for of in g_offers])
                     for of in g_offers:
-                        of.price = uniform_price
+                        of.cleared_price = uniform_price
 
                 g_bids = [bid for bid in self.bids if bid.vload == g]
                 if g_bids:
-                    uniform_price = min([bid.price for bid in g_bids])
+                    uniform_price = min([bid.cleared_price for bid in g_bids])
                     for bid in g_bids:
-                        bid.price = uniform_price
+                        bid.cleared_price = uniform_price
 
 #------------------------------------------------------------------------------
 #  "_OfferBid" class:
