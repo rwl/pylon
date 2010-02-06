@@ -24,6 +24,8 @@
 
 import logging
 
+from copy import copy
+
 from numpy import angle, pi
 
 from util import Named, Serializable, conj
@@ -460,7 +462,40 @@ class Case(Named, Serializable):
     Y = property(getYbus)
 
     #--------------------------------------------------------------------------
-    #  Susceptance matrix:
+    #  Builds the FDPF matrices, B prime and B double prime:
+    #--------------------------------------------------------------------------
+
+    def makeB(self, buses=None, branches=None, method="XB"):
+        """ Builds the FDPF matrices, B prime and B double prime.
+        """
+        buses = self.connected_buses if buses is None else buses
+        branches = self.online_branches if branches is None else branches
+
+        tmp_buses = copy(buses) # modify copied branches
+        Bp_branches = copy(branches) # modify copied buses
+
+        for bus in tmp_buses:
+            bus.b_shunt = 0.0
+        for branch in Bp_branches:
+            branch.b = 0.0
+            branch.ratio = 0.0
+            if method == "XB":
+                branch.r = 0.0
+
+        Yp, _, _ = self.makeYbus(tmp_buses, Bp_branches)
+
+        Bpp_branches = copy(branches)
+
+        for branch in Bpp_branches:
+            branch.phase_shift = 0.0
+            branch.r = 0.0
+
+        Ypp, _, _ = self.makeYbus(tmp_buses, Bpp_branches)
+
+        return -Yp.imag(), -Ypp.imag()
+
+    #--------------------------------------------------------------------------
+    #  Build B matrices and phase shift injections for DC power flow:
     #--------------------------------------------------------------------------
 
     def makeBdc(self, buses=None, branches=None):
