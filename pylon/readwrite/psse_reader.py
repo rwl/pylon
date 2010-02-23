@@ -30,7 +30,7 @@ from parsing_util \
 
 from pyparsing \
     import Literal, Word, restOfLine, printables, quotedString, OneOrMore, \
-    ZeroOrMore, Optional, alphas
+    ZeroOrMore, Optional, alphas, Combine, printables
 
 from pylon import Case, Bus, Branch, Generator
 
@@ -76,16 +76,16 @@ class PSSEReader(CaseReader):
         # Parse case
         case = ZeroOrMore(psse_comment) + header + \
                ZeroOrMore(psse_comment) + Optional(title) + \
-               ZeroOrMore(psse_comment) + ZeroOrMore(bus_data) + \
+               ZeroOrMore(psse_comment) + OneOrMore(bus_data) + \
                ZeroOrMore(psse_comment) + separator + \
-               ZeroOrMore(psse_comment) + ZeroOrMore(load_data) + \
-               ZeroOrMore(psse_comment) + separator + \
-               ZeroOrMore(psse_comment) + ZeroOrMore(generator_data) + \
-               ZeroOrMore(psse_comment) + separator + \
-               ZeroOrMore(psse_comment) + ZeroOrMore(branch_data) + \
-               ZeroOrMore(psse_comment) + separator + \
-               ZeroOrMore(psse_comment) + ZeroOrMore(transformer_data) + \
-               ZeroOrMore(psse_comment)
+               ZeroOrMore(psse_comment) + ZeroOrMore(load_data)# + \
+#               ZeroOrMore(psse_comment) + separator + \
+#               ZeroOrMore(psse_comment) + ZeroOrMore(generator_data) + \
+#               ZeroOrMore(psse_comment) + separator + \
+#               ZeroOrMore(psse_comment) + ZeroOrMore(branch_data) + \
+#               ZeroOrMore(psse_comment) + separator + \
+#               ZeroOrMore(psse_comment) + ZeroOrMore(transformer_data) + \
+#               ZeroOrMore(psse_comment)
 
         case.parseFile(file_or_filename)
 
@@ -102,7 +102,8 @@ class PSSEReader(CaseReader):
         """ Returns a construct for a PSS/E separator.
         """
         # Tables are separated by a single 0
-        separator = Literal('0') + Optional(restOfLine)#White('\n')
+        comment = Optional(restOfLine).setResultsName("comment")
+        separator = Literal('0') + comment
         separator.setParseAction(self._push_separator)
 
         return separator
@@ -120,13 +121,15 @@ class PSSEReader(CaseReader):
     def _get_title_construct(self):
         """ Returns a construct for the subtitle of a PSS/E file.
         """
-        title = Word(alphas).suppress() + restOfLine.suppress()
-        sub_title = Word(printables) + restOfLine.suppress()
-#        sub_title = Combine(Word(alphanums) + restOfLine)
-        sub_title.setParseAction(self._push_sub_title)
-        sub_title.setResultsName("sub_title")
+#        title = Word(alphas).suppress() + restOfLine.suppress()
+#        sub_title = Word(printables) + restOfLine.suppress()
+        title = Combine(Word(printables) + restOfLine).setResultsName("title")
+        sub_title = Combine(Word(printables) + restOfLine).setResultsName("sub_title")
 
-        return title + sub_title
+        titles = title + sub_title
+        titles.setParseAction(self._push_title)
+
+        return  titles
 
 
     def _get_bus_data_construct(self):
@@ -155,15 +158,18 @@ class PSSEReader(CaseReader):
         bus_name = quotedString.setResultsName("Name") + comma_sep
         base_kv = real.setResultsName("Base_kV") + comma_sep
         ide = Word("1234", exact=1).setResultsName("Type") + comma_sep
+
         sh_conductance = real.setResultsName("Y_re") + comma_sep
         sh_susceptance = real.setResultsName("Y_im") + comma_sep
+
+        shunt = integer.setResultsName("shunt") + comma_sep
         area = integer.setResultsName("Area") + comma_sep
         zone = integer.setResultsName("Zone") + comma_sep
         v_magnitude = real.setResultsName("PU_Volt") + comma_sep
         v_angle = real.setResultsName("Angle")
 
-        bus_data = i + bus_name + base_kv + ide + sh_conductance + \
-            sh_susceptance + area + zone + v_magnitude + v_angle + \
+        bus_data = i + bus_name + base_kv + ide + shunt + \
+            area + zone + v_magnitude + v_angle + \
             restOfLine.suppress()
 
         bus_data.setParseAction(self._push_bus_data)
@@ -175,7 +181,7 @@ class PSSEReader(CaseReader):
         """
         # [Bus, LoadID, Status, Area, Zone, LP, LQ]
         bus_id = integer.setResultsName("Bus") + comma_sep
-        load_id = integer.setResultsName("LoadID") + comma_sep
+        load_id = quotedString.setResultsName("LoadID") + comma_sep
         status = boolean.setResultsName("Status") + comma_sep
         area = integer.setResultsName("Area") + comma_sep
         zone = integer.setResultsName("Zone") + comma_sep
@@ -187,6 +193,23 @@ class PSSEReader(CaseReader):
 
         load_data.setParseAction(self._push_load_data)
         return load_data
+
+
+    def _get_fixed_shunt_construct(self):
+        """ Returns a construct for a line of fixed shunt data.
+        """
+        bus_id = integer.setResultsName("Bus") + comma_sep
+        shunt_id = quotedString.setResultsName("ShuntID") + comma_sep
+        status = boolean.setResultsName("Status") + comma_sep
+        Bsh = real.setResultsName("Bsh") + comma_sep
+        Gsh = real.setResultsName("Gsh")
+
+        shunt_data = bus_id + shunt_id + status + Bsh + Gsh + \
+            restOfLine.suppress()
+
+        shunt_data.setParseAction(self._push_shunt_data)
+
+        return shunt_data
 
 
     def _get_generator_data_construct(self):
@@ -345,6 +368,19 @@ class PSSEReader(CaseReader):
 
         return transformer_data
 
+
+    def _get_bus(self, bus_id):
+        """ Returns the bus with the given id or None.
+        """
+        for bus in self.case.buses:
+            if bus._bus_id == bus_id:
+                break
+        else:
+            logger.error("Bus [%d] not found." % bus_id)
+            return None
+
+        return bus
+
     #--------------------------------------------------------------------------
     #  Parse actions:
     #--------------------------------------------------------------------------
@@ -359,20 +395,15 @@ class PSSEReader(CaseReader):
     def _push_title(self, tokens):
         """ Handles the case title.
         """
-        logger.debug("Title: %s" % tokens[0])
+        logger.debug("Title: %s" % tokens["title"])
+        logger.debug("Sub-Title: %s" % tokens["sub_title"])
+        self.case.name = tokens["title"] + tokens["sub_title"]
 
 
-    def _push_sub_title(self, tokens):
-        """ Sets the case name.
-        """
-        logger.debug("Sub-Title: %s" % tokens[0])
-        self.case.name = tokens[0]
-
-
-    def _push_separator(self):
+    def _push_separator(self, tokens):
         """ Handles separators.
         """
-        logger.debug("Parsed separator.")
+        logger.debug("Parsed separator [%s]." % tokens["comment"])
 
 
     def _push_bus_data(self, tokens):
@@ -383,7 +414,7 @@ class PSSEReader(CaseReader):
         logger.debug("Parsing bus data: %s" % tokens)
 
         bus = Bus()
-        bus.name = tokens["Name"].strip("'")
+        bus.name = tokens["Name"].strip("'").strip()
         bus._bus_id = tokens["Bus"]
 
         bus.v_magnitude_guess = tokens["PU_Volt"]
@@ -401,15 +432,11 @@ class PSSEReader(CaseReader):
         #[Bus, Load, ID, Status, Area, Zone, LP, LQ]
         logger.debug("Parsing load data: %s" % tokens)
 
-        for bus in self.case.buses:
-            if bus._bus_id == tokens["Bus"]:
-                break
-        else:
-            logger.error("Bus [%d] for load not found." % tokens["Bus"])
-            return
+        bus = self._get_bus(tokens["Bus"])
 
-        bus.p_demand += tokens["LP"]
-        bus.q_demand += tokens["LQ"]
+        if bus is not None:
+            bus.p_demand += tokens["LP"]
+            bus.q_demand += tokens["LQ"]
 
 
     def _push_generator(self, tokens):
@@ -421,28 +448,22 @@ class PSSEReader(CaseReader):
 
         logger.debug("Parsing generator data: %s" % tokens)
 
-        for bus in self.case.buses:
-            if bus._bus_id == tokens["Bus"]:
-                break
-        else:
-            logger.error("Bus [%d] for generator not found." % tokens["Bus"])
-            return
+        bus = self._get_bus(tokens["Bus"])
 
-        base = tokens["MVAbase"]
+        if bus is not None:
+            g = Generator(bus)
+            g.base_mva = tokens["MVAbase"]
+            g.p_max = tokens["Pmax"]
+            g.p_min = tokens["Pmin"]
+            g.p = tokens["P"]
 
-        g = Generator(bus)
-        g.base_mva = base
-        g.p_max = tokens["Pmax"]
-        g.p_min = tokens["Pmin"]
-        g.p     = tokens["P"]
+            g.q_max = tokens["Qmax"]
+            g.q_min = tokens["Qmin"]
+            g.q = tokens["Q"]
 
-        g.q_max = tokens["Qmax"]
-        g.q_min = tokens["Qmin"]
-        g.q     = tokens["Q"]
+            g.online = tokens["Stat"]
 
-        g.status = tokens["Stat"]
-
-        self.case.generators.append(g)
+            self.case.generators.append(g)
 
 
     def _push_branch(self, tokens):
@@ -465,34 +486,8 @@ class PSSEReader(CaseReader):
                 break
         else:
             logger.error("A bus for branch from %d to %d not found" %
-            (tokens["From"], tokens["To"]))
+                         (tokens["From"], tokens["To"]))
             return
-
-#        from_buses = [
-#            bus for bus in self.case.buses if bus.id == tokens["From"]
-#        ]
-#
-#        if len(from_buses) == 0:
-#            print "From bus [%s] for branch not found" % tokens["From"]
-#            return
-#        elif len(from_buses) == 1:
-#            from_bus = from_buses[0]
-#        else:
-#            print "More than on from bus for branch found", buses
-#            return
-#
-#        to_buses = [
-#            bus for bus in self.case.buses if bus.id == tokens["To"]
-#        ]
-#
-#        if len(to_buses) == 0:
-#            print "To bus [%s] for branch not found" % tokens["To"]
-#            return
-#        elif len(to_buses) == 1:
-#            to_bus = to_buses[0]
-#        else:
-#            print "More than on to bus for branch found", buses
-#            return
 
         branch = Branch(from_bus=from_bus, to_bus=to_bus)
 
@@ -517,7 +512,7 @@ class PSSEReader(CaseReader):
         for v in self.case.buses:
             if from_bus is None:
                 if v._bus_id == tokens["From"]:
-                    from_bus_id = v
+                    from_bus = v
             if to_bus is None:
                 if v._bus_id == tokens["To"]:
                     to_bus = v
@@ -525,7 +520,7 @@ class PSSEReader(CaseReader):
                 break
         else:
             logger.error("A bus for branch from %d to %d not found" %
-            (tokens["From"], tokens["To"]))
+                         (tokens["From"], tokens["To"]))
             return
 
         branch = Branch(from_bus=from_bus, to_bus=to_bus)
