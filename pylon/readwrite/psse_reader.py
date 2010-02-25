@@ -69,6 +69,7 @@ class PSSEReader(CaseReader):
         bus_data = self._get_bus_data_construct()
         separator = self._get_separator_construct()
         load_data = self._get_load_data_construct()
+        fixed_shunt_data = self._get_fixed_shunt_construct()
         generator_data = self._get_generator_data_construct()
         branch_data = self._get_branch_data_construct()
         transformer_data = self._get_transformer_data_construct()
@@ -78,9 +79,11 @@ class PSSEReader(CaseReader):
                ZeroOrMore(psse_comment) + Optional(title) + \
                ZeroOrMore(psse_comment) + OneOrMore(bus_data) + \
                ZeroOrMore(psse_comment) + separator + \
-               ZeroOrMore(psse_comment) + ZeroOrMore(load_data)# + \
-#               ZeroOrMore(psse_comment) + separator + \
-#               ZeroOrMore(psse_comment) + ZeroOrMore(generator_data) + \
+               ZeroOrMore(psse_comment) + ZeroOrMore(load_data) + \
+               ZeroOrMore(psse_comment) + separator + \
+               ZeroOrMore(psse_comment) + ZeroOrMore(fixed_shunt_data) + \
+               ZeroOrMore(psse_comment) + separator + \
+               ZeroOrMore(psse_comment) + OneOrMore(generator_data)# + \
 #               ZeroOrMore(psse_comment) + separator + \
 #               ZeroOrMore(psse_comment) + ZeroOrMore(branch_data) + \
 #               ZeroOrMore(psse_comment) + separator + \
@@ -135,42 +138,22 @@ class PSSEReader(CaseReader):
     def _get_bus_data_construct(self):
         """ Returns a construct for a line of bus data.
         """
-        # [I, IDE, PL, QL, GL, BL, IA, VM, VA, 'NAME', BASKL, ZONE]
-#        i = integer
-#        ide = Word('1234', exact=1)
-#        load_mw = real
-#        load_mvar = real
-#        sh_conductance = real
-#        sh_susceptance = real
-#        area = integer
-#        volt_magnitude = real
-#        volt_angle = real
-#        bus_name = quotedString
-#        base_kv = real
-#        loss_zone = integer
-#
-#        bus_data = i + ide + load_mw + load_mvar + sh_conductance + \
-#                   sh_susceptance + area + volt_magnitude + volt_angle + \
-#                   bus_name + base_kv + loss_zone
-
-        # Bus, Name, Base_kV, Type, Y_re, Y_im, Area, Zone, PU_Volt, Angle
+        # I, 'NAME', BASKV, IDE, GL, BL, AREA, ZONE, VM, VA, OWNER
         i = integer.setResultsName("Bus") + comma_sep
         bus_name = quotedString.setResultsName("Name") + comma_sep
-        base_kv = real.setResultsName("Base_kV") + comma_sep
+        base_kv = real.setResultsName("BASKV") + comma_sep
         ide = Word("1234", exact=1).setResultsName("Type") + comma_sep
 
-        sh_conductance = real.setResultsName("Y_re") + comma_sep
-        sh_susceptance = real.setResultsName("Y_im") + comma_sep
+        Gsh = real.setResultsName("Gl") + comma_sep
+        Bsh = real.setResultsName("Bl") + comma_sep
 
-        shunt = integer.setResultsName("shunt") + comma_sep
-        area = integer.setResultsName("Area") + comma_sep
-        zone = integer.setResultsName("Zone") + comma_sep
+        area = Optional(integer).setResultsName("Area") + comma_sep
+        zone = Optional(integer).setResultsName("Zone") + comma_sep
         v_magnitude = real.setResultsName("PU_Volt") + comma_sep
         v_angle = real.setResultsName("Angle")
 
-        bus_data = i + bus_name + base_kv + ide + shunt + \
-            area + zone + v_magnitude + v_angle + \
-            restOfLine.suppress()
+        bus_data = i + bus_name + base_kv + ide + Gsh + Bsh + \
+            area + v_magnitude + v_angle + restOfLine.suppress()
 
         bus_data.setParseAction(self._push_bus_data)
         return bus_data
@@ -179,7 +162,7 @@ class PSSEReader(CaseReader):
     def _get_load_data_construct(self):
         """ Returns a construct for a line of load data.
         """
-        # [Bus, LoadID, Status, Area, Zone, LP, LQ]
+        # I, ID, STATUS, AREA, ZONE, PL, QL, IP, IQ, YP, YQ, OWNER
         bus_id = integer.setResultsName("Bus") + comma_sep
         load_id = quotedString.setResultsName("LoadID") + comma_sep
         status = boolean.setResultsName("Status") + comma_sep
@@ -207,7 +190,7 @@ class PSSEReader(CaseReader):
         shunt_data = bus_id + shunt_id + status + Bsh + Gsh + \
             restOfLine.suppress()
 
-        shunt_data.setParseAction(self._push_shunt_data)
+        shunt_data.setParseAction(self._push_fixed_shunt_data)
 
         return shunt_data
 
@@ -215,58 +198,34 @@ class PSSEReader(CaseReader):
     def _get_generator_data_construct(self):
         """ Returns a construct for a line of generator data.
         """
-        # [I,ID,PG,QG,QT,QB,VS,IREG,MBASE,ZR,ZX,RT,XT,GTAP,STAT,RMPCT,PT,PB]
-#        bus_idx = integer
-#        machine_id = Word(alphanums, exact=1)
-#        mw_out = real
-#        mvar_out = real
-#        mvar_max = real
-#        mvar_min = real
-#        v_setpoint = real
-#        reg_idx = integer
-#        base_mva = real
-#        z_r = real
-#        z_x = real
-#        r_t = real
-#        x_t = real
-#        g_tap = real
-#        status = boolean
-#        rmpct = real
-#        mw_max = real
-#        mw_min = real
-#
-#        generator_data = bus_idx + machine_id + mw_out + mvar_out + mvar_max + \
-#                         mvar_min + v_setpoint + reg_idx + base_mva + z_r + \
-#                         z_x + r_t + x_t + g_tap + status + rmpct + mw_max + \
-#                         mw_min
-
-        # Bus, ID, P, Q, Qmax, Qmin, SchedV, RegBs, MVAbase, ZR, ZX, RTr,
-        # XTr, GTAP, Stat, Percent, Pmax, Pmin
-
+        # I, ID, 'NAME', PG, QG, QT, QB, VS, IREG, MBASE, ZR, ZX, RT, XT, GTAP,
+        # STAT, RMPCT, PT, PB, O1, F1, ....O4, F4
         bus_id = integer.setResultsName("Bus") + comma_sep
-        generator_id = integer.setResultsName("ID") + comma_sep
-        p = real.setResultsName("P") + comma_sep
-        q = real.setResultsName("Q") + comma_sep
-        q_max = real.setResultsName("Qmax") + comma_sep
-        q_min = real.setResultsName("Qmin") + comma_sep
-        v_sched = real.setResultsName("SchedV") + comma_sep
-        reg_bus = integer.setResultsName("RegBs") + comma_sep
-        base_mva = real.setResultsName("MVAbase") + comma_sep
+        g_id = integer.setResultsName("ID") + comma_sep
+        g_name = quotedString.setResultsName("NAME") + comma_sep
+        p = real.setResultsName("PG") + comma_sep
+        q = real.setResultsName("QG") + comma_sep
+        q_max = real.setResultsName("QT") + comma_sep
+        q_min = real.setResultsName("QB") + comma_sep
+        v_sched = real.setResultsName("VS") + comma_sep
+        reg_bus = integer.setResultsName("IREG") + comma_sep
+        base_mva = real.setResultsName("MBASE") + comma_sep
         r_zero = real.setResultsName("ZR") + comma_sep
         x_zero = real.setResultsName("ZX") + comma_sep
-        r_tr = real.setResultsName("RTr") + comma_sep
-        x_tr = real.setResultsName("XTr") + comma_sep
+        r_tr = real.setResultsName("RT") + comma_sep
+        x_tr = real.setResultsName("XT") + comma_sep
         gtap = integer.setResultsName("GTAP") + comma_sep
-        status = boolean.setResultsName("Stat") + comma_sep
-        percent = integer.setResultsName("Percent") + comma_sep
-        p_max = real.setResultsName("Pmax") + comma_sep
-        p_min = real.setResultsName("Pmin")
+        status = boolean.setResultsName("STAT") + comma_sep
+        percent = integer.setResultsName("RMPCT") + comma_sep
+        p_max = real.setResultsName("PT") + comma_sep
+        p_min = real.setResultsName("PB")
 
-        generator_data = bus_id + generator_id + p + q + q_max + q_min + \
+        generator_data = bus_id + g_id + g_name + p + q + q_max + q_min + \
             v_sched + reg_bus + base_mva + r_zero + x_zero + r_tr + x_tr + \
             gtap + status + percent + p_max + p_min + restOfLine.suppress()
 
         generator_data.setParseAction(self._push_generator)
+
         return generator_data
 
 
@@ -417,6 +376,11 @@ class PSSEReader(CaseReader):
         bus.name = tokens["Name"].strip("'").strip()
         bus._bus_id = tokens["Bus"]
 
+        bus.v_base = tokens["BASKV"]
+
+        bus.g_shunt = tokens["Gl"]
+        bus.b_shunt = tokens["Bl"]
+
         bus.v_magnitude_guess = tokens["PU_Volt"]
         bus.v_magnitude = tokens["PU_Volt"]
 
@@ -429,7 +393,7 @@ class PSSEReader(CaseReader):
     def _push_load_data(self, tokens):
         """ Adds a load to a bus.
         """
-        #[Bus, Load, ID, Status, Area, Zone, LP, LQ]
+        # I, ID, STATUS, AREA, ZONE, PL, QL, IP, IQ, YP, YQ, OWNER
         logger.debug("Parsing load data: %s" % tokens)
 
         bus = self._get_bus(tokens["Bus"])
@@ -439,29 +403,30 @@ class PSSEReader(CaseReader):
             bus.q_demand += tokens["LQ"]
 
 
+    def _push_fixed_shunt_data(self, tokens):
+        logger.debug("Parsing fixed shunt data: %s" % tokens)
+
+
     def _push_generator(self, tokens):
         """ Adds a generator to a bus.
         """
-        # [I,ID,PG,QG,QT,QB,VS,IREG,MBASE,ZR,ZX,RT,XT,GTAP,STAT,RMPCT,PT,PB]
-        # Bus, ID, P, Q, Qmax, Qmin, SchedV, RegBs, MVAbase, ZR, ZX, RTr, XTr,
-        # GTAP, Stat, Percent, Pmax, Pmin
-
+        # I, ID, PG, QG, QT, QB, VS, IREG, MBASE, ZR, ZX, RT, XT, GTAP, STAT,
+        # RMPCT, PT, PB, O1, F1, ....O4, F4
         logger.debug("Parsing generator data: %s" % tokens)
 
         bus = self._get_bus(tokens["Bus"])
 
         if bus is not None:
             g = Generator(bus)
-            g.base_mva = tokens["MVAbase"]
-            g.p_max = tokens["Pmax"]
-            g.p_min = tokens["Pmin"]
-            g.p = tokens["P"]
-
-            g.q_max = tokens["Qmax"]
-            g.q_min = tokens["Qmin"]
-            g.q = tokens["Q"]
-
-            g.online = tokens["Stat"]
+            g.p = tokens["PG"]
+            g.q = tokens["QG"]
+            g.q_max = tokens["QT"]
+            g.q_min = tokens["QB"]
+            g.v_magnitude = tokens["VS"]
+            g.base_mva = tokens["MBASE"]
+            g.online = tokens["STAT"]
+            g.p_max = tokens["PT"]
+            g.p_min = tokens["PB"]
 
             self.case.generators.append(g)
 

@@ -189,7 +189,7 @@ class MatpowerReaderTest(ReaderTest):
 #  "PSSEReaderTest" class:
 #------------------------------------------------------------------------------
 
-class PSSEReaderTest(ReaderTest):
+class PSSEReaderTest(TestCase):
     """ Defines a test case for the PSS/E data file reader.
     """
 
@@ -199,20 +199,32 @@ class PSSEReaderTest(ReaderTest):
         self.reader = PSSEReader()
 
 
-    def test_ipsa(self):
+    def test_psse_v31(self):
         """ Test parsing of a data file exported from IPSA.
         """
-        self.case = self.reader.read(PSSE_DATA_FILE)
+        case = self.reader.read(PSSE_DATA_FILE)
 
-        self._validate_base(100.0)
-        self._validate_object_numbers(n_buses=42, n_branches=30, n_gen=15)
+#        self._validate_base(100.0)
+#        self._validate_object_numbers(n_buses=42, n_branches=30, n_gen=15)
 
-#        for bus in self.case.buses:
-#            print bus.name
+        self.assertEqual(len(case.buses), 42)
+        pl = 5
+        self.assertAlmostEqual(case.buses[0].v_base, 21.6, pl)
+        self.assertAlmostEqual(case.buses[41].v_base, 0.69, pl)
+        self.assertAlmostEqual(case.buses[0].v_magnitude_guess, 1.01, pl)
+        self.assertAlmostEqual(case.buses[40].v_magnitude_guess, 1.04738, pl)
+        self.assertAlmostEqual(case.buses[0].v_angle_guess, -10.4286, pl)
+        self.assertAlmostEqual(case.buses[1].v_angle_guess, -10.7806, pl)
 
-        load_buses = [b for b in self.case.buses if
+        load_buses = [b for b in case.buses if
                       b.p_demand > 0.0 or b.q_demand > 0.0]
         self.assertEqual(len(load_buses), 15)
+        self.assertAlmostEqual(case.buses[3].p_demand, 1200.0, pl)
+        self.assertAlmostEqual(case.buses[3].q_demand, 360.0, pl)
+        self.assertAlmostEqual(case.buses[34].p_demand, 12.0, pl)
+        self.assertAlmostEqual(case.buses[34].q_demand, 5.0, pl)
+
+        self.assertEqual(len(case.generators), 15)
 
 
 #    def test_ukgds(self):
