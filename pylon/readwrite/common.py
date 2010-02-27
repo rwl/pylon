@@ -35,14 +35,17 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 BUS_ATTRS = ["name", "type", "v_base", "v_magnitude_guess",
-    "v_angle_guess", "v_max", "v_min", "v_magnitude", "v_angle", "g_shunt",
-    "b_shunt", "zone"]
+    "v_angle_guess", "v_max", "v_min", "p_demand", "q_demand",
+    "g_shunt", "b_shunt", "v_magnitude", "v_angle",
+    "p_lmbda", "q_lmbda", "mu_vmin", "mu_vmax"]
 
-BRANCH_ATTRS = ["name", "mode", "online", "r", "x", "b", "rate_a",
-    "phase_shift", "online"]
+BRANCH_ATTRS = ["name", "online", "r", "x", "b", "rate_a", "rate_b", "rate_c",
+    "ratio", "phase_shift", "ang_min", "ang_max", "p_from", "p_to",
+    "q_from", "q_to", "mu_s_from", "mu_s_to", "mu_angmin", "mu_angmax"]
 
-GENERATOR_ATTRS = ["name", "base_mva", "v_magnitude", "p", "p_max", "p_min",
-    "q", "q_max", "q_min", "pcost_model", "p_cost", "online"]
+GENERATOR_ATTRS = ["name", "online", "base_mva", "p", "p_max", "p_min",
+    "v_magnitude", "q", "q_max", "q_min", "c_startup", "c_shutdown",
+    "pcost_model", "p_cost", "qcost_model", "q_cost", "mu_pmin", "mu_pmax"]
 
 #------------------------------------------------------------------------------
 #  "CaseWriter" class:
