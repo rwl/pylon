@@ -379,19 +379,6 @@ class PSSEReader(CaseReader):
 
         return wind2, wind3
 
-
-#    def _get_bus(self, bus_id):
-#        """ Returns the bus with the given id or None.
-#        """
-#        for bus in self.case.buses:
-#            if bus._bus_id == bus_id:
-#                break
-#        else:
-#            logger.error("Bus [%d] not found." % bus_id)
-#            return None
-#
-#        return bus
-
     #--------------------------------------------------------------------------
     #  Parse actions:
     #--------------------------------------------------------------------------
@@ -498,21 +485,6 @@ class PSSEReader(CaseReader):
         from_id = abs(tokens["I"])
         to_id = abs(tokens["J"])
 
-#        from_bus = None
-#        to_bus = None
-#        for v in self.case.buses:
-#            if from_bus is None:
-#                if v._bus_id == from_bus_id:
-#                    from_bus = v
-#            if to_bus is None:
-#                if v._bus_id == to_bus_id:
-#                    to_bus = v
-#            if (from_bus is not None) and (to_bus is not None):
-#                break
-#        else:
-#            logger.error("Bus [%d %d] not found." % (from_bus_id, to_bus_id))
-#            return
-
         if self.bus_map.has_key(from_id) and self.bus_map.has_key(to_id):
             from_bus = self.bus_map[from_id]
             to_bus = self.bus_map[to_id]
@@ -544,21 +516,6 @@ class PSSEReader(CaseReader):
 
         from_id = abs(tokens["I"])
         to_id = abs(tokens["J"])
-
-#        from_bus = None
-#        to_bus = None
-#        for v in self.case.buses:
-#            if from_bus is None:
-#                if v._bus_id == from_bus_id:
-#                    from_bus = v
-#            if to_bus is None:
-#                if v._bus_id == to_bus_id:
-#                    to_bus = v
-#            if (from_bus is not None) and (to_bus is not None):
-#                break
-#        else:
-#            logger.error("Bus [%d %d] not found." % (from_bus_id, to_bus_id))
-#            return
 
         if self.bus_map.has_key(from_id) and self.bus_map.has_key(to_id):
             from_bus = self.bus_map[from_id]
