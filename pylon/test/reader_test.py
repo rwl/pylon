@@ -38,7 +38,9 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 MATPOWER_DATA_FILE = os.path.join(DATA_DIR, "case6ww.m")
 PWL_MP_DATA_FILE   = os.path.join(DATA_DIR, "case30pwl.m")
 UKGDS_DATA_FILE    = os.path.join(DATA_DIR, "ehv3.raw")
-PSSE_DATA_FILE     = os.path.join(DATA_DIR, "sample.raw")
+PSSE_DATA_FILE     = os.path.join(DATA_DIR, "sample30.raw")
+BENCH_DATA_FILE    = os.path.join(DATA_DIR, "bench30.raw")
+BENCH2_DATA_FILE   = os.path.join(DATA_DIR, "bench2_30.raw")
 PSAT_DATA_FILE     = os.path.join(DATA_DIR, "d_006_mdl.m")
 
 #------------------------------------------------------------------------------
@@ -199,13 +201,10 @@ class PSSEReaderTest(TestCase):
         self.reader = PSSEReader()
 
 
-    def test_psse_v31(self):
-        """ Test parsing of a data file exported from IPSA.
+    def test_sample(self):
+        """ Test parsing a sample PSS/E version 30 file.
         """
         case = self.reader.read(PSSE_DATA_FILE)
-
-#        self._validate_base(100.0)
-#        self._validate_object_numbers(n_buses=42, n_branches=30, n_gen=15)
 
         self.assertEqual(len(case.buses), 42)
         pl = 5
@@ -225,6 +224,32 @@ class PSSEReaderTest(TestCase):
         self.assertAlmostEqual(case.buses[34].q_demand, 5.0, pl)
 
         self.assertEqual(len(case.generators), 15)
+        self.assertAlmostEqual(case.generators[0].p, 750.0, pl)
+        self.assertAlmostEqual(case.generators[0].q, 125.648, pl)
+        self.assertAlmostEqual(case.generators[0].q_max, 400.0, pl)
+        self.assertAlmostEqual(case.generators[0].q_min, -100.0, pl)
+        self.assertAlmostEqual(case.generators[0].v_magnitude, 1.01, pl)
+        self.assertAlmostEqual(case.generators[0].base_mva, 900.0, pl)
+        self.assertTrue(case.generators[0].online)
+        self.assertAlmostEqual(case.generators[0].p_max, 800.0, pl)
+        self.assertAlmostEqual(case.generators[0].p_min, 50.0, pl)
+
+        self.assertAlmostEqual(case.generators[14].p, 3.24, pl)
+        self.assertAlmostEqual(case.generators[14].q, -1.475, pl)
+
+        self.assertEqual(len(case.branches), 30)
+        self.assertEqual(case.buses.index(case.branches[0].from_bus), 2)
+        self.assertEqual(case.buses.index(case.branches[0].to_bus), 3)
+        self.assertEqual(case.branches[0].r, 0.00260, pl)
+        self.assertEqual(case.branches[0].x, 0.04600, pl)
+        self.assertEqual(case.branches[0].b, 3.50000, pl)
+        self.assertEqual(case.branches[0].rate_a, 1200.00, pl)
+        self.assertEqual(case.branches[0].rate_b, 1100.00, pl)
+        self.assertEqual(case.branches[0].rate_c, 1000.00, pl)
+        self.assertTrue(case.branches[0].online)
+
+        self.assertEqual(case.buses.index(case.branches[29].from_bus), 32)
+        self.assertEqual(case.buses.index(case.branches[29].to_bus), 33)
 
 
 #    def test_ukgds(self):

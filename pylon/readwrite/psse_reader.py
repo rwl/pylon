@@ -30,7 +30,7 @@ from parsing_util \
 
 from pyparsing \
     import Literal, Word, restOfLine, printables, quotedString, OneOrMore, \
-    ZeroOrMore, Optional, alphas, Combine, printables
+    ZeroOrMore, Optional, alphas, Combine, printables, Or, MatchFirst
 
 from pylon import Case, Bus, Branch, Generator
 
@@ -69,26 +69,18 @@ class PSSEReader(CaseReader):
         bus_data = self._get_bus_data_construct()
         separator = self._get_separator_construct()
         load_data = self._get_load_data_construct()
-        fixed_shunt_data = self._get_fixed_shunt_construct()
         generator_data = self._get_generator_data_construct()
         branch_data = self._get_branch_data_construct()
-        transformer_data = self._get_transformer_data_construct()
+        wind2, wind3 = self._get_transformer_data_construct()
 
         # Parse case
-        case = ZeroOrMore(psse_comment) + header + \
-               ZeroOrMore(psse_comment) + Optional(title) + \
-               ZeroOrMore(psse_comment) + OneOrMore(bus_data) + \
-               ZeroOrMore(psse_comment) + separator + \
-               ZeroOrMore(psse_comment) + ZeroOrMore(load_data) + \
-               ZeroOrMore(psse_comment) + separator + \
-               ZeroOrMore(psse_comment) + ZeroOrMore(fixed_shunt_data) + \
-               ZeroOrMore(psse_comment) + separator + \
-               ZeroOrMore(psse_comment) + OneOrMore(generator_data)# + \
-#               ZeroOrMore(psse_comment) + separator + \
-#               ZeroOrMore(psse_comment) + ZeroOrMore(branch_data) + \
-#               ZeroOrMore(psse_comment) + separator + \
-#               ZeroOrMore(psse_comment) + ZeroOrMore(transformer_data) + \
-#               ZeroOrMore(psse_comment)
+        case = header + \
+               Optional(title) + \
+               OneOrMore(bus_data) + separator + \
+               OneOrMore(load_data) + separator + \
+               OneOrMore(generator_data) + separator + \
+               OneOrMore(branch_data) + separator + \
+               OneOrMore(wind2) + OneOrMore(wind3)
 
         case.parseFile(file_or_filename)
 
@@ -115,7 +107,7 @@ class PSSEReader(CaseReader):
     def _get_header_construct(self):
         """ Returns a construct for the header of a PSS/E file.
         """
-        first_line = Word('0', exact=1).suppress() + comma_sep + real + \
+        first_line = Word('01', exact=1).suppress() + comma_sep + real + \
             restOfLine.suppress()
         first_line.setParseAction(self._push_system_base)
         return first_line
@@ -124,8 +116,6 @@ class PSSEReader(CaseReader):
     def _get_title_construct(self):
         """ Returns a construct for the subtitle of a PSS/E file.
         """
-#        title = Word(alphas).suppress() + restOfLine.suppress()
-#        sub_title = Word(printables) + restOfLine.suppress()
         title = Combine(Word(printables) + restOfLine).setResultsName("title")
         sub_title = Combine(Word(printables) + restOfLine).setResultsName("sub_title")
 
@@ -139,21 +129,21 @@ class PSSEReader(CaseReader):
         """ Returns a construct for a line of bus data.
         """
         # I, 'NAME', BASKV, IDE, GL, BL, AREA, ZONE, VM, VA, OWNER
-        i = integer.setResultsName("Bus") + comma_sep
-        bus_name = quotedString.setResultsName("Name") + comma_sep
+        i = integer.setResultsName("I") + comma_sep
+        bus_name = quotedString.setResultsName("NAME") + comma_sep
         base_kv = real.setResultsName("BASKV") + comma_sep
-        ide = Word("1234", exact=1).setResultsName("Type") + comma_sep
+        ide = Word("1234", exact=1).setResultsName("IDE") + comma_sep
 
-        Gsh = real.setResultsName("Gl") + comma_sep
-        Bsh = real.setResultsName("Bl") + comma_sep
+        Gsh = real.setResultsName("GL") + comma_sep
+        Bsh = real.setResultsName("BL") + comma_sep
 
-        area = Optional(integer).setResultsName("Area") + comma_sep
-        zone = Optional(integer).setResultsName("Zone") + comma_sep
-        v_magnitude = real.setResultsName("PU_Volt") + comma_sep
-        v_angle = real.setResultsName("Angle")
+        area = Optional(integer).setResultsName("AREA") + comma_sep
+        zone = Optional(integer).setResultsName("ZONE") + comma_sep
+        v_magnitude = real.setResultsName("VM") + comma_sep
+        v_angle = real.setResultsName("VA")
 
         bus_data = i + bus_name + base_kv + ide + Gsh + Bsh + \
-            area + v_magnitude + v_angle + restOfLine.suppress()
+            area + zone + v_magnitude + v_angle + restOfLine.suppress()
 
         bus_data.setParseAction(self._push_bus_data)
         return bus_data
@@ -163,13 +153,13 @@ class PSSEReader(CaseReader):
         """ Returns a construct for a line of load data.
         """
         # I, ID, STATUS, AREA, ZONE, PL, QL, IP, IQ, YP, YQ, OWNER
-        bus_id = integer.setResultsName("Bus") + comma_sep
-        load_id = quotedString.setResultsName("LoadID") + comma_sep
-        status = boolean.setResultsName("Status") + comma_sep
-        area = integer.setResultsName("Area") + comma_sep
-        zone = integer.setResultsName("Zone") + comma_sep
-        p_load = real.setResultsName("LP") + comma_sep
-        q_load = real.setResultsName("LQ")
+        bus_id = integer.setResultsName("I") + comma_sep
+        load_id = quotedString.setResultsName("ID") + comma_sep
+        status = boolean.setResultsName("STATUS") + comma_sep
+        area = integer.setResultsName("AREA") + comma_sep
+        zone = integer.setResultsName("ZONE") + comma_sep
+        p_load = real.setResultsName("PL") + comma_sep
+        q_load = real.setResultsName("QL")
 
         load_data = bus_id + load_id + status + area + zone + p_load + \
                     q_load + restOfLine.suppress()
@@ -178,31 +168,13 @@ class PSSEReader(CaseReader):
         return load_data
 
 
-    def _get_fixed_shunt_construct(self):
-        """ Returns a construct for a line of fixed shunt data.
-        """
-        bus_id = integer.setResultsName("Bus") + comma_sep
-        shunt_id = quotedString.setResultsName("ShuntID") + comma_sep
-        status = boolean.setResultsName("Status") + comma_sep
-        Bsh = real.setResultsName("Bsh") + comma_sep
-        Gsh = real.setResultsName("Gsh")
-
-        shunt_data = bus_id + shunt_id + status + Bsh + Gsh + \
-            restOfLine.suppress()
-
-        shunt_data.setParseAction(self._push_fixed_shunt_data)
-
-        return shunt_data
-
-
     def _get_generator_data_construct(self):
         """ Returns a construct for a line of generator data.
         """
-        # I, ID, 'NAME', PG, QG, QT, QB, VS, IREG, MBASE, ZR, ZX, RT, XT, GTAP,
-        # STAT, RMPCT, PT, PB, O1, F1, ....O4, F4
-        bus_id = integer.setResultsName("Bus") + comma_sep
-        g_id = integer.setResultsName("ID") + comma_sep
-        g_name = quotedString.setResultsName("NAME") + comma_sep
+        #I,ID,PG,QG,QT,QB,VS,IREG,MBASE,ZR,ZX,RT,XT,GTAP,STAT,RMPCT,PT,PB,O1,F1
+        #    101,'1 ',   750.000,   125.648,   400.000,  -100.000,1.01000,     0,   900.000,   0.01000,   0.30000,   0.00000,   0.00000,1.00000,1,  100.0,   800.000,    50.000,   1,0.1289,   2,0.2524,   3,0.1031,   4,0.5156
+        bus_id = integer.setResultsName("I") + comma_sep
+        g_id = quotedString.setResultsName("ID") + comma_sep
         p = real.setResultsName("PG") + comma_sep
         q = real.setResultsName("QG") + comma_sep
         q_max = real.setResultsName("QT") + comma_sep
@@ -214,13 +186,13 @@ class PSSEReader(CaseReader):
         x_zero = real.setResultsName("ZX") + comma_sep
         r_tr = real.setResultsName("RT") + comma_sep
         x_tr = real.setResultsName("XT") + comma_sep
-        gtap = integer.setResultsName("GTAP") + comma_sep
+        gtap = real.setResultsName("GTAP") + comma_sep
         status = boolean.setResultsName("STAT") + comma_sep
-        percent = integer.setResultsName("RMPCT") + comma_sep
+        percent = real.setResultsName("RMPCT") + comma_sep
         p_max = real.setResultsName("PT") + comma_sep
         p_min = real.setResultsName("PB")
 
-        generator_data = bus_id + g_id + g_name + p + q + q_max + q_min + \
+        generator_data = bus_id + g_id + p + q + q_max + q_min + \
             v_sched + reg_bus + base_mva + r_zero + x_zero + r_tr + x_tr + \
             gtap + status + percent + p_max + p_min + restOfLine.suppress()
 
@@ -232,47 +204,58 @@ class PSSEReader(CaseReader):
     def _get_branch_data_construct(self):
         """ Returns a construct for a line of branch data.
         """
-        # From, To, ID, R, X, B, RateA, RateB, RateC, G_busI, B_busI,
-        # G_busJ, B_busJ, Stat, Len
-        from_bus_id = integer.setResultsName("From") + comma_sep
-        to_bus_id = integer.setResultsName("To") + comma_sep
-        id = integer.setResultsName("ID") + comma_sep
+        # I,J,CKT,R,X,B,RATEA,RATEB,RATEC,GI,BI,GJ,BJ,ST,LEN,O1,F1,...,O4,F4
+        # 151,   -152,'1 ',   0.00260,   0.04600,   3.50000, 1200.00, 1100.00, 1000.00,  0.01000, -0.25000,  0.01100, -0.15000,1, 150.00,   1,0.2000,   2,0.3000,   3,0.4000,   4,0.1000
+
+        # FIXME: I and J may be an extended bus name enclosed in single quotes.
+        from_bus_id = integer.setResultsName("I") + comma_sep
+        to_bus_id = integer.setResultsName("J") + comma_sep
+        id = quotedString.setResultsName("CKT") + comma_sep
         r = real.setResultsName("R") + comma_sep
         x = real.setResultsName("X") + comma_sep
         b = real.setResultsName("B") + comma_sep
-        rate_a = real.setResultsName("RateA") + comma_sep
-        rate_b = real.setResultsName("RateB") + comma_sep
-        rate_c = real.setResultsName("RateC") + comma_sep
-        g_bus_i = real.setResultsName("G_busI") + comma_sep
-        b_bus_i = real.setResultsName("B_busI") + comma_sep
-        g_bus_j = real.setResultsName("G_busJ") + comma_sep
-        b_bus_j = real.setResultsName("B_busJ") + comma_sep
-        status = boolean.setResultsName("Stat") + comma_sep
-        length = real.setResultsName("Len")
+        rate_a = real.setResultsName("RATEA") + comma_sep
+        rate_b = real.setResultsName("RATEB") + comma_sep
+        rate_c = real.setResultsName("RATEC") + comma_sep
+        g_i = real.setResultsName("GI") + comma_sep
+        b_i = real.setResultsName("BI") + comma_sep
+        g_j = real.setResultsName("GJ") + comma_sep
+        b_j = real.setResultsName("BJ") + comma_sep
+        status = boolean.setResultsName("ST") + comma_sep
+        length = real.setResultsName("LEN")
 
         branch_data = from_bus_id + to_bus_id + id + r + x + b + \
-            rate_a + rate_b + rate_c + g_bus_i + b_bus_i + g_bus_j + \
-            b_bus_j + status + length + restOfLine.suppress()
+            rate_a + rate_b + rate_c + g_i + b_i + g_j + b_j + \
+            status + length + restOfLine.suppress()
 
         branch_data.setParseAction(self._push_branch)
+
         return branch_data
 
 
     def _get_transformer_data_construct(self):
         """ Returns a construct for a line of transformer data.
         """
-        # From, To, K, ID, CW, CZ, CM, MAG1, MAG2, NMETR, NAME, STAT, O1, F1
-        # R1-2, X1-2, SBASE1-2
-        # WINDV1, NOMV1, ANG1, RATA1, RATB1, RATC1, COD, CONT, RMA, RMI, VMA, VMI, NTP, TAB, CR, CX
-        # WINDV2, NOMV2
+        # I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,'NAME',STAT,O1,F1,...,O4,F4
+        # R1-2,X1-2,SBASE1-2
+        # WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD1,CONT1,RMA1,RMI1,VMA1,VMI1,NTP1,TAB1,CR1,CX1
+        # WINDV2,NOMV2
+
+        # I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,'NAME',STAT,O1,F1,...,O4,F4
+        # R1-2,X1-2,SBASE1-2,R2-3,X2-3,SBASE2-3,R3-1,X3-1,SBASE3-1,VMSTAR,ANSTAR
+        # WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD1,CONT1,RMA1,RMI1,VMA1,VMI1,NTP1,TAB1,CR1,CX1
+        # WINDV2,NOMV2,ANG2,RATA2,RATB2,RATC2,COD2,CONT2,RMA2,RMI2,VMA2,VMI2,NTP2,TAB2,CR2,CX2
+        # WINDV3,NOMV3,ANG3,RATA3,RATB3,RATC3,COD3,CONT3,RMA3,RMI3,VMA3,VMI3,NTP3,TAB3,CR3,CX3
 
         # Unused column of data
         unused = Literal("/").suppress()
 
-        from_bus_id = integer.setResultsName("From") + comma_sep
-        to_bus_id = integer.setResultsName("To") + comma_sep
+        # 101,   151,     0,'T1',1,1,1,   0.17147,  -0.10288,2,'NUCA GSU    ',1,   1,0.3200,   2,0.3900,   3,0.1400,   4,0.1500
+        # 205,   215,   216,'3 ',1,1,1,   0.00034,  -0.00340,2,'3WNDSTAT3   ',3,   2,0.2540,   2,0.1746,   3,0.3333,   4,0.2381
+        i = integer.setResultsName("I") + comma_sep
+        j = integer.setResultsName("J") + comma_sep
         k = integer.setResultsName("K") + comma_sep
-        id = integer.setResultsName("ID") + comma_sep
+        ckt = quotedString.setResultsName("CKT") + comma_sep
         cw = integer.setResultsName("CW") + comma_sep
         cz = integer.setResultsName("CZ") + comma_sep
         cm = integer.setResultsName("CM") + comma_sep
@@ -280,52 +263,114 @@ class PSSEReader(CaseReader):
         mag2 = real.setResultsName("MAG2") + comma_sep
         nmetr = integer.setResultsName("NMETR") + comma_sep
         name = quotedString.setResultsName("NAME") + comma_sep
-        status = boolean.setResultsName("STAT") + comma_sep
-        o1 = integer.setResultsName("o1") + comma_sep
-        f1 = integer.setResultsName("f1") + comma_sep
+        status = integer.setResultsName("STAT") + comma_sep
+#        o1 = integer.setResultsName("o1") + comma_sep
+#        f1 = real.setResultsName("f1") + comma_sep
 
-        transformer_general = from_bus_id + to_bus_id + k + id + \
-            cw + cz + cm + mag1 + mag2 + nmetr + name + status + \
-            o1 + f1 + OneOrMore(unused)
+        trx_record1 = i + j + k + ckt + cw + cz + cm + \
+            mag1 + mag2 + nmetr + name + status + restOfLine.suppress()
+#            o1 + f1 + OneOrMore(unused)
 
+        # 0.00009,   0.00758, 1200.00
+        # 0.00069,   0.06667,  150.00,   0.00690,   0.60000,   20.00,   0.00453,   0.50000,   15.00,1.02605, -33.2424
         r12 = real.setResultsName("R1-2") + comma_sep
         x12 = real.setResultsName("X1-2") + comma_sep
-        s_base12 = real.setResultsName("SBASE1-2") + comma_sep
+        s_base12 = real.setResultsName("SBASE1-2")
 
-        transformer_impedance = r12 + x12 + s_base12 + OneOrMore(unused)
+        r23 = real.setResultsName("R2-3") + comma_sep
+        x23 = real.setResultsName("X2-3") + comma_sep
+        s_base23 = real.setResultsName("SBASE2-3") + comma_sep
+        r31 = real.setResultsName("R3-1") + comma_sep
+        x31 = real.setResultsName("X3-1") + comma_sep
+        s_base31 = real.setResultsName("SBASE3-1") + comma_sep
+        vm_star = real.setResultsName("VMSTAR") + comma_sep
+        an_star = real.setResultsName("ANSTAR")
 
-        v1_wind = real.setResultsName("WINDV1") + comma_sep
-        v1_nom = real.setResultsName("NOMV1") + comma_sep
+        wind2_record2 = r12 + x12 + s_base12
+        wind3_record2 = r12 + x12 + s_base12 + comma_sep + \
+                        r23 + x23 + s_base23 + \
+                        r31 + x31 + s_base31 + \
+                        vm_star + an_star
+
+        # 1.00000,  21.600,   0.000, 1200.00, 1100.00, 1000.00, 1,   -101, 1.05000, 0.95000, 1.05000, 0.95000,  25, 0, 0.00021, 0.00051
+        wind_v1 = real.setResultsName("WINDV1") + comma_sep
+        nom_v1 = real.setResultsName("NOMV1") + comma_sep
         angle1 = real.setResultsName("ANG1") + comma_sep
         rate_a1 = real.setResultsName("RATA1") + comma_sep
         rate_b1 = real.setResultsName("RATB1") + comma_sep
         rate_c1 = real.setResultsName("RATC1") + comma_sep
-        cod = integer.setResultsName("COD") + comma_sep
-        cont = real.setResultsName("CONT") + comma_sep
-        rma = real.setResultsName("RMA") + comma_sep
-        rmi = real.setResultsName("RMI") + comma_sep
-        vma = real.setResultsName("VMA") + comma_sep
-        vmi = real.setResultsName("VMI") + comma_sep
-        ntp = real.setResultsName("NTP") + comma_sep
-        tab = real.setResultsName("TAB") + comma_sep
-        cr = real.setResultsName("CR") + comma_sep
-        cx = real.setResultsName("CX") + comma_sep
+        cod1 = integer.setResultsName("COD1") + comma_sep
+        cont1 = integer.setResultsName("CONT1") + comma_sep
+        rma1 = real.setResultsName("RMA1") + comma_sep
+        rmi1 = real.setResultsName("RMI1") + comma_sep
+        vma1 = real.setResultsName("VMA1") + comma_sep
+        vmi1 = real.setResultsName("VMI1") + comma_sep
+        ntp1 = integer.setResultsName("NTP1") + comma_sep
+        tab1 = integer.setResultsName("TAB1") + comma_sep
+        cr1 = real.setResultsName("CR1") + comma_sep
+        cx1 = real.setResultsName("CX1")
 
-        transformer_winding_1 = v1_wind + v1_nom + angle1 + rate_a1 + \
-            rate_b1 + rate_c1 + cod + cont + rma + rmi + vma + vmi + \
-            ntp + tab + cr + cx
+        trx_record3 = wind_v1 + nom_v1 + angle1 + rate_a1 + \
+            rate_b1 + rate_c1 + cod1 + cont1 + rma1 + rmi1 + \
+            vma1 + vmi1 + ntp1 + tab1 + cr1 + cx1
 
-        v2_wind = real.setResultsName("WINDV2") + comma_sep
-        v2_nom = real.setResultsName("NOMV2") + comma_sep
+        # 1.00000, 500.000
+        wind2_v2 = real.setResultsName("WINDV2") + comma_sep
+        nom2_v2 = real.setResultsName("NOMV2")
 
-        transformer_winding_2 = v2_wind + v2_nom + OneOrMore(unused)
+        wind2_record4 = wind2_v2 + nom2_v2
 
-        transformer_data = transformer_general + transformer_impedance + \
-            transformer_winding_1 + transformer_winding_2
+        wind_v2 = real.setResultsName("WINDV2") + comma_sep
+        nom_v2 = real.setResultsName("NOMV2") + comma_sep
+        angle2 = real.setResultsName("ANG2") + comma_sep
+        rate_a2 = real.setResultsName("RATA2") + comma_sep
+        rate_b2 = real.setResultsName("RATB2") + comma_sep
+        rate_c2 = real.setResultsName("RATC2")# + comma_sep
+#        cod2 = integer.setResultsName("COD2") + comma_sep
+#        cont2 = integer.setResultsName("CONT2") + comma_sep
+#        rma2 = real.setResultsName("RMA2") + comma_sep
+#        rmi2 = real.setResultsName("RMI2") + comma_sep
+#        vma2 = real.setResultsName("VMA2") + comma_sep
+#        vmi2 = real.setResultsName("VMI2") + comma_sep
+#        ntp2 = integer.setResultsName("NTP2") + comma_sep
+#        tab2 = integer.setResultsName("TAB2") + comma_sep
+#        cr2 = real.setResultsName("CR2") + comma_sep
+#        cx2 = real.setResultsName("CX2")
 
-        transformer_data.setParseAction(self._push_transformer_data)
+        wind_v3 = real.setResultsName("WINDV3") + comma_sep
+        nom_v3 = real.setResultsName("NOMV3") + comma_sep
+        angle3 = real.setResultsName("ANG3") + comma_sep
+        rate_a3 = real.setResultsName("RATA3") + comma_sep
+        rate_b3 = real.setResultsName("RATB3") + comma_sep
+        rate_c3 = real.setResultsName("RATC3")# + comma_sep
+#        cod3 = integer.setResultsName("COD3") + comma_sep
+#        cont3 = integer.setResultsName("CONT3") + comma_sep
+#        rma3 = real.setResultsName("RMA3") + comma_sep
+#        rmi3 = real.setResultsName("RMI3") + comma_sep
+#        vma3 = real.setResultsName("VMA3") + comma_sep
+#        vmi3 = real.setResultsName("VMI3") + comma_sep
+#        ntp3 = integer.setResultsName("NTP3") + comma_sep
+#        tab3 = integer.setResultsName("TAB3") + comma_sep
+#        cr3 = real.setResultsName("CR3") + comma_sep
+#        cx3 = real.setResultsName("CX3")
 
-        return transformer_data
+        wind3_record4 = wind_v2 + nom_v2 + angle2 + rate_a2 + \
+            rate_b2 + rate_c2# + cod2 + cont2 + rma2 + rmi2 + \
+#            vma2 + vmi2 + ntp2 + tab2 + cr2 + cx2
+
+        wind3_record5 = wind_v3 + nom_v3 + angle3 + rate_a3 + \
+            rate_b3 + rate_c3# + cod3 + cont3 + rma3 + rmi3 + \
+#            vma3 + vmi3 + ntp3 + tab3 + cr3 + cx3
+
+        wind2 = trx_record1 + wind2_record2 + trx_record3 + wind2_record4
+
+        wind3 = trx_record1 + wind3_record2 + trx_record3 + wind3_record4 + \
+            wind3_record5
+
+        wind2.setParseAction(self._push_two_winding_transformer)
+        wind3.setParseAction(self._push_three_winding_transformer)
+
+        return wind2, wind3
 
 
     def _get_bus(self, bus_id):
@@ -368,24 +413,24 @@ class PSSEReader(CaseReader):
     def _push_bus_data(self, tokens):
         """ Adds a bus to the case.
         """
-        # [I, IDE, PL, QL, GL, BL, IA, VM, VA, 'NAME', BASKL, ZONE]
-        # Bus, Name, Base_kV, Type, Y_re, Y_im, Area, Zone, PU_Volt, Angle
+        # I, 'NAME', BASKV, IDE, GL, BL, AREA, ZONE, VM, VA, OWNER
         logger.debug("Parsing bus data: %s" % tokens)
 
         bus = Bus()
-        bus.name = tokens["Name"].strip("'").strip()
-        bus._bus_id = tokens["Bus"]
+        bus._bus_id = tokens["I"]
+
+        bus.name = tokens["NAME"].strip("'").strip()
 
         bus.v_base = tokens["BASKV"]
 
-        bus.g_shunt = tokens["Gl"]
-        bus.b_shunt = tokens["Bl"]
+        bus.g_shunt = tokens["GL"]
+        bus.b_shunt = tokens["BL"]
 
-        bus.v_magnitude_guess = tokens["PU_Volt"]
-        bus.v_magnitude = tokens["PU_Volt"]
+        bus.v_magnitude_guess = tokens["VM"]
+        bus.v_magnitude = tokens["VM"]
 
-        bus.v_angle_guess = tokens["Angle"]
-        bus.v_angle = tokens["Angle"]
+        bus.v_angle_guess = tokens["VA"]
+        bus.v_angle = tokens["VA"]
 
         self.case.buses.append(bus)
 
@@ -396,25 +441,20 @@ class PSSEReader(CaseReader):
         # I, ID, STATUS, AREA, ZONE, PL, QL, IP, IQ, YP, YQ, OWNER
         logger.debug("Parsing load data: %s" % tokens)
 
-        bus = self._get_bus(tokens["Bus"])
+        bus = self._get_bus(tokens["I"])
 
         if bus is not None:
-            bus.p_demand += tokens["LP"]
-            bus.q_demand += tokens["LQ"]
-
-
-    def _push_fixed_shunt_data(self, tokens):
-        logger.debug("Parsing fixed shunt data: %s" % tokens)
+            bus.p_demand += tokens["PL"]
+            bus.q_demand += tokens["QL"]
 
 
     def _push_generator(self, tokens):
         """ Adds a generator to a bus.
         """
-        # I, ID, PG, QG, QT, QB, VS, IREG, MBASE, ZR, ZX, RT, XT, GTAP, STAT,
-        # RMPCT, PT, PB, O1, F1, ....O4, F4
+        #I,ID,PG,QG,QT,QB,VS,IREG,MBASE,ZR,ZX,RT,XT,GTAP,STAT,RMPCT,PT,PB,O1,F1
         logger.debug("Parsing generator data: %s" % tokens)
 
-        bus = self._get_bus(tokens["Bus"])
+        bus = self._get_bus(tokens["I"])
 
         if bus is not None:
             g = Generator(bus)
@@ -434,63 +474,72 @@ class PSSEReader(CaseReader):
     def _push_branch(self, tokens):
         """ Adds a branch to the case.
         """
-        # From, To, ID, R, X, B, RateA, RateB, RateC, G_busI, B_busI,
-        # G_busJ, B_busJ, Stat, Len
+        # I,J,CKT,R,X,B,RATEA,RATEB,RATEC,GI,BI,GJ,BJ,ST,LEN,O1,F1,...,O4,F4
         logger.debug("Parsing branch data: %s", tokens)
+
+        # FIXME: Support extended bus name enclosed in single quotes.
+        from_bus_id = abs(tokens["I"])
+        to_bus_id = abs(tokens["J"])
 
         from_bus = None
         to_bus = None
         for v in self.case.buses:
             if from_bus is None:
-                if v._bus_id == tokens["From"]:
+                if v._bus_id == from_bus_id:
                     from_bus = v
             if to_bus is None:
-                if v._bus_id == tokens["To"]:
+                if v._bus_id == to_bus_id:
                     to_bus = v
             if (from_bus is not None) and (to_bus is not None):
                 break
         else:
-            logger.error("A bus for branch from %d to %d not found" %
-                         (tokens["From"], tokens["To"]))
+            logger.error("Bus [%d %d] not found." % (from_bus_id, to_bus_id))
             return
 
-        branch = Branch(from_bus=from_bus, to_bus=to_bus)
+        branch = Branch(from_bus, to_bus)
 
         branch.r = tokens["R"]
         branch.x = tokens["X"]
         branch.b = tokens["B"]
-        branch.rate_a = tokens["RateA"]
-        branch.rate_b = tokens["RateB"]
-        branch.rate_c = tokens["RateC"]
-        branch.online = tokens["Stat"]
+        branch.rate_a = tokens["RATEA"]
+        branch.rate_b = tokens["RATEB"]
+        branch.rate_c = tokens["RATEC"]
+        branch.online = tokens["ST"]
 
         self.case.branches.append(branch)
 
 
-    def _push_transformer_data(self, tokens):
+    def _push_two_winding_transformer(self, tokens):
         """ Adds a branch to the case with transformer data.
         """
-        logger.debug("Parsing transformer data: %s" % tokens)
+        logger.debug("Parsing two winding transformer data: %s" % tokens)
+
+        from_bus_id = abs(tokens["I"])
+        to_bus_id = abs(tokens["J"])
 
         from_bus = None
         to_bus = None
         for v in self.case.buses:
             if from_bus is None:
-                if v._bus_id == tokens["From"]:
+                if v._bus_id == from_bus_id:
                     from_bus = v
             if to_bus is None:
-                if v._bus_id == tokens["To"]:
+                if v._bus_id == to_bus_id:
                     to_bus = v
             if (from_bus is not None) and (to_bus is not None):
                 break
         else:
-            logger.error("A bus for branch from %d to %d not found" %
-                         (tokens["From"], tokens["To"]))
+            logger.error("Bus [%d %d] not found." % (from_bus_id, to_bus_id))
             return
 
-        branch = Branch(from_bus=from_bus, to_bus=to_bus)
+        branch = Branch(from_bus, to_bus)
         branch.online = tokens["STAT"]
 
         self.case.branches.append(branch)
+
+
+    def _push_three_winding_transformer(self, tokens):
+
+        logger.debug("Parsing three winding transformer data: %s" % tokens)
 
 # EOF -------------------------------------------------------------------------
