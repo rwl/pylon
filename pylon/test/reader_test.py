@@ -215,6 +215,7 @@ class PSSEReaderTest(TestCase):
         self.assertAlmostEqual(case.buses[0].v_angle_guess, -10.4286, pl)
         self.assertAlmostEqual(case.buses[1].v_angle_guess, -10.7806, pl)
 
+        # Loads.
         load_buses = [b for b in case.buses if
                       b.p_demand > 0.0 or b.q_demand > 0.0]
         self.assertEqual(len(load_buses), 15)
@@ -223,6 +224,7 @@ class PSSEReaderTest(TestCase):
         self.assertAlmostEqual(case.buses[34].p_demand, 12.0, pl)
         self.assertAlmostEqual(case.buses[34].q_demand, 5.0, pl)
 
+        # Generators.
         self.assertEqual(len(case.generators), 15)
         self.assertAlmostEqual(case.generators[0].p, 750.0, pl)
         self.assertAlmostEqual(case.generators[0].q, 125.648, pl)
@@ -237,7 +239,7 @@ class PSSEReaderTest(TestCase):
         self.assertAlmostEqual(case.generators[14].p, 3.24, pl)
         self.assertAlmostEqual(case.generators[14].q, -1.475, pl)
 
-        self.assertEqual(len(case.branches), 30)
+        # Branches.
         self.assertEqual(case.buses.index(case.branches[0].from_bus), 2)
         self.assertEqual(case.buses.index(case.branches[0].to_bus), 3)
         self.assertEqual(case.branches[0].r, 0.00260, pl)
@@ -250,6 +252,40 @@ class PSSEReaderTest(TestCase):
 
         self.assertEqual(case.buses.index(case.branches[29].from_bus), 32)
         self.assertEqual(case.buses.index(case.branches[29].to_bus), 33)
+
+        # Transformers.
+        self.assertEqual(case.buses.index(case.branches[30].from_bus), 0)
+        self.assertEqual(case.buses.index(case.branches[30].to_bus), 2)
+        self.assertEqual(case.branches[30].b, -0.10288, pl)
+        self.assertEqual(case.branches[30].r, 0.00009, pl)
+        self.assertEqual(case.branches[30].x, 0.00758, pl)
+        self.assertEqual(case.branches[30].ratio, 1.0, pl)
+        self.assertEqual(case.branches[30].phase_shift, 0.0, pl)
+        self.assertEqual(case.branches[30].rate_a, 1200.00, pl)
+        self.assertEqual(case.branches[30].rate_b, 1100.00, pl)
+        self.assertEqual(case.branches[30].rate_c, 1000.00, pl)
+
+        self.assertEqual(len(case.branches), 30 + 18 - 4) # 4 3-winding trx.
+
+
+    def test_benchmark(self):
+        """ Test parsing the benchmark case.
+        """
+        case = self.reader.read(BENCH_DATA_FILE)
+
+        self.assertEqual(len(case.buses), 1648)
+        self.assertEqual(len(case.branches), 2602)
+        self.assertEqual(len(case.generators), 313)
+
+
+#    def test_benchmark_two(self):
+#        """ Test parsing the second benchmark case.
+#        """
+#        case = self.reader.read(BENCH2_DATA_FILE)
+#
+#        self.assertEqual(len(case.buses), 7917)
+#        self.assertEqual(len(case.branches), 13014)
+#        self.assertEqual(len(case.generators), 1325)
 
 
 #    def test_ukgds(self):

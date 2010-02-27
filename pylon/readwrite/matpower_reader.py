@@ -53,7 +53,7 @@ class MATPOWERReader(CaseReader):
     """
 
     def __init__(self, case_format=2):
-        """ Initialises a new PSSEReader instance.
+        """ Initialises a new MATPOWERReader instance.
         """
         # MATPOWER case format.  Version 2 introduced in MATPOWER 4.0b1.
         self.case_format = case_format

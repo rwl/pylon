@@ -50,6 +50,12 @@ class PSSEReader(CaseReader):
     """ Defines a reader of PSS/E data files that returns a case object.
     """
 
+    def __init__(self, case_format=2):
+        """ Initialises a new PSSEReader instance.
+        """
+        # Map of bus ids to bus objects.
+        self.bus_map = {}
+
     #--------------------------------------------------------------------------
     #  "CaseReader" interface:
     #--------------------------------------------------------------------------
@@ -63,6 +69,7 @@ class PSSEReader(CaseReader):
         t0 = time.time()
 
         self.case = Case()
+        self.bus_map = {}
 
         header = self._get_header_construct()
         title = self._get_title_construct()
@@ -80,7 +87,7 @@ class PSSEReader(CaseReader):
                OneOrMore(load_data) + separator + \
                OneOrMore(generator_data) + separator + \
                OneOrMore(branch_data) + separator + \
-               OneOrMore(wind2) + OneOrMore(wind3)
+               OneOrMore(wind2 | wind3)
 
         case.parseFile(file_or_filename)
 
@@ -373,17 +380,17 @@ class PSSEReader(CaseReader):
         return wind2, wind3
 
 
-    def _get_bus(self, bus_id):
-        """ Returns the bus with the given id or None.
-        """
-        for bus in self.case.buses:
-            if bus._bus_id == bus_id:
-                break
-        else:
-            logger.error("Bus [%d] not found." % bus_id)
-            return None
-
-        return bus
+#    def _get_bus(self, bus_id):
+#        """ Returns the bus with the given id or None.
+#        """
+#        for bus in self.case.buses:
+#            if bus._bus_id == bus_id:
+#                break
+#        else:
+#            logger.error("Bus [%d] not found." % bus_id)
+#            return None
+#
+#        return bus
 
     #--------------------------------------------------------------------------
     #  Parse actions:
@@ -417,7 +424,6 @@ class PSSEReader(CaseReader):
         logger.debug("Parsing bus data: %s" % tokens)
 
         bus = Bus()
-        bus._bus_id = tokens["I"]
 
         bus.name = tokens["NAME"].strip("'").strip()
 
@@ -434,6 +440,8 @@ class PSSEReader(CaseReader):
 
         self.case.buses.append(bus)
 
+        self.bus_map[tokens["I"]] = bus
+
 
     def _push_load_data(self, tokens):
         """ Adds a load to a bus.
@@ -441,11 +449,15 @@ class PSSEReader(CaseReader):
         # I, ID, STATUS, AREA, ZONE, PL, QL, IP, IQ, YP, YQ, OWNER
         logger.debug("Parsing load data: %s" % tokens)
 
-        bus = self._get_bus(tokens["I"])
+        bus_id = tokens["I"]
+        if self.bus_map.has_key(bus_id):
+            bus = self.bus_map[bus_id]
+        else:
+            logger.error("Bus [%d] not found." % bus_id)
+            return
 
-        if bus is not None:
-            bus.p_demand += tokens["PL"]
-            bus.q_demand += tokens["QL"]
+        bus.p_demand += tokens["PL"]
+        bus.q_demand += tokens["QL"]
 
 
     def _push_generator(self, tokens):
@@ -454,21 +466,26 @@ class PSSEReader(CaseReader):
         #I,ID,PG,QG,QT,QB,VS,IREG,MBASE,ZR,ZX,RT,XT,GTAP,STAT,RMPCT,PT,PB,O1,F1
         logger.debug("Parsing generator data: %s" % tokens)
 
-        bus = self._get_bus(tokens["I"])
+        bus_id = tokens["I"]
+        if self.bus_map.has_key(bus_id):
+            bus = self.bus_map[bus_id]
+        else:
+            logger.error("Bus [%d] not found." % bus_id)
+            return
 
-        if bus is not None:
-            g = Generator(bus)
-            g.p = tokens["PG"]
-            g.q = tokens["QG"]
-            g.q_max = tokens["QT"]
-            g.q_min = tokens["QB"]
-            g.v_magnitude = tokens["VS"]
-            g.base_mva = tokens["MBASE"]
-            g.online = tokens["STAT"]
-            g.p_max = tokens["PT"]
-            g.p_min = tokens["PB"]
+        g = Generator(bus)
+#        g.name = tokens["ID"]
+        g.p = tokens["PG"]
+        g.q = tokens["QG"]
+        g.q_max = tokens["QT"]
+        g.q_min = tokens["QB"]
+        g.v_magnitude = tokens["VS"]
+        g.base_mva = tokens["MBASE"]
+        g.online = tokens["STAT"]
+        g.p_max = tokens["PT"]
+        g.p_min = tokens["PB"]
 
-            self.case.generators.append(g)
+        self.case.generators.append(g)
 
 
     def _push_branch(self, tokens):
@@ -478,23 +495,29 @@ class PSSEReader(CaseReader):
         logger.debug("Parsing branch data: %s", tokens)
 
         # FIXME: Support extended bus name enclosed in single quotes.
-        from_bus_id = abs(tokens["I"])
-        to_bus_id = abs(tokens["J"])
+        from_id = abs(tokens["I"])
+        to_id = abs(tokens["J"])
 
-        from_bus = None
-        to_bus = None
-        for v in self.case.buses:
-            if from_bus is None:
-                if v._bus_id == from_bus_id:
-                    from_bus = v
-            if to_bus is None:
-                if v._bus_id == to_bus_id:
-                    to_bus = v
-            if (from_bus is not None) and (to_bus is not None):
-                break
+#        from_bus = None
+#        to_bus = None
+#        for v in self.case.buses:
+#            if from_bus is None:
+#                if v._bus_id == from_bus_id:
+#                    from_bus = v
+#            if to_bus is None:
+#                if v._bus_id == to_bus_id:
+#                    to_bus = v
+#            if (from_bus is not None) and (to_bus is not None):
+#                break
+#        else:
+#            logger.error("Bus [%d %d] not found." % (from_bus_id, to_bus_id))
+#            return
+
+        if self.bus_map.has_key(from_id) and self.bus_map.has_key(to_id):
+            from_bus = self.bus_map[from_id]
+            to_bus = self.bus_map[to_id]
         else:
-            logger.error("Bus [%d %d] not found." % (from_bus_id, to_bus_id))
-            return
+            logger.error("Bus [%d %d] not found." % (from_id, to_id))
 
         branch = Branch(from_bus, to_bus)
 
@@ -514,32 +537,58 @@ class PSSEReader(CaseReader):
         """
         logger.debug("Parsing two winding transformer data: %s" % tokens)
 
-        from_bus_id = abs(tokens["I"])
-        to_bus_id = abs(tokens["J"])
+        # I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,'NAME',STAT,O1,F1,...,O4,F4
+        # R1-2,X1-2,SBASE1-2
+        # WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD1,CONT1,RMA1,RMI1,VMA1,VMI1,NTP1,TAB1,CR1,CX1
+        # WINDV2,NOMV2
 
-        from_bus = None
-        to_bus = None
-        for v in self.case.buses:
-            if from_bus is None:
-                if v._bus_id == from_bus_id:
-                    from_bus = v
-            if to_bus is None:
-                if v._bus_id == to_bus_id:
-                    to_bus = v
-            if (from_bus is not None) and (to_bus is not None):
-                break
+        from_id = abs(tokens["I"])
+        to_id = abs(tokens["J"])
+
+#        from_bus = None
+#        to_bus = None
+#        for v in self.case.buses:
+#            if from_bus is None:
+#                if v._bus_id == from_bus_id:
+#                    from_bus = v
+#            if to_bus is None:
+#                if v._bus_id == to_bus_id:
+#                    to_bus = v
+#            if (from_bus is not None) and (to_bus is not None):
+#                break
+#        else:
+#            logger.error("Bus [%d %d] not found." % (from_bus_id, to_bus_id))
+#            return
+
+        if self.bus_map.has_key(from_id) and self.bus_map.has_key(to_id):
+            from_bus = self.bus_map[from_id]
+            to_bus = self.bus_map[to_id]
         else:
-            logger.error("Bus [%d %d] not found." % (from_bus_id, to_bus_id))
-            return
+            logger.error("Bus [%d %d] not found." % (from_id, to_id))
 
         branch = Branch(from_bus, to_bus)
+        branch.name = tokens["NAME"].strip("'").strip()
         branch.online = tokens["STAT"]
+#        branch.g = tokens["MAG1"]
+        branch.b = tokens["MAG2"]
+
+        branch.r = tokens["R1-2"]
+        branch.x = tokens["X1-2"]
+
+        branch.ratio = tokens["WINDV1"]
+        branch.phase_shift = tokens["ANG1"]
+        if tokens["RATA1"] != 0.0:
+            branch.rate_a = tokens["RATA1"]
+        if tokens["RATB1"] != 0.0:
+            branch.rate_b = tokens["RATB1"]
+        if tokens["RATC1"] != 0.0:
+            branch.rate_c = tokens["RATC1"]
 
         self.case.branches.append(branch)
 
 
     def _push_three_winding_transformer(self, tokens):
-
         logger.debug("Parsing three winding transformer data: %s" % tokens)
+        logger.warning("Three winding transformers are not supported.")
 
 # EOF -------------------------------------------------------------------------
