@@ -5,6 +5,7 @@
 .. _ReStructuredText: http://docutils.sf.net/rst.html
 
 .. _`GNU General Public License`: http://www.gnu.org/licenses/gpl.html
+.. _`Apache License, Version 2.0`: http://www.apache.org/licenses/LICENSE-2.0
 
 .. _Virtualenv: http://pypi.python.org/pypi/virtualenv
 .. _Git: http://git.or.cz/
