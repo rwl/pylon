@@ -23,7 +23,8 @@
 #------------------------------------------------------------------------------
 
 import os.path
-import pickle
+# import pickle
+import cPickle as pickle
 import logging
 
 from pylon.readwrite.common import CaseReader, CaseWriter
