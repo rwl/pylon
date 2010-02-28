@@ -31,6 +31,14 @@ default::
 Refer to the documentation for detailed usage information.
 
 -------
+License
+-------
+
+Pylon is licensed under the Apache License, version 2.0 with the exception of
+the pylon.cvxopt module which is licensed under the GNU General Public License,
+version 3.
+
+-------
 Credits
 -------
 
