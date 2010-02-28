@@ -29,9 +29,8 @@ import logging
 from math import pi
 from time import time
 
-from scipy import matrix, array, angle, pi, exp, linalg, multiply
+from numpy import matrix, array, angle, pi, exp, linalg, multiply, conj
 
-from pylon.util import conj
 from pylon.case import PQ, PV, REFERENCE
 
 #------------------------------------------------------------------------------

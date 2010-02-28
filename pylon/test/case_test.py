@@ -132,7 +132,7 @@ class CaseTest(unittest.TestCase):
         """
         Y, _, _ = self.case.Y
 
-        self.assertEqual(Y.size, (6, 6))
+        self.assertEqual(Y.shape, (6, 6))
 
         places = 4
 
@@ -155,7 +155,7 @@ class CaseTest(unittest.TestCase):
         self.assertAlmostEqual(abs(Y[2, 5]), abs(Y_2_5), places)
 
         # Validate that elements [i, j] and [j, i] are equal.
-        w, h = Y.size
+        w, h = Y.shape
         for i in range(w):
             for j in range(h):
                 if (i != j) and (i < j):
@@ -182,7 +182,7 @@ class CaseTest(unittest.TestCase):
 
         places = 4
 
-        self.assertEqual(B.size, (6,6))
+        self.assertEqual(B.shape, (6,6))
         # Validate diagonal values.
         self.assertAlmostEqual(13.3333, B[0, 0], places)
         self.assertAlmostEqual(17.8462, B[2, 2], places)
@@ -192,23 +192,23 @@ class CaseTest(unittest.TestCase):
         self.assertAlmostEqual(-3.3333, B[0, 4], places)
         self.assertAlmostEqual(-10.0000, B[5, 2], places)
         # Validate that elements [i, j] and [j, i] are equal.
-        w, h = B.size
+        w, h = B.shape
         for i in range(w):
             for j in range(h):
                 if (i != j) and (i < j):
                     self.assertEqual(abs(B[i, j]), abs(B[j, i]))
 
-        self.assertEqual(Bf.size, (11,6))
+        self.assertEqual(Bf.shape, (11,6))
         self.assertAlmostEqual(5.0000, Bf[0, 0], places)
         self.assertAlmostEqual(-10.00, Bf[4, 3], places)
         self.assertAlmostEqual(3.8462, Bf[7, 2], places)
         self.assertAlmostEqual(2.5000, Bf[9, 3], places)
 
-        self.assertEqual(Pbusinj.size, (6, 1))
+        self.assertEqual(Pbusinj.shape, (6,))
         for v in Pbusinj:
             self.assertEqual(v, 0.0)
 
-        self.assertEqual(Pfinj.size, (11, 1))
+        self.assertEqual(Pfinj.shape, (11,))
         for v in Pfinj:
             self.assertEqual(v, 0.0)
 
