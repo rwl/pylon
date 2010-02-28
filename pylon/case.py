@@ -26,11 +26,10 @@ import logging
 
 from copy import copy
 
-from numpy import angle, pi
+from scipy import matrix, array, angle, pi, exp, multiply
+from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
 
 from util import Named, Serializable, conj
-
-from cvxopt.base import matrix, spmatrix, spdiag, exp, mul, div
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -353,7 +352,7 @@ class Case(Named, Serializable):
             r = matrix(0.0, (nl, 1)) # Zero out line resistance.
         x = matrix([e.x for e in branches])
 
-        Ys = div(online, (r + 1j * x))
+        Ys = online / (r + 1j * x)
 
         #----------------------------------------------------------------------
         #  Line charging susceptance.
@@ -364,7 +363,7 @@ class Case(Named, Serializable):
         else:
             b = matrix(0.0, (nl, 1)) # Zero out line charging shunts.
 
-        Bc = mul(online, b)
+        Bc = multiply(online, b)
 
         #----------------------------------------------------------------------
         #  Transformer tap ratios.
@@ -391,7 +390,7 @@ class Case(Named, Serializable):
         else:
             phase_shift = matrix(0.0, (nl, 1))
 
-        tap = mul(tap, exp(1j * shift))
+        tap = multiply(tap, exp(1j * shift))
 
         #----------------------------------------------------------------------
         #  Branch admittance matrix elements.
@@ -402,9 +401,9 @@ class Case(Named, Serializable):
         #  | It |   | Ytf  Ytt |   | Vt |
 
         Ytt = Ys + 1j * Bc / 2.0
-        Yff = div(Ytt, (mul(tap, conj(tap))))
-        Yft = div(-Ys, conj(tap))
-        Ytf = div(-Ys, tap)
+        Yff = Ytt / (multiply(tap, conj(tap)))
+        Yft = -Ys / conj(tap)
+        Ytf = -Ys / tap
 
         #----------------------------------------------------------------------
         #  Shunt admittance.
@@ -526,7 +525,7 @@ class Case(Named, Serializable):
         # Ones at in-service branches.
         online = matrix([br.online for br in branches])
         # Series susceptance.
-        b = div(online, matrix([br.x for br in branches]))
+        b = online / matrix([br.x for br in branches])
 
         # Default tap ratio = 1.0.
         tap = matrix(1.0, (nl, 1))
@@ -535,7 +534,7 @@ class Case(Named, Serializable):
         for i, branch in enumerate(branches):
             if branch.ratio != 0.0:
                 tap[i] = branch.ratio
-        b = div(b, tap)
+        b = b / tap
 
         f = matrix([buses.index(br.from_bus) for br in branches])
         t = matrix([buses.index(br.to_bus) for br in branches])
@@ -564,7 +563,7 @@ class Case(Named, Serializable):
 
         # Build phase shift injection vectors.
         shift = matrix([br.phase_shift * pi / 180.0 for br in branches])
-        Pfinj = mul(b, shift)
+        Pfinj = multiply(b, shift)
         #Ptinj = -Pfinj
         # Pbusinj = Cf * Pfinj + Ct * Ptinj
         Pbusinj = Cft.H * Pfinj
@@ -588,7 +587,7 @@ class Case(Named, Serializable):
 
         diag_v = spdiag(V)
         diag_i = spdiag(I)
-        diag_vnorm = spdiag(div(V, abs(V))) # Element-wise division.
+        diag_vnorm = spdiag(V / abs(V)) # Element-wise division.
 
         dS_dVm = diag_v * conj(Y * diag_vnorm) + conj(diag_i) * diag_vnorm
         dS_dVa = 1j * diag_v * conj(diag_i - Y * diag_v)
@@ -607,7 +606,7 @@ class Case(Named, Serializable):
         """
 #        nb = len(V)
 
-        Vnorm = div(V, abs(V))
+        Vnorm = V / abs(V)
         diagV = spdiag(V)
         diagVnorm = spdiag(Vnorm)
         dIf_dVa = Yf * 1j * diagV
@@ -642,7 +641,7 @@ class Case(Named, Serializable):
         If = Yf * V
         It = Yt * V
 
-        Vnorm = div(V, abs(V))
+        Vnorm = V / abs(V)
 
         diagVf = spdiag(V[f])
         diagIf = spdiag(If)
@@ -668,8 +667,8 @@ class Case(Named, Serializable):
             spmatrix(Vnorm[t], ibr, t, size)
 
         # Compute power flow vectors.
-        Sf = mul(V[f], conj(If))
-        St = mul(V[t], conj(It))
+        Sf = multiply(V[f], conj(If))
+        St = multiply(V[t], conj(It))
 
         return dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St
 
@@ -725,7 +724,7 @@ class Case(Named, Serializable):
         diaglam = spdiag(lam)
         diagV = spdiag(V)
 
-        A = spmatrix(mul(lam, V), range(n), range(n))
+        A = spmatrix(multiply(lam, V), range(n), range(n))
         B = Ybus * diagV
         C = A * conj(B)
         D = Ybus.H * diagV
@@ -748,9 +747,9 @@ class Case(Named, Serializable):
         """ Computes 2nd derivatives of complex branch current w.r.t. voltage.
         """
         nb = len(V)
-        diaginvVm = spdiag(div(matrix(1.0, (nb, 1)), abs(V)))
+        diaginvVm = spdiag(matrix(1.0, (nb, 1)) / abs(V))
 
-        Gaa = spdiag(mul(-(Ybr.T * lam), V))
+        Gaa = spdiag(-(Ybr.T * lam) / V)
         Gva = -1j * Gaa * diaginvVm
         Gav = Gva
         Gvv = spmatrix([], [], [], (nb, nb))
@@ -771,10 +770,10 @@ class Case(Named, Serializable):
 
         A = Ybr.H * diaglam * Cbr
         B = conj(diagV) * A * diagV
-        D = spdiag(mul((A*V), conj(V)))
-        E = spdiag(mul((A.T * conj(V)), V))
+        D = spdiag(multiply((A*V), conj(V)))
+        E = spdiag(multiply((A.T * conj(V)), V))
         F = B + B.T
-        G = spdiag(div(matrix(1.0, (nb, 1)), abs(V)))
+        G = spdiag(matrix(1.0, (nb, 1)) / abs(V))
 
         Gaa = F - D - E
         Gva = 1j * G * (B - B.T - D + E)
@@ -847,7 +846,7 @@ class Case(Named, Serializable):
                          g.bus.type == REFERENCE])
 
         # Compute total injected bus powers.
-        Sg = mul(V[gbus], conj(Ybus[gbus, :] * V))
+        Sg = multiply(V[gbus], conj(Ybus[gbus, :] * V))
 
         # Update Qg for all generators.
         for i in gbus:
@@ -877,8 +876,8 @@ class Case(Named, Serializable):
         for i, l in enumerate(branches):
             idx_f = buses.index(l.from_bus)
             idx_t = buses.index(l.to_bus)
-            Sf = mul(V[idx_f], conj(Yf[i, :] * V)) * self.base_mva
-            St = mul(V[idx_t], conj(Yt[i, :] * V)) * self.base_mva
+            Sf = multiply(V[idx_f], conj(Yf[i, :] * V)) * self.base_mva
+            St = multiply(V[idx_t], conj(Yt[i, :] * V)) * self.base_mva
 
             l.p_from = Sf.real()[0]
             l.q_from = Sf.imag()[0]

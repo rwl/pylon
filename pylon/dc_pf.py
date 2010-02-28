@@ -30,7 +30,7 @@ import time
 import logging
 import math
 
-from cvxopt import matrix, umfpack, cholmod
+from scipy import matrix, linalg
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -57,10 +57,6 @@ class DCPF(object):
     def __init__(self, case, solver="UMFPACK"):
         """ Initialises a DCPF instance.
         """
-        # CVXOPT offers interfaces to two routines for solving sets of sparse
-        # linear equations: 'UMFPACK' and 'CHOLMOD' (default: 'UMFPACK')
-        self.solver = solver
-
         # Solved case.
         self.case = case
 
@@ -180,16 +176,7 @@ class DCPF(object):
         A = Bpvpq
         b = p_pvpq - Bref * v_angle_guess_ref
 
-        if self.solver == "UMFPACK":
-            # Solves the sparse set of linear equations Ax=b where A is a
-            # sparse matrix and B is a dense matrix of the same type ('d'
-            # or 'z') as A. On exit b contains the solution.
-            umfpack.linsolve(A, b)
-        elif self.solver == "CHOLMOD":
-            # Cholesky factorization routines from the CHOLMOD package.
-            cholmod.linsolve(A, b)
-        else:
-            raise ValueError
+        linalg.solve(A, b)
 
         # Insert the reference voltage angle of the slack bus.
         v_angle = matrix([b[:iref], v_angle_guess_ref, b[iref:]])

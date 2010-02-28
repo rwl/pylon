@@ -15,7 +15,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #------------------------------------------------------------------------------
 
-""" Solves an AC optimal power flow using cp from CVXOPT.
+""" Defines a solver for AC optimal power flow.
 
     References:
         Ray Zimmerman, "runopf.m", MATPOWER, PSERC Cornell,
@@ -28,10 +28,9 @@
 
 import time
 import logging
-from numpy import pi, polyder, polyval
 
-from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, exp, div
-from cvxopt import solvers
+from scipy import matrix, pi, polyder, polyval, multiply, exp
+from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
 
 from pylon.util import conj
 
@@ -46,7 +45,7 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class ACOPF(object):
-    """ Solves an AC optimal power flow using cp from CVXOPT.
+    """ Solves AC optimal power flow.
 
         When specified, A, l, u represent additional linear constraints on the
         optimization variables, l <= A*[x; z] <= u. For an explanation of the
@@ -102,18 +101,18 @@ class ACOPF(object):
         self.case = case
 
 
-    def solve(self):
+    def solve(self, case=None):
         """ Solves AC OPF for the given case.
         """
         t0 = time.time()
 
         # Turn off output to screen.
-        solvers.options["show_progress"] = self.show_progress
-        solvers.options["maxiters"] = self.max_iterations
-        solvers.options["abstol"] = self.absolute_tol
-        solvers.options["reltol"] = self.relative_tol
-        solvers.options["feastol"] = self.feasibility_tol
-        solvers.options["refinement"] = self.refinement
+#        solvers.options["show_progress"] = self.show_progress
+#        solvers.options["maxiters"] = self.max_iterations
+#        solvers.options["abstol"] = self.absolute_tol
+#        solvers.options["reltol"] = self.relative_tol
+#        solvers.options["feastol"] = self.feasibility_tol
+#        solvers.options["refinement"] = self.refinement
 
         case = self.case if case is None else case
         assert case is not None
@@ -267,11 +266,11 @@ class ACOPF(object):
             v_angle = x[ph_base:ph_end + 1]
             v_magnitude = x[v_base:v_end]
 #            Va0r = Va0 * pi / 180 #convert to radians
-            v = mul(v_magnitude, exp(j * v_angle)) #element-wise product
+            v = multiply(v_magnitude, exp(j * v_angle)) #element-wise product
 
             # Evaluate the power flow equations.
             Y, Yfrom, Yto = case.Y
-            mismatch = mul(v, conj(Y * v)) - s
+            mismatch = multiply(v, conj(Y * v)) - s
 
             # Evaluate power balance equality constraint function values.
             fk_eq = matrix([mismatch.real(), mismatch.imag()])
@@ -282,9 +281,9 @@ class ACOPF(object):
             from_idxs = matrix([buses.index(e.from_bus) for e in branches])
             to_idxs = matrix([buses.index(e.to_bus) for e in branches])
             # Complex power in p.u. injected at the from bus.
-            s_from = mul(v[from_idxs], conj(Yfrom, v))
+            s_from = multiply(v[from_idxs], conj(Yfrom, v))
             # Complex power in p.u. injected at the to bus.
-            s_to = mul(v[to_idxs], conj(Yto, v))
+            s_to = multiply(v[to_idxs], conj(Yto, v))
 
             # Apparent power flow limit in MVA, |S|.
             rate_a = matrix([e.rate_a for e in branches])
@@ -295,7 +294,7 @@ class ACOPF(object):
             # Evaluate partial derivatives of constraints ---------------------
 
             # Partial derivative of injected bus power
-            dS_dVm, dS_dVa = dSbus_dV(Y, v) # w.r.t voltage
+            dS_dVm, dS_dVa = case.dSbus_dV(Y, v) # w.r.t voltage
             pv_idxs = matrix([buses.index(bus) for bus in buses])
             dS_dPg = spmatrix(-1, pv_idxs, range(n_gen)) # w.r.t Pg
             dS_dQg = spmatrix(-j, pv_idxs, range(n_gen)) # w.r.t Qg
@@ -312,11 +311,11 @@ class ACOPF(object):
 
             # Partial derivative of branch power flow w.r.t voltage.
             dSf_dVa, dSt_dVa, dSf_dVm, dSt_dVm, s_from, s_to = \
-                dSbr_dV(branches, Yfrom, Yto, v)
+                case.dSbr_dV(branches, Yfrom, Yto, v)
 
             # Magnitude of complex power flow.
             df_dVa, dt_dVa, df_dVm, dt_dVm = \
-                dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_from, s_to)
+                case.dAbr_dV(dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, s_from, s_to)
 
             # Transposed Jacobian of branch power flow inequality constraints.
             dfk_ieq = matrix([matrix([df_dVa, df_dVm]),

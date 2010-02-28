@@ -25,9 +25,6 @@
 from os.path import join, dirname
 import unittest
 
-from cvxopt import solvers
-from cvxopt import printing
-
 from pylon import OPF, Case, Generator, REFERENCE, POLYNOMIAL, PW_LINEAR
 from pylon.opf import INF, DCOPFSolver, PDIPMSolver#, CVXOPTSolver
 
@@ -212,9 +209,9 @@ class OPFTest(unittest.TestCase):
 
         self.opf._algorithm_parameters()
 
-        self.assertFalse(solvers.options["show_progress"])
-        self.assertEqual(solvers.options["maxiters"], 150)
-        self.assertEqual(solvers.options["abstol"], 1e-8)
+#        self.assertFalse(solvers.options["show_progress"])
+#        self.assertEqual(solvers.options["maxiters"], 150)
+#        self.assertEqual(solvers.options["abstol"], 1e-8)
 
 
     def test_one_reference(self):

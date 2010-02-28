@@ -28,14 +28,10 @@
 
 import logging
 
-from numpy import nonzero, Inf, any, isnan, asarray
-from numpy.linalg import norm, solve
+from numpy import matrix, nonzero, Inf, any, isnan, asarray, log
+from numpy.linalg import solve, norm
 
-from cvxopt import matrix, spmatrix, sparse, spdiag, div, log
-
-from cvxopt import umfpack #@UnusedImport
-from cvxopt import cholmod #@UnusedImport
-from cvxopt import lapack #@UnusedImport
+from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -153,7 +149,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     k = matrix([j for j in range(len(g)) if g[j] < -z0])
     z[k] = -g[k]
     k = matrix([j for j in range(len(z)) if (gamma / z[j]) > z0])
-    mu[k] = div(gamma, z[k])
+    mu[k] = gamma / z[k]
     e = matrix(1.0, (niq, 1))
 
     # check tolerance
@@ -201,12 +197,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
                      [dh, spmatrix([], [], [], (neq, neq))]])
         bb = matrix([-N, -h])
 
-#        umfpack.linsolve(Ab, bb)
-        lapack.gesv(matrix(Ab), bb)
-        dxdlam = bb
-#        xx = solve(asarray(matrix(Ab)), asarray(bb))
-
-#        print "dxdlam\n", bb
+        dxdlam = solve(Ab, bb)
 
         dx = dxdlam[:nx]
         dlam = dxdlam[nx:nx + neq]
@@ -262,11 +253,11 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 
         # do the update
         k = matrix([j for j in range(len(dz)) if dz[j] < 0.0])
-        alphap = min( matrix([xi * min(div(z[k], -dz[k])), 1]) )
+        alphap = min( matrix([xi * min(z[k] / -dz[k]), 1]) )
 
         k = matrix([j for j in range(len(dmu)) if dmu[j] < 0.0])
 #        alphad = min( matrix([xi * min(div(mu[k], -dmu[k])), 1]) )
-        alphad = min( matrix([xi * min(matrix([div(mu[k], -dmu[k]), 1])), 1]) )
+        alphad = min( matrix([xi * min(matrix([mu[k] / -dmu[k], 1])), 1]) )
 
         x = x + alphap * dx
         z = z + alphap * dz

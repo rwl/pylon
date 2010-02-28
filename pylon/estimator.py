@@ -28,13 +28,10 @@
 
 import sys
 import logging
-from time import time
-from numpy import pi, angle
 
-from cvxopt.base import matrix, spmatrix, sparse, spdiag, mul, div, exp
-from cvxopt import umfpack #@UnusedImport
-from cvxopt import cholmod #@UnusedImport
-from cvxopt import lapack #@UnusedImport
+from time import time
+
+from scipy import matrix, array, pi, angle, multiply, exp, linalg
 
 from case import REFERENCE, PV, PQ
 from util import conj
@@ -204,18 +201,18 @@ class StateEstimator(object):
         ])
         sigma_squared = sigma_vector**2
 
-        Rinv = spdiag(div(1.0, sigma_squared))
+        Rinv = spdiag(1.0 / sigma_squared)
 
         # Do Newton iterations.
         while (not converged) and (i < self.max_iter):
             i += 1
 
             # Compute estimated measurement.
-            Sfe = mul(V[f], conj(Yf * V))
-            Ste = mul(V[t], conj(Yt * V))
+            Sfe = multiply(V[f], conj(Yf * V))
+            Ste = multiply(V[t], conj(Yt * V))
             # Compute net injection at generator buses.
             gbus = matrix([buses.index(g.bus) for g in generators])
-            Sgbus = mul(V[gbus], conj(Ybus[gbus, :] * V))
+            Sgbus = multiply(V[gbus], conj(Ybus[gbus, :] * V))
             # inj S + local Sd
             Sd = matrix([complex(b.p_demand, b.q_demand) for b in buses])
             Sgen = (Sgbus * baseMVA + Sd) / baseMVA
@@ -277,7 +274,7 @@ class StateEstimator(object):
             # Compute update step.
             J = H.T * Rinv * H
             F = H.T * Rinv * (z - z_est) # evalute F(x)
-            umfpack.linsolve(J, F)
+            linalg.solve(J, F)
 #            cholmod.linsolve(J, F)
             dx = F
 
@@ -297,12 +294,12 @@ class StateEstimator(object):
             Va[nonref] = Va[nonref] + dx[:npvpq]
             Vm[nonref] = Vm[nonref] + dx[npvpq:2 * npvpq]
 
-            V = mul(Vm, exp(1j * Va))
+            V = multiply(Vm, exp(1j * Va))
             Va = matrix(angle(V))
             Vm = abs(V)
 
         # Weighted sum squares of error.
-        error_sqrsum = sum(div((z - z_est)**2, sigma_squared))
+        error_sqrsum = sum((z - z_est)**2 / sigma_squared)
 
         # Update case with solution.
         case.pf_solution(Ybus, Yf, Yt, V)
@@ -328,7 +325,7 @@ class StateEstimator(object):
         if type == CASE_GUESS:
             Va = matrix([b.v_angle_guess * (pi / 180.0) for b in buses])
             Vm = matrix([b.v_magnitude_guess for b in buses])
-            V0 = mul(Vm, exp(1j * Va))
+            V0 = multiply(Vm, exp(1j * Va))
         elif type == FLAT_START:
             V0 = matrix(1.0, (len(buses), 1))
         elif type == FROM_INPUT:
@@ -341,7 +338,7 @@ class StateEstimator(object):
         gbus = matrix([buses.index(g.bus) for g in generators])
         Vg = matrix([g.v_magnitude for g in generators])
 
-        V0[gbus] = mul(div(Vg, abs(V0[gbus])), V0[gbus])
+        V0[gbus] = multiply(Vg, abs(V0[gbus]) / V0[gbus])
 
         return V0
 

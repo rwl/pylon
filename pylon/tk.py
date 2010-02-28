@@ -18,13 +18,14 @@ import webbrowser
 
 import networkx as nx
 import pylab
+import numpy
+import scipy
 
 from Tkinter import *
 from tkFileDialog import askopenfilename, asksaveasfilename
 import tkSimpleDialog
 
 import pylon
-import cvxopt.info
 
 from pylon import \
     Case, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
@@ -281,12 +282,13 @@ class PylonTk(object):
         self.status_status = False
 
         python_version = platform.python_version()
-        cvxopt_version = cvxopt.info.version
+        numpy_version = numpy.version.version
+        scipy_version = scipy.version.version
         tk_version = TkVersion
         pylon_version = pylon.__version__
 
-        self.status.set("Python %s, CVXOPT %s, Tk %s" % \
-            (python_version, cvxopt_version, tk_version))#, pylon_version))
+        self.status.set("Python %s, NumPy %s, SciPy %s, Tk %s" % \
+            (python_version, numpy_version, scipy_version, tk_version))
 
 
     def on_status_enter(self, event=None):
