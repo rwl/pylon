@@ -25,9 +25,12 @@
 import os.path
 import logging
 
+from time import time
+
 from unittest import TestCase, main
 
-from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader
+from pylon.readwrite import \
+    MATPOWERReader, PSSEReader, PSATReader, PickleReader, RDFReader, RDFWriter
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -42,6 +45,8 @@ PSSE_DATA_FILE     = os.path.join(DATA_DIR, "sample30.raw")
 BENCH_DATA_FILE    = os.path.join(DATA_DIR, "bench30.raw")
 BENCH2_DATA_FILE   = os.path.join(DATA_DIR, "bench2_30.raw")
 PSAT_DATA_FILE     = os.path.join(DATA_DIR, "d_006_mdl.m")
+BENCH_PICKLE_FILE  = os.path.join(DATA_DIR, "bench30.pkl")
+BENCH_RDFXML_FILE  = os.path.join(DATA_DIR, "bench30.rdf")
 
 #------------------------------------------------------------------------------
 #  "ReaderTest" class:
@@ -191,91 +196,94 @@ class MatpowerReaderTest(ReaderTest):
 #  "PSSEReaderTest" class:
 #------------------------------------------------------------------------------
 
-class PSSEReaderTest(TestCase):
-    """ Defines a test case for the PSS/E data file reader.
-    """
+#class PSSEReaderTest(TestCase):
+#    """ Defines a test case for the PSS/E data file reader.
+#    """
+#
+#    def setUp(self):
+#        """ The test runner will execute this method prior to each test.
+#        """
+#        self.reader = PSSEReader()
+#
+#
+#    def test_sample(self):
+#        """ Test parsing a sample PSS/E version 30 file.
+#        """
+#        case = self.reader.read(PSSE_DATA_FILE)
+#
+#        self.assertEqual(len(case.buses), 42)
+#        pl = 5
+#        self.assertAlmostEqual(case.buses[0].v_base, 21.6, pl)
+#        self.assertAlmostEqual(case.buses[41].v_base, 0.69, pl)
+#        self.assertAlmostEqual(case.buses[0].v_magnitude_guess, 1.01, pl)
+#        self.assertAlmostEqual(case.buses[40].v_magnitude_guess, 1.04738, pl)
+#        self.assertAlmostEqual(case.buses[0].v_angle_guess, -10.4286, pl)
+#        self.assertAlmostEqual(case.buses[1].v_angle_guess, -10.7806, pl)
+#
+#        # Loads.
+#        load_buses = [b for b in case.buses if
+#                      b.p_demand > 0.0 or b.q_demand > 0.0]
+#        self.assertEqual(len(load_buses), 15)
+#        self.assertAlmostEqual(case.buses[3].p_demand, 1200.0, pl)
+#        self.assertAlmostEqual(case.buses[3].q_demand, 360.0, pl)
+#        self.assertAlmostEqual(case.buses[34].p_demand, 12.0, pl)
+#        self.assertAlmostEqual(case.buses[34].q_demand, 5.0, pl)
+#
+#        # Generators.
+#        self.assertEqual(len(case.generators), 15)
+#        self.assertAlmostEqual(case.generators[0].p, 750.0, pl)
+#        self.assertAlmostEqual(case.generators[0].q, 125.648, pl)
+#        self.assertAlmostEqual(case.generators[0].q_max, 400.0, pl)
+#        self.assertAlmostEqual(case.generators[0].q_min, -100.0, pl)
+#        self.assertAlmostEqual(case.generators[0].v_magnitude, 1.01, pl)
+#        self.assertAlmostEqual(case.generators[0].base_mva, 900.0, pl)
+#        self.assertTrue(case.generators[0].online)
+#        self.assertAlmostEqual(case.generators[0].p_max, 800.0, pl)
+#        self.assertAlmostEqual(case.generators[0].p_min, 50.0, pl)
+#
+#        self.assertAlmostEqual(case.generators[14].p, 3.24, pl)
+#        self.assertAlmostEqual(case.generators[14].q, -1.475, pl)
+#
+#        # Branches.
+#        self.assertEqual(case.buses.index(case.branches[0].from_bus), 2)
+#        self.assertEqual(case.buses.index(case.branches[0].to_bus), 3)
+#        self.assertEqual(case.branches[0].r, 0.00260, pl)
+#        self.assertEqual(case.branches[0].x, 0.04600, pl)
+#        self.assertEqual(case.branches[0].b, 3.50000, pl)
+#        self.assertEqual(case.branches[0].rate_a, 1200.00, pl)
+#        self.assertEqual(case.branches[0].rate_b, 1100.00, pl)
+#        self.assertEqual(case.branches[0].rate_c, 1000.00, pl)
+#        self.assertTrue(case.branches[0].online)
+#
+#        self.assertEqual(case.buses.index(case.branches[29].from_bus), 32)
+#        self.assertEqual(case.buses.index(case.branches[29].to_bus), 33)
+#
+#        # Transformers.
+#        self.assertEqual(case.buses.index(case.branches[30].from_bus), 0)
+#        self.assertEqual(case.buses.index(case.branches[30].to_bus), 2)
+#        self.assertEqual(case.branches[30].b, -0.10288, pl)
+#        self.assertEqual(case.branches[30].r, 0.00009, pl)
+#        self.assertEqual(case.branches[30].x, 0.00758, pl)
+#        self.assertEqual(case.branches[30].ratio, 1.0, pl)
+#        self.assertEqual(case.branches[30].phase_shift, 0.0, pl)
+#        self.assertEqual(case.branches[30].rate_a, 1200.00, pl)
+#        self.assertEqual(case.branches[30].rate_b, 1100.00, pl)
+#        self.assertEqual(case.branches[30].rate_c, 1000.00, pl)
+#
+#        self.assertEqual(len(case.branches), 30 + 18 - 4) # 4 3-winding trx.
+#
+#
+#    def test_benchmark(self):
+#        """ Test parsing the benchmark case.
+#        """
+#        case = self.reader.read(BENCH_DATA_FILE)
+#
+#        self.assertEqual(len(case.buses), 1648)
+#        self.assertEqual(len(case.branches), 2602)
+#        self.assertEqual(len(case.generators), 313)
 
-    def setUp(self):
-        """ The test runner will execute this method prior to each test.
-        """
-        self.reader = PSSEReader()
-
-
-    def test_sample(self):
-        """ Test parsing a sample PSS/E version 30 file.
-        """
-        case = self.reader.read(PSSE_DATA_FILE)
-
-        self.assertEqual(len(case.buses), 42)
-        pl = 5
-        self.assertAlmostEqual(case.buses[0].v_base, 21.6, pl)
-        self.assertAlmostEqual(case.buses[41].v_base, 0.69, pl)
-        self.assertAlmostEqual(case.buses[0].v_magnitude_guess, 1.01, pl)
-        self.assertAlmostEqual(case.buses[40].v_magnitude_guess, 1.04738, pl)
-        self.assertAlmostEqual(case.buses[0].v_angle_guess, -10.4286, pl)
-        self.assertAlmostEqual(case.buses[1].v_angle_guess, -10.7806, pl)
-
-        # Loads.
-        load_buses = [b for b in case.buses if
-                      b.p_demand > 0.0 or b.q_demand > 0.0]
-        self.assertEqual(len(load_buses), 15)
-        self.assertAlmostEqual(case.buses[3].p_demand, 1200.0, pl)
-        self.assertAlmostEqual(case.buses[3].q_demand, 360.0, pl)
-        self.assertAlmostEqual(case.buses[34].p_demand, 12.0, pl)
-        self.assertAlmostEqual(case.buses[34].q_demand, 5.0, pl)
-
-        # Generators.
-        self.assertEqual(len(case.generators), 15)
-        self.assertAlmostEqual(case.generators[0].p, 750.0, pl)
-        self.assertAlmostEqual(case.generators[0].q, 125.648, pl)
-        self.assertAlmostEqual(case.generators[0].q_max, 400.0, pl)
-        self.assertAlmostEqual(case.generators[0].q_min, -100.0, pl)
-        self.assertAlmostEqual(case.generators[0].v_magnitude, 1.01, pl)
-        self.assertAlmostEqual(case.generators[0].base_mva, 900.0, pl)
-        self.assertTrue(case.generators[0].online)
-        self.assertAlmostEqual(case.generators[0].p_max, 800.0, pl)
-        self.assertAlmostEqual(case.generators[0].p_min, 50.0, pl)
-
-        self.assertAlmostEqual(case.generators[14].p, 3.24, pl)
-        self.assertAlmostEqual(case.generators[14].q, -1.475, pl)
-
-        # Branches.
-        self.assertEqual(case.buses.index(case.branches[0].from_bus), 2)
-        self.assertEqual(case.buses.index(case.branches[0].to_bus), 3)
-        self.assertEqual(case.branches[0].r, 0.00260, pl)
-        self.assertEqual(case.branches[0].x, 0.04600, pl)
-        self.assertEqual(case.branches[0].b, 3.50000, pl)
-        self.assertEqual(case.branches[0].rate_a, 1200.00, pl)
-        self.assertEqual(case.branches[0].rate_b, 1100.00, pl)
-        self.assertEqual(case.branches[0].rate_c, 1000.00, pl)
-        self.assertTrue(case.branches[0].online)
-
-        self.assertEqual(case.buses.index(case.branches[29].from_bus), 32)
-        self.assertEqual(case.buses.index(case.branches[29].to_bus), 33)
-
-        # Transformers.
-        self.assertEqual(case.buses.index(case.branches[30].from_bus), 0)
-        self.assertEqual(case.buses.index(case.branches[30].to_bus), 2)
-        self.assertEqual(case.branches[30].b, -0.10288, pl)
-        self.assertEqual(case.branches[30].r, 0.00009, pl)
-        self.assertEqual(case.branches[30].x, 0.00758, pl)
-        self.assertEqual(case.branches[30].ratio, 1.0, pl)
-        self.assertEqual(case.branches[30].phase_shift, 0.0, pl)
-        self.assertEqual(case.branches[30].rate_a, 1200.00, pl)
-        self.assertEqual(case.branches[30].rate_b, 1100.00, pl)
-        self.assertEqual(case.branches[30].rate_c, 1000.00, pl)
-
-        self.assertEqual(len(case.branches), 30 + 18 - 4) # 4 3-winding trx.
-
-
-    def test_benchmark(self):
-        """ Test parsing the benchmark case.
-        """
-        case = self.reader.read(BENCH_DATA_FILE)
-
-        self.assertEqual(len(case.buses), 1648)
-        self.assertEqual(len(case.branches), 2602)
-        self.assertEqual(len(case.generators), 313)
+#        from pylon.readwrite.pickle_readwrite import PickleWriter
+#        PickleWriter(case).write("./data/bench30.pkl")
 
 
 #    def test_benchmark_two(self):
@@ -322,6 +330,72 @@ class PSSEReaderTest(TestCase):
 #        """
 #        reader = PSATReader()
 #        self.case = reader(PSAT_DATA_FILE)
+
+#------------------------------------------------------------------------------
+#  "PickleReaderTest" class:
+#------------------------------------------------------------------------------
+
+class PickleReaderTest(TestCase):
+    """ Defines a test case for the pickle reader.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.reader = PickleReader()
+
+
+    def test_benchmark_case(self):
+        """ Test unpickling the benchmark case.
+        """
+        t0 = time()
+        case = self.reader.read(BENCH_PICKLE_FILE)
+        print "read elapse:", time() - t0
+
+        self.assertEqual(len(case.buses), 1648)
+        self.assertEqual(len(case.branches), 2602)
+        self.assertEqual(len(case.generators), 313)
+
+#        from pylon.readwrite.pickle_readwrite import PickleWriter
+#        t1 = time()
+#        PickleWriter(case).write("/tmp/bench30.pkl")
+#        print "write elapse:", time() - t1
+
+#        from pylon.readwrite.rdf_readwrite import RDFWriter
+#        RDFWriter(case).write("./data/bench.rdf")
+
+#------------------------------------------------------------------------------
+#  "RDFReadWriteTest" class:
+#------------------------------------------------------------------------------
+
+class RDFReadWriteTest(TestCase):
+    """ Defines a test case for RDF reading/writing.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.reader = RDFReader()
+
+
+    def test_read_benchmark(self):
+        """ Test reading the RDF benchmark case.
+        """
+        t0 = time()
+        case = self.reader.read(BENCH_RDFXML_FILE)
+        print "Read RDF time:", time() - t0
+
+#        self.assertEqual(len(case.buses), 1648)
+#        self.assertEqual(len(case.branches), 2602)
+#        self.assertEqual(len(case.generators), 313)
+
+
+#    def test_write_benchmark(self):
+#        """ Test write case as RDF.
+#        """
+#        case = PickleReader().read(BENCH_PICKLE_FILE)
+#
+#        RDFWriter(case).write("/tmp/bench30.rdf")
 
 #------------------------------------------------------------------------------
 #  Standalone call:

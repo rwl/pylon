@@ -22,6 +22,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import os.path
 import logging
 
 from rdflib.Graph import Graph
@@ -29,13 +30,53 @@ from rdflib import URIRef, Literal, BNode, Namespace
 from rdflib import RDF
 
 from pylon.readwrite.common import \
-    CaseWriter, BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
+    CaseWriter, CaseReader, BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
+
+#------------------------------------------------------------------------------
+#  "RDFReader" class:
+#------------------------------------------------------------------------------
+
+class RDFReader(CaseReader):
+    """ Defines a reader for pickled cases.
+    """
+
+    def read(self, file_or_filename):
+        """ Loads a case from RDF.
+        """
+        if isinstance(file_or_filename, basestring):
+            fname = os.path.basename(file_or_filename)
+            logger.info("Loading RDF case file [%s]." % fname)
+
+            file = None
+            try:
+                file = open(file_or_filename, "rb")
+                case = self._parse_rdf(file)
+            except Exception, detail:
+                logger.error("Error loading '%s': %s" % (fname, detail))
+                return None
+            finally:
+                if file is not None:
+                    file.close()
+        else:
+            file = file_or_filename
+            case = self._parse_rdf(file)
+
+        return case
+
+
+    def _parse_rdf(self, file):
+        """ Returns a case from the given file.
+        """
+        store = Graph()
+        store.parse(file)
+
+        print len(store)
 
 #------------------------------------------------------------------------------
 #  "RDFWriter" class:

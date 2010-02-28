@@ -36,4 +36,6 @@ from csv_writer import CSVWriter
 #from excel_writer import ExcelWriter
 from dot_writer import DotWriter
 
+from rdf_readwrite import RDFReader, RDFWriter
+
 # EOF -------------------------------------------------------------------------
