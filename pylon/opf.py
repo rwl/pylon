@@ -27,10 +27,10 @@
 
 import logging
 
-from scipy import \
-    matrix, array, pi, diff, polyder, polyval, array, nonzero, multiply, exp
+from numpy import \
+    array, pi, diff, polyder, polyval, array, nonzero, multiply, exp, conj
 
-from util import Named, conj
+from util import Named
 from case import REFERENCE
 from generator import POLYNOMIAL, PW_LINEAR
 from pdipm import pdipm, pdipm_qp

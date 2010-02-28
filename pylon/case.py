@@ -25,10 +25,12 @@ import logging
 
 from copy import copy
 
-from scipy import matrix, array, angle, pi, exp, multiply
+from numpy import \
+    array, angle, pi, exp, ones, zeros, r_, complex64, conj, int32
+
 from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
 
-from util import Named, Serializable, conj
+from util import Named, Serializable
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -277,7 +279,7 @@ class Case(Named, Serializable):
     def Sbus(self):
         """ Net complex bus power injection vector in p.u.
         """
-        s = matrix([self.s_surplus(v) / self.base_mva for v in self.buses])
+        s = array([self.s_surplus(v) / self.base_mva for v in self.buses])
         return s
 
 
@@ -293,8 +295,8 @@ class Case(Named, Serializable):
     def s_supply(self, bus):
         """ Returns the total complex power generation capacity.
         """
-        Sg = matrix([complex(g.p, g.q) for g in self.generators if
-                     (g.bus == bus) and not g.is_load], tc="z")
+        Sg = array([complex(g.p, g.q) for g in self.generators if
+                   (g.bus == bus) and not g.is_load], dtype=complex64)
 
         if len(Sg):
             return sum(Sg)
@@ -305,8 +307,8 @@ class Case(Named, Serializable):
     def s_demand(self, bus):
         """ Returns the total complex power demand.
         """
-        Svl = matrix([complex(g.p, g.q) for g in self.generators if
-                      (g.bus == bus) and g.is_load], tc="z")
+        Svl = array([complex(g.p, g.q) for g in self.generators if
+                    (g.bus == bus) and g.is_load], dtype=complex64)
 
         Sd = complex(bus.p_demand, bus.q_demand)
 
@@ -322,9 +324,7 @@ class Case(Named, Serializable):
     #  Admittance matrix:
     #--------------------------------------------------------------------------
 
-    def getYbus(self, buses=None, branches=None, bus_shunts=True,
-                line_shunts=True, tap_positions=True, line_resistance=True,
-                phase_shift=True):
+    def getYbus(self, buses=None, branches=None):
         """ Returns the bus and branch admittance matrices, Yf and Yt, such
             that Yf * V is the vector of complex branch currents injected at
             each branch's "from" bus.
@@ -338,122 +338,66 @@ class Case(Named, Serializable):
 
         nb = len(buses)
         nl = len(branches)
+        ib = array(range(nb), dtype=int32)
+        il = array(range(nl), dtype=int32)
 
-        online = matrix([e.online for e in branches])
+        online = array([e.online for e in branches])
 
-        #----------------------------------------------------------------------
-        #  Series admittance.
-        #----------------------------------------------------------------------
-
-        if line_resistance:
-            r = matrix([e.r for e in branches])
-        else:
-            r = matrix(0.0, (nl, 1)) # Zero out line resistance.
-        x = matrix([e.x for e in branches])
-
+        # Series admittance.
+        r = array([e.r for e in branches])
+        x = array([e.x for e in branches])
         Ys = online / (r + 1j * x)
 
-        #----------------------------------------------------------------------
-        #  Line charging susceptance.
-        #----------------------------------------------------------------------
+        # Line charging susceptance.
+        b = array([e.b for e in branches])
+        Bc = online * b
 
-        if line_shunts:
-            b = matrix([e.b for e in branches])
-        else:
-            b = matrix(0.0, (nl, 1)) # Zero out line charging shunts.
-
-        Bc = multiply(online, b)
-
-        #----------------------------------------------------------------------
         #  Transformer tap ratios.
-        #----------------------------------------------------------------------
+        tap = ones(nl) # Default tap ratio = 1.0.
+        # Indices of branches with non-zero tap ratio.
+        i_trx = array([i for i, e in enumerate(branches) if e.ratio != 0.0],
+                      dtype=int32)
+        # Transformer off nominal turns ratio ( = 0 for lines ) (taps at
+        # "from" bus, impedance at 'to' bus, i.e. ratio = Vf / Vt)"
+        ratio = array([e.ratio for e in branches])
 
-        tap = matrix(1.0, (nl, 1), tc="d") # Default tap ratio = 1.0.
+        # Set non-zero tap ratios.
+        if len(i_trx) > 0:
+            tap[i_trx] = ratio[i_trx]
 
-        if tap_positions:
-            # Indices of branches with non-zero tap ratio.
-            idxs = [i for i, e in enumerate(branches) if e.ratio != 0.0]
-            # Transformer off nominal turns ratio ( = 0 for lines ) (taps at
-            # "from" bus, impedance at 'to' bus, i.e. ratio = Vf / Vt)"
-            ratio = matrix([e.ratio for e in branches])
-            # Set non-zero tap ratios.
-            tap[idxs] = ratio[idxs]
+        # Phase shifters.
+        shift = array([e.phase_shift * pi / 180.0 for e in branches])
 
-        #----------------------------------------------------------------------
-        #  Phase shifters.
-        #----------------------------------------------------------------------
+        tap = tap * exp(1j * shift)
 
-        # Convert branch attribute in degrees to radians.
-        if phase_shift:
-            shift = matrix([e.phase_shift * pi / 180.0 for e in branches])
-        else:
-            phase_shift = matrix(0.0, (nl, 1))
-
-        tap = multiply(tap, exp(1j * shift))
-
-        #----------------------------------------------------------------------
-        #  Branch admittance matrix elements.
-        #----------------------------------------------------------------------
-
-        #  | If |   | Yff  Yft |   | Vf |
-        #  |    | = |          | * |    |
-        #  | It |   | Ytf  Ytt |   | Vt |
-
+        # Branch admittance matrix elements.
         Ytt = Ys + 1j * Bc / 2.0
-        Yff = Ytt / (multiply(tap, conj(tap)))
+        Yff = Ytt / (tap * conj(tap))
         Yft = -Ys / conj(tap)
         Ytf = -Ys / tap
 
-        #----------------------------------------------------------------------
-        #  Shunt admittance.
-        #----------------------------------------------------------------------
-
-        # Ysh = (bus(:, GS) + j * bus(:, BS)) / baseMVA;
-        if bus_shunts:
-            g_shunt = matrix([v.g_shunt for v in buses])
-            b_shunt = matrix([v.b_shunt for v in buses])
-        else:
-            g_shunt = matrix(0.0, (nb, 1)) # Zero out shunts at buses.
-            b_shunt = matrix(0.0, (nb, 1))
-
+        # Shunt admittance.
+        g_shunt = array([v.g_shunt for v in buses])
+        b_shunt = array([v.b_shunt for v in buses])
         Ysh = (g_shunt + 1j * b_shunt) / self.base_mva
 
-        #----------------------------------------------------------------------
-        #  Connection matrices.
-        #----------------------------------------------------------------------
+        # Connection matrices.
+        f = array([self.buses.index(e.from_bus) for e in branches])
+        t = array([self.buses.index(e.to_bus) for e in branches])
 
-        f = matrix([self.buses.index(e.from_bus) for e in branches])
-        t = matrix([self.buses.index(e.to_bus) for e in branches])
-        Cf = spmatrix(1.0, range(nl), f, (nl, nb))
-        Ct = spmatrix(1.0, range(nl), t, (nl, nb))
+        Cf = csc_matrix((ones(nl), (il, f)), shape=(nl, nb))
+        Ct = csc_matrix((ones(nl), (il, t)), shape=(nl, nb))
 
         # Build bus admittance matrix
-        # Ybus = spdiags(Ysh, 0, nb, nb) + ... %% shunt admittance
-        # Cf * spdiags(Yff, 0, nl, nl) * Cf' + ...
-        # Cf * spdiags(Yft, 0, nl, nl) * Ct' + ...
-        # Ct * spdiags(Ytf, 0, nl, nl) * Cf' + ...
-        # Ct * spdiags(Ytt, 0, nl, nl) * Ct';
-
-#        ff = Cf * spdiag(Yff) * Cf.H
-#        ft = Cf * spdiag(Yft) * Ct.H
-#        tf = Ct * spdiag(Ytf) * Cf.H
-#        tt = Ct * spdiag(Ytt) * Ct.H
-
-        # Resize otherwise all-zero rows/columns are lost.
-#        Ybus = spdiag(Ysh) + \
-#            spmatrix(ff.V, ff.I, ff.J, (nb, nb), tc="z") + \
-#            spmatrix(ft.V, ft.I, ft.J, (nb, nb), tc="z") + \
-#            spmatrix(tf.V, tf.I, tf.J, (nb, nb), tc="z") + \
-#            spmatrix(tt.V, tt.I, tt.J, (nb, nb), tc="z")
-
-        i = matrix([range(nl), range(nl)])
-        j = matrix([f, t])
-        Yf = spmatrix(matrix([Yff, Yft]), i, j, (nl, nb))
-        Yt = spmatrix(matrix([Ytf, Ytt]), i, j, (nl, nb))
+        i = r_[il, il]
+        j = r_[f, t]
+        Yf = csc_matrix((r_[Yff, Yft], (i, j)), (nl, nb))
+        Yt = csc_matrix((r_[Ytf, Ytt], (i, j)), (nl, nb))
 
         # Branch admittances plus shunt admittances.
-        Ybus = Cf.H * Yf + Ct.H * Yt + spdiag(Ysh)
-        assert Ybus.size == (nb, nb)
+        Ysh_diag = csc_matrix((Ysh, (ib, ib)), shape=(nb, nb))
+        Ybus = Cf.H * Yf + Ct.H * Yt + Ysh_diag
+        assert Ybus.shape == (nb, nb)
 
         return Ybus, Yf, Yt
 
@@ -469,10 +413,10 @@ class Case(Named, Serializable):
         buses = self.connected_buses if buses is None else buses
         branches = self.online_branches if branches is None else branches
 
-        tmp_buses = copy(buses) # modify copied branches
-        Bp_branches = copy(branches) # modify copied buses
+        B_buses = copy(buses) # modify branch copies
+        Bp_branches = copy(branches) # modify bus copies
 
-        for bus in tmp_buses:
+        for bus in B_buses:
             bus.b_shunt = 0.0
         for branch in Bp_branches:
             branch.b = 0.0
@@ -480,7 +424,7 @@ class Case(Named, Serializable):
             if method == "XB":
                 branch.r = 0.0
 
-        Yp, _, _ = self.makeYbus(tmp_buses, Bp_branches)
+        Yp, _, _ = self.makeYbus(B_buses, Bp_branches)
 
         Bpp_branches = copy(branches)
 
@@ -488,7 +432,7 @@ class Case(Named, Serializable):
             branch.phase_shift = 0.0
             branch.r = 0.0
 
-        Ypp, _, _ = self.makeYbus(tmp_buses, Bpp_branches)
+        Ypp, _, _ = self.makeYbus(B_buses, Bpp_branches)
 
         return -Yp.imag(), -Ypp.imag()
 
@@ -522,12 +466,12 @@ class Case(Named, Serializable):
         nl = len(branches)
 
         # Ones at in-service branches.
-        online = matrix([br.online for br in branches])
+        online = array([br.online for br in branches])
         # Series susceptance.
-        b = online / matrix([br.x for br in branches])
+        b = online / array([br.x for br in branches])
 
         # Default tap ratio = 1.0.
-        tap = matrix(1.0, (nl, 1))
+        tap = ones(nl)
         # Transformer off nominal turns ratio (equals 0 for lines) (taps at
         # "from" bus, impedance at 'to' bus, i.e. ratio = Vsrc / Vtgt)
         for i, branch in enumerate(branches):
@@ -535,37 +479,26 @@ class Case(Named, Serializable):
                 tap[i] = branch.ratio
         b = b / tap
 
-        f = matrix([buses.index(br.from_bus) for br in branches])
-        t = matrix([buses.index(br.to_bus) for br in branches])
-        i = matrix([matrix(range(nl)), matrix(range(nl))])
-        one = matrix(1.0, (nl, 1))
-        Cft = spmatrix(matrix([one, -one]), i, matrix([f, t]), (nl, nb))
+        f = array([buses.index(br.from_bus) for br in branches])
+        t = array([buses.index(br.to_bus) for br in branches])
+        i = r_[array(range(nl)), array(range(nl))]
+        one = ones(nl)
+        Cft = csc_matrix((r_[one, -one], (i, r_[f, t])), shape=(nl, nb))
 #        Cf = spmatrix(1.0, f, range(nl), (nb, nl))
 #        Ct = spmatrix(1.0, t, range(nl), (nb, nl))
 
-#        ff = Cf * spdiag(b) * Cf.H
-#        ft = Cf * spdiag(-b) * Ct.H
-#        tf = Ct * spdiag(-b) * Cf.H
-#        tt = Ct * spdiag(b) * Ct.H
-
-        # Resize otherwise all-zero rows/columns are lost.
-#        B = spmatrix(ff.V, ff.I, ff.J, (nb, nb), tc="d") + \
-#            spmatrix(ft.V, ft.I, ft.J, (nb, nb), tc="d") + \
-#            spmatrix(tf.V, tf.I, tf.J, (nb, nb), tc="d") + \
-#            spmatrix(tt.V, tt.I, tt.J, (nb, nb), tc="d")
-
         # Build Bsrc such that Bsrc * Va is the vector of real branch powers
         # injected at each branch's "from" bus.
-        Bf = spmatrix(matrix([b, -b]), i, matrix([f, t]), (nl, nb))
+        Bf = csc_matrix((r_[b, -b], (i, r_[f, t])), (nl, nb))
 
         Bbus = Cft.H * Bf
 
         # Build phase shift injection vectors.
-        shift = matrix([br.phase_shift * pi / 180.0 for br in branches])
-        Pfinj = multiply(b, shift)
+        shift = array([br.phase_shift * pi / 180.0 for br in branches])
+        Pfinj = b * shift
         #Ptinj = -Pfinj
         # Pbusinj = Cf * Pfinj + Ct * Ptinj
-        Pbusinj = Cft.H * Pfinj
+        Pbusinj = Cft.T * Pfinj
 
         return Bbus, Bf, Pbusinj, Pfinj
 

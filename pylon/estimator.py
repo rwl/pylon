@@ -30,10 +30,9 @@ import logging
 
 from time import time
 
-from scipy import matrix, array, pi, angle, multiply, exp, linalg
+from numpy import array, pi, angle, multiply, exp, linalg, conj
 
 from case import REFERENCE, PV, PQ
-from util import conj
 
 #------------------------------------------------------------------------------
 #  Logging:

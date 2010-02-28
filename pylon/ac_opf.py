@@ -28,10 +28,8 @@
 import time
 import logging
 
-from scipy import matrix, pi, polyder, polyval, multiply, exp
+from numpy import matrix, pi, polyder, polyval, multiply, exp, conj
 from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
-
-from pylon.util import conj
 
 #------------------------------------------------------------------------------
 #  Logging:

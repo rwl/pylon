@@ -1,18 +1,18 @@
 #------------------------------------------------------------------------------
 # Copyright (C) 2010 Richard Lincoln
 #
-# This program is free software; you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; version 2 dated June, 1991.
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# This software is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANDABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #------------------------------------------------------------------------------
 
 """ Defines an OPF solver using CVXOPT.
@@ -36,7 +36,6 @@ from numpy import polyval, polyder
 from cvxopt import matrix, spmatrix, mul, sparse, exp, solvers
 
 from pylon.opf import Solver
-from pylon.util import conj
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -224,5 +223,14 @@ class CVXOPTSolver(Solver):
         solution = solvers.cp(F, G=Aieq, h=bieq, dims=None, A=Aeq, b=beq)
 
         return solution
+
+#------------------------------------------------------------------------------
+# Complex conjugate:
+#------------------------------------------------------------------------------
+
+def conj(A):
+    """ Returns the complex conjugate of A as a new matrix.
+    """
+    return A.ctrans().trans()
 
 # EOF -------------------------------------------------------------------------
