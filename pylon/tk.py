@@ -948,7 +948,7 @@ class AboutDialog(object):
         l = self.l = Label(top, text="PylonTk")
         l.pack(padx=100, pady=15)
 
-        license = Label(top, text="GNU GPLv2")
+        license = Label(top, text="Apache License, Version 2.0")
         license.pack(pady=5)
 
         b = Button(top, text="OK", command=self.ok)
