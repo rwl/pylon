@@ -25,7 +25,7 @@
 from os.path import join, dirname
 import unittest
 
-from cvxopt import matrix
+from scipy import array
 
 from pylon.readwrite import PickleReader
 from pylon.estimator import StateEstimator, Measurement, PF, PT, PG, VM
@@ -61,7 +61,7 @@ class StateEstimatorTest(unittest.TestCase):
             Measurement(case.buses[2], VM, 0.98),
         ]
 
-        self.sigma = matrix([0.02, 0.02, 0,0, 0.015, 0, 0.01, 0])
+        self.sigma = array([0.02, 0.02, 0,0, 0.015, 0, 0.01, 0])
 
 
     def test_case(self):

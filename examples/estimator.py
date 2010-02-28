@@ -8,7 +8,7 @@ import sys
 
 from pylon import Case, StateEstimator, Measurement, PF, PT, PG, VM
 
-from cvxopt import matrix
+from numpy import array
 
 DATA_FILE = "../pylon/test/data/case3bus_P6_6.pkl"
 
@@ -28,7 +28,7 @@ measurements = [
 ]
 
 # Specify measurement variances (ordered: PF, PT, QF, QT, PG, QG, VM, VA).
-sigma = matrix([0.02, 0.02, 0.0, 0.0, 0.015, 0.0, 0.01, 0.0])
+sigma = array([0.02, 0.02, 0.0, 0.0, 0.015, 0.0, 0.01, 0.0])
 
 # Create a state estimator...
 se = StateEstimator(case, measurements, sigma)

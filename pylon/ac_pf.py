@@ -30,12 +30,7 @@ import logging
 from math import pi
 from time import time
 
-from numpy import angle, pi
-
-from cvxopt import matrix, sparse, exp, mul, div, umfpack, cholmod
-#from cvxopt.lapack import getrf
-from cvxopt.umfpack import symbolic, numeric
-#import cvxopt.blas
+from scipy import matrix, array, angle, pi, exp, linalg, multiply
 
 from pylon.util import conj
 from pylon.case import PQ, PV, REFERENCE
@@ -167,10 +162,10 @@ class _ACPF(object):
     def _index_buses(self, buses):
         """ Set up indexing for updating v.
         """
-        refs = matrix([i for i,b in enumerate(buses) if b.type == REFERENCE])
-        pv = matrix([i for i,b in enumerate(buses) if b.type == PV])
-        pq = matrix([i for i,b in enumerate(buses) if b.type == PQ])
-        pvpq = matrix([pv, pq])
+        refs = array([i for i,b in enumerate(buses) if b.type == REFERENCE])
+        pv = array([i for i,b in enumerate(buses) if b.type == PV])
+        pq = array([i for i,b in enumerate(buses) if b.type == PQ])
+        pvpq = array([pv, pq])
 
         return refs, pq, pv, pvpq
 
@@ -183,12 +178,12 @@ class _ACPF(object):
             bus, as well as an initial guess for remaining magnitudes and
             angles.
         """
-        Vm = matrix([bus.v_magnitude_guess for bus in buses])
+        Vm = array([bus.v_magnitude_guess for bus in buses])
 
         # Initial bus voltage angles in radians.
-        Va = matrix([bus.v_angle_guess * (pi / 180.0) for bus in buses])
+        Va = array([bus.v_angle_guess * (pi / 180.0) for bus in buses])
 
-        V = mul(Vm, exp(1j * Va))
+        V = Vm * exp(1j * Va)
 
         # Get generator set points.
         for i, g in enumerate(generators):
@@ -253,12 +248,14 @@ class NewtonRaphson(_ACPF):
         """
         J = self._build_jacobian(Ybus, V, pv, pq, pvpq)
 
-        if self.solver == "UMFPACK":
-            umfpack.linsolve(J, F)
-        elif self.solver == "CHOLMOD":
-            cholmod.linsolve(J, F)
-        else:
-            raise ValueError
+#        if self.solver == "UMFPACK":
+#            umfpack.linsolve(J, F)
+#        elif self.solver == "CHOLMOD":
+#            cholmod.linsolve(J, F)
+#        else:
+#            raise ValueError
+
+        linalg.solve(J, F)
 
         # Update step.
         dx = -1 * F
@@ -272,7 +269,7 @@ class NewtonRaphson(_ACPF):
             Va[pq] = Va[pq] + dx[range(npv, npv + npq)]
             Vm[pq] = Vm[pq] + dx[range(npv + npq, npv + npq + npq)]
 
-        V = mul(Vm, exp(1j * Va))
+        V = multiply(Vm, exp(1j * Va))
 
         # Avoid wrapped round negative Vm.
         Vm = abs(V)
@@ -307,7 +304,7 @@ class NewtonRaphson(_ACPF):
     def _evaluate_function(self, Ybus, V, Sbus, pv, pq):
         """ Evaluates F(x).
         """
-        mis = mul(V, conj(Ybus * V)) - Sbus
+        mis = multiply(V, conj(Ybus * V)) - Sbus
 
         F = matrix([mis[pv].real(), mis[pq].real(), mis[pq].imag()])
 
@@ -424,22 +421,23 @@ class FastDecoupled(_ACPF):
         """
         # The numeric factorisation is returned as an opaque C object that
         # can be passed on to umfpack.solve().
-        Bps = symbolic(Bp)
-        Bpps = symbolic(Bp)
-        FBp = numeric(Bp, Bps)
-        FBpp = numeric(Bpp, Bpps)
+#        Bps = symbolic(Bp)
+#        Bpps = symbolic(Bp)
+#        FBp = numeric(Bp, Bps)
+#        FBpp = numeric(Bpp, Bpps)
 
-        umfpack.linsolve
+        Pp, Lp, Up = linalg.lu(Bp)
+#        LU, P = linalg.lu_factor(Bp)
 
         # P iteration, update Va.
         # dVa = -( Up \  (Lp \ (Pp * P)));
         # L, U = Sci.linalg.lu(a)
         # LU, P = Sci.linalg.lu_factor(a)
-        dVa = solve(Lp, (Pp * P))
+        dVa = linalg.solve(Lp, (Pp * P))
 
         # Update voltage.
         Va[pvpq] = Va[pvpq] + dVa
-        V = mul(Vm, exp(1j * Va))
+        V = multiply(Vm, exp(1j * Va))
 
         return V, Vm, Va
 
@@ -454,7 +452,7 @@ class FastDecoupled(_ACPF):
 
         # Update voltage.
         Vm[pq] = Vm[pq] + dVm
-        V = mul(Vm, exp(1j * Va))
+        V = multiply(Vm, exp(1j * Va))
 
         return V, Vm
 
@@ -477,7 +475,7 @@ class FastDecoupled(_ACPF):
     def _evaluate_mismatch(self, Ybus, V, Sbus, pq, pvpq):
         """ Evaluates the mismatch.
         """
-        mis = div(mul(V, conj(Ybus * V)) - Sbus, abs(V))
+        mis = multiply(V, conj(Ybus * V)) - Sbus / abs(V)
 
         P = mis[pvpq].real()
         Q = mis[pq].imag()

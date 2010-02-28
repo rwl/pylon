@@ -31,9 +31,7 @@ from time import time
 
 from math import pi
 
-from cvxopt.base import matrix, spmatrix, sparse, spdiag
-from cvxopt import solvers
-from cvxopt.solvers import qp, lp
+from scipy import array, matrix
 
 from pylon import PW_LINEAR, POLYNOMIAL, REFERENCE
 
@@ -169,11 +167,11 @@ class DCOPF(object):
     def _algorithm_parameters(self):
         """ Sets the parameters of the CVXOPT solver algorithm.
         """
-        solvers.options["show_progress"] = self.show_progress
-        solvers.options["maxiters"] = self.max_iterations
-        solvers.options["abstol"] = self.absolute_tol
-        solvers.options["reltol"] = self.relative_tol
-        solvers.options["feastol"] = self.feasibility_tol
+#        solvers.options["show_progress"] = self.show_progress
+#        solvers.options["maxiters"] = self.max_iterations
+#        solvers.options["abstol"] = self.absolute_tol
+#        solvers.options["reltol"] = self.relative_tol
+#        solvers.options["feastol"] = self.feasibility_tol
 
 
     def _unpack_case(self, case):

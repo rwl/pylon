@@ -24,8 +24,7 @@
 
 import logging
 
-from cvxopt.base import matrix
-from cvxopt.modeling import variable, op, dot, sum
+from numpy import matrix
 
 #------------------------------------------------------------------------------
 #  Logging:

@@ -35,8 +35,7 @@ import time
 import logging
 import random
 
-from cvxopt import matrix
-from cvxopt import solvers
+from numpy import matrix
 
 from pylon import DCOPF, ACOPF
 

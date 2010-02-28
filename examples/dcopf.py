@@ -15,12 +15,12 @@ CASE_FILE = join(dirname(pylon.case.__file__), "test", "data", "case30pwl.pkl")
 case = Case.load(CASE_FILE)
 
 # Select a solver.
-solver = None # Python solver from CVXOPT.
+solver = None
 #solver = "glpk"
 #solver = "mosek"
 
 # Solve DC optimal power flow.
-DCOPF(case, cvxopt=False, solver=solver, show_progress=False).solve()
+DCOPF(case, solver=solver, show_progress=False).solve()
 
 # Print a report to screen.
 case.save_rst(sys.stdout)

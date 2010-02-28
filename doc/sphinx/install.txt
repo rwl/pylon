@@ -11,10 +11,6 @@ Pylon dependencies
 
   Python_ 2.5 or 2.6
 
-  CVXOPT_ 1.0 or later
-    CVXOPT is a free software package for convex optimization based on the
-    Python programming language.
-
   NumPy_ 1.2 or later
     NumPy provides additional support for multi-dimentional arrays and
     matrices.

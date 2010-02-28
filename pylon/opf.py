@@ -28,11 +28,8 @@
 
 import logging
 
-from numpy import pi, diff, polyder, polyval, array, nonzero
-
-from cvxopt import matrix, spmatrix, sparse, spdiag, div, mul, exp
-from cvxopt.solvers import qp, lp
-from cvxopt import solvers
+from scipy import \
+    matrix, array, pi, diff, polyder, polyval, array, nonzero, multiply, exp
 
 from util import Named, conj
 from case import REFERENCE
@@ -190,11 +187,11 @@ class OPF(object):
     def _algorithm_parameters(self):
         """ Sets the parameters of the CVXOPT solver algorithm.
         """
-        solvers.options["show_progress"] = self.show_progress
-        solvers.options["maxiters"] = self.max_iterations
-        solvers.options["abstol"] = self.absolute_tol
-        solvers.options["reltol"] = self.relative_tol
-        solvers.options["feastol"] = self.feasibility_tol
+#        solvers.options["show_progress"] = self.show_progress
+#        solvers.options["maxiters"] = self.max_iterations
+#        solvers.options["abstol"] = self.absolute_tol
+#        solvers.options["reltol"] = self.relative_tol
+#        solvers.options["feastol"] = self.feasibility_tol
 
         opts = {"verbose": self.show_progress,
                 "feastol": self.feasibility_tol,
@@ -426,12 +423,12 @@ class OPF(object):
                 p = matrix([x / base_mva for x, c in g.p_cost])
                 c = matrix([c for x, c in g.p_cost])
                 # Slopes for Pg (or Qg).
-                m = div(matrix(diff(c.T)), matrix(diff(p.T)))
+                m = matrix(diff(c.T)) / matrix(diff(p.T))
 
                 if 0.0 in diff(p):
                     logger.error("Bad Pcost data: %s" % p)
 
-                b = mul(m.T, p[:ns-1]) - c[:ns-1] # rhs
+                b = multiply(m.T, p[:ns-1]) - c[:ns-1] # rhs
                 by = matrix([by, b])
 
                 print "B:\n", by
@@ -722,25 +719,18 @@ class DCOPFSolver(Solver):
     def _run_opf(self, P, q, G, h, A, b, LB, UB, x0):
         """ Solves the either quadratic or linear program.
         """
-        if not self.cvxopt:
-            AA = sparse([A, G]) # Combined equality and inequality constraints.
-            bb = matrix([b, h])
-            N = A.size[0]
-            if solvers.options.has_key("show_progress"):
-                opt = {"verbose": solvers.options["show_progress"]}
-            else:
-                opt = {"verbose": False}
+        AA = sparse([A, G]) # Combined equality and inequality constraints.
+        bb = matrix([b, h])
+        N = A.size[0]
+#            if solvers.options.has_key("show_progress"):
+#                opt = {"verbose": solvers.options["show_progress"]}
+#            else:
+#                opt = {"verbose": False}
 
         if len(P) > 0:
-            if self.cvxopt:
-                solution = qp(P, q, G, h, A, b, self.solver, {"x": x0})
-            else:
-                solution = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, opt)
+            solution = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, opt)
         else:
-            if self.cvxopt:
-                solution = lp(q, G, h, A, b, self.solver, {"x": x0})
-            else:
-                solution = pdipm_qp(None, q, AA, bb, LB, UB, x0, N)
+            solution = pdipm_qp(None, q, AA, bb, LB, UB, x0, N)
 
         return solution
 
@@ -887,10 +877,10 @@ class PDIPMSolver(Solver):
 
             Vang = x[Va.i1:Va.iN + 1]
             Vmag = x[Vm.i1:Vm.iN + 1]
-            V = mul(Vmag, exp(j * Vang))
+            V = multiply(Vmag, exp(j * Vang))
 
             # Evaluate the power flow equations.
-            mis = mul(V, conj(Ybus * V)) - Sbus
+            mis = multiply(V, conj(Ybus * V)) - Sbus
 
             #------------------------------------------------------------------
             #  Evaluate constraint function values.
@@ -911,23 +901,23 @@ class PDIPMSolver(Solver):
                 If = Yf * V
                 It = Yt * V
                 # Branch current limits.
-                g = matrix([(mul(If, conj(If)) - flow_max),
-                            (mul(If, conj(It)) - flow_max)])
+                g = matrix([(multiply(If, conj(If)) - flow_max),
+                            (multiply(If, conj(It)) - flow_max)])
             else:
                 i_fbus = matrix([bs.index(e.from_bus) for e in ln])
                 i_tbus = matrix([bs.index(e.to_bus) for e in ln])
                 # Complex power injected at "from" bus (p.u.).
-                Sf = mul(V[i_fbus], conj(Yf * V))
+                Sf = multiply(V[i_fbus], conj(Yf * V))
                 # Complex power injected at "to" bus (p.u.).
-                St = mul(V[i_tbus], conj(Yt * V))
+                St = multiply(V[i_tbus], conj(Yt * V))
                 if self.flow_lim == "P": # active power limit, P (Pan Wei)
                     # Branch real power limits.
                     g = matrix([Sf.real()**2 - flow_max,
                                 St.real()**2 - flow_max])
                 elif self.flow_lim == "S": # apparent power limit, |S|
                     # Branch apparent power limits.
-                    g = matrix([mul(Sf, conj(Sf)) - flow_max,
-                                mul(St, conj(St)) - flow_max]).real()
+                    g = matrix([multiply(Sf, conj(Sf)) - flow_max,
+                                multiply(St, conj(St)) - flow_max]).real()
                 else:
                     raise ValueError
 
