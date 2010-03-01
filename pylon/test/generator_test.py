@@ -223,11 +223,9 @@ class OfferBidToPWLTest(unittest.TestCase):
 
         for g in gens:
             g.offers_to_pwl(offers)
-            g.adjust_limits()
 
         for vl in vloads:
             vl.bids_to_pwl(bids)
-            vl.adjust_limits()
 
         # All dispatchable loads are shutdown as they have no bids.
         self.assertTrue(True not in [vl.online for vl in vloads])
@@ -276,11 +274,9 @@ class OfferBidToPWLTest(unittest.TestCase):
 
         for g in generators:
             g.offers_to_pwl(offers)
-            g.adjust_limits()
 
         for vl in [l for l in generators if l.is_load]:
             vl.bids_to_pwl(bids)
-            vl.adjust_limits()
 
         self.assertFalse(generators[0].online)
         self.assertTrue(generators[1].online)
@@ -302,11 +298,9 @@ class OfferBidToPWLTest(unittest.TestCase):
 
         for g in generators:
             g.offers_to_pwl(offers)
-            g.adjust_limits()
 
         for vl in vloads:
             vl.bids_to_pwl(bids)
-            vl.adjust_limits()
 
         self.assertAlmostEqual(vloads[0].p_min, -20.0, places=1)
         self.assertAlmostEqual(vloads[0].q_min, -10.0, places=1)
@@ -352,11 +346,9 @@ class OfferBidToPWLTest(unittest.TestCase):
 
         for g in generators:
             g.offers_to_pwl(offers)
-            g.adjust_limits()
 
         for vl in vloads:
             vl.bids_to_pwl(bids)
-            vl.adjust_limits()
 
         self.assertEqual(len(generators[0].p_cost), 2)
         self.assertEqual(len(generators[1].p_cost), 3)

@@ -29,7 +29,11 @@ import time
 import logging
 import math
 
-from scipy import matrix, linalg
+from numpy import array, linalg, pi, r_, ix_
+
+from scipy.sparse.linalg import spsolve
+
+from pylon.case import REFERENCE
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -60,28 +64,28 @@ class DCPF(object):
         self.case = case
 
         # Branch susceptance matrix.
-        self.B = None
+#        self.B = None
 
         # Branch from bus susceptance matrix.
-        self.Bsrc = None
+#        self.Bsrc = None
 
         # Vector of bus phase shift injections.
-        self.p_businj = None
+#        self.p_businj = None
 
         # Vector of phase shift injections at the from buses.
-        self.p_srcinj = None
+#        self.p_srcinj = None
 
         # Vector of voltage angle guesses.
-        self.v_angle_guess = None
+#        self.v_angle_guess = None
 
         # Vector of voltage phase angles.
         self.v_angle = None
 
         # Index of the reference bus.
-        self.ref_idx = -1
+#        self.ref_idx = -1
 
         # Active power injection at the reference bus.
-        self.p_ref = 0.0
+#        self.p_ref = 0.0
 
 
     def solve(self):
@@ -94,23 +98,25 @@ class DCPF(object):
         t0 = time.time()
 
         # Find the index of the refence bus.
-        self.ref_idx = self._get_reference_index(case)
+        ref_idx = self._get_reference_index(case)
 
-        if self.ref_idx < 0:
+        if ref_idx < 0:
             return False
 
         # Build the susceptance matrices.
-        self.B, self.Bsrc, self.p_businj, self.p_srcinj = case.Bdc
+        B, Bsrc, p_businj, p_srcinj = case.Bdc
 
         # Get the vector of initial voltage angles.
-        self.v_angle_guess = self._get_v_angle_guess(case)
+        v_angle_guess = self._get_v_angle_guess(case)
 
         # Calculate the new voltage phase angles.
-        self.v_angle = self._get_v_angle(case)
-        logger.debug("Bus voltage phase angles: \n%s" % self.v_angle)
+        v_angle, p_ref = self._get_v_angle(case, B, v_angle_guess, p_businj,
+                                           ref_idx)
+        logger.debug("Bus voltage phase angles: \n%s" % v_angle)
+        self.v_angle = v_angle
 
         # Push the results to the case.
-        self._update_model(case)
+        self._update_model(case, B, Bsrc, v_angle, p_srcinj, p_ref, ref_idx)
 
         logger.info("DC power flow completed in %.3fs." % (time.time() - t0))
 
@@ -124,7 +130,7 @@ class DCPF(object):
         """ Returns the index of the reference bus.
         """
         for i, bus in enumerate(case.connected_buses):
-            if bus.type == "ref":
+            if bus.type == REFERENCE:
                 return i
         else:
             logger.error("Swing bus required for DCPF.")
@@ -137,65 +143,63 @@ class DCPF(object):
     def _get_v_angle_guess(self, case):
         """ Make the vector of voltage phase guesses.
         """
-        v_angle = matrix([bus.v_angle_guess * (math.pi / 180.0)
-                       for bus in case.connected_buses])
+        v_angle = array([bus.v_angle_guess * (pi / 180.0)
+                         for bus in case.connected_buses])
         return v_angle
 
     #--------------------------------------------------------------------------
     #  Calculate voltage angles:
     #--------------------------------------------------------------------------
 
-    def _get_v_angle(self, case):
+    def _get_v_angle(self, case, B, v_angle_guess, p_businj, iref):
         """ Calculates the voltage phase angles.
         """
-        iref = self.ref_idx
         buses = case.connected_buses
 
-        pv_idxs = matrix([i for i, b in enumerate(buses) if b.type == "PV"])
-        pq_idxs = matrix([i for i, b in enumerate(buses) if b.type == "PQ"])
-        pvpq_idxs = matrix([pv_idxs, pq_idxs])
+        pv_idxs = [i for i, b in enumerate(buses) if b.type == "PV"]
+        pq_idxs = [i for i, b in enumerate(buses) if b.type == "PQ"]
+        pvpq_idxs = pv_idxs + pq_idxs
+        pvpq_rows = [[i] for i in pvpq_idxs]
 
         # Get the susceptance matrix with the column and row corresponding to
         # the reference bus removed.
-        Bpvpq = self.B[pvpq_idxs, pvpq_idxs]
+        Bpvpq = B[pvpq_rows, pvpq_idxs]
 
-        Bref = self.B[pvpq_idxs, iref]
+        Bref = B[pvpq_rows, [iref]]
 
         # Bus active power injections (generation - load) adjusted for phase
         # shifters and real shunts.
-        p_surplus = matrix([case.s_surplus(v).real for v in buses])
-        g_shunt = matrix([bus.g_shunt for bus in buses])
-        p_bus = (p_surplus - self.p_businj - g_shunt) / case.base_mva
+        p_surplus = array([case.s_surplus(v).real for v in buses])
+        g_shunt = array([bus.g_shunt for bus in buses])
+        Pbus = (p_surplus - p_businj - g_shunt) / case.base_mva
 
-        self.p_ref = p_bus[iref]
-        p_pvpq = p_bus[pvpq_idxs]
-
-        v_angle_guess_ref = self.v_angle_guess[iref]
+        Pbus.shape = len(Pbus), 1
 
         A = Bpvpq
-        b = p_pvpq - Bref * v_angle_guess_ref
+        b = Pbus[pvpq_idxs] - Bref * v_angle_guess[iref]
 
-        linalg.solve(A, b)
+#        x, res, rank, s = linalg.lstsq(A.todense(), b)
+        x = spsolve(A, b)
 
         # Insert the reference voltage angle of the slack bus.
-        v_angle = matrix([b[:iref], v_angle_guess_ref, b[iref:]])
+        v_angle = r_[x[:iref], v_angle_guess[iref], x[iref:]]
 
-        return v_angle
+        return v_angle, Pbus[iref]
 
     #--------------------------------------------------------------------------
     #  Update model with solution:
     #--------------------------------------------------------------------------
 
-    def _update_model(self, case):
+    def _update_model(self, case, B, Bsrc, v_angle, p_srcinj, p_ref, ref_idx):
         """ Updates the case with values computed from the voltage phase
             angle solution.
         """
-        iref = self.ref_idx
+        iref = ref_idx
         base_mva = case.base_mva
         buses = case.connected_buses
         branches = case.online_branches
 
-        p_from = (self.Bsrc * self.v_angle + self.p_srcinj) * base_mva
+        p_from = (Bsrc * v_angle + p_srcinj) * base_mva
         p_to = -p_from
 
         for i, branch in enumerate(branches):
@@ -205,14 +209,14 @@ class DCPF(object):
             branch.q_to = 0.0
 
         for j, bus in enumerate(buses):
-            bus.v_angle = self.v_angle[j] * (180 / math.pi)
+            bus.v_angle = v_angle[j] * (180 / pi)
             bus.v_magnitude = 1.0
 
         # Update Pg for swing generator.
         g_ref = [g for g in case.generators if g.bus == buses[iref]][0]
         # Pg = Pinj + Pload + Gs
         # newPg = oldPg + newPinj - oldPinj
-        p_inj = (self.B[iref, :] * self.v_angle - self.p_ref) * base_mva
+        p_inj = (B[iref, :] * v_angle - p_ref) * base_mva
         g_ref.p += p_inj[0]
 
 # EOF -------------------------------------------------------------------------

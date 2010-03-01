@@ -47,19 +47,19 @@ class DCPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        case = PickleReader().read(DATA_FILE)
-        self.routine = DCPF(case)#"CHOLMOD")
+        self.case = PickleReader().read(DATA_FILE)
+        self.routine = DCPF(self.case)#"CHOLMOD")
         self.routine.solve()
 
 
     def test_v_angle_guess_vector(self):
         """ Test the voltage phase guess trait of a bus.
         """
-        guesses = self.routine.v_angle_guess
+        Va0 = self.routine._get_v_angle_guess(self.case)
 
-        self.assertEqual(guesses.size, (6, 1))
-        self.assertEqual(guesses[1], 0.0)
-        self.assertEqual(guesses[5], 0.0)
+        self.assertEqual(Va0.shape, (6,))
+        self.assertEqual(Va0[1], 0.0)
+        self.assertEqual(Va0[5], 0.0)
 
 
     def test_v_angle_vector(self):
