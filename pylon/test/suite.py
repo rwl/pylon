@@ -54,14 +54,11 @@ def suite():
     # Solver test cases.
 #    suite.addTest(unittest.makeSuite(DCPFTest))
 #    suite.addTest(unittest.makeSuite(NewtonPFTest))
-#    suite.addTest(unittest.makeSuite(DCOPFTest))
     suite.addTest(unittest.makeSuite(PiecewiseLinearDCOPFTest))
-#    suite.addTest(unittest.makeSuite(ACOPFTest))
 #    suite.addTest(unittest.makeSuite(OPFTest))
 #    suite.addTest(unittest.makeSuite(DCOPFSolverTest))
 #    suite.addTest(unittest.makeSuite(PDIPMSolverTest))
 #    suite.addTest(unittest.makeSuite(OPFModelTest))
-#    suite.addTest(unittest.makeSuite(UnitCommitmentTest))
 
     # Read/write test cases.
     suite.addTest(unittest.makeSuite(MatpowerReaderTest))

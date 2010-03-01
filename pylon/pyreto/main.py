@@ -34,7 +34,7 @@ from pybrain.rl.learners import ENAC
 from pybrain.structure.modules import SigmoidLayer
 
 from pylon import Case, Bus, Generator
-from pylon import DCOPF
+from pylon import OPF
 
 from pylon.main import read_case
 

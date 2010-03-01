@@ -7,7 +7,7 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 import sys
-from pylon import Case, Bus, Branch, Generator, DCOPF
+from pylon import Case, Bus, Branch, Generator, OPF
 
 """ This tutorial provides a guide for solving an Optimal Power
 Flow problem using Pylon.
@@ -27,7 +27,7 @@ case = Case(buses=[bus1, bus2], branches=[line])
 
 """ Pass the case to the OPF routine and solve. """
 
-DCOPF().solve(case)
+OPF(case, True).solve()
 
 """ View the results as ReStructuredText tables. """
 case.save_rst(sys.stdout)

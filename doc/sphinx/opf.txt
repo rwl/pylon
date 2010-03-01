@@ -7,7 +7,7 @@ Optimal Power Flow
   __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
   import sys
-  from pylon import Case, Bus, Branch, Generator, Load, DCOPF
+  from pylon import Case, Bus, Branch, Generator, Load, OPF
   from pylon.readwrite import ReSTWriter
 
 This tutorial provides a guide for solving an Optimal Power
@@ -34,7 +34,7 @@ Pass the case to the OPF routine and solve.
 ::
 
 
-  DCOPF().solve(case)
+  OPF().solve(case)
 
 View the results as ReStructuredText tables.
 ::

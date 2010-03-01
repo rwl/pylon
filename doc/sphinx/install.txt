@@ -75,6 +75,6 @@ Access the ``pylon`` application programming inteface.
 
 .. sourcecode:: ipython
 
-  In [1]: from pylon import DCOPF
+  In [1]: from pylon import OPF
 
 .. include:: ../links_names.txt
