@@ -3,9 +3,9 @@ Pylon
 -----
 
 Pylon is a free software package for simulation of electric power systems and
-energy markets.  Its purpose is to provide a simple yet powerful tool for Power
-Engineers that is not tied to proprietary software and can be used and extended
-easily.
+energy markets.  Its purpose is to provide a simple yet powerful tool for
+electric power Engineers that is not tied to proprietary software and can be
+used and extended easily.
 
 Pylon's features currently include:
 
@@ -28,15 +28,17 @@ default::
 
   $ pylon data_file.raw
 
-Refer to the documentation for detailed usage information.
+Refer to the documentation for detailed usage information or type::
+
+  $ pylon --help
 
 -------
 License
 -------
 
-Pylon is licensed under the Apache License, version 2.0 with the exception of
-the pylon.cvxopt module which is licensed under the GNU General Public License,
-version 3.
+Pylon is licensed under the Apache License version 2.0 with the exception of
+the ``pylon.cvxopt`` module which is licensed under the GNU General Public
+License version 3.
 
 -------
 Credits
