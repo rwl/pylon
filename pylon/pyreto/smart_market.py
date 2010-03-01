@@ -24,7 +24,7 @@
 import time
 import logging
 
-from pylon import UDOPF, DCOPF, OPF #@UnusedImport
+from pylon import UDOPF, OPF #@UnusedImport
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -268,8 +268,7 @@ class SmartMarket(object):
         if self.decommit:
             solver = UDOPF(self.case, dc=(self.loc_adjust == "dc"))
         elif self.loc_adjust == "dc":
-            solver = DCOPF(self.case, show_progress=False)
-#            solver = OPF(self.case, dc=True, show_progress=False)
+            solver = OPF(self.case, dc=True, show_progress=False)
         else:
             solver = OPF(self.case, show_progress=False)
 

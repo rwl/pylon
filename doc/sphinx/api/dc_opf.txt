@@ -1,8 +1,0 @@
-:mod:`dc_opf` -- DC Optimal Power Flow
-======================================
-
-.. automodule:: pylon.dc_opf
-
-.. autoclass:: DCOPF
-   :members: __init__
-   :show-inheritance:

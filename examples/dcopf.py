@@ -6,7 +6,7 @@ import sys
 from os.path import join, dirname
 
 import pylon.case
-from pylon import Case, DCOPF
+from pylon import Case, OPF
 
 # Define a path to the data file.
 CASE_FILE = join(dirname(pylon.case.__file__), "test", "data", "case30pwl.pkl")
@@ -20,7 +20,7 @@ solver = None
 #solver = "mosek"
 
 # Solve DC optimal power flow.
-DCOPF(case, solver=solver, show_progress=False).solve()
+OPF(case, True, solver=solver, show_progress=False).solve()
 
 # Print a report to screen.
 case.save_rst(sys.stdout)

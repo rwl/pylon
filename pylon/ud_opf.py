@@ -36,7 +36,7 @@ import random
 
 from numpy import matrix
 
-from pylon import DCOPF, ACOPF
+from pylon import OPF
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -165,12 +165,8 @@ class UDOPF(object):
         reltol  = self.relative_tol
         feastol = self.feasibility_tol
 
-        if self.dc:
-            solver = self.solver = DCOPF(case, cvxopt, solver, progress,
-                                         itermax, abstol, reltol, feastol)
-        else:
-            solver = self.solver = ACOPF(case, solver, progress, itermax,
-                                         abstol, reltol, feastol)
+        solver = self.solver = ACOPF(case, self.dc, solver, progress, itermax,
+                                     abstol, reltol, feastol)
 
         # Initial solve fo the OPF problem.
         solution = solver.solve()

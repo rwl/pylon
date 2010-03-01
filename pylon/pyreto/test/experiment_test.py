@@ -185,8 +185,8 @@ if __name__ == "__main__":
 #    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
 #        format="%(levelname)s: %(message)s")
 
-    dcopf_logger = logging.getLogger('pylon.dc_opf')
-    dcopf_logger.setLevel(logging.INFO)
+    opf_logger = logging.getLogger('pylon.opf')
+    opf_logger.setLevel(logging.INFO)
     y_logger = logging.getLogger('pylon.y')
     y_logger.setLevel(logging.INFO)
 

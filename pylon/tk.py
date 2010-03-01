@@ -28,7 +28,7 @@ import tkSimpleDialog
 import pylon
 
 from pylon import \
-    Case, DCPF, NewtonRaphson, FastDecoupled, DCOPF, ACOPF, UDOPF
+    Case, DCPF, NewtonRaphson, FastDecoupled, UDOPF
 
 from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
@@ -153,10 +153,10 @@ class PylonTk(object):
 
         opfmenu = Menu(menubar, tearoff=True)
         menubar.add_cascade(label="OPF", menu=opfmenu)
-        opfmenu.add_command(label="DC OPF", command=self.on_dcopf)
-        opfmenu.add_command(label="AC OPF", command=self.on_acopf)
-        opfmenu.add_command(label="DC (UD) OPF", command=self.on_duopf)
-        opfmenu.add_command(label="AC (UD) OPF", command=self.on_uopf)
+#        opfmenu.add_command(label="DC OPF", command=self.on_dcopf)
+#        opfmenu.add_command(label="AC OPF", command=self.on_acopf)
+#        opfmenu.add_command(label="DC (UD) OPF", command=self.on_duopf)
+#        opfmenu.add_command(label="AC (UD) OPF", command=self.on_uopf)
 
         mktmenu = Menu(menubar, tearoff=True)
         menubar.add_cascade(label="RL", menu=mktmenu)
@@ -285,7 +285,6 @@ class PylonTk(object):
         numpy_version = numpy.version.version
         scipy_version = scipy.version.version
         tk_version = TkVersion
-        pylon_version = pylon.__version__
 
         self.status.set("Python %s, NumPy %s, SciPy %s, Tk %s" % \
             (python_version, numpy_version, scipy_version, tk_version))
@@ -483,12 +482,12 @@ class PylonTk(object):
         FastDecoupled(self.case).solve()
 
 
-    def on_dcopf(self):
-        DCOPF(self.case).solve()
+#    def on_dcopf(self):
+#        DCOPF(self.case).solve()
 
 
-    def on_acopf(self):
-        ACOPF(self.case).solve()
+#    def on_acopf(self):
+#        ACOPF(self.case).solve()
 
 
     def on_duopf(self):

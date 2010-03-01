@@ -27,7 +27,7 @@ import unittest
 
 from os.path import dirname, join
 
-from pylon import Case, Bus, Generator, REFERENCE, DCOPF
+from pylon import Case, Bus, Generator, REFERENCE, OPF
 from pylon.pyreto import SmartMarket, Bid, Offer, FIRST_PRICE
 
 #------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ class DCMarketTestCase(unittest.TestCase):
     def test_dc_opf(self):
         """ Test solving the auction case using DC OPF.
         """
-        solver = DCOPF(self.case, show_progress=False)
+        solver = OPF(self.case, True, show_progress=False)
         solution = solver.solve()
         self.assertTrue(solution["status"] == "optimal" or "unknown")
         self.assertAlmostEqual(solution["primal objective"], -517.81, 2)

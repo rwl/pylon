@@ -14,8 +14,6 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-__version__ = "0.3.2"
-
 from case import Case, Bus, Branch
 from case import REFERENCE, PV, PQ, ISOLATED
 from generator import Generator, POLYNOMIAL, PW_LINEAR
@@ -27,11 +25,7 @@ from ac_pf import NewtonRaphson, FastDecoupled
 
 from opf import OPF
 
-from dc_opf import DCOPF
-from ac_opf import ACOPF
 from ud_opf import UDOPF
-
-from uc import UnitCommitment
 
 from estimator import StateEstimator, Measurement
 from estimator import PF, PT, QF, QT, PG, QG, VM, VA
