@@ -515,14 +515,17 @@ class Case(Named, Serializable):
                 Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
                 PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
         """
+        ib = range(len(V))
+
         I = Y * V
 
-        diag_v = spdiag(V)
-        diag_i = spdiag(I)
-        diag_vnorm = spdiag(V / abs(V)) # Element-wise division.
+        diagV = csr_matrix((V, (ib, ib)))
+        diagIbus = csr_matrix((I, (ib, ib)))
+        # Element-wise division.
+        diagVnorm = csr_matrix((V / abs(V), (ib, ib)))
 
-        dS_dVm = diag_v * conj(Y * diag_vnorm) + conj(diag_i) * diag_vnorm
-        dS_dVa = 1j * diag_v * conj(diag_i - Y * diag_v)
+        dS_dVm = diagV * conj(Y * diagVnorm) + conj(diagIbus) * diagVnorm
+        dS_dVa = 1j * diagV * conj(diagIbus - Y * diagV)
 
         return dS_dVm, dS_dVa
 
@@ -536,11 +539,11 @@ class Case(Named, Serializable):
             Ray Zimmerman, "dIbr_dV.m", MATPOWER, version 4.0b1,
             PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
         """
-#        nb = len(V)
+        i = range(len(V))
 
         Vnorm = V / abs(V)
-        diagV = spdiag(V)
-        diagVnorm = spdiag(Vnorm)
+        diagV = csr_matrix((V, (i, i)))
+        diagVnorm = csr_matrix((Vnorm, (i, i)))
         dIf_dVa = Yf * 1j * diagV
         dIf_dVm = Yf * diagVnorm
         dIt_dVa = Yt * 1j * diagV
@@ -565,9 +568,11 @@ class Case(Named, Serializable):
 
         nl = len(branches)
         nb = len(V)
+        il = range(nl)
+        ib = range(nb)
 
-        f = matrix([buses.index(l.from_bus) for l in branches])
-        t = matrix([buses.index(l.to_bus) for l in branches])
+        f = [buses.index(l.from_bus) for l in branches]
+        t = [buses.index(l.to_bus) for l in branches]
 
         # Compute currents.
         If = Yf * V
@@ -575,32 +580,31 @@ class Case(Named, Serializable):
 
         Vnorm = V / abs(V)
 
-        diagVf = spdiag(V[f])
-        diagIf = spdiag(If)
-        diagVt = spdiag(V[t])
-        diagIt = spdiag(It)
-        diagV = spdiag(V)
-        diagVnorm = spdiag(Vnorm)
+        diagVf = csr_matrix((V[f], (il, il)))
+        diagIf = csr_matrix((If, (il, il)))
+        diagVt = csr_matrix((V[t], (il, il)))
+        diagIt = csr_matrix((It, (il, il)))
+        diagV  = csr_matrix((V, (ib, ib)))
+        diagVnorm = csr_matrix((Vnorm, (ib, ib)))
 
-        ibr = range(nl)
-        size = (nl, nb)
+        shape = (nl, nb)
         # Partial derivative of S w.r.t voltage phase angle.
         dSf_dVa = 1j * (conj(diagIf) *
-            spmatrix(V[f], ibr, f, size) - diagVf * conj(Yf * diagV))
+            csr_matrix((V[f], (il, f)), shape) - diagVf * conj(Yf * diagV))
 
         dSt_dVa = 1j * (conj(diagIt) *
-            spmatrix(V[t], ibr, t, size) - diagVt * conj(Yt * diagV))
+            csr_matrix((V[t], (il, t)), shape) - diagVt * conj(Yt * diagV))
 
         # Partial derivative of S w.r.t. voltage amplitude.
         dSf_dVm = diagVf * conj(Yf * diagVnorm) + conj(diagIf) * \
-            spmatrix(Vnorm[f], ibr, f, size)
+            csr_matrix((Vnorm[f], (il, f)), shape)
 
         dSt_dVm = diagVt * conj(Yt * diagVnorm) + conj(diagIt) * \
-            spmatrix(Vnorm[t], ibr, t, size)
+            csr_matrix((Vnorm[t], (il, t)), shape)
 
         # Compute power flow vectors.
-        Sf = multiply(V[f], conj(If))
-        St = multiply(V[t], conj(It))
+        Sf = V[f] * conj(If)
+        St = V[t] * conj(It)
 
         return dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St
 
