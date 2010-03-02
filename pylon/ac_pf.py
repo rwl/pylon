@@ -29,7 +29,10 @@ import logging
 from math import pi
 from time import time
 
-from numpy import matrix, array, angle, pi, exp, linalg, multiply, conj
+from numpy import array, angle, pi, exp, linalg, multiply, conj, r_
+
+from scipy.sparse import hstack, vstack
+from scipy.sparse.linalg import spsolve
 
 from pylon.case import PQ, PV, REFERENCE
 
@@ -160,10 +163,10 @@ class _ACPF(object):
     def _index_buses(self, buses):
         """ Set up indexing for updating v.
         """
-        refs = array([i for i,b in enumerate(buses) if b.type == REFERENCE])
-        pv = array([i for i,b in enumerate(buses) if b.type == PV])
-        pq = array([i for i,b in enumerate(buses) if b.type == PQ])
-        pvpq = array([pv, pq])
+        refs = [i for i,b in enumerate(buses) if b.type == REFERENCE]
+        pv = [i for i,b in enumerate(buses) if b.type == PV]
+        pq = [i for i,b in enumerate(buses) if b.type == PQ]
+        pvpq = pv + pq
 
         return refs, pq, pv, pvpq
 
@@ -234,7 +237,7 @@ class NewtonRaphson(_ACPF):
         i = 0
         while (not converged) and (i < self.iter_max):
             V, Vm, Va = self._one_iteration(F, Ybus, V, Vm, Va, pv, pq, pvpq)
-            F = self._evaluate_function(V)
+            F = self._evaluate_function(Ybus, V, Sbus, pv, pq)
             converged = self._check_convergence(F)
             i += 1
 
@@ -253,7 +256,9 @@ class NewtonRaphson(_ACPF):
 #        else:
 #            raise ValueError
 
-        linalg.solve(J, F)
+        print F
+
+        spsolve(J, F)
 
         # Update step.
         dx = -1 * F
@@ -271,7 +276,7 @@ class NewtonRaphson(_ACPF):
 
         # Avoid wrapped round negative Vm.
         Vm = abs(V)
-        Va = matrix(angle(Vm))
+        Va = angle(Vm)
 
         return V, Vm, Va
 
@@ -282,16 +287,20 @@ class NewtonRaphson(_ACPF):
     def _build_jacobian(self, Ybus, V, pv, pq, pvpq):
         """ Returns the Jacobian matrix.
         """
+        pq_col = [[i] for i in pq]
+        pvpq_col = [[i] for i in pvpq]
+
         dS_dVm, dS_dVa = self.case.dSbus_dV(Ybus, V)
 
-        J11 = dS_dVa[pvpq, pvpq].real()
-        J12 = dS_dVm[pvpq, pq].real()
-        J21 = dS_dVa[pq, pvpq].imag()
-        J22 = dS_dVm[pq, pq].imag()
-#        J1 = sparse([J11, J21])
-#        J2 = sparse([J12, J22])
-#        J = sparse([[J1], [J2]])
-        J = sparse([[J11, J21], [J12, J22]])
+        J11 = dS_dVa[pvpq_col, pvpq].real
+
+        J12 = dS_dVm[pvpq_col, pq].real
+        J21 = dS_dVa[pq_col, pvpq].imag
+        J22 = dS_dVm[pq_col, pq].imag
+
+        J1 = hstack([J11, J12], format="csr")
+        J2 = hstack([J21, J22], format="csr")
+        J  = vstack([J1, J2], format="csr")
 
         return J
 
@@ -304,7 +313,7 @@ class NewtonRaphson(_ACPF):
         """
         mis = multiply(V, conj(Ybus * V)) - Sbus
 
-        F = matrix([mis[pv].real(), mis[pq].real(), mis[pq].imag()])
+        F = r_[mis[pv].real, mis[pq].real, mis[pq].imag]
 
         return F
 
