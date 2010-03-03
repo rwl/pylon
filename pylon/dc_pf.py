@@ -33,7 +33,7 @@ from numpy import array, linalg, pi, r_, ix_
 
 from scipy.sparse.linalg import spsolve
 
-from pylon.case import REFERENCE
+from pylon.case import REFERENCE, PV, PQ
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -63,52 +63,28 @@ class DCPF(object):
         # Solved case.
         self.case = case
 
-        # Branch susceptance matrix.
-#        self.B = None
-
-        # Branch from bus susceptance matrix.
-#        self.Bsrc = None
-
-        # Vector of bus phase shift injections.
-#        self.p_businj = None
-
-        # Vector of phase shift injections at the from buses.
-#        self.p_srcinj = None
-
-        # Vector of voltage angle guesses.
-#        self.v_angle_guess = None
-
         # Vector of voltage phase angles.
         self.v_angle = None
-
-        # Index of the reference bus.
-#        self.ref_idx = -1
-
-        # Active power injection at the reference bus.
-#        self.p_ref = 0.0
 
 
     def solve(self):
         """ Solves DC power flow for the given case.
         """
         case = self.case
-
         logger.info("Starting DC power flow [%s]." % case.name)
-
         t0 = time.time()
+        # Update bus indexes.
+        self.case.index_buses()
 
         # Find the index of the refence bus.
         ref_idx = self._get_reference_index(case)
-
         if ref_idx < 0:
             return False
 
         # Build the susceptance matrices.
         B, Bsrc, p_businj, p_srcinj = case.Bdc
-
         # Get the vector of initial voltage angles.
         v_angle_guess = self._get_v_angle_guess(case)
-
         # Calculate the new voltage phase angles.
         v_angle, p_ref = self._get_v_angle(case, B, v_angle_guess, p_businj,
                                            ref_idx)
@@ -129,11 +105,11 @@ class DCPF(object):
     def _get_reference_index(self, case):
         """ Returns the index of the reference bus.
         """
-        for i, bus in enumerate(case.connected_buses):
-            if bus.type == REFERENCE:
-                return i
+        refs = [bus.i for bus in case.connected_buses if bus.type == REFERENCE]
+        if len(refs) == 1:
+            return refs [0]
         else:
-            logger.error("Swing bus required for DCPF.")
+            logger.error("Single swing bus required for DCPF.")
             return -1
 
     #--------------------------------------------------------------------------
@@ -156,8 +132,8 @@ class DCPF(object):
         """
         buses = case.connected_buses
 
-        pv_idxs = [i for i, b in enumerate(buses) if b.type == "PV"]
-        pq_idxs = [i for i, b in enumerate(buses) if b.type == "PQ"]
+        pv_idxs = [bus.i for bus in buses if bus.type == PV]
+        pq_idxs = [bus.i for bus in buses if bus.type == PQ]
         pvpq_idxs = pv_idxs + pq_idxs
         pvpq_rows = [[i] for i in pvpq_idxs]
 

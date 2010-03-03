@@ -26,13 +26,12 @@
 #------------------------------------------------------------------------------
 
 import logging
-from math import pi
 from time import time
 
 from numpy import array, angle, pi, exp, linalg, multiply, conj, r_
 
 from scipy.sparse import hstack, vstack
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve, splu
 
 from pylon.case import PQ, PV, REFERENCE
 
@@ -96,6 +95,8 @@ class _ACPF(object):
         """
         # Zero result attributes.
         self.case.reset()
+        # Update bus indexes.
+        self.case.index_buses()
 
         # Retrieve the contents of the case.
         b, l, g, nb, nl, ng, base_mva = self._unpack_case(self.case)
@@ -127,7 +128,7 @@ class _ACPF(object):
             Ybus, Yf, Yt = self.case.Y
 
             # Compute complex bus power injections (generation - load).
-            Sbus = self.case.Sbus
+            Sbus = self.case.getSbus(b)
 
             # Run the power flow.
             V, success, i = self._run_power_flow(Ybus, Sbus, V0, **kw_args)
@@ -163,9 +164,9 @@ class _ACPF(object):
     def _index_buses(self, buses):
         """ Set up indexing for updating v.
         """
-        refs = [i for i,b in enumerate(buses) if b.type == REFERENCE]
-        pv = [i for i,b in enumerate(buses) if b.type == PV]
-        pq = [i for i,b in enumerate(buses) if b.type == PQ]
+        refs = [bus.i for bus in buses if bus.type == REFERENCE]
+        pv = [bus.i for bus in buses if bus.type == PV]
+        pq = [bus.i for bus in buses if bus.type == PQ]
         pvpq = pv + pq
 
         return refs, pq, pv, pvpq
@@ -249,19 +250,8 @@ class NewtonRaphson(_ACPF):
         """
         J = self._build_jacobian(Ybus, V, pv, pq, pvpq)
 
-#        if self.solver == "UMFPACK":
-#            umfpack.linsolve(J, F)
-#        elif self.solver == "CHOLMOD":
-#            cholmod.linsolve(J, F)
-#        else:
-#            raise ValueError
-
-        print F
-
-        spsolve(J, F)
-
         # Update step.
-        dx = -1 * F
+        dx = -1 * spsolve(J, F)
 
         # Update voltage vector.
         npv = len(pv)
@@ -433,14 +423,14 @@ class FastDecoupled(_ACPF):
 #        FBp = numeric(Bp, Bps)
 #        FBpp = numeric(Bpp, Bpps)
 
-        Pp, Lp, Up = linalg.lu(Bp)
+        Pp, Lp, Up = splu(Bp)
 #        LU, P = linalg.lu_factor(Bp)
 
         # P iteration, update Va.
         # dVa = -( Up \  (Lp \ (Pp * P)));
         # L, U = Sci.linalg.lu(a)
         # LU, P = Sci.linalg.lu_factor(a)
-        dVa = linalg.solve(Lp, (Pp * P))
+        dVa = spsolve(Lp, (Pp * P))
 
         # Update voltage.
         Va[pvpq] = Va[pvpq] + dVa
@@ -462,18 +452,6 @@ class FastDecoupled(_ACPF):
         V = multiply(Vm, exp(1j * Va))
 
         return V, Vm
-
-
-#    def _factor_B_matrices(self):
-#        """ Perform symbolic and numeric LU factorisation of Bp and Bpp.
-#        """
-#        Bp = self.Bp
-#        Bpp = self.Bpp
-#
-#        # The numeric factorisation is returned as an opaque C object that
-#        # can be passed on to umfpack.solve().
-#        opaqueBp = numeric(Bp, symbolic(Bp))
-#        opaqueBpp = numeric(Bpp, symbolic(Bp))
 
     #--------------------------------------------------------------------------
     #  Evaluate mismatch:
@@ -509,52 +487,5 @@ class FastDecoupled(_ACPF):
             converged = False
 
         return converged
-
-    #--------------------------------------------------------------------------
-    #  Make FDPF matrix B prime:
-    #--------------------------------------------------------------------------
-
-#    def _make_B_prime(self):
-#        """ Builds the Fast Decoupled Power Flow matrix B prime.
-#
-#            References:
-#            R. Zimmerman, "makeB.m", MATPOWER, PSERC (Cornell),
-#            version 1.5, http://www.pserc.cornell.edu/matpower/, July 8, 2005
-#
-#        """
-#        if self.method is "XB":
-#            r_line = False
-#        else:
-#            r_line = True
-#
-#        Y, _, _ = self.case.get_admittance_matrix(bus_shunts=False,
-#            line_shunts=False, tap_positions=False, line_resistance=r_line)
-#
-#        self.Bp = Bp = -Y.imag()
-#
-#        return Bp
-
-    #--------------------------------------------------------------------------
-    #  Make FDPF matrix B double prime:
-    #--------------------------------------------------------------------------
-
-#    def _make_B_double_prime(self):
-#        """ Builds the Fast Decoupled Power Flow matrix B double prime.
-#
-#            References:
-#            R. Zimmerman, "makeB.m", MATPOWER, PSERC (Cornell),
-#            version 1.5, http://www.pserc.cornell.edu/matpower/, July 8, 2005
-#        """
-#        if self.method is "BX":
-#            r_line = False
-#        else:
-#            r_line = True
-#
-#        Y, _, _ = self.case.get_admittance_matrix(line_resistance=r_line,
-#                                                  phase_shift=False)
-#
-#        self.Bp = Bpp = -Y.imag()
-#
-#        return Bpp
 
 # EOF -------------------------------------------------------------------------

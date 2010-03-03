@@ -58,13 +58,16 @@ class Bus(Named):
     """ Defines a power system bus node.
     """
 
-    def __init__(self, name=None, type=PQ, v_base=100.0,
+    def __init__(self, name=None, i=0, type=PQ, v_base=100.0,
             v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
             p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0):
         """ Initialises a new Bus instance.
         """
         # Unique name.
         self.name = name
+
+        # Index of w.r.t. all buses.
+        self.i = 0
 
         # Bus type: 'PQ', 'PV', 'ref' and 'isolated' (default: 'PQ')
         self.type = type
@@ -244,6 +247,9 @@ class Case(Named, Serializable):
         # Generating units and dispatchable loads.
         self.generators = generators if generators is not None else []
 
+    #--------------------------------------------------------------------------
+    #  Properties:
+    #--------------------------------------------------------------------------
 
     @property
     def connected_buses(self):
@@ -275,18 +281,30 @@ class Case(Named, Serializable):
         return [branch for branch in self.branches if branch.online]
 
 
-    @property
-    def Sbus(self):
+    def getSbus(self, buses=None):
         """ Net complex bus power injection vector in p.u.
         """
-        s = array([self.s_surplus(v) / self.base_mva for v in self.buses])
+        buses = self.buses if buses is None else buses
+        s = array([self.s_surplus(v) / self.base_mva for v in buses])
         return s
+
+    Sbus = property(getSbus)
 
 
     def sort_generators(self):
         """ Reorders the list of generators according to bus index.
         """
         self.generators.sort(key=lambda gn: self.buses.index(gn.bus))
+
+    #--------------------------------------------------------------------------
+    #  Update bus indexes:
+    #--------------------------------------------------------------------------
+
+    def index_buses(self):
+        """ Updates the indexes of all case buses.
+        """
+        for i, bus in enumerate(self.connected_buses):
+            bus.i = i
 
     #--------------------------------------------------------------------------
     #  Bus injections:
