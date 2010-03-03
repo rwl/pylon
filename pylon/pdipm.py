@@ -27,10 +27,13 @@
 
 import logging
 
-from numpy import matrix, nonzero, Inf, any, isnan, asarray, log
-from numpy.linalg import solve, norm
+from numpy import \
+    array, nonzero, Inf, any, isnan, log, ones, r_, finfo, zeros
 
-from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
+from numpy.linalg import norm
+
+from scipy.sparse import csr_matrix, vstack, hstack
+from scipy.sparse.linalg import spsolve
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -42,7 +45,7 @@ logger = logging.getLogger(__name__)
 #  Constants:
 #------------------------------------------------------------------------------
 
-EPS = 2**-52
+EPS = finfo(float).eps
 
 #------------------------------------------------------------------------------
 #  "pdipm" function:
@@ -60,12 +63,12 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         l <= A*x <= u
         xmin <= x <= xmax
     """
-    xmin = matrix(-Inf, x0.size) if xmin is None else xmin
-    xmax = matrix( Inf, x0.size) if xmax is None else xmax
+    xmin = ones(x0.shape[0]) * -Inf if xmin is None else xmin
+    xmax = ones(x0.shape[0]) *  Inf if xmax is None else xmax
     if A is None:
-        A = spmatrix([], [], [], (0, x0.size[0]))
-        l = matrix(0.0, (0, 1))
-        u = matrix(0.0, (0, 1))
+        A = csr_matrix((0, x0.shape[0]))
+        l = array([])
+        u = array([])
 
     opt = {} if opt is None else opt
     if not opt.has_key("feastol"):
@@ -103,21 +106,19 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     nA = A.size[0]             # number of original linear constraints
 
     # add var limits to linear constraints
-    AA = sparse([spmatrix(1.0, range(nx), range(nx)), A])
-    ll = matrix([xmin, l])
-    uu = matrix([xmax, u])
+    AA = vstack([csr_matrix(ones(nx), range(nx), range(nx)), A])
+    ll = r_[xmin, l]
+    uu = r_[xmax, u]
 
     # split up linear constraints
-    ieq = matrix([j for j, v in enumerate(abs(uu - ll)) if v < EPS])
-    igt = matrix([j for j in range(len(ll)) if uu[j] >=  1e10 and ll[j]>-1e10])
-    ilt = matrix([j for j in range(len(ll)) if ll[j] <= -1e10 and uu[j]< 1e10])
-    ibx = matrix([j for j in range(len(ll))
-                  if (abs(uu[j] - ll[j]) > EPS) and
-                  (uu[j] < 1e10) and (ll[j] > -1e10)])
+    ieq = nonzero( abs(uu - ll) <= EPS )
+    igt = nonzero( uu >=  1e10 and ll > -1e10 )
+    ilt = nonzero( ll <= -1e10 and uu <  1e10 )
+    ibx = nonzero( (abs(uu - ll) > EPS) and (uu < 1e10) and (ll > -1e10) )
     Ae = AA[ieq, :]
     be = uu[ieq, :]
-    Ai = sparse([AA[ilt, :], -AA[igt, :], AA[ibx, :], -AA[ibx, :]])
-    bi = matrix([uu[ilt], -ll[igt], uu[ibx], -ll[ibx]])
+    Ai = vstack([AA[ilt, :], -AA[igt, :], AA[ibx, :], -AA[ibx, :]])
+    bi = r_[uu[ilt], -ll[igt], uu[ibx], -ll[ibx]]
 
     # evaluate cost f(x0) and constraints g(x0), h(x0)
     x = x0
@@ -125,10 +126,10 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     f = f * opt["cost_mult"]
     df = df * opt["cost_mult"]
     gn, hn, dgn, dhn = ipm_gh(x)        # non-linear constraints
-    g = matrix([gn, Ai * x - bi])       # inequality constraints
-    h = matrix([hn, Ae * x - be])       # equality constraints
-    dg = sparse([[dgn], [Ai.H]])        # 1st derivative of inequalities
-    dh = sparse([[dhn], [Ae.H]])        # 1st derivative of equalities
+    g = r_[gn, Ai * x - bi]             # inequality constraints
+    h = r_[hn, Ae * x - be]             # equality constraints
+    dg = hstack([dgn, Ai.H])            # 1st derivative of inequalities
+    dh = hstack([dhn, Ae.H])            # 1st derivative of equalities
 
     # some dimensions
     neq = h.size[0]           # number of equality constraints
@@ -141,15 +142,15 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 
     # initialize gamma, lam, mu, z, e
     gamma = 1                  # barrier coefficient
-    lam = matrix(0.0, (neq, 1))
-    z = z0 * matrix(1.0, (niq, 1))
+    lam = zeros(neq)
+    z = z0 * ones(niq)
     mu = z
 #    k = matrix(map(lambda x, y: x < y, g, -z0))
-    k = matrix([j for j in range(len(g)) if g[j] < -z0])
+    k = array([j for j in range(len(g)) if g[j] < -z0])
     z[k] = -g[k]
-    k = matrix([j for j in range(len(z)) if (gamma / z[j]) > z0])
+    k = array([j for j in range(len(z)) if (gamma / z[j]) > z0])
     mu[k] = gamma / z[k]
-    e = matrix(1.0, (niq, 1))
+    e = ones(niq)
 
     # check tolerance
     f0 = f
@@ -187,16 +188,16 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
                  "ineqnonlin": mu[range(niqnln)]}
         Lxx = ipm_hess(x, lmbda)
 
-        zinvdiag = spdiag(div(1.0, z))
-        mudiag = spdiag(mu)
+        zinvdiag = csr_matrix((1.0 / z, (range(len(z)), range(len(z)))))
+        mudiag = csr_matrix((mu, (range(len(mu)), range(len(mu)))))
         dg_zinv = dg * zinvdiag
         M = Lxx + dg_zinv * mudiag * dg.H
         N = Lx + dg_zinv * (mudiag * g + gamma * e)
-        Ab = sparse([[M, dh.H],
-                     [dh, spmatrix([], [], [], (neq, neq))]])
-        bb = matrix([-N, -h])
+        Ab = vstack([hstack([M, dh]),
+                     hstack([dh.T, csr_matrix((neq, neq))])])
+        bb = r_[-N, -h]
 
-        dxdlam = solve(Ab, bb)
+        dxdlam = spsolve(Ab, bb)
 
         dx = dxdlam[:nx]
         dlam = dxdlam[nx:nx + neq]
@@ -213,10 +214,10 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
             f1 = f1 * opt["cost_mult"]
             df1 = df1 * opt["cost_mult"]
             gn1, hn1, dgn1, dhn1 = ipm_gh(x1) # non-linear constraints
-            g1 = matrix([gn1, Ai * x1 - bi])  # inequality constraints
-            h1 = matrix([hn1, Ae * x1 - be])  # equality constraints
-            dg1 = sparse([dgn1.T, Ai.H.T]).T  # 1st derivative of inequalities
-            dh1 = sparse([dhn1.T, Ae.H.T]).T  # 1st derivative of equalities
+            g1 = r_[gn1, Ai * x1 - bi]        # inequality constraints
+            h1 = r_[hn1, Ae * x1 - be]        # equality constraints
+            dg1 = r_[dgn1.T, Ai.H.T].T        # 1st derivative of inequalities
+            dh1 = r_[dhn1.T, Ae.H.T].T        # 1st derivative of equalities
 
             # check tolerance
             Lx1 = df1 + dh1 * lam + dg1 * mu
@@ -235,8 +236,8 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
                 f1 = ipm_f(x1)             # cost
                 f1 = f1 * opt["cost_mult"]
                 gn1, hn1 = ipm_gh(x1)              # non-linear constraints
-                g1 = matrix([gn1, Ai * x1 - bi])   # inequality constraints
-                h1 = matrix([hn1, Ae * x1 - be])   # equality constraints
+                g1 = r_[gn1, Ai * x1 - bi]         # inequality constraints
+                h1 = r_[hn1, Ae * x1 - be]         # equality constraints
                 L1 = f1 + lam.H * h1 + mu.H * (g1 + z) - gamma * sum(log(z))
                 if opt["verbose"]:
                     logger.info("\n   %3d            %10.f" % (-j, norm(dx1)))
@@ -251,12 +252,12 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
             dmu = alpha * dmu
 
         # do the update
-        k = matrix([j for j in range(len(dz)) if dz[j] < 0.0])
-        alphap = min( matrix([xi * min(z[k] / -dz[k]), 1]) )
+        k = nonzero(dz < 0.0)
+        alphap = min( r_[xi * min(z[k] / -dz[k]), 1] )
 
-        k = matrix([j for j in range(len(dmu)) if dmu[j] < 0.0])
+        k = nonzero(dmu < 0.0)
 #        alphad = min( matrix([xi * min(div(mu[k], -dmu[k])), 1]) )
-        alphad = min( matrix([xi * min(matrix([mu[k] / -dmu[k], 1])), 1]) )
+        alphad = min( r_[xi * min( r_[mu[k] / -dmu[k], 1] ), 1] )
 
         x = x + alphap * dx
         z = z + alphap * dz
@@ -270,10 +271,10 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         df = df * opt["cost_mult"]
 
         gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints
-        g = matrix([gn, Ai * x - bi])          # inequality constraints
-        h = matrix([hn, Ae * x - be])          # equality constraints
-        dg = sparse([[dgn], [Ai.H]])           # 1st derivative of inequalities
-        dh = sparse([[dhn], [Ae.H]])           # 1st derivative of equalities
+        g = r_[gn, Ai * x - bi]                # inequality constraints
+        h = r_[hn, Ae * x - be]                # equality constraints
+        dg = hstack([dgn, Ai.T])           # 1st derivative of inequalities
+        dh = hstack([dhn, Ae.T])           # 1st derivative of equalities
 
 #        print "\n", df
 
@@ -322,17 +323,17 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     # re-package multipliers into struct
     lam_lin = lam[neqnln:neq]              # lambda for linear constraints
     mu_lin = mu[niqnln:niq]                # mu for linear constraints
-    kl = matrix([j for j, v in enumerate(lam_lin) if v < 0.0])
+    kl = nonzero(lam_lin < 0.0)
 #    kl = nonzero(lam_lin < 0)              # lower bound binding
-    ku = matrix([j for j, v in enumerate(lam_lin) if v > 0.0])
+    ku = nonzero(lam_lin > 0.0)
 #    ku = nonzero(lam_lin > 0)              # upper bound binding
 
-    mu_l = matrix(0.0, (nx + nA, 1))
+    mu_l = zeros(nx + nA)
     mu_l[ieq[kl]] = -lam_lin[kl]
     mu_l[igt] = mu_lin[nlt:nlt + ngt]
     mu_l[ibx] = mu_lin[nlt + ngt + nbx:nlt + ngt + nbx + nbx]
 
-    mu_u = matrix(0.0, (nx + nA, 1))
+    mu_u = zeros(nx + nA)
     mu_u[ieq[ku]] = lam_lin[ku]
     mu_u[ilt] = mu_lin[:nlt]
     mu_u[ibx] = mu_lin[nlt + ngt:nlt + ngt + nbx]
@@ -360,16 +361,16 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
     nx = len(c)
 
     if H is None:
-        H = spmatrix([], [], [], (nx, nx))
+        H = csr_matrix((nx, nx))
 
     if VLB is None:
-        VLB = matrix(-Inf, (nx, 1))
+        VLB = ones(nx) * -Inf
 
     if VUB is None:
-        VUB = matrix(Inf, (nx, 1))
+        VUB = ones(nx) * Inf
 
     if x0 is None:
-        x0 = matrix(0.0, (nx, 1))
+        x0 = zeros(nx)
         k = nonzero(VUB < 1e10 and VLB > -1e10)
         x0[k] ((VUB[k] + VLB[k]) / 2)
         k = nonzero(VUB < 1e10 and VLB <= -1e10)
@@ -387,18 +388,18 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
         return f, df, H
 
     def qp_gh(x):
-        g = matrix(0.0, (0, 1))
-        h = matrix(0.0, (0, 1))
+        g = array([])
+        h = array([])
         n, _ = x.size
-        dg = spmatrix([], [], [], (n, 0))
-        dh = spmatrix([], [], [], (n, 0))
+        dg = csr_matrix((n, 0))
+        dh = csr_matrix((n, 0))
         return g, h, dg, dh
 
     def qp_hessian(x, lmbda):
         Lxx = H * opt["cost_mult"]
         return Lxx
 
-    l = matrix(-Inf, b.size)
+    l = -Inf * ones(b.shape[0])
     l[:N] = b[:N]
 
     return pdipm(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b, opt)
