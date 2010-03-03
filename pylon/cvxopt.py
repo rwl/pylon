@@ -15,13 +15,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #------------------------------------------------------------------------------
 
-""" Defines an OPF solver using CVXOPT.
+""" Defines an OPF solver using CVXOPT [1].
 
     Note: This module is licensed under GNU GPL version 3 due to the
     CVXOPT import.
 
-    References:
-        Ray Zimmerman, "fmincon.m", MATPOWER, PSERC Cornell, version 4.0b1,
+    [1] Ray Zimmerman, "fmincon.m", MATPOWER, PSERC Cornell, version 4.0b1,
         http://www.pserc.cornell.edu/matpower/, December 2009
 """
 

@@ -14,10 +14,9 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Primal-dual interior point method for NLP.
+""" Primal-dual interior point method for NLP [1].
 
-    References:
-        Ray Zimmerman, "pdipm.m", MATPOWER, PSERC Cornell, version 4.0b1,
+    [1] Ray Zimmerman, "pdipm.m", MATPOWER, PSERC Cornell, version 4.0b1,
         http://www.pserc.cornell.edu/matpower/, December 2009
 """
 

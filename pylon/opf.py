@@ -14,10 +14,10 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines a generalised OPF solver and an OPF model.
+""" Defines a generalised OPF solver and an OPF model [1].
 
-    Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
-    http://www.pserc.cornell.edu/matpower/, December 2009
+    [1] Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
+        http://www.pserc.cornell.edu/matpower/, December 2009
 """
 
 #------------------------------------------------------------------------------
@@ -57,10 +57,10 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class OPF(object):
-    """ Defines a generalised OPF solver.
+    """ Defines a generalised OPF solver [1].
 
-        Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
-        http://www.pserc.cornell.edu/matpower/, December 2009
+        [1] Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
+            http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
     def __init__(self, case, dc=True, ignore_ang_lim=True, opts=None):
@@ -105,8 +105,6 @@ class OPF(object):
     def _construct_opf_model(self, case):
         """ Returns an OPF model.
         """
-        # Update bus indexes.
-        self.case.index_buses()
         # Zero the case result attributes.
         self.case.reset()
 
@@ -118,6 +116,9 @@ class OPF(object):
 
         # Remove isolated components.
         bs, ln, gn = self._remove_isolated(case)
+
+        # Update bus indexes.
+        self.case.index_buses(bs)
 
         # Convert single-block piecewise-linear costs into linear polynomial.
         gn = self._pwl1_to_poly(gn)
@@ -357,10 +358,9 @@ class OPF(object):
 
     def _pwl_gen_costs(self, generators, base_mva):
         """ Returns the basin constraints for piece-wise linear gen cost
-            variables.  CCV cost formulation expressed as Ay * x <= by.
+            variables [2].  CCV cost formulation expressed as Ay * x <= by.
 
-            References:
-                C. E. Murillo-Sanchez, "makeAy.m", MATPOWER, PSERC Cornell,
+            [2] C. E. Murillo-Sanchez, "makeAy.m", MATPOWER, PSERC Cornell,
                 version 4.0b1, http://www.pserc.cornell.edu/matpower/, Dec 09
         """
         ng = len(generators)
@@ -529,10 +529,10 @@ class Solver(object):
 #------------------------------------------------------------------------------
 
 class DCOPFSolver(Solver):
-    """ Defines a solver for DC optimal power flow.
+    """ Defines a solver for DC optimal power flow [3].
 
-        Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell, v4.0b1,
-        http://www.pserc.cornell.edu/matpower/, December 2009
+        [3] Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell, v4.0b1,
+            http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
     def __init__(self, om, opts=None):

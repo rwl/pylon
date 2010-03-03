@@ -14,11 +14,10 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines solvers for AC power flow.
+""" Defines solvers for AC power flow [1].
 
-    References:
-        Ray Zimmerman, "runpf.m", MATPOWER, PSERC Cornell,
-        http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
+    [1] Ray Zimmerman, "runpf.m", MATPOWER, PSERC Cornell,
+    http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
 """
 
 #------------------------------------------------------------------------------
@@ -53,11 +52,10 @@ XB = "XB"
 #------------------------------------------------------------------------------
 
 class _ACPF(object):
-    """ Defines a base class for AC power flow solvers.
+    """ Defines a base class for AC power flow solvers [1].
 
-        References:
-            Ray Zimmerman, "runpf.m", MATPOWER, PSERC Cornell,
-            http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
+        [1] Ray Zimmerman, "runpf.m", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
     """
 
     #--------------------------------------------------------------------------
@@ -95,11 +93,12 @@ class _ACPF(object):
         """
         # Zero result attributes.
         self.case.reset()
-        # Update bus indexes.
-        self.case.index_buses()
 
         # Retrieve the contents of the case.
         b, l, g, nb, nl, ng, base_mva = self._unpack_case(self.case)
+
+        # Update bus indexes.
+        self.case.index_buses(b)
 
         refs, pq, pv, pvpq = self._index_buses(b)
 
@@ -209,11 +208,10 @@ class _ACPF(object):
 #------------------------------------------------------------------------------
 
 class NewtonRaphson(_ACPF):
-    """ Solves the power flow using full Newton's method.
+    """ Solves the power flow using full Newton's method [2].
 
-        References:
-            Ray Zimmerman, "newtonpf.m", MATPOWER, PSERC Cornell,
-            http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
+        [2] Ray Zimmerman, "newtonpf.m", MATPOWER, PSERC Cornell,
+        http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
     """
 
     def _run_power_flow(self, Ybus, Sbus, V, pv, pq, pvpq, **kw_args):
@@ -330,11 +328,10 @@ class NewtonRaphson(_ACPF):
 #------------------------------------------------------------------------------
 
 class FastDecoupled(_ACPF):
-    """ Solves the power flow using fast decoupled method.
+    """ Solves the power flow using fast decoupled method [3].
 
-        References:
-            Ray Zimmerman, "fdpf.m", MATPOWER, PSERC Cornell, version 3.2,
-            http://www.pserc.cornell.edu/matpower/, June 2007
+        [3] Ray Zimmerman, "fdpf.m", MATPOWER, PSERC Cornell, version 4.0b1,
+        http://www.pserc.cornell.edu/matpower/, December 2009
     """
     #--------------------------------------------------------------------------
     #  "object" interface:

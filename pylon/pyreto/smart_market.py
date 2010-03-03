@@ -52,10 +52,9 @@ FIRST_PRICE = "first price"
 
 class SmartMarket(object):
     """ Computes the new generation and price schedules based on the offers
-        submitted.
+        submitted [1].
 
-        References:
-            R. D. Zimmerman, 'extras/smartmarket/smartmkt.m', MATPOWER,
+        [1] R. D. Zimmerman, 'extras/smartmarket/smartmkt.m', MATPOWER,
             PSERC (Cornell), version 3.2, www.pserc.cornell.edu/matpower
     """
 
@@ -354,10 +353,9 @@ class SmartMarket(object):
 
 class Auction(object):
     """ Defines a power auction for clearing offers/bids, where pricing is
-        adjusted for network losses and binding constraints.
+        adjusted for network losses and binding constraints [2].
 
-        References:
-            R. D. Zimmerman, 'extras/smartmarket/auction.m', MATPOWER,
+        [2] R. D. Zimmerman, 'extras/smartmarket/auction.m', MATPOWER,
             PSERC (Cornell), version 3.2, www.pserc.cornell.edu/matpower
     """
 

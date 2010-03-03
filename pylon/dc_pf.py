@@ -14,10 +14,9 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines a solver for DC power flow.
+""" Defines a solver for DC power flow [1].
 
-    References:
-        Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell, version 3.2,
+    [1] Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell, version 3.2,
         http://www.pserc.cornell.edu/matpower/, June 2007
 """
 
@@ -46,10 +45,9 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class DCPF(object):
-    """ Solves DC power flow.
+    """ Solves DC power flow [1].
 
-        References:
-            Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell, version 3.2,
+        [1] Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell, version 3.2,
             http://www.pserc.cornell.edu/matpower/, June 2007
     """
 
