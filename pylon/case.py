@@ -659,19 +659,21 @@ class Case(Named, Serializable):
 #        dAt_dPt = spdiag(Pt)
 #        dAt_dQt = spdiag(Qt)
 
-        dAf_dPf = spdiag(2 * Sf.real())
-        dAf_dQf = spdiag(2 * Sf.imag())
-        dAt_dPt = spdiag(2 * St.real())
-        dAt_dQt = spdiag(2 * St.imag())
+        il = range(len(Sf))
+
+        dAf_dPf = csr_matrix((2 * Sf.real, (il, il)))
+        dAf_dQf = csr_matrix((2 * Sf.imag, (il, il)))
+        dAt_dPt = csr_matrix((2 * St.real, (il, il)))
+        dAt_dQt = csr_matrix((2 * St.imag, (il, il)))
 
         # Partial derivative of apparent power magnitude w.r.t voltage
         # phase angle.
-        dAf_dVa = dAf_dPf * dSf_dVa.real() + dAf_dQf * dSf_dVa.imag()
-        dAt_dVa = dAt_dPt * dSt_dVa.real() + dAt_dQt * dSt_dVa.imag()
+        dAf_dVa = dAf_dPf * dSf_dVa.real + dAf_dQf * dSf_dVa.imag
+        dAt_dVa = dAt_dPt * dSt_dVa.real + dAt_dQt * dSt_dVa.imag
         # Partial derivative of apparent power magnitude w.r.t. voltage
         # amplitude.
-        dAf_dVm = dAf_dPf * dSf_dVm.real() + dAf_dQf * dSf_dVm.imag()
-        dAt_dVm = dAt_dPt * dSt_dVm.real() + dAt_dQt * dSt_dVm.imag()
+        dAf_dVm = dAf_dPf * dSf_dVm.real + dAf_dQf * dSf_dVm.imag
+        dAt_dVm = dAt_dPt * dSt_dVm.real + dAt_dQt * dSt_dVm.imag
 
         return dAf_dVa, dAf_dVm, dAt_dVa, dAt_dVm
 
@@ -682,18 +684,19 @@ class Case(Named, Serializable):
     def d2Sbus_dV2(self, Ybus, V, lam):
         """ Computes 2nd derivatives of power injection w.r.t. voltage.
         """
-        n = len(V)
+        nb = len(V)
+        ib = range(nb)
         Ibus = Ybus * V
-        diaglam = spdiag(lam)
-        diagV = spdiag(V)
+        diaglam = csr_matrix((lam, (ib, ib)))
+        diagV = csr_matrix((V, (ib, ib)))
 
-        A = spmatrix(multiply(lam, V), range(n), range(n))
+        A = csr_matrix((lam * V, (ib, ib)))
         B = Ybus * diagV
         C = A * conj(B)
-        D = Ybus.H * diagV
-        E = conj(diagV) * (D * diaglam - spmatrix(D*lam, range(n), range(n)))
-        F = C - A * spmatrix(conj(Ibus), range(n), range(n))
-        G = spmatrix(div(matrix(1.0, (n, 1)), abs(V)), range(n), range(n))
+        D = Ybus.T * diagV
+        E = conj(diagV) * (D * diaglam - csr_matrix((D * lam, (ib, ib))))
+        F = C - A * csr_matrix((conj(Ibus), (ib, ib)))
+        G = csr_matrix((ones(nb) / abs(V), (ib, ib)))
 
         Haa = E + F
         Hva = 1j * G * (E - F)
@@ -710,12 +713,13 @@ class Case(Named, Serializable):
         """ Computes 2nd derivatives of complex branch current w.r.t. voltage.
         """
         nb = len(V)
-        diaginvVm = spdiag(matrix(1.0, (nb, 1)) / abs(V))
+        ib = range(nb)
+        diaginvVm = csr_matrix((ones(nb) / abs(V), (ib, ib)))
 
-        Gaa = spdiag(-(Ybr.T * lam) / V)
+        Gaa = csr_matrix((-(Ybr.T * lam) / V, (ib, ib)))
         Gva = -1j * Gaa * diaginvVm
         Gav = Gva
-        Gvv = spmatrix([], [], [], (nb, nb))
+        Gvv = csr_matrix((nb, nb))
 
         return Gaa, Gav, Gva, Gvv
 
@@ -727,16 +731,17 @@ class Case(Named, Serializable):
         """ Computes 2nd derivatives of complex power flow w.r.t. voltage.
         """
         nb = len(V)
+        ib = range(nb)
 
-        diaglam = spdiag(lam)
-        diagV = spdiag(V)
+        diaglam = csr_matrix((lam, (ib, ib)))
+        diagV = csr_matrix((V, (ib, ib)))
 
         A = Ybr.H * diaglam * Cbr
         B = conj(diagV) * A * diagV
-        D = spdiag(multiply((A*V), conj(V)))
-        E = spdiag(multiply((A.T * conj(V)), V))
+        D = csr_matrix( ((A * V) * conj(V), (ib, ib)) )
+        E = csr_matrix( (A.T * conj(V) * V), (ib, ib) )
         F = B + B.T
-        G = spdiag(matrix(1.0, (nb, 1)) / abs(V))
+        G = csr_matrix((ones(nb) / abs(V), (ib, ib)))
 
         Gaa = F - D - E
         Gva = 1j * G * (B - B.T - D + E)
@@ -752,15 +757,17 @@ class Case(Named, Serializable):
     def d2ASbr_dV2(self, dSbr_dVa, dSbr_dVm, Sbr, Cbr, Ybr, V, lam):
         """ Computes 2nd derivatives of |complex power flow|**2 w.r.t. V.
         """
-        diaglam = spdiag(lam)
-        diagSbr_conj = spdiag(conj(Sbr))
+        il = range(len(lam))
+
+        diaglam = csr_matrix((lam, (il, il)))
+        diagSbr_conj = csr_matrix((conj(Sbr), (il, il)))
 
         [Saa, Sav, Sva, Svv] = self.d2Sbr_dV2(Cbr, Ybr, V, diagSbr_conj * lam)
 
-        Gaa = 2 * ( Saa + dSbr_dVa.T * diaglam * conj(dSbr_dVa) ).real()
-        Gva = 2 * ( Sva + dSbr_dVm.T * diaglam * conj(dSbr_dVa) ).real()
-        Gav = 2 * ( Sav + dSbr_dVa.T * diaglam * conj(dSbr_dVm) ).real()
-        Gvv = 2 * ( Svv + dSbr_dVm.T * diaglam * conj(dSbr_dVm) ).real()
+        Gaa = 2 * ( Saa + dSbr_dVa.T * diaglam * conj(dSbr_dVa) ).real
+        Gva = 2 * ( Sva + dSbr_dVm.T * diaglam * conj(dSbr_dVa) ).real
+        Gav = 2 * ( Sav + dSbr_dVa.T * diaglam * conj(dSbr_dVm) ).real
+        Gvv = 2 * ( Svv + dSbr_dVm.T * diaglam * conj(dSbr_dVm) ).real
 
         return Gaa, Gav, Gva, Gvv
 
@@ -771,8 +778,10 @@ class Case(Named, Serializable):
     def d2AIbr_dV2(self, dIbr_dVa, dIbr_dVm, Ibr, Ybr, V, lam):
         """ Computes 2nd derivatives of |complex current|**2 w.r.t. V.
         """
-        diaglam = spdiag(lam)
-        diagIbr_conj = spdiag(conj(Ibr))
+        il = range(len(lam))
+
+        diaglam = csr_matrix((lam, (il, il)))
+        diagIbr_conj = csr_matrix((conj(Ibr), (il, il)))
 
         Iaa, Iav, Iva, Ivv = self.d2Ibr_dV2(Ybr, V, diagIbr_conj * lam)
 
@@ -796,20 +805,20 @@ class Case(Named, Serializable):
         generators = self.online_generators
 
         self.reset()
+        self.index_buses()
 
-        Va = matrix(angle(V))
+        Va = angle(V)
         Vm = abs(V)
         for i, b in enumerate(buses):
             b.v_angle = Va[i] * 180.0 / pi
             b.v_magnitude = Vm[i]
 
         # Update Qg for all gens and Pg for swing bus.
-        gbus = matrix([buses.index(g.bus) for g in generators])
-        refgen = matrix([buses.index(g.bus) for g in generators if
-                         g.bus.type == REFERENCE])
+        gbus = [g.bus.i for g in generators]
+        refgen = [g.bus.i for g in generators if g.bus.type == REFERENCE]
 
         # Compute total injected bus powers.
-        Sg = multiply(V[gbus], conj(Ybus[gbus, :] * V))
+        Sg = V[gbus] * conj(Ybus[gbus, :] * V)
 
         # Update Qg for all generators.
         for i in gbus:
@@ -828,7 +837,7 @@ class Case(Named, Serializable):
         for i in refgen:
             g = generators[i]
             # inj P + local Pd
-            g.p = Sg.real()[i] * self.base_mva + g.bus.p_demand
+            g.p = Sg.real[i] * self.base_mva + g.bus.p_demand
 
         # More than one generator at the ref bus subtract off what is generated
         # by other gens at this bus.
@@ -837,15 +846,15 @@ class Case(Named, Serializable):
 
         # Complex power at "from" bus.
         for i, l in enumerate(branches):
-            idx_f = buses.index(l.from_bus)
+            idx_f = l.from_bus.i
             idx_t = buses.index(l.to_bus)
-            Sf = multiply(V[idx_f], conj(Yf[i, :] * V)) * self.base_mva
-            St = multiply(V[idx_t], conj(Yt[i, :] * V)) * self.base_mva
+            Sf = V[idx_f] * conj(Yf[i, :] * V) * self.base_mva
+            St = V[idx_t] * conj(Yt[i, :] * V) * self.base_mva
 
-            l.p_from = Sf.real()[0]
-            l.q_from = Sf.imag()[0]
-            l.p_to = St.real()[0]
-            l.q_to = St.imag()[0]
+            l.p_from = Sf.real[0]
+            l.q_from = Sf.imag[0]
+            l.p_to = St.real[0]
+            l.q_to = St.imag[0]
 
     #--------------------------------------------------------------------------
     #  Reset case results:
