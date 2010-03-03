@@ -16,9 +16,8 @@
 
 """ Defines a generalised OPF solver and an OPF model.
 
-    References:
-        Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
-        http://www.pserc.cornell.edu/matpower/, December 2009
+    Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
+    http://www.pserc.cornell.edu/matpower/, December 2009
 """
 
 #------------------------------------------------------------------------------
@@ -28,7 +27,10 @@
 import logging
 
 from numpy import \
-    array, pi, diff, polyder, polyval, array, nonzero, multiply, exp, conj
+    array, pi, diff, polyder, polyval, exp, conj, Inf, finfo, ones, r_, \
+    float64, zeros, diag
+
+from scipy.sparse import csr_matrix, hstack, vstack
 
 from util import Named
 from case import REFERENCE
@@ -39,8 +41,10 @@ from pdipm import pdipm, pdipm_qp
 #  Constants:
 #------------------------------------------------------------------------------
 
-INF = 1e10
-EPS = 2**-52
+EPS = finfo(float).eps
+SFLOW = "Sflow"
+PFLOW = "Pflow"
+IFLOW = "Iflow"
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -55,14 +59,11 @@ logger = logging.getLogger(__name__)
 class OPF(object):
     """ Defines a generalised OPF solver.
 
-        References:
-            Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
-            http://www.pserc.cornell.edu/matpower/, December 2009
+        Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
+        http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
-    def __init__(self, case, dc=True, ignore_ang_lim=True, show_progress=True,
-                 max_iterations=100, absolute_tol=1e-7, relative_tol=1e-6,
-                 feasibility_tol=1e-7):
+    def __init__(self, case, dc=True, ignore_ang_lim=True, opts=None):
         """ Initialises a new OPF instance.
         """
         # Case under optimisation.
@@ -74,36 +75,26 @@ class OPF(object):
         # Ignore angle difference limits for branches even if specified.
         self.ignore_ang_lim = ignore_ang_lim
 
-        # Turns the output to the screen on or off.
-        self.show_progress = show_progress
-        # Maximum number of iterations.
-        self.max_iterations = max_iterations
-        # Absolute accuracy.
-        self.absolute_tol = absolute_tol
-        # Relative accuracy.
-        self.relative_tol = relative_tol
-        # Tolerance for feasibility conditions.
-        self.feasibility_tol = feasibility_tol
+        # Solver options (See pdipm.py for futher details).
+        self.opts = {} if opts is None else opts
 
     #--------------------------------------------------------------------------
     #  Public interface:
     #--------------------------------------------------------------------------
 
-    def solve(self):
+    def solve(self, solver_klass=None):
         """ Solves an optimal power flow and returns a results dictionary.
         """
-        # Set algorithm parameters.
-        opts = self._algorithm_parameters()
-
         # Build an OPF model with variables and constraints.
         om = self._construct_opf_model(self.case)
 
         # Call the specific solver.
-        if self.dc:
+        if solver_klass is not None:
+            result = solver_klass(om).solve()
+        elif self.dc:
             result = DCOPFSolver(om).solve()
         else:
-#            result = CVXOPTSolver(om).solve()
-            result = PDIPMSolver(om, opts).solve()
+            result = PDIPMSolver(om, self.opts).solve()
 
         return result
 
@@ -112,18 +103,21 @@ class OPF(object):
     #--------------------------------------------------------------------------
 
     def _construct_opf_model(self, case):
+        """ Returns an OPF model.
+        """
+        # Update bus indexes.
+        self.case.index_buses()
+        # Zero the case result attributes.
+        self.case.reset()
+
         base_mva = case.base_mva
 
         # Check for one reference bus.
         oneref, refs = self._ref_check(case)
-        if not oneref:
-            return {"status": "error"}
+        if not oneref: return {"status": "error"}
 
         # Remove isolated components.
         bs, ln, gn = self._remove_isolated(case)
-
-        # Zero the case result attributes.
-        self.case.reset()
 
         # Convert single-block piecewise-linear costs into linear polynomial.
         gn = self._pwl1_to_poly(gn)
@@ -183,39 +177,16 @@ class OPF(object):
         return opf
 
 
-    def _algorithm_parameters(self):
-        """ Sets the parameters of the CVXOPT solver algorithm.
-        """
-#        solvers.options["show_progress"] = self.show_progress
-#        solvers.options["maxiters"] = self.max_iterations
-#        solvers.options["abstol"] = self.absolute_tol
-#        solvers.options["reltol"] = self.relative_tol
-#        solvers.options["feastol"] = self.feasibility_tol
-
-        opts = {"verbose": self.show_progress,
-                "feastol": self.feasibility_tol,
-                "gradtol": 1e-6,
-                "comptol": 1e-6,
-                "costtol": 1e-6,
-                "max_it": self.max_iterations,
-                "max_red": 20,
-                "step_contol": False,
-                "cost_mult": 1e-4}
-
-        return opts
-
-
     def _ref_check(self, case):
         """ Checks that there is only one reference bus.
         """
-        refs = matrix([i for i, bus in enumerate(case.buses)
-                      if bus.type == REFERENCE])
+        refs = [bus.i for bus in case.buses if bus.type == REFERENCE]
 
-        if not len(refs) == 1:
+        if len(refs) == 1:
+            return True, refs
+        else:
             logger.error("OPF requires a single reference bus.")
             return False, refs
-        else:
-            return True, refs
 
 
     def _remove_isolated(self, case):
@@ -246,9 +217,9 @@ class OPF(object):
     def _voltage_angle_var(self, refs, buses):
         """ Returns the voltage angle variable set.
         """
-        Va = matrix([b.v_angle_guess * (pi / 180.0) for b in buses])
+        Va = array([b.v_angle_guess * (pi / 180.0) for b in buses])
 
-        Vau = matrix(INF, (len(buses), 1))
+        Vau = ones(len(buses)) * Inf
         Val = -Vau
         Vau[refs] = Va[refs]
         Val[refs] = Va[refs]
@@ -259,14 +230,14 @@ class OPF(object):
     def _voltage_magnitude_var(self, buses, generators):
         """ Returns the voltage magnitude variable set.
         """
-        Vm = matrix([b.v_magnitude_guess for b in buses])
+        Vm = array([b.v_magnitude_guess for b in buses])
 
         # For buses with generators initialise Vm from gen data.
         for g in generators:
             Vm[buses.index(g.bus)] = g.v_magnitude
 
-        Vmin = matrix([b.v_min for b in buses])
-        Vmax = matrix([b.v_max for b in buses])
+        Vmin = array([b.v_min for b in buses])
+        Vmax = array([b.v_max for b in buses])
 
         return Variable("Vm", len(buses), Vm, Vmin, Vmax)
 
@@ -274,10 +245,10 @@ class OPF(object):
     def _p_gen_var(self, generators, base_mva):
         """ Returns the generator active power set-point variable.
         """
-        Pg = matrix([g.p / base_mva for g in generators])
+        Pg = array([g.p / base_mva for g in generators])
 
-        Pmin = matrix([g.p_min / base_mva for g in generators])
-        Pmax = matrix([g.p_max / base_mva for g in generators])
+        Pmin = array([g.p_min / base_mva for g in generators])
+        Pmax = array([g.p_max / base_mva for g in generators])
 
         return Variable("Pg", len(generators), Pg, Pmin, Pmax)
 
@@ -285,10 +256,10 @@ class OPF(object):
     def _q_gen_var(self, generators, base_mva):
         """ Returns the generator reactive power variable set.
         """
-        Qg = matrix([g.q / base_mva for g in generators])
+        Qg = array([g.q / base_mva for g in generators])
 
-        Qmin = matrix([g.q_min / base_mva for g in generators])
-        Qmax = matrix([g.q_max / base_mva for g in generators])
+        Qmin = array([g.q_min / base_mva for g in generators])
+        Qmax = array([g.q_max / base_mva for g in generators])
 
         return Variable("Qg", len(generators), Qg, Qmin, Qmax)
 
@@ -312,13 +283,13 @@ class OPF(object):
         """
         nb, ng = len(buses), len(generators)
         # Negative bus-generator incidence matrix.
-        gen_bus = matrix([buses.index(g.bus) for g in generators])
-        neg_Cg = spmatrix(-1.0, gen_bus, range(ng), (nb, ng))
+        gen_bus = array([buses.index(g.bus) for g in generators])
+        neg_Cg = csr_matrix((-1.0, (gen_bus, range(ng))), (nb, ng))
 
-        Amis = sparse([B.T, neg_Cg.T]).T
+        Amis = hstack([B, neg_Cg], format="csr")
 
-        Pd = matrix([bus.p_demand for bus in buses])
-        Gs = matrix([bus.g_shunt for bus in buses])
+        Pd = array([bus.p_demand for bus in buses])
+        Gs = array([bus.g_shunt for bus in buses])
 
         bmis = -(Pd - Gs) / base_mva - Pbusinj
 
@@ -331,9 +302,9 @@ class OPF(object):
             by Pf = Bf * Va + Pfinj.
         """
         # Indexes of constrained lines.
-        il = matrix([i for i,l in enumerate(branches) if 0.0 < l.rate_a < 1e10])
-        lpf = matrix(-INF, (len(il), 1))
-        rate_a = matrix([l.rate_a / base_mva for l in branches])
+        il = array([i for i,l in enumerate(branches) if 0.0 < l.rate_a < 1e10])
+        lpf = ones(len(il)) * -Inf
+        rate_a = array([l.rate_a / base_mva for l in branches])
         upf = rate_a[il] - Pfinj[il]
         upt = rate_a[il] + Pfinj[il]
 
@@ -349,38 +320,37 @@ class OPF(object):
         nb = len(buses)
 
         if not self.ignore_ang_lim:
-            iang = matrix([i for i, b in enumerate(branches)
-                           if (b.ang_min and (b.ang_min > -360.0))
-                           or (b.ang_max and (b.ang_max < 360.0))])
-            iangl = matrix([i for i, b in enumerate(branches)
-                            if b.ang_min is not None])[iang]
-            iangh = matrix([i for i, b in enumerate(branches)
-                            if b.ang_max is not None])[iang]
+            iang = [i for i, b in enumerate(branches)
+                    if (b.ang_min and (b.ang_min > -360.0))
+                    or (b.ang_max and (b.ang_max < 360.0))]
+            iangl = array([i for i, b in enumerate(branches)
+                     if b.ang_min is not None])[iang]
+            iangh = array([i for i, b in enumerate(branches)
+                           if b.ang_max is not None])[iang]
             nang = len(iang)
 
             if nang > 0:
-                ii = matrix([range(nang), range(nang)])
-                jjf = matrix([buses.index(b.from_bus) for b in branches])[iang]
-                jjt = matrix([buses.index(b.to_bus) for b in branches])[iang]
-                jj = matrix([jjf, jjt])
-                Aang = spmatrix(matrix([matrix(1.0, (nang, 1)),
-                                        matrix(-1.0, (nang, 1))]),
-                                        ii, jj, (nang, nb))
-                uang = matrix(INF, (nang, 1))
+                ii = range(nang) + range(nang)
+                jjf = array([b.from_bus.i for b in branches])[iang]
+                jjt = array([b.to_bus.i for b in branches])[iang]
+                jj = r_[jjf, jjt]
+                Aang = csr_matrix(r_[ones(nang), -ones(nang)],
+                                        (ii, jj), (nang, nb))
+                uang = ones(nang) * Inf
                 lang = -uang
-                lang[iangl] = matrix([b.ang_min * (pi / 180.0)
-                                      for b in branches])[iangl]
-                uang[iangh] = matrix([b.ang_max * (pi / 180.0)
-                                      for b in branches])[iangh]
+                lang[iangl] = array([b.ang_min * (pi / 180.0)
+                                    for b in branches])[iangl]
+                uang[iangh] = array([b.ang_max * (pi / 180.0)
+                                    for b in branches])[iangh]
             else:
-                Aang = spmatrix([], [], [], (0, nb))
-                lang = matrix()
-                uang = matrix()
+                Aang = csr_matrix((0, nb), dtype=float64)
+                lang = array([], dtype=float64)
+                uang = array([], dtype=float64)
         else:
-            Aang = spmatrix([], [], [], (0, nb))
-            lang = matrix()
-            uang = matrix()
-            iang = matrix()
+            Aang = csr_matrix((0, nb), dtype=float64)
+            lang = array([], dtype=float64)
+            uang = array([], dtype=float64)
+            iang = array([], dtype=float64)
 
         return LinearConstraint("ang", Aang, lang, uang, ["Va"])
 
@@ -411,24 +381,24 @@ class OPF(object):
         if ny > 0:
             # Total number of cost points.
             nc = len([co for gn in gpwl for co in gn.p_cost])
-            Ay = spmatrix([], [], [], (nc - ny, ybas + ny -1))
-            by = matrix(0.0, (0, 1))
+            Ay = csr_matrix((nc - ny, ybas + ny -1))
+            by = zeros((0, 1))
 
             k = 0
             for i, g in enumerate(gpwl):
                 # Number of cost points: segments = ns-1
                 ns = len(g.p_cost)
 
-                p = matrix([x / base_mva for x, c in g.p_cost])
-                c = matrix([c for x, c in g.p_cost])
+                p = array([x / base_mva for x, c in g.p_cost])
+                c = array([c for x, c in g.p_cost])
                 # Slopes for Pg (or Qg).
-                m = matrix(diff(c.T)) / matrix(diff(p.T))
+                m = array(diff(c.T) / diff(p.T))
 
                 if 0.0 in diff(p):
                     logger.error("Bad Pcost data: %s" % p)
 
-                b = multiply(m.T, p[:ns-1]) - c[:ns-1] # rhs
-                by = matrix([by, b])
+                b = m.T * p[:ns-1] - c[:ns-1] # rhs
+                by = r_[by, b]
 
                 print "B:\n", by
 
@@ -488,10 +458,10 @@ class Solver(object):
     def _dimension_data(self, buses, branches, generators):
         """ Returns the problem dimensions.
         """
-        ipol = self.ipol = matrix([i for i, g in enumerate(generators)
-                                   if g.pcost_model == POLYNOMIAL])
-        ipwl = self.ipwl = matrix([i for i, g in enumerate(generators)
-                                   if g.pcost_model == PW_LINEAR])
+        ipol = self.ipol = [i for i, g in enumerate(generators)
+                            if g.pcost_model == POLYNOMIAL]
+        ipwl = self.ipwl = [i for i, g in enumerate(generators)
+                            if g.pcost_model == PW_LINEAR]
         nb = len(buses)
         nl = len(branches)
         # Number of general cost vars, w.
@@ -514,17 +484,16 @@ class Solver(object):
 
         # Indexes for equality, greater than (unbounded above), less than
         # (unbounded below) and doubly-bounded constraints.
-        ieq = matrix([i for i, v in enumerate(abs(u - l)) if v < EPS])
-        igt = matrix([i for i in range(len(l)) if u[i] >=  1e10 and l[i] > -1e10])
-        ilt = matrix([i for i in range(len(l)) if l[i] <= -1e10 and u[i] <  1e10])
-        ibx = matrix([i for i in range(len(l))
-                      if (abs(u[i] - l[i]) > EPS) and
-                      (u[i] < 1e10) and (l[i] > -1e10)])
+        ieq = [i for i, v in enumerate(abs(u - l)) if v < EPS]
+        igt = [i for i in range(len(l)) if u[i] >=  1e10 and l[i] > -1e10]
+        ilt = [i for i in range(len(l)) if l[i] <= -1e10 and u[i] <  1e10]
+        ibx = [i for i in range(len(l))
+               if (abs(u[i] - l[i]) > EPS) and (u[i] < 1e10) and (l[i] >-1e10)]
 
         Aeq = A[ieq, :]
         beq = u[ieq, :]
-        Aieq = sparse([A[ilt, :], -A[igt, :], A[ibx, :], -A[ibx, :]])
-        bieq = matrix([u[ilt], -l[igt], u[ibx], -l[ibx]])
+        Aieq = hstack([A[ilt, :], -A[igt, :], A[ibx, :], -A[ibx, :]])
+        bieq = r_[u[ilt], -l[igt], u[ibx], -l[ibx]]
 
         return Aeq, beq, Aieq, bieq
 
@@ -532,14 +501,14 @@ class Solver(object):
     def _var_bounds(self):
         """ Returns bounds on the optimisation variables.
         """
-        x0 = matrix(0.0, (0, 1))
-        LB = matrix(0.0, (0, 1))
-        UB = matrix(0.0, (0, 1))
+        x0 = zeros((0, 1))
+        LB = zeros((0, 1))
+        UB = zeros((0, 1))
 
         for var in self.om.vars:
-            x0 = matrix([x0, var.v0])
-            LB = matrix([LB, var.vl])
-            UB = matrix([UB, var.vu])
+            x0 = r_[x0, var.v0]
+            LB = r_[LB, var.vl]
+            UB = r_[UB, var.vu]
 
         return x0, LB, UB
 
@@ -550,7 +519,7 @@ class Solver(object):
         Va = self.om.get_var("Va")
         va_refs = [b.v_angle_guess * pi / 180.0 for b in buses
                    if b.type == REFERENCE]
-        x0 = matrix((LB + UB) / 2.0)
+        x0 = (LB + UB) / 2.0
         x0[Va.i1:Va.iN + 1] = va_refs[0] # Angles set to first reference angle.
         # TODO: PWL initial points.
         return x0
@@ -562,28 +531,23 @@ class Solver(object):
 class DCOPFSolver(Solver):
     """ Defines a solver for DC optimal power flow.
 
-        References:
-            Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell, v4.0b1,
-            http://www.pserc.cornell.edu/matpower/, December 2009
+        Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell, v4.0b1,
+        http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
-    def __init__(self, om, cvxopt=True, solver=None):
+    def __init__(self, om, opts=None):
         """ Initialises a new DCOPFSolver instance.
         """
         super(DCOPFSolver, self).__init__(om)
 
-        # Use a solver from CVXOPT.
-        self.cvxopt = cvxopt
-
-        # Specify an alternative solver ("mosek" (or "glpk" for linear
-        # formulation)). Specify None to use the CVXOPT solver.
-        self.solver = solver
-
         # User-defined costs.
-        self.N = spmatrix([], [], [], (0, self.om.var_N))
-        self.H = spmatrix([], [], [], (0, 0))
-        self.Cw = matrix(0.0, (0, 0))
-        self.fparm = matrix(0.0, (0, 0))
+        self.N = csr_matrix((0, self.om.var_N))
+        self.H = csr_matrix((0, 0))
+        self.Cw = zeros((0, 0))
+        self.fparm = zeros((0, 0))
+
+        # Solver options (See pdipm.py for futher details).
+        self.opts = {} if opts is None else opts
 
 
     def solve(self):
@@ -618,9 +582,9 @@ class DCOPFSolver(Solver):
         x0 = self._initial_interior_point(buses, LB, UB)
 
         # Call the quadratic/linear solver.
-        solution = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0)
+        s = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0, self.opts)
 
-        return solution
+        return s
 
 
     def _pwl_costs(self, ny, nxyz):
@@ -628,15 +592,15 @@ class DCOPFSolver(Solver):
         """
         any_pwl = int(ny > 0)
         if any_pwl:
-            Npwl = spmatrix(1.0, )
+            Npwl = csr_matrix((ones(ny), ()))
             Hpwl = 0
             Cpwl = 1
-            fparm_pwl = matrix([1, 0, 0, 1])
+            fparm_pwl = array([1, 0, 0, 1])
         else:
-            Npwl = spmatrix([], [], [], (0, nxyz))
-            Hpwl = spmatrix([], [], [], (0, 0))
-            Cpwl = matrix(0.0, (0, 1))
-            fparm_pwl = matrix(0.0, (0, 4))
+            Npwl = csr_matrix((0, nxyz))
+            Hpwl = csr_matrix((0, 0))
+            Cpwl = array([])
+            fparm_pwl = zeros(4)
 
         return Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl
 
@@ -645,31 +609,32 @@ class DCOPFSolver(Solver):
         """ Returns the quadratic cost components of the objective function.
         """
         npol = len(ipol)
+        rnpol = range(npol)
         gpol = [g for g in generators if g.pcost_model == POLYNOMIAL]
 
         if [g for g in gpol if len(g.p_cost) > 3]:
             logger.error("Order of polynomial cost greater than quadratic.")
 
-        iqdr = matrix([i for i, g in enumerate(generators)
-                       if g.pcost_model == POLYNOMIAL and len(g.p_cost) == 3])
-        ilin = matrix([i for i, g in enumerate(generators)
-                       if g.pcost_model == POLYNOMIAL and len(g.p_cost) == 2])
+        iqdr = [i for i, g in enumerate(generators)
+                if g.pcost_model == POLYNOMIAL and len(g.p_cost) == 3]
+        ilin = [i for i, g in enumerate(generators)
+                if g.pcost_model == POLYNOMIAL and len(g.p_cost) == 2]
 
-        polycf = matrix(0.0, (npol, 3))
+        polycf = zeros((npol, 3))
         if len(iqdr) > 0:
-            polycf[iqdr, :] = matrix([list(g.p_cost)
-                                      for g in generators]).T[iqdr, :]
+            polycf[iqdr, :] = array([list(g.p_cost)
+                                     for g in generators]).T[iqdr, :]
 
-        polycf[ilin, 1:] = matrix([list(g.p_cost[:2])
-                                    for g in generators]).T[ilin, :]
+        polycf[ilin, 1:] = array([list(g.p_cost[:2])
+                                  for g in generators]).T[ilin, :]
 
         # Convert to per-unit.
-        polycf *= spdiag([base_mva**2, base_mva, 1])
+        polycf *= diag([base_mva**2, base_mva, 1])
         Pg = self.om.get_var("Pg")
-        Npol = spmatrix(1.0, range(npol), Pg.i1 + ipol, (npol, nxyz))
-        Hpol = spmatrix(2 * polycf[:, 0], range(npol), range(npol))
+        Npol = csr_matrix((ones(npol), (rnpol, Pg.i1 + ipol)), (npol, nxyz))
+        Hpol = csr_matrix((2 * polycf[:, 0], (rnpol, rnpol)), (npol, npol))
         Cpol = polycf[:, 1]
-        fparm_pol = matrix(1.0, (npol, 1)) * matrix([1, 0, 0, 1]).T
+        fparm_pol = ones(npol) * array([1, 0, 0, 1]).T
 
         return Npol, Hpol, Cpol, fparm_pol, polycf, npol
 
@@ -677,12 +642,12 @@ class DCOPFSolver(Solver):
     def _combine_costs(self, Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
                        Npol, Hpol, Cpol, fparm_pol, npol,
                        N=None, H=None, Cw=None, fparm=None, nw=0):
-        NN = sparse([Npwl, Npol])#, N])
+        NN = vstack([Npwl, Npol])#, N])
 
-        HHw = sparse([
-            sparse([Hpwl, spmatrix([], [], [], (npol, any_pwl))]).T,
-            sparse([spmatrix([], [], [], (any_pwl, npol)), Hpol]).T
-        ]).T
+        HHw = vstack([
+            hstack([Hpwl, csr_matrix((npol, any_pwl))]),
+            hstack([csr_matrix((any_pwl, npol)), Hpol])
+        ])
 
 #        HHw = sparse([
 #            sparse([Hpwl, spmatrix([], [], [], (any_pwl, npol + nw))]).T,
@@ -692,8 +657,8 @@ class DCOPFSolver(Solver):
 #            sparse([spmatrix([], [], [], (nw, any_pwl + npol)), H]).T
 #        ]).T
 
-        CCw = matrix([Cpwl, Cpol])#, Cw])
-        ffparm = matrix([fparm_pwl, fparm_pol])#, fparm])
+        CCw = r_[Cpwl, Cpol]#, Cw]
+        ffparm = r_[fparm_pwl, fparm_pol]#, fparm]
 
         return NN, HHw, CCw, ffparm
 
@@ -703,7 +668,7 @@ class DCOPFSolver(Solver):
         """ Transforms quadratic coefficients for w into coefficients for X.
         """
         nnw = any_pwl + npol + nw
-        M = spmatrix(ffparm[:, 3], range(nnw), range(nnw))
+        M = csr_matrix((ffparm[:, 3], (range(nnw), range(nnw))))
         MR = M * ffparm[:, 2]
         HMR = HHw * MR
         MN = M * NN
@@ -715,21 +680,17 @@ class DCOPFSolver(Solver):
         return HH, CC, C0
 
 
-    def _run_opf(self, P, q, G, h, A, b, LB, UB, x0):
+    def _run_opf(self, P, q, G, h, A, b, LB, UB, x0, opts):
         """ Solves the either quadratic or linear program.
         """
-        AA = sparse([A, G]) # Combined equality and inequality constraints.
-        bb = matrix([b, h])
-        N = A.size[0]
-#            if solvers.options.has_key("show_progress"):
-#                opt = {"verbose": solvers.options["show_progress"]}
-#            else:
-#                opt = {"verbose": False}
+        AA = vstack([A, G]) # Combined equality and inequality constraints.
+        bb = r_[b, h]
+        N = A.shape[0]
 
         if len(P) > 0:
-            solution = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, opt)
+            solution = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, opts)
         else:
-            solution = pdipm_qp(None, q, AA, bb, LB, UB, x0, N)
+            solution = pdipm_qp(None, q, AA, bb, LB, UB, x0, N, opts)
 
         return solution
 
@@ -741,7 +702,7 @@ class PDIPMSolver(Solver):
     """ Solves AC optimal power flow using a primal-dual interior point method.
     """
 
-    def __init__(self, om, flow_lim="S", opt=None):
+    def __init__(self, om, flow_lim=SFLOW, opts=None):
         """ Initialises a new PDIPMSolver instance.
         """
         super(PDIPMSolver, self).__init__(om)
@@ -750,14 +711,14 @@ class PDIPMSolver(Solver):
         self.flow_lim = flow_lim
 
         # Options for the PDIPM.
-        self.opt = {} if opt is None else opt
+        self.opts = {} if opts is None else opts
 
 
     def _ref_bus_angle_constraint(self, buses, Va, xmin, xmax):
         """ Adds a constraint on the reference bus angles.
         """
-        refs = matrix([i for i, v in enumerate(buses) if v.type == REFERENCE])
-        Varefs = matrix([b.v_angle_guess for b in buses if b.type ==REFERENCE])
+        refs = [bus.i for bus in buses if bus.type == REFERENCE]
+        Varefs = array([b.v_angle_guess for b in buses if b.type == REFERENCE])
 
         xmin[Va.i1 - 1 + refs] = Varefs
         xmax[Va.iN - 1 + refs] = Varefs
@@ -766,11 +727,12 @@ class PDIPMSolver(Solver):
 
 
     def solve(self):
-        j = 0 + 1j
+        """ Solves AC optimal power flow.
+        """
         case = self.om.case
         base_mva = case.base_mva
 
-        # TODO: Find explanation for this value.
+        # TODO: Find an explanation for this value.
         self.opt["cost_mult"] = 1e-4
 
         # Unpack the OPF model.
@@ -812,7 +774,7 @@ class PDIPMSolver(Solver):
             #------------------------------------------------------------------
 
             # Polynomial cost of P and Q.
-            xx = matrix([p_gen, q_gen]) * base_mva
+            xx = r_[p_gen, q_gen] * base_mva
             if len(ipol) > 0:
                 f = sum([g.total_cost(xx[i]) for i,g in enumerate(gn)])
             else:
@@ -821,11 +783,11 @@ class PDIPMSolver(Solver):
             # Piecewise linear cost of P and Q.
             if ny:
                 y = self.om.get_var("y")
-                ccost = spmatrix(matrix(1.0, (1, ny)), range(y.i1, i.iN + 1),
-                                 matrix(1.0, (1, ny)), (1, nxyz))
+                ccost = csr_matrix((ones(ny), (range(y.i1, i.iN + 1),
+                                 ones(1, ny))), (1, nxyz))
                 f += ccost * x
             else:
-                ccost = matrix(0.0, (1, nxyz))
+                ccost = zeros(nxyz)
 
             # TODO: Generalised cost term.
 
@@ -833,17 +795,17 @@ class PDIPMSolver(Solver):
             #  Evaluate cost gradient.
             #------------------------------------------------------------------
 
-            iPg = matrix(range(Pg.i1, Pg.iN + 1))
-            iQg = matrix(range(Qg.i1, Qg.iN + 1))
+            iPg = array(range(Pg.i1, Pg.iN + 1))
+            iQg = array(range(Qg.i1, Qg.iN + 1))
 
             # Polynomial cost of P and Q.
-            df_dPgQg = matrix(0.0, (2 * ng, 1))        # w.r.t p.u. Pg and Qg
+            df_dPgQg = zeros(2 * ng)        # w.r.t p.u. Pg and Qg
 #            df_dPgQg[ipol] = matrix([g.poly_cost(xx[i], 1) for g in gpol])
             for i, g in enumerate(gn):
                 der = polyder(list(g.p_cost))
                 df_dPgQg[i] = polyval(der, xx[i]) * base_mva
 
-            df = matrix(0.0, (nxyz, 1))
+            df = zeros(nxyz, 1)
             df[iPg] = df_dPgQg[:ng]
             df[iQg] = df_dPgQg[ng:ng + ng]
 
@@ -872,51 +834,51 @@ class PDIPMSolver(Solver):
                 g.q = Qgen[i] * base_mva # reactive generation in MVAr
 
             # Rebuild the net complex bus power injection vector in p.u.
-            Sbus = case.Sbus
+            Sbus = case.getSbus(bs)
 
             Vang = x[Va.i1:Va.iN + 1]
             Vmag = x[Vm.i1:Vm.iN + 1]
-            V = multiply(Vmag, exp(j * Vang))
+            V = Vmag * exp(1j * Vang)
 
             # Evaluate the power flow equations.
-            mis = multiply(V, conj(Ybus * V)) - Sbus
+            mis = V * conj(Ybus * V) - Sbus
 
             #------------------------------------------------------------------
             #  Evaluate constraint function values.
             #------------------------------------------------------------------
 
             # Equality constraints (power flow).
-            h = matrix([mis.real(),  # active power mismatch for all buses
-                        mis.imag()]) # reactive power mismatch for all buses
+            h = r_[mis.real,  # active power mismatch for all buses
+                   mis.imag]  # reactive power mismatch for all buses
 
             # Inequality constraints (branch flow limits).
-            flow_max = matrix([(l.rate_a / base_mva)**2 for l in ln])
+            flow_max = array([(l.rate_a / base_mva)**2 for l in ln])
             # FIXME: There must be a more elegant method for this.
             for i, v in enumerate(flow_max):
                 if v == 0.0:
-                    flow_max[i] = INF
+                    flow_max[i] = Inf
 
-            if self.flow_lim == "I":
+            if self.flow_lim == IFLOW:
                 If = Yf * V
                 It = Yt * V
                 # Branch current limits.
-                g = matrix([(multiply(If, conj(If)) - flow_max),
-                            (multiply(If, conj(It)) - flow_max)])
+                g = r_[(If * conj(If)) - flow_max,
+                       (If * conj(It)) - flow_max]
             else:
-                i_fbus = matrix([bs.index(e.from_bus) for e in ln])
-                i_tbus = matrix([bs.index(e.to_bus) for e in ln])
+                i_fbus = [e.from_bus.i for e in ln]
+                i_tbus = [e.to_bus.i for e in ln]
                 # Complex power injected at "from" bus (p.u.).
-                Sf = multiply(V[i_fbus], conj(Yf * V))
+                Sf = V[i_fbus] * conj(Yf * V)
                 # Complex power injected at "to" bus (p.u.).
-                St = multiply(V[i_tbus], conj(Yt * V))
-                if self.flow_lim == "P": # active power limit, P (Pan Wei)
+                St = V[i_tbus] * conj(Yt * V)
+                if self.flow_lim == PFLOW: # active power limit, P (Pan Wei)
                     # Branch real power limits.
-                    g = matrix([Sf.real()**2 - flow_max,
-                                St.real()**2 - flow_max])
-                elif self.flow_lim == "S": # apparent power limit, |S|
+                    g = r_[Sf.real()**2 - flow_max,
+                           St.real()**2 - flow_max]
+                elif self.flow_lim == SFLOW: # apparent power limit, |S|
                     # Branch apparent power limits.
-                    g = matrix([multiply(Sf, conj(Sf)) - flow_max,
-                                multiply(St, conj(St)) - flow_max]).real()
+                    g = r_[(Sf * conj(Sf)) - flow_max,
+                           (St * conj(St)) - flow_max].real
                 else:
                     raise ValueError
 
@@ -924,42 +886,41 @@ class PDIPMSolver(Solver):
             #  Evaluate partials of constraints.
             #------------------------------------------------------------------
 
-            iVa = matrix(range(Va.i1, Va.iN + 1))
-            iVm = matrix(range(Vm.i1, Vm.iN + 1))
-            iPg = matrix(range(Pg.i1, Pg.iN + 1))
-            iQg = matrix(range(Qg.i1, Qg.iN + 1))
-            iVaVmPgQg = matrix([iVa, iVm, iPg, iQg]).T
+            iVa = range(Va.i1, Va.iN + 1)
+            iVm = range(Vm.i1, Vm.iN + 1)
+            iPg = range(Pg.i1, Pg.iN + 1)
+            iQg = range(Qg.i1, Qg.iN + 1)
+            iVaVmPgQg = r_[iVa, iVm, iPg, iQg].T
 
             # Compute partials of injected bus powers.
             dSbus_dVm, dSbus_dVa = case.dSbus_dV(Ybus, V)
 
-            i_gbus = matrix([bs.index(gen.bus) for gen in gn])
-            neg_Cg = spmatrix(-1.0, i_gbus, range(ng), (nb, ng))
+            i_gbus = [gen.bus.i for gen in gn]
+            neg_Cg = csr_matrix((-ones(ng), (i_gbus, range(ng))), (nb, ng))
 
             # Transposed Jacobian of the power balance equality constraints.
-            dh = spmatrix([], [], [], (nxyz, 2 * nb))
+            dh = csr_matrix((nxyz, 2 * nb))
 
-            dh[iVaVmPgQg, :] = sparse([
-                [dSbus_dVa.real(), dSbus_dVa.imag()],
-                [dSbus_dVm.real(), dSbus_dVm.imag()],
-                [neg_Cg, spmatrix([], [], [], (nb, ng))],
-                [spmatrix([], [], [], (nb, ng)), neg_Cg]
+            blank = csr_matrix((nb, ng))
+            dh[iVaVmPgQg, :] = vstack([
+                hstack([dSbus_dVa.real, dSbus_dVm.real, neg_Cg, blank]),
+                hstack([dSbus_dVa.imag, dSbus_dVm.imag, blank, neg_Cg])
             ]).T
 
             # Compute partials of flows w.r.t V.
-            if self.flow_lim == "I":
+            if self.flow_lim == IFLOW:
                 dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
                     case.dIbr_dV(Yf, Yt, V)
             else:
                 dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
                     case.dSbr_dV(Yf, Yt, V, bs, ln)
-            if self.flow_lim == "P":
-                dFf_dVa = dFf_dVa.real()
-                dFf_dVm = dFf_dVm.real()
-                dFt_dVa = dFt_dVa.real()
-                dFt_dVm = dFt_dVm.real()
-                Ff = Ff.real()
-                Ft = Ft.real()
+            if self.flow_lim == PFLOW:
+                dFf_dVa = dFf_dVa.real
+                dFf_dVm = dFf_dVm.real
+                dFt_dVa = dFt_dVa.real
+                dFt_dVm = dFt_dVm.real
+                Ff = Ff.real
+                Ft = Ft.real
 
             # Squared magnitude of flow (complex power, current or real power).
             df_dVa, df_dVm, dt_dVa, dt_dVm = \
@@ -967,9 +928,11 @@ class PDIPMSolver(Solver):
 
             # Construct Jacobian of inequality constraints (branch limits) and
             # transpose it.
-            dg = spmatrix([], [], [], (nxyz, 2 * nl))
-            dg[matrix([iVa, iVm]).T, :] = sparse([[df_dVa, dt_dVa],
-                                                  [df_dVm, dt_dVm]]).T
+            dg = csr_matrix((nxyz, 2 * nl))
+            dg[r_[iVa, iVm].T, :] = vstack([
+                hstack([df_dVa, df_dVm]),
+                hstack([dt_dVa, dt_dVm])
+            ]).T
 
             return g, h, dg, dh
 
@@ -986,15 +949,15 @@ class PDIPMSolver(Solver):
 
             Vang = x[Va.i1:Va.iN + 1]
             Vmag = x[Vm.i1:Vm.iN + 1]
-            V = mul(Vmag, exp(j * Vang))
+            V = Vmag * exp(1j * Vang)
             nxtra = nxyz - 2 * nb
 
             #------------------------------------------------------------------
             #  Evaluate d2f.
             #------------------------------------------------------------------
 
-            d2f_dPg2 = spmatrix([], [], [], (ng, 1)) # w.r.t p.u. Pg
-            d2f_dQg2 = spmatrix([], [], [], (ng, 1)) # w.r.t p.u. Qg
+            d2f_dPg2 = csr_matrix((ng, 1)) # w.r.t p.u. Pg
+            d2f_dQg2 = csr_matrix((ng, 1)) # w.r.t p.u. Qg
 #            d2f_dPg2[ipol] = matrix([g.poly_cost(Pg[i] * base_mva, 2)
 #                                     for i, g in enumerate(gpol)])
             for i, g in enumerate(gn):
@@ -1008,13 +971,13 @@ class PDIPMSolver(Solver):
                     der = polyder(list(g.q_cost), 2)
                     d2f_dQg2[i] = polyval(der, Qgen[i]) * base_mva
 
-            i = matrix([matrix(range(Pg.i1, Pg.iN + 1)),
-                        matrix(range(Qg.i1, Qg.iN + 1))])
-            d2f = spmatrix(matrix([d2f_dPg2, d2f_dQg2]), i, i, (nxyz, nxyz))
+            i = r_[array(range(Pg.i1, Pg.iN + 1)),
+                   array(range(Qg.i1, Qg.iN + 1))]
+            d2f = csr_matrix(r_[d2f_dPg2, d2f_dQg2], i, i, (nxyz, nxyz))
 
             # TODO: Generalised cost model.
 
-            d2f *= self.opt["cost_mult"]
+            d2f *= self.opts["cost_mult"]
 
             #------------------------------------------------------------------
             #  Evaluate Hessian of power balance constraints.
@@ -1026,14 +989,17 @@ class PDIPMSolver(Solver):
             Hpaa, Hpav, Hpva, Hpvv = case.d2Sbus_dV2(Ybus, V, lamP)
             Hqaa, Hqav, Hqva, Hqvv = case.d2Sbus_dV2(Ybus, V, lamQ)
 
-            d2H = sparse([
-                [sparse([[Hpaa.real(), Hpva.real()],
-                         [Hpav.real(), Hpvv.real()]]) + \
-                 sparse([[Hqaa.imag(), Hqva.imag()],
-                         [Hqav.imag(), Hqvv.imag()]]),
-                 spmatrix([], [], [], (nxtra, 2 * nb))],
-                [spmatrix([], [], [], (2 * nb, nxtra)),
-                 spmatrix([], [], [], (nxtra, nxtra))]
+            d2H = vstack([
+                hstack([
+                    vstack([hstack([Hpaa, Hpav]),
+                            hstack([Hpva, Hpvv])]).real +
+                    vstack([hstack([Hqaa, Hqav]),
+                            hstack([Hpva, Hpvv])]).imag,
+                    csr_matrix((2 * nb, nxtra))]),
+                hstack([
+                    csr_matrix((nxtra, 2 * nb)),
+                    csr_matrix((nxtra, nxtra))
+                ])
             ])
 
             #------------------------------------------------------------------
@@ -1051,21 +1017,21 @@ class PDIPMSolver(Solver):
                 Gtaa, Gtav, Gtva, Gtvv = \
                     case.d2AIbr_dV2(dIt_dVa, dIt_dVm, It, Yt, V, muT)
             else:
-                f = matrix([bs.index(e.from_bus) for e in ln])
-                t = matrix([bs.index(e.to_bus) for e in ln])
+                f = [e.from_bus.i for e in ln]
+                t = [e.to_bus.i for e in ln]
                 # Line-bus connection matrices.
-                Cf = spmatrix(matrix(1.0, (nl, 1)), range(nl), f, (nl, nb))
-                Ct = spmatrix(matrix(1.0, (nl, 1)), range(nl), t, (nl, nb))
+                Cf = csr_matrix((ones(nl), (range(nl), f)), (nl, nb))
+                Ct = csr_matrix((ones(nl), (range(nl), t)), (nl, nb))
                 dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St = \
                     case.dSbr_dV(Yf, Yt, V)
-                if self.flow_lim == "P":
+                if self.flow_lim == PFLOW:
                     Gfaa, Gfav, Gfva, Gfvv = \
                         case.d2ASbr_dV2(dSf_dVa.real(), dSf_dVm.real(),
                                         Sf.real(), Cf, Yf, V, muF)
                     Gtaa, Gtav, Gtva, Gtvv = \
                         case.d2ASbr_dV2(dSt_dVa.real(), dSt_dVm.real(),
                                         St.real(), Ct, Yt, V, muT)
-                elif self.flow_lim == "S":
+                elif self.flow_lim == SFLOW:
                     Gfaa, Gfav, Gfva, Gfvv = \
                         case.d2ASbr_dV2(dSf_dVa, dSf_dVm, Sf, Cf, Yf, V, muF)
                     Gtaa, Gtav, Gtva, Gtvv = \
@@ -1073,39 +1039,27 @@ class PDIPMSolver(Solver):
                 else:
                     raise ValueError
 
-#            Gf = sparse([[Gfaa, Gfva], [Gfav, Gfvv]])
-#            Gt = sparse([[Gtaa, Gtva], [Gtav, Gtvv]])
-#            d2G1 = sparse([[Gf + Gt],
-#                           [spmatrix([], [], [], (2 * nb, nxtra))]])
-#            d2G2 = spmatrix([], [], [], (nxtra, 2 * nb + nxtra))
-#            d2G = sparse([d2G1, d2G2])
-
-            d2G = sparse([
-                [sparse([[Gfaa, Gfva], [Gfav, Gfvv]]) + \
-                 sparse([[Gtaa, Gtva], [Gtav, Gtvv]]),
-                 spmatrix([], [], [], (nxtra, 2 * nb))],
-                [spmatrix([], [], [], (2 * nb, nxtra)),
-                 spmatrix([], [], [], (nxtra, nxtra))]
+            d2G = vstack([
+                hstack([
+                    vstack([hstack([Gfaa, Gfav]),
+                            hstack([Gfva, Gfvv])]) +
+                    vstack([hstack([Gtaa, Gtav]),
+                            hstack([Gtva, Gtvv])]),
+                    csr_matrix((2 * nb, nxtra))
+                ]),
+                hstack([
+                    csr_matrix((nxtra, 2 * nb)),
+                    csr_matrix((nxtra, nxtra))
+                ])
             ])
 
             return d2f + d2H + d2G
 
         # Solve using primal-dual interior point method.
 #        x, _, info, output, lmbda = \
-        solution = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u,
-                         self.opt)
+        s = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u, self.opts)
 
-
-#        lmbda = matrix([-solution["lmbda"]["mu_l"] + solution["lmbda"]["mu_u"],
-#                         solution["lmbda"]["lower"],
-#                         solution["lmbda"]["upper"]])
-#
-#        solution = {"xout": x, "lmbdaout": lmbda,
-#                    "howout": howout, "success": success}
-#
-#        solution.update(output)
-
-        return solution
+        return s
 
 #------------------------------------------------------------------------------
 #  "OPFModel" class:
@@ -1182,8 +1136,8 @@ class OPFModel(object):
     def linear_constraints(self):
         """ Returns the linear constraints.
         """
-        A = spmatrix([], [], [], (self.lin_N, self.var_N), tc='d')
-        l = matrix(-INF, (self.lin_N, 1))
+        A = csr_matrix((self.lin_N, self.var_N), dtype=float64)
+        l = ones(self.lin_N) * -Inf
         u = -l
 
         for lin in self.lin_constraints:
@@ -1193,7 +1147,7 @@ class OPFModel(object):
                 iN = lin.iN             # ending row index
                 vsl = lin.vs            # var set list
                 kN = -1                 # initialize last col of Ak used
-                Ai = spmatrix([], [], [], (lin.N, self.var_N))
+                Ai = csr_matrix((lin.N, self.var_N))
                 for v in vsl:
                     var = self.get_var(v)
                     j1 = var.i1         # starting column in A
@@ -1302,19 +1256,19 @@ class Variable(Set):
 
         # Initial value of the variables. Zero by default.
         if v0 is None:
-            self.v0 = matrix(0.0, (N, 1))
+            self.v0 = zeros(N)
         else:
             self.v0 = v0
 
         # Lower bound on the variables. Unbounded below be default.
         if vl is None:
-            self.vl = matrix(-INF, (N, 1))
+            self.vl = ones(N) * -Inf
         else:
             self.vl = vl
 
         # Upper bound on the variables. Unbounded above by default.
         if vu is None:
-            self.vu = matrix(INF, (N, 1))
+            self.vu = ones(N) * Inf
         else:
             self.vu = vu
 
@@ -1332,8 +1286,8 @@ class LinearConstraint(Set):
         super(LinearConstraint, self).__init__(name, N)
 
         self.A = AorN
-        self.l = matrix(-INF, (N, 1)) if l is None else l
-        self.u = matrix( INF, (N, 1)) if u is None else u
+        self.l = ones(N) * -Inf if l is None else l
+        self.u = ones(N) *  Inf if u is None else u
 
         # Varsets.
         self.vs = [] if vs is None else vs
