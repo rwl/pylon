@@ -30,7 +30,7 @@ from numpy import \
     array, pi, diff, polyder, polyval, exp, conj, Inf, finfo, ones, r_, \
     float64, zeros, diag
 
-from scipy.sparse import csr_matrix, hstack, vstack
+from scipy.sparse import lil_matrix, csr_matrix, csc_matrix, hstack, vstack
 
 from util import Named
 from case import REFERENCE
@@ -285,7 +285,7 @@ class OPF(object):
         nb, ng = len(buses), len(generators)
         # Negative bus-generator incidence matrix.
         gen_bus = array([buses.index(g.bus) for g in generators])
-        neg_Cg = csr_matrix((-1.0, (gen_bus, range(ng))), (nb, ng))
+        neg_Cg = csr_matrix((-ones(ng), (gen_bus, range(ng))), (nb, ng))
 
         Amis = hstack([B, neg_Cg], format="csr")
 
@@ -344,14 +344,20 @@ class OPF(object):
                 uang[iangh] = array([b.ang_max * (pi / 180.0)
                                     for b in branches])[iangh]
             else:
-                Aang = csr_matrix((0, nb), dtype=float64)
-                lang = array([], dtype=float64)
-                uang = array([], dtype=float64)
+#                Aang = csr_matrix((0, nb), dtype=float64)
+#                lang = array([], dtype=float64)
+#                uang = array([], dtype=float64)
+                Aang = zeros((0, nb))
+                lang = array([])
+                uang = array([])
         else:
-            Aang = csr_matrix((0, nb), dtype=float64)
-            lang = array([], dtype=float64)
-            uang = array([], dtype=float64)
-            iang = array([], dtype=float64)
+#            Aang = csr_matrix((0, nb), dtype=float64)
+#            lang = array([], dtype=float64)
+#            uang = array([], dtype=float64)
+#            iang = array([], dtype=float64)
+            Aang = zeros((0, nb))
+            lang = array([])
+            uang = array([])
 
         return LinearConstraint("ang", Aang, lang, uang, ["Va"])
 
@@ -367,10 +373,13 @@ class OPF(object):
         gpwl = [g for g in generators if g.pcost_model == PW_LINEAR]
         nq = len([g for g in gpwl if g.qcost_model is not None])
 
+        if nq > 0:
+            raise NotImplementedError
+
         if self.dc:
-            pgbas = 0 # starting index within x for active sources
-            qgbas = None
-            ybas = ng # starting index within x for y variables
+            pgbas = 0        # starting index within x for active sources
+            qgbas = None     # index of 1st Qg column in Ay
+            ybas = ng        # starting index within x for y variables
         else:
             pgbas = 0
             qgbas = ng + 1 # index of 1st Qg column in Ay
@@ -378,46 +387,54 @@ class OPF(object):
 
         # Number of extra y variables.
         ny = len(gpwl) + nq
-        if ny > 0:
-            # Total number of cost points.
-            nc = len([co for gn in gpwl for co in gn.p_cost])
-            Ay = csr_matrix((nc - ny, ybas + ny -1))
-            by = zeros((0, 1))
 
-            k = 0
-            for i, g in enumerate(gpwl):
-                # Number of cost points: segments = ns-1
-                ns = len(g.p_cost)
+        if ny == 0:
+            return None, None
 
-                p = array([x / base_mva for x, c in g.p_cost])
-                c = array([c for x, c in g.p_cost])
-                # Slopes for Pg (or Qg).
-                m = array(diff(c.T) / diff(p.T))
+        # Total number of cost points.
+        nc = len([co for gn in gpwl for co in gn.p_cost])
+#        Ay = lil_matrix((nc - ny, ybas + ny))
+        # Fills rows and use transpose.
+        Ay = lil_matrix((ybas + ny, nc - ny))
+        by = array([])
 
-                if 0.0 in diff(p):
-                    logger.error("Bad Pcost data: %s" % p)
+        j = 0
+        k = 0
+        for i, g in enumerate(gpwl):
+            # Number of cost points: segments = ns-1
+            ns = len(g.p_cost)
 
-                b = m.T * p[:ns-1] - c[:ns-1] # rhs
-                by = r_[by, b]
+            p = array([x / base_mva for x, c in g.p_cost])
+            c = array([c for x, c in g.p_cost])
+            m = diff(c) / diff(p)        # Slopes for Pg (or Qg).
 
-                print "B:\n", by
+            if 0.0 in diff(p):
+                logger.error("Bad Pcost data: %s" % p)
 
-#                Ay[k:k + ns - 2, pgbas + i]
-                Ay[k:k + ns - 2, ybas + i] = m.T#matrix(-1., (ns, 1))
-                k += (ns - 1)
+            b = m * p[:ns-1] - c[:ns-1] # rhs
+            by = r_[by, b.T]
 
-                # FIXME: Repeat for Q cost.
+#            if i > ng:
+#                sidx = qgbas + (i-ng) - 1       # this was for a q cost
+#            else:
+#                sidx = pgbas + i - 1            # this was for a p cost
 
-            y = Variable("y", ny)
+            Ay[pgbas + i, k:k + ns - 1] = m
 
-            if self.dc:
-                ycon = LinearConstraint("ycon", Ay, None, by, ["Pg", "y"])
-            else:
-                ycon = LinearConstraint("ycon", Ay, None, by, ["Pg", "Qg","y"])
+            # FIXME: Repeat for Q costs.
+
+            # Now fill the y rows with -1's
+            Ay[ybas + j, k:k + ns - 1] = -ones(ns-1)
+
+            k += (ns - 1)
+            j += 1
+
+        y = Variable("y", ny)
+
+        if self.dc:
+            ycon = LinearConstraint("ycon", Ay.T, None, by, ["Pg", "y"])
         else:
-#            Ay = spmatrix([], [], [], (ybas + ny, 0))
-#            by = matrix()
-            y = ycon = None
+            ycon = LinearConstraint("ycon", Ay.T, None, by, ["Pg", "Qg","y"])
 
         return y, ycon
 
@@ -458,10 +475,10 @@ class Solver(object):
     def _dimension_data(self, buses, branches, generators):
         """ Returns the problem dimensions.
         """
-        ipol = self.ipol = [i for i, g in enumerate(generators)
-                            if g.pcost_model == POLYNOMIAL]
-        ipwl = self.ipwl = [i for i, g in enumerate(generators)
-                            if g.pcost_model == PW_LINEAR]
+        ipol = [i for i, g in enumerate(generators)
+                if g.pcost_model == POLYNOMIAL]
+        ipwl = [i for i, g in enumerate(generators)
+                if g.pcost_model == PW_LINEAR]
         nb = len(buses)
         nl = len(branches)
         # Number of general cost vars, w.
@@ -492,7 +509,7 @@ class Solver(object):
 
         Aeq = A[ieq, :]
         beq = u[ieq, :]
-        Aieq = hstack([A[ilt, :], -A[igt, :], A[ibx, :], -A[ibx, :]])
+        Aieq = vstack([A[ilt, :], -A[igt, :], A[ibx, :], -A[ibx, :]])
         bieq = r_[u[ilt], -l[igt], u[ibx], -l[ibx]]
 
         return Aeq, beq, Aieq, bieq
@@ -501,9 +518,9 @@ class Solver(object):
     def _var_bounds(self):
         """ Returns bounds on the optimisation variables.
         """
-        x0 = zeros((0, 1))
-        LB = zeros((0, 1))
-        UB = zeros((0, 1))
+        x0 = array([])
+        LB = array([])
+        UB = array([])
 
         for var in self.om.vars:
             x0 = r_[x0, var.v0]
@@ -513,15 +530,23 @@ class Solver(object):
         return x0, LB, UB
 
 
-    def _initial_interior_point(self, buses, LB, UB):
+    def _initial_interior_point(self, buses, generators, LB, UB, ny):
         """ Selects an interior initial point for interior point solver.
         """
         Va = self.om.get_var("Va")
         va_refs = [b.v_angle_guess * pi / 180.0 for b in buses
                    if b.type == REFERENCE]
         x0 = (LB + UB) / 2.0
+
         x0[Va.i1:Va.iN + 1] = va_refs[0] # Angles set to first reference angle.
-        # TODO: PWL initial points.
+
+        if ny > 0:
+            yvar = self.om.get_var("y")
+            # Largest y-value in CCV data
+            c = [y for g in generators for _,y in g.p_cost if
+                 g.pcost_model == PW_LINEAR]
+            x0[yvar.i1:yvar.iN + 1] = max(c) * 1.1
+
         return x0
 
 #------------------------------------------------------------------------------
@@ -541,8 +566,8 @@ class DCOPFSolver(Solver):
         super(DCOPFSolver, self).__init__(om)
 
         # User-defined costs.
-        self.N = csr_matrix((0, self.om.var_N))
-        self.H = csr_matrix((0, 0))
+        self.N = None#csr_matrix((0, self.om.var_N))
+        self.H = None#csr_matrix((0, 0))
         self.Cw = zeros((0, 0))
         self.fparm = zeros((0, 0))
 
@@ -579,7 +604,7 @@ class DCOPFSolver(Solver):
         _, LB, UB = self._var_bounds()
 
         # Select an interior initial point for interior point solver.
-        x0 = self._initial_interior_point(buses, LB, UB)
+        x0 = self._initial_interior_point(buses, generators, LB, UB, ny)
 
         # Call the quadratic/linear solver.
         s = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0, self.opts)
@@ -597,10 +622,10 @@ class DCOPFSolver(Solver):
             Cpwl = 1
             fparm_pwl = array([1, 0, 0, 1])
         else:
-            Npwl = csr_matrix((0, nxyz))
-            Hpwl = csr_matrix((0, 0))
+            Npwl = zeros((0, nxyz))
+            Hpwl = array([])
             Cpwl = array([])
-            fparm_pwl = zeros(4)
+            fparm_pwl = zeros((0, 4))
 
         return Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl
 
@@ -1136,7 +1161,7 @@ class OPFModel(object):
     def linear_constraints(self):
         """ Returns the linear constraints.
         """
-        A = csr_matrix((self.lin_N, self.var_N), dtype=float64)
+        A = lil_matrix((self.lin_N, self.var_N), dtype=float64)
         l = ones(self.lin_N) * -Inf
         u = -l
 
@@ -1147,7 +1172,7 @@ class OPFModel(object):
                 iN = lin.iN             # ending row index
                 vsl = lin.vs            # var set list
                 kN = -1                 # initialize last col of Ak used
-                Ai = csr_matrix((lin.N, self.var_N))
+                Ai = lil_matrix((lin.N, self.var_N))
                 for v in vsl:
                     var = self.get_var(v)
                     j1 = var.i1         # starting column in A
@@ -1160,14 +1185,14 @@ class OPFModel(object):
                 l[i1:iN + 1] = lin.l
                 u[i1:iN + 1] = lin.u
 
-        return A, l, u
+        return A.tocsr(), l, u
 
 
     def add_constraint(self, con):
         """ Adds a constraint to the model.
         """
         if isinstance(con, LinearConstraint):
-            N, M = con.A.size
+            N, M = con.A.shape
             if con.name in [c.name for c in self.lin_constraints]:
                 logger.error("Constraint set named '%s' already exists."
                              % con.name)
@@ -1281,7 +1306,7 @@ class LinearConstraint(Set):
     """
 
     def __init__(self, name, AorN, l=None, u=None, vs=None):
-        N, _ = AorN.size
+        N, _ = AorN.shape
 
         super(LinearConstraint, self).__init__(name, N)
 
@@ -1292,7 +1317,7 @@ class LinearConstraint(Set):
         # Varsets.
         self.vs = [] if vs is None else vs
 
-        if (self.l.size[0] != N) or (self.u.size[0] != N):
+        if (self.l.shape[0] != N) or (self.u.shape[0] != N):
             logger.error("Sizes of A, l and u must match.")
 
 #------------------------------------------------------------------------------
