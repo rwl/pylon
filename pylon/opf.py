@@ -28,7 +28,7 @@ import logging
 
 from numpy import \
     array, pi, diff, polyder, polyval, exp, conj, Inf, finfo, ones, r_, \
-    float64, zeros, diag
+    float64, zeros, diag, flatnonzero
 
 from scipy.sparse import lil_matrix, csr_matrix, csc_matrix, hstack, vstack
 
@@ -500,19 +500,26 @@ class Solver(object):
         A, l, u = om.linear_constraints() # l <= A*x <= u
 
         # Indexes for equality, greater than (unbounded above), less than
-        # (unbounded below) and doubly-bounded constraints.
-        ieq = [i for i, v in enumerate(abs(u - l)) if v < EPS]
-        igt = [i for i in range(len(l)) if u[i] >=  1e10 and l[i] > -1e10]
-        ilt = [i for i in range(len(l)) if l[i] <= -1e10 and u[i] <  1e10]
-        ibx = [i for i in range(len(l))
-               if (abs(u[i] - l[i]) > EPS) and (u[i] < 1e10) and (l[i] >-1e10)]
+        # (unbounded below) and doubly-bounded box constraints.
+        ieq = flatnonzero( abs(u - l) <= EPS )
+        igt = flatnonzero( (u >=  1e10) & (l > -1e10) )
+        ilt = flatnonzero( (l <= -1e10) & (u <  1e10) )
+        ibx = flatnonzero( (abs(u - l) > EPS) & (u < 1e10) & (l > -1e10) )
 
-        Aeq = A[ieq, :]
-        beq = u[ieq, :]
-        Aieq = vstack([A[ilt, :], -A[igt, :], A[ibx, :], -A[ibx, :]])
-        bieq = r_[u[ilt], -l[igt], u[ibx], -l[ibx]]
+        # Zero-sized sparse matrices not supported.  Assume equality
+        # constraints exist.
+        AA = A[ieq, :]
 
-        return Aeq, beq, Aieq, bieq
+        if len(ilt) > 0:
+            AA = vstack([AA, A[ilt, :]], "csr")
+        if len(igt) > 0:
+            AA = vstack([AA, -A[igt, :]], "csr")
+        if len(ibx) > 0:
+            AA = vstack([AA, A[ibx, :], -A[ibx, :]], "csr")
+
+        bb = r_[u[ieq, :], u[ilt], -l[igt], u[ibx], -l[ibx]]
+
+        return AA, bb
 
 
     def _var_bounds(self):
@@ -586,9 +593,9 @@ class DCOPFSolver(Solver):
                                                                 branches,
                                                                 generators)
         # Split the constraints in equality and inequality.
-        Aeq, beq, Aieq, bieq = self._split_constraints(self.om)
+        AA, bb = self._split_constraints(self.om)
         # Piece-wise linear components of the objective function.
-        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self._pwl_costs(ny, nxyz)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self._pwl_costs(ny, nxyz, ipwl)
         # Quadratic components of the objective function.
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
             self._quadratic_costs(generators, ipol, nxyz, base_mva)
@@ -607,20 +614,22 @@ class DCOPFSolver(Solver):
         x0 = self._initial_interior_point(buses, generators, LB, UB, ny)
 
         # Call the quadratic/linear solver.
-        s = self._run_opf(HH, CC, Aieq, bieq, Aeq, beq, LB, UB, x0, self.opts)
+        s = self._run_opf(HH, CC, AA, bb, LB, UB, x0, self.opts)
 
         return s
 
 
-    def _pwl_costs(self, ny, nxyz):
+    def _pwl_costs(self, ny, nxyz, ipwl):
         """ Returns the piece-wise linear components of the objective function.
         """
         any_pwl = int(ny > 0)
         if any_pwl:
-            Npwl = csr_matrix((ones(ny), ()))
+            # Sum of y vars.
+            y = self.om.get_var("y")
+            Npwl = csr_matrix((ones(ny), (zeros(ny), array(ipwl) + y.i1)))
             Hpwl = 0
             Cpwl = 1
-            fparm_pwl = array([1, 0, 0, 1])
+            fparm_pwl = array([[1, 0, 0, 1]])
         else:
             Npwl = zeros((0, nxyz))
             Hpwl = array([])
@@ -646,20 +655,24 @@ class DCOPFSolver(Solver):
                 if g.pcost_model == POLYNOMIAL and len(g.p_cost) == 2]
 
         polycf = zeros((npol, 3))
-        if len(iqdr) > 0:
-            polycf[iqdr, :] = array([list(g.p_cost)
-                                     for g in generators]).T[iqdr, :]
+        if npol > 0:
+            if len(iqdr) > 0:
+                polycf[iqdr, :] = array([list(g.p_cost)
+                                         for g in generators])[iqdr, :].T
+            if len(ilin) > 0:
+                polycf[ilin, 1:] = array([list(g.p_cost[:2])
+                                          for g in generators])[ilin, :].T
+            # Convert to per-unit.
+            polycf *= diag([base_mva**2, base_mva, 1])
 
-        polycf[ilin, 1:] = array([list(g.p_cost[:2])
-                                  for g in generators]).T[ilin, :]
-
-        # Convert to per-unit.
-        polycf *= diag([base_mva**2, base_mva, 1])
-        Pg = self.om.get_var("Pg")
-        Npol = csr_matrix((ones(npol), (rnpol, Pg.i1 + ipol)), (npol, nxyz))
-        Hpol = csr_matrix((2 * polycf[:, 0], (rnpol, rnpol)), (npol, npol))
-        Cpol = polycf[:, 1]
-        fparm_pol = ones(npol) * array([1, 0, 0, 1]).T
+            Pg = self.om.get_var("Pg")
+            Npol = csr_matrix((ones(npol), (rnpol, Pg.i1 + array(ipol))),
+                              (npol, nxyz))
+            Hpol = csr_matrix((2 * polycf[:, 0], (rnpol, rnpol)), (npol, npol))
+            Cpol = polycf[:, 1]
+            fparm_pol = ones(npol) * array([1, 0, 0, 1]).T
+        else:
+            Npol = Hpol = Cpol = fparm_pol = polycf = npol = None
 
         return Npol, Hpol, Cpol, fparm_pol, polycf, npol
 
@@ -667,12 +680,12 @@ class DCOPFSolver(Solver):
     def _combine_costs(self, Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
                        Npol, Hpol, Cpol, fparm_pol, npol,
                        N=None, H=None, Cw=None, fparm=None, nw=0):
-        NN = vstack([Npwl, Npol])#, N])
+        NN = vstack([Npwl, Npol], "csr")#, N])
 
         HHw = vstack([
             hstack([Hpwl, csr_matrix((npol, any_pwl))]),
             hstack([csr_matrix((any_pwl, npol)), Hpol])
-        ])
+        ], "csr")
 
 #        HHw = sparse([
 #            sparse([Hpwl, spmatrix([], [], [], (any_pwl, npol + nw))]).T,
@@ -708,8 +721,8 @@ class DCOPFSolver(Solver):
     def _run_opf(self, P, q, G, h, A, b, LB, UB, x0, opts):
         """ Solves the either quadratic or linear program.
         """
-        AA = vstack([A, G]) # Combined equality and inequality constraints.
-        bb = r_[b, h]
+#        AA = vstack([A, G], "csr") # Combined equality & inequality constraints
+#        bb = r_[b, h]
         N = A.shape[0]
 
         if len(P) > 0:
@@ -930,7 +943,7 @@ class PDIPMSolver(Solver):
             dh[iVaVmPgQg, :] = vstack([
                 hstack([dSbus_dVa.real, dSbus_dVm.real, neg_Cg, blank]),
                 hstack([dSbus_dVa.imag, dSbus_dVm.imag, blank, neg_Cg])
-            ]).T
+            ], "csr").T
 
             # Compute partials of flows w.r.t V.
             if self.flow_lim == IFLOW:
@@ -957,7 +970,7 @@ class PDIPMSolver(Solver):
             dg[r_[iVa, iVm].T, :] = vstack([
                 hstack([df_dVa, df_dVm]),
                 hstack([dt_dVa, dt_dVm])
-            ]).T
+            ], "csr").T
 
             return g, h, dg, dh
 
@@ -1025,7 +1038,7 @@ class PDIPMSolver(Solver):
                     csr_matrix((nxtra, 2 * nb)),
                     csr_matrix((nxtra, nxtra))
                 ])
-            ])
+        ], "csr")
 
             #------------------------------------------------------------------
             #  Evaluate Hessian of flow constraints.
@@ -1076,7 +1089,7 @@ class PDIPMSolver(Solver):
                     csr_matrix((nxtra, 2 * nb)),
                     csr_matrix((nxtra, nxtra))
                 ])
-            ])
+            ], "csr")
 
             return d2f + d2H + d2G
 
