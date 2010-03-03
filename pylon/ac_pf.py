@@ -163,9 +163,9 @@ class _ACPF(object):
     def _index_buses(self, buses):
         """ Set up indexing for updating v.
         """
-        refs = [bus.i for bus in buses if bus.type == REFERENCE]
-        pv = [bus.i for bus in buses if bus.type == PV]
-        pq = [bus.i for bus in buses if bus.type == PQ]
+        refs = [bus._i for bus in buses if bus.type == REFERENCE]
+        pv = [bus._i for bus in buses if bus.type == PV]
+        pq = [bus._i for bus in buses if bus.type == PQ]
         pvpq = pv + pq
 
         return refs, pq, pv, pvpq

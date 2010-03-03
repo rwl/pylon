@@ -103,7 +103,7 @@ class DCPF(object):
     def _get_reference_index(self, case):
         """ Returns the index of the reference bus.
         """
-        refs = [bus.i for bus in case.connected_buses if bus.type == REFERENCE]
+        refs = [bus._i for bus in case.connected_buses if bus.type == REFERENCE]
         if len(refs) == 1:
             return refs [0]
         else:
@@ -130,8 +130,8 @@ class DCPF(object):
         """
         buses = case.connected_buses
 
-        pv_idxs = [bus.i for bus in buses if bus.type == PV]
-        pq_idxs = [bus.i for bus in buses if bus.type == PQ]
+        pv_idxs = [bus._i for bus in buses if bus.type == PV]
+        pq_idxs = [bus._i for bus in buses if bus.type == PQ]
         pvpq_idxs = pv_idxs + pq_idxs
         pvpq_rows = [[i] for i in pvpq_idxs]
 
