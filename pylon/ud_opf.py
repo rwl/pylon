@@ -19,10 +19,9 @@
     dispatched at their minimum generation limits. PYLON includes the
     capability to run an optimal power flow combined with a unit decommitment
     for a single time period, which allows it to shut down these expensive
-    units and find a least cost commitment and dispatch.
+    units and find a least cost commitment and dispatch [1].
 
-    References:
-        Ray Zimmerman, "MATPOWER User's Manual", MATPOWER, PSERC Cornell,
+    [1] Ray Zimmerman, "MATPOWER User's Manual", MATPOWER, PSERC Cornell,
         version 3.2, http://www.pserc.cornell.edu/matpower/, September, 2007
 """
 
@@ -57,10 +56,9 @@ class UDOPF(object):
         each one of them shut down. It selects the least cost case as the
         starting point for the next stage, continuing until there are no more
         candidates to be shut down or no more improvement can be gained by
-        shutting something down.
+        shutting something down [2].
 
-        References:
-            Ray Zimmerman, "uopf.m", MATPOWER, PSERC Cornell, version 3.2,
+        [2] Ray Zimmerman, "uopf.m", MATPOWER, PSERC Cornell, version 3.2,
             http://www.pserc.cornell.edu/matpower/, March, 2006
     """
 
@@ -165,8 +163,8 @@ class UDOPF(object):
         reltol  = self.relative_tol
         feastol = self.feasibility_tol
 
-        solver = self.solver = ACOPF(case, self.dc, solver, progress, itermax,
-                                     abstol, reltol, feastol)
+        solver = self.solver = OPF(case, self.dc, solver, progress, itermax,
+                                   abstol, reltol, feastol)
 
         # Initial solve fo the OPF problem.
         solution = solver.solve()

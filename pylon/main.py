@@ -220,10 +220,10 @@ def main():
                 sys.exit(1)
         elif options.solver == "dcopf":
 #            solver = OPF(case, True)
-             pass
+            pass
         elif options.solver == "acopf":
 #            solver = OPF(case, False)
-             pass
+            pass
         elif options.solver == "udopf":
             solver = UDOPF(case)
         else:

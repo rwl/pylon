@@ -66,7 +66,7 @@ class Bus(Named):
         # Unique name.
         self.name = name
 
-        # Index of w.r.t. all buses.
+        # Bus index, managed at a case level.
         self.i = 0
 
         # Bus type: 'PQ', 'PV', 'ref' and 'isolated' (default: 'PQ')
@@ -128,17 +128,18 @@ class Branch(Named):
     """ Defines a case edge that links two Bus objects.
     """
 
-    def __init__(self, from_bus, to_bus, name=None, online=True, r=0.0,
+    def __init__(self, from_bus, to_bus, i=0, name=None, online=True, r=0.0,
             x=0.0, b=0.0, rate_a=999.0, rate_b=999.0, rate_c=999.0,
             ratio=1.0, phase_shift=0.0, ang_min=-360.0, ang_max=360.0):
         """ Initialises a new Branch instance.
         """
         # From/source/start bus.
         self.from_bus = from_bus
-#        self.from_bus_idx = 0
         # To/target/end bus.
         self.to_bus = to_bus
-#        self.to_bus_idx = 0
+
+        # Branch index, managed at a case level.
+        self.i = i
 
         # Unique name.
         self.name = name
@@ -284,8 +285,8 @@ class Case(Named, Serializable):
     def getSbus(self, buses=None):
         """ Net complex bus power injection vector in p.u.
         """
-        buses = self.buses if buses is None else buses
-        s = array([self.s_surplus(v) / self.base_mva for v in buses])
+        bs = self.buses if buses is None else buses
+        s = array([self.s_surplus(v) / self.base_mva for v in bs])
         return s
 
     Sbus = property(getSbus)
@@ -297,14 +298,23 @@ class Case(Named, Serializable):
         self.generators.sort(key=lambda gn: self.buses.index(gn.bus))
 
     #--------------------------------------------------------------------------
-    #  Update bus indexes:
+    #  Update indicies:
     #--------------------------------------------------------------------------
 
-    def index_buses(self):
-        """ Updates the indexes of all case buses.
+    def index_buses(self, buses=None):
+        """ Updates the indices of all case buses.
         """
-        for i, bus in enumerate(self.connected_buses):
-            bus.i = i
+        bs = self.connected_buses if buses is None else buses
+        for i, b in enumerate(bs):
+            b.i = i
+
+
+    def index_branches(self, branches=None):
+        """ Updates the indices for all brnaches.
+        """
+        ln = self.online_branches if branches is None else branches
+        for i, l in enumerate(ln):
+            l.i = i
 
     #--------------------------------------------------------------------------
     #  Bus injections:
@@ -345,11 +355,10 @@ class Case(Named, Serializable):
     def getYbus(self, buses=None, branches=None):
         """ Returns the bus and branch admittance matrices, Yf and Yt, such
             that Yf * V is the vector of complex branch currents injected at
-            each branch's "from" bus.
+            each branch's "from" bus [1].
 
-            References:
-                Ray Zimmerman, "makeYbus.m", MATPOWER, PSERC Cornell,
-                http://www.pserc.cornell.edu/matpower/, version 1.8, June 2007
+            [1] Ray Zimmerman, "makeYbus.m", MATPOWER, PSERC Cornell,
+                http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
         """
         buses = self.buses if buses is None else buses
         branches = self.branches if branches is None else branches
@@ -460,7 +469,7 @@ class Case(Named, Serializable):
 
     def makeBdc(self, buses=None, branches=None):
         """ Returns the sparse susceptance matrices and phase shift injection
-            vectors needed for a DC power flow.
+            vectors needed for a DC power flow [2].
 
             The bus real power injections are related to bus voltage angles by
                 P = Bbus * Va + Pbusinj
@@ -473,9 +482,9 @@ class Case(Named, Serializable):
             |    | = |          | * |     | + |       |
             | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
 
-            References:
-                Ray Zimmerman, "makeBdc.m", MATPOWER, PSERC Cornell,
-                http://www.pserc.cornell.edu/matpower/, version 1.10, June 2007
+
+            [2] Ray Zimmerman, "makeBdc.m", MATPOWER, PSERC Cornell,
+                http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
         """
         buses = self.connected_buses if buses is None else buses
         branches = self.online_branches if branches is None else branches
@@ -527,10 +536,10 @@ class Case(Named, Serializable):
     #--------------------------------------------------------------------------
 
     def dSbus_dV(self, Y, V):
-        """ Computes the partial derivative of power injection w.r.t. voltage.
+        """ Computes the partial derivative of power injection w.r.t.
+            voltage [3].
 
-            References:
-                Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 3.2,
+            [3] Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 4.0b1,
                 PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
         """
         ib = range(len(V))
@@ -552,10 +561,10 @@ class Case(Named, Serializable):
     #--------------------------------------------------------------------------
 
     def dIbr_dV(self, Yf, Yt, V):
-        """ Computes partial derivatives of branch currents w.r.t. voltage.
+        """ Computes partial derivatives of branch currents w.r.t. voltage [4].
 
-            Ray Zimmerman, "dIbr_dV.m", MATPOWER, version 4.0b1,
-            PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+            [4] Ray Zimmerman, "dIbr_dV.m", MATPOWER, version 4.0b1,
+                PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
         """
         i = range(len(V))
 

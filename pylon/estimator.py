@@ -17,7 +17,7 @@
 """ State estimation based on code by Rui Bo and James S. Thorp [1].
 
     [1] Ray Zimmerman and Rui Bo, "extras/se", MATPOWER, PSERC Cornell,
-    http://www.pserc.cornell.edu/matpower/, version 4.0b1, December 2009
+        http://www.pserc.cornell.edu/matpower/, version 4.0b1, December 2009
 """
 
 #------------------------------------------------------------------------------
