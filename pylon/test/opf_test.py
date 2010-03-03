@@ -296,26 +296,25 @@ class PWLDCOPFSolverTest(unittest.TestCase):
     def test_constraints(self):
         """ Test equality and inequality constraints.
         """
-        Aeq, beq, Aieq, bieq = self.solver._split_constraints(self.om)
+        AA, bb = self.solver._split_constraints(self.om)
 
-        self.assertEqual(Aeq.shape, (6, 9))
-        self.assertEqual(beq.shape, (6, 1))
-        self.assertEqual(Aieq.shape, (22, 9))
-        self.assertEqual(bieq.shape, (22, 1))
+        self.assertEqual(AA.shape, (130, 42))
+        self.assertEqual(bb.shape, (130,))
 
 
     def test_pwl_costs(self):
         """ Test piecewise linear costs.
         """
         b, l, g, _ = self.solver._unpack_model(self.om)
-        _, _, _, _, _, ny, nxyz = self.solver._dimension_data(b, l, g)
-        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
+        _, ipwl, _, _, _, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz,
+                                                                      ipwl)
 
-        self.assertEqual(any_pwl, 0)
-        self.assertEqual(Npwl.shape, (0, 9))
-        self.assertEqual(Hpwl.shape, (0, 0))
-        self.assertEqual(Cpwl.shape, (0, 1))
-        self.assertEqual(fparm_pwl.shape, (0, 4))
+        self.assertEqual(any_pwl, 1)
+        self.assertEqual(Npwl.shape, (1, 42))
+        self.assertEqual(Hpwl, 0)
+        self.assertEqual(Cpwl, 1)
+        self.assertEqual(fparm_pwl.shape, (1, 4))
 
 
     def test_poly_costs(self):
@@ -357,8 +356,9 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         """
         base_mva = self.om.case.base_mva
         b, l, g, _ = self.solver._unpack_model(self.om)
-        ipol, _, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
-        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
+        ipol, ipwl, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz,
+                                                                      ipwl)
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
             self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
         NN, HHw, CCw, ffparm = \
@@ -377,8 +377,9 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         """
         base_mva = self.om.case.base_mva
         b, l, g, _ = self.solver._unpack_model(self.om)
-        ipol, _, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
-        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz)
+        ipol, ipwl, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz,
+                                                                      ipwl)
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
             self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
         NN, HHw, CCw, ffparm = \
@@ -430,7 +431,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         self.assertEqual(x0.shape, (42,))
         self.assertEqual(x0[0], 0.0)
         self.assertEqual(x0[30], 0.4)
-        self.assertEqual(x0[41], 3.6432)
+        self.assertAlmostEqual(x0[41], 3643.2, 4)
 
 #------------------------------------------------------------------------------
 #  "OPFTest" class:
