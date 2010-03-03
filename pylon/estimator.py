@@ -14,25 +14,29 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" State estimation based on code by Rui Bo and James S. Thorp.
+""" State estimation based on code by Rui Bo and James S. Thorp [1].
 
-    References:
-        Ray Zimmerman and Rui Bo, "extras/se", MATPOWER, PSERC Cornell,
-        http://www.pserc.cornell.edu/matpower/, version 4.0b1, December 2009
+    [1] Ray Zimmerman and Rui Bo, "extras/se", MATPOWER, PSERC Cornell,
+    http://www.pserc.cornell.edu/matpower/, version 4.0b1, December 2009
 """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-import sys
 import logging
 
 from time import time
 
-from numpy import array, pi, angle, multiply, exp, linalg, conj
+from numpy import \
+    array, pi, angle, abs, ones, exp, linalg, conj, zeros, r_, Inf
 
-from case import REFERENCE, PV, PQ
+from scipy.sparse import \
+    csr_matrix, vstack, hstack
+
+from scipy.sparse.linalg import spsolve
+
+from case import PV, PQ
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -58,26 +62,6 @@ FLAT_START = "flat start"
 FROM_INPUT = "from input"
 
 #------------------------------------------------------------------------------
-#  "Measurement" class:
-#------------------------------------------------------------------------------
-
-class Measurement(object):
-    """ Defines a measurement at a bus or a branch.
-    """
-
-    def __init__(self, bus_or_line, type, value):
-        """ Initialises a new Measurement instance.
-        """
-        # Bus or branch component at which the measure was made.
-        self.b_l = bus_or_line
-
-        # Type of value measured.
-        self.type = type
-
-        # Measurement value.
-        self.value = value
-
-#------------------------------------------------------------------------------
 #  "StateEstimator" class:
 #------------------------------------------------------------------------------
 
@@ -99,7 +83,7 @@ class StateEstimator(object):
         self.measurements = measurements
 
         # Measurement variances.
-        self.sigma = matrix(0.0, (8, 1)) if sigma is None else sigma
+        self.sigma = zeros(8) if sigma is None else sigma
 
         # Initial guess for voltage magnitude vector.
         self.v_mag_guess = v_mag_guess
@@ -125,11 +109,15 @@ class StateEstimator(object):
         buses = self.case.connected_buses
         branches = case.online_branches
         generators = case.online_generators
+        meas = self.measurements
+        # Update indices.
+        self.case.index_buses()
+        self.case.index_branches()
 
         # Index buses.
 #        ref = [buses.index(b) for b in buses if b.type == REFERENCE]
-        pv  = matrix([buses.index(b) for b in buses if b.type == PV])
-        pq  = matrix([buses.index(b) for b in buses if b.type == PQ])
+        pv  = [b.i for b in buses if b.type == PV]
+        pq  = [b.i for b in buses if b.type == PQ]
 
         # Build admittance matrices.
         Ybus, Yf, Yt = case.Y
@@ -144,34 +132,26 @@ class StateEstimator(object):
         converged = False
         i = 0
         V = V0
-        Va = matrix(angle(V0))
+        Va = angle(V0)
         Vm = abs(V0)
 
         nb = Ybus.size[0]
-        f = matrix([buses.index(b.from_bus) for b in branches])
-        t = matrix([buses.index(b.to_bus)   for b in branches])
-        nonref = matrix([pv, pq])
+        f = [b.from_bus.i for b in branches]
+        t = [b.to_bus.i for b in branches]
+        nonref = pv + pq
 
         # Form measurement vector.
-        z = matrix([m.value for m in self.measurements])
+        z = array([m.value for m in meas])
 
         # Form measurement index vectors.
-        idx_zPf = matrix([branches.index(m.b_l) for m in self.measurements
-                          if m.type == PF])
-        idx_zPt = matrix([branches.index(m.b_l) for m in self.measurements
-                          if m.type == PT])
-        idx_zQf = matrix([branches.index(m.b_l) for m in self.measurements
-                          if m.type == QF])
-        idx_zQt = matrix([branches.index(m.b_l) for m in self.measurements
-                          if m.type == QT])
-        idx_zPg = matrix([buses.index(m.b_l) for m in self.measurements
-                          if m.type == PG])
-        idx_zQg = matrix([buses.index(m.b_l) for m in self.measurements
-                          if m.type == QG])
-        idx_zVm = matrix([buses.index(m.b_l) for m in self.measurements
-                          if m.type == VM])
-        idx_zVa = matrix([buses.index(m.b_l) for m in self.measurements
-                          if m.type == VA])
+        idx_zPf = [m.b_or_l.i for m in meas if m.type == PF]
+        idx_zPt = [m.b_or_l.i for m in meas if m.type == PT]
+        idx_zQf = [m.b_or_l.i for m in meas if m.type == QF]
+        idx_zQt = [m.b_or_l.i for m in meas if m.type == QT]
+        idx_zPg = [m.b_or_l.i for m in meas if m.type == PG]
+        idx_zQg = [m.b_or_l.i for m in meas if m.type == QG]
+        idx_zVm = [m.b_or_l.i for m in meas if m.type == VM]
+        idx_zVa = [m.b_or_l.i for m in meas if m.type == VA]
 
         # Create inverse of covariance matrix with all measurements.
 #        full_scale = 30
@@ -187,98 +167,101 @@ class StateEstimator(object):
 #        ] ./ 3
 
         # Get R inverse matrix.
-        sigma_vector = matrix([
-            self.sigma[0] * matrix(1.0, (idx_zPf.size[0], 1)),
-            self.sigma[1] * matrix(1.0, (idx_zPt.size[0], 1)),
-            self.sigma[2] * matrix(1.0, (idx_zQf.size[0], 1)),
-            self.sigma[3] * matrix(1.0, (idx_zQt.size[0], 1)),
-            self.sigma[4] * matrix(1.0, (idx_zPg.size[0], 1)),
-            self.sigma[5] * matrix(1.0, (idx_zQg.size[0], 1)),
-            self.sigma[6] * matrix(1.0, (idx_zVm.size[0], 1)),
-            self.sigma[7] * matrix(1.0, (idx_zVa.size[0], 1))
-        ])
+        sigma_vector = r_[
+            self.sigma[0] * ones(len(idx_zPf)),
+            self.sigma[1] * ones(len(idx_zPt)),
+            self.sigma[2] * ones(len(idx_zQf)),
+            self.sigma[3] * ones(len(idx_zQt)),
+            self.sigma[4] * ones(len(idx_zPg)),
+            self.sigma[5] * ones(len(idx_zQg)),
+            self.sigma[6] * ones(len(idx_zVm)),
+            self.sigma[7] * ones(len(idx_zVa))
+        ]
         sigma_squared = sigma_vector**2
 
-        Rinv = spdiag(1.0 / sigma_squared)
+        rsig = range(len(sigma_squared))
+        Rinv = csr_matrix((1.0 / sigma_squared, (rsig, rsig)))
 
         # Do Newton iterations.
         while (not converged) and (i < self.max_iter):
             i += 1
 
             # Compute estimated measurement.
-            Sfe = multiply(V[f], conj(Yf * V))
-            Ste = multiply(V[t], conj(Yt * V))
+            Sfe = V[f] * conj(Yf * V)
+            Ste = V[t] * conj(Yt * V)
             # Compute net injection at generator buses.
-            gbus = matrix([buses.index(g.bus) for g in generators])
-            Sgbus = multiply(V[gbus], conj(Ybus[gbus, :] * V))
+            gbus = [g.bus.i for g in generators]
+            Sgbus = V[gbus] * conj(Ybus[gbus, :] * V)
             # inj S + local Sd
-            Sd = matrix([complex(b.p_demand, b.q_demand) for b in buses])
+            Sd = array([complex(b.p_demand, b.q_demand) for b in buses])
             Sgen = (Sgbus * baseMVA + Sd) / baseMVA
 
-            z_est = matrix([
-                Sfe[idx_zPf].real(),
-                Ste[idx_zPt].real(),
-                Sfe[idx_zQf].imag(),
-                Ste[idx_zQt].imag(),
-                Sgen[idx_zPg].real(),
-                Sgen[idx_zQg].imag(),
+            z_est = r_[
+                Sfe[idx_zPf].real,
+                Ste[idx_zPt].real,
+                Sfe[idx_zQf].imag,
+                Ste[idx_zQt].imag,
+                Sgen[idx_zPg].real,
+                Sgen[idx_zQg].imag,
                 abs(V[idx_zVm]),
-                matrix(angle(V[idx_zVa]))
-            ])
+                angle(V[idx_zVa])
+            ]
 
             # Get H matrix.
             dSbus_dVm, dSbus_dVa = case.dSbus_dV(Ybus, V)
             dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, _, _ = case.dSbr_dV(Yf, Yt,V)
 
             # Get sub-matrix of H relating to line flow.
-            dPF_dVa = dSf_dVa.real() # from end
-            dQF_dVa = dSf_dVa.imag()
-            dPF_dVm = dSf_dVm.real()
-            dQF_dVm = dSf_dVm.imag()
-            dPT_dVa = dSt_dVa.real() # to end
-            dQT_dVa = dSt_dVa.imag()
-            dPT_dVm = dSt_dVm.real()
-            dQT_dVm = dSt_dVm.imag()
+            dPF_dVa = dSf_dVa.real # from end
+            dQF_dVa = dSf_dVa.imag
+            dPF_dVm = dSf_dVm.real
+            dQF_dVm = dSf_dVm.imag
+            dPT_dVa = dSt_dVa.real # to end
+            dQT_dVa = dSt_dVa.imag
+            dPT_dVm = dSt_dVm.real
+            dQT_dVm = dSt_dVm.imag
             # Get sub-matrix of H relating to generator output.
-            dPG_dVa = dSbus_dVa[gbus, :].real()
-            dQG_dVa = dSbus_dVa[gbus, :].imag()
-            dPG_dVm = dSbus_dVm[gbus, :].real()
-            dQG_dVm = dSbus_dVm[gbus, :].imag()
+            dPG_dVa = dSbus_dVa[gbus, :].real
+            dQG_dVa = dSbus_dVa[gbus, :].imag
+            dPG_dVm = dSbus_dVm[gbus, :].real
+            dQG_dVm = dSbus_dVm[gbus, :].imag
             # Get sub-matrix of H relating to voltage angle.
-            dVa_dVa = spmatrix(1.0, range(nb), range(nb))
-            dVa_dVm = spmatrix([], [], [], (nb, nb))
+            dVa_dVa = csr_matrix((ones(nb), (range(nb), range(nb))))
+            dVa_dVm = csr_matrix((nb, nb))
             # Get sub-matrix of H relating to voltage magnitude.
-            dVm_dVa = spmatrix([], [], [], (nb, nb))
-            dVm_dVm = spmatrix(1.0, range(nb), range(nb))
-            H = sparse([
-                [dPF_dVa[idx_zPf, nonref],
-                 dQF_dVa[idx_zQf, nonref],
-                 dPT_dVa[idx_zPt, nonref],
-                 dQT_dVa[idx_zQt, nonref],
-                 dPG_dVa[idx_zPg, nonref],
-                 dQG_dVa[idx_zQg, nonref],
-                 dVm_dVa[idx_zVm, nonref],
-                 dVa_dVa[idx_zVa, nonref]],
-                [dPF_dVm[idx_zPf, nonref],
-                 dQF_dVm[idx_zQf, nonref],
-                 dPT_dVm[idx_zPt, nonref],
-                 dQT_dVm[idx_zQt, nonref],
-                 dPG_dVm[idx_zPg, nonref],
-                 dQG_dVm[idx_zQg, nonref],
-                 dVm_dVm[idx_zVm, nonref],
-                 dVa_dVm[idx_zVa, nonref]]
+            dVm_dVa = csr_matrix((nb, nb))
+            dVm_dVm = csr_matrix((ones(nb), (range(nb), range(nb))))
+            H = hstack([
+                vstack([
+                    dPF_dVa[idx_zPf, nonref],
+                    dQF_dVa[idx_zQf, nonref],
+                    dPT_dVa[idx_zPt, nonref],
+                    dQT_dVa[idx_zQt, nonref],
+                    dPG_dVa[idx_zPg, nonref],
+                    dQG_dVa[idx_zQg, nonref],
+                    dVm_dVa[idx_zVm, nonref],
+                    dVa_dVa[idx_zVa, nonref]
+                ]),
+                vstack([
+                    dPF_dVm[idx_zPf, nonref],
+                    dQF_dVm[idx_zQf, nonref],
+                    dPT_dVm[idx_zPt, nonref],
+                    dQT_dVm[idx_zQt, nonref],
+                    dPG_dVm[idx_zPg, nonref],
+                    dQG_dVm[idx_zQg, nonref],
+                    dVm_dVm[idx_zVm, nonref],
+                    dVa_dVm[idx_zVa, nonref]
+                ])
             ])
 
             # Compute update step.
             J = H.T * Rinv * H
             F = H.T * Rinv * (z - z_est) # evalute F(x)
-            linalg.solve(J, F)
-#            cholmod.linsolve(J, F)
-            dx = F
+            dx = spsolve(J, F)
 
             # Check for convergence.
-#            normF = norm(F, inf)
-            normF = max(abs(F))
+            normF = linalg.norm(F, Inf)
+#            normF = max(abs(F))
 
             if self.verbose:
                 logger.info("Iteration [%d]: Norm of mismatch: %.3f" %
@@ -292,8 +275,8 @@ class StateEstimator(object):
             Va[nonref] = Va[nonref] + dx[:npvpq]
             Vm[nonref] = Vm[nonref] + dx[npvpq:2 * npvpq]
 
-            V = multiply(Vm, exp(1j * Va))
-            Va = matrix(angle(V))
+            V = Vm * exp(1j * Va)
+            Va = angle(V)
             Vm = abs(V)
 
         # Weighted sum squares of error.
@@ -321,11 +304,11 @@ class StateEstimator(object):
         """ Returns the initial voltage profile.
         """
         if type == CASE_GUESS:
-            Va = matrix([b.v_angle_guess * (pi / 180.0) for b in buses])
-            Vm = matrix([b.v_magnitude_guess for b in buses])
-            V0 = multiply(Vm, exp(1j * Va))
+            Va = array([b.v_angle_guess * (pi / 180.0) for b in buses])
+            Vm = array([b.v_magnitude_guess for b in buses])
+            V0 = Vm * exp(1j * Va)
         elif type == FLAT_START:
-            V0 = matrix(1.0, (len(buses), 1))
+            V0 = ones(len(buses))
         elif type == FROM_INPUT:
             V0 = v_mag_guess
         else:
@@ -333,10 +316,10 @@ class StateEstimator(object):
 
         # Set the voltages of PV buses and the reference bus in the guess.
 #        online = [g for g in self.case.generators if g.online]
-        gbus = matrix([buses.index(g.bus) for g in generators])
-        Vg = matrix([g.v_magnitude for g in generators])
+        gbus = [g.bus.i for g in generators]
+        Vg = array([g.v_magnitude for g in generators])
 
-        V0[gbus] = multiply(Vg, abs(V0[gbus]) / V0[gbus])
+        V0[gbus] = Vg * abs(V0[gbus]) / V0[gbus]
 
         return V0
 
@@ -361,7 +344,7 @@ class StateEstimator(object):
         for t in [PF, PT, QF, QT, PG, QG, VM, VA]:
             for meas in self.measurements:
                 if meas.type == t:
-                    n = meas.b_l.name[:col_width].ljust(col_width)
+                    n = meas.b_or_l.name[:col_width].ljust(col_width)
                     fd.write(t.ljust(col_width) + " ")
                     fd.write(n + " ")
                     fd.write("%11.5f " % z[c])
@@ -370,5 +353,25 @@ class StateEstimator(object):
                     c += 1
 
         fd.write("\nWeighted sum of error squares = %.4f\n" % error_sqrsum)
+
+#------------------------------------------------------------------------------
+#  "Measurement" class:
+#------------------------------------------------------------------------------
+
+class Measurement(object):
+    """ Defines a measurement at a bus or a branch.
+    """
+
+    def __init__(self, bus_or_line, type, value):
+        """ Initialises a new Measurement instance.
+        """
+        # Bus or branch component at which the measure was made.
+        self.b_or_l = bus_or_line
+
+        # Type of value measured.
+        self.type = type
+
+        # Measurement value.
+        self.value = value
 
 # EOF -------------------------------------------------------------------------
