@@ -181,7 +181,7 @@ class OPF(object):
     def _ref_check(self, case):
         """ Checks that there is only one reference bus.
         """
-        refs = [bus.i for bus in case.buses if bus.type == REFERENCE]
+        refs = [bus._i for bus in case.buses if bus.type == REFERENCE]
 
         if len(refs) == 1:
             return True, refs
@@ -235,7 +235,7 @@ class OPF(object):
 
         # For buses with generators initialise Vm from gen data.
         for g in generators:
-            Vm[buses.index(g.bus)] = g.v_magnitude
+            Vm[g.bus._i] = g.v_magnitude
 
         Vmin = array([b.v_min for b in buses])
         Vmax = array([b.v_max for b in buses])
@@ -332,8 +332,8 @@ class OPF(object):
 
             if nang > 0:
                 ii = range(nang) + range(nang)
-                jjf = array([b.from_bus.i for b in branches])[iang]
-                jjt = array([b.to_bus.i for b in branches])[iang]
+                jjf = array([b.from_bus._i for b in branches])[iang]
+                jjt = array([b.to_bus._i for b in branches])[iang]
                 jj = r_[jjf, jjt]
                 Aang = csr_matrix(r_[ones(nang), -ones(nang)],
                                         (ii, jj), (nang, nb))
@@ -717,7 +717,7 @@ class PDIPMSolver(Solver):
     def _ref_bus_angle_constraint(self, buses, Va, xmin, xmax):
         """ Adds a constraint on the reference bus angles.
         """
-        refs = [bus.i for bus in buses if bus.type == REFERENCE]
+        refs = [bus._i for bus in buses if bus.type == REFERENCE]
         Varefs = array([b.v_angle_guess for b in buses if b.type == REFERENCE])
 
         xmin[Va.i1 - 1 + refs] = Varefs
@@ -865,8 +865,8 @@ class PDIPMSolver(Solver):
                 g = r_[(If * conj(If)) - flow_max,
                        (If * conj(It)) - flow_max]
             else:
-                i_fbus = [e.from_bus.i for e in ln]
-                i_tbus = [e.to_bus.i for e in ln]
+                i_fbus = [e.from_bus._i for e in ln]
+                i_tbus = [e.to_bus._i for e in ln]
                 # Complex power injected at "from" bus (p.u.).
                 Sf = V[i_fbus] * conj(Yf * V)
                 # Complex power injected at "to" bus (p.u.).
@@ -895,7 +895,7 @@ class PDIPMSolver(Solver):
             # Compute partials of injected bus powers.
             dSbus_dVm, dSbus_dVa = case.dSbus_dV(Ybus, V)
 
-            i_gbus = [gen.bus.i for gen in gn]
+            i_gbus = [gen.bus._i for gen in gn]
             neg_Cg = csr_matrix((-ones(ng), (i_gbus, range(ng))), (nb, ng))
 
             # Transposed Jacobian of the power balance equality constraints.
@@ -1017,8 +1017,8 @@ class PDIPMSolver(Solver):
                 Gtaa, Gtav, Gtva, Gtvv = \
                     case.d2AIbr_dV2(dIt_dVa, dIt_dVm, It, Yt, V, muT)
             else:
-                f = [e.from_bus.i for e in ln]
-                t = [e.to_bus.i for e in ln]
+                f = [e.from_bus._i for e in ln]
+                t = [e.to_bus._i for e in ln]
                 # Line-bus connection matrices.
                 Cf = csr_matrix((ones(nl), (range(nl), f)), (nl, nb))
                 Ct = csr_matrix((ones(nl), (range(nl), t)), (nl, nb))

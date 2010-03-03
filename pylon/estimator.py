@@ -116,8 +116,8 @@ class StateEstimator(object):
 
         # Index buses.
 #        ref = [buses.index(b) for b in buses if b.type == REFERENCE]
-        pv  = [b.i for b in buses if b.type == PV]
-        pq  = [b.i for b in buses if b.type == PQ]
+        pv  = [b._i for b in buses if b.type == PV]
+        pq  = [b._i for b in buses if b.type == PQ]
 
         # Build admittance matrices.
         Ybus, Yf, Yt = case.Y
@@ -136,22 +136,22 @@ class StateEstimator(object):
         Vm = abs(V0)
 
         nb = Ybus.size[0]
-        f = [b.from_bus.i for b in branches]
-        t = [b.to_bus.i for b in branches]
+        f = [b.from_bus._i for b in branches]
+        t = [b.to_bus._i for b in branches]
         nonref = pv + pq
 
         # Form measurement vector.
         z = array([m.value for m in meas])
 
         # Form measurement index vectors.
-        idx_zPf = [m.b_or_l.i for m in meas if m.type == PF]
-        idx_zPt = [m.b_or_l.i for m in meas if m.type == PT]
-        idx_zQf = [m.b_or_l.i for m in meas if m.type == QF]
-        idx_zQt = [m.b_or_l.i for m in meas if m.type == QT]
-        idx_zPg = [m.b_or_l.i for m in meas if m.type == PG]
-        idx_zQg = [m.b_or_l.i for m in meas if m.type == QG]
-        idx_zVm = [m.b_or_l.i for m in meas if m.type == VM]
-        idx_zVa = [m.b_or_l.i for m in meas if m.type == VA]
+        idx_zPf = [m.b_or_l._i for m in meas if m.type == PF]
+        idx_zPt = [m.b_or_l._i for m in meas if m.type == PT]
+        idx_zQf = [m.b_or_l._i for m in meas if m.type == QF]
+        idx_zQt = [m.b_or_l._i for m in meas if m.type == QT]
+        idx_zPg = [m.b_or_l._i for m in meas if m.type == PG]
+        idx_zQg = [m.b_or_l._i for m in meas if m.type == QG]
+        idx_zVm = [m.b_or_l._i for m in meas if m.type == VM]
+        idx_zVa = [m.b_or_l._i for m in meas if m.type == VA]
 
         # Create inverse of covariance matrix with all measurements.
 #        full_scale = 30
@@ -190,7 +190,7 @@ class StateEstimator(object):
             Sfe = V[f] * conj(Yf * V)
             Ste = V[t] * conj(Yt * V)
             # Compute net injection at generator buses.
-            gbus = [g.bus.i for g in generators]
+            gbus = [g.bus._i for g in generators]
             Sgbus = V[gbus] * conj(Ybus[gbus, :] * V)
             # inj S + local Sd
             Sd = array([complex(b.p_demand, b.q_demand) for b in buses])
@@ -316,7 +316,7 @@ class StateEstimator(object):
 
         # Set the voltages of PV buses and the reference bus in the guess.
 #        online = [g for g in self.case.generators if g.online]
-        gbus = [g.bus.i for g in generators]
+        gbus = [g.bus._i for g in generators]
         Vg = array([g.v_magnitude for g in generators])
 
         V0[gbus] = Vg * abs(V0[gbus]) / V0[gbus]

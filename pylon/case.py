@@ -58,16 +58,13 @@ class Bus(Named):
     """ Defines a power system bus node.
     """
 
-    def __init__(self, name=None, i=0, type=PQ, v_base=100.0,
+    def __init__(self, name=None, type=PQ, v_base=100.0,
             v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
             p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0):
         """ Initialises a new Bus instance.
         """
         # Unique name.
         self.name = name
-
-        # Bus index, managed at a case level.
-        self.i = 0
 
         # Bus type: 'PQ', 'PV', 'ref' and 'isolated' (default: 'PQ')
         self.type = type
@@ -109,6 +106,9 @@ class Bus(Named):
         self.mu_vmin = 0.0
         self.mu_vmax = 0.0
 
+        # Bus index, managed at a case level.
+        self._i = 0
+
 
     def reset(self):
         """ Resets the result variables.
@@ -128,7 +128,7 @@ class Branch(Named):
     """ Defines a case edge that links two Bus objects.
     """
 
-    def __init__(self, from_bus, to_bus, i=0, name=None, online=True, r=0.0,
+    def __init__(self, from_bus, to_bus, name=None, online=True, r=0.0,
             x=0.0, b=0.0, rate_a=999.0, rate_b=999.0, rate_c=999.0,
             ratio=1.0, phase_shift=0.0, ang_min=-360.0, ang_max=360.0):
         """ Initialises a new Branch instance.
@@ -137,9 +137,6 @@ class Branch(Named):
         self.from_bus = from_bus
         # To/target/end bus.
         self.to_bus = to_bus
-
-        # Branch index, managed at a case level.
-        self.i = i
 
         # Unique name.
         self.name = name
@@ -190,6 +187,9 @@ class Branch(Named):
         self.mu_angmin = 0.0
         # Upper bus voltage angle difference limit constraint multiplier.
         self.mu_angmax = 0.0
+
+        # Branch index, managed at a case level.
+        self._i = 0
 
 
     @property
@@ -306,7 +306,7 @@ class Case(Named, Serializable):
         """
         bs = self.connected_buses if buses is None else buses
         for i, b in enumerate(bs):
-            b.i = i
+            b._i = i
 
 
     def index_branches(self, branches=None):
@@ -314,7 +314,7 @@ class Case(Named, Serializable):
         """
         ln = self.online_branches if branches is None else branches
         for i, l in enumerate(ln):
-            l.i = i
+            l._i = i
 
     #--------------------------------------------------------------------------
     #  Bus injections:
@@ -814,8 +814,8 @@ class Case(Named, Serializable):
             b.v_magnitude = Vm[i]
 
         # Update Qg for all gens and Pg for swing bus.
-        gbus = [g.bus.i for g in generators]
-        refgen = [g.bus.i for g in generators if g.bus.type == REFERENCE]
+        gbus = [g.bus._i for g in generators]
+        refgen = [g.bus._i for g in generators if g.bus.type == REFERENCE]
 
         # Compute total injected bus powers.
         Sg = V[gbus] * conj(Ybus[gbus, :] * V)
@@ -846,7 +846,7 @@ class Case(Named, Serializable):
 
         # Complex power at "from" bus.
         for i, l in enumerate(branches):
-            idx_f = l.from_bus.i
+            idx_f = l.from_bus._i
             idx_t = buses.index(l.to_bus)
             Sf = V[idx_f] * conj(Yf[i, :] * V) * self.base_mva
             St = V[idx_t] * conj(Yt[i, :] * V) * self.base_mva
