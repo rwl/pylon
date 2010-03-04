@@ -76,7 +76,7 @@ class CVXOPTSolver(Solver):
         nc = 2 * nb + 2 * ng
 
         # Split the constraints in equality and inequality.
-        Aeq, beq, Aieq, bieq = self._split_constraints(self.om)
+        Aeq, beq, Aieq, bieq = self._linear_constraints(self.om)
 
         # Optimisation variables.
         Va = self.om.get_var("Va")
