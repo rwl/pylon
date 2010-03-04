@@ -28,7 +28,7 @@ import logging
 
 from numpy import \
     array, pi, diff, polyder, polyval, exp, conj, Inf, finfo, ones, r_, \
-    float64, zeros, diag, flatnonzero
+    float64, zeros, diag, flatnonzero, dot
 
 from scipy.sparse import lil_matrix, csr_matrix, csc_matrix, hstack, vstack
 
@@ -591,19 +591,19 @@ class DCOPFSolver(Solver):
         """ Solves DC optimal power flow and returns a results dict.
         """
         base_mva = self.om.case.base_mva
+        Bf = self.om._Bf
+        Pfinj = self.om._Pfinj
         # Unpack the OPF model.
-        buses, branches, generators, cp = self._unpack_model(self.om)
+        bs, ln, gn, cp = self._unpack_model(self.om)
         # Compute problem dimensions.
-        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(buses,
-                                                                branches,
-                                                                generators)
+        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(bs, ln, gn)
         # Split the constraints in equality and inequality.
         AA, bb = self._linear_constraints(self.om)
         # Piece-wise linear components of the objective function.
         Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self._pwl_costs(ny, nxyz, ipwl)
         # Quadratic components of the objective function.
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
-            self._quadratic_costs(generators, ipol, nxyz, base_mva)
+            self._quadratic_costs(gn, ipol, nxyz, base_mva)
         # Combine pwl, poly and user costs.
         NN, HHw, CCw, ffparm = \
             self._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
@@ -615,10 +615,16 @@ class DCOPFSolver(Solver):
         _, LB, UB = self._var_bounds()
 
         # Select an interior initial point for interior point solver.
-        x0 = self._initial_interior_point(buses, generators, LB, UB, ny)
+        x0 = self._initial_interior_point(bs, gn, LB, UB, ny)
 
         # Call the quadratic/linear solver.
         s = self._run_opf(HH, CC, AA, bb, LB, UB, x0, self.opts)
+
+        # Compute the objective function value.
+        Va, Pg, _ = self._update_solution_data(s["x"], HH, CC, C0)
+
+        # Set case result attributes.
+        self._update_case(bs, ln, gn, base_mva, Bf, Pfinj, Va, Pg, s["lmbda"])
 
         return s
 
@@ -737,6 +743,56 @@ class DCOPFSolver(Solver):
             solution = pdipm_qp(None, CC, AA, bb, LB, UB, x0, N, opts)
 
         return solution
+
+
+    def _update_solution_data(self, x, HH, CC, C0):
+        """ Returns the voltage angle and generator set-point vectors.
+        """
+#        x = solution["x"]
+        Va_v = self.om.get_var("Va")
+        Pg_v = self.om.get_var("Pg")
+
+        Va = x[Va_v.i1:Va_v.iN + 1]
+        Pg = x[Pg_v.i1:Pg_v.iN + 1]
+        f = 0.5 * dot(x.T * HH, x) + dot(CC.T, x)
+
+        # Put the objective function value in the solution.
+#        solution["f"] = f
+
+        return Va, Pg, f
+
+
+    def _update_case(self, bs, ln, gn, base_mva, Bf, Pfinj, Va, Pg, lmbda):
+        """ Calculates the result attribute values.
+        """
+        Pmis = self.om.get_lin_constraint("Pmis")
+        Pf = self.om.get_lin_constraint("Pf")
+        Pt = self.om.get_lin_constraint("Pt")
+        Pg_v = self.om.get_var("Pg")
+
+        mu_l = lmbda["mu_l"]
+        mu_u = lmbda["mu_u"]
+        lower = lmbda["lower"]
+        upper = lmbda["upper"]
+
+        for i, bus in enumerate(bs):
+            bus.v_angle = Va[i] * 180.0 / pi
+
+            bus.p_lmbda = (mu_u[Pmis.i1:Pmis.iN + 1][i] -
+                           mu_l[Pmis.i1:Pmis.iN + 1][i]) / base_mva
+
+        for l, branch in enumerate(ln):
+            branch.p_from = (Bf * Va + Pfinj)[l] * base_mva
+            branch.p_to = -branch.p_from
+
+            branch.mu_s_from = mu_u[Pf.i1:Pf.iN + 1][l] / base_mva
+            branch.mu_s_to = mu_u[Pt.i1:Pt.iN + 1][l] / base_mva
+
+        for k, generator in enumerate(gn):
+            generator.p = Pg[k] * base_mva
+
+            generator.mu_pmin = lower[Pg_v.i1:Pg_v.iN + 1][k] / base_mva
+            generator.mu_pmax = upper[Pg_v.i1:Pg_v.iN + 1][k] / base_mva
 
 #------------------------------------------------------------------------------
 #  "PDIPMSolver" class:
@@ -1044,7 +1100,7 @@ class PDIPMSolver(Solver):
                     csr_matrix((nxtra, 2 * nb)),
                     csr_matrix((nxtra, nxtra))
                 ])
-        ], "csr")
+            ], "csr")
 
             #------------------------------------------------------------------
             #  Evaluate Hessian of flow constraints.
@@ -1249,6 +1305,15 @@ class OPFModel(object):
         for con in constraints:
             self.add_constraint(con)
 
+
+    def get_lin_constraint(self, name):
+        """ Returns the constraint set with the given name.
+        """
+        for c in self.lin_constraints:
+            if c.name == name:
+                return c
+        else:
+            raise ValueError
 
     @property
     def cost_N(self):
