@@ -572,9 +572,9 @@ class DCOPFSolver(Solver):
         """
         super(DCOPFSolver, self).__init__(om)
 
-        # User-defined costs.
-        self.N = None#csr_matrix((0, self.om.var_N))
-        self.H = None#csr_matrix((0, 0))
+        # TODO: Implement user-defined costs.
+        self.N = None
+        self.H = None
         self.Cw = zeros((0, 0))
         self.fparm = zeros((0, 0))
 
@@ -602,8 +602,7 @@ class DCOPFSolver(Solver):
         # Combine pwl, poly and user costs.
         NN, HHw, CCw, ffparm = \
             self._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
-                                Npol, Hpol, Cpol, fparm_pol, npol,
-                                self.N, self.H, self.Cw, self.fparm, nw)
+                                Npol, Hpol, Cpol, fparm_pol, npol, nw)
         # Transform quadratic coefficients for w into coefficients for X.
         HH, CC, C0 = self._transform_coefficients(NN, HHw, CCw, ffparm, polycf,
                                                   any_pwl, npol, nw)
@@ -624,15 +623,15 @@ class DCOPFSolver(Solver):
         """
         any_pwl = int(ny > 0)
         if any_pwl:
-            # Sum of y vars.
             y = self.om.get_var("y")
+            # Sum of y vars.
             Npwl = csr_matrix((ones(ny), (zeros(ny), array(ipwl) + y.i1)))
-            Hpwl = 0
-            Cpwl = 1
+            Hpwl = csr_matrix((1, 1))
+            Cpwl = array([1])
             fparm_pwl = array([[1, 0, 0, 1]])
         else:
-            Npwl = zeros((0, nxyz))
-            Hpwl = array([])
+            Npwl = None#zeros((0, nxyz))
+            Hpwl = None#array([])
             Cpwl = array([])
             fparm_pwl = zeros((0, 4))
 
@@ -672,31 +671,35 @@ class DCOPFSolver(Solver):
             Cpol = polycf[:, 1]
             fparm_pol = ones(npol) * array([1, 0, 0, 1]).T
         else:
-            Npol = Hpol = Cpol = fparm_pol = polycf = npol = None
+            Npol = Hpol = None
+            Cpol = array([])
+            fparm_pol = zeros((0, 4))
 
         return Npol, Hpol, Cpol, fparm_pol, polycf, npol
 
 
     def _combine_costs(self, Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
-                       Npol, Hpol, Cpol, fparm_pol, npol,
-                       N=None, H=None, Cw=None, fparm=None, nw=0):
-        NN = vstack([Npwl, Npol], "csr")#, N])
+                       Npol, Hpol, Cpol, fparm_pol, npol, nw):
+        """ Combines pwl, polynomial and user-defined costs.
+        """
+#        N = self.N
+#        H = self.H
+#        Cw = self.Cw
+#        fparm = self.fparm
 
-        HHw = vstack([
-            hstack([Hpwl, csr_matrix((npol, any_pwl))]),
-            hstack([csr_matrix((any_pwl, npol)), Hpol])
-        ], "csr")
+        NN = vstack([n for n in [Npwl, Npol] if n is not None], "csr")
 
-#        HHw = sparse([
-#            sparse([Hpwl, spmatrix([], [], [], (any_pwl, npol + nw))]).T,
-#            sparse([spmatrix([], [], [], (npol, any_pwl)),
-#                    Hpol,
-#                    spmatrix([], [], [], (npol, nw))]).T,
-#            sparse([spmatrix([], [], [], (nw, any_pwl + npol)), H]).T
-#        ]).T
+        if (Hpwl is not None) and (Hpol is not None):
+            Hpwl = hstack([Hpwl, csr_matrix((any_pwl, npol))])
+            Hpol = hstack([csr_matrix((npol, any_pwl)), Hpol])
+#        if H is not None:
+#            H = hstack([csr_matrix((nw, any_pwl+npol)), H])
 
-        CCw = r_[Cpwl, Cpol]#, Cw]
-        ffparm = r_[fparm_pwl, fparm_pol]#, fparm]
+        HHw = vstack([h for h in [Hpwl, Hpol] if h is not None], "csr")
+
+        CCw = r_[Cpwl, Cpol]
+
+        ffparm = r_[fparm_pwl, fparm_pol]
 
         return NN, HHw, CCw, ffparm
 
@@ -713,22 +716,20 @@ class DCOPFSolver(Solver):
         HH = MN.H * HHw * MN
         CC = MN.H * (CCw - HMR)
         # Constant term of cost.
-        C0 = 1./2. * MR.H * HMR + sum(polycf[:, 2])
+        C0 = 1./2. * MR.T * HMR + sum(polycf[:, 2])
 
         return HH, CC, C0
 
 
-    def _run_opf(self, P, q, G, h, A, b, LB, UB, x0, opts):
+    def _run_opf(self, HH, CC, AA, bb, LB, UB, x0, opts):
         """ Solves the either quadratic or linear program.
         """
-#        AA = vstack([A, G], "csr") # Combined equality & inequality constraints
-#        bb = r_[b, h]
-        N = A.shape[0]
+        N = AA.shape[0]
 
-        if len(P) > 0:
-            solution = pdipm_qp(P, q, AA, bb, LB, UB, x0, N, opts)
+        if len(HH) > 0:
+            solution = pdipm_qp(HH, CC, AA, bb, LB, UB, x0, N, opts)
         else:
-            solution = pdipm_qp(None, q, AA, bb, LB, UB, x0, N, opts)
+            solution = pdipm_qp(None, CC, AA, bb, LB, UB, x0, N, opts)
 
         return solution
 

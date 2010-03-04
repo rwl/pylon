@@ -24,7 +24,7 @@
 from os.path import join, dirname
 import unittest
 
-from numpy import Inf
+from numpy import Inf, zeros
 
 from pylon import OPF, Case, Generator, REFERENCE, POLYNOMIAL, PW_LINEAR
 from pylon.opf import DCOPFSolver, PDIPMSolver
@@ -312,8 +312,8 @@ class PWLDCOPFSolverTest(unittest.TestCase):
 
         self.assertEqual(any_pwl, 1)
         self.assertEqual(Npwl.shape, (1, 42))
-        self.assertEqual(Hpwl, 0)
-        self.assertEqual(Cpwl, 1)
+        self.assertEqual(Hpwl.shape, (1, 1))
+        self.assertEqual(Cpwl.shape, (1,))
         self.assertEqual(fparm_pwl.shape, (1, 4))
 
 
@@ -326,33 +326,17 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
             self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
 
-        self.assertEqual(npol, 3)
-
-        self.assertEqual(Npol.shape, (3, 9))
-        self.assertEqual(Npol[0, 0], 0.0)
-        self.assertEqual(Npol[1, 7], 1.0)
-
-        self.assertEqual(Hpol.shape, (3, 3))
-        self.assertEqual(Hpol[0, 0], 106.6)
-        self.assertEqual(Hpol[1, 1], 177.8)
-        self.assertEqual(Hpol[2, 2], 148.2)
-
-        self.assertEqual(Cpol.shape, (3, 1))
-        self.assertEqual(Cpol[0], 1.1669e3)
-        self.assertEqual(Cpol[1], 1.0333e3)
-        self.assertEqual(Cpol[2], 1.0833e3)
-
-        self.assertEqual(fparm_pol.shape, (3, 4))
-        self.assertEqual(fparm_pol[0, 0], 1.0)
-        self.assertEqual(fparm_pol[1, 0], 1.0)
-        self.assertEqual(fparm_pol[1, 1], 0.0)
-        self.assertEqual(fparm_pol[2, 3], 1.0)
+        self.assertEqual(npol, 0)
+        self.assertEqual(Npol, None)
+        self.assertEqual(Hpol, None)
+        self.assertEqual(Cpol.shape, (0,))
+        self.assertEqual(fparm_pol.shape, (0, 4))
 
 
     def test_combine_costs(self):
         """ Test combination of pwl and poly costs.
 
-            TODO: Repeat with combined pwl and poly costs.
+            TODO: Repeat with both pwl and poly costs.
         """
         base_mva = self.om.case.base_mva
         b, l, g, _ = self.solver._unpack_model(self.om)
@@ -363,12 +347,12 @@ class PWLDCOPFSolverTest(unittest.TestCase):
             self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
         NN, HHw, CCw, ffparm = \
             self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
-                                       Npol, Hpol, Cpol, fparm_pol, npol)
+                                       Npol, Hpol, Cpol, fparm_pol, npol, nw)
 
-        self.assertEqual(NN.shape, (3, 9))
-        self.assertEqual(HHw.shape, (3, 3))
-        self.assertEqual(CCw.shape, (3, 1))
-        self.assertEqual(ffparm.shape, (3, 4))
+        self.assertEqual(NN.shape, (1, 42))
+        self.assertEqual(HHw.shape, (1, 1))
+        self.assertEqual(CCw.shape, (1,))
+        self.assertEqual(ffparm.shape, (1, 4))
 
 
     def test_coefficient_transformation(self):
@@ -378,26 +362,26 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         base_mva = self.om.case.base_mva
         b, l, g, _ = self.solver._unpack_model(self.om)
         ipol, ipwl, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
-        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz,
-                                                                      ipwl)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = \
+            self.solver._pwl_costs(ny, nxyz, ipwl)
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
             self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
         NN, HHw, CCw, ffparm = \
             self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
-                                       Npol, Hpol, Cpol, fparm_pol, npol)
-        HH, CC, C0 = self.solver._transform_coefficients(NN, HHw, CCw, ffparm,
-                                                         polycf, any_pwl, npol,
-                                                         nw)
+                                       Npol, Hpol, Cpol, fparm_pol, npol, nw)
+        HH, CC, C0 = \
+            self.solver._transform_coefficients(NN, HHw, CCw, ffparm, polycf,
+                                                any_pwl, npol, nw)
 
-        self.assertEqual(HH.shape, (9, 9))
+        self.assertEqual(HH.shape, (42, 42))
         self.assertEqual(HH[0, 0], 0.0)
-        self.assertEqual(HH[8, 8], 148.2)
+        self.assertEqual(HH[41, 41], 0.0)
 
-        self.assertEqual(CC.shape, (9, 1))
+        self.assertEqual(CC.shape, (42,))
         self.assertEqual(CC[0], 0.0)
-        self.assertEqual(CC[6], 1.1669e3)
+        self.assertEqual(CC[36], 1.0)
 
-        self.assertEqual(C0[0], 653.1)
+        self.assertEqual(C0[0], 0.0)
 
 
     def test_var_bounds(self):
