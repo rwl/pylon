@@ -453,6 +453,68 @@ class PWLDCOPFSolverTest(unittest.TestCase):
 
         self.assertTrue(solution["converged"])
 
+
+    def test_update_solution_data(self):
+        """ Test objective function value.
+        """
+        solver =self.solver
+
+        base_mva = self.solver.om.case.base_mva
+        buses, branches, generators, cp = \
+            self.solver._unpack_model(self.om)
+        ipol, ipwl, nb, nl, nw, ny, nxyz = \
+            self.solver._dimension_data(buses, branches, generators)
+        AA, bb = self.solver._linear_constraints(self.om)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = \
+            self.solver._pwl_costs(ny, nxyz, ipwl)
+        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
+            self.solver._quadratic_costs(generators, ipol, nxyz, base_mva)
+        NN, HHw, CCw, ffparm = \
+            self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
+                                       Npol, Hpol, Cpol, fparm_pol, npol, nw)
+        HH, CC, C0 = \
+            self.solver._transform_coefficients(NN, HHw, CCw, ffparm, polycf,
+                                                any_pwl, npol, nw)
+        _, LB, UB = self.solver._var_bounds()
+        x0 = self.solver._initial_interior_point(buses, generators, LB, UB, ny)
+        s = self.solver._run_opf(HH, CC, AA, bb, LB, UB, x0, self.solver.opts)
+
+        Va, Pg, f = self.solver._update_solution_data(s["x"], HH, CC, C0)
+
+        pl = 4
+        self.assertAlmostEqual(Va[0], 0.0, pl)
+        self.assertAlmostEqual(Va[27], -0.0308, pl)
+        self.assertAlmostEqual(Va[29], -0.0177, pl)
+
+        self.assertAlmostEqual(Pg[0], 0.3600, pl)
+        self.assertAlmostEqual(Pg[1], 0.2818, pl)
+
+        self.assertAlmostEqual(f, 5.7328e03, pl)
+
+
+    def test_update_case(self):
+        """ Test solution from the PDIPM solver.
+        """
+        case = self.case
+
+        solution = self.solver.solve()
+
+        pl = 4
+        self.assertAlmostEqual(case.buses[1].v_angle, -0.8022, pl)
+        self.assertAlmostEqual(case.buses[25].v_angle, -0.4973, places=3)
+        self.assertAlmostEqual(case.buses[0].p_lmbda, 44.0, pl)
+        self.assertAlmostEqual(case.buses[29].p_lmbda, 44.0, pl)
+
+        self.assertAlmostEqual(case.branches[0].p_from, 23.3340, places=2)
+        self.assertAlmostEqual(case.branches[0].p_to, -23.3340, places=2)
+        self.assertAlmostEqual(case.branches[0].mu_s_from, 0.0, pl)
+        self.assertAlmostEqual(case.branches[0].mu_s_to, 0.0, pl)
+
+        self.assertAlmostEqual(case.generators[0].p, 36.0, pl)
+        self.assertAlmostEqual(case.generators[1].p, 28.1824, places=2)
+        self.assertAlmostEqual(case.generators[0].mu_pmin, 0.0, pl)
+        self.assertAlmostEqual(case.generators[1].mu_pmax, 0.0, pl)
+
 #------------------------------------------------------------------------------
 #  "OPFTest" class:
 #------------------------------------------------------------------------------
