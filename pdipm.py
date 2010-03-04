@@ -28,7 +28,7 @@ import logging
 
 from numpy import \
     array, flatnonzero, Inf, any, isnan, log, ones, r_, finfo, zeros, dot, \
-    absolute
+    absolute, asmatrix
 
 from numpy.linalg import norm
 
@@ -66,7 +66,6 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     xmin = ones(x0.shape[0]) * -Inf if xmin is None else xmin
     xmax = ones(x0.shape[0]) *  Inf if xmax is None else xmax
     if A is None:
-#        A = csr_matrix((0, x0.shape[0]))
         l = array([])
         u = array([])
 
@@ -142,7 +141,6 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dg = dgn
     else:
         hstack([dgn, Ai.T])
-#    dg = dgn if (dgn is None) or (Ai is None) else hstack([dgn, Ai.T])  # d_ieq
     if (dhn is None) and (Ae is None):
         dh = None
     elif dhn is None:
@@ -151,7 +149,6 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dh = dhn
     else:
         hstack([dhn, Ae.T])
-#    dh = dhn if dgn is None or Ae is None else hstack([dhn, Ae.T])  # d_eq
 
     # some dimensions
     neq = h.shape[0]           # number of equality constraints
@@ -178,7 +175,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     if opt["step_control"]:
         L = f + lam.T * h + mu.T * (g + z) - gamma * sum(log(z))
 
-    Lx = df# + dh * lam + dg * mu
+    Lx = df
     Lx = Lx + dh * lam if dh is not None else Lx
     Lx = Lx + dg * mu  if dg is not None else Lx
 
@@ -189,8 +186,6 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     compcond = dot(z, mu) / (1 + norm(x, Inf))
     costcond = absolute(f - f0) / (1 + absolute(f0))
 
-    print f
-
     if opt["verbose"]:
         logger.info(" it    objective   step size   feascond     gradcond     "
                     "compcond     costcond  ")
@@ -198,9 +193,9 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
                     "------------ ------------")
         logger.info("%3d  %12.8f %10s %12.f %12.f %12.f %12.f" %
             (i, (f / opt["cost_mult"]), "", feascond, gradcond,
-             compcond[0], costcond))
+             compcond, costcond))
     if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
-        compcond[0] < opt["comptol"] and costcond[0] < opt["costtol"]:
+        compcond < opt["comptol"] and costcond < opt["costtol"]:
         converged = True
         if opt["verbose"]:
             logger.info("Converged!")
@@ -220,7 +215,6 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         rmu = range(len(mu))
         mudiag = csr_matrix((mu, (rmu, rmu))) if len(mu) else None
         dg_zinv = None if dg is None else dg * zinvdiag
-#        M = Lxx + dg_zinv * mudiag * dg.T
         M = Lxx if dg is None else Lxx + dg_zinv * mudiag * dg.T
         N = Lx if dg is None else Lx + dg_zinv * (mudiag * g + gamma * e)
         Ab = M if dh is None else vstack([
@@ -287,75 +281,86 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         # do the update
         k = flatnonzero(dz < 0.0)
         alphap = min( r_[xi * min(z[k] / -dz[k]), array([1])] )
-
         k = flatnonzero(dmu < 0.0)
         alphad = min( r_[xi * min(mu[k] / -dmu[k]), array([1])] )
-
         x = x + alphap * dx
         z = z + alphap * dz
         lam = lam + alphad * dlam
         mu = mu + alphad * dmu
-        gamma = sigma * (z.T * mu) / niq
+        gamma = sigma * dot(z, mu) / niq
 
         # evaluate cost, constraints, derivatives
         f, df, _ = ipm_f(x)             # cost
         f = f * opt["cost_mult"]
         df = df * opt["cost_mult"]
+        gn, hn, dgn, dhn = ipm_gh(x)                  # non-linear constraints
+        g = gn if Ai is None else r_[gn, Ai * x - bi] # inequality constraints
+        h = hn if Ae is None else r_[hn, Ae * x - be] # equality constraints
+        if (dgn is None) and (Ai is None):
+            dg = None
+        elif dgn is None:
+            dg = Ai.T
+        elif Ai is None:
+            dg = dgn
+        else:
+            hstack([dgn, Ai.T])
+        if (dhn is None) and (Ae is None):
+            dh = None
+        elif dhn is None:
+            dh = Ae.T
+        elif Ae is None:
+            dh = dhn
+        else:
+            hstack([dhn, Ae.T])
 
-        gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints
-        g = gn if Ai is None else r_[gn, Ai * x - bi]   # inequality cnstraints
-        h = hn if Ae is None else r_[hn, Ae * x - be]   # equality constraints
-        dg = dgn if Ai is None else hstack([dgn, Ai.T]) # 1st der of ieq
-        dh = dhn if Ae is None else hstack([dhn, Ae.T]) # 1st der of eqs
-
-        Lx = df + dh * lam + dg * mu
+        Lx = df
+        Lx = Lx + dh * lam if dh is not None else Lx
+        Lx = Lx + dg * mu  if dg is not None else Lx
 
         feascond = \
-            max([norm(h, Inf), max(g)]) / (1 + max([norm(x,Inf), norm(z,Inf)]))
+            max([norm(h, Inf), max(g)]) / (1+max([norm(x, Inf), norm(z, Inf)]))
         gradcond = \
             norm(Lx, Inf) / (1 + max([norm(lam, Inf), norm(mu, Inf)]))
-        compcond = (z.H * mu) / (1 + norm(x, Inf))
+        compcond = dot(z, mu) / (1 + norm(x, Inf))
         costcond = absolute(f - f0) / (1 + absolute(f0))
         if opt["verbose"]:
             logger.info("%3d  %12.8f %10.5f %12.f %12.f %12.f %12.f" %
                 (i, (f / opt["cost_mult"]), norm(dx), feascond, gradcond,
                  compcond[0], costcond))
         if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
-            compcond[0] < opt["comptol"] and costcond[0] < opt["costtol"]:
+            compcond < opt["comptol"] and costcond < opt["costtol"]:
             converged = True
             if opt["verbose"]:
                 logger.info("Converged!")
         else:
             if any(isnan(x)) or alphap < alpha_min or alphad < alpha_min or \
-                    gamma[0] < EPS or gamma[0] > 1.0 / EPS:
+                    gamma < EPS or gamma > 1.0 / EPS:
                 if opt["verbose"]:
                     logger.info("Numerically failed.")
                 break
             f0 = f
+
             if opt["step_control"]:
-                L = f + lam.H * h + mu.H * (g + z) - gamma * sum(log(z))
+#                L = f + lam.T * h + mu.T * (g + z) - gamma * sum(log(z))
+                L = f + dot(lam, h) + dot(mu * (g + z)) - gamma * sum(log(z))
 
     if opt["verbose"]:
         if not converged:
             logger.info("Did not converge in %d iterations." % i)
 
     # zero out multipliers on non-binding constraints
-    k = [j for j in range(len(mu))
-         if g[j] < -opt["feastol"] and mu[j] < mu_threshold]
-    mu[k] = 0.0
+    mu[flatnonzero( (g < -opt["feastol"]) & (mu < mu_threshold) )] = 0.0
 
     # un-scale cost and prices
-    f   = f / opt["cost_mult"]
+    f = f / opt["cost_mult"]
     lam = lam / opt["cost_mult"]
-    mu  = mu / opt["cost_mult"]
+    mu = mu / opt["cost_mult"]
 
     # re-package multipliers into struct
-    lam_lin = lam[neqnln:neq]              # lambda for linear constraints
-    mu_lin = mu[niqnln:niq]                # mu for linear constraints
-    kl = flatnonzero(lam_lin < 0.0)
-#    kl = nonzero(lam_lin < 0)              # lower bound binding
-    ku = flatnonzero(lam_lin > 0.0)
-#    ku = nonzero(lam_lin > 0)              # upper bound binding
+    lam_lin = lam[neqnln:neq]           # lambda for linear constraints
+    mu_lin = mu[niqnln:niq]             # mu for linear constraints
+    kl = flatnonzero(lam_lin < 0.0)     # lower bound binding
+    ku = flatnonzero(lam_lin > 0.0)     # upper bound binding
 
     mu_l = zeros(nx + nA)
     mu_l[ieq[kl]] = -lam_lin[kl]
@@ -368,14 +373,14 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     mu_u[ibx] = mu_lin[nlt + ngt:nlt + ngt + nbx]
 
     lmbda = {"eqnonlin": lam[:neqnln], 'ineqnonlin': mu[:niqnln],
-        'mu_l': mu_l[nx:], 'mu_u': mu_u[nx:],
-        'lower': mu_l[:nx], 'upper': mu_u[:nx]}
+             "mu_l": mu_l[nx:], "mu_u": mu_u[nx:],
+             "lower": mu_l[:nx], "upper": mu_u[:nx]}
 
     output = {"iterations": i, "feascond": feascond, "gradcond": gradcond,
-        "compcond": compcond, "costcond": costcond}
+              "compcond": compcond, "costcond": costcond}
 
-    solution =  {"x": x, "f": f, "converged": converged, "lmbda": lmbda,
-                 "output": output}
+    solution =  {"x": x, "f": f, "converged": converged,
+                 "lmbda": lmbda, "output": output}
 
     return solution
 
@@ -411,16 +416,15 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
         opt["cost_mult"] = 1
 
     def qp_f(x):
-        f = 0.5 * x.T * H * x + c.T * x
+        f = 0.5 * dot(x.T * H, x) + dot(c.T, x)
         df = H * x + c
         return f, df, H
 
     def qp_gh(x):
         g = array([])
         h = array([])
-#        n = x.shape[0]
-        dg = None #csr_matrix((n, 0))
-        dh = None #csr_matrix((n, 0))
+        dg = None
+        dh = None
         return g, h, dg, dh
 
     def qp_hessian(x, lmbda):
