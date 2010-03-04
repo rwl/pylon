@@ -30,7 +30,7 @@ from numpy import \
     array, pi, diff, polyder, polyval, exp, conj, Inf, finfo, ones, r_, \
     float64, zeros, diag, flatnonzero, dot
 
-from scipy.sparse import lil_matrix, csr_matrix, csc_matrix, hstack, vstack
+from scipy.sparse import lil_matrix, csr_matrix, hstack, vstack
 
 from util import Named
 from case import REFERENCE
@@ -63,7 +63,7 @@ class OPF(object):
             http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
-    def __init__(self, case, dc=True, ignore_ang_lim=True, opts=None):
+    def __init__(self, case, dc=True, ignore_ang_lim=True, opt=None):
         """ Initialises a new OPF instance.
         """
         # Case under optimisation.
@@ -76,7 +76,7 @@ class OPF(object):
         self.ignore_ang_lim = ignore_ang_lim
 
         # Solver options (See pdipm.py for futher details).
-        self.opts = {} if opts is None else opts
+        self.opt = {} if opt is None else opt
 
     #--------------------------------------------------------------------------
     #  Public interface:
@@ -94,7 +94,7 @@ class OPF(object):
         elif self.dc:
             result = DCOPFSolver(om).solve()
         else:
-            result = PDIPMSolver(om, self.opts).solve()
+            result = PDIPMSolver(om, self.opt).solve()
 
         return result
 
@@ -162,6 +162,7 @@ class OPF(object):
 
         # Piece-wise linear generator cost constraints.
         y, ycon = self._pwl_gen_costs(gn, base_mva)
+
         if ycon is not None:
             vars.append(y)
             constraints.append(ycon)
@@ -220,7 +221,7 @@ class OPF(object):
         """
         Va = array([b.v_angle_guess * (pi / 180.0) for b in buses])
 
-        Vau = ones(len(buses)) * Inf
+        Vau = Inf * ones(len(buses))
         Val = -Vau
         Vau[refs] = Va[refs]
         Val[refs] = Va[refs]
@@ -304,7 +305,7 @@ class OPF(object):
         """
         # Indexes of constrained lines.
         il = array([i for i,l in enumerate(branches) if 0.0 < l.rate_a < 1e10])
-        lpf = ones(len(il)) * -Inf
+        lpf = -Inf * ones(len(il))
         rate_a = array([l.rate_a / base_mva for l in branches])
         upf = rate_a[il] - Pfinj[il]
         upt = rate_a[il] + Pfinj[il]
@@ -337,7 +338,7 @@ class OPF(object):
                 jj = r_[jjf, jjt]
                 Aang = csr_matrix(r_[ones(nang), -ones(nang)],
                                         (ii, jj), (nang, nb))
-                uang = ones(nang) * Inf
+                uang = Inf * ones(nang)
                 lang = -uang
                 lang[iangl] = array([b.ang_min * (pi / 180.0)
                                     for b in branches])[iangl]
@@ -371,22 +372,21 @@ class OPF(object):
         """
         ng = len(generators)
         gpwl = [g for g in generators if g.pcost_model == PW_LINEAR]
-        nq = len([g for g in gpwl if g.qcost_model is not None])
-
-        if nq > 0:
-            raise NotImplementedError
+#        nq = len([g for g in gpwl if g.qcost_model is not None])
 
         if self.dc:
             pgbas = 0        # starting index within x for active sources
+            nq = 0           # number of Qg vars
             qgbas = None     # index of 1st Qg column in Ay
             ybas = ng        # starting index within x for y variables
         else:
             pgbas = 0
+            nq = ng
             qgbas = ng + 1 # index of 1st Qg column in Ay
             ybas = ng + nq
 
         # Number of extra y variables.
-        ny = len(gpwl) + nq
+        ny = len(gpwl)
 
         if ny == 0:
             return None, None
@@ -394,7 +394,7 @@ class OPF(object):
         # Total number of cost points.
         nc = len([co for gn in gpwl for co in gn.p_cost])
 #        Ay = lil_matrix((nc - ny, ybas + ny))
-        # Fills rows and use transpose.
+        # Fill rows and then transpose.
         Ay = lil_matrix((ybas + ny, nc - ny))
         by = array([])
 
@@ -431,6 +431,7 @@ class OPF(object):
 
         y = Variable("y", ny)
 
+        # Transpose Ay since lil_matrix stores in rows.
         if self.dc:
             ycon = LinearConstraint("ycon", Ay.T, None, by, ["Pg", "y"])
         else:
@@ -572,7 +573,7 @@ class DCOPFSolver(Solver):
             http://www.pserc.cornell.edu/matpower/, December 2009
     """
 
-    def __init__(self, om, opts=None):
+    def __init__(self, om, opt=None):
         """ Initialises a new DCOPFSolver instance.
         """
         super(DCOPFSolver, self).__init__(om)
@@ -584,7 +585,7 @@ class DCOPFSolver(Solver):
         self.fparm = zeros((0, 0))
 
         # Solver options (See pdipm.py for futher details).
-        self.opts = {} if opts is None else opts
+        self.opt = {} if opt is None else opt
 
 
     def solve(self):
@@ -618,7 +619,7 @@ class DCOPFSolver(Solver):
         x0 = self._initial_interior_point(bs, gn, LB, UB, ny)
 
         # Call the quadratic/linear solver.
-        s = self._run_opf(HH, CC, AA, bb, LB, UB, x0, self.opts)
+        s = self._run_opf(HH, CC, AA, bb, LB, UB, x0, self.opt)
 
         # Compute the objective function value.
         Va, Pg, _ = self._update_solution_data(s["x"], HH, CC, C0)
@@ -732,15 +733,15 @@ class DCOPFSolver(Solver):
         return HH, CC, C0
 
 
-    def _run_opf(self, HH, CC, AA, bb, LB, UB, x0, opts):
+    def _run_opf(self, HH, CC, AA, bb, LB, UB, x0, opt):
         """ Solves the either quadratic or linear program.
         """
         N = self._nieq
 
         if HH.nnz > 0:
-            solution = pdipm_qp(HH, CC, AA, bb, LB, UB, x0, N, opts)
+            solution = pdipm_qp(HH, CC, AA, bb, LB, UB, x0, N, opt)
         else:
-            solution = pdipm_qp(None, CC, AA, bb, LB, UB, x0, N, opts)
+            solution = pdipm_qp(None, CC, AA, bb, LB, UB, x0, N, opt)
 
         return solution
 
@@ -802,7 +803,7 @@ class PDIPMSolver(Solver):
     """ Solves AC optimal power flow using a primal-dual interior point method.
     """
 
-    def __init__(self, om, flow_lim=SFLOW, opts=None):
+    def __init__(self, om, flow_lim=SFLOW, opt=None):
         """ Initialises a new PDIPMSolver instance.
         """
         super(PDIPMSolver, self).__init__(om)
@@ -811,7 +812,7 @@ class PDIPMSolver(Solver):
         self.flow_lim = flow_lim
 
         # Options for the PDIPM.
-        self.opts = {} if opts is None else opts
+        self.opt = {} if opt is None else opt
 
 
     def _ref_bus_angle_constraint(self, buses, Va, xmin, xmax):
@@ -831,25 +832,26 @@ class PDIPMSolver(Solver):
         """
         case = self.om.case
         base_mva = case.base_mva
-
         # TODO: Find an explanation for this value.
         self.opt["cost_mult"] = 1e-4
 
         # Unpack the OPF model.
         bs, ln, gn, cp = self._unpack_model(self.om)
+        # Compute problem dimensions.
+        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(bs, ln, gn)
 
         # Compute problem dimensions.
         ng = len(gn)
-        gpol = [g for g in gn if g.pcost_model == POLYNOMIAL]
-        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(bs, ln, gn)
+#        gpol = [g for g in gn if g.pcost_model == POLYNOMIAL]
 
         # Linear constraints (l <= A*x <= u).
         A, l, u = self.om.linear_constraints()
+#        AA, bb = self._linear_constraints(self.om)
 
         _, xmin, xmax = self._var_bounds()
 
         # Select an interior initial point for interior point solver.
-        x0 = self._initial_interior_point(bs, xmin, xmax)
+        x0 = self._initial_interior_point(bs, gn, xmin, xmax, ny)
 
         # Build admittance matrices.
         Ybus, Yf, Yt = case.Y
@@ -883,35 +885,38 @@ class PDIPMSolver(Solver):
             # Piecewise linear cost of P and Q.
             if ny:
                 y = self.om.get_var("y")
-                ccost = csr_matrix((ones(ny), (range(y.i1, i.iN + 1),
-                                 ones(1, ny))), (1, nxyz))
-                f += ccost * x
-            else:
-                ccost = zeros(nxyz)
+                ccost = csr_matrix((ones(ny),
+                    (range(y.i1, y.iN + 1), zeros(ny))), shape=(nxyz, 1)).T
+                f = f + ccost * x
 
+                print f
+            else:
+                ccost = zeros((1, nxyz))
             # TODO: Generalised cost term.
 
             #------------------------------------------------------------------
             #  Evaluate cost gradient.
             #------------------------------------------------------------------
 
-            iPg = array(range(Pg.i1, Pg.iN + 1))
-            iQg = array(range(Qg.i1, Qg.iN + 1))
+            iPg = range(Pg.i1, Pg.iN + 1)
+            iQg = range(Qg.i1, Qg.iN + 1)
 
             # Polynomial cost of P and Q.
-            df_dPgQg = zeros(2 * ng)        # w.r.t p.u. Pg and Qg
+            df_dPgQg = zeros((2 * ng, 1))        # w.r.t p.u. Pg and Qg
 #            df_dPgQg[ipol] = matrix([g.poly_cost(xx[i], 1) for g in gpol])
-            for i, g in enumerate(gn):
-                der = polyder(list(g.p_cost))
-                df_dPgQg[i] = polyval(der, xx[i]) * base_mva
+#            for i, g in enumerate(gn):
+#                der = polyder(list(g.p_cost))
+#                df_dPgQg[i] = polyval(der, xx[i]) * base_mva
+            for i in ipol:
+                df_dPgQg[i] = \
+                    base_mva * polyval(polyder(list(gn[i].p_cost)), xx[i])
 
-            df = zeros(nxyz, 1)
+            df = zeros((nxyz, 1))
             df[iPg] = df_dPgQg[:ng]
             df[iQg] = df_dPgQg[ng:ng + ng]
 
             # Piecewise linear cost of P and Q.
-            df += ccost.T # linear cost row is additive wrt any nonlinear cost
-
+            df = df + ccost.T
             # TODO: Generalised cost term.
 
             #------------------------------------------------------------------
@@ -999,7 +1004,7 @@ class PDIPMSolver(Solver):
             neg_Cg = csr_matrix((-ones(ng), (i_gbus, range(ng))), (nb, ng))
 
             # Transposed Jacobian of the power balance equality constraints.
-            dh = csr_matrix((nxyz, 2 * nb))
+            dh = lil_matrix((nxyz, 2 * nb))
 
             blank = csr_matrix((nb, ng))
             dh[iVaVmPgQg, :] = vstack([
@@ -1028,7 +1033,7 @@ class PDIPMSolver(Solver):
 
             # Construct Jacobian of inequality constraints (branch limits) and
             # transpose it.
-            dg = csr_matrix((nxyz, 2 * nl))
+            dg = lil_matrix((nxyz, 2 * nl))
             dg[r_[iVa, iVm].T, :] = vstack([
                 hstack([df_dVa, df_dVm]),
                 hstack([dt_dVa, dt_dVm])
@@ -1060,24 +1065,30 @@ class PDIPMSolver(Solver):
             d2f_dQg2 = csr_matrix((ng, 1)) # w.r.t p.u. Qg
 #            d2f_dPg2[ipol] = matrix([g.poly_cost(Pg[i] * base_mva, 2)
 #                                     for i, g in enumerate(gpol)])
-            for i, g in enumerate(gn):
-                der = polyder(list(g.p_cost), 2)
-                d2f_dPg2[i] = polyval(der, Pgen[i]) * base_mva
+#            for i, g in enumerate(gn):
+#                der = polyder(list(g.p_cost), 2)
+#                d2f_dPg2[i] = polyval(der, Pgen[i]) * base_mva
 #            d2f_dQg2[ipol] = matrix([g.poly_cost(Qg[i] * base_mva, 2)
 #                                     for i, g in enumerate(gpol)
 #                                     if g.qcost_model is not None])
-            for i, g in enumerate(gn):
-                if g.qcost_model == POLYNOMIAL:
-                    der = polyder(list(g.q_cost), 2)
-                    d2f_dQg2[i] = polyval(der, Qgen[i]) * base_mva
+
+            for i in ipol:
+                d2f_dQg2[i] = \
+                    base_mva * polyval(polyder(list(gn[i].p_cost), 2),
+                                       Pg[i] * base_mva)
+
+#            for i, g in enumerate(gn):
+#                if g.qcost_model == POLYNOMIAL:
+#                    der = polyder(list(g.q_cost), 2)
+#                    d2f_dQg2[i] = polyval(der, Qgen[i]) * base_mva
 
             i = r_[array(range(Pg.i1, Pg.iN + 1)),
                    array(range(Qg.i1, Qg.iN + 1))]
-            d2f = csr_matrix(r_[d2f_dPg2, d2f_dQg2], i, i, (nxyz, nxyz))
 
+            d2f = csr_matrix((vstack([d2f_dPg2, d2f_dQg2]).toarray().flatten(),
+                              (i, i)), shape=(nxyz, nxyz))
             # TODO: Generalised cost model.
-
-            d2f *= self.opts["cost_mult"]
+            d2f = d2f * self.opt["cost_mult"]
 
             #------------------------------------------------------------------
             #  Evaluate Hessian of power balance constraints.
@@ -1157,7 +1168,7 @@ class PDIPMSolver(Solver):
 
         # Solve using primal-dual interior point method.
 #        x, _, info, output, lmbda = \
-        s = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u, self.opts)
+        s = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u, self.opt)
 
         return s
 
@@ -1236,8 +1247,11 @@ class OPFModel(object):
     def linear_constraints(self):
         """ Returns the linear constraints.
         """
+        if self.lin_N == 0:
+            return None, array([]), array([])
+
         A = lil_matrix((self.lin_N, self.var_N), dtype=float64)
-        l = ones(self.lin_N) * -Inf
+        l = -Inf * ones(self.lin_N)
         u = -l
 
         for lin in self.lin_constraints:
@@ -1371,13 +1385,13 @@ class Variable(Set):
 
         # Lower bound on the variables. Unbounded below be default.
         if vl is None:
-            self.vl = ones(N) * -Inf
+            self.vl = -Inf * ones(N)
         else:
             self.vl = vl
 
         # Upper bound on the variables. Unbounded above by default.
         if vu is None:
-            self.vu = ones(N) * Inf
+            self.vu = Inf * ones(N)
         else:
             self.vu = vu
 
@@ -1395,8 +1409,8 @@ class LinearConstraint(Set):
         super(LinearConstraint, self).__init__(name, N)
 
         self.A = AorN
-        self.l = ones(N) * -Inf if l is None else l
-        self.u = ones(N) *  Inf if u is None else u
+        self.l = -Inf * ones(N) if l is None else l
+        self.u =  Inf * ones(N) if u is None else u
 
         # Varsets.
         self.vs = [] if vs is None else vs
