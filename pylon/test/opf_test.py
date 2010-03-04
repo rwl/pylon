@@ -33,7 +33,7 @@ from pylon.opf import DCOPFSolver, PDIPMSolver
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
+POLY_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 PWL_FILE  = join(dirname(__file__), "data", "case30pwl.pkl")
 
 #------------------------------------------------------------------------------
@@ -179,66 +179,6 @@ class PWLOPFTest(unittest.TestCase):
 
     def test_pwl_gen_cost(self):
         """ Test piece-wise linear generator cost constraints.
-
-        Ay =
-
-           (1,1)           1200
-           (2,1)           3600
-           (3,1)           7600
-           (4,2)           2000
-           (5,2)           4400
-           (6,2)           8400
-           (7,3)           1200
-           (8,3)           3600
-           (9,3)           7600
-          (10,4)           2000
-          (11,4)           4400
-          (12,4)           8400
-          (13,5)           2000
-          (14,5)           4400
-          (15,5)           8400
-          (16,6)           1200
-          (17,6)           3600
-          (18,6)           7600
-           (1,7)             -1
-           (2,7)             -1
-           (3,7)             -1
-           (4,8)             -1
-           (5,8)             -1
-           (6,8)             -1
-           (7,9)             -1
-           (8,9)             -1
-           (9,9)             -1
-          (10,10)            -1
-          (11,10)            -1
-          (12,10)            -1
-          (13,11)            -1
-          (14,11)            -1
-          (15,11)            -1
-          (16,12)            -1
-          (17,12)            -1
-          (18,12)            -1
-
-        by =
-
-                   0
-                 288
-                1728
-                   0
-                 288
-                1728
-                   0
-                 288
-                1728
-                   0
-                 288
-                1728
-                   0
-                 288
-                1728
-                   0
-                 288
-                1728
         """
         y, ycon = self.opf._pwl_gen_costs(self.case.generators,
                                           self.case.base_mva)
@@ -259,7 +199,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         self.case = Case.load(PWL_FILE)
-        self.opf = OPF(self.case, dc=True, opts={"verbose": True})
+        self.opf = OPF(self.case, dc=True, opt={"verbose": True})
         self.om = self.opf._construct_opf_model(self.case)
         self.solver = DCOPFSolver(self.om)
 
@@ -477,7 +417,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
                                                 any_pwl, npol, nw)
         _, LB, UB = self.solver._var_bounds()
         x0 = self.solver._initial_interior_point(buses, generators, LB, UB, ny)
-        s = self.solver._run_opf(HH, CC, AA, bb, LB, UB, x0, self.solver.opts)
+        s = self.solver._run_opf(HH, CC, AA, bb, LB, UB, x0, self.solver.opt)
 
         Va, Pg, f = self.solver._update_solution_data(s["x"], HH, CC, C0)
 
@@ -516,6 +456,58 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         self.assertAlmostEqual(case.generators[1].mu_pmax, 0.0, pl)
 
 #------------------------------------------------------------------------------
+#  "PDIPMSolverTest" class:
+#------------------------------------------------------------------------------
+
+class PDIPMSolverTest(unittest.TestCase):
+    """ Test case for the PDIPM OPF solver.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.case = Case.load(PWL_FILE)
+        self.opf = OPF(self.case, dc=False)
+        self.om = self.opf._construct_opf_model(self.case)
+        self.solver = PDIPMSolver(self.om, opt={"verbose": True})
+
+
+    def test_solution(self):
+        """ Test solution to AC OPF using PDIPM.
+        """
+        self.solver.opt["max_it"] = 1
+
+        solution = self.solver.solve()
+        x = solution["x"]
+#        lmbda = solution["lmbdaout"]
+
+        self.assertEqual(solution["output"]["iterations"], 9)
+
+        pl = 4
+        # Va
+        self.assertAlmostEqual(x[0], 0.0, pl)
+        self.assertAlmostEqual(x[1], -0.0346, pl)
+        self.assertAlmostEqual(x[2], -0.0390, pl)
+        self.assertAlmostEqual(x[3], -0.0536, pl)
+        self.assertAlmostEqual(x[4], -0.0684, pl)
+        self.assertAlmostEqual(x[5], -0.0719, pl)
+        # Vm
+        self.assertAlmostEqual(x[6], 1.05, pl)
+        self.assertAlmostEqual(x[7], 1.05, pl)
+        self.assertAlmostEqual(x[8], 1.07, pl)
+        self.assertAlmostEqual(x[9], 0.9882, pl)
+        self.assertAlmostEqual(x[10], 0.9851, pl)
+        self.assertAlmostEqual(x[11], 1.0046, pl)
+        # Pg
+        self.assertAlmostEqual(x[12], 0.7722, pl)
+        self.assertAlmostEqual(x[13], 0.6927, pl)
+        self.assertAlmostEqual(x[14], 0.7042, pl)
+        # Qg
+        self.assertAlmostEqual(x[15], 0.2572, pl)
+        self.assertAlmostEqual(x[16], 0.6465, pl)
+        self.assertAlmostEqual(x[17], 0.8664, pl)
+
+#------------------------------------------------------------------------------
 #  "OPFTest" class:
 #------------------------------------------------------------------------------
 
@@ -526,7 +518,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
 #    def setUp(self):
 #        """ The test runner will execute this method prior to each test.
 #        """
-#        self.case = Case.load(DATA_FILE)
+#        self.case = Case.load(POLY_FILE)
 #
 #        self.opf = OPF(self.case, show_progress=False)
 #
@@ -755,7 +747,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
 #    def setUp(self):
 #        """ The test runner will execute this method prior to each test.
 #        """
-#        self.case = Case.load(DATA_FILE)
+#        self.case = Case.load(POLY_FILE)
 #        self.opf = OPF(self.case, show_progress=True)
 #        self.om = self.opf._construct_opf_model(self.case)
 #        self.solver = DCOPFSolver(self.om)
@@ -975,7 +967,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
 #    def setUp(self):
 #        """ The test runner will execute this method prior to each test.
 #        """
-#        self.case = Case.load(DATA_FILE)
+#        self.case = Case.load(POLY_FILE)
 #        self.opf = OPF(self.case, dc=False)
 #        self.om = self.opf._construct_opf_model(self.case)
 #        self.solver = PDIPMSolver(self.om, opt={"verbose": True})
@@ -1050,15 +1042,17 @@ class OPFModelTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = Case.load(DATA_FILE)
-        self.opf = OPF(self.case, dc=True)
-        self.om = self.opf._construct_opf_model(self.case)
+        self.case = Case.load(POLY_FILE)
+        self.opf = OPF(self.case)
 
 
-    def test_linear_constraints(self):
+    def test_dc_linear_constraints(self):
         """ Test linear OPF constraints.
         """
-        A, l, u = self.om.linear_constraints()
+        self.opf.dc = True
+        om = self.opf._construct_opf_model(self.case)
+
+        A, l, u = om.linear_constraints()
 
         self.assertEqual(A.shape, (28, 9))
         self.assertEqual(l.shape, (28, ))
@@ -1081,6 +1075,19 @@ class OPFModelTest(unittest.TestCase):
         self.assertAlmostEqual(u[6],  0.4000, pl)
         self.assertAlmostEqual(u[7],  0.6000, pl)
         self.assertAlmostEqual(u[23], 0.9000, pl)
+
+
+    def test_ac_linear_constraints(self):
+        """ Test linear OPF constraints.
+        """
+        self.opf.dc = False
+        om = self.opf._construct_opf_model(self.case)
+
+        A, l, u = om.linear_constraints()
+
+        self.assertEqual(A, None)
+        self.assertEqual(l.shape, (0, ))
+        self.assertEqual(u.shape, (0, ))
 
 
 if __name__ == "__main__":

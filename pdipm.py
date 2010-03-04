@@ -140,7 +140,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     elif Ai is None:
         dg = dgn
     else:
-        hstack([dgn, Ai.T])
+        dg = hstack([dgn, Ai.T])
     if (dhn is None) and (Ae is None):
         dh = None
     elif dhn is None:
@@ -148,7 +148,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     elif Ae is None:
         dh = dhn
     else:
-        hstack([dhn, Ae.T])
+        dh = hstack([dhn, Ae.T])
 
     # some dimensions
     neq = h.shape[0]           # number of equality constraints
@@ -303,7 +303,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         elif Ai is None:
             dg = dgn
         else:
-            hstack([dgn, Ai.T])
+            dg = hstack([dgn, Ai.T])
         if (dhn is None) and (Ae is None):
             dh = None
         elif dhn is None:
@@ -311,7 +311,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         elif Ae is None:
             dh = dhn
         else:
-            hstack([dhn, Ae.T])
+            dh = hstack([dhn, Ae.T])
 
         Lx = df
         Lx = Lx + dh * lam if dh is not None else Lx
