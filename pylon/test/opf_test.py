@@ -259,7 +259,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         self.case = Case.load(PWL_FILE)
-        self.opf = OPF(self.case, dc=True)
+        self.opf = OPF(self.case, dc=True, opts={"verbose": True})
         self.om = self.opf._construct_opf_model(self.case)
         self.solver = DCOPFSolver(self.om)
 
@@ -267,7 +267,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
     def test_unpack_model(self):
         """ Test unpacking the OPF model.
         """
-        buses, branches, generators, cp = self.solver._unpack_model(self.om)
+        buses, branches, generators, _ = self.solver._unpack_model(self.om)
 
         self.assertEqual(len(buses), 30)
         self.assertEqual(len(branches), 41)
@@ -296,7 +296,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
     def test_constraints(self):
         """ Test equality and inequality constraints.
         """
-        AA, bb = self.solver._split_constraints(self.om)
+        AA, bb = self.solver._linear_constraints(self.om)
 
         self.assertEqual(AA.shape, (130, 42))
         self.assertEqual(bb.shape, (130,))
@@ -323,7 +323,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         base_mva = self.om.case.base_mva
         b, l, g, _ = self.solver._unpack_model(self.om)
         ipol, _, _, _, _, _, nxyz = self.solver._dimension_data(b, l, g)
-        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
+        Npol, Hpol, Cpol, fparm_pol, _, npol = \
             self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
 
         self.assertEqual(npol, 0)
@@ -343,7 +343,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         ipol, ipwl, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
         Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz,
                                                                       ipwl)
-        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
+        Npol, Hpol, Cpol, fparm_pol, _, npol = \
             self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
         NN, HHw, CCw, ffparm = \
             self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
@@ -409,13 +409,49 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         """
         b, l, g, _ = self.solver._unpack_model(self.om)
         _, LB, UB = self.solver._var_bounds()
-        ipol, ipwl, nb, nl, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
+        _, _, _, _, _, ny, _ = self.solver._dimension_data(b, l, g)
         x0 = self.solver._initial_interior_point(b, g, LB, UB, ny)
 
         self.assertEqual(x0.shape, (42,))
         self.assertEqual(x0[0], 0.0)
         self.assertEqual(x0[30], 0.4)
         self.assertAlmostEqual(x0[41], 3643.2, 4)
+
+
+    def test_run_opf(self):
+        """ Test solution from the PDIPM solver.
+        """
+        solution = self.solver.solve()
+        x = solution["x"]
+        lmbda = solution["lmbda"]
+
+        pl = 4
+        self.assertEqual(solution["output"]["iterations"], 10)
+        self.assertEqual(x.shape, (42,))
+        self.assertAlmostEqual(x[0], 0.0, pl)
+        self.assertAlmostEqual(x[1], -0.0140, pl)
+        self.assertAlmostEqual(x[30], 0.3600, pl)
+        self.assertAlmostEqual(x[31], 0.2818, pl)
+        self.assertAlmostEqual(x[40], 753.70, places=1)
+        self.assertAlmostEqual(x[41], 1008.0, places=1)
+
+        self.assertEqual(lmbda["eqnonlin"].shape, (0,))
+        self.assertEqual(lmbda["ineqnonlin"].shape, (0,))
+        self.assertEqual(lmbda["mu_l"].shape, (130,))
+        self.assertEqual(lmbda["mu_u"].shape, (130,))
+        self.assertEqual(lmbda["lower"].shape, (42,))
+        self.assertEqual(lmbda["upper"].shape, (42,))
+        self.assertAlmostEqual(lmbda["mu_u"][0], 4400.0, pl)
+        self.assertAlmostEqual(lmbda["mu_u"][30], 0.0, pl)
+        self.assertAlmostEqual(lmbda["mu_u"][129], 0.2, pl)
+        self.assertAlmostEqual(lmbda["lower"][0], 0.0, pl)
+        self.assertAlmostEqual(lmbda["lower"][31], 1.115e-5, places=8)
+        self.assertAlmostEqual(lmbda["lower"][34], 1.669e-5, places=8)
+        self.assertAlmostEqual(lmbda["upper"][0], 0.0, pl)
+        self.assertAlmostEqual(lmbda["upper"][33], 1.821e-5, places=8)
+        self.assertAlmostEqual(lmbda["upper"][35], 8.652e-5, places=8)
+
+        self.assertTrue(solution["converged"])
 
 #------------------------------------------------------------------------------
 #  "OPFTest" class:
@@ -695,7 +731,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
 #    def test_constraints(self):
 #        """ Test equality and inequality constraints.
 #        """
-#        Aeq, beq, Aieq, bieq = self.solver._split_constraints(self.om)
+#        Aeq, beq, Aieq, bieq = self.solver._linear_constraints(self.om)
 #
 #        self.assertEqual(Aeq.shape, (6, 9))
 #        self.assertEqual(beq.shape, (6, 1))
