@@ -450,6 +450,9 @@ class Solver(object):
         # Optimal power flow model.
         self.om = om
 
+        # Number of equality constraints.
+        self._nieq = 0
+
 
     def solve(self):
         """ Solves optimal power flow and returns a results dict.
@@ -494,7 +497,7 @@ class Solver(object):
         return ipol, ipwl, nb, nl, nw, ny, nxyz
 
 
-    def _split_constraints(self, om):
+    def _linear_constraints(self, om):
         """ Returns the linear problem constraints.
         """
         A, l, u = om.linear_constraints() # l <= A*x <= u
@@ -518,6 +521,8 @@ class Solver(object):
             AA = vstack([AA, A[ibx, :], -A[ibx, :]], "csr")
 
         bb = r_[u[ieq, :], u[ilt], -l[igt], u[ibx], -l[ibx]]
+
+        self._nieq = ieq.shape[0]
 
         return AA, bb
 
@@ -593,7 +598,7 @@ class DCOPFSolver(Solver):
                                                                 branches,
                                                                 generators)
         # Split the constraints in equality and inequality.
-        AA, bb = self._split_constraints(self.om)
+        AA, bb = self._linear_constraints(self.om)
         # Piece-wise linear components of the objective function.
         Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self._pwl_costs(ny, nxyz, ipwl)
         # Quadratic components of the objective function.
@@ -713,8 +718,8 @@ class DCOPFSolver(Solver):
         MR = M * ffparm[:, 2]
         HMR = HHw * MR
         MN = M * NN
-        HH = MN.H * HHw * MN
-        CC = MN.H * (CCw - HMR)
+        HH = MN.T * HHw * MN
+        CC = MN.T * (CCw - HMR)
         # Constant term of cost.
         C0 = 1./2. * MR.T * HMR + sum(polycf[:, 2])
 
@@ -724,9 +729,9 @@ class DCOPFSolver(Solver):
     def _run_opf(self, HH, CC, AA, bb, LB, UB, x0, opts):
         """ Solves the either quadratic or linear program.
         """
-        N = AA.shape[0]
+        N = self._nieq
 
-        if len(HH) > 0:
+        if HH.nnz > 0:
             solution = pdipm_qp(HH, CC, AA, bb, LB, UB, x0, N, opts)
         else:
             solution = pdipm_qp(None, CC, AA, bb, LB, UB, x0, N, opts)

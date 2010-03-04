@@ -27,11 +27,12 @@
 import logging
 
 from numpy import \
-    array, nonzero, Inf, any, isnan, log, ones, r_, finfo, zeros
+    array, flatnonzero, Inf, any, isnan, log, ones, r_, finfo, zeros, dot, \
+    absolute
 
 from numpy.linalg import norm
 
-from scipy.sparse import csr_matrix, vstack, hstack
+from scipy.sparse import csr_matrix, vstack, hstack, eye
 from scipy.sparse.linalg import spsolve
 
 #------------------------------------------------------------------------------
@@ -65,7 +66,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     xmin = ones(x0.shape[0]) * -Inf if xmin is None else xmin
     xmax = ones(x0.shape[0]) *  Inf if xmax is None else xmax
     if A is None:
-        A = csr_matrix((0, x0.shape[0]))
+#        A = csr_matrix((0, x0.shape[0]))
         l = array([])
         u = array([])
 
@@ -99,24 +100,30 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     mu_threshold = 1e-5
 
     # initialize
-    i = 0                      # iteration counter
-    converged = False          # flag
-    nx = x0.size[0]            # number of variables
-    nA = A.size[0]             # number of original linear constraints
+    i = 0                       # iteration counter
+    converged = False           # flag
+    nx = x0.shape[0]            # number of variables
+    nA = A.shape[0]             # number of original linear constraints
 
     # add var limits to linear constraints
-    AA = vstack([csr_matrix(ones(nx), range(nx), range(nx)), A])
+    eyex = eye(nx, nx, format="csr")
+    AA = eyex if A is None else vstack([eyex, A], "csr")
     ll = r_[xmin, l]
     uu = r_[xmax, u]
 
     # split up linear constraints
-    ieq = nonzero( abs(uu - ll) <= EPS )
-    igt = nonzero( uu >=  1e10 and ll > -1e10 )
-    ilt = nonzero( ll <= -1e10 and uu <  1e10 )
-    ibx = nonzero( (abs(uu - ll) > EPS) and (uu < 1e10) and (ll > -1e10) )
-    Ae = AA[ieq, :]
+    ieq = flatnonzero( absolute(uu - ll) <= EPS )
+    igt = flatnonzero( (uu >=  1e10) & (ll > -1e10) )
+    ilt = flatnonzero( (ll <= -1e10) & (uu <  1e10) )
+    ibx = flatnonzero( (absolute(uu - ll) > EPS) & (uu < 1e10) & (ll > -1e10) )
+    # zero-sized sparse matrices unsupported
+    Ae = AA[ieq, :] if len(ieq) else None
+    if len(ilt) or len(igt) or len(ibx):
+        idxs = [(1, ilt), (-1, igt), (1, ibx), (-1, ibx)]
+        Ai = vstack([sig * AA[idx, :] for sig, idx in idxs if len(idx)])#, "csr")
+    else:
+        Ai = None
     be = uu[ieq, :]
-    Ai = vstack([AA[ilt, :], -AA[igt, :], AA[ibx, :], -AA[ibx, :]])
     bi = r_[uu[ilt], -ll[igt], uu[ibx], -ll[ibx]]
 
     # evaluate cost f(x0) and constraints g(x0), h(x0)
@@ -125,44 +132,65 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     f = f * opt["cost_mult"]
     df = df * opt["cost_mult"]
     gn, hn, dgn, dhn = ipm_gh(x)        # non-linear constraints
-    g = r_[gn, Ai * x - bi]             # inequality constraints
-    h = r_[hn, Ae * x - be]             # equality constraints
-    dg = hstack([dgn, Ai.H])            # 1st derivative of inequalities
-    dh = hstack([dhn, Ae.H])            # 1st derivative of equalities
+    g = gn if Ai is None else r_[gn, Ai * x - bi]    # inequality constraints
+    h = hn if Ae is None else r_[hn, Ae * x - be]    # equality constraints
+    if (dgn is None) and (Ai is None):
+        dg = None
+    elif dgn is None:
+        dg = Ai.T
+    elif Ai is None:
+        dg = dgn
+    else:
+        hstack([dgn, Ai.T])
+#    dg = dgn if (dgn is None) or (Ai is None) else hstack([dgn, Ai.T])  # d_ieq
+    if (dhn is None) and (Ae is None):
+        dh = None
+    elif dhn is None:
+        dh = Ae.T
+    elif Ae is None:
+        dh = dhn
+    else:
+        hstack([dhn, Ae.T])
+#    dh = dhn if dgn is None or Ae is None else hstack([dhn, Ae.T])  # d_eq
 
     # some dimensions
-    neq = h.size[0]           # number of equality constraints
-    niq = g.size[0]           # number of inequality constraints
-    neqnln = hn.size[0]       # number of non-linear equality constraints
-    niqnln = gn.size[0]       # number of non-linear inequality constraints
-    nlt = len(ilt)            # number of upper bounded linear inequalities
-    ngt = len(igt)            # number of lower bounded linear inequalities
-    nbx = len(ibx)            # number of doubly bounded linear inequalities
+    neq = h.shape[0]           # number of equality constraints
+    niq = g.shape[0]           # number of inequality constraints
+    neqnln = hn.shape[0]       # number of non-linear equality constraints
+    niqnln = gn.shape[0]       # number of non-linear inequality constraints
+    nlt = len(ilt)             # number of upper bounded linear inequalities
+    ngt = len(igt)             # number of lower bounded linear inequalities
+    nbx = len(ibx)             # number of doubly bounded linear inequalities
 
     # initialize gamma, lam, mu, z, e
     gamma = 1                  # barrier coefficient
     lam = zeros(neq)
     z = z0 * ones(niq)
-    mu = z
-#    k = matrix(map(lambda x, y: x < y, g, -z0))
-    k = array([j for j in range(len(g)) if g[j] < -z0])
+    mu = z0 * ones(niq)
+    k = flatnonzero(g < -z0)
     z[k] = -g[k]
-    k = array([j for j in range(len(z)) if (gamma / z[j]) > z0])
+    k = flatnonzero((gamma / z) > z0)
     mu[k] = gamma / z[k]
     e = ones(niq)
 
     # check tolerance
     f0 = f
     if opt["step_control"]:
-        L = f + lam.H * h + mu.H * (g + z) - gamma * sum(log(z))
+        L = f + lam.T * h + mu.T * (g + z) - gamma * sum(log(z))
 
-    Lx = df + dh * lam + dg * mu
+    Lx = df# + dh * lam + dg * mu
+    Lx = Lx + dh * lam if dh is not None else Lx
+    Lx = Lx + dg * mu  if dg is not None else Lx
+
     feascond = \
         max([norm(h, Inf), max(g)]) / (1 + max([norm(x, Inf), norm(z, Inf)]))
     gradcond = \
         norm(Lx, Inf) / (1 + max([norm(lam, Inf), norm(mu, Inf)]))
-    compcond = (z.H * mu) / (1 + norm(x, Inf))
-    costcond = abs(f - f0) / (1 + abs(f0))
+    compcond = dot(z, mu) / (1 + norm(x, Inf))
+    costcond = absolute(f - f0) / (1 + absolute(f0))
+
+    print f
+
     if opt["verbose"]:
         logger.info(" it    objective   step size   feascond     gradcond     "
                     "compcond     costcond  ")
@@ -187,82 +215,87 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
                  "ineqnonlin": mu[range(niqnln)]}
         Lxx = ipm_hess(x, lmbda)
 
-        zinvdiag = csr_matrix((1.0 / z, (range(len(z)), range(len(z)))))
-        mudiag = csr_matrix((mu, (range(len(mu)), range(len(mu)))))
-        dg_zinv = dg * zinvdiag
-        M = Lxx + dg_zinv * mudiag * dg.H
-        N = Lx + dg_zinv * (mudiag * g + gamma * e)
-        Ab = vstack([hstack([M, dh]),
-                     hstack([dh.T, csr_matrix((neq, neq))])])
+        rz = range(len(z))
+        zinvdiag = csr_matrix((1.0 / z, (rz, rz))) if len(z) else None
+        rmu = range(len(mu))
+        mudiag = csr_matrix((mu, (rmu, rmu))) if len(mu) else None
+        dg_zinv = None if dg is None else dg * zinvdiag
+#        M = Lxx + dg_zinv * mudiag * dg.T
+        M = Lxx if dg is None else Lxx + dg_zinv * mudiag * dg.T
+        N = Lx if dg is None else Lx + dg_zinv * (mudiag * g + gamma * e)
+        Ab = M if dh is None else vstack([
+            hstack([M, dh]),
+            hstack([dh.T, csr_matrix((neq, neq))])
+        ])
         bb = r_[-N, -h]
 
-        dxdlam = spsolve(Ab, bb)
+        dxdlam = spsolve(Ab.tocsr(), bb)
 
         dx = dxdlam[:nx]
         dlam = dxdlam[nx:nx + neq]
-        dz = -g - z - dg.H * dx
-        dmu = -mu + zinvdiag * (gamma * e - mudiag * dz)
+        dz = -g - z if dg is None else -g - z - dg.T * dx
+        dmu = -mu if dg is None else -mu + zinvdiag * (gamma * e - mudiag * dz)
 
         # optional step-size control
         sc = False
         if opt["step_control"]:
-            x1 = x + dx
-
-            # evaluate cost, constraints, derivatives at x1
-            f1, df1 = ipm_f(x1)          # cost
-            f1 = f1 * opt["cost_mult"]
-            df1 = df1 * opt["cost_mult"]
-            gn1, hn1, dgn1, dhn1 = ipm_gh(x1) # non-linear constraints
-            g1 = r_[gn1, Ai * x1 - bi]        # inequality constraints
-            h1 = r_[hn1, Ae * x1 - be]        # equality constraints
-            dg1 = r_[dgn1.T, Ai.H.T].T        # 1st derivative of inequalities
-            dh1 = r_[dhn1.T, Ae.H.T].T        # 1st derivative of equalities
-
-            # check tolerance
-            Lx1 = df1 + dh1 * lam + dg1 * mu
-            feascond1 = max([ norm(h1, Inf), max(g1) ]) / \
-                (1 + max([ norm(x1, Inf), norm(z, Inf) ]))
-            gradcond1 = norm(Lx1, Inf) / \
-                (1 + max([ norm(lam, Inf), norm(mu, Inf) ]))
-
-            if feascond1 > feascond and gradcond1 > gradcond:
-                sc = True
-        if sc:
-            alpha = 1.0
-            for j in range(opt["max_red"]):
-                dx1 = alpha * dx
-                x1 = x + dx1
-                f1 = ipm_f(x1)             # cost
-                f1 = f1 * opt["cost_mult"]
-                gn1, hn1 = ipm_gh(x1)              # non-linear constraints
-                g1 = r_[gn1, Ai * x1 - bi]         # inequality constraints
-                h1 = r_[hn1, Ae * x1 - be]         # equality constraints
-                L1 = f1 + lam.H * h1 + mu.H * (g1 + z) - gamma * sum(log(z))
-                if opt["verbose"]:
-                    logger.info("\n   %3d            %10.f" % (-j, norm(dx1)))
-                rho = (L1 - L) / (Lx.H * dx1 + 0.5 * dx1.H * Lxx * dx1)
-                if rho > rho_min and rho < rho_max:
-                    break
-                else:
-                    alpha = alpha / 2.0
-            dx = alpha * dx
-            dz = alpha * dz
-            dlam = alpha * dlam
-            dmu = alpha * dmu
+            raise NotImplementedError
+#            x1 = x + dx
+#
+#            # evaluate cost, constraints, derivatives at x1
+#            f1, df1 = ipm_f(x1)          # cost
+#            f1 = f1 * opt["cost_mult"]
+#            df1 = df1 * opt["cost_mult"]
+#            gn1, hn1, dgn1, dhn1 = ipm_gh(x1) # non-linear constraints
+#            g1 = gn1 if Ai is None else r_[gn1, Ai * x1 - bi] # ieq constraints
+#            h1 = hn1 if Ae is None else r_[hn1, Ae * x1 - be] # eq constraints
+#            dg1 = dgn1 if Ai is None else r_[dgn1, Ai.T]      # 1st der of ieq
+#            dh1 = dhn1 if Ae is None else r_[dhn1, Ae.T]      # 1st der of eqs
+#
+#            # check tolerance
+#            Lx1 = df1 + dh1 * lam + dg1 * mu
+#            feascond1 = max([ norm(h1, Inf), max(g1) ]) / \
+#                (1 + max([ norm(x1, Inf), norm(z, Inf) ]))
+#            gradcond1 = norm(Lx1, Inf) / \
+#                (1 + max([ norm(lam, Inf), norm(mu, Inf) ]))
+#
+#            if feascond1 > feascond and gradcond1 > gradcond:
+#                sc = True
+#        if sc:
+#            alpha = 1.0
+#            for j in range(opt["max_red"]):
+#                dx1 = alpha * dx
+#                x1 = x + dx1
+#                f1 = ipm_f(x1)             # cost
+#                f1 = f1 * opt["cost_mult"]
+#                gn1, hn1 = ipm_gh(x1)              # non-linear constraints
+#                g1 = r_[gn1, Ai * x1 - bi]         # inequality constraints
+#                h1 = r_[hn1, Ae * x1 - be]         # equality constraints
+#                L1 = f1 + lam.H * h1 + mu.H * (g1 + z) - gamma * sum(log(z))
+#                if opt["verbose"]:
+#                    logger.info("\n   %3d            %10.f" % (-j, norm(dx1)))
+#                rho = (L1 - L) / (Lx.H * dx1 + 0.5 * dx1.H * Lxx * dx1)
+#                if rho > rho_min and rho < rho_max:
+#                    break
+#                else:
+#                    alpha = alpha / 2.0
+#            dx = alpha * dx
+#            dz = alpha * dz
+#            dlam = alpha * dlam
+#            dmu = alpha * dmu
 
         # do the update
-        k = nonzero(dz < 0.0)
-        alphap = min( r_[xi * min(z[k] / -dz[k]), 1] )
+        k = flatnonzero(dz < 0.0)
+        alphap = min( r_[xi * min(z[k] / -dz[k]), array([1])] )
 
-        k = nonzero(dmu < 0.0)
-#        alphad = min( matrix([xi * min(div(mu[k], -dmu[k])), 1]) )
-        alphad = min( r_[xi * min( r_[mu[k] / -dmu[k], 1] ), 1] )
+        k = flatnonzero(dmu < 0.0)
+        alphad = min( r_[xi * min(mu[k] / -dmu[k]), array([1])] )
 
         x = x + alphap * dx
         z = z + alphap * dz
         lam = lam + alphad * dlam
         mu = mu + alphad * dmu
-        gamma = sigma * (z.H * mu) / niq
+        gamma = sigma * (z.T * mu) / niq
 
         # evaluate cost, constraints, derivatives
         f, df, _ = ipm_f(x)             # cost
@@ -270,22 +303,19 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         df = df * opt["cost_mult"]
 
         gn, hn, dgn, dhn = ipm_gh(x)           # non-linear constraints
-        g = r_[gn, Ai * x - bi]                # inequality constraints
-        h = r_[hn, Ae * x - be]                # equality constraints
-        dg = hstack([dgn, Ai.T])           # 1st derivative of inequalities
-        dh = hstack([dhn, Ae.T])           # 1st derivative of equalities
-
-#        print "\n", df
+        g = gn if Ai is None else r_[gn, Ai * x - bi]   # inequality cnstraints
+        h = hn if Ae is None else r_[hn, Ae * x - be]   # equality constraints
+        dg = dgn if Ai is None else hstack([dgn, Ai.T]) # 1st der of ieq
+        dh = dhn if Ae is None else hstack([dhn, Ae.T]) # 1st der of eqs
 
         Lx = df + dh * lam + dg * mu
-#        print "Lx\n", dh * lam, dg * mu, Lx
 
         feascond = \
             max([norm(h, Inf), max(g)]) / (1 + max([norm(x,Inf), norm(z,Inf)]))
         gradcond = \
             norm(Lx, Inf) / (1 + max([norm(lam, Inf), norm(mu, Inf)]))
         compcond = (z.H * mu) / (1 + norm(x, Inf))
-        costcond = abs(f - f0) / (1 + abs(f0))
+        costcond = absolute(f - f0) / (1 + absolute(f0))
         if opt["verbose"]:
             logger.info("%3d  %12.8f %10.5f %12.f %12.f %12.f %12.f" %
                 (i, (f / opt["cost_mult"]), norm(dx), feascond, gradcond,
@@ -322,9 +352,9 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     # re-package multipliers into struct
     lam_lin = lam[neqnln:neq]              # lambda for linear constraints
     mu_lin = mu[niqnln:niq]                # mu for linear constraints
-    kl = nonzero(lam_lin < 0.0)
+    kl = flatnonzero(lam_lin < 0.0)
 #    kl = nonzero(lam_lin < 0)              # lower bound binding
-    ku = nonzero(lam_lin > 0.0)
+    ku = flatnonzero(lam_lin > 0.0)
 #    ku = nonzero(lam_lin > 0)              # upper bound binding
 
     mu_l = zeros(nx + nA)
@@ -354,7 +384,6 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 #------------------------------------------------------------------------------
 
 def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
-#             verbose=True, cost_mult=1):
     """ Wrapper function for a primal-dual interior point QP solver.
     """
     nx = len(c)
@@ -370,11 +399,11 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
 
     if x0 is None:
         x0 = zeros(nx)
-        k = nonzero(VUB < 1e10 and VLB > -1e10)
-        x0[k] ((VUB[k] + VLB[k]) / 2)
-        k = nonzero(VUB < 1e10 and VLB <= -1e10)
+        k = flatnonzero( (VUB < 1e10) & (VLB > -1e10) )
+        x0[k] = ((VUB[k] + VLB[k]) / 2)
+        k = flatnonzero( (VUB < 1e10) & (VLB <= -1e10) )
         x0[k] = VUB[k] - 1
-        k = nonzero(VUB >= 1e10 and VLB > -1e10)
+        k = flatnonzero( (VUB >= 1e10) & (VLB > -1e10) )
         x0[k] = VLB[k] + 1
 
     opt = {} if opt is None else opt
@@ -382,16 +411,16 @@ def pdipm_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
         opt["cost_mult"] = 1
 
     def qp_f(x):
-        f = 0.5 * x.H * H * x + c.H * x
+        f = 0.5 * x.T * H * x + c.T * x
         df = H * x + c
         return f, df, H
 
     def qp_gh(x):
         g = array([])
         h = array([])
-        n, _ = x.size
-        dg = csr_matrix((n, 0))
-        dh = csr_matrix((n, 0))
+#        n = x.shape[0]
+        dg = None #csr_matrix((n, 0))
+        dh = None #csr_matrix((n, 0))
         return g, h, dg, dh
 
     def qp_hessian(x, lmbda):

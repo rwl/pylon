@@ -423,7 +423,7 @@ class Case(Named, Serializable):
 
         # Branch admittances plus shunt admittances.
         Ysh_diag = csc_matrix((Ysh, (ib, ib)), shape=(nb, nb))
-        Ybus = Cf.H * Yf + Ct.H * Yt + Ysh_diag
+        Ybus = Cf.T * Yf + Ct.T * Yt + Ysh_diag
         assert Ybus.shape == (nb, nb)
 
         return Ybus, Yf, Yt
@@ -518,7 +518,7 @@ class Case(Named, Serializable):
         # injected at each branch's "from" bus.
         Bf = csc_matrix((r_[b, -b], (i, r_[f, t])), (nl, nb))
 
-        Bbus = Cft.H * Bf
+        Bbus = Cft.T * Bf
 
         # Build phase shift injection vectors.
         shift = array([br.phase_shift * pi / 180.0 for br in branches])
