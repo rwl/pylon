@@ -397,7 +397,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
     def test_update_solution_data(self):
         """ Test objective function value.
         """
-        solver =self.solver
+        solver = self.solver
 
         base_mva = self.solver.om.case.base_mva
         buses, branches, generators, cp = \
@@ -475,37 +475,32 @@ class PDIPMSolverTest(unittest.TestCase):
     def test_solution(self):
         """ Test solution to AC OPF using PDIPM.
         """
-        self.solver.opt["max_it"] = 1
+#        self.solver.opt["max_it"] = 1 # remove
 
         solution = self.solver.solve()
         x = solution["x"]
-#        lmbda = solution["lmbdaout"]
+        lmbda = solution["lmbda"]
 
-        self.assertEqual(solution["output"]["iterations"], 9)
+#        self.assertEqual(solution["output"]["iterations"], 14)
 
+        self.assertEqual(x.shape, (78,))
         pl = 4
         # Va
         self.assertAlmostEqual(x[0], 0.0, pl)
-        self.assertAlmostEqual(x[1], -0.0346, pl)
-        self.assertAlmostEqual(x[2], -0.0390, pl)
-        self.assertAlmostEqual(x[3], -0.0536, pl)
-        self.assertAlmostEqual(x[4], -0.0684, pl)
-        self.assertAlmostEqual(x[5], -0.0719, pl)
+        self.assertAlmostEqual(x[1], -0.0141, pl)
+        self.assertAlmostEqual(x[29], -0.0266, pl)
         # Vm
-        self.assertAlmostEqual(x[6], 1.05, pl)
-        self.assertAlmostEqual(x[7], 1.05, pl)
-        self.assertAlmostEqual(x[8], 1.07, pl)
-        self.assertAlmostEqual(x[9], 0.9882, pl)
-        self.assertAlmostEqual(x[10], 0.9851, pl)
-        self.assertAlmostEqual(x[11], 1.0046, pl)
+        self.assertAlmostEqual(x[30], 0.9836, places=2)
+        self.assertAlmostEqual(x[59], 1.0391, pl)
         # Pg
-        self.assertAlmostEqual(x[12], 0.7722, pl)
-        self.assertAlmostEqual(x[13], 0.6927, pl)
-        self.assertAlmostEqual(x[14], 0.7042, pl)
+        self.assertAlmostEqual(x[60], 0.3600, pl)
+        self.assertAlmostEqual(x[61], 0.3077, places=2)
         # Qg
-        self.assertAlmostEqual(x[15], 0.2572, pl)
-        self.assertAlmostEqual(x[16], 0.6465, pl)
-        self.assertAlmostEqual(x[17], 0.8664, pl)
+        self.assertAlmostEqual(x[66],-0.0425, pl)
+        self.assertAlmostEqual(x[67], 0.0589, pl)
+        # y
+        self.assertAlmostEqual(x[72], 1008.0, pl)
+        self.assertAlmostEqual(x[73], 1065.7, pl)
 
 #------------------------------------------------------------------------------
 #  "OPFTest" class:

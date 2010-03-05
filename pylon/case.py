@@ -641,24 +641,12 @@ class Case(Named, Serializable):
 
     def dAbr_dV(self, dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St):
         """ Partial derivatives of squared flow magnitudes w.r.t voltage.
+
+            Computes partial derivatives of apparent power w.r.t active and
+            reactive power flows.  Partial derivative must equal 1 for lines
+            with zero flow to avoid division by zero errors (1 comes from
+            L'Hopital).
         """
-        # Compute apparent powers.
-#        Af = abs(Sf)
-#        At = abs(St)
-
-        # Compute partial derivative of apparent power w.r.t active and
-        # reactive power flows.  Partial derivative must equal 1 for lines with
-        # zero flow to avoid division by zero errors (1 comes from L'Hopital).
-#        Pf = div(Sf.real(), matrix(map(zero2one, Af)))
-#        Qf = div(St.imag(), matrix(map(zero2one, Af)))
-#        Pt = div(St.real(), matrix(map(zero2one, At)))
-#        Qt = div(St.imag(), matrix(map(zero2one, At)))
-#
-#        dAf_dPf = spdiag(Pf)
-#        dAf_dQf = spdiag(Qf)
-#        dAt_dPt = spdiag(Pt)
-#        dAt_dQt = spdiag(Qt)
-
         il = range(len(Sf))
 
         dAf_dPf = csr_matrix((2 * Sf.real, (il, il)))
@@ -693,8 +681,8 @@ class Case(Named, Serializable):
         A = csr_matrix((lam * V, (ib, ib)))
         B = Ybus * diagV
         C = A * conj(B)
-        D = Ybus.T * diagV
-        E = conj(diagV) * (D * diaglam - csr_matrix((D * lam, (ib, ib))))
+        D = Ybus.H * diagV
+        E = diagV.conj() * (D * diaglam - csr_matrix((D * lam, (ib, ib))))
         F = C - A * csr_matrix((conj(Ibus), (ib, ib)))
         G = csr_matrix((ones(nb) / abs(V), (ib, ib)))
 
@@ -731,15 +719,17 @@ class Case(Named, Serializable):
         """ Computes 2nd derivatives of complex power flow w.r.t. voltage.
         """
         nb = len(V)
+        nl = len(lam)
         ib = range(nb)
+        il = range(nl)
 
-        diaglam = csr_matrix((lam, (ib, ib)))
+        diaglam = csr_matrix((lam, (il, il)))
         diagV = csr_matrix((V, (ib, ib)))
 
         A = Ybr.H * diaglam * Cbr
         B = conj(diagV) * A * diagV
         D = csr_matrix( ((A * V) * conj(V), (ib, ib)) )
-        E = csr_matrix( (A.T * conj(V) * V), (ib, ib) )
+        E = csr_matrix( ((A.T * conj(V) * V), (ib, ib)) )
         F = B + B.T
         G = csr_matrix((ones(nb) / abs(V), (ib, ib)))
 
@@ -760,14 +750,14 @@ class Case(Named, Serializable):
         il = range(len(lam))
 
         diaglam = csr_matrix((lam, (il, il)))
-        diagSbr_conj = csr_matrix((conj(Sbr), (il, il)))
+        diagSbr_conj = csr_matrix((Sbr.conj(), (il, il)))
 
-        [Saa, Sav, Sva, Svv] = self.d2Sbr_dV2(Cbr, Ybr, V, diagSbr_conj * lam)
+        Saa, Sav, Sva, Svv = self.d2Sbr_dV2(Cbr, Ybr, V, diagSbr_conj * lam)
 
-        Gaa = 2 * ( Saa + dSbr_dVa.T * diaglam * conj(dSbr_dVa) ).real
-        Gva = 2 * ( Sva + dSbr_dVm.T * diaglam * conj(dSbr_dVa) ).real
-        Gav = 2 * ( Sav + dSbr_dVa.T * diaglam * conj(dSbr_dVm) ).real
-        Gvv = 2 * ( Svv + dSbr_dVm.T * diaglam * conj(dSbr_dVm) ).real
+        Gaa = 2 * ( Saa + dSbr_dVa.T * diaglam * dSbr_dVa.conj() ).real
+        Gva = 2 * ( Sva + dSbr_dVm.T * diaglam * dSbr_dVa.conj() ).real
+        Gav = 2 * ( Sav + dSbr_dVa.T * diaglam * dSbr_dVm.conj() ).real
+        Gvv = 2 * ( Svv + dSbr_dVm.T * diaglam * dSbr_dVm.conj() ).real
 
         return Gaa, Gav, Gva, Gvv
 
@@ -785,10 +775,10 @@ class Case(Named, Serializable):
 
         Iaa, Iav, Iva, Ivv = self.d2Ibr_dV2(Ybr, V, diagIbr_conj * lam)
 
-        Gaa = 2 * ( Iaa + dIbr_dVa.T * diaglam * conj(dIbr_dVa) ).real()
-        Gva = 2 * ( Iva + dIbr_dVm.T * diaglam * conj(dIbr_dVa) ).real()
-        Gav = 2 * ( Iav + dIbr_dVa.T * diaglam * conj(dIbr_dVm) ).real()
-        Gvv = 2 * ( Ivv + dIbr_dVm.T * diaglam * conj(dIbr_dVm) ).real()
+        Gaa = 2 * ( Iaa + dIbr_dVa.T * diaglam * dIbr_dVa.conj() ).real
+        Gva = 2 * ( Iva + dIbr_dVm.T * diaglam * dIbr_dVa.conj() ).real
+        Gav = 2 * ( Iav + dIbr_dVa.T * diaglam * dIbr_dVm.conj() ).real
+        Gvv = 2 * ( Ivv + dIbr_dVm.T * diaglam * dIbr_dVm.conj() ).real
 
         return Gaa, Gav, Gva, Gvv
 
