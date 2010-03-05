@@ -467,6 +467,8 @@ class PDIPMSolverTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         self.case = Case.load(PWL_FILE)
+        self.case.sort_generators()
+
         self.opf = OPF(self.case, dc=False)
         self.om = self.opf._construct_opf_model(self.case)
         self.solver = PDIPMSolver(self.om, opt={"verbose": True})
