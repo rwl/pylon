@@ -1,6 +1,6 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
-""" This example demonstrates how to solve a DC OPF problem. """
+""" This example demonstrates how to solve an OPF problem. """
 
 import sys
 from os.path import join, dirname
@@ -14,13 +14,11 @@ CASE_FILE = join(dirname(pylon.case.__file__), "test", "data", "case30pwl.pkl")
 # Load the data file.
 case = Case.load(CASE_FILE)
 
-# Select a solver.
-solver = None
-#solver = "glpk"
-#solver = "mosek"
+# Use DC formulation?
+dc = False
 
 # Solve DC optimal power flow.
-OPF(case, True, solver=solver, show_progress=False).solve()
+OPF(case, dc, opt={"verbose": True}).solve()
 
 # Print a report to screen.
 case.save_rst(sys.stdout)
