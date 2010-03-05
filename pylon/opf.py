@@ -94,7 +94,7 @@ class OPF(object):
         elif self.dc:
             result = DCOPFSolver(om).solve()
         else:
-            result = PDIPMSolver(om, self.opt).solve()
+            result = PDIPMSolver(om, opt=self.opt).solve()
 
         return result
 
@@ -1153,7 +1153,6 @@ class PDIPMSolver(Solver):
             return d2f + d2H + d2G
 
         # Solve using primal-dual interior point method.
-#        x, _, info, output, lmbda = \
         s = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u, self.opt)
 
         return s

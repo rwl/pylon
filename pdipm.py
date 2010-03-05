@@ -63,8 +63,8 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         l <= A*x <= u
         xmin <= x <= xmax
     """
-    xmin = ones(x0.shape[0]) * -Inf if xmin is None else xmin
-    xmax = ones(x0.shape[0]) *  Inf if xmax is None else xmax
+    xmin = -Inf * ones(x0.shape[0]) if xmin is None else xmin
+    xmax =  Inf * ones(x0.shape[0]) if xmax is None else xmax
     l = array([]) if A is None else l
     u = array([]) if A is None else u
 
@@ -191,7 +191,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
                     "compcond     costcond  ")
         logger.info("----  ------------ --------- ------------ ------------ "
                     "------------ ------------")
-        logger.info("%3d  %12.8f %10s %12.f %12.f %12.f %12.f" %
+        logger.info("%3d  %12.8g %10s %12g %12g %12g %12g" %
             (i, (f / opt["cost_mult"]), "", feascond, gradcond,
              compcond, costcond))
     if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
@@ -324,26 +324,27 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         gradcond = \
             norm(Lx, Inf) / (1 + max([norm(lam, Inf), norm(mu, Inf)]))
         compcond = dot(z, mu) / (1 + norm(x, Inf))
-        costcond = absolute(f - f0) / (1 + absolute(f0))
+        costcond = float(absolute(f - f0) / (1 + absolute(f0)))
+
         if opt["verbose"]:
-            logger.info("%3d  %12.8f %10.5f %12.f %12.f %12.f %12.f" %
+            logger.info("%3d  %12.8g %10.5g %12g %12g %12g %12g" %
                 (i, (f / opt["cost_mult"]), norm(dx), feascond, gradcond,
                  compcond, costcond))
+
         if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
             compcond < opt["comptol"] and costcond < opt["costtol"]:
             converged = True
             if opt["verbose"]:
                 logger.info("Converged!")
         else:
-            if any(isnan(x)) or alphap < alpha_min or alphad < alpha_min or \
-                    gamma < EPS or gamma > 1.0 / EPS:
+            if any(isnan(x)) or (alphap < alpha_min) or \
+                (alphad < alpha_min) or (gamma < EPS) or (gamma > 1.0 / EPS):
                 if opt["verbose"]:
                     logger.info("Numerically failed.")
                 break
             f0 = f
 
             if opt["step_control"]:
-#                L = f + lam.T * h + mu.T * (g + z) - gamma * sum(log(z))
                 L = f + dot(lam, h) + dot(mu * (g + z)) - gamma * sum(log(z))
 
     if opt["verbose"]:
