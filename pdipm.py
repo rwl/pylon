@@ -65,11 +65,11 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     """
     xmin = ones(x0.shape[0]) * -Inf if xmin is None else xmin
     xmax = ones(x0.shape[0]) *  Inf if xmax is None else xmax
-    if A is None:
-        l = array([])
-        u = array([])
+    l = array([]) if A is None else l
+    u = array([]) if A is None else u
 
     opt = {} if opt is None else opt
+    # options
     if not opt.has_key("feastol"):
         opt["feastol"] = 1e-06
     if not opt.has_key("gradtol"):
@@ -119,7 +119,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     Ae = AA[ieq, :] if len(ieq) else None
     if len(ilt) or len(igt) or len(ibx):
         idxs = [(1, ilt), (-1, igt), (1, ibx), (-1, ibx)]
-        Ai = vstack([sig * AA[idx, :] for sig, idx in idxs if len(idx)])#, "csr")
+        Ai = vstack([sig * AA[idx, :] for sig, idx in idxs if len(idx)])
     else:
         Ai = None
     be = uu[ieq, :]
@@ -133,6 +133,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     gn, hn, dgn, dhn = ipm_gh(x)        # non-linear constraints
     g = gn if Ai is None else r_[gn, Ai * x - bi]    # inequality constraints
     h = hn if Ae is None else r_[hn, Ae * x - be]    # equality constraints
+
     if (dgn is None) and (Ai is None):
         dg = None
     elif dgn is None:
@@ -141,6 +142,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dg = dgn
     else:
         dg = hstack([dgn, Ai.T])
+
     if (dhn is None) and (Ae is None):
         dh = None
     elif dhn is None:
@@ -178,14 +180,12 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
     Lx = df
     Lx = Lx + dh * lam if dh is not None else Lx
     Lx = Lx + dg * mu  if dg is not None else Lx
-
     feascond = \
         max([norm(h, Inf), max(g)]) / (1 + max([norm(x, Inf), norm(z, Inf)]))
     gradcond = \
         norm(Lx, Inf) / (1 + max([norm(lam, Inf), norm(mu, Inf)]))
     compcond = dot(z, mu) / (1 + norm(x, Inf))
     costcond = absolute(f - f0) / (1 + absolute(f0))
-
     if opt["verbose"]:
         logger.info(" it    objective   step size   feascond     gradcond     "
                     "compcond     costcond  ")
@@ -209,7 +209,6 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         lmbda = {"eqnonlin": lam[range(neqnln)],
                  "ineqnonlin": mu[range(niqnln)]}
         Lxx = ipm_hess(x, lmbda)
-
         rz = range(len(z))
         zinvdiag = csr_matrix((1.0 / z, (rz, rz))) if len(z) else None
         rmu = range(len(mu))
@@ -217,6 +216,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         dg_zinv = None if dg is None else dg * zinvdiag
         M = Lxx if dg is None else Lxx + dg_zinv * mudiag * dg.T
         N = Lx if dg is None else Lx + dg_zinv * (mudiag * g + gamma * e)
+
         Ab = M if dh is None else vstack([
             hstack([M, dh]),
             hstack([dh.T, csr_matrix((neq, neq))])
@@ -296,6 +296,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         gn, hn, dgn, dhn = ipm_gh(x)                  # non-linear constraints
         g = gn if Ai is None else r_[gn, Ai * x - bi] # inequality constraints
         h = hn if Ae is None else r_[hn, Ae * x - be] # equality constraints
+
         if (dgn is None) and (Ai is None):
             dg = None
         elif dgn is None:
@@ -304,6 +305,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
             dg = dgn
         else:
             dg = hstack([dgn, Ai.T])
+
         if (dhn is None) and (Ae is None):
             dh = None
         elif dhn is None:
@@ -326,7 +328,7 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
         if opt["verbose"]:
             logger.info("%3d  %12.8f %10.5f %12.f %12.f %12.f %12.f" %
                 (i, (f / opt["cost_mult"]), norm(dx), feascond, gradcond,
-                 compcond[0], costcond))
+                 compcond, costcond))
         if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
             compcond < opt["comptol"] and costcond < opt["costtol"]:
             converged = True

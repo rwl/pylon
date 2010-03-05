@@ -28,7 +28,7 @@ import logging
 
 from numpy import \
     array, pi, diff, polyder, polyval, exp, conj, Inf, finfo, ones, r_, \
-    float64, zeros, diag, flatnonzero, dot
+    float64, zeros, diag, flatnonzero, dot, asarray
 
 from scipy.sparse import lil_matrix, csr_matrix, hstack, vstack
 
@@ -888,8 +888,6 @@ class PDIPMSolver(Solver):
                 ccost = csr_matrix((ones(ny),
                     (range(y.i1, y.iN + 1), zeros(ny))), shape=(nxyz, 1)).T
                 f = f + ccost * x
-
-                print f
             else:
                 ccost = zeros((1, nxyz))
             # TODO: Generalised cost term.
@@ -925,7 +923,7 @@ class PDIPMSolver(Solver):
 
             d2f = None
 
-            return f, df, d2f
+            return f, asarray(df).flatten(), d2f
 
 
         def ipm_gh(x):
@@ -1063,27 +1061,15 @@ class PDIPMSolver(Solver):
 
             d2f_dPg2 = csr_matrix((ng, 1)) # w.r.t p.u. Pg
             d2f_dQg2 = csr_matrix((ng, 1)) # w.r.t p.u. Qg
-#            d2f_dPg2[ipol] = matrix([g.poly_cost(Pg[i] * base_mva, 2)
-#                                     for i, g in enumerate(gpol)])
-#            for i, g in enumerate(gn):
-#                der = polyder(list(g.p_cost), 2)
-#                d2f_dPg2[i] = polyval(der, Pgen[i]) * base_mva
-#            d2f_dQg2[ipol] = matrix([g.poly_cost(Qg[i] * base_mva, 2)
-#                                     for i, g in enumerate(gpol)
-#                                     if g.qcost_model is not None])
 
             for i in ipol:
-                d2f_dQg2[i] = \
-                    base_mva * polyval(polyder(list(gn[i].p_cost), 2),
-                                       Pg[i] * base_mva)
+                d2f_dPg2[i] = polyval(polyder(list(gn[i].p_cost), 2),
+                                      Pg.v0[i] * base_mva) * base_mva**2
+#            for i in ipol:
+#                d2f_dQg2[i] = polyval(polyder(list(gn[i].p_cost), 2),
+#                                      Qg.v0[i] * base_mva) * base_mva**2
 
-#            for i, g in enumerate(gn):
-#                if g.qcost_model == POLYNOMIAL:
-#                    der = polyder(list(g.q_cost), 2)
-#                    d2f_dQg2[i] = polyval(der, Qgen[i]) * base_mva
-
-            i = r_[array(range(Pg.i1, Pg.iN + 1)),
-                   array(range(Qg.i1, Qg.iN + 1))]
+            i = r_[range(Pg.i1, Pg.iN + 1), range(Qg.i1, Qg.iN + 1)]
 
             d2f = csr_matrix((vstack([d2f_dPg2, d2f_dQg2]).toarray().flatten(),
                               (i, i)), shape=(nxyz, nxyz))
