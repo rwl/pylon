@@ -280,9 +280,9 @@ def pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin=None, xmax=None,
 
         # do the update
         k = flatnonzero(dz < 0.0)
-        alphap = min( r_[xi * min(z[k] / -dz[k]), array([1])] )
+        alphap = min([xi * min(z[k] / -dz[k]), 1]) if len(k) else 1.0
         k = flatnonzero(dmu < 0.0)
-        alphad = min( r_[xi * min(mu[k] / -dmu[k]), array([1])] )
+        alphad = min([xi * min(mu[k] / -dmu[k]), 1]) if len(k) else 1.0
         x = x + alphap * dx
         z = z + alphap * dz
         lam = lam + alphad * dlam
