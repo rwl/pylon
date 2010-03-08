@@ -168,36 +168,32 @@ class Generator(Named):
         self.mu_pmax = 0.0
 
 
-    def total_cost(self, p=None):
+    def total_cost(self, p=None, p_cost=None, pcost_model=None):
         """ Computes total cost for the generator at the given output level.
         """
         p = self.p if p is None else p
+        p_cost = self.p_cost if p_cost is None else p_cost
+        pcost_model = self.pcost_model if pcost_model is None else pcost_model
 
         if self.pcost_model == PW_LINEAR:
-            n_segments = len(self.p_cost) - 1
+            n_segments = len(p_cost) - 1
             # Iterate over the piece-wise linear segments.
             for i in range(n_segments):
-                x1, y1 = self.p_cost[i]
-                x2, y2 = self.p_cost[(i + 1)]
-
-                m = (y2 - y1) / (x2 - x1)
-                c = y1 - m * x1
-
-                result = m*p + c
-
+                x1, y1 = p_cost[i]
+                x2, y2 = p_cost[i + 1]
                 if x1 <= p <= x2:
+                    m = (y2 - y1) / (x2 - x1)
+                    c = y1 - m * x1
+                    result = m*p + c
                     break
-#            else:
-##                raise ValueError, "Value [%f] outwith pwl cost curve." % p
-#                # Use the last segment for values outwith the cost curve.
+            else:
+                raise ValueError, "Value [%f] outwith pwl cost curve." % p
+                # Use the last segment for values outwith the cost curve.
 #                result = m*p + c
-
         elif self.pcost_model == POLYNOMIAL:
-            result = self.p_cost[-1]
-
-            for i in range(1, len(self.p_cost)):
-                result += self.p_cost[-(i + 1)] * p**i
-
+            result = p_cost[-1]
+            for i in range(1, len(p_cost)):
+                result += p_cost[-(i + 1)] * p**i
         else:
             raise ValueError
 

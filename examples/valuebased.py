@@ -17,7 +17,9 @@ import time
 import pylab
 import scipy
 
-from pylon import Case, Bus, Generator
+from os.path import join, dirname
+
+import pylon
 
 from pylon.pyreto import \
     MarketExperiment, ParticipantEnvironment, SmartMarket, DiscreteTask
@@ -27,6 +29,10 @@ from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
 from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 from pybrain.tools.plotting import MultilinePlotter
+
+# Define a path to the data file.
+DATA_DIR = join(dirname(pylon.case.__file__), "pyreto", "test", "data")
+AUCTION_CASE = join(DATA_DIR, "t_auction_case.pkl")
 
 # Set up publication quality graphs.
 #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
@@ -54,46 +60,51 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
 
-# Define a case with two generators of differing capacity and a fixed load.
-bus1 = Bus(p_demand=80.0)
-g1 = Generator(bus1, p_max=60.0, p_min=0.0,
-               p_cost=[(0.0, 0.0), (60.0, 600.0)])
-g2 = Generator(bus1, p_max=100.0, p_min=0.0,
-               p_cost=[(0.0, 0.0), (100.0, 500.0)])
-case = Case(buses=[bus1], generators=[g1, g2])
+#logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+#logger = logging.getLogger()
+
+# Load the case.
+case = pylon.Case.load(AUCTION_CASE)
 
 # Create the market and associate learning agents with each generator.
-mkt = SmartMarket(case)
-dim_state, num_actions = (10, 10)
+market = SmartMarket(case)
 
-env1 = ParticipantEnvironment(g1, mkt)
-task1 = DiscreteTask(env1, dim_state, num_actions)
-module1 = ActionValueTable(dim_state, num_actions)
-module1.initialize(1.0)
-learner1 = SARSA() #Q() QLambda()
-#learner1.explorer = BoltzmannExplorer() # default is e-greedy.
-agent1 = LearningAgent(module1, learner1)
+# Define the set of possible markups on marginal cost.
+markups = (0,10,20)
+# Define the number of offers/bids each participant can submit.
+n_offbids = 1
 
-env2 = ParticipantEnvironment(g2, mkt)
-task2 = DiscreteTask(env2, dim_state, num_actions)
-module2 = ActionValueTable(dim_state, num_actions)
-module2.initialize(1.0)
-agent2 = LearningAgent(module2, SARSA())
+dim_state = 10
+dim_action = len(markups) * n_offbids
 
-exp = MarketExperiment([task1, task2], [agent1, agent2], mkt)
+# Construct an experiment to test the market.
+experiment = MarketExperiment([], [], market)
+
+# Add the agents and their tasks.
+for g in case.generators:
+    env = ParticipantEnvironment(g, market, markups, n_offbids)
+    task = DiscreteTask(env, dim_state)
+    module = ActionValueTable(dim_state, dim_action)
+    module.initialize(1.0)
+    learner = SARSA() #Q() QLambda()
+#    learner.explorer = BoltzmannExplorer() # default is e-greedy.
+    agent = LearningAgent(module, learner)
+
+    experiment.tasks.append(task)
+    experiment.agents.append(agent)
 
 # Prepare for plotting.
 pylab.ion()
 pl = MultilinePlotter(autoscale=1.1, xlim=[0, 24], ylim=[0, 1])
 pl.setLineStyle(linewidth=2)
-pl.setLegend([agent1.name], loc='upper right')
+pl.setLegend([agent.name], loc='upper right')
 
 # Execute interactions with the environment in batch mode.
 t0 = time.time()
 x = 0
 batch = 5
 while x <= 1200:
-    exp.doInteractions(batch)
+    experiment.doInteractions(batch)
 
     # Plot the progress of the agents.
 #    pylab.clf()
@@ -101,14 +112,13 @@ while x <= 1200:
 #    pylab.plot(agent2.module.params, "ro-")
 #    pylab.draw()
 
-    reward = scipy.mean(agent1.history.getSumOverSequences('reward'))
+    reward = scipy.mean(agent.history.getSumOverSequences('reward'))
     pl.addData(0, x, reward)
     pl.update()
 
-    agent1.learn()
-    agent1.reset()
-    agent2.learn()
-    agent2.reset()
+    for a in experiment.agents:
+        a.learn()
+        a.reset()
     x += batch
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
