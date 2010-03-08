@@ -58,8 +58,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, asset, market, n_offbids=1, offbid_qty=False,
-                 render=True):
+    def __init__(self, asset, market, markups=(0,10,20,30), n_offbids=1):
         """ Initialises the environment.
         """
         super(ParticipantEnvironment, self).__init__()
@@ -74,7 +73,7 @@ class ParticipantEnvironment(GraphicalEnvironment):
         self.n_offbids = n_offbids
 
         # Does a participant's offer/bid comprise quantity aswell as price.
-        self.offbid_qty = offbid_qty
+#        self.offbid_qty = offbid_qty
 
         # A non-negative amount of money.
 #        money = 1e6
@@ -87,8 +86,8 @@ class ParticipantEnvironment(GraphicalEnvironment):
 
         # Marginal cost function proportional to current capacity.  Agents may
         # offer/bid above or below marginal cost.
-        self.marginal_cost = asset.p_cost
-        self.marginal_cost_model = asset.pcost_model
+        self.p_cost = asset.p_cost
+        self.pcost_model = asset.pcost_model
 
 #        # Amortised fixed costs.
 #        self.c_startup = asset.c_startup
@@ -105,19 +104,24 @@ class ParticipantEnvironment(GraphicalEnvironment):
 #            # companies and receives an according dividend each period.
 #            self.shares = {}
 
-        self.render = render
+#        self.render = render
 #        if self.render:
 #            self.updateDone = True
 #            self.updateLock=threading.Lock()
+
+        self.all_actions = list(xselections(markups, n_offbids))
 
         #----------------------------------------------------------------------
         # Set the number of action values that the environment accepts.
         #----------------------------------------------------------------------
 
-        if offbid_qty:
-            self.indim = n_offbids * 2
-        else:
-            self.indim = n_offbids
+#        if offbid_qty:
+#            self.indim = n_offbids * 2
+#        else:
+#            self.indim = n_offbids
+
+        # One (cumulative) markup per segment.
+        self.indim = len(asset.p_cost) * 4
 
         #----------------------------------------------------------------------
         # Set the number of sensor values that the environment produces.
@@ -149,8 +153,8 @@ class ParticipantEnvironment(GraphicalEnvironment):
         # Dispatch related sensors.
         dispatch_sensors = zeros(3)
 
-        if self.market.routine is not None:
-            dispatch_sensors[0] = self.market.routine.f
+        if self.market._solution.has_key("f"):
+            dispatch_sensors[0] = self.market._solution["f"]
         dispatch_sensors[1] = sum([ob.cleared_quantity for ob in offbids])
         if offbids:
             dispatch_sensors[2] = offbids[0].cleared_price
@@ -186,34 +190,61 @@ class ParticipantEnvironment(GraphicalEnvironment):
         asset = self.asset
         mkt = self.market
         n_offbids = self.n_offbids
+        p_cost = self.p_cost
+
+        a = self.all_actions[ int(action[0]) ]
+
+        # Divide the rated capacity equally among the offers/bids.
+        qty = self.p_max / n_offbids
+        for i in range(n_offbids):
+            n_segments = len(p_cost) - 1
+            # Markup each piece-wise linear segments.
+            for j in range(n_segments):
+                x1, y1 = p_cost[j]
+                x2, y2 = p_cost[j + 1]
+                if x1 <= qty <= x2:
+                    m = (y2 - y1) / (x2 - x1)
+                    # cumulative markup to ensure convexity
+                    prc = m * sum(a[:i])
+                    break
+
+            if not asset.is_load:
+                mkt.offers.append(Offer(asset, qty, prc))
+                logger.info("%.2fMW offered at %.2f$/MWh for %s." %
+                            (qty, prc, asset.name))
+            else:
+                mkt.bids.append(Bid(asset, qty, prc))
+                logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
+                            (prc, qty, asset.name))
+
 
         # Participants either submit prices, where the quantity is divided
         # equally among the offers/bids, or tuples of quantity and price.
-        if not self.offbid_qty:
-            # Divide the rated capacity equally among the offers/bids.
-            qty = asset.rated_pmax / n_offbids
-            for prc in action:
-                if not asset.is_load:
-                    mkt.offers.append(Offer(asset, qty, prc))
-                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
-                                (qty, prc, asset.name))
-                else:
-                    mkt.bids.append(Bid(asset, qty, prc))
-                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
-                                (prc, qty, asset.name))
-        else:
-            # Agent's actions comprise both quantities and prices.
-            for i in range(0, len(action), 2):
-                qty = action[i]
-                prc = action[i + 1]
-                if not asset.is_load:
-                    mkt.offers.append(Offer(asset, qty, prc))
-                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
-                                (qty, prc, asset.name))
-                else:
-                    mkt.bids.append(Bid(asset, qty, prc))
-                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
-                                (prc, qty, asset.name))
+#        if not self.offbid_qty:
+#            # Divide the rated capacity equally among the offers/bids.
+#            qty = self.p_max / n_offbids
+#            for prc in action:
+#                if not asset.is_load:
+#                    mkt.offers.append(Offer(asset, qty, prc))
+#                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
+#                                (qty, prc, asset.name))
+#                else:
+#                    mkt.bids.append(Bid(asset, qty, prc))
+#                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
+#                                (prc, qty, asset.name))
+#        else:
+#            # Agent's actions comprise both quantities and prices.
+#            for i in range(0, len(action), 2):
+#                qty = action[i]
+#                prc = action[i + 1]
+#                if not asset.is_load:
+#                    mkt.offers.append(Offer(asset, qty, prc))
+#                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
+#                                (qty, prc, asset.name))
+#                else:
+#                    mkt.bids.append(Bid(asset, qty, prc))
+#                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
+#                                (prc, qty, asset.name))
 
 #        if self.hasRenderer():
 #            render = self.getRenderer()
@@ -223,5 +254,13 @@ class ParticipantEnvironment(GraphicalEnvironment):
         """ Reinitialises the environment.
         """
         self.market.init()
+
+
+def xselections(items, n):
+    if n==0: yield []
+    else:
+        for i in xrange(len(items)):
+            for ss in xselections(items, n-1):
+                yield [items[i]]+ss
 
 # EOF -------------------------------------------------------------------------

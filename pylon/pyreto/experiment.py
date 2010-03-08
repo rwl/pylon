@@ -104,7 +104,7 @@ class MarketExperiment(GraphicalExperiment):
         logger.info("Entering period %d." % self.stepid)
 
         # Initialise the market.
-        self.market.init()
+        self.market.reset()
 
         # Get an action from each agent and perform it.
         for task, agent in zip(self.tasks, self.agents):
@@ -114,10 +114,8 @@ class MarketExperiment(GraphicalExperiment):
             action = agent.getAction()
             task.performAction(action)
 
-
         # Clear the market.
         self.market.run()
-
 
         # Reward each agent appropriately.
         for task, agent in zip(self.tasks, self.agents):

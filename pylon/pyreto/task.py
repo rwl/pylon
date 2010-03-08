@@ -101,22 +101,26 @@ class BaseProfitTask(Task):
 #                shutdown_cost = 0.0
 
         g = self.env.asset
+
         if not g.is_load:
             offbids = [x for x in self.env.market.offers if x.generator == g]
         else:
             offbids = [x for x in self.env.market.bids if x.vload == g]
+
         t = self.env.market.period
 
-        # Compute costs in $ (not $/hr).  Apply the marginal cost function for
-        # calculating fixed and variable marginal costs.
-        g.p_cost = self.env.marginal_cost
-        fixed_cost = t * g.total_cost(0.0)
-        variable_cost = (t * g.total_cost()) - fixed_cost
+        # Compute costs in $ (not $/hr).
+#        g.p_cost = self.env.marginal_cost
+
+#        fixed_cost = t * g.total_cost(0.0)
+#        variable_cost = (t * g.total_cost()) - fixed_cost
+        costs = g.total_cost(g.p, self.env.p_cost, self.env.p_cost_model)
 
         revenue = t * sum([ob.revenue for ob in offbids])
-        earnings = revenue - (fixed_cost + variable_cost)
+        earnings = revenue - costs#(fixed_cost + variable_cost)
 
-        logger.debug("Profit task [%s] reward: %s" % (g.name, earnings))
+        logger.debug("Profit task [%s] reward: %.2f (%.2f - %.2f)" %
+                     (g.name, earnings, revenue, costs))
         return earnings
 
 #------------------------------------------------------------------------------
@@ -131,27 +135,27 @@ class DiscreteTask(BaseProfitTask):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, environment, dim_state=100, num_actions=10):
+    def __init__(self, environment, dim_state=10):
         """ The sensor space is divided into the given number of steps.
         """
-        super(DiscreteTask, self).__init__(environment, num_actions)
+        super(DiscreteTask, self).__init__(environment)
 
         # State dimensions.
         self.dim_state = dim_state
 
         # The number of steps that the action value should be divided into.
 #        self.action_steps = num_actions
-        self.action_space = self.getDiscreteActions(num_actions)
+#        self.action_space = self.getDiscreteActions(num_actions)
 
     #--------------------------------------------------------------------------
     #  "DiscreteTask" interface:
     #--------------------------------------------------------------------------
 
-    def getDiscreteActions(self, num_actions):
-        """ Returns an array of action values.
-        """
-        limit = self.env.market.price_cap
-        return linspace(0.0, limit, num_actions)
+#    def getDiscreteActions(self, num_actions):
+#        """ Returns an array of action values.
+#        """
+#        limit = self.env.market.price_cap
+#        return linspace(0.0, limit, num_actions)
 
     #--------------------------------------------------------------------------
     #  "Task" interface:
