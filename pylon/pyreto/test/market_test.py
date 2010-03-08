@@ -27,7 +27,7 @@ import unittest
 
 from os.path import dirname, join
 
-from pylon import Case, Bus, Generator, REFERENCE, OPF
+from pylon import Case, Bus, Branch, Generator, REFERENCE, PV, OPF
 from pylon.pyreto import SmartMarket, Bid, Offer, FIRST_PRICE
 
 #------------------------------------------------------------------------------
@@ -37,130 +37,138 @@ from pylon.pyreto import SmartMarket, Bid, Offer, FIRST_PRICE
 DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 
 #------------------------------------------------------------------------------
-#  "OneBusMarketTestCase" class:
+#  "TwoBusMarketTestCase" class:
 #------------------------------------------------------------------------------
 
-class OneBusMarketTestCase(unittest.TestCase):
-    """ Defines a simple test case for the Pyreto market.
-    """
-
-    def setUp(self):
-        """ The test runner will execute this method prior to each test.
-        """
-        bus1 = Bus(type=REFERENCE, p_demand=80.0)
-        g1 = Generator(bus1, p_max=60.0, p_min=0.0)
-        g2 = Generator(bus1, p_max=100.0, p_min=0.0)
-        self.case = Case(buses=[bus1], generators=[g1, g2])
-
-
-    def test_have_q(self):
-        """ Test reactive offers/bids.
-        """
-        mkt = SmartMarket(self.case)
-        self.assertFalse(mkt._reactive_market())
-
-
-    def test_offers(self):
-        """ Test market clearing of offers using results from DC OPF.
-        """
-        offers = [Offer(self.case.generators[0], 60.0, 20.0),
-                  Offer(self.case.generators[1], 100.0, 10.0)]
-
-        mkt = SmartMarket(self.case, offers)
-        mkt.run()
-
-        places = 2
-        self.assertAlmostEqual(mkt._solution["f"], 800.0, 1)
-
-        self.assertFalse(offers[0].accepted)
-        self.assertAlmostEqual(offers[0].cleared_quantity, 0.0, places)
-        self.assertAlmostEqual(offers[0].cleared_price, 10.0, places)
-
-        self.assertTrue(offers[1].accepted)
-        self.assertAlmostEqual(offers[1].cleared_quantity, 80.0, places)
-        self.assertAlmostEqual(offers[1].cleared_price, 10.0, places)
-
-
-    def test_multiple_offers(self):
-        """ Test market clearing of multiple offers per generator.
-        """
-        offers = [Offer(self.case.generators[0], 30.0, 5.0),
-                  Offer(self.case.generators[0], 30.0, 6.0),
-                  Offer(self.case.generators[1], 40.0, 10.0),
-                  Offer(self.case.generators[1], 40.0, 12.0),
-                  Offer(self.case.generators[1], 20.0, 20.0)]
-
-        mkt = SmartMarket(self.case, offers)
-        mkt.run()
-
-        self.assertAlmostEqual(mkt._solution["f"], 150. + 180. + 200., 1)
-
-        self.assertTrue(offers[0].accepted)
-        self.assertTrue(offers[1].accepted)
-        self.assertTrue(offers[2].accepted)
-        self.assertFalse(offers[3].accepted)
-        self.assertFalse(offers[4].accepted)
-
-        places = 2
-        self.assertAlmostEqual(offers[0].cleared_quantity, 30.0, places)
-        self.assertAlmostEqual(offers[1].cleared_quantity, 30.0, places)
-        self.assertAlmostEqual(offers[2].cleared_quantity, 20.0, places)
-        self.assertAlmostEqual(offers[0].cleared_price, 10.0, places)
-        self.assertAlmostEqual(offers[1].cleared_price, 10.0, places)
-        self.assertAlmostEqual(offers[2].cleared_price, 10.0, places)
-
-
-    def test_first_price(self):
-        """ Test marginal offer/bid setting price.
-        """
-        offers = [Offer(self.case.generators[0], 60.0, 10.0),
-                  Offer(self.case.generators[1], 100.0, 20.0)]
-
-        SmartMarket(self.case, offers).run()
-
-        places = 2
-        self.assertTrue(offers[0].accepted)
-        self.assertAlmostEqual(offers[0].cleared_quantity, 60.0, places)
-        self.assertAlmostEqual(offers[0].cleared_price, 20.0, places)
-        self.assertTrue(offers[1].accepted)
-        self.assertAlmostEqual(offers[1].cleared_quantity, 20.0, places)
-        self.assertAlmostEqual(offers[1].cleared_price, 20.0, places)
-
-
-    def test_price_cap(self):
-        """ Test price cap.
-        """
-        offers = [Offer(self.case.generators[0], 60.0, 10.0),
-                  Offer(self.case.generators[1], 100.0, 20.0)]
-
-        mkt = SmartMarket(self.case, offers, price_cap=15.0)
-        mkt.run()
-
-        self.assertFalse(mkt._solution["converged"]) # Blackout.
-        self.assertFalse(self.case.generators[1].online)
-        self.assertFalse(offers[0].withheld)
-        self.assertTrue(offers[1].withheld)
-        self.assertFalse(offers[0].accepted)
-        self.assertFalse(offers[1].accepted)
-
-
-    def test_bids(self):
-        """ Test clearing offers and bids.
-        """
-        vl = Generator(self.case.buses[0], p_max=0.0, p_min=-50.0)
-        self.case.generators.append(vl)
-
-        offers = [Offer(self.case.generators[0], 60.0, 10.0),
-                  Offer(self.case.generators[1], 60.0, 20.0)]
-
-        bids = [Bid(vl, 50.0, 30.0)] # Marginal bid.
-
-        SmartMarket(self.case, offers, bids).run()
-
-        places = 2
-        self.assertTrue(bids[0].accepted)
-        self.assertAlmostEqual(bids[0].cleared_quantity, 40.0, places)
-        self.assertAlmostEqual(bids[0].cleared_price, 30.0, places)
+#class TwoBusMarketTestCase(unittest.TestCase):
+#    """ Defines a simple test case for the Pyreto market.
+#    """
+#
+#    def setUp(self):
+#        """ The test runner will execute this method prior to each test.
+#        """
+#        bus1 = Bus(type=REFERENCE, p_demand=10.0)
+#        bus2 = Bus(type=PV, p_demand=70.0)
+#        g2 = Generator(bus1, p_max=100.0, p_min=0.0)
+#        g1 = Generator(bus2, p_max=60.0, p_min=0.0)
+#        branch1 = Branch(bus1, bus2)
+#        self.case = Case(buses=[bus1, bus2],
+#                         branches=[branch1],
+#                         generators=[g1, g2])
+#        self.case.index_buses()
+#
+#
+#    def test_have_q(self):
+#        """ Test reactive offers/bids.
+#        """
+#        mkt = SmartMarket(self.case)
+#        self.assertFalse(mkt._reactive_market())
+#
+#
+#    def test_offers(self):
+#        """ Test market clearing of offers using results from DC OPF.
+#        """
+#        offers = [Offer(self.case.generators[0], 60.0, 20.0),
+#                  Offer(self.case.generators[1], 100.0, 10.0)]
+#
+##        print "P:", self.case.generators[0].p
+#
+#        mkt = SmartMarket(self.case, offers)
+#        mkt.run()
+#
+#        self.assertTrue(mkt._solution["converged"])
+#        places = 2
+#        self.assertAlmostEqual(mkt._solution["f"], 800.0, 1)
+#
+#        self.assertFalse(offers[0].accepted)
+#        self.assertAlmostEqual(offers[0].cleared_quantity, 0.0, places)
+#        self.assertAlmostEqual(offers[0].cleared_price, 10.0, places)
+#
+#        self.assertTrue(offers[1].accepted)
+#        self.assertAlmostEqual(offers[1].cleared_quantity, 80.0, places)
+#        self.assertAlmostEqual(offers[1].cleared_price, 10.0, places)
+#
+#
+#    def test_multiple_offers(self):
+#        """ Test market clearing of multiple offers per generator.
+#        """
+#        offers = [Offer(self.case.generators[0], 30.0, 5.0),
+#                  Offer(self.case.generators[0], 30.0, 6.0),
+#                  Offer(self.case.generators[1], 40.0, 10.0),
+#                  Offer(self.case.generators[1], 40.0, 12.0),
+#                  Offer(self.case.generators[1], 20.0, 20.0)]
+#
+#        mkt = SmartMarket(self.case, offers)
+#        mkt.run()
+#
+#        self.assertAlmostEqual(mkt._solution["f"], 150. + 180. + 200., 1)
+#
+#        self.assertTrue(offers[0].accepted)
+#        self.assertTrue(offers[1].accepted)
+#        self.assertTrue(offers[2].accepted)
+#        self.assertFalse(offers[3].accepted)
+#        self.assertFalse(offers[4].accepted)
+#
+#        places = 2
+#        self.assertAlmostEqual(offers[0].cleared_quantity, 30.0, places)
+#        self.assertAlmostEqual(offers[1].cleared_quantity, 30.0, places)
+#        self.assertAlmostEqual(offers[2].cleared_quantity, 20.0, places)
+#        self.assertAlmostEqual(offers[0].cleared_price, 10.0, places)
+#        self.assertAlmostEqual(offers[1].cleared_price, 10.0, places)
+#        self.assertAlmostEqual(offers[2].cleared_price, 10.0, places)
+#
+#
+#    def test_first_price(self):
+#        """ Test marginal offer/bid setting price.
+#        """
+#        offers = [Offer(self.case.generators[0], 60.0, 10.0),
+#                  Offer(self.case.generators[1], 100.0, 20.0)]
+#
+#        SmartMarket(self.case, offers).run()
+#
+#        places = 2
+#        self.assertTrue(offers[0].accepted)
+#        self.assertAlmostEqual(offers[0].cleared_quantity, 60.0, places)
+#        self.assertAlmostEqual(offers[0].cleared_price, 20.0, places)
+#        self.assertTrue(offers[1].accepted)
+#        self.assertAlmostEqual(offers[1].cleared_quantity, 20.0, places)
+#        self.assertAlmostEqual(offers[1].cleared_price, 20.0, places)
+#
+#
+#    def test_price_cap(self):
+#        """ Test price cap.
+#        """
+#        offers = [Offer(self.case.generators[0], 60.0, 10.0),
+#                  Offer(self.case.generators[1], 100.0, 20.0)]
+#
+#        mkt = SmartMarket(self.case, offers, price_cap=15.0)
+#        mkt.run()
+#
+#        self.assertFalse(mkt._solution["converged"]) # Blackout.
+#        self.assertFalse(self.case.generators[1].online)
+#        self.assertFalse(offers[0].withheld)
+#        self.assertTrue(offers[1].withheld)
+#        self.assertFalse(offers[0].accepted)
+#        self.assertFalse(offers[1].accepted)
+#
+#
+#    def test_bids(self):
+#        """ Test clearing offers and bids.
+#        """
+#        vl = Generator(self.case.buses[0], p_max=0.0, p_min=-50.0)
+#        self.case.generators.append(vl)
+#
+#        offers = [Offer(self.case.generators[0], 60.0, 10.0),
+#                  Offer(self.case.generators[1], 60.0, 20.0)]
+#
+#        bids = [Bid(vl, 50.0, 30.0)] # Marginal bid.
+#
+#        SmartMarket(self.case, offers, bids).run()
+#
+#        places = 2
+#        self.assertTrue(bids[0].accepted)
+#        self.assertAlmostEqual(bids[0].cleared_quantity, 40.0, places)
+#        self.assertAlmostEqual(bids[0].cleared_price, 30.0, places)
 
 #------------------------------------------------------------------------------
 #  "DCMarketTestCase" class:
@@ -224,10 +232,10 @@ class DCMarketTestCase(unittest.TestCase):
     def test_dc_opf(self):
         """ Test solving the auction case using DC OPF.
         """
-        solver = OPF(self.case, True, show_progress=False)
+        solver = OPF(self.case, True, opt={"verbose": False})
         solution = solver.solve()
-        self.assertTrue(solution["status"] == "optimal" or "unknown")
-        self.assertAlmostEqual(solution["primal objective"], -517.81, 2)
+        self.assertTrue(solution["converged"])
+        self.assertAlmostEqual(solution["f"], -517.81, 2)
 
 
     def test_reset(self):
@@ -328,7 +336,7 @@ class DCMarketTestCase(unittest.TestCase):
         success = mkt._run_opf()
 
         self.assertTrue(success)
-        self.assertAlmostEqual(mkt._solution["primal objective"], 2802.19, 2)
+        self.assertAlmostEqual(mkt._solution["f"], 2802.19, 2)
 
 
     def test_nodal_marginal_prices(self):
@@ -353,12 +361,8 @@ class DCMarketTestCase(unittest.TestCase):
         self.assertAlmostEqual(self.offers[6].total_quantity, 36.0000, places)
 
         self.assertAlmostEqual(self.bids[0].total_quantity, 30.0000, places)
-#        self.assertAlmostEqual(self.bids[3].total_quantity, 11.1779, places)
-#        self.assertAlmostEqual(self.bids[6].total_quantity, 22.7885, places)
-
-        # Results from CVXOPT not MATPOWER.
-        self.assertAlmostEqual(self.bids[3].total_quantity, 10.01828, places)
-        self.assertAlmostEqual(self.bids[6].total_quantity, 24.27777, places)
+        self.assertAlmostEqual(self.bids[3].total_quantity, 11.1779, places)
+        self.assertAlmostEqual(self.bids[6].total_quantity, 22.7885, places)
 
 
     def test_active_power_auction(self):
@@ -408,34 +412,28 @@ class DCMarketTestCase(unittest.TestCase):
         self.assertAlmostEqual(bids[2].cleared_quantity, 10.0, places)
 
         self.assertAlmostEqual(bids[3].cleared_quantity, 10.0, places)
-#        self.assertAlmostEqual(bids[4].cleared_quantity, 1.1779, places)
+        self.assertAlmostEqual(bids[4].cleared_quantity, 1.1779, places)
         self.assertAlmostEqual(bids[5].cleared_quantity, 0.0, places)
 
         self.assertAlmostEqual(bids[6].cleared_quantity, 10.0, places)
         self.assertAlmostEqual(bids[7].cleared_quantity, 10.0, places)
-#        self.assertAlmostEqual(bids[8].cleared_quantity, 2.7885, places)
-
-        # CVXOPT results.
-        self.assertAlmostEqual(bids[4].cleared_quantity, 0.01828, places)
-        self.assertAlmostEqual(bids[8].cleared_quantity, 4.27777, places)
+        self.assertAlmostEqual(bids[8].cleared_quantity, 2.7885, places)
 
 
     def test_constrained_market(self):
         """ Test cleared prices & quantities in a constrained system.
         """
         mkt = self.mkt
-        offers = self.offers
-        bids = self.bids
 
         # Introduce a constraint on the 16th branch by lowering the rating.
         constrained = self.case.branches[15]
         constrained.rate_a = 30.0
 
-        mkt.run()
+        offers, bids = mkt.run()
 
         places = 4
 
-        self.assertAlmostEqual(mkt._solution["primal objective"], 2949.10, 2)
+        self.assertAlmostEqual(mkt._solution["f"], 2949.10, 2)
 
         # Cleared offer prices.
         for i in range(0, 3):
@@ -497,47 +495,52 @@ class DCMarketTestCase(unittest.TestCase):
         self.assertAlmostEqual(bids[7].cleared_quantity, 10.0, places)
         self.assertAlmostEqual(bids[8].cleared_quantity, 2.7519, places)
 
-#------------------------------------------------------------------------------
-#  "ACMarketTestCase" class:
-#------------------------------------------------------------------------------
-
-class ACMarketTestCase(unittest.TestCase):
-    """ Defines a test case for the Pyreto market using data from t_runmarket.
-    """
-
-    def setUp(self):
-        """ The test runner will execute this method prior to each test.
-        """
-        self.case = Case.load(DATA_FILE)
-
-        generators = self.case.generators
-
-        self.q_offers = [
-            Offer(generators[0], 60.0, 0.0, True),
-            Offer(generators[1], 60.0, 0.0, True),
-            Offer(generators[2], 60.0, 0.0, True),
-            Offer(generators[3], 60.0, 0.0, True),
-            Offer(generators[4], 60.0, 0.0, True),
-            Offer(generators[5], 60.0, 3.0, True),
-        ]
-
-        self.q_bids = [
-            Bid(generators[0], 15.0, 0.0, True),
-            Bid(generators[1], 15.0, 0.0, True),
-            Bid(generators[2], 15.0, 0.0, True),
-            Bid(generators[3], 15.0, 0.0, True),
-            Bid(generators[4], 15.0, 0.0, True),
-            Bid(generators[5], 15.0, 0.0, True),
-            Bid(generators[6], 15.0, 0.0, True),
-#            Bid(generators[7], 12.0, 83.9056, True),
-            Bid(generators[7], 12.0, 20.0, True),
-            Bid(generators[8], 7.5, 0.0, True)
-        ]
+##------------------------------------------------------------------------------
+##  "ACMarketTestCase" class:
+##------------------------------------------------------------------------------
+#
+#class ACMarketTestCase(unittest.TestCase):
+#    """ Defines a test case for the Pyreto market using data from t_runmarket.
+#    """
+#
+#    def setUp(self):
+#        """ The test runner will execute this method prior to each test.
+#        """
+#        self.case = Case.load(DATA_FILE)
+#
+#        generators = self.case.generators
+#
+#        self.q_offers = [
+#            Offer(generators[0], 60.0, 0.0, True),
+#            Offer(generators[1], 60.0, 0.0, True),
+#            Offer(generators[2], 60.0, 0.0, True),
+#            Offer(generators[3], 60.0, 0.0, True),
+#            Offer(generators[4], 60.0, 0.0, True),
+#            Offer(generators[5], 60.0, 3.0, True),
+#        ]
+#
+#        self.q_bids = [
+#            Bid(generators[0], 15.0, 0.0, True),
+#            Bid(generators[1], 15.0, 0.0, True),
+#            Bid(generators[2], 15.0, 0.0, True),
+#            Bid(generators[3], 15.0, 0.0, True),
+#            Bid(generators[4], 15.0, 0.0, True),
+#            Bid(generators[5], 15.0, 0.0, True),
+#            Bid(generators[6], 15.0, 0.0, True),
+##            Bid(generators[7], 12.0, 83.9056, True),
+#            Bid(generators[7], 12.0, 20.0, True),
+#            Bid(generators[8], 7.5, 0.0, True)
+#        ]
 
 
 if __name__ == "__main__":
+#    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
+#        format="%(levelname)s: %(message)s")
+#
+#    logger = logging.getLogger()#"pylon")
+
     logger = logging.getLogger()#'pylon.pyreto.smart_market')
-    logging.getLogger('pylon.dc_opf').setLevel(logging.INFO)
+    logging.getLogger('pylon.opf').setLevel(logging.INFO)
     logging.getLogger('pylon.y').setLevel(logging.INFO)
 
     # Remove PyBrain handlers.
