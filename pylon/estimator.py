@@ -115,7 +115,7 @@ class StateEstimator(object):
         self.case.index_branches()
 
         # Index buses.
-#        ref = [buses.index(b) for b in buses if b.type == REFERENCE]
+#        ref = [b._i for b in buses if b.type == REFERENCE]
         pv  = [b._i for b in buses if b.type == PV]
         pq  = [b._i for b in buses if b.type == PQ]
 

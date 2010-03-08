@@ -150,8 +150,8 @@ class CVXOPTSolver(Solver):
             # Evaluate nonlinear inequality constraints -----------------------
 
             # Branch power flow limit inequality constraint function values.
-            from_idxs = matrix([buses.index(e.from_bus) for e in branches])
-            to_idxs = matrix([buses.index(e.to_bus) for e in branches])
+            from_idxs = matrix([e.from_bus._i for e in branches])
+            to_idxs = matrix([e.to_bus._i for e in branches])
             # Complex power in p.u. injected at the from bus.
             s_from = mul(v[from_idxs], conj(Yfrom, v))
             # Complex power in p.u. injected at the to bus.
@@ -167,7 +167,7 @@ class CVXOPTSolver(Solver):
 
             # Partial derivative of injected bus power
             dS_dVm, dS_dVa = case.dSbus_dV(Y, v) # w.r.t voltage
-            pv_idxs = matrix([buses.index(bus) for bus in buses])
+            pv_idxs = matrix([bus._i for bus in buses])
             dS_dPg = spmatrix(-1, pv_idxs, range(ng)) # w.r.t Pg
             dS_dQg = spmatrix(-j, pv_idxs, range(ng)) # w.r.t Qg
 

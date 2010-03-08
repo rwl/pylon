@@ -95,7 +95,7 @@ class CSVWriter(CaseWriter):
         writer.writerow(["bus"] + GENERATOR_ATTRS)
 
         for g in self.case.generators:
-            i = self.case.buses.index(g.bus)
+            i = g.bus._i
             writer.writerow([i] + [getattr(g,a) for a in GENERATOR_ATTRS])
 
     #--------------------------------------------------------------------------

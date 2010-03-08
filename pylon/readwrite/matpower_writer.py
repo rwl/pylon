@@ -151,7 +151,7 @@ class MATPOWERWriter(CaseWriter):
             # FIXME: Need faster way to find generator bus index
             g_data["bus"] = 1 # Failsafe value
             if g in self.case.generators:
-                g_data["bus"] = self.case.buses.index(g.bus) + 1
+                g_data["bus"] = g.bus._i + 1
             g_data["Pg"] = g.p * g_base
             g_data["Qg"] = g.q * g_base
             g_data["Qmax"] = g.q_max * g_base
@@ -204,8 +204,8 @@ class MATPOWERWriter(CaseWriter):
         branches_data = []
         for e in self.case.branches:
             e_data = {}
-            e_data["fbus"] = self.case.buses.index(e.from_bus) + 1
-            e_data["tbus"] = self.case.buses.index(e.to_bus) + 1
+            e_data["fbus"] = e.from_bus._i + 1
+            e_data["tbus"] = e.to_bus._i + 1
             e_data["r"] = e.r
             e_data["x"] = e.x
             e_data["b"] = e.b

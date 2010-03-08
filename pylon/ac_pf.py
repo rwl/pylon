@@ -192,8 +192,8 @@ class _ACPF(object):
             #            Vg
             #   V0 = ---------
             #        |V0| . V0
-            V[buses.index(g.bus)] = g.v_magnitude / abs(V[i]) * V[i]
-#            V[buses.index(g.bus)] = g.v_magnitude
+            V[g.bus._i] = g.v_magnitude / abs(V[i]) * V[i]
+#            V[g.bus._i] = g.v_magnitude
 
         return V
 

@@ -295,7 +295,7 @@ class Case(Named, Serializable):
     def sort_generators(self):
         """ Reorders the list of generators according to bus index.
         """
-        self.generators.sort(key=lambda gn: self.buses.index(gn.bus))
+        self.generators.sort(key=lambda gn: gn.bus._i)
 
     #--------------------------------------------------------------------------
     #  Update indicies:
@@ -409,8 +409,8 @@ class Case(Named, Serializable):
         Ysh = (g_shunt + 1j * b_shunt) / self.base_mva
 
         # Connection matrices.
-        f = array([self.buses.index(e.from_bus) for e in branches])
-        t = array([self.buses.index(e.to_bus) for e in branches])
+        f = [e.from_bus._i for e in branches]
+        t = [e.to_bus._i for e in branches]
 
         Cf = csc_matrix((ones(nl), (il, f)), shape=(nl, nb))
         Ct = csc_matrix((ones(nl), (il, t)), shape=(nl, nb))
@@ -506,8 +506,8 @@ class Case(Named, Serializable):
                 tap[i] = branch.ratio
         b = b / tap
 
-        f = array([buses.index(br.from_bus) for br in branches])
-        t = array([buses.index(br.to_bus) for br in branches])
+        f = [br.from_bus._i for br in branches]
+        t = [br.to_bus._i for br in branches]
         i = r_[array(range(nl)), array(range(nl))]
         one = ones(nl)
         Cft = csc_matrix((r_[one, -one], (i, r_[f, t])), shape=(nl, nb))
@@ -598,8 +598,8 @@ class Case(Named, Serializable):
         il = range(nl)
         ib = range(nb)
 
-        f = [buses.index(l.from_bus) for l in branches]
-        t = [buses.index(l.to_bus) for l in branches]
+        f = [l.from_bus._i for l in branches]
+        t = [l.to_bus._i for l in branches]
 
         # Compute currents.
         If = Yf * V
@@ -837,7 +837,7 @@ class Case(Named, Serializable):
         # Complex power at "from" bus.
         for i, l in enumerate(branches):
             idx_f = l.from_bus._i
-            idx_t = buses.index(l.to_bus)
+            idx_t = l.to_bus._i
             Sf = V[idx_f] * conj(Yf[i, :] * V) * self.base_mva
             St = V[idx_t] * conj(Yt[i, :] * V) * self.base_mva
 
