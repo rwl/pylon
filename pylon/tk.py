@@ -384,13 +384,12 @@ class PylonTk(object):
 #        GraphView(self.root, self.case, self.e)
         graph = nx.Graph()
         for edge in self.case.branches:
-            graph.add_edge(self.case.buses.index(edge.from_bus),
-                           self.case.buses.index(edge.to_bus))
+            graph.add_edge(edge.from_bus._i, edge.to_bus._i)
         for i, bus in enumerate(self.case.buses):
             if bus.p_demand > 0.0:
                 graph.add_edge(i, "l" + str(i))
         for g in self.case.generators:
-            graph.add_edge(self.case.buses.index(g.bus), g.name)
+            graph.add_edge(g.bus._i, g.name)
 
         pylab.figure(1,figsize=(8,8))
         pos = nx.graphviz_layout(graph, prog="dot")

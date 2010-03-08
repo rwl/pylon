@@ -77,7 +77,7 @@ class ExcelWriter(CaseWriter):
         generator_sheet = self.book.add_sheet("Generators")
 
         for j, generator in enumerate(self.case.generators):
-            i = self.case.buses.index(generator.bus)
+            i = generator.bus._i
             for k, attr in enumerate(GENERATOR_ATTRS):
                 generator_sheet.write(j, 0, i)
                 # FIXME: Cast p_cost tuple.
