@@ -121,7 +121,7 @@ class OPF(object):
         self.case.index_buses(bs)
 
         # Convert single-block piecewise-linear costs into linear polynomial.
-        gn = self._pwl1_to_poly(gn)
+#        gn = self._pwl1_to_poly(gn)
 
         # Set-up initial problem variables.
         Va = self._voltage_angle_var(refs, bs)
@@ -285,7 +285,7 @@ class OPF(object):
         """
         nb, ng = len(buses), len(generators)
         # Negative bus-generator incidence matrix.
-        gen_bus = array([buses.index(g.bus) for g in generators])
+        gen_bus = array([g.bus._i for g in generators])
         neg_Cg = csr_matrix((-ones(ng), (gen_bus, range(ng))), (nb, ng))
 
         Amis = hstack([B, neg_Cg], format="csr")
@@ -512,14 +512,18 @@ class Solver(object):
 
         # Zero-sized sparse matrices not supported.  Assume equality
         # constraints exist.
-        AA = A[ieq, :]
-
-        if len(ilt) > 0:
-            AA = vstack([AA, A[ilt, :]], "csr")
-        if len(igt) > 0:
-            AA = vstack([AA, -A[igt, :]], "csr")
-        if len(ibx) > 0:
-            AA = vstack([AA, A[ibx, :], -A[ibx, :]], "csr")
+#        AA = A[ieq, :]
+#        if len(ilt) > 0:
+#            AA = vstack([AA, A[ilt, :]], "csr")
+#        if len(igt) > 0:
+#            AA = vstack([AA, -A[igt, :]], "csr")
+#        if len(ibx) > 0:
+#            AA = vstack([AA, A[ibx, :], -A[ibx, :]], "csr")
+        if len(ieq) or len(igt) or len(ilt) or len(ibx):
+            sig_idx = [(1, ieq), (1, ilt), (-1, igt), (1, ibx), (-1, ibx)]
+            AA = vstack([sig * A[idx, :] for sig, idx in sig_idx if len(idx)])
+        else:
+            AA = None
 
         bb = r_[u[ieq, :], u[ilt], -l[igt], u[ibx], -l[ibx]]
 
@@ -622,7 +626,10 @@ class DCOPFSolver(Solver):
         s = self._run_opf(HH, CC, AA, bb, LB, UB, x0, self.opt)
 
         # Compute the objective function value.
-        Va, Pg, _ = self._update_solution_data(s["x"], HH, CC, C0)
+        Va, Pg, f = self._update_solution_data(s["x"], HH, CC, C0)
+
+        # Add primal objective value to solution.
+        s["f"] = f
 
         # Set case result attributes.
         self._update_case(bs, ln, gn, base_mva, Bf, Pfinj, Va, Pg, s["lmbda"])

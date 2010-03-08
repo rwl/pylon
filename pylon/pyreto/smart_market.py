@@ -240,11 +240,11 @@ class SmartMarket(object):
 
         # Convert offers into piecewise linear segments and update limits.
         for g in generators:
-#            print "G: ", g.p_min, g.p_max, g.p_cost
+#            print "G: ", g.p_min, g.p_max, g.p_cost, g.pcost_model
 
             g.offers_to_pwl(self.offers)
 
-#            print "GG:", g.p_min, g.p_max, g.q_min, g.q_max, g.p_cost
+#            print "GG:", g.p_min, g.p_max, g.p_cost, g.pcost_model
 
         for vl in vloads:
 #            print "L: ", vl.p_min, vl.p_max, vl.p_cost
@@ -267,19 +267,16 @@ class SmartMarket(object):
         if self.decommit:
             solver = UDOPF(self.case, dc=(self.loc_adjust == "dc"))
         elif self.loc_adjust == "dc":
-            solver = OPF(self.case, dc=True, show_progress=False)
+            solver = OPF(self.case, dc=True, opt={"verbose": True})
         else:
-            solver = OPF(self.case, show_progress=False)
+            solver = OPF(self.case, dc=False, opt={"verbose": True})
 
         solution = self._solution = solver.solve()
 
 #        for g in self.case.generators:
 #            print "G:", g.online, g.p, g.q_min, g.q_max, g.bus.p_lmbda
 
-        success = solution["status"] == "optimal" or \
-                  solution["status"] == "unknown"
-
-        return success
+        return solution["converged"]
 
 
     def _nodal_prices(self, haveQ):
