@@ -69,65 +69,35 @@ class BaseProfitTask(Task):
     def getReward(self):
         """ Returns the reward corresponding to the last action performed.
         """
-#        for i, g in enumerate(case.generators):
-#            g_offbids = [ob for ob in offers + bids if ob.generator == g]
-#
-#            if not g_offbids: continue
-#
-#            quantity = g.p
-#
-#            totclrqty = sum([offer.cleared_quantity for offer in g_offbids])
-#            if totclrqty == 0.0:
-#                price = totclrqty
-#            else:
-#                price = sum([of.cleared_quantity * of.cleared_price / totclrqty
-#                             for of in g_offbids])
-#
-#            # Compute costs in $ (not $/hr).
-#            fixed_cost = t * g.total_cost(0.0)
-#
-#            variable_cost = (t * g.total_cost) - fixed_cost
-#
-#            if (not self.g_online[i]) and g.online:
-#                startup_cost = g.c_startup #g.total_cost(g.c_startup)
-#                shutdown_cost = 0.0
-#
-#            elif self.g_online[i] and (not g.online):
-#                startup_cost = 0.0
-#                shutdown_cost = g.c_shutdown #g.total_cost(g.c_shutdown)
-#
-#            else:
-#                startup_cost = 0.0
-#                shutdown_cost = 0.0
-
         g = self.env.asset
-
-        if not g.is_load:
-            offbids = [x for x in self.env.market.offers if x.generator == g]
-        else:
-            offbids = [x for x in self.env.market.bids if x.vload == g]
-
         t = self.env.market.period
+
+        offbids = self.env.market.get_offbids(g)
 
         # Compute costs in $ (not $/hr).
 #        g.p_cost = self.env.marginal_cost
 
 #        fixed_cost = t * g.total_cost(0.0)
 #        variable_cost = (t * g.total_cost()) - fixed_cost
-        costs = g.total_cost(g.p, self.env.p_cost, self.env.p_cost_model)
+        costs = g.total_cost(g.p, self.env._p_cost, self.env._pcost_model)
 
         revenue = t * sum([ob.revenue for ob in offbids])
-        earnings = revenue - costs#(fixed_cost + variable_cost)
 
-        logger.debug("Profit task [%s] reward: %.2f (%.2f - %.2f)" %
+        if g.is_load:
+            earnings = costs - revenue
+        else:
+            earnings = revenue - costs#(fixed_cost + variable_cost)
+
+        logger.debug("Profit task [%s] reward: %.2f (%.2f, %.2f)" %
                      (g.name, earnings, revenue, costs))
+
         return earnings
 
 #------------------------------------------------------------------------------
 #  "DiscreteTask" class:
 #------------------------------------------------------------------------------
 
-class DiscreteTask(BaseProfitTask):
+class DiscreteProfitTask(BaseProfitTask):
     """ Defines a task with discrete observations of the clearing price.
     """
 
@@ -135,13 +105,13 @@ class DiscreteTask(BaseProfitTask):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, environment, dim_state=10):
-        """ The sensor space is divided into the given number of steps.
-        """
-        super(DiscreteTask, self).__init__(environment)
-
-        # State dimensions.
-        self.dim_state = dim_state
+#    def __init__(self, environment, dim_state=10):
+#        """ The sensor space is divided into the given number of steps.
+#        """
+#        super(DiscreteProfitTask, self).__init__(environment)
+#
+#        # State dimensions.
+#        self.dim_state = dim_state
 
         # The number of steps that the action value should be divided into.
 #        self.action_steps = num_actions
@@ -161,34 +131,41 @@ class DiscreteTask(BaseProfitTask):
     #  "Task" interface:
     #--------------------------------------------------------------------------
 
-    def getObservation(self):
-        """ The agent receives a single non-negative integer indicating the
-            band of market clearing prices in which the price from the last
-            auction exists.
+    def performAction(self, action):
+        """ The action vector is stripped and the only element is cast to
+            integer and given to the super class.
         """
-        sensors = Task.getObservation(self)
-        # Divide the range of market prices in to discrete bands.
-        limit = self.env.market.price_cap
-        states = linspace(0.0, limit, self.dim_state)
-        mcp = abs(sensors[2]) # Discard all other sensor data.
-        for i in range(len(states) - 1):
-            if (states[i] <= round(mcp, 4) <= states[i + 1]):
-                return array([i])
-        else:
-            raise ValueError, "MCP: %f" % mcp
+        super(DiscreteProfitTask, self).performAction(int(action[0]))
+
+
+#    def getObservation(self):
+#        """ The agent receives a single non-negative integer indicating the
+#            band of market clearing prices in which the price from the last
+#            auction exists.
+#        """
+#        sensors = super(DiscreteProfitTask, self).getObservation()
+#        # Divide the range of market prices in to discrete bands.
+#        limit = self.env.market.price_cap
+#        states = linspace(0.0, limit, self.dim_state)
+#        mcp = abs(sensors[2]) # Discard all other sensor data.
+#        for i in range(len(states) - 1):
+#            if (states[i] <= round(mcp, 4) <= states[i + 1]):
+#                return array([i])
+#        else:
+#            raise ValueError, "MCP: %f" % mcp
 
 #------------------------------------------------------------------------------
 #  "ContinuousTask" class:
 #------------------------------------------------------------------------------
 
-class ContinuousTask(BaseProfitTask):
+class ContinuousProfitTask(BaseProfitTask):
     """ Defines a task for continuous sensor and action spaces.
     """
 
     def __init__(self, environment):
         """ Initialises the task.
         """
-        super(ContinuousTask, self).__init__(environment)
+        super(ContinuousProfitTask, self).__init__(environment)
 
         # Limits for scaling of sensors.
         self.sensor_limits = self.getSensorLimits()

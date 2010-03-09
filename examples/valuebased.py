@@ -22,7 +22,8 @@ from os.path import join, dirname
 import pylon
 
 from pylon.pyreto import \
-    MarketExperiment, ParticipantEnvironment, SmartMarket, DiscreteTask
+    MarketExperiment, DiscreteMarketEnvironment, SmartMarket, \
+    DiscreteProfitTask
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
@@ -70,7 +71,7 @@ case = pylon.Case.load(AUCTION_CASE)
 market = SmartMarket(case)
 
 # Define the set of possible markups on marginal cost.
-markups = (0,10,20)
+markups = (0,0.1,0.2)
 # Define the number of offers/bids each participant can submit.
 n_offbids = 1
 
@@ -82,8 +83,8 @@ experiment = MarketExperiment([], [], market)
 
 # Add the agents and their tasks.
 for g in case.generators:
-    env = ParticipantEnvironment(g, market, markups, n_offbids)
-    task = DiscreteTask(env, dim_state)
+    env = DiscreteMarketEnvironment(g, market, dim_state, markups, n_offbids)
+    task = DiscreteProfitTask(env)
     module = ActionValueTable(dim_state, dim_action)
     module.initialize(1.0)
     learner = SARSA() #Q() QLambda()

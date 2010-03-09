@@ -101,7 +101,7 @@ class MarketExperiment(GraphicalExperiment):
         """
         self.stepid += 1
 
-        logger.info("Entering period %d." % self.stepid)
+        logger.info("Entering simulation period %d." % self.stepid)
 
         # Initialise the market.
         self.market.reset()
