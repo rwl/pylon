@@ -79,7 +79,9 @@ class BaseProfitTask(Task):
 
 #        fixed_cost = t * g.total_cost(0.0)
 #        variable_cost = (t * g.total_cost()) - fixed_cost
-        costs = g.total_cost(g.p, self.env._p_cost, self.env._pcost_model)
+        costs = g.total_cost(round(g.p, 2),
+                             self.env._p_cost,
+                             self.env._pcost_model)
 
         revenue = t * sum([ob.revenue for ob in offbids])
 

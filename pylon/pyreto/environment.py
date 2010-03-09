@@ -22,12 +22,12 @@
 #------------------------------------------------------------------------------
 
 import logging
-from scipy import array, zeros, mean, linspace, r_
+from scipy import array, zeros, mean, linspace, r_, polyval, polyder
 
 from pybrain.rl.environments import Environment
 #from pybrain.rl.environments.graphical import GraphicalEnvironment
 
-from pylon import PW_LINEAR
+from pylon import PW_LINEAR, POLYNOMIAL
 from pylon.pyreto.smart_market import Offer, Bid
 
 logger = logging.getLogger(__name__)
@@ -68,13 +68,16 @@ class DiscreteMarketEnvironment(Environment):
         # List of all markup combinations.
         self.all_actions = list(xselections(markups, n_offbids))
 
+        # List of offers/bids from the previous action.
+        self.last_action = []
+
         # Does a participant's offer/bid comprise quantity aswell as price.
 #        self.offbid_qty = offbid_qty
 
         # A non-negative amount of money.
 #        money = 1e6
 
-        assert asset.pcost_model == PW_LINEAR
+#        assert asset.pcost_model == PW_LINEAR
         # Asset capacity limits.
         self._p_max = asset.p_max
         self._p_min = asset.p_min
@@ -140,9 +143,14 @@ class DiscreteMarketEnvironment(Environment):
         """ Returns the currently visible state of the world as a numpy array
             of doubles.
         """
-        offbids = self.market.get_offbids(self.asset)
+#        offbids = self.market.get_offbids(self.asset)
 
-        prc = mean([ob.cleared_price for ob in offbids]) if offbids else 0.0
+        if len(self.last_action):
+            prc = mean([ob.cleared_price for ob in self.last_action])
+        else:
+            prc = 0.0
+
+#        print "STATE:", [ob.cleared_price for ob in self.last_action]
 
         # Divide the range of market prices in to discrete bands.
         limit = self.market.price_cap
@@ -161,6 +169,8 @@ class DiscreteMarketEnvironment(Environment):
             @param action: an action that should be executed in the Environment
             @type action: array: [int]
         """
+        self.last_action = []
+
         asset = self.asset
         mkt = self.market
         n_offbids = self.n_offbids
@@ -174,36 +184,45 @@ class DiscreteMarketEnvironment(Environment):
         else:
             qty = self._p_max / n_offbids
 
-        tot_qty = 0.0#self._p_min
-#        qty = self._p_min + bid_qty
+        tot_qty = 0.0
 
         for i in range(n_offbids):
             tot_qty += qty
-            n_segments = len(p_cost) - 1
-            for j in range(n_segments):
-                x1, y1 = p_cost[j]
-                x2, y2 = p_cost[j + 1]
-                if x1 <= tot_qty <= x2:
-                    m = (y2 - y1) / (x2 - x1)
-                    # Cumulative markup/markdown to ensure convexity.
-                    if asset.is_load:
-                        prc = m * (1.0 - sum(markups[:i]))
-                    else:
-                        prc = m * (1.0 + sum(markups[:i]))
-                    break
+            if self._pcost_model == PW_LINEAR:
+                n_segments = len(p_cost) - 1
+                for j in range(n_segments):
+                    x1, y1 = p_cost[j]
+                    x2, y2 = p_cost[j + 1]
+                    if x1 <= tot_qty <= x2:
+                        m = (y2 - y1) / (x2 - x1)
+                        break
+                else:
+                    raise ValueError
+            elif self._pcost_model == POLYNOMIAL:
+                m = polyval(polyder(list(self._p_cost)), tot_qty)
             else:
                 raise ValueError
 
-            if not asset.is_load:
-                mkt.offers.append(Offer(asset, qty, prc))
-                logger.info("%.2fMW offered at %.2f$/MWh for %s (%d%%)." %
-                            (qty, prc, asset.name, int(sum(markups[:i]))*100))
+            # Cumulative markup/markdown to ensure convexity.
+            if asset.is_load:
+                prc = m * (1.0 - sum(markups[:i + 1]))
             else:
-                mkt.bids.append(Bid(asset, -qty, prc))
-                logger.info("%.2f$/MWh bid for %.2fMW to supply %s (%d%%)." %
-                            (prc, -qty, asset.name, int(sum(markups[:i]))*100))
+                prc = m * (1.0 + sum(markups[:i + 1]))
 
-#            qty = bid_qty
+            if not asset.is_load:
+                offer = Offer(asset, qty, prc)
+                mkt.offers.append(offer)
+                self.last_action.append(offer)
+
+                logger.info("%.2fMW offered at %.2f$/MWh for %s (%d%%)." %
+                    (qty, prc, asset.name, sum(markups[:i + 1]) * 100))
+            else:
+                bid = Bid(asset, -qty, prc)
+                mkt.bids.append(bid)
+                self.last_action.append(bid)
+
+                logger.info("%.2f$/MWh bid for %.2fMW to supply %s (%d%%)." %
+                    (prc, -qty, asset.name, sum(markups[:i + 1]) * 100))
 
 
         # Participants either submit prices, where the quantity is divided
