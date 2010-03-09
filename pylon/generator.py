@@ -175,7 +175,7 @@ class Generator(Named):
         p_cost = self.p_cost if p_cost is None else p_cost
         pcost_model = self.pcost_model if pcost_model is None else pcost_model
 
-        if self.pcost_model == PW_LINEAR:
+        if pcost_model == PW_LINEAR:
             n_segments = len(p_cost) - 1
             # Iterate over the piece-wise linear segments.
             for i in range(n_segments):
@@ -190,7 +190,7 @@ class Generator(Named):
                 raise ValueError, "Value [%f] outwith pwl cost curve." % p
                 # Use the last segment for values outwith the cost curve.
 #                result = m*p + c
-        elif self.pcost_model == POLYNOMIAL:
+        elif pcost_model == POLYNOMIAL:
             result = p_cost[-1]
             for i in range(1, len(p_cost)):
                 result += p_cost[-(i + 1)] * p**i
@@ -509,9 +509,7 @@ class Generator(Named):
             points.reverse()
 
         n_segs = len(points) - 1
-        plural = "" if n_segs == 1 else "s"
-        logger.info("Creating pwl cost function with %d segment%s %s." %
-                    (n_segs, plural, points))
+        logger.info("%d segment pwl cost function: %s" % (n_segs, points))
 
         return points
 

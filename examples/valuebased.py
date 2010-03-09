@@ -71,9 +71,9 @@ case = pylon.Case.load(AUCTION_CASE)
 market = SmartMarket(case)
 
 # Define the set of possible markups on marginal cost.
-markups = (0,0.1,0.2)
+markups = (0,0.25,0.5,0.75,1.0)
 # Define the number of offers/bids each participant can submit.
-n_offbids = 1
+n_offbids = 2
 
 dim_state = 10
 dim_action = len(markups) * n_offbids
@@ -87,7 +87,9 @@ for g in case.generators:
     task = DiscreteProfitTask(env)
     module = ActionValueTable(dim_state, dim_action)
     module.initialize(1.0)
-    learner = SARSA() #Q() QLambda()
+#    learner = SARSA(gamma=0.95)
+    learner = Q()
+#    learner = QLambda()
 #    learner.explorer = BoltzmannExplorer() # default is e-greedy.
     agent = LearningAgent(module, learner)
 
