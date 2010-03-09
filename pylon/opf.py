@@ -409,6 +409,7 @@ class OPF(object):
             m = diff(c) / diff(p)        # Slopes for Pg (or Qg).
 
             if 0.0 in diff(p):
+                raise ValueError, "Bad Pcost data: %s (%s)" % (p, g.name)
                 logger.error("Bad Pcost data: %s" % p)
 
             b = m * p[:ns-1] - c[:ns-1] # rhs

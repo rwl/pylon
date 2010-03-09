@@ -18,8 +18,8 @@ from smart_market import \
     SmartMarket, Offer, Bid, DISCRIMINATIVE, FIRST_PRICE
 
 from experiment import MarketExperiment
-from environment import ParticipantEnvironment
-from task import DiscreteTask, ContinuousTask
+from environment import DiscreteMarketEnvironment, ContinuousMarketEnvironment
+from task import DiscreteProfitTask, ContinuousProfitTask
 from roth_erev import RothErev, PropensityTable
 
 # EOF -------------------------------------------------------------------------

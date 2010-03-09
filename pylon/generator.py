@@ -197,7 +197,10 @@ class Generator(Named):
         else:
             raise ValueError
 
-        return result
+        if self.is_load:
+            return -result
+        else:
+            return result
 
 
 #    def poly_cost(self, val=None, der=0, reactive=False):
@@ -462,29 +465,24 @@ class Generator(Named):
         q_bids = [v for v in valid_bids if v.reactive]
 
         if p_bids:
-            p_cost = self._offbids_to_points(p_bids, True)
-            neg_pcost = [(-x, -y) for x, y in p_cost]
-            neg_pcost.reverse()
-            self.p_cost = neg_pcost
+            self.p_cost = self._offbids_to_points(p_bids, True)
             self.pcost_model = PW_LINEAR
             self.online = True
         else:
             self.p_cost = [(0.0, 0.0), (self.p_max, 0.0)]
             self.pcost_model = PW_LINEAR
-            self.online = True
+            logger.info("No valid active power bids for dispatchable load "
+                        "[%s], shutting down." % self.name)
+            self.online = False
 
         if q_bids:
-            q_cost = self._offbids_to_points(q_bids, True)
-            neg_qcost = [(-x, -y) for x, y in q_cost]
-            neg_qcost.reverse()
-            self.q_cost = neg_qcost
-
+            self.q_cost = self._offbids_to_points(q_bids, True)
             self.qcost_model = PW_LINEAR
             self.online = True
         else:
             self.q_cost = [(self.q_min, 0.0), (0.0, 0.0), (self.q_max, 0.0)]
             self.qcost_model = PW_LINEAR
-            logger.info("No valid bids for dispatchable load, shutting down.")
+#            logger.info("No valid bids for dispatchable load, shutting down.")
 #            self.online = False
 
         self._adjust_limits()
@@ -506,9 +504,13 @@ class Generator(Named):
             y2 = m * (x2 - x1) + y1
             points.append((x2, y2))
 
+        if arebids:
+            points = [(-x, -y) for x, y in points]
+            points.reverse()
+
         n_segs = len(points) - 1
         plural = "" if n_segs == 1 else "s"
-        logger.info("Creating pwl cost function with %d segment%s [%s]." %
+        logger.info("Creating pwl cost function with %d segment%s %s." %
                     (n_segs, plural, points))
 
         return points

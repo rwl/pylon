@@ -22,21 +22,21 @@
 #------------------------------------------------------------------------------
 
 import logging
-from scipy import array, zeros, r_
+from scipy import array, zeros, mean, linspace, r_
 
-#from pybrain.rl.environments import Environment
-from pybrain.rl.environments.graphical import GraphicalEnvironment
+from pybrain.rl.environments import Environment
+#from pybrain.rl.environments.graphical import GraphicalEnvironment
 
-#from pylon import Generator
+from pylon import PW_LINEAR
 from pylon.pyreto.smart_market import Offer, Bid
 
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "ParticipantEnvironment" class:
+#  "DiscreteMarketEnvironment" class:
 #------------------------------------------------------------------------------
 
-class ParticipantEnvironment(GraphicalEnvironment):
+class DiscreteMarketEnvironment(Environment):
     """ Defines the world in which an agent acts.  It receives an input with
         .performAction() and returns an output with .getSensors(). Each
         environment requires a reference to an asset (Generator) and the whole
@@ -45,23 +45,13 @@ class ParticipantEnvironment(GraphicalEnvironment):
     """
 
     #--------------------------------------------------------------------------
-    #  "Environment" interface:
-    #--------------------------------------------------------------------------
-
-    # The number of action values the environment accepts.
-#    indim = 2
-
-    # The number of sensor values the environment produces.
-#    outdim = 1
-
-    #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, asset, market, markups=(0,10,20,30), n_offbids=1):
+    def __init__(self, asset, market, outdim=10, markups=None, n_offbids=1):
         """ Initialises the environment.
         """
-        super(ParticipantEnvironment, self).__init__()
+        super(DiscreteMarketEnvironment, self).__init__()
 
         # Generator instance that the agent controls.
         self.asset = asset
@@ -72,22 +62,25 @@ class ParticipantEnvironment(GraphicalEnvironment):
         # Number of offers/bids a participant submits.
         self.n_offbids = n_offbids
 
+        # Discrete markups allowed on each offer/bid.
+        self.markups = (0.0,0.1,0.2,0.3) if markups is None else markups
+
+        # List of all markup combinations.
+        self.all_actions = list(xselections(markups, n_offbids))
+
         # Does a participant's offer/bid comprise quantity aswell as price.
 #        self.offbid_qty = offbid_qty
 
         # A non-negative amount of money.
 #        money = 1e6
 
-        # Record capacity limits and the cost function on instantiation as the
-        # marginal cost function since these values are changed to reflect
-        # submitted offers and bids.
-        self.p_max = asset.p_max
-        self.p_min = asset.p_min
-
-        # Marginal cost function proportional to current capacity.  Agents may
-        # offer/bid above or below marginal cost.
-        self.p_cost = asset.p_cost
-        self.pcost_model = asset.pcost_model
+        assert asset.pcost_model == PW_LINEAR
+        # Asset capacity limits.
+        self._p_max = asset.p_max
+        self._p_min = asset.p_min
+        # Marginal cost function proportional to current capacity.
+        self._p_cost = asset.p_cost
+        self._pcost_model = asset.pcost_model
 
 #        # Amortised fixed costs.
 #        self.c_startup = asset.c_startup
@@ -109,20 +102,156 @@ class ParticipantEnvironment(GraphicalEnvironment):
 #            self.updateDone = True
 #            self.updateLock=threading.Lock()
 
-        self.all_actions = list(xselections(markups, n_offbids))
-
         #----------------------------------------------------------------------
-        # Set the number of action values that the environment accepts.
+        #  Set the number of action values that the environment accepts.
         #----------------------------------------------------------------------
 
-#        if offbid_qty:
-#            self.indim = n_offbids * 2
+        self.indim = len(self.all_actions)
+
+        #----------------------------------------------------------------------
+        #  Set the number of sensor values that the environment produces.
+        #----------------------------------------------------------------------
+
+        self.outdim = outdim
+
+    #--------------------------------------------------------------------------
+    #  "ParticipantEnvironment" interface:
+    #--------------------------------------------------------------------------
+
+    def setMarkups(self, markups):
+        """ Sets the list of possible markups on marginal cost allowed
+            with each offer/bid.
+        """
+        self.all_actions = list(xselections(markups, self.n_offbids))
+        self.markups = markups
+
+
+    def setNumOffbids(self, n_offbids):
+        """ Set the number of offers/bids submitted to the market.
+        """
+        self.all_actions = list(xselections(self.markups, n_offbids))
+        self.n_offbids = n_offbids
+
+    #--------------------------------------------------------------------------
+    #  "Environment" interface:
+    #--------------------------------------------------------------------------
+
+    def getSensors(self):
+        """ Returns the currently visible state of the world as a numpy array
+            of doubles.
+        """
+        offbids = self.market.get_offbids(self.asset)
+
+        prc = mean([ob.cleared_price for ob in offbids]) if offbids else 0.0
+
+        # Divide the range of market prices in to discrete bands.
+        limit = self.market.price_cap
+        states = linspace(0.0, limit, self.outdim)
+
+        for i in range(len(states) - 1):
+            if states[i] <= round(prc, 4) <= states[i + 1]:
+                logger.info("%s in state %d." % (self.asset.name, i))
+                return array([i])
+        else:
+            raise ValueError, "Cleared price mean: %f" % prc
+
+
+    def performAction(self, action):
+        """ Performs an action on the world that changes it's internal state.
+            @param action: an action that should be executed in the Environment
+            @type action: array: [int]
+        """
+        asset = self.asset
+        mkt = self.market
+        n_offbids = self.n_offbids
+        p_cost = self._p_cost
+
+        markups = self.all_actions[action]
+
+        # Divide available capacity equally among the offers/bids.
+        if asset.is_load:
+            qty = self._p_min / n_offbids
+        else:
+            qty = self._p_max / n_offbids
+
+        tot_qty = 0.0#self._p_min
+#        qty = self._p_min + bid_qty
+
+        for i in range(n_offbids):
+            tot_qty += qty
+            n_segments = len(p_cost) - 1
+            for j in range(n_segments):
+                x1, y1 = p_cost[j]
+                x2, y2 = p_cost[j + 1]
+                if x1 <= tot_qty <= x2:
+                    m = (y2 - y1) / (x2 - x1)
+                    # Cumulative markup/markdown to ensure convexity.
+                    if asset.is_load:
+                        prc = m * (1.0 - sum(markups[:i]))
+                    else:
+                        prc = m * (1.0 + sum(markups[:i]))
+                    break
+            else:
+                raise ValueError
+
+            if not asset.is_load:
+                mkt.offers.append(Offer(asset, qty, prc))
+                logger.info("%.2fMW offered at %.2f$/MWh for %s (%d%%)." %
+                            (qty, prc, asset.name, int(sum(markups[:i]))*100))
+            else:
+                mkt.bids.append(Bid(asset, -qty, prc))
+                logger.info("%.2f$/MWh bid for %.2fMW to supply %s (%d%%)." %
+                            (prc, -qty, asset.name, int(sum(markups[:i]))*100))
+
+#            qty = bid_qty
+
+
+        # Participants either submit prices, where the quantity is divided
+        # equally among the offers/bids, or tuples of quantity and price.
+#        if not self.offbid_qty:
+#            # Divide the rated capacity equally among the offers/bids.
+#            qty = self.p_max / n_offbids
+#            for prc in action:
+#                if not asset.is_load:
+#                    mkt.offers.append(Offer(asset, qty, prc))
+#                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
+#                                (qty, prc, asset.name))
+#                else:
+#                    mkt.bids.append(Bid(asset, qty, prc))
+#                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
+#                                (prc, qty, asset.name))
 #        else:
-#            self.indim = n_offbids
+#            # Agent's actions comprise both quantities and prices.
+#            for i in range(0, len(action), 2):
+#                qty = action[i]
+#                prc = action[i + 1]
+#                if not asset.is_load:
+#                    mkt.offers.append(Offer(asset, qty, prc))
+#                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
+#                                (qty, prc, asset.name))
+#                else:
+#                    mkt.bids.append(Bid(asset, qty, prc))
+#                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
+#                                (prc, qty, asset.name))
 
-        # One (cumulative) markup per segment.
-        self.indim = len(asset.p_cost) * 4
+#        if self.hasRenderer():
+#            render = self.getRenderer()
 
+
+    def reset(self):
+        """ Reinitialises the environment.
+        """
+        self.market.init()
+
+#------------------------------------------------------------------------------
+#  "ContinuousMarketEnvironment" class:
+#------------------------------------------------------------------------------
+
+class ContinuousMarketEnvironment(Environment):
+    """ Defines a continuous representation of an electricity market.
+    """
+
+    def __init__(self, market):
         #----------------------------------------------------------------------
         # Set the number of sensor values that the environment produces.
         #----------------------------------------------------------------------
@@ -171,8 +300,8 @@ class ParticipantEnvironment(GraphicalEnvironment):
         v_max = array([bus.mu_vmax for bus in case.buses])
         v_min = array([bus.mu_vmin for bus in case.buses])
         pg = array([g.p for g in case.generators])
-        g_max = array([g.mu_pmax for g in case.generators])
-        g_min = array([g.mu_pmin for g in case.generators])
+        g_max = array([g.mu_p_max for g in case.generators])
+        g_min = array([g.mu_p_min for g in case.generators])
 
         case_sensors = r_[flows, mu_flow, angles, nodal_prc, pg, g_max, g_min]
 
@@ -182,82 +311,23 @@ class ParticipantEnvironment(GraphicalEnvironment):
         return r_[dispatch_sensors, case_sensors]
 
 
-    def performAction(self, action):
-        """ Performs an action on the world that changes it's internal state.
-            @param action: an action that should be executed in the Environment
-            @type action: array: [ qty, prc, qty, prc, ... ]
-        """
-        asset = self.asset
-        mkt = self.market
-        n_offbids = self.n_offbids
-        p_cost = self.p_cost
-
-        a = self.all_actions[ int(action[0]) ]
-
-        # Divide the rated capacity equally among the offers/bids.
-        qty = self.p_max / n_offbids
-        for i in range(n_offbids):
-            n_segments = len(p_cost) - 1
-            # Markup each piece-wise linear segments.
-            for j in range(n_segments):
-                x1, y1 = p_cost[j]
-                x2, y2 = p_cost[j + 1]
-                if x1 <= qty <= x2:
-                    m = (y2 - y1) / (x2 - x1)
-                    # cumulative markup to ensure convexity
-                    prc = m * sum(a[:i])
-                    break
-
-            if not asset.is_load:
-                mkt.offers.append(Offer(asset, qty, prc))
-                logger.info("%.2fMW offered at %.2f$/MWh for %s." %
-                            (qty, prc, asset.name))
-            else:
-                mkt.bids.append(Bid(asset, qty, prc))
-                logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
-                            (prc, qty, asset.name))
-
-
-        # Participants either submit prices, where the quantity is divided
-        # equally among the offers/bids, or tuples of quantity and price.
-#        if not self.offbid_qty:
-#            # Divide the rated capacity equally among the offers/bids.
-#            qty = self.p_max / n_offbids
-#            for prc in action:
-#                if not asset.is_load:
-#                    mkt.offers.append(Offer(asset, qty, prc))
-#                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
-#                                (qty, prc, asset.name))
-#                else:
-#                    mkt.bids.append(Bid(asset, qty, prc))
-#                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
-#                                (prc, qty, asset.name))
-#        else:
-#            # Agent's actions comprise both quantities and prices.
-#            for i in range(0, len(action), 2):
-#                qty = action[i]
-#                prc = action[i + 1]
-#                if not asset.is_load:
-#                    mkt.offers.append(Offer(asset, qty, prc))
-#                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
-#                                (qty, prc, asset.name))
-#                else:
-#                    mkt.bids.append(Bid(asset, qty, prc))
-#                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
-#                                (prc, qty, asset.name))
-
-#        if self.hasRenderer():
-#            render = self.getRenderer()
-
-
     def reset(self):
         """ Reinitialises the environment.
         """
         self.market.init()
 
+#------------------------------------------------------------------------------
+#  "xselections" function:
+#------------------------------------------------------------------------------
 
 def xselections(items, n):
-    if n==0: yield []
+    """ Takes n elements (not necessarily distinct) from the sequence, order
+        matters.
+
+        @see: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/190465
+    """
+    if n==0:
+        yield []
     else:
         for i in xrange(len(items)):
             for ss in xselections(items, n-1):

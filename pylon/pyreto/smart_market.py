@@ -128,6 +128,17 @@ class SmartMarket(object):
         self.bids = []
 
 
+    def get_offbids(self, g):
+        """ Returns the offers/bids for the given generator.
+        """
+        if not g.is_load:
+            offbids = [x for x in self.offers if x.generator == g]
+        else:
+            offbids = [x for x in self.bids if x.vload == g]
+
+        return offbids
+
+
     def run(self):
         """ Computes cleared offers and bids.
         """
@@ -151,15 +162,17 @@ class SmartMarket(object):
             gtee_offer_prc, gtee_bid_prc = self._nodal_prices(haveQ)
             # Determine quantity and price for each offer/bid.
             self._run_auction(gtee_offer_prc, gtee_bid_prc, haveQ)
+
+            logger.info("SmartMarket cleared in %.3fs" % (time.time() - t0))
         else:
             for offbid in self.offers + self.bids:
                 offbid.cleared_quantity = 0.0
                 offbid.cleared_price = 0.0
                 offbid.accepted = False
 
-            logger.error("Non-convergent market OPF.")
+                offbid.generator.p = 0.0
 
-        logger.info("SmartMarket cleared in %.3fs" % (time.time() - t0))
+            logger.error("Non-convergent market OPF. Blackout!")
 
         return self.offers, self.bids
 
@@ -397,6 +410,8 @@ class Auction(object):
         # Clip cleared prices according to guarantees and limits.
         self._clip_prices()
 
+        self._log_clearances()
+
         return self.offers, self.bids
 
 
@@ -442,14 +457,14 @@ class Auction(object):
             ob.accepted = (accepted > 0.0)
 
             # Log the event.
-            if ob.accepted:
-                logger.info("%s [%s, %.3f, %.3f] accepted at %.2f MW." %
-                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
-                     ob.price, ob.cleared_quantity))
-            else:
-                logger.info("%s [%s, %.3f, %.3f] rejected." %
-                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
-                     ob.price))
+#            if ob.accepted:
+#                logger.info("%s [%s, %.3f, %.3f] accepted at %.2f MW." %
+#                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
+#                     ob.price, ob.cleared_quantity))
+#            else:
+#                logger.info("%s [%s, %.3f, %.3f] rejected." %
+#                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
+#                     ob.price))
 
             # Increment the accepted quantity.
             accepted_qty += ob.quantity
@@ -606,6 +621,19 @@ class Auction(object):
                     uniform_price = min([bid.cleared_price for bid in g_bids])
                     for bid in g_bids:
                         bid.cleared_price = uniform_price
+
+
+    def _log_clearances(self):
+        """ Logs offer/bid cleared values.
+        """
+        for offer in self.offers:
+            logger.info("%.2fMW offer cleared at %.2f$/MWh for %s (%.2f)." %
+                        (offer.cleared_quantity, offer.cleared_price,
+                         offer.generator.name, offer.revenue))
+        for bid in self.bids:
+            logger.info("%.2fMW bid cleared at %.2f$/MWh for %s (%.2f)." %
+                        (bid.cleared_quantity, bid.cleared_price,
+                         bid.vload.name, bid.revenue))
 
 #------------------------------------------------------------------------------
 #  "_OfferBid" class:
