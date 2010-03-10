@@ -1,8 +1,7 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
-""" This example demonstrates how to use the discrete Temporal Difference
-Reinforcement Learning algorithms (SARSA, Q, Q(lambda)) in a partially
-observable MDP energy market task. """
+""" This example demonstrates how to use Pylon to simulate a power echange
+auction market . """
 
 #import matplotlib
 #matplotlib.use('WXAgg')
@@ -22,13 +21,14 @@ from os.path import join, dirname
 import pylon
 
 from pylon.pyreto import \
-    MarketExperiment, DiscreteMarketEnvironment, SmartMarket, \
-    DiscreteProfitTask
+    MarketExperiment, DiscreteMarketEnvironment, ContinuousMarketEnvironment, \
+    SmartMarket, DiscreteProfitTask, ContinuousProfitTask
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
-from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
+from pybrain.rl.learners import Q, QLambda, SARSA, ENAC, Reinforce #@UnusedImport
 from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
+from pybrain.tools.shortcuts import buildNetwork
 from pybrain.tools.plotting import MultilinePlotter
 
 # Define a path to the data file.
@@ -70,31 +70,46 @@ case = pylon.Case.load(AUCTION_CASE)
 # Create the market and associate learning agents with each generator.
 market = SmartMarket(case)
 
-# Define the set of possible markups on marginal cost.
-markups = (0,0.25,0.5,0.75,1.0)
-# Define the number of offers/bids each participant can submit.
+# Specify the discrete set of possible markups on marginal cost.
+markups = (0, 0.25, 0.5, 0.75, 1.0)
+
+# Specify the number of offers/bids each participant can submit.
 n_offbids = 2
 
+# Specify the desired number of discrete states.
 dim_state = 10
+
 dim_action = len(markups) * n_offbids
+
+# Use value based methods?
+vb = True
 
 # Construct an experiment to test the market.
 experiment = MarketExperiment([], [], market)
 
 # Add the agents and their tasks.
 for g in case.generators:
-    env = DiscreteMarketEnvironment(g, market, dim_state, markups, n_offbids)
-    task = DiscreteProfitTask(env)
-    module = ActionValueTable(dim_state, dim_action)
-    module.initialize(1.0)
-#    learner = SARSA(gamma=0.95)
-    learner = Q()
-#    learner = QLambda()
-#    learner.explorer = BoltzmannExplorer() # default is e-greedy.
-    agent = LearningAgent(module, learner)
+    if vb:
+        env = DiscreteMarketEnvironment(g, market, dim_state, markups, n_offbids)
+        task = DiscreteProfitTask(env)
+        module = ActionValueTable(dim_state, dim_action)
+        module.initialize(1.0)
+    #    learner = SARSA(gamma=0.95)
+        learner = Q()
+    #    learner = QLambda()
+    #    learner.explorer = BoltzmannExplorer() # default is e-greedy.
+        agent = LearningAgent(module, learner)
+    else:
+        env = ContinuousMarketEnvironment(g, market, n_offbids, False)
+        task = ContinuousProfitTask(env)
+        net = buildNetwork(4, 1, bias=False)
+        learner = ENAC()
+#        learner = Reinforce()
+        agent = LearningAgent(net, learner)
 
     experiment.tasks.append(task)
     experiment.agents.append(agent)
+
 
 # Prepare for plotting.
 pylab.ion()
@@ -115,11 +130,11 @@ while x <= 1200:
 #    pylab.plot(agent2.module.params, "ro-")
 #    pylab.draw()
 
-    reward = scipy.mean(agent.history.getSumOverSequences('reward'))
-    pl.addData(0, x, reward)
-    pl.update()
+    for i, a in enumerate(experiment.agents):
+        reward = scipy.mean(agent.history.getSumOverSequences('reward'))
+        pl.addData(i, x, reward)
+        pl.update()
 
-    for a in experiment.agents:
         a.learn()
         a.reset()
     x += batch
