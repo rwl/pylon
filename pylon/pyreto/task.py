@@ -72,7 +72,8 @@ class BaseProfitTask(Task):
         g = self.env.asset
         t = self.env.market.period
 
-        offbids = self.env.market.get_offbids(g)
+#        offbids = self.env.market.get_offbids(g)
+        offbids = self.env.last_action
 
         # Compute costs in $ (not $/hr).
 #        g.p_cost = self.env.marginal_cost
@@ -175,6 +176,8 @@ class ContinuousProfitTask(BaseProfitTask):
         # Limits for scaling of actors.
         self.actor_limits = self.getActorLimits()
 
+        self.mark_max = 1.0
+
     #--------------------------------------------------------------------------
     #  "ContinuousTask" interface:
     #--------------------------------------------------------------------------
@@ -216,16 +219,14 @@ class ContinuousProfitTask(BaseProfitTask):
         """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
             one tuple per parameter, giving min and max for that parameter.
         """
-        g = self.env.asset
         n_offbids = self.env.n_offbids
         offbid_qty = self.env.offbid_qty
-        mkt = self.env.market
 
         actor_limits = []
         for _ in range(n_offbids):
             if offbid_qty:
-                actor_limits.append((0.0, g.rated_pmax))
-            actor_limits.append((0.0, mkt.price_cap))
+                actor_limits.append((0.0, self.env._p_max))
+            actor_limits.append((0.0, self.mark_max))
 
         return actor_limits
 
