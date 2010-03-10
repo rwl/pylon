@@ -111,6 +111,10 @@ class MATPOWERReader(CaseReader):
         # Parse the data file
         parsing_case.parseFile(file_or_filename)
 
+        # Update internal indices.
+        case.index_buses()
+        case.index_branches()
+
         return case
 
     #--------------------------------------------------------------------------
