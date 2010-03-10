@@ -27,7 +27,7 @@ from pybrain.rl.environments import Task
 
 logger = logging.getLogger(__name__)
 
-BIGNUM = 1e06
+BIGNUM = 1e04
 
 #------------------------------------------------------------------------------
 #  "BaseProfitTask" class:
@@ -170,13 +170,14 @@ class ContinuousProfitTask(BaseProfitTask):
         """
         super(ContinuousProfitTask, self).__init__(environment)
 
+        # Maximum markup/markdown.
+        self.mark_max = 0.4
+
         # Limits for scaling of sensors.
         self.sensor_limits = self.getSensorLimits()
 
         # Limits for scaling of actors.
         self.actor_limits = self.getActorLimits()
-
-        self.mark_max = 1.0
 
     #--------------------------------------------------------------------------
     #  "ContinuousTask" interface:
@@ -187,30 +188,27 @@ class ContinuousProfitTask(BaseProfitTask):
             one tuple per parameter, giving min and max for that parameter.
         """
         g = self.env.asset
-        mkt = self.env.market
-        case = mkt.case
+        case = self.env.market.case
 
         limits = []
-        limits.append((0.0, BIGNUM)) # f
-        limits.append((0.0, self.env.p_max)) # quantity
-        limits.append((0.0, BIGNUM)) # price
-        limits.append((0.0, g.total_cost(self.env.p_max))) # variable
-#        c_startup = 2.0 if g.c_startup == 0.0 else g.c_startup
-#        limits.append((0.0, c_startup)) # startup
-#        c_shutdown = 2.0 if g.c_shutdown == 0.0 else g.c_shutdown
-#        limits.append((0.0, c_shutdown)) # shutdown
 
-        limits.extend([(0.0, b.rate_a) for b in case.branches])
-        limits.extend([(-BIGNUM, BIGNUM) for b in case.branches]) # mu_flow
+        # Market sensor limits.
+        limits.append((1e-6, BIGNUM)) # f
+        p_lim = self.env._p_min if g.is_load else self.env._p_max
+        limits.append((0.0, p_lim)) # quantity
+        limits.append((0.0, g.total_cost(p_lim, self.env._p_cost,
+                                         self.env._pcost_model)))
 
-        limits.extend([(-180.0, 180.0) for b in case.buses]) # angle
-        limits.extend([(0.0, BIGNUM) for b in case.buses]) # p_lmbda
-#        limits.extend([(b.v_min, b.v_max) for b in case.buses]) # mu_vmin
-#        limits.extend([(b.v_min, b.v_max) for b in case.buses]) # mu_vmax
+        # Case sensor limits.
+#        limits.extend([(-180.0, 180.0) for _ in case.buses]) # Va
+        limits.extend([(0.0, BIGNUM) for _ in case.buses]) # Plam
 
-        limits.extend([(0., g.p_max) for g in case.generators]) #pg
-        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) #g_pmax
-        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) #g_pmin
+        limits.extend([(-b.rate_a, b.rate_a) for b in case.branches]) # Pf
+#        limits.extend([(-BIGNUM, BIGNUM) for b in case.branches]) # mu_f
+
+        limits.extend([(g.p_min, g.p_max) for g in case.generators]) # Pg
+#        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) # Pg_max
+#        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) # Pg_min
 
         return limits
 
@@ -229,5 +227,26 @@ class ContinuousProfitTask(BaseProfitTask):
             actor_limits.append((0.0, self.mark_max))
 
         return actor_limits
+
+    #--------------------------------------------------------------------------
+    #  "Task" interface:
+    #--------------------------------------------------------------------------
+
+    def getObservation(self):
+        """ A filtered mapping to getSample of the underlying environment. """
+        sensors = super(ContinuousProfitTask, self).getObservation()
+
+#        print "SENSORSZ:", sensors
+
+        return sensors
+
+
+    def performAction(self, action):
+        """ The action vector is stripped and the only element is cast to
+            integer and given to the super class.
+        """
+#        print "AACTION:", action
+
+        super(ContinuousProfitTask, self).performAction(action)
 
 # EOF -------------------------------------------------------------------------

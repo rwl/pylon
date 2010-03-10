@@ -276,9 +276,9 @@ class ContinuousMarketEnvironment(Environment):
 
         outdim = 0
         outdim += 3                                 # f, tot_qty, mcp
-        outdim += len(market.case.buses) * 2        # Va, Plam
-        outdim += len(market.case.branches) * 2     # Pf, mu_f
-        outdim += len(market.case.generators) * 3   # Pg, mu_pmax, mu_pmin
+        outdim += len(market.case.buses) * 1        # Va, Plam
+        outdim += len(market.case.branches) * 1     # Pf, mu_f
+        outdim += len(market.case.generators) * 1   # Pg, mu_pmax, mu_pmin
         self.outdim = outdim
 
     #--------------------------------------------------------------------------
@@ -321,29 +321,32 @@ class ContinuousMarketEnvironment(Environment):
         else:
             offbids = [x for x in self.market.bids if x.vload == g]
 
-        # Dispatch related sensors.
-        dispatch_sensors = zeros(3)
+        # Market sensors.
+        market_sensors = zeros(3)
 
         if self.market._solution.has_key("f"):
-            dispatch_sensors[0] = self.market._solution["f"]
-        dispatch_sensors[1] = sum([ob.cleared_quantity for ob in offbids])
+            market_sensors[0] = self.market._solution["f"]
+        market_sensors[1] = sum([ob.cleared_quantity for ob in offbids])
         if offbids:
-            dispatch_sensors[2] = offbids[0].cleared_price
+            market_sensors[2] = offbids[0].cleared_price
 
         # Case related sensors.
-        angles = array([bus.v_angle for bus in case.buses])
+#        angles = array([bus.v_angle for bus in case.buses])
         nodal_prc = array([bus.p_lmbda for bus in case.buses])
 
         flows = array([branch.p_from for branch in case.branches])
-        mu_flow = array([branch.mu_s_from for branch in case.branches])
+#        mu_flow = array([branch.mu_s_from for branch in case.branches])
 
         pg = array([g.p for g in case.generators])
-        g_max = array([g.mu_p_max for g in case.generators])
-        g_min = array([g.mu_p_min for g in case.generators])
+#        g_max = array([g.mu_pmax for g in case.generators])
+#        g_min = array([g.mu_pmin for g in case.generators])
 
-        case_sensors = r_[flows, mu_flow, angles, nodal_prc, pg, g_max, g_min]
+#        case_sensors = r_[flows, mu_flow, angles, nodal_prc, pg, g_max, g_min]
+        case_sensors = r_[flows, nodal_prc, pg]
 
-        return r_[dispatch_sensors, case_sensors]
+#        print "SENSORS:", r_[market_sensors, case_sensors]
+
+        return r_[market_sensors, case_sensors]
 
 
     def performAction(self, action):
@@ -351,7 +354,12 @@ class ContinuousMarketEnvironment(Environment):
             @param action: an action that should be executed in the Environment
             @type action: array: [ qty, prc, qty, prc, ... ]
         """
+        self.last_action = []
+
         asset = self.asset
+
+#        print "ACTION:", action
+
         # Participants either submit prices, where the quantity is divided
         # equally among the offers/bids, or tuples of quantity and price.
         if not self.offbid_qty:
@@ -361,8 +369,12 @@ class ContinuousMarketEnvironment(Environment):
             else:
                 qty = self._p_max / self.n_offbids
 
+            tot_qty = 0.0
+
             for i in range(self.indim):
-                marginal = self._get_marginal_cost(qty)
+                tot_qty += qty
+
+                marginal = self._get_marginal_cost(tot_qty)
 
                 if asset.is_load:
                     prc = marginal * (1.0 - sum(action[:i + 1])) # markdown
@@ -373,29 +385,29 @@ class ContinuousMarketEnvironment(Environment):
                     offer = Offer(asset, qty, prc)
                     self.market.offers.append(offer)
                     self.last_action.append(offer)
-                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
-                                (qty, prc, asset.name))
+                    logger.info("%.2fMW offered at %.2f$/MWh for %s (%.1f%%)." %
+                        (qty, prc, asset.name, sum(action[:i + 1]) * 100))
                 else:
-                    bid = Bid(asset, qty, prc)
+                    bid = Bid(asset, -qty, prc)
                     self.market.bids.append(bid)
                     self.last_action.append(bid)
-                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
-                                (prc, qty, asset.name))
+                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s (%.1f%%)." %
+                        (prc, -qty, asset.name, sum(action[:i + 1]) * 100))
         else:
             raise NotImplementedError
 
             # Agent's actions comprise both quantities and prices.
-            for i in range(0, len(action), 2):
-                qty = action[i]
-                prc = action[i + 1]
-                if not asset.is_load:
-                    self.market.offers.append(Offer(asset, qty, prc))
-                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
-                                (qty, prc, asset.name))
-                else:
-                    self.market.bids.append(Bid(asset, qty, prc))
-                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
-                                (prc, qty, asset.name))
+#            for i in range(0, len(action), 2):
+#                qty = action[i]
+#                prc = action[i + 1]
+#                if not asset.is_load:
+#                    self.market.offers.append(Offer(asset, qty, prc))
+#                    logger.info("%.2fMW offered at %.2f$/MWh for %s." %
+#                                (qty, prc, asset.name))
+#                else:
+#                    self.market.bids.append(Bid(asset, qty, prc))
+#                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s." %
+#                                (prc, qty, asset.name))
 
 
     def reset(self):

@@ -28,6 +28,7 @@ from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
 from pybrain.rl.learners import Q, QLambda, SARSA, ENAC, Reinforce #@UnusedImport
 from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
+from pybrain.structure import TanhLayer #@UnusedImport
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.tools.plotting import MultilinePlotter
 
@@ -82,65 +83,60 @@ dim_state = 10
 dim_action = len(markups) * n_offbids
 
 # Use value based methods?
-vb = True
+value_based = False
 
 # Construct an experiment to test the market.
 experiment = MarketExperiment([], [], market)
 
 # Add the agents and their tasks.
 for g in case.generators:
-    if vb:
+    if value_based:
         env = DiscreteMarketEnvironment(g, market, dim_state, markups, n_offbids)
         task = DiscreteProfitTask(env)
         module = ActionValueTable(dim_state, dim_action)
         module.initialize(1.0)
-    #    learner = SARSA(gamma=0.95)
+#        learner = SARSA(gamma=0.95)
         learner = Q()
-    #    learner = QLambda()
-    #    learner.explorer = BoltzmannExplorer() # default is e-greedy.
+#        learner = QLambda()
+#        learner.explorer = BoltzmannExplorer() # default is e-greedy.
         agent = LearningAgent(module, learner)
     else:
         env = ContinuousMarketEnvironment(g, market, n_offbids, False)
         task = ContinuousProfitTask(env)
-        net = buildNetwork(4, 1, bias=False)
+        net = buildNetwork(env.outdim, env.outdim + 10, env.indim, bias=False)#, hiddenclass=TanhLayer)
         learner = ENAC()
 #        learner = Reinforce()
         agent = LearningAgent(net, learner)
 
+    agent.name = g.name
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
-
 # Prepare for plotting.
+pylab.figure(figsize=(16,8))
 pylab.ion()
-pl = MultilinePlotter(autoscale=1.1, xlim=[0, 24], ylim=[0, 1])
+pl = MultilinePlotter(autoscale=1.1, xlim=[0, 24], ylim=[0, 1],
+                      maxLines=len(experiment.agents))
 pl.setLineStyle(linewidth=2)
-pl.setLegend([agent.name], loc='upper right')
+pl.setLegend([a.name for a in experiment.agents], loc='upper left')
+
+# Solve an initial OPF.
+pylon.OPF(case, market.loc_adjust=='dc').solve()
 
 # Execute interactions with the environment in batch mode.
 t0 = time.time()
 x = 0
-batch = 5
+batch = 2
 while x <= 1200:
     experiment.doInteractions(batch)
-
-    # Plot the progress of the agents.
-#    pylab.clf()
-#    pylab.plot(agent1.module.params, "mx-")
-#    pylab.plot(agent2.module.params, "ro-")
-#    pylab.draw()
-
     for i, a in enumerate(experiment.agents):
-        reward = scipy.mean(agent.history.getSumOverSequences('reward'))
+        reward = scipy.mean(a.history.getSumOverSequences('reward'))
         pl.addData(i, x, reward)
-        pl.update()
-
         a.learn()
         a.reset()
+    pl.update()
     x += batch
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
-
-#pl.show("Periods", "Reward", "Value-based Reward", popup=True)
 
 time.sleep(6)
