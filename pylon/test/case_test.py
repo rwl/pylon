@@ -54,15 +54,17 @@ class CaseTest(unittest.TestCase):
     def test_reset(self):
         """ Test zeroing of result attributes.
         """
-        self.case.buses[5].p_lmbda = 1.1
-        self.case.generators[2].mu_pmax = 1.1
-        self.case.branches[10].p_from = 1.1
+        case = self.case
 
-        self.case.reset()
+        case.buses[5].p_lmbda = 1.1
+        case.generators[2].mu_pmax = 1.1
+        case.branches[10].p_from = 1.1
 
-        self.assertEqual(self.case.buses[5].p_lmbda, 0.0)
-        self.assertEqual(self.case.generators[2].mu_pmax, 0.0)
-        self.assertEqual(self.case.branches[10].p_from, 0.0)
+        case.reset()
+
+        self.assertEqual(case.buses[5].p_lmbda, 0.0)
+        self.assertEqual(case.generators[2].mu_pmax, 0.0)
+        self.assertEqual(case.branches[10].p_from, 0.0)
 
 
     def test_sort_generators(self):
@@ -184,13 +186,13 @@ class CaseTest(unittest.TestCase):
 
         self.assertEqual(B.shape, (6,6))
         # Validate diagonal values.
-        self.assertAlmostEqual(13.3333, B[0, 0], places)
-        self.assertAlmostEqual(17.8462, B[2, 2], places)
-        self.assertAlmostEqual(16.3462, B[4, 4], places)
+        self.assertAlmostEqual(B[0, 0], 13.3333, places)
+        self.assertAlmostEqual(B[2, 2], 17.8462, places)
+        self.assertAlmostEqual(B[4, 4], 16.3462, places)
         # Validate off-diagonal values.
-        self.assertAlmostEqual(-5.0000, B[0, 1], places)
-        self.assertAlmostEqual(-3.3333, B[0, 4], places)
-        self.assertAlmostEqual(-10.0000, B[5, 2], places)
+        self.assertAlmostEqual(B[0, 1], -5.0000, places)
+        self.assertAlmostEqual(B[0, 4], -3.3333, places)
+        self.assertAlmostEqual(B[5, 2], -10.000, places)
         # Validate that elements [i, j] and [j, i] are equal.
         w, h = B.shape
         for i in range(w):
@@ -199,10 +201,10 @@ class CaseTest(unittest.TestCase):
                     self.assertEqual(abs(B[i, j]), abs(B[j, i]))
 
         self.assertEqual(Bf.shape, (11,6))
-        self.assertAlmostEqual(5.0000, Bf[0, 0], places)
-        self.assertAlmostEqual(-10.00, Bf[4, 3], places)
-        self.assertAlmostEqual(3.8462, Bf[7, 2], places)
-        self.assertAlmostEqual(2.5000, Bf[9, 3], places)
+        self.assertAlmostEqual(Bf[0, 0], 5.0000, places)
+        self.assertAlmostEqual(Bf[4, 3],-10.000, places)
+        self.assertAlmostEqual(Bf[7, 2], 3.8462, places)
+        self.assertAlmostEqual(Bf[9, 3], 2.5000, places)
 
         self.assertEqual(Pbusinj.shape, (6,))
         for v in Pbusinj:
