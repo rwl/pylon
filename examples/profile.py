@@ -4,7 +4,7 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 from os.path import join, dirname
 
-import hotshot
+from hotshot import Profile
 from hotshot import stats
 
 import pylon.case
@@ -16,7 +16,7 @@ CASE_FILE = join(dirname(pylon.case.__file__), "test", "data", "case30pwl.pkl")
 # Load the data file.
 case = Case.load(CASE_FILE)
 
-prof = hotshot.Profile("hotshot_opf_stats")
+prof = Profile("hotshot_opf_stats")
 prof.runcall(OPF(case, dc=False, opt={"verbose": True}).solve)
 prof.close()
 
