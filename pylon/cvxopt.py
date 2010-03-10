@@ -30,17 +30,94 @@
 
 import logging
 
-from numpy import polyval, polyder
+from numpy import pi, polyval, polyder, r_
+from scipy.sparse import vstack, eye
 
 from cvxopt import matrix, spmatrix, mul, sparse, exp, solvers
 
-from pylon.opf import Solver
+from pylon.opf import Solver, DCOPFSolver
 
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
+
+#------------------------------------------------------------------------------
+#  "DCCVXOPTSolver" class:
+#------------------------------------------------------------------------------
+
+class DCCVXOPTSolver(DCOPFSolver):
+    """ Solves DC optimal power flow using CVXOPT [1].
+
+        [1] Ray Zimmerman, "dcopf.m", MATPOWER, PSERC Cornell, version 4.0b1,
+            http://www.pserc.cornell.edu/matpower/, December 2009
+    """
+
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __init__(self, om, opt=None, solver=None):
+        """ Initialises the new DCOPF instance.
+        """
+        super(DCOPFSolver, self).__init__(om, opt)
+
+        # Choice of solver (May be None or "mosek" (or "glpk" for linear
+        # formulation)). Specify None to use the Python solver from CVXOPT.
+        self.solver = solver
+
+        if opt.has_key("verbose"):
+            solvers.options["show_progress"] = opt["verbose"]
+        if opt.has_key("max_it"):
+            solvers.options["maxiters"] = opt["max_it"]
+        if opt.has_key("feastol"):
+            solvers.options["feastol"] = opt["feastol"]
+        if opt.has_key("gradtol"):
+            raise NotImplementedError
+        if opt.has_key("comptol"):
+            raise NotImplementedError
+        if opt.has_key("costtol"):
+            raise NotImplementedError
+        if opt.has_key("max_red"):
+            raise NotImplementedError
+        if opt.has_key("step_control"):
+            raise NotImplementedError
+        if opt.has_key("cost_mult"):
+            raise NotImplementedError
+
+
+    def _run_opf(self, P, q, AA, bb, LB, UB, x0, opt):
+        """ Solves the either quadratic or linear program.
+        """
+        nieq = self._nieq
+        solver = self.solver
+
+        A = AA[:nieq, :]
+        Gieq = AA[nieq:]
+        b = bb[:nieq]
+        hieq = bb[:nieq]
+
+        nx = x0.shape[0] # number of variables
+        # add var limits to linear constraints
+        eyex = eye(nx, nx, format="csr")
+        G = eyex if Gieq is None else vstack([eyex, Gieq], "csr")
+        h = r_[-LB, hieq]
+        h = r_[ UB, h]
+
+        if P.nnz > 0:
+            cvx_sol = solvers.qp(P, q, G, h, A, b, solver, {"x": x0})
+        else:
+            cvx_sol = solvers.lp(q, G, h, A, b, solver, {"x": x0})
+
+        return cvx_sol
+
+
+    def _update_case(self, bs, ln, gn, base_mva, Bf, Pfinj, Va, Pg, lmbda):
+        """ Calculates the result attribute values.
+        """
+        for i, bus in enumerate(bs):
+            bus.v_angle = Va[i] * 180.0 / pi
 
 #------------------------------------------------------------------------------
 #  "CVXOPTSolver" class:
