@@ -1,14 +1,14 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
-""" This example demonstrates how to profile an OPF problem. """
+""" This example demonstrates profiling an OPF problem. """
 
 from os.path import join, dirname
 
-from hotshot import Profile
-from hotshot import stats
+import cProfile
+import pstats
 
 import pylon.case
-from pylon import Case, OPF
+from pylon import Case, OPF #@UnusedImport
 
 # Define a path to the data file.
 CASE_FILE = join(dirname(pylon.case.__file__), "test", "data", "case30pwl.pkl")
@@ -16,11 +16,10 @@ CASE_FILE = join(dirname(pylon.case.__file__), "test", "data", "case30pwl.pkl")
 # Load the data file.
 case = Case.load(CASE_FILE)
 
-prof = Profile("hotshot_opf_stats")
-prof.runcall(OPF(case, dc=False, opt={"verbose": True}).solve)
-prof.close()
+cProfile.run("OPF(case, dc=False, opt={'verbose': True}).solve()", "opf_prof")
 
-st = stats.load("hotshot_opf_stats")
-st.strip_dirs()
-st.sort_stats('time', 'calls')
-st.print_stats()
+p = pstats.Stats("opf_prof")
+#p.sort_stats('name').print_stats()
+p.sort_stats('cumulative').print_stats(20)
+#p.sort_stats('time').print_stats(20)
+#p.sort_stats('time', 'cum').print_stats(.5, 'init')
