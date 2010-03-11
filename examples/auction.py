@@ -26,7 +26,7 @@ import pylon
 
 from pylon.pyreto import \
     MarketExperiment, DiscreteMarketEnvironment, ContinuousMarketEnvironment, \
-    SmartMarket, DiscreteProfitTask, ContinuousProfitTask
+    SmartMarket, ProfitTask, EpisodicProfitTask
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
@@ -96,7 +96,7 @@ experiment = MarketExperiment([], [], market)
 for g in case.generators:
     if value_based:
         env = DiscreteMarketEnvironment(g, market, dim_state, markups, n_offbids)
-        task = DiscreteProfitTask(env)
+        task = ProfitTask(env)
         module = ActionValueTable(dim_state, dim_action)
         module.initialize(1.0)
 #        learner = SARSA(gamma=0.95)
@@ -106,7 +106,7 @@ for g in case.generators:
         agent = LearningAgent(module, learner)
     else:
         env = ContinuousMarketEnvironment(g, market, n_offbids, False)
-        task = ContinuousProfitTask(env)
+        task = EpisodicProfitTask(env)
         net = buildNetwork(env.outdim, env.outdim + 10, env.indim, bias=False)#, hiddenclass=TanhLayer)
         learner = ENAC()
 #        learner = Reinforce()
@@ -127,38 +127,38 @@ pl.setLegend([a.name for a in experiment.agents], loc='upper left')
 # Solve an initial OPF.
 pylon.OPF(case, market.loc_adjust=='dc').solve()
 
-# Save data in tables for plotting with PGF/Tikz.
-table_map = {"state": {}, "action": {}, "reward": {}}
-timestr = time.strftime("%Y%m%d%H%M", time.gmtime())
-table_dir = tempfile.mkdtemp(prefix=timestr)
-for a in experiment.agents:
-    for t in ("state", "action", "reward"):
-        file_name = "%s-%s.table" % (a.name, t)
-        tmp_name = join(table_dir, file_name)
-#        tmp_fd, tmp_name = tempfile.mkstemp(".table", prefix, table_dir)
-#        os.close(tmp_fd) # gets deleted
-        fd = file(tmp_name, "w+b")
-        fd.write("# %s %s data - %s\n" % (a.name, t, timestr))
-        fd.close()
-        table_map[t][a.name] = tmp_name
+## Save data in tables for plotting with PGF/Tikz.
+#table_map = {"state": {}, "action": {}, "reward": {}}
+#timestr = time.strftime("%Y%m%d%H%M", time.gmtime())
+#table_dir = tempfile.mkdtemp(prefix=timestr)
+#for a in experiment.agents:
+#    for t in ("state", "action", "reward"):
+#        file_name = "%s-%s.table" % (a.name, t)
+#        tmp_name = join(table_dir, file_name)
+##        tmp_fd, tmp_name = tempfile.mkstemp(".table", prefix, table_dir)
+##        os.close(tmp_fd) # gets deleted
+#        fd = file(tmp_name, "w+b")
+#        fd.write("# %s %s data - %s\n" % (a.name, t, timestr))
+#        fd.close()
+#        table_map[t][a.name] = tmp_name
 
 # Execute interactions with the environment in batch mode.
 t0 = time.time()
 x = 0
 batch = 3
-while x <= 7:#1200:
+while x <= 1200:
     experiment.doInteractions(batch)
     for i, agent in enumerate(experiment.agents):
         s, a, r = agent.history.getSequence(agent.history.getNumSequences()-1)
 
         pl.addData(i, x, scipy.mean(r))
 
-        for n, seq in (("state", s), ("action", a), ("reward", r)):
-            tmp_name = table_map[n][agent.name]
-            fd = file(tmp_name, "a+b")
-            for i in range(batch):
-                fd.write("%.1f %.5f\n" % (x + i, seq[i]))
-            fd.close()
+#        for n, seq in (("state", s), ("action", a), ("reward", r)):
+#            tmp_name = table_map[n][agent.name]
+#            fd = file(tmp_name, "a+b")
+#            for i in range(batch):
+#                fd.write("%.1f %.5f\n" % (x + i, seq[i]))
+#            fd.close()
 
         agent.learn()
         agent.reset()
@@ -167,12 +167,12 @@ while x <= 7:#1200:
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
 
-table_zip = zipfile.ZipFile("%s.zip" % timestr, "w")
-for a in experiment.agents:
-    for t in ("state", "action", "reward"):
-        tmp_name = table_map[t][a.name]
-        table_zip.write(tmp_name, basename(tmp_name), zipfile.ZIP_DEFLATED)
-table_zip.close()
-shutil.rmtree(table_dir)
+#table_zip = zipfile.ZipFile("%s.zip" % timestr, "w")
+#for a in experiment.agents:
+#    for t in ("state", "action", "reward"):
+#        tmp_name = table_map[t][a.name]
+#        table_zip.write(tmp_name, basename(tmp_name), zipfile.ZIP_DEFLATED)
+#table_zip.close()
+#shutil.rmtree(table_dir)
 
 #time.sleep(6)
