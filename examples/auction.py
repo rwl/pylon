@@ -10,13 +10,17 @@ auction market . """
 #matplotlib.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
 #matplotlib.rc('text', usetex=True)
 
+import os
 import sys
 import logging
 import time
+import tempfile
+import shutil
+import zipfile
 import pylab
 import scipy
 
-from os.path import join, dirname
+from os.path import join, dirname, basename
 
 import pylon
 
@@ -83,7 +87,7 @@ dim_state = 10
 dim_action = len(markups) * n_offbids
 
 # Use value based methods?
-value_based = False
+value_based = True
 
 # Construct an experiment to test the market.
 experiment = MarketExperiment([], [], market)
@@ -123,20 +127,52 @@ pl.setLegend([a.name for a in experiment.agents], loc='upper left')
 # Solve an initial OPF.
 pylon.OPF(case, market.loc_adjust=='dc').solve()
 
+# Save data in tables for plotting with PGF/Tikz.
+table_map = {"state": {}, "action": {}, "reward": {}}
+timestr = time.strftime("%Y%m%d%H%M", time.gmtime())
+table_dir = tempfile.mkdtemp(prefix=timestr)
+for a in experiment.agents:
+    for t in ("state", "action", "reward"):
+        file_name = "%s-%s.table" % (a.name, t)
+        tmp_name = join(table_dir, file_name)
+#        tmp_fd, tmp_name = tempfile.mkstemp(".table", prefix, table_dir)
+#        os.close(tmp_fd) # gets deleted
+        fd = file(tmp_name, "w+b")
+        fd.write("# %s %s data - %s\n" % (a.name, t, timestr))
+        fd.close()
+        table_map[t][a.name] = tmp_name
+
 # Execute interactions with the environment in batch mode.
 t0 = time.time()
 x = 0
-batch = 2
-while x <= 1200:
+batch = 3
+while x <= 7:#1200:
     experiment.doInteractions(batch)
-    for i, a in enumerate(experiment.agents):
-        reward = scipy.mean(a.history.getSumOverSequences('reward'))
-        pl.addData(i, x, reward)
-        a.learn()
-        a.reset()
+    for i, agent in enumerate(experiment.agents):
+        s, a, r = agent.history.getSequence(agent.history.getNumSequences()-1)
+
+        pl.addData(i, x, scipy.mean(r))
+
+        for n, seq in (("state", s), ("action", a), ("reward", r)):
+            tmp_name = table_map[n][agent.name]
+            fd = file(tmp_name, "a+b")
+            for i in range(batch):
+                fd.write("%.1f %.5f\n" % (x + i, seq[i]))
+            fd.close()
+
+        agent.learn()
+        agent.reset()
     pl.update()
     x += batch
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
 
-time.sleep(6)
+table_zip = zipfile.ZipFile("%s.zip" % timestr, "w")
+for a in experiment.agents:
+    for t in ("state", "action", "reward"):
+        tmp_name = table_map[t][a.name]
+        table_zip.write(tmp_name, basename(tmp_name), zipfile.ZIP_DEFLATED)
+table_zip.close()
+shutil.rmtree(table_dir)
+
+#time.sleep(6)
