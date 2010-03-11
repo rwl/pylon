@@ -24,7 +24,7 @@
 import logging
 from scipy import array, zeros, mean, linspace, r_, polyval, polyder
 
-from pybrain.rl.environments import Environment
+#from pybrain.rl.environments import Environment
 #from pybrain.rl.environments.graphical import GraphicalEnvironment
 
 from pylon import PW_LINEAR, POLYNOMIAL
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 #  "DiscreteMarketEnvironment" class:
 #------------------------------------------------------------------------------
 
-class DiscreteMarketEnvironment(Environment):
+class DiscreteMarketEnvironment(object):
     """ Defines the world in which an agent acts.  It receives an input with
         .performAction() and returns an output with .getSensors(). Each
         environment requires a reference to an asset (Generator) and the whole
@@ -157,7 +157,7 @@ class DiscreteMarketEnvironment(Environment):
         states = linspace(0.0, limit, self.outdim)
 
         for i in range(len(states) - 1):
-            if states[i] <= round(prc, 4) <= states[i + 1]:
+            if states[i] <= round(prc, 1) <= states[i + 1]:
                 logger.info("%s in state %d." % (self.asset.name, i))
                 return array([i])
         else:
@@ -234,7 +234,7 @@ class DiscreteMarketEnvironment(Environment):
 #  "ContinuousMarketEnvironment" class:
 #------------------------------------------------------------------------------
 
-class ContinuousMarketEnvironment(Environment):
+class ContinuousMarketEnvironment(object):
     """ Defines a continuous representation of an electricity market.
     """
 

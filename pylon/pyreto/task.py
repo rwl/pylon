@@ -22,49 +22,30 @@
 #------------------------------------------------------------------------------
 
 import logging
-from scipy import array, linspace
+
+from scipy import power
+
 from pybrain.rl.environments import Task
 
+#------------------------------------------------------------------------------
+#  Logging:
+#------------------------------------------------------------------------------
+
 logger = logging.getLogger(__name__)
+
+#------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
 
 BIGNUM = 1e04
 
 #------------------------------------------------------------------------------
-#  "BaseProfitTask" class:
+#  "ProfitTask" class:
 #------------------------------------------------------------------------------
 
-class BaseProfitTask(Task):
-    """ Defines a base task where reward is profit (revenue - cost).
+class ProfitTask(Task):
+    """ Defines a task with discrete observations of the clearing price.
     """
-
-#    def __init__(self, environment, num_actions=10):
-#        """ The action space is divided into the given number of steps.
-#        """
-#        super(ProfitTask, self).__init__(environment)
-#
-#        # The number of steps that the action value should be divided into.
-##        self.action_steps = num_actions
-#        self.action_space = self.getDiscreteActions(num_actions)
-
-    #--------------------------------------------------------------------------
-    #  "Task" interface:
-    #--------------------------------------------------------------------------
-
-#    def getObservation(self):
-#        """ The vector of sensor values is replaced by a single integer since
-#            there is only one state.
-#        """
-#        return 0
-#
-#
-#    def performAction(self, action):
-#        """ The action vector is stripped and the only element is cast to
-#            integer and given to the super class.
-#        """
-##        Task.performAction(self, int(action[0]))
-#        idx = int(action[0])
-#        Task.performAction(self, array([self.action_space[idx]]))
-
 
     def getReward(self):
         """ Returns the reward corresponding to the last action performed.
@@ -96,79 +77,40 @@ class BaseProfitTask(Task):
 
         return earnings
 
-#------------------------------------------------------------------------------
-#  "DiscreteTask" class:
-#------------------------------------------------------------------------------
-
-class DiscreteProfitTask(BaseProfitTask):
-    """ Defines a task with discrete observations of the clearing price.
-    """
-
-    #--------------------------------------------------------------------------
-    #  "object" interface:
-    #--------------------------------------------------------------------------
-
-#    def __init__(self, environment, dim_state=10):
-#        """ The sensor space is divided into the given number of steps.
-#        """
-#        super(DiscreteProfitTask, self).__init__(environment)
-#
-#        # State dimensions.
-#        self.dim_state = dim_state
-
-        # The number of steps that the action value should be divided into.
-#        self.action_steps = num_actions
-#        self.action_space = self.getDiscreteActions(num_actions)
-
-    #--------------------------------------------------------------------------
-    #  "DiscreteTask" interface:
-    #--------------------------------------------------------------------------
-
-#    def getDiscreteActions(self, num_actions):
-#        """ Returns an array of action values.
-#        """
-#        limit = self.env.market.price_cap
-#        return linspace(0.0, limit, num_actions)
-
-    #--------------------------------------------------------------------------
-    #  "Task" interface:
-    #--------------------------------------------------------------------------
 
     def performAction(self, action):
         """ The action vector is stripped and the only element is cast to
             integer and given to the super class.
         """
-        super(DiscreteProfitTask, self).performAction(int(action[0]))
-
-
-#    def getObservation(self):
-#        """ The agent receives a single non-negative integer indicating the
-#            band of market clearing prices in which the price from the last
-#            auction exists.
-#        """
-#        sensors = super(DiscreteProfitTask, self).getObservation()
-#        # Divide the range of market prices in to discrete bands.
-#        limit = self.env.market.price_cap
-#        states = linspace(0.0, limit, self.dim_state)
-#        mcp = abs(sensors[2]) # Discard all other sensor data.
-#        for i in range(len(states) - 1):
-#            if (states[i] <= round(mcp, 4) <= states[i + 1]):
-#                return array([i])
-#        else:
-#            raise ValueError, "MCP: %f" % mcp
+        super(ProfitTask, self).performAction(int(action[0]))
 
 #------------------------------------------------------------------------------
-#  "ContinuousTask" class:
+#  "EpisodicProfitTask" class:
 #------------------------------------------------------------------------------
 
-class ContinuousProfitTask(BaseProfitTask):
+class EpisodicProfitTask(ProfitTask):
     """ Defines a task for continuous sensor and action spaces.
     """
 
-    def __init__(self, environment):
+    def __init__(self, environment, maxsteps=24, discount=None):
         """ Initialises the task.
         """
-        super(ContinuousProfitTask, self).__init__(environment)
+        super(EpisodicProfitTask, self).__init__(environment)
+
+        # Maximum number of time steps.
+        self.maxsteps = maxsteps
+
+        # Current time step.
+        self.t = 0
+
+        # Discount factor.
+        self.discount = discount
+
+        # Track cumulative reward.
+        self.cumreward = 0
+
+        # Track the number of samples.
+        self.samples = 0
 
         # Maximum markup/markdown.
         self.mark_max = 0.4
@@ -180,7 +122,57 @@ class ContinuousProfitTask(BaseProfitTask):
         self.actor_limits = self.getActorLimits()
 
     #--------------------------------------------------------------------------
-    #  "ContinuousTask" interface:
+    #  "Task" interface:
+    #--------------------------------------------------------------------------
+
+    def getObservation(self):
+        """ A filtered mapping to getSample of the underlying environment. """
+        sensors = super(EpisodicProfitTask, self).getObservation()
+#        print "SENSORS:", sensors
+        return sensors
+
+
+    def performAction(self, action):
+        """ Execute one action.
+        """
+        self.t += 1
+        Task.performAction(self, action)
+        self.addReward()
+        self.samples += 1
+
+
+    def reset(self):
+        super(EpisodicProfitTask, self).reset()
+        self.env.reset()
+        self.cumreward = 0
+        self.samples = 0
+        self.t = 0
+
+    #--------------------------------------------------------------------------
+    #  "EpisodicTask" interface:
+    #--------------------------------------------------------------------------
+
+    def isFinished(self):
+        """ Is the current episode over?
+        """
+        if self.t >= self.maxsteps:
+            return True # maximal timesteps
+        return False
+
+
+    def addReward(self):
+        """ A filtered mapping towards performAction of the underlying
+            environment.
+        """
+        # by default, the cumulative reward is just the sum over the episode
+        if self.discount:
+            reward = self.getReward()
+            self.cumreward += power(self.discount, self.samples) * reward
+        else:
+            self.cumreward += self.getReward()
+
+    #--------------------------------------------------------------------------
+    #  "EpisodicProfitTask" interface:
     #--------------------------------------------------------------------------
 
     def getSensorLimits(self):
@@ -227,26 +219,5 @@ class ContinuousProfitTask(BaseProfitTask):
             actor_limits.append((0.0, self.mark_max))
 
         return actor_limits
-
-    #--------------------------------------------------------------------------
-    #  "Task" interface:
-    #--------------------------------------------------------------------------
-
-    def getObservation(self):
-        """ A filtered mapping to getSample of the underlying environment. """
-        sensors = super(ContinuousProfitTask, self).getObservation()
-
-#        print "SENSORSZ:", sensors
-
-        return sensors
-
-
-    def performAction(self, action):
-        """ The action vector is stripped and the only element is cast to
-            integer and given to the super class.
-        """
-#        print "AACTION:", action
-
-        super(ContinuousProfitTask, self).performAction(action)
 
 # EOF -------------------------------------------------------------------------

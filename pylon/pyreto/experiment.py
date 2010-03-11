@@ -25,7 +25,8 @@
 import time
 import logging
 
-from pybrain.rl.experiments import Experiment
+#from pybrain.rl.experiments import Experiment, EpisodicExperiment
+from pybrain.rl.agents.optimization import OptimizationAgent
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -34,42 +35,10 @@ from pybrain.rl.experiments import Experiment
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "GraphicalExperiment" class:
-#------------------------------------------------------------------------------
-
-class GraphicalExperiment(Experiment):
-    """ Defines an experiment with graphical output.
-    """
-
-    def __init__(self, task, agent):
-        """ Constructs a new GraphicalExperiment.
-        """
-        super(GraphicalExperiment, self).__init__(task, agent)
-        self.renderer = None
-
-
-    def setRenderer(self, renderer):
-        """ Set the renderer, which is an object of or inherited from Renderer.
-        """
-        self.renderer = renderer
-
-
-    def getRenderer(self):
-        """ Returns the current renderer.
-        """
-        return self.renderer
-
-
-    def hasRenderer(self):
-        """ Returns true if a Renderer has been previously set.
-        """
-        return (self.getRenderer() != None)
-
-#------------------------------------------------------------------------------
 #  "MarketExperiment" class:
 #------------------------------------------------------------------------------
 
-class MarketExperiment(GraphicalExperiment):
+class MarketExperiment(object):
     """ Defines an experiment that matches up agents with tasks and handles
         their interaction.
     """
@@ -94,49 +63,6 @@ class MarketExperiment(GraphicalExperiment):
         self.market = market
 
         self.stepid = 0
-
-
-    def _oneInteraction(self):
-        """ Coordinates one interaction between each agent and its environment.
-        """
-        self.stepid += 1
-
-        logger.info("Entering simulation period %d." % self.stepid)
-
-        # Initialise the market.
-        self.market.reset()
-
-        # Get an action from each agent and perform it.
-        for task, agent in zip(self.tasks, self.agents):
-            observation = task.getObservation()
-            agent.integrateObservation(observation)
-
-            action = agent.getAction()
-            task.performAction(action)
-
-        # Clear the market.
-        self.market.run()
-
-        # Reward each agent appropriately.
-        for task, agent in zip(self.tasks, self.agents):
-            reward = task.getReward()
-            agent.giveReward(reward)
-
-        # Instruct each agent to learn from it's actions.
-#        for agent in self.agents:
-#            agent.learn()
-
-        # Update environment rendering data.
-#        for task, agent in zip(self.tasks, self.agents):
-#            if task.env.hasRenderer():
-#                numseq = agent.history.getNumSequences()
-#                seq = agent.history.getSequence(numseq - 1)
-#                states = seq[0][-1]
-#                actions = seq[1][-1]
-#                rewards = seq[2][-1]
-#                task.env.getRenderer().updateData(states, actions, rewards)
-
-        logger.info("")
 
     #--------------------------------------------------------------------------
     #  "Experiment" interface:
@@ -169,9 +95,41 @@ class MarketExperiment(GraphicalExperiment):
 #        if self.hasRenderer():
 #            self.getRenderer().stop()
 
-    #--------------------------------------------------------------------------
-    #  Set initial conditions for the experiment:
-    #--------------------------------------------------------------------------
+        return self.stepid
+
+
+    def _oneInteraction(self):
+        """ Coordinates one interaction between each agent and its environment.
+        """
+        self.stepid += 1
+
+        logger.info("Entering simulation period %d." % self.stepid)
+
+        # Initialise the market.
+        self.market.reset()
+
+        # Get an action from each agent and perform it.
+        for task, agent in zip(self.tasks, self.agents):
+            observation = task.getObservation()
+            agent.integrateObservation(observation)
+
+            action = agent.getAction()
+            task.performAction(action)
+
+        # Clear the market.
+        self.market.run()
+
+        # Reward each agent appropriately.
+        for task, agent in zip(self.tasks, self.agents):
+            reward = task.getReward()
+            agent.giveReward(reward)
+
+        # Instruct each agent to learn from it's actions.
+#        for agent in self.agents:
+#            agent.learn()
+
+        logger.info("")
+
 
     def reset(self):
         """ Sets initial conditions for the experiment.
@@ -184,5 +142,112 @@ class MarketExperiment(GraphicalExperiment):
             agent.module.reset()
             agent.history.reset()
 #            agent.history.clear()
+
+#------------------------------------------------------------------------------
+#  "EpisodicMarketExperiment" class:
+#------------------------------------------------------------------------------
+
+class EpisodicMarketExperiment(object):
+    """ Defines a multi-agent market experiment in which loads follow an
+        episodic profile.
+    """
+
+    #--------------------------------------------------------------------------
+    #  "object" interface:
+    #--------------------------------------------------------------------------
+
+    def __init__(self, tasks, agents, market, profile=None):
+        """ Initialises the market experiment.
+        """
+        super(EpisodicMarketExperiment, self).__init__(None, None)
+
+        assert len(tasks) == len(agents)
+
+        # Tasks associate and agent with its environment.
+        self.tasks = tasks
+
+        # Agents capable of producing actions based on previous observations.
+        self.agents = agents
+
+        # Market to which agents submit offers/bids.
+        self.market = market
+
+        # Load profile.
+        self.profile = [1.0] if profile is None else profile
+
+        self.do_optimisation = {}
+        self.optimisers = {}
+
+        for task, agent in zip(self.tasks, self.agents):
+            if isinstance(agent, OptimizationAgent):
+                self.do_optimisation[agent] = True
+                self.optimisers[agent] = agent.learner
+                self.optimisers[agent].setEvaluator(task, agent.module)
+                self.optimisers[agent].maxEvaluations = \
+                    self.optimisers[agent].numEvaluations
+            else:
+                self.do_optimisation[agent] = False
+
+    #--------------------------------------------------------------------------
+    #  "Experiment" interface:
+    #--------------------------------------------------------------------------
+
+    def _oneInteraction(self):
+        """ Coordinates one interaction between each agent and its environment.
+        """
+        self.stepid += 1
+
+        logger.info("Entering simulation period %d." % self.stepid)
+
+        # Initialise the market.
+        self.market.reset()
+
+        # Get an action from each agent and perform it.
+        for task, agent in zip(self.tasks, self.agents):
+            if self.do_optimisation[agent]:
+                raise Exception("When using a black-box learning algorithm, "
+                                "only full episodes can be done.")
+            if not task.isFinished():
+                observation = task.getObservation()
+                agent.integrateObservation(observation)
+
+                action = agent.getAction()
+                task.performAction(action)
+
+        # Clear the market.
+        self.market.run()
+
+        # Reward each agent appropriately.
+        for task, agent in zip(self.tasks, self.agents):
+            if not task.isFinished():
+                reward = task.getReward()
+                agent.giveReward(reward)
+
+
+    def reset(self):
+        """ Sets initial conditions for the experiment.
+        """
+        self.stepid = 0
+
+        for task, agent in zip(self.tasks, self.agents):
+            task.env.reset()
+
+            agent.module.reset()
+            agent.history.reset()
+
+    #--------------------------------------------------------------------------
+    #  "EpisodicExperiment" interface:
+    #--------------------------------------------------------------------------
+
+    def doEpisodes(self, number=1):
+        """ Do the given numer of episodes, and return the rewards of each
+            step as a list.
+        """
+        for _ in range(number):
+            for task, agent in zip(self.tasks, self.agents):
+                agent.newEpisode()
+                task.reset()
+            while False in [task.isFinished() for task in self.tasks]:
+                self._oneInteraction()
 
 # EOF -------------------------------------------------------------------------

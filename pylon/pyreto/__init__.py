@@ -19,7 +19,7 @@ from smart_market import \
 
 from experiment import MarketExperiment
 from environment import DiscreteMarketEnvironment, ContinuousMarketEnvironment
-from task import DiscreteProfitTask, ContinuousProfitTask
+from task import ProfitTask, EpisodicProfitTask
 from roth_erev import RothErev, PropensityTable
 
 # EOF -------------------------------------------------------------------------
