@@ -37,6 +37,7 @@ from itertools import count
 known_extensions = {
     'm': 'matpower',
     'pkl': 'pickle',
+    'pickle': 'pickle',
     'raw': 'psse',
     'rst': 'rest',
     'csv': 'csv',
