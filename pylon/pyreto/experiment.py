@@ -25,6 +25,8 @@
 import time
 import logging
 
+from itertools import cycle
+
 #from pybrain.rl.experiments import Experiment, EpisodicExperiment
 from pybrain.rl.agents.optimization import OptimizationAgent
 
@@ -71,9 +73,6 @@ class MarketExperiment(object):
     def doInteractions(self, number=1):
         """ Directly maps the agents and the tasks.
         """
-#        if self.hasRenderer():
-#            self.getRenderer().start()
-
         t0 = time.time()
 
         for _ in range(number):
@@ -81,19 +80,6 @@ class MarketExperiment(object):
 
         elapsed = time.time() - t0
         logger.info("%d interactions executed in %.3fs." % (number, elapsed))
-
-        # Update experiment rendering data.
-        if self.hasRenderer():
-            data = []
-            for agent in self.agents:
-                nseq = agent.history.getNumSequences()
-                seq = agent.history.getSequence(nseq - 1)
-                data.append(seq)
-
-            self.getRenderer().updateData(data)
-
-#        if self.hasRenderer():
-#            self.getRenderer().stop()
 
         return self.stepid
 
@@ -173,20 +159,85 @@ class EpisodicMarketExperiment(object):
         self.market = market
 
         # Load profile.
+        self._profile = None
+        self._p_cycle = None
         self.profile = [1.0] if profile is None else profile
 
-        self.do_optimisation = {}
-        self.optimisers = {}
+        self.stepid = 0
 
-        for task, agent in zip(self.tasks, self.agents):
-            if isinstance(agent, OptimizationAgent):
-                self.do_optimisation[agent] = True
-                self.optimisers[agent] = agent.learner
-                self.optimisers[agent].setEvaluator(task, agent.module)
-                self.optimisers[agent].maxEvaluations = \
-                    self.optimisers[agent].numEvaluations
-            else:
-                self.do_optimisation[agent] = False
+#        self.do_optimisation = {}
+#        self.optimisers = {}
+#
+#        for task, agent in zip(self.tasks, self.agents):
+#            if isinstance(agent, OptimizationAgent):
+#                self.do_optimisation[agent] = True
+#                self.optimisers[agent] = agent.learner
+#                self.optimisers[agent].setEvaluator(task, agent.module)
+#                self.optimisers[agent].maxEvaluations = \
+#                    self.optimisers[agent].numEvaluations
+#            else:
+#                self.do_optimisation[agent] = False
+
+        # Save the demand at each bus.
+        self.p_orig = {}
+        for bus in self.market.case.buses:
+            self.p_orig[bus] = bus.p_demand
+
+
+    def __getstate__(self):
+        """ Prevents the cycle from being pickled.
+        """
+        result = self.__dict__.copy()
+        del result['_p_cycle']
+        return result
+
+
+    def __setstate__(self, dict):
+        """ Sets the load profile cycle when unpickling.
+        """
+        self.__dict__ = dict
+        self._p_cycle = cycle(self.profile)
+
+    #--------------------------------------------------------------------------
+    #  "EpisodicMarketExperiment" interface:
+    #--------------------------------------------------------------------------
+
+    def get_profile(self):
+        """ Returns the active power profile for the load.
+        """
+        return self._profile
+
+
+    def set_profile(self, profile):
+        """ Sets the active power profile, updating the cycle iterator.
+        """
+        self._p_cycle = cycle(profile)
+        self._profile = profile
+
+    profile = property(get_profile, set_profile)
+
+    #--------------------------------------------------------------------------
+    #  "EpisodicExperiment" interface:
+    #--------------------------------------------------------------------------
+
+    def doEpisodes(self, number=1):
+        """ Do the given numer of episodes, and return the rewards of each
+            step as a list.
+        """
+        for _ in range(number):
+            # Restore original load levels.
+            for bus in self.market.case.buses:
+                bus.p_demand = self.p_orig[bus]
+
+            # Initialise agents and their tasks.
+            for task, agent in zip(self.tasks, self.agents):
+                agent.newEpisode()
+                task.reset()
+
+            while False in [task.isFinished() for task in self.tasks]:
+                if True in [task.isFinished() for task in self.tasks]:
+                    raise ValueError
+                self._oneInteraction()
 
     #--------------------------------------------------------------------------
     #  "Experiment" interface:
@@ -204,9 +255,9 @@ class EpisodicMarketExperiment(object):
 
         # Get an action from each agent and perform it.
         for task, agent in zip(self.tasks, self.agents):
-            if self.do_optimisation[agent]:
-                raise Exception("When using a black-box learning algorithm, "
-                                "only full episodes can be done.")
+#            if self.do_optimisation[agent]:
+#                raise Exception("When using a black-box learning algorithm, "
+#                                "only full episodes can be done.")
             if not task.isFinished():
                 observation = task.getObservation()
                 agent.integrateObservation(observation)
@@ -223,6 +274,13 @@ class EpisodicMarketExperiment(object):
                 reward = task.getReward()
                 agent.giveReward(reward)
 
+        # Scale loads.
+        c = self._p_cycle.next()
+        for bus in self.market.case.buses:
+            bus.p_demand = self.p_orig[bus] * c
+
+        logger.info("") # newline
+
 
     def reset(self):
         """ Sets initial conditions for the experiment.
@@ -230,24 +288,9 @@ class EpisodicMarketExperiment(object):
         self.stepid = 0
 
         for task, agent in zip(self.tasks, self.agents):
-            task.env.reset()
+            task.reset()
 
             agent.module.reset()
             agent.history.reset()
-
-    #--------------------------------------------------------------------------
-    #  "EpisodicExperiment" interface:
-    #--------------------------------------------------------------------------
-
-    def doEpisodes(self, number=1):
-        """ Do the given numer of episodes, and return the rewards of each
-            step as a list.
-        """
-        for _ in range(number):
-            for task, agent in zip(self.tasks, self.agents):
-                agent.newEpisode()
-                task.reset()
-            while False in [task.isFinished() for task in self.tasks]:
-                self._oneInteraction()
 
 # EOF -------------------------------------------------------------------------
