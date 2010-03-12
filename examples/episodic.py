@@ -15,7 +15,6 @@ from pybrain.rl.learners import ENAC
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.tools.plotting import MultilinePlotter
 
-#logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger()
 for handler in logger.handlers: logger.removeHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -28,9 +27,8 @@ case = Case.load("auction_case.pickle")
 market = pyreto.SmartMarket(case, price_cap=100.0)
 
 # Define a 24-hour load profile with hourly values.
-#p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
-#       0.90, 0.88, 0.88, 0.82, 0.80, 0.78, 0.76, 0.68, 0.68, 0.68, 0.65, 0.58]
-p1h = [0.8, 0.9, 0.7]
+p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
+       0.90, 0.88, 0.88, 0.82, 0.80, 0.78, 0.76, 0.68, 0.68, 0.68, 0.65, 0.58]
 
 # An experiment coordinates interactions between agents and their tasks.
 experiment = pyreto.EpisodicMarketExperiment([], [], market, p1h)
@@ -55,8 +53,7 @@ for gen in case.generators:
 # Prepare for plotting.
 pylab.figure(figsize=(16,8))
 pylab.ion()
-a_plot = MultilinePlotter(autoscale=1.1, xlim=[0, len(p1h)], ylim=[0, 1])
-r_plot = MultilinePlotter(autoscale=1.1, xlim=[0, len(p1h)], ylim=[0, 1])
+plot = MultilinePlotter(autoscale=1.1, xlim=[0, len(p1h)], ylim=[0, 1])
 
 # Solve an initial OPF.
 OPF(case, market.loc_adjust=='dc').solve()
@@ -70,7 +67,5 @@ for week in range(weeks):
     for i, agent in enumerate(experiment.agents):
         state, action, reward = \
             agent.history.getSequence(agent.history.getNumSequences() - 1)
-        a_plot.addData(i, week, scipy.mean(action))
-        r_plot.addData(i, week, scipy.mean(reward))
-    a_plot.update()
-    r_plot.update()
+        plot.addData(i, week, scipy.mean(reward))
+    plot.update()

@@ -1,7 +1,7 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
-""" This example demonstrates how to use Pylon to simulate a power echange
-auction market . """
+""" This example demonstrates how to use Pylon to simulate a power exchange
+auction market. """
 
 #import matplotlib
 #matplotlib.use('WXAgg')
@@ -25,8 +25,8 @@ from os.path import join, dirname, basename
 import pylon
 
 from pylon.pyreto import \
-    MarketExperiment, DiscreteMarketEnvironment, ContinuousMarketEnvironment, \
-    SmartMarket, ProfitTask, EpisodicProfitTask
+    MarketExperiment, EpisodicMarketExperiment, DiscreteMarketEnvironment, \
+    ContinuousMarketEnvironment, SmartMarket, ProfitTask, EpisodicProfitTask
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
@@ -86,31 +86,20 @@ dim_state = 10
 
 dim_action = len(markups) * n_offbids
 
-# Use value based methods?
-value_based = True
-
 # Construct an experiment to test the market.
 experiment = MarketExperiment([], [], market)
 
 # Add the agents and their tasks.
 for g in case.generators:
-    if value_based:
-        env = DiscreteMarketEnvironment(g, market, dim_state, markups, n_offbids)
-        task = ProfitTask(env)
-        module = ActionValueTable(dim_state, dim_action)
-        module.initialize(1.0)
-#        learner = SARSA(gamma=0.95)
-        learner = Q()
-#        learner = QLambda()
-#        learner.explorer = BoltzmannExplorer() # default is e-greedy.
-        agent = LearningAgent(module, learner)
-    else:
-        env = ContinuousMarketEnvironment(g, market, n_offbids, False)
-        task = EpisodicProfitTask(env)
-        net = buildNetwork(env.outdim, env.outdim + 10, env.indim, bias=False)#, hiddenclass=TanhLayer)
-        learner = ENAC()
-#        learner = Reinforce()
-        agent = LearningAgent(net, learner)
+    env = DiscreteMarketEnvironment(g, market, dim_state, markups, n_offbids)
+    task = ProfitTask(env)
+    module = ActionValueTable(dim_state, dim_action)
+    module.initialize(1.0)
+#    learner = SARSA(gamma=0.95)
+    learner = Q()
+#    learner = QLambda()
+#    learner.explorer = BoltzmannExplorer() # default is e-greedy.
+    agent = LearningAgent(module, learner)
 
     agent.name = g.name
     experiment.tasks.append(task)
@@ -126,6 +115,11 @@ pl.setLegend([a.name for a in experiment.agents], loc='upper left')
 
 # Solve an initial OPF.
 pylon.OPF(case, market.loc_adjust=='dc').solve()
+
+# Save action and reward data for plotting.
+agent_map = {}
+for agent in experiment.agents:
+    agent_map[agent.name] = (scipy.zeros((1,)), scipy.zeros((1,)))
 
 ## Save data in tables for plotting with PGF/Tikz.
 #table_map = {"state": {}, "action": {}, "reward": {}}
@@ -145,13 +139,17 @@ pylon.OPF(case, market.loc_adjust=='dc').solve()
 # Execute interactions with the environment in batch mode.
 t0 = time.time()
 x = 0
-batch = 3
-while x <= 1200:
+batch = 2
+while x <= 24:#00:
     experiment.doInteractions(batch)
     for i, agent in enumerate(experiment.agents):
         s, a, r = agent.history.getSequence(agent.history.getNumSequences()-1)
-
         pl.addData(i, x, scipy.mean(r))
+
+        action, reward = agent_map[agent.name]
+
+        agent_map[agent.name] = (scipy.r_[action, a.flatten()],
+                                 scipy.r_[reward, r.flatten()])
 
 #        for n, seq in (("state", s), ("action", a), ("reward", r)):
 #            tmp_name = table_map[n][agent.name]
@@ -166,6 +164,9 @@ while x <= 1200:
     x += batch
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
+
+from pylon.pyreto.tools import sparkline_data
+sparkline_data(agent_map, "auctiondata.txt")
 
 #table_zip = zipfile.ZipFile("%s.zip" % timestr, "w")
 #for a in experiment.agents:
