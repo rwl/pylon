@@ -413,7 +413,7 @@ class ContinuousMarketEnvironment(object):
     def reset(self):
         """ Reinitialises the environment.
         """
-        self.market.init()
+        self.market.reset()
 
 #------------------------------------------------------------------------------
 #  "xselections" function:

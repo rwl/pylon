@@ -142,8 +142,8 @@ class EpisodicProfitTask(ProfitTask):
 
 
     def reset(self):
-        super(EpisodicProfitTask, self).reset()
-        self.env.reset()
+#        super(EpisodicProfitTask, self).reset()
+#        self.env.reset()
         self.cumreward = 0
         self.samples = 0
         self.t = 0
