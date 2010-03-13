@@ -92,21 +92,21 @@ class _ACPF(object):
     #  "_ACPF" interface:
     #--------------------------------------------------------------------------
 
-    def solve(self, **kw_args):
+    def solve(self):
         """ Override this method in subclasses.
         """
         # Zero result attributes.
         self.case.reset()
 
         # Retrieve the contents of the case.
-        b, l, g, nb, nl, ng, base_mva = self._unpack_case(self.case)
+        b, l, g, _, _, _, _ = self._unpack_case(self.case)
 
         # Update bus indexes.
         self.case.index_buses(b)
 
         # Index buses accoding to type.
         try:
-            refs, pq, pv, pvpq = self._index_buses(b)
+            _, pq, pv, pvpq = self._index_buses(b)
         except SlackBusError:
             logger.error("Swing bus required for DCPF.")
             return {"converged": False}
@@ -154,10 +154,10 @@ class _ACPF(object):
     def _unpack_case(self, case):
         """ Returns the contents of the case to be used in the OPF.
         """
-        base_mva = self.case.base_mva
-        b = self.case.connected_buses
-        l = self.case.online_branches
-        g = self.case.online_generators
+        base_mva = case.base_mva
+        b = case.connected_buses
+        l = case.online_branches
+        g = case.online_generators
         nb = len(b)
         nl = len(l)
         ng = len(g)
@@ -195,12 +195,10 @@ class _ACPF(object):
 
         # Get generator set points.
         for i, g in enumerate(generators):
-            #   V0(gbus) = gen(on, VG) ./ abs(V0(gbus)).* V0(gbus);
             #            Vg
             #   V0 = ---------
             #        |V0| . V0
             V[g.bus._i] = g.v_magnitude / abs(V[i]) * V[i]
-#            V[g.bus._i] = g.v_magnitude
 
         return V
 
@@ -226,13 +224,6 @@ class NewtonPF(_ACPF):
         """
         Va = angle(V)
         Vm = abs(V)
-
-        # Set up indexing for updating V.
-#        npv = len(pv)
-#        npq = len(pq)
-#        j0, j1 = 0,  npv
-#        j2, j3 = j1 + 1, j1 + npq
-#        j4, j5 = j3 + 1, j3 + npq
 
         # Initial evaluation of F(x0)...
         F = self._evaluate_function(Ybus, V, Sbus, pv, pq)
@@ -345,11 +336,12 @@ class FastDecoupledPF(_ACPF):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, case, tolerance=1e-08, iter_max=10, method=XB):
+    def __init__(self, case, qlimit=False, tolerance=1e-08, iter_max=20,
+                 verbose=True, method=XB):
         """ Initialises a new ACPF instance.
         """
-        super(_ACPF, self).__init__(case, tolerance, iter_max)
-
+        super(FastDecoupledPF, self).__init__(case, qlimit, tolerance,
+                                              iter_max, verbose)
         # Use XB or BX method?
         self.method = method
 
@@ -357,12 +349,12 @@ class FastDecoupledPF(_ACPF):
     def _run_power_flow(self, Ybus, Sbus, V, pv, pq, pvpq):
         """ Solves the power flow using a full Newton's method.
         """
-        # FIXME: Do not repeat build for each Q limit loop.
-        Bp, Bpp = self.case.makeB(self.method)
-
         i = 0
         Va = angle(V)
         Vm = abs(V)
+
+        # FIXME: Do not repeat build for each Q limit loop.
+        Bp, Bpp = self.case.makeB(method=self.method)
 
         # Evaluate initial mismatch.
         P, Q = self._evaluate_mismatch(Ybus, V, Sbus, pq, pvpq)
@@ -373,38 +365,46 @@ class FastDecoupledPF(_ACPF):
             logger.info("---- ----  -----------  -----------\n")
 
         # Check tolerance.
-        converged = self._check_convergence(self, i, P, Q)
+        converged = self._check_convergence(P, Q, i, "P")
 
         if converged and self.verbose:
             logger.info("Converged!")
 
         # Reduce B matrices.
-        Bp = Bp[pvpq, pvpq]
-        Bpp = Bpp[pq, pq]
+        pq_col = [[k] for k in pq]
+        pvpq_col = [[k] for k in pvpq]
+        Bp = Bp[pvpq_col, pvpq].tocsc() # splu requires a CSC matrix
+        Bpp = Bpp[pq_col, pq].tocsc()
+
+        # Factor B matrices.
+        Bp_solver = splu(Bp)
+        Bpp_solver = splu(Bpp)
+#        L = decomp.lu(Bp.todense())
+#        LU, P = decomp.lu_factor(Bp.todense())
 
         # Perform Newton iterations.
         while (not converged) and (i < self.iter_max):
             i += 1
             # Perform P iteration, update Va.
-            V, Vm, Va = self._p_iteration(P, Q, Ybus, V, Vm, Va, pv, pq, pvpq)
+            V, Vm, Va = self._p_iteration(P, Bp_solver, Vm, Va, pvpq)
 
             # Evalute mismatch.
             P, Q = self._evaluate_mismatch(Ybus, V, Sbus, pq, pvpq)
             # Check tolerance.
-            converged = self._check_convergence(self, i, P, Q, "P")
+            converged = self._check_convergence(P, Q, i, "P")
 
             if self.verbose and converged:
                 logger.info("Fast-decoupled power flow converged in %d "
-                    "P-iterations and %d Q-iterations." % (i, i-1))
+                    "P-iterations and %d Q-iterations." % (i, i - 1))
                 break
 
             # Perform Q iteration, update Vm.
-            V, Vm, Va = self._q_iteration(P, Q, Ybus, V, Vm, Va, pv, pq, pvpq)
+            V, Vm, Va = self._q_iteration(Q, Bpp_solver, Vm, Va, pq)
 
             # Evalute mismatch.
             P, Q = self._evaluate_mismatch(Ybus, V, Sbus, pq, pvpq)
             # Check tolerance.
-            converged = self._check_convergence(self, i, P, Q, "Q")
+            converged = self._check_convergence(P, Q, i, "Q")
 
             if self.verbose and converged:
                 logger.info("Fast-decoupled power flow converged in %d "
@@ -414,28 +414,51 @@ class FastDecoupledPF(_ACPF):
         if self.verbose and not converged:
             logger.info("FDPF did not converge in %d iterations." % i)
 
+        return V, converged, i
+
+    #--------------------------------------------------------------------------
+    #  Evaluate mismatch:
+    #--------------------------------------------------------------------------
+
+    def _evaluate_mismatch(self, Ybus, V, Sbus, pq, pvpq):
+        """ Evaluates the mismatch.
+        """
+        mis = (multiply(V, conj(Ybus * V)) - Sbus) / abs(V)
+
+        P = mis[pvpq].real
+        Q = mis[pq].imag
+
+        return P, Q
+
+    #--------------------------------------------------------------------------
+    #  Check convergence:
+    #--------------------------------------------------------------------------
+
+    def _check_convergence(self, P, Q, i, type):
+        """ Checks if the solution has converged to within the specified
+            tolerance.
+        """
+        normP = linalg.norm(P, Inf)
+        normQ = linalg.norm(Q, Inf)
+
+        if self.verbose:
+            logger.info("  %s  %3d   %10.3e   %10.3e" % (type,i, normP, normQ))
+
+        if (normP < self.tolerance) and (normQ < self.tolerance):
+            converged = True
+        else:
+            converged = False
+
+        return converged
+
     #--------------------------------------------------------------------------
     #  P iterations:
     #--------------------------------------------------------------------------
 
-    def _p_iteration(self, P, Ybus, Bp, Bpp, Sbus, Vm, Va, pq, pvpq):
+    def _p_iteration(self, P, Bp_solver, Vm, Va, pvpq):
         """ Performs a P iteration, updates Va.
         """
-        # The numeric factorisation is returned as an opaque C object that
-        # can be passed on to umfpack.solve().
-#        Bps = symbolic(Bp)
-#        Bpps = symbolic(Bp)
-#        FBp = numeric(Bp, Bps)
-#        FBpp = numeric(Bpp, Bpps)
-
-        Pp, Lp, Up = splu(Bp)
-#        LU, P = linalg.lu_factor(Bp)
-
-        # P iteration, update Va.
-        # dVa = -( Up \  (Lp \ (Pp * P)));
-        # L, U = Sci.linalg.lu(a)
-        # LU, P = Sci.linalg.lu_factor(a)
-        dVa = spsolve(Lp, (Pp * P))
+        dVa = -Bp_solver.solve(P)
 
         # Update voltage.
         Va[pvpq] = Va[pvpq] + dVa
@@ -447,50 +470,15 @@ class FastDecoupledPF(_ACPF):
     #  Q iterations:
     #--------------------------------------------------------------------------
 
-    def _q_iteration(self, Lpp, Upp, Ppp, Ybus, Bp, Bpp, Sbus, Vm, Va, pq, pvpq):
+    def _q_iteration(self, Q, Bpp_solver, Vm, Va, pq):
         """ Performs a Q iteration, updates Vm.
         """
-        dVm = None
+        dVm = -Bpp_solver.solve(Q)
 
         # Update voltage.
         Vm[pq] = Vm[pq] + dVm
         V = Vm * exp(1j * Va)
 
-        return V, Vm
-
-    #--------------------------------------------------------------------------
-    #  Evaluate mismatch:
-    #--------------------------------------------------------------------------
-
-    def _evaluate_mismatch(self, Ybus, V, Sbus, pq, pvpq):
-        """ Evaluates the mismatch.
-        """
-        mis = multiply(V, conj(Ybus * V)) - Sbus / abs(V)
-
-        P = mis[pvpq].real()
-        Q = mis[pq].imag()
-
-        return P, Q
-
-    #--------------------------------------------------------------------------
-    #  Check convergence:
-    #--------------------------------------------------------------------------
-
-    def _check_convergence(self, i, P, Q, type):
-        """ Checks if the solution has converged to within the specified
-            tolerance.
-        """
-        normP = max(abs(P))
-        normQ = max(abs(Q))
-
-        if self.verbose:
-            logger.info("  -  %3d   %10.3e   %10.3e" % (i, normP, normQ))
-
-        if (normP < self.tolerance) and (normQ < self.tolerance):
-            converged = True
-        else:
-            converged = False
-
-        return converged
+        return V, Vm, Va
 
 # EOF -------------------------------------------------------------------------

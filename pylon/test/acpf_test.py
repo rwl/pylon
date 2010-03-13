@@ -27,7 +27,7 @@ from os.path import join, dirname
 
 from numpy import complex128, angle, abs
 
-from pylon import Case, NewtonPF
+from pylon import Case, NewtonPF, FastDecoupledPF
 from pylon.ac_pf import _ACPF
 
 #------------------------------------------------------------------------------
@@ -207,13 +207,84 @@ class NewtonPFTest(unittest.TestCase):
 
 
     def test_solution(self):
-        """ Test solution voltage.
+        """ Test resulting voltage vector.
         """
         result = self.solver.solve()
         V = result["V"]
 
-        self.assertEqual(result["iterations"], 3)
         self.assertTrue(result["success"])
+        self.assertEqual(result["iterations"], 3)
+
+        places = 4
+        self.assertAlmostEqual(abs(V[1]), abs(1.0478-0.0672j), places)
+        self.assertAlmostEqual(abs(V[2]), abs(1.0670-0.0797j), places)
+        self.assertAlmostEqual(abs(V[5]), abs(0.9990-0.1041j), places)
+
+#------------------------------------------------------------------------------
+#  "FDPFTest" class:
+#------------------------------------------------------------------------------
+
+class FDPFTest(unittest.TestCase):
+    """ Test AC power flow results using fast decoupled method against those
+        obtained using MATPOWER.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        case = self.case = Case.load(DATA_FILE)
+        self.solver = FastDecoupledPF(case)
+
+
+    def test_mismatch(self):
+        """ Test FDPF mismatch evaluation.
+        """
+        b, _, g, _, _, _, _ = self.solver._unpack_case(self.case)
+        _, pq, _, pvpq = self.solver._index_buses(b)
+        V0 = self.solver._initial_voltage(b, g)
+        Sbus = self.case.Sbus
+        Ybus, _, _ = self.case.Y
+        P, Q = self.solver._evaluate_mismatch(Ybus, V0, Sbus, pq, pvpq)
+
+        self.assertEqual(P.shape, (5,))
+        self.assertEqual(Q.shape, (3,))
+
+        places = 4
+        self.assertAlmostEqual(P[0],-0.1636, places)
+        self.assertAlmostEqual(P[3], 0.5061, places)
+        self.assertAlmostEqual(Q[0],-0.0053, places)
+        self.assertAlmostEqual(Q[2],-0.2608, places)
+
+
+    def test_convergence(self):
+        """ Test convergence satisfaction check.
+        """
+        b, _, g, _, _, _, _ = self.solver._unpack_case(self.case)
+        _, pq, _, pvpq = self.solver._index_buses(b)
+        V0 = self.solver._initial_voltage(b, g)
+        Sbus = self.case.Sbus
+        Ybus, _, _ = self.case.Y
+        P, Q = self.solver._evaluate_mismatch(Ybus, V0, Sbus, pq, pvpq)
+
+        # True negative
+        self.solver.converged = False
+        self.solver.tolerance = 0.5000
+        self.assertFalse(self.solver._check_convergence(P, Q, 0, ""))
+
+        # True positive
+        self.solver.converged = False
+        self.solver.tolerance = 0.6000
+        self.assertTrue(self.solver._check_convergence(P, Q, 0, ""))
+
+
+    def test_solution(self):
+        """ Test resulting voltage vector.
+        """
+        result = self.solver.solve()
+        V = result["V"]
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["iterations"], 9)
 
         places = 4
         self.assertAlmostEqual(abs(V[1]), abs(1.0478-0.0672j), places)
