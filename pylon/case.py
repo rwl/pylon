@@ -814,7 +814,7 @@ class Case(Named, Serializable):
         for i in gbus:
             g = generators[i]
             # inj Q + local Qd
-            g.q = Sg.imag()[i] * self.base_mva + g.bus.q_demand
+            g.q = Sg.imag[i] * self.base_mva + g.bus.q_demand
 
         # At this point any buses with more than one generator will have
         # the total Q dispatch for the bus assigned to each generator. This

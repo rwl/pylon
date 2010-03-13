@@ -25,6 +25,7 @@ import os
 from os.path import join, dirname, exists, getsize
 import unittest
 import tempfile
+from numpy import complex128
 
 from pylon import Case, Bus, Branch, Generator
 from pylon.readwrite import PickleReader
@@ -116,6 +117,26 @@ class CaseTest(unittest.TestCase):
 
         self.assertTrue(exists(tmp_name))
         self.assertTrue(getsize(tmp_name) > 0)
+
+    #--------------------------------------------------------------------------
+    #  New complex power injection.
+    #--------------------------------------------------------------------------
+
+    def test_complex_power_vector(self):
+        """ Test the vector of complex bus power injections.
+        """
+        Sbus = self.case.Sbus
+
+        self.assertEqual(Sbus.dtype, complex128)
+        self.assertEqual(Sbus.shape, (6,))
+
+        places = 4
+        self.assertAlmostEqual(abs(Sbus[0]), 0.0000, places)
+        self.assertAlmostEqual(abs(Sbus[2]), 0.6000, places)
+        self.assertAlmostEqual(Sbus[3].real, -0.7000, places)
+        self.assertAlmostEqual(Sbus[3].imag, -0.7000, places)
+        self.assertAlmostEqual(Sbus[5].real, -0.7000, places)
+        self.assertAlmostEqual(Sbus[5].imag, -0.7000, places)
 
     #--------------------------------------------------------------------------
     #  Admittance matrix tests.
