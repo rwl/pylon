@@ -28,7 +28,7 @@ import tkSimpleDialog
 import pylon
 
 from pylon import \
-    Case, DCPF, NewtonRaphson, FastDecoupled, UDOPF
+    Case, DCPF, NewtonPF, FastDecoupledPF, UDOPF
 
 from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
@@ -474,11 +474,11 @@ class PylonTk(object):
 
 
     def on_newton(self):
-        NewtonRaphson(self.case).solve()
+        NewtonPF(self.case).solve()
 
 
     def on_fd(self):
-        FastDecoupled(self.case).solve()
+        FastDecoupledPF(self.case).solve()
 
 
 #    def on_dcopf(self):

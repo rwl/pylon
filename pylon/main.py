@@ -29,7 +29,7 @@ import optparse
 from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader, \
     MATPOWERWriter, ReSTWriter, CSVWriter, PickleReader, PickleWriter
 
-from pylon import DCPF, NewtonRaphson, FastDecoupled, UDOPF
+from pylon import DCPF, NewtonPF, FastDecoupledPF, UDOPF
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -212,9 +212,9 @@ def main():
             solver = DCPF(case)
         elif options.solver == "acpf":
             if options.algorithm == "newton":
-                solver = NewtonRaphson(case)
+                solver = NewtonPF(case)
             elif options.algorithm == "decoupled":
-                solver = FastDecoupled(case)
+                solver = FastDecoupledPF(case)
             else:
                 logger.critical("Invalid algorithm [%s]." % options.algorithm)
                 sys.exit(1)

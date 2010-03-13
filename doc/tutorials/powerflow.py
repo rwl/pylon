@@ -10,7 +10,7 @@ import sys
 
 """ The "pylon" package contains the power system model classes and the
 routines used to solve particular cases. """
-from pylon import Case, Bus, Branch, Generator, NewtonRaphson
+from pylon import Case, Bus, Branch, Generator, NewtonPF
 
 """ The "readwrite" subpackage contains classes that will parse power system
 data files and return a populated Case object.  It also contains classes that
@@ -33,7 +33,7 @@ line = Branch(bus1, bus2, r=0.05, x=0.01)
 case = Case(buses=[bus1, bus2], branches=[line])
 
 """ Pass the newly created case to the routine of your choice """
-NewtonRaphson().solve(case)
+NewtonPF().solve(case)
 
 """ and then write the case out to view the results. """
 ReSTWriter().write(case, sys.stdout)

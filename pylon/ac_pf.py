@@ -27,7 +27,7 @@
 import logging
 from time import time
 
-from numpy import array, angle, pi, exp, linalg, multiply, conj, r_
+from numpy import array, angle, pi, exp, linalg, multiply, conj, r_, Inf
 
 from scipy.sparse import hstack, vstack
 from scipy.sparse.linalg import spsolve, splu
@@ -48,6 +48,13 @@ BX = "BX"
 XB = "XB"
 
 #------------------------------------------------------------------------------
+#  Exceptions:
+#------------------------------------------------------------------------------
+
+class SlackBusError(Exception):
+    """ No single slack bus error. """
+
+#------------------------------------------------------------------------------
 #  "_ACPF" class:
 #------------------------------------------------------------------------------
 
@@ -62,15 +69,12 @@ class _ACPF(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, case, solver="UMFPACK", qlimit=False, tolerance=1e-08,
+    def __init__(self, case, qlimit=False, tolerance=1e-08,
                  iter_max=10, verbose=True):
         """ Initialises a new ACPF instance.
         """
         # Solved case.
         self.case = case
-
-        # Solver for sparse linear equations: 'UMFPACK' and 'CHOLMOD'
-        self.solver = solver
 
         # Enforce Q limits on generators.
         self.qlimit = qlimit
@@ -100,9 +104,10 @@ class _ACPF(object):
         # Update bus indexes.
         self.case.index_buses(b)
 
-        refs, pq, pv, pvpq = self._index_buses(b)
-
-        if len(refs) != 1:
+        # Index buses accoding to type.
+        try:
+            refs, pq, pv, pvpq = self._index_buses(b)
+        except SlackBusError:
             logger.error("Swing bus required for DCPF.")
             return {"converged": False}
 
@@ -124,26 +129,26 @@ class _ACPF(object):
         repeat = True
         while repeat:
             # Build admittance matrices.
-            Ybus, Yf, Yt = self.case.Y
+            Ybus, Yf, Yt = self.case.getYbus(b, l)
 
             # Compute complex bus power injections (generation - load).
             Sbus = self.case.getSbus(b)
 
             # Run the power flow.
-            V, success, i = self._run_power_flow(Ybus, Sbus, V0, **kw_args)
+            V, success, i = self._run_power_flow(Ybus, Sbus, V0, pv, pq, pvpq)
 
             # Update case with solution.
             self.case.pf_solution(Ybus, Yf, Yt, V)
 
             # Enforce generator Q limits.
             if self.qlimit:
-                repeat = False
+                raise NotImplementedError
             else:
                 repeat = False
 
         elapsed = time() - t0
 
-        return {"success": success, "elapsed": elapsed, "iterations": i}
+        return {"success": success, "elapsed": elapsed, "iterations": i, "V":V}
 
 
     def _unpack_case(self, case):
@@ -164,6 +169,8 @@ class _ACPF(object):
         """ Set up indexing for updating v.
         """
         refs = [bus._i for bus in buses if bus.type == REFERENCE]
+        if len(refs) != 1:
+            raise SlackBusError
         pv = [bus._i for bus in buses if bus.type == PV]
         pq = [bus._i for bus in buses if bus.type == PQ]
         pvpq = pv + pq
@@ -204,10 +211,10 @@ class _ACPF(object):
         raise NotImplementedError
 
 #------------------------------------------------------------------------------
-#  "NewtonRaphson" class:
+#  "NewtonPF" class:
 #------------------------------------------------------------------------------
 
-class NewtonRaphson(_ACPF):
+class NewtonPF(_ACPF):
     """ Solves the power flow using full Newton's method [2].
 
         [2] Ray Zimmerman, "newtonpf.m", MATPOWER, PSERC Cornell,
@@ -228,7 +235,7 @@ class NewtonRaphson(_ACPF):
 #        j4, j5 = j3 + 1, j3 + npq
 
         # Initial evaluation of F(x0)...
-        F = self._evaluate_function(V)
+        F = self._evaluate_function(Ybus, V, Sbus, pv, pq)
         # ...and convergency check.
         converged = self._check_convergence(F)
 
@@ -250,47 +257,22 @@ class NewtonRaphson(_ACPF):
 
         # Update step.
         dx = -1 * spsolve(J, F)
+#        dx = -1 * linalg.lstsq(J.todense(), F)[0]
 
         # Update voltage vector.
         npv = len(pv)
         npq = len(pq)
-        if pv:
+        if npv > 0:
             Va[pv] = Va[pv] + dx[range(npv)]
-        if pq:
+        if npq > 0:
             Va[pq] = Va[pq] + dx[range(npv, npv + npq)]
             Vm[pq] = Vm[pq] + dx[range(npv + npq, npv + npq + npq)]
 
-        V = multiply(Vm, exp(1j * Va))
-
-        # Avoid wrapped round negative Vm.
-        Vm = abs(V)
-        Va = angle(Vm)
+        V = Vm * exp(1j * Va)
+        Vm = abs(V) # Avoid wrapped round negative Vm.
+        Va = angle(V)
 
         return V, Vm, Va
-
-    #--------------------------------------------------------------------------
-    #  Evaluate Jacobian:
-    #--------------------------------------------------------------------------
-
-    def _build_jacobian(self, Ybus, V, pv, pq, pvpq):
-        """ Returns the Jacobian matrix.
-        """
-        pq_col = [[i] for i in pq]
-        pvpq_col = [[i] for i in pvpq]
-
-        dS_dVm, dS_dVa = self.case.dSbus_dV(Ybus, V)
-
-        J11 = dS_dVa[pvpq_col, pvpq].real
-
-        J12 = dS_dVm[pvpq_col, pq].real
-        J21 = dS_dVa[pq_col, pvpq].imag
-        J22 = dS_dVm[pq_col, pq].imag
-
-        J1 = hstack([J11, J12], format="csr")
-        J2 = hstack([J21, J22], format="csr")
-        J  = vstack([J1, J2], format="csr")
-
-        return J
 
     #--------------------------------------------------------------------------
     #  Evaluate F(x):
@@ -313,21 +295,47 @@ class NewtonRaphson(_ACPF):
         """ Checks if the solution has converged to within the specified
             tolerance.
         """
-        normF = max(abs(F))
+        normF = linalg.norm(F, Inf)
 
         if normF < self.tolerance:
             converged = True
         else:
             converged = False
-            logger.info("Difference: %.3f" % normF - self.tolerance)
+            if self.verbose:
+                logger.info("Difference: %.3f" % (normF - self.tolerance))
 
         return converged
 
+    #--------------------------------------------------------------------------
+    #  Evaluate Jacobian:
+    #--------------------------------------------------------------------------
+
+    def _build_jacobian(self, Ybus, V, pv, pq, pvpq):
+        """ Returns the Jacobian matrix.
+        """
+        pq_col = [[i] for i in pq]
+        pvpq_col = [[i] for i in pvpq]
+
+        dS_dVm, dS_dVa = self.case.dSbus_dV(Ybus, V)
+
+        J11 = dS_dVa[pvpq_col, pvpq].real
+
+        J12 = dS_dVm[pvpq_col, pq].real
+        J21 = dS_dVa[pq_col, pvpq].imag
+        J22 = dS_dVm[pq_col, pq].imag
+
+        J = vstack([
+            hstack([J11, J12]),
+            hstack([J21, J22])
+        ], format="csr")
+
+        return J
+
 #------------------------------------------------------------------------------
-#  "FastDecoupled" class:
+#  "FastDecoupledPF" class:
 #------------------------------------------------------------------------------
 
-class FastDecoupled(_ACPF):
+class FastDecoupledPF(_ACPF):
     """ Solves the power flow using fast decoupled method [3].
 
         [3] Ray Zimmerman, "fdpf.m", MATPOWER, PSERC Cornell, version 4.0b1,
@@ -431,7 +439,7 @@ class FastDecoupled(_ACPF):
 
         # Update voltage.
         Va[pvpq] = Va[pvpq] + dVa
-        V = multiply(Vm, exp(1j * Va))
+        V = Vm * exp(1j * Va)
 
         return V, Vm, Va
 
@@ -446,7 +454,7 @@ class FastDecoupled(_ACPF):
 
         # Update voltage.
         Vm[pq] = Vm[pq] + dVm
-        V = multiply(Vm, exp(1j * Va))
+        V = Vm * exp(1j * Va)
 
         return V, Vm
 
