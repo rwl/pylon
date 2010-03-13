@@ -22,13 +22,12 @@
 #------------------------------------------------------------------------------
 
 import logging
-
-from copy import copy
+import copy
 
 from numpy import \
-    array, angle, pi, exp, ones, zeros, r_, complex64, conj, int32
+    array, angle, pi, exp, ones, r_, complex64, conj, int32
 
-from scipy.sparse import lil_matrix, csc_matrix, csr_matrix
+from scipy.sparse import csc_matrix, csr_matrix
 
 from util import Named, Serializable
 
@@ -440,28 +439,31 @@ class Case(Named, Serializable):
         buses = self.connected_buses if buses is None else buses
         branches = self.online_branches if branches is None else branches
 
-        B_buses = copy(buses) # modify branch copies
-        Bp_branches = copy(branches) # modify bus copies
+        B_buses = copy.deepcopy(buses) # modify bus copies
+        Bp_branches = copy.deepcopy(branches) # modify branch copies
+        Bpp_branches = copy.deepcopy(branches)
 
         for bus in B_buses:
             bus.b_shunt = 0.0
         for branch in Bp_branches:
             branch.b = 0.0
-            branch.ratio = 0.0
+            branch.ratio = 1.0
             if method == "XB":
                 branch.r = 0.0
 
-        Yp, _, _ = self.makeYbus(B_buses, Bp_branches)
-
-        Bpp_branches = copy(branches)
+        Yp, _, _ = self.getYbus(B_buses, Bp_branches)
 
         for branch in Bpp_branches:
             branch.phase_shift = 0.0
-            branch.r = 0.0
+            if method == "BX":
+                branch.r = 0.0
 
-        Ypp, _, _ = self.makeYbus(B_buses, Bpp_branches)
+        Ypp, _, _ = self.getYbus(B_buses, Bpp_branches)
 
-        return -Yp.imag(), -Ypp.imag()
+        del B_buses
+        del Bp_branches
+
+        return -Yp.imag, -Ypp.imag
 
     #--------------------------------------------------------------------------
     #  Build B matrices and phase shift injections for DC power flow:

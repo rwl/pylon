@@ -119,7 +119,7 @@ class CaseTest(unittest.TestCase):
         self.assertTrue(getsize(tmp_name) > 0)
 
     #--------------------------------------------------------------------------
-    #  New complex power injection.
+    #  Net complex power injection.
     #--------------------------------------------------------------------------
 
     def test_complex_power_vector(self):
@@ -139,19 +139,28 @@ class CaseTest(unittest.TestCase):
         self.assertAlmostEqual(Sbus[5].imag, -0.7000, places)
 
     #--------------------------------------------------------------------------
+    #  Bus injections:
+    #--------------------------------------------------------------------------
+
+    def test_bus_injections(self):
+        """ Test totals of complex bus power injection.
+        """
+        bus = Bus(p_demand=200.0, q_demand=120.0)
+        g1 = Generator(bus, p=200.0, q=50.0)
+        g2 = Generator(bus, p=100.0, q=50.0)
+        g3 = Generator(bus, p=-50, q=-10, p_max=0.0, p_min=-100.0)
+        case = Case(buses=[bus], generators=[g1, g2, g3])
+
+        self.assertAlmostEqual(abs(case.s_supply(bus)), 316.2278, 4)
+        self.assertAlmostEqual(abs(case.s_demand(bus)), 281.7801, 4)
+        self.assertAlmostEqual(abs(case.s_surplus(bus)), 58.3095, 4)
+
+    #--------------------------------------------------------------------------
     #  Admittance matrix tests.
     #--------------------------------------------------------------------------
 
     def test_admittance(self):
         """ Test the values of the admittance matrix.
-
-           4.0063 -11.7479i  -2.0000 + 4.0000i        0            -1.1765 + 4.7059i  -0.8299 + 3.1120i        0
-          -2.0000 + 4.0000i   9.3283 -23.1955i  -0.7692 + 3.8462i  -4.0000 + 8.0000i  -1.0000 + 3.0000i  -1.5590 + 4.4543i
-                0            -0.7692 + 3.8462i   4.1557 -16.5673i        0            -1.4634 + 3.1707i  -1.9231 + 9.6154i
-          -1.1765 + 4.7059i  -4.0000 + 8.0000i        0             6.1765 -14.6359i  -1.0000 + 2.0000i        0
-          -0.8299 + 3.1120i  -1.0000 + 3.0000i  -1.4634 + 3.1707i  -1.0000 + 2.0000i   5.2933 -14.1378i  -1.0000 + 3.0000i
-                0            -1.5590 + 4.4543i  -1.9231 + 9.6154i        0            -1.0000 + 3.0000i   4.4821 -17.0047i
-
         """
         Y, _, _ = self.case.Y
 
@@ -185,21 +194,35 @@ class CaseTest(unittest.TestCase):
                     self.assertEqual(abs(Y[i, j]), abs(Y[j, i]))
 
     #--------------------------------------------------------------------------
+    #  FDPF B matrices.
+    #--------------------------------------------------------------------------
+
+
+    def test_B_prime(self):
+        """ Test build of FDPF matrix B prime.
+        """
+        Bp, Bpp = self.case.makeB()
+
+        self.assertEqual(Bp.shape, (6, 6))
+        self.assertEqual(Bpp.shape, (6, 6))
+
+        places = 4
+        self.assertAlmostEqual(Bp[0, 0], 13.3333, places)
+        self.assertAlmostEqual(Bp[5, 5], 18.3333, places)
+        self.assertAlmostEqual(Bp[3, 1],-10.0000, places)
+        self.assertAlmostEqual(Bp[2, 4], -3.8462, places)
+
+        self.assertAlmostEqual(Bpp[0, 0], 11.7479, places)
+        self.assertAlmostEqual(Bpp[5, 5], 17.0047, places)
+        self.assertAlmostEqual(Bpp[3, 1], -8.0000, places)
+        self.assertAlmostEqual(Bpp[2, 4], -3.1707, places)
+
+    #--------------------------------------------------------------------------
     #  Susceptance matrix tests.
     #--------------------------------------------------------------------------
 
     def test_susceptance(self):
         """ Test the values of the susceptance matrix.
-
-            B =
-
-               13.3333   -5.0000         0   -5.0000   -3.3333         0
-               -5.0000   27.3333   -4.0000  -10.0000   -3.3333   -5.0000
-                     0   -4.0000   17.8462         0   -3.8462  -10.0000
-               -5.0000  -10.0000         0   17.5000   -2.5000         0
-               -3.3333   -3.3333   -3.8462   -2.5000   16.3462   -3.3333
-                     0   -5.0000  -10.0000         0   -3.3333   18.3333
-
         """
         B, Bf, Pbusinj, Pfinj = self.case.Bdc
 
@@ -234,23 +257,6 @@ class CaseTest(unittest.TestCase):
         self.assertEqual(Pfinj.shape, (11,))
         for v in Pfinj:
             self.assertEqual(v, 0.0)
-
-    #--------------------------------------------------------------------------
-    #  Bus injection tests:
-    #--------------------------------------------------------------------------
-
-    def test_bus_injections(self):
-        """ Test totals of complex bus power injection.
-        """
-        bus = Bus(p_demand=200.0, q_demand=120.0)
-        g1 = Generator(bus, p=200.0, q=50.0)
-        g2 = Generator(bus, p=100.0, q=50.0)
-        g3 = Generator(bus, p=-50, q=-10, p_max=0.0, p_min=-100.0)
-        case = Case(buses=[bus], generators=[g1, g2, g3])
-
-        self.assertAlmostEqual(abs(case.s_supply(bus)), 316.2278, 4)
-        self.assertAlmostEqual(abs(case.s_demand(bus)), 281.7801, 4)
-        self.assertAlmostEqual(abs(case.s_surplus(bus)), 58.3095, 4)
 
 #------------------------------------------------------------------------------
 #  "BusTest" class:
