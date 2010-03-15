@@ -28,7 +28,7 @@ import tkSimpleDialog
 import pylon
 
 from pylon import \
-    Case, DCPF, NewtonPF, FastDecoupledPF, UDOPF
+    Case, DCPF, NewtonPF, FastDecoupledPF, OPF, UDOPF
 
 from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
@@ -148,15 +148,15 @@ class PylonTk(object):
         pfmenu = Menu(menubar, tearoff=True)
         menubar.add_cascade(label="Power Flow", menu=pfmenu)
         pfmenu.add_command(label="DC PF", command=self.on_dcpf)
-        pfmenu.add_command(label="Newton-Raphson", command=self.on_newton)
+        pfmenu.add_command(label="Newton's Method", command=self.on_newton)
         pfmenu.add_command(label="Fast Decoupled", command=self.on_fd)
 
         opfmenu = Menu(menubar, tearoff=True)
         menubar.add_cascade(label="OPF", menu=opfmenu)
-#        opfmenu.add_command(label="DC OPF", command=self.on_dcopf)
-#        opfmenu.add_command(label="AC OPF", command=self.on_acopf)
-#        opfmenu.add_command(label="DC (UD) OPF", command=self.on_duopf)
-#        opfmenu.add_command(label="AC (UD) OPF", command=self.on_uopf)
+        opfmenu.add_command(label="DC OPF", command=self.on_dcopf)
+        opfmenu.add_command(label="AC OPF", command=self.on_acopf)
+        opfmenu.add_command(label="DC (UD) OPF", command=self.on_duopf)
+        opfmenu.add_command(label="AC (UD) OPF", command=self.on_uopf)
 
         mktmenu = Menu(menubar, tearoff=True)
         menubar.add_cascade(label="RL", menu=mktmenu)
@@ -481,12 +481,12 @@ class PylonTk(object):
         FastDecoupledPF(self.case).solve()
 
 
-#    def on_dcopf(self):
-#        DCOPF(self.case).solve()
+    def on_dcopf(self):
+        OPF(self.case, dc=True).solve()
 
 
-#    def on_acopf(self):
-#        ACOPF(self.case).solve()
+    def on_acopf(self):
+        OPF(self.case, dc=False).solve()
 
 
     def on_duopf(self):

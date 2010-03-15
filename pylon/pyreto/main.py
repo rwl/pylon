@@ -41,9 +41,9 @@ from pylon.main import read_case
 from pylon.readwrite import MATPOWERReader, ReSTWriter
 from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
-from environment import ParticipantEnvironment
+from environment import ContinuousMarketEnvironment
 from experiment import MarketExperiment
-from task import ContinuousTask
+from task import EpisodicProfitTask
 from smart_market import SmartMarket
 
 #------------------------------------------------------------------------------
@@ -101,12 +101,12 @@ def one_for_one(case):
 
     for generator in mkt.case.online_generators:
         # Create the world in which the trading agent acts.
-        env = ParticipantEnvironment(asset=generator, market=mkt)
+        env = ContinuousMarketEnvironment(asset=generator, market=mkt)
 
         # Create a task that connects each agent to it's environment. The task
         # defines what the goal is for an agent and how the agent is rewarded
         # for it's actions.
-        task = ContinuousTask(env)
+        task = EpisodicProfitTask(env)
 
         # Create a linear controller network. Each agent needs a controller
         # that maps the current state to an action.
