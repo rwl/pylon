@@ -75,7 +75,13 @@ class StateEstimatorTest(unittest.TestCase):
         """ Test state estimation.
         """
         se = StateEstimator(self.case, self.measurements, self.sigma)
-        se.run()
+        solution = se.run()
+        V = solution["V"]
+
+        places = 4
+        self.assertAlmostEqual(abs(V[0]), abs(1.0), places)
+        self.assertAlmostEqual(abs(V[1]), abs(1.0256-0.0175j), places)
+        self.assertAlmostEqual(abs(V[2]), abs(0.9790+0.0007j), places)
 
 
 if __name__ == "__main__":

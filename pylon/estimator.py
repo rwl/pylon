@@ -66,7 +66,7 @@ FROM_INPUT = "from input"
 #------------------------------------------------------------------------------
 
 class StateEstimator(object):
-    """ State estimation based on code by Rui Bo.
+    """ State estimation based on code by Rui Bo and James S. Thorp.
     """
 
     #--------------------------------------------------------------------------
@@ -135,7 +135,7 @@ class StateEstimator(object):
         Va = angle(V0)
         Vm = abs(V0)
 
-        nb = Ybus.size[0]
+        nb = Ybus.shape[0]
         f = [b.from_bus._i for b in branches]
         t = [b.to_bus._i for b in branches]
         nonref = pv + pq
@@ -152,6 +152,9 @@ class StateEstimator(object):
         idx_zQg = [m.b_or_l._i for m in meas if m.type == QG]
         idx_zVm = [m.b_or_l._i for m in meas if m.type == VM]
         idx_zVa = [m.b_or_l._i for m in meas if m.type == VA]
+
+        def col(seq):
+            return [[k] for k in seq]
 
         # Create inverse of covariance matrix with all measurements.
 #        full_scale = 30
@@ -231,28 +234,18 @@ class StateEstimator(object):
             # Get sub-matrix of H relating to voltage magnitude.
             dVm_dVa = csr_matrix((nb, nb))
             dVm_dVm = csr_matrix((ones(nb), (range(nb), range(nb))))
-            H = hstack([
-                vstack([
-                    dPF_dVa[idx_zPf, nonref],
-                    dQF_dVa[idx_zQf, nonref],
-                    dPT_dVa[idx_zPt, nonref],
-                    dQT_dVa[idx_zQt, nonref],
-                    dPG_dVa[idx_zPg, nonref],
-                    dQG_dVa[idx_zQg, nonref],
-                    dVm_dVa[idx_zVm, nonref],
-                    dVa_dVa[idx_zVa, nonref]
-                ]),
-                vstack([
-                    dPF_dVm[idx_zPf, nonref],
-                    dQF_dVm[idx_zQf, nonref],
-                    dPT_dVm[idx_zPt, nonref],
-                    dQT_dVm[idx_zQt, nonref],
-                    dPG_dVm[idx_zPg, nonref],
-                    dQG_dVm[idx_zQg, nonref],
-                    dVm_dVm[idx_zVm, nonref],
-                    dVa_dVm[idx_zVa, nonref]
-                ])
-            ])
+
+            h = [(col(idx_zPf), dPF_dVa, dPF_dVm),
+                 (col(idx_zQf), dQF_dVa, dQF_dVm),
+                 (col(idx_zPt), dPT_dVa, dPT_dVm),
+                 (col(idx_zQt), dQT_dVa, dQT_dVm),
+                 (col(idx_zPg), dPG_dVa, dPG_dVm),
+                 (col(idx_zQg), dQG_dVa, dQG_dVm),
+                 (col(idx_zVm), dVm_dVa, dVm_dVm),
+                 (col(idx_zVa), dVa_dVa, dVa_dVm)]
+
+            H = vstack([hstack([dVa[idx, nonref], dVm[idx, nonref]])
+                        for idx, dVa, dVm in h if len(idx) > 0 ])
 
             # Compute update step.
             J = H.T * Rinv * H
@@ -261,7 +254,6 @@ class StateEstimator(object):
 
             # Check for convergence.
             normF = linalg.norm(F, Inf)
-#            normF = max(abs(F))
 
             if self.verbose:
                 logger.info("Iteration [%d]: Norm of mismatch: %.3f" %
@@ -270,7 +262,7 @@ class StateEstimator(object):
                 converged = True
 
             # Update voltage.
-            npvpq = nonref.size[0]
+            npvpq = len(nonref)
 
             Va[nonref] = Va[nonref] + dx[:npvpq]
             Vm[nonref] = Vm[nonref] + dx[npvpq:2 * npvpq]
