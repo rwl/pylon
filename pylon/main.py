@@ -232,22 +232,22 @@ def main():
 
         # Output writer selection.
         if options.output_type == "matpower":
-            writer = MATPOWERWriter(case, outfile)
+            writer = MATPOWERWriter(case)
         elif options.output_type == "rst":
-            writer = ReSTWriter(case, outfile)
+            writer = ReSTWriter(case)
         elif options.output_type == "csv":
-            writer = CSVWriter(case, outfile)
+            writer = CSVWriter(case)
         elif options.output_type == "excel":
             from pylon.readwrite.excel_writer import ExcelWriter
-            writer = ExcelWriter(case, outfile)
+            writer = ExcelWriter(case)
         elif options.output_type == "pickle":
-            writer = PickleWriter(case, outfile)
+            writer = PickleWriter(case)
         else:
             logger.critical("Invalid output type [%s]." % options.output_type)
             sys.exit(1)
 
         solver.solve()
-        writer.write()
+        writer.write(outfile)
     else:
         logger.critical("Unable to read case data.")
 
