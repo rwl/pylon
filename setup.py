@@ -23,7 +23,7 @@ if sys.platform == "darwin":
     extra_opts = {"app": [mainscript],
                   "setup_requires": ["py2app"],
                   "options": {"py2app": {"argv_emulation": True,
-                                         "plist": {"LSPrefersPPC": True},
+#                                         "plist": {"LSPrefersPPC": True},
                                          "packages": ["numpy", "scipy"],
                                          "includes": ["pdipm", "pyparsing"]}}}
 elif sys.platform == "win32":
@@ -37,7 +37,7 @@ setup(author="Richard Lincoln",
       author_email="r.w.lincoln@gmail.com",
       description="Power system and energy market simulator.",
       url="http://rwl.github.com/pylon",
-      version="0.4b1",
+      version="0.4.1",
       entry_points={"console_scripts":
             ["pylon = pylon.main:main",
              "pylontk = pylon.tk:main [tk]"]},
@@ -47,7 +47,7 @@ setup(author="Richard Lincoln",
       name="Pylon",
       include_package_data=True,
       packages=find_packages(),
-      modules=["pdipm"],
+      py_modules=["pdipm"],
       test_suite="pylon.test",
       zip_safe=True,
       **extra_opts)
