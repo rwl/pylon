@@ -151,7 +151,7 @@ def main():
     parser.add_option("-a", "--algorithm", action="store_true",
         metavar="ALGORITHM", dest="algorithm", default="newton",
         help="Indicates the algorithm type to be used for AC power flow. The "
-        "types which are currently supported are: 'newton' and 'decoupled' "
+        "types which are currently supported are: 'newton' and 'fdpf' "
         "[default: %default].")
 
     parser.add_option("-T", "--output-type", dest="output_type",
@@ -177,8 +177,8 @@ def main():
             outfile = open(options.output, "wb")
     else:
         outfile = sys.stdout
-        if not options.no_report:
-            logger.setLevel(logging.CRITICAL) # must stay quiet
+#        if not options.no_report:
+#            logger.setLevel(logging.CRITICAL) # must stay quiet
 
     # Input.
     if len(args) > 1:
@@ -213,7 +213,7 @@ def main():
         elif options.solver == "acpf":
             if options.algorithm == "newton":
                 solver = NewtonPF(case)
-            elif options.algorithm == "decoupled":
+            elif options.algorithm == "fdpf":
                 solver = FastDecoupledPF(case)
             else:
                 logger.critical("Invalid algorithm [%s]." % options.algorithm)
@@ -247,7 +247,8 @@ def main():
             sys.exit(1)
 
         solver.solve()
-        writer.write(outfile)
+        if not options.no_report:
+            writer.write(outfile)
     else:
         logger.critical("Unable to read case data.")
 
