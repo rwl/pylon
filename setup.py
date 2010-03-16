@@ -20,7 +20,7 @@ setup(author="Richard Lincoln",
       author_email="r.w.lincoln@gmail.com",
       description="Power system and energy market simulator.",
       url="http://rwl.github.com/pylon",
-      version="0.3.3",
+      version="0.4b1",
       entry_points={"console_scripts":
             ["pylon = pylon.main:main",
              "pylontk = pylon.tk:main [tk]"]},
@@ -30,6 +30,7 @@ setup(author="Richard Lincoln",
       name="Pylon",
       include_package_data=True,
       packages=find_packages(),
+      modules=["pdipm"],
       test_suite="pylon.test",
       zip_safe=True)
 
