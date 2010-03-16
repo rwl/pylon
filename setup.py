@@ -14,7 +14,24 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
+import sys
 from setuptools import setup, find_packages
+
+mainscript = "pylon/main.py"
+
+if sys.platform == "darwin":
+    extra_opts = {"app": [mainscript],
+                  "setup_requires": ["py2app"],
+                  "options": {"py2app": {"argv_emulation": True,
+                                         "plist": {"LSPrefersPPC": True},
+                                         "packages": ["numpy", "scipy"],
+                                         "includes": ["pdipm", "pyparsing"]}}}
+elif sys.platform == "win32":
+    extra_opts = {"app": [mainscript],
+                  "setup_requires": ["py2exe"]}
+else:
+    extra_opts = {}
+
 
 setup(author="Richard Lincoln",
       author_email="r.w.lincoln@gmail.com",
@@ -32,6 +49,7 @@ setup(author="Richard Lincoln",
       packages=find_packages(),
       modules=["pdipm"],
       test_suite="pylon.test",
-      zip_safe=True)
+      zip_safe=True,
+      **extra_opts)
 
 # EOF -------------------------------------------------------------------------
