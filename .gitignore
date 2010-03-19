@@ -6,6 +6,7 @@
 build/
 dist/
 *.egg-info
+output/
 
 pylon/test/data/ipsa.raw
 pylon/test/data/ipsa.seq
