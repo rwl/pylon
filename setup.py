@@ -35,14 +35,11 @@ else:
 
 setup(author="Richard Lincoln",
       author_email="r.w.lincoln@gmail.com",
-      description="Power system and energy market simulator.",
+      description="Port of MATPOWER to the Python programming language.",
       url="http://rwl.github.com/pylon",
       version="0.4.1",
-      entry_points={"console_scripts":
-            ["pylon = pylon.main:main",
-             "pylontk = pylon.tk:main [tk]"]},
-      install_requires=["numpy", "scipy", "pyparsing"],#, "pyexcelerator"],
-      extras_require={"tk": ["pybrain", "matplotlib", "networkx"]},
+      entry_points={"console_scripts": ["pylon = pylon.main:main"]},
+      install_requires=["numpy", "scipy", "pyparsing"],
       license="Apache License, Version 2.0",
       name="Pylon",
       include_package_data=True,
