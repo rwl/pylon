@@ -21,7 +21,7 @@ Pylon is a port of MATPOWER to the Python programming language.  MATPOWER is a M
 :mod:`pylon.test <pylon.test>`
   A comprehensive suite of unit tests.
 
-:mod:`pylon.tk` <pylon.tk>`
+:mod:`pylontk` <pylontk>`
   Portable GUI with plots from Matplotlib_ and graph viualisation using NetworkX_.
 
 This manual provides tutorials on simulating power systems and energy markets using Pylon.  Pylon contains solvers translated from MATPOWER_ and the `user manual <http://www.pserc.cornell.edu/matpower/manual.pdf>`_ is a useful reference.
