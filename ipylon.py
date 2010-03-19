@@ -30,22 +30,22 @@ from pyjamas.ui.TabPanel import TabPanel
 from pyjamas.ui.decoratorpanel import DecoratedTabPanel, DecoratorPanel
 from pyjamas.ui.decoratorpanel import DecoratorTitledPanel
 from pyjamas import Window
+from pyjamas.JSONService import JSONProxy
 
 
 class IPylon:
-    def __init__(self, case=None):
-        self.case = self.get_default_case() if case is None else case
-        self.base_panel = HorizontalPanel()
+    def __init__(self):
+        self.remote_case = CaseService()
+
+        self.base_panel = VerticalPanel()
         self.tab_panel = TabPanel()
+        self.base_panel.add(self.tab_panel)
         self.tab_panel.add(self.get_case_panel(), "Case")
         self.tab_panel.add(self.get_buses_panel(), "Buses")
         self.tab_panel.selectTab(0)
-        self.base_panel.add(self.tab_panel)
+        self.status = Label()
+        self.base_panel.add(self.status)
         RootPanel().add(self.base_panel)
-
-
-    def get_default_case(self):
-        return None#Case()
 
 
     def get_case_panel(self):
@@ -63,12 +63,11 @@ class IPylon:
         tree.addItem(case_item)
         buses = TreeItem("Buses")
         case_item.addItem(buses)
-#        for bus in self.case.buses:
-        for n in ["Bus_1", "Bus_2"]:
-#            proto = Proto(bus.name)
-            proto = Proto(n)
-            self.create_item(proto)
-            buses.addItem(proto.item)
+        id = self.remote_case.buses("name", self)
+#        for bus in []:
+#            proto = Proto(bus)#.name)
+#            self.create_item(proto)
+#            buses.addItem(proto.item)
         return tree
 
 
@@ -85,6 +84,36 @@ class IPylon:
         title = HTML("""Buses""")
         panel.add(title)
         return panel
+
+    # JSON handler interface --------------------------------------------------
+
+    # The handler object should implement
+    #     onRemoteResponse(value, requestInfo)
+    # to accept the return value of the remote method, and
+    #     onRemoteError(code, error_dict, requestInfo)
+    #          code = http-code or 0
+    #          error_dict is an jsonrpc 2.0 error dict:
+    #              {
+    #                'code': jsonrpc-error-code (integer) ,
+    #                'message': jsonrpc-error-message (string) ,
+    #                'data' : extra-error-data
+    #              }
+    # to handle errors.
+
+    def onRemoteResponse(self, response, request_info):
+        print "RESPONSE:", response
+        self.tree.clear()
+
+
+    def onRemoteError(self, code, errobj, request_info):
+        print "ERROR:", errobj['message']
+
+        message = errobj['message']
+        if code != 0:
+            self.status.setText("HTTP error %d: %s" % (code, message))
+        else:
+            code = errobj['code']
+            self.status.setText("JSONRPC Error %s: %s" % (code, message))
 
 
 class Proto:
@@ -105,8 +134,15 @@ class PendingItem(TreeItem):
         return True
 
 
+class CaseService(JSONProxy):
+    def __init__(self):
+        JSONProxy.__init__(self, "services/CaseService.py", ["buses"])
+
+
 if __name__ == "__main__":
-    pyjd.setup("public/ipylon.html")
+    # For pyjd, set up a web server and load the HTML from there.
+    pyjd.setup("http://127.0.0.1/pylon/public/ipylon.html")
+#    pyjd.setup("public/ipylon.html")
     app = IPylon()
     pyjd.run() # dummy in pyjs
 
