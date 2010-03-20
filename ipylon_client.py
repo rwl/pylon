@@ -58,16 +58,12 @@ class IPylon:
 
 
     def get_case_tree(self):
-        tree = Tree()
+        tree = self.tree = Tree()
         case_item = TreeItem("Case_1")
         tree.addItem(case_item)
-        buses = TreeItem("Buses")
+        buses = self.buses = TreeItem("Buses")
         case_item.addItem(buses)
         id = self.remote_case.buses("name", self)
-#        for bus in []:
-#            proto = Proto(bus)#.name)
-#            self.create_item(proto)
-#            buses.addItem(proto.item)
         return tree
 
 
@@ -102,7 +98,12 @@ class IPylon:
 
     def onRemoteResponse(self, response, request_info):
         print "RESPONSE:", response
-        self.tree.clear()
+#        self.tree.clear()
+        self.buses.removeItems()
+        for bus_name in response:
+            proto = Proto(str(bus_name))
+            self.create_item(proto)
+            self.buses.addItem(proto.item)
 
 
     def onRemoteError(self, code, errobj, request_info):
@@ -136,12 +137,12 @@ class PendingItem(TreeItem):
 
 class CaseService(JSONProxy):
     def __init__(self):
-        JSONProxy.__init__(self, "services/CaseService.py", ["buses"])
+        JSONProxy.__init__(self, "/json", ["buses"])
 
 
 if __name__ == "__main__":
     # For pyjd, set up a web server and load the HTML from there.
-    pyjd.setup("http://127.0.0.1/pylon/public/ipylon.html")
+    pyjd.setup("http://0.0.0.0:8080/static/ipylon.html")
 #    pyjd.setup("public/ipylon.html")
     app = IPylon()
     pyjd.run() # dummy in pyjs
