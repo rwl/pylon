@@ -24,7 +24,7 @@
 import unittest
 
 from pylon import Bus, Generator, POLYNOMIAL, PW_LINEAR
-from pylon.pyreto import Offer, Bid
+from pyreto import Offer, Bid
 
 #------------------------------------------------------------------------------
 #  "GeneratorTest" class:

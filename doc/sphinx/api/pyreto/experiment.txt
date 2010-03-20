@@ -1,7 +1,7 @@
 :mod:`experiment` -- Market Experiment
 ======================================
 
-.. automodule:: pylon.pyreto.experiment
+.. automodule:: pyreto.experiment
 
 .. autoclass:: MarketExperiment
    :members: __init__

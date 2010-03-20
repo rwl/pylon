@@ -28,7 +28,7 @@ from scipy import array, zeros, mean, linspace, r_, polyval, polyder
 #from pybrain.rl.environments.graphical import GraphicalEnvironment
 
 from pylon import PW_LINEAR, POLYNOMIAL
-from pylon.pyreto.smart_market import Offer, Bid
+from pyreto.smart_market import Offer, Bid
 
 logger = logging.getLogger(__name__)
 

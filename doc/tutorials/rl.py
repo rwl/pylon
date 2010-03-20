@@ -9,10 +9,10 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 import sys, logging
 from pylon import Case, Bus, Generator
 
-from pylon.pyreto import \
+from pyreto import \
     MarketExperiment, ParticipantEnvironment, ProfitTask, SmartMarket
 
-from pylon.pyreto.renderer import ExperimentRenderer
+from pyreto.renderer import ExperimentRenderer
 
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.rl.agents import LearningAgent

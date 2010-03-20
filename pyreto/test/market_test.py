@@ -28,7 +28,7 @@ import unittest
 from os.path import dirname, join
 
 from pylon import Case, Bus, Branch, Generator, REFERENCE, PV, OPF
-from pylon.pyreto import SmartMarket, Bid, Offer, FIRST_PRICE
+from pyreto import SmartMarket, Bid, Offer, FIRST_PRICE
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -539,7 +539,7 @@ if __name__ == "__main__":
 #
 #    logger = logging.getLogger()#"pylon")
 
-    logger = logging.getLogger()#'pylon.pyreto.smart_market')
+    logger = logging.getLogger()#'pyreto.smart_market')
     logging.getLogger('pylon.opf').setLevel(logging.INFO)
     logging.getLogger('pylon.y').setLevel(logging.INFO)
 

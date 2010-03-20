@@ -30,11 +30,11 @@ from os.path import dirname, join
 from pylon import Case, Bus, Generator
 from pylon.readwrite import PickleReader
 
-from pylon.pyreto import \
+from pyreto import \
     MarketExperiment, ParticipantEnvironment, SmartMarket, \
     DiscreteTask, ContinuousTask, RothErev, PropensityTable
 
-from pylon.pyreto.renderer import ParticipantRenderer, ExperimentRenderer
+from pyreto.renderer import ParticipantRenderer, ExperimentRenderer
 
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.rl.agents import LearningAgent

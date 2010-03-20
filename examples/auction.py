@@ -24,7 +24,7 @@ from os.path import join, dirname, basename
 
 import pylon
 
-from pylon.pyreto import \
+from pyreto import \
     MarketExperiment, EpisodicMarketExperiment, DiscreteMarketEnvironment, \
     ContinuousMarketEnvironment, SmartMarket, ProfitTask, EpisodicProfitTask
 
@@ -165,7 +165,7 @@ while x <= 24:#00:
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
 
-from pylon.pyreto.tools import sparkline_data
+from pyreto.tools import sparkline_data
 sparkline_data(agent_map, "auctiondata.txt")
 
 #table_zip = zipfile.ZipFile("%s.zip" % timestr, "w")

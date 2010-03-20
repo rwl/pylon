@@ -9,7 +9,7 @@ Pylon is a port of MATPOWER to the Python programming language.  MATPOWER is a M
 :mod:`pylon <pylon>`
   Implements the MATPOWER power system model using the classes :class:`Bus <pylon.bus.Bus>`,  :class:`Branch <pylon.branch.Branch>` and :class:`Generator <pylon.generator.Generator>`.  Defines solvers for power flow and optimal power flow problems.  They are translated from MATPOWER_ using the sparse matrix types and solvers from CVXOPT_.
 
-:mod:`pylon.pyreto <pylon.pyreto>`
+:mod:`pyreto <pyreto>`
   Defines PyBrain_ experiments for simulating competitive energy trade using reinforcement learning algorithms with artificial neural networks.
 
 :mod:`pylon.readwrite <pylon.readwrite>`
