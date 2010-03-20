@@ -294,7 +294,7 @@ class Generator(Named):
     def get_offers(self, n_points=6):
         """ Returns quantity and price offers created from the cost function.
         """
-        from pylon.pyreto.smart_market import Offer
+        from pyreto.smart_market import Offer
 
         qtyprc = self._get_qtyprc(n_points)
         return [Offer(self, qty, prc) for qty, prc in qtyprc]
@@ -303,7 +303,7 @@ class Generator(Named):
     def get_bids(self, n_points=6):
         """ Returns quantity and price bids created from the cost function.
         """
-        from pylon.pyreto.smart_market import Bid
+        from pyreto.smart_market import Bid
 
         qtyprc = self._get_qtyprc(n_points)
         return [Bid(self, qty, prc) for qty, prc in qtyprc]

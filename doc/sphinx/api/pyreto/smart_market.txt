@@ -1,7 +1,7 @@
 :mod:`smart_market` -- Auction Clearing Mechanism
 =================================================
 
-.. automodule:: pylon.pyreto.smart_market
+.. automodule:: pyreto.smart_market
 
 .. autoclass:: SmartMarket
    :members: __init__

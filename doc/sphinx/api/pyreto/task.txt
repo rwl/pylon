@@ -1,7 +1,7 @@
 :mod:`task` -- Market Tasks
 ===========================
 
-.. automodule:: pylon.pyreto.task
+.. automodule:: pyreto.task
 
 .. autoclass:: DiscreteTask
    :members: __init__

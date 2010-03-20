@@ -50,7 +50,7 @@ from pylon.readwrite import \
 
 from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
-from pylon.pyreto.main import one_for_one
+from pyreto.main import one_for_one
 
 from pylon.readwrite.common import BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
