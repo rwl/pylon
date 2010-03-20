@@ -1,5 +1,29 @@
 import pylon
 
+import kmldom
+import zipfile
+import xml.etree.ElementTree as ET
+
+file = zipfile.ZipFile("spt.kmz", "r")
+
+#for name in file.namelist():
+#    data = file.read(name)
+#    print name, len(data), repr(data[:40])
+
+#element = kmldom.ParseKml(file.read("doc.kml"))
+#kml = kmldom.AsKml(element)
+#doc = kmldom.AsDocument(kml.get_feature())
+
+tree = ET.parse("doc.kml")
+root = tree.getroot()
+for node in root:
+    print "foo:", node
+
+for pl in root.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+    print pl
+
+tree.write("/tmp/et.xml")
+
 # SPT 400kV
 hunterston = pylon.Bus("HUER Hunterston", v_base=400.0)
 inverkip = pylon.Bus("INKI Inverkip", v_base=400.0)
@@ -10,7 +34,7 @@ coalburn = pylon.Bus("COAL Coalburn", v_base=400.0)
 elvanfoot = pylon.Bus("ELVA Elvanfoot", v_base=400.0)
 gretna = pylon.Bus("GRNA Gretna", v_base=400.0)
 straiton = pylon.Bus("SMEA (Straiton)", v_base=400.0)
-cryr = pylon.Bus("CRYR", v_base=400.0)
+crystal_rig = pylon.Bus("CRYR Crystal Rig", v_base=400.0)
 torness = pylon.Bus("TORN Torness", v_base=400.0)
 cockenzie = pylon.Bus("COCK Cockenzie", v_base=400.0)
 eccles = pylon.Bus("ECCL Eccles", v_base=400.0)
