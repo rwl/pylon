@@ -1,9 +1,11 @@
 import pylon
 
-import kmldom
+import csv
+#import kmldom
 import zipfile
 import xml.etree.ElementTree as ET
 import geolocator.gislib
+from bin.examples.national_grid import heysham, keadby
 
 file = zipfile.ZipFile("spt.kmz", "r")
 
@@ -19,11 +21,30 @@ file = zipfile.ZipFile("spt.kmz", "r")
 tree = ET.parse("doc.kml")
 root = tree.getroot()
 
-for pl in root.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-    point = pl.find("./{http://www.opengis.net/kml/2.2}Point")
-    coord = point.findtext(".//{http://www.opengis.net/kml/2.2}coordinates")
-    name = pl.findtext("./{http://www.opengis.net/kml/2.2}name")
-    print '    "%s": (%s),' % (name, coord[:-3])
+#for pl in root.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+#    point = pl.find("./{http://www.opengis.net/kml/2.2}Point")
+#    coord = point.findtext(".//{http://www.opengis.net/kml/2.2}coordinates")
+#    name = pl.findtext("./{http://www.opengis.net/kml/2.2}name")
+#    print '    "%s": (%s),' % (name, coord[:-3])
+
+reader = csv.reader(open('generators.csv'), delimiter=',', quotechar='"')
+for row in reader:
+#    print ", ".join(row)
+
+    p_max = float(row[3])
+    g = pylon.Generator(None, name=row[1], p=p_max, p_max=p_max)
+    g._company = row[0]
+    g._fuel = row[2]
+    g._year = int(row[4])
+    g._location = row[5]
+
+    if p_max >= 100.0:
+        lc_name = row[1].lower().replace(' ', '_').replace("'", "")
+        print '%s = pylon.Generator(None, name="%s", p_max=%.2f)' % (lc_name, row[1], p_max)
+#        print '%s._company = "%s"' % (lc_name, row[0])
+#        print '%s._fuel = "%s"' % (lc_name, row[2])
+#        print '%s._year = %d' % (lc_name, int(row[4]))
+#        print '%s._location = "%s"' %(lc_name, row[5])
 
 # SPT 400kV
 hunterston = pylon.Bus("HUER Hunterston", v_base=400.0, position=(-4.890804,55.7218))
@@ -438,5 +459,106 @@ for l in ngt_400:
     from_pos = ngt400_positions[l.from_bus.name]
     to_pos = ngt400_positions[l.to_bus.name]
     km = geolocator.gislib.getDistance(from_pos, to_pos)
-    print "km", km
+#    print "km", km
     l._length = km
+
+# Power stations in the United Kingdom (>100MW).
+gbus = {
+#    "Kilroot": (ireland, 275.0),
+#    "Baglan Bay": (balgan_bay, 275.0),
+    "Barking": (barking, 400.0),
+    "Dungeness B": (dugeness, 400.0),
+#    "Hartlepool" (hartlepool, 275.0),
+    "Heysham1": (heysham, 400.0),
+    "Heysham2": (heysham, 400.0),
+    "Hinkley Point B": (hinkley_point, 400.0),
+    "Sizewell B": (sizewell, 400.0),
+    "Hunterston B": (hunterston, 400.0),
+    "Torness": (torness, 400.0),
+    "Eggborough": (eggsborough, 400.0),
+#    "Barry": (cardiff_east,tremorfa,, 275.0),
+    "Glanford Brigg": (keadby, 400.0),
+    "Killingholme": (killingholme, 400.0),
+    "Kings Lynn": (walpole, 400.0),
+#    "Peterborough": (None, 132.0),
+#    "Roosecote": (None, 132.0),
+    "South Humber Bank": (south_humber_bank, 400.0),
+#    "Coolkeeragh": (derry, 275.0),
+    "Corby": (grendon, 400.0),
+    "Coryton": (coryton, 400.0),
+#    "Derwent": (derby, 132.0),
+    "Drax": (drax, 400.0),
+    "Sutton Bridge": (walpole, 400.0),
+    "Cottam": (cottam, 400.0),
+    "West Burton": (west_burton, 400.0),
+    "Kingsnorth": (kingsnorth, 400.0),
+    "Ironbridge": (ironbridge, 400.0),
+    "Ratcliffe": (ratcliffe_on_soar, 400.0),
+    "Grain": (grain_1, 400.0),
+#    "Taylor's Lane GT": (willesden, 275.0),
+    "Connahs Quay": (deeside, 400.0),
+    "Cottam Development Centre": (cottam, 400.0),
+#    "Enfield": (waltham_cross, 400.0),
+    "Killingholme": (killingholme, 400.0),
+    "Shotton": ()
+}
+
+#sutton_bridge = pylon.Generator(None, name="Sutton Bridge", p_max=803.00)
+#cottam = pylon.Generator(None, name="Cottam", p_max=2008.00)
+#west_burton = pylon.Generator(None, name="West Burton", p_max=2012.00)
+#kingsnorth = pylon.Generator(None, name="Kingsnorth", p_max=1940.00)
+#ironbridge = pylon.Generator(None, name="Ironbridge", p_max=970.00)
+#ratcliffe = pylon.Generator(None, name="Ratcliffe", p_max=2000.00)
+#grain_ = pylon.Generator(None, name="Grain ", p_max=1300.00)
+#taylors_lane_gt = pylon.Generator(None, name="Taylor's Lane GT", p_max=132.00)
+#connahs_quay = pylon.Generator(None, name="Connahs Quay", p_max=1380.00)
+#cottam_development_centre = pylon.Generator(None, name="Cottam Development Centre", p_max=400.00)
+#enfield = pylon.Generator(None, name="Enfield", p_max=392.00)
+#killingholme = pylon.Generator(None, name="Killingholme", p_max=900.00)
+#shotton = pylon.Generator(None, name="Shotton", p_max=180.00)
+#teesside_power_station = pylon.Generator(None, name="Teesside Power Station", p_max=1875.00)
+#immingham_chp = pylon.Generator(None, name="Immingham CHP", p_max=1240.00)
+#indian_queens = pylon.Generator(None, name="Indian Queens", p_max=140.00)
+#dinorwig = pylon.Generator(None, name="Dinorwig", p_max=1728.00)
+#ffestiniog = pylon.Generator(None, name="Ffestiniog", p_max=360.00)
+#rugeley_ = pylon.Generator(None, name="Rugeley ", p_max=1006.00)
+#deeside_ = pylon.Generator(None, name="Deeside ", p_max=500.00)
+#saltend_ = pylon.Generator(None, name="Saltend ", p_max=1200.00)
+#oldbury = pylon.Generator(None, name="Oldbury", p_max=434.00)
+#wylfa = pylon.Generator(None, name="Wylfa", p_max=980.00)
+#fellside_chp = pylon.Generator(None, name="Fellside CHP", p_max=180.00)
+#ballylumford_b = pylon.Generator(None, name="Ballylumford B", p_max=540.00)
+#ballylumford_c = pylon.Generator(None, name="Ballylumford C", p_max=616.00)
+#rocksavage = pylon.Generator(None, name="Rocksavage", p_max=748.00)
+#aberthaw_b = pylon.Generator(None, name="Aberthaw B", p_max=1586.00)
+#tilbury_b_ = pylon.Generator(None, name="Tilbury B ", p_max=1063.00)
+#didcot_a = pylon.Generator(None, name="Didcot A", p_max=1958.00)
+#cowes_ = pylon.Generator(None, name="Cowes ", p_max=140.00)
+#didcot_gt = pylon.Generator(None, name="Didcot GT", p_max=100.00)
+#littlebrook_gt = pylon.Generator(None, name="Littlebrook GT", p_max=105.00)
+#fawley_ = pylon.Generator(None, name="Fawley ", p_max=968.00)
+#littlebrook_d_ = pylon.Generator(None, name="Littlebrook D ", p_max=1370.00)
+#didcot_b = pylon.Generator(None, name="Didcot B", p_max=1390.00)
+#great_yarmouth = pylon.Generator(None, name="Great Yarmouth", p_max=420.00)
+#little_barford = pylon.Generator(None, name="Little Barford", p_max=665.00)
+#foyers = pylon.Generator(None, name="Foyers", p_max=300.00)
+#glendoe = pylon.Generator(None, name="Glendoe", p_max=100.00)
+#sloy = pylon.Generator(None, name="Sloy", p_max=152.50)
+#hadyard_hill = pylon.Generator(None, name="Hadyard Hill", p_max=120.00)
+#peterhead = pylon.Generator(None, name="Peterhead", p_max=1540.00)
+#fife_power_station = pylon.Generator(None, name="Fife Power Station", p_max=123.00)
+#keadby = pylon.Generator(None, name="Keadby", p_max=749.00)
+#medway = pylon.Generator(None, name="Medway", p_max=688.00)
+#ferrybridge_c = pylon.Generator(None, name="Ferrybridge C", p_max=1960.00)
+#fiddlers_ferry = pylon.Generator(None, name="Fiddler's Ferry", p_max=1980.00)
+#cruachan = pylon.Generator(None, name="Cruachan", p_max=440.00)
+#cockenzie = pylon.Generator(None, name="Cockenzie", p_max=1152.00)
+#longannet = pylon.Generator(None, name="Longannet", p_max=2304.00)
+#damhead_creek = pylon.Generator(None, name="Damhead Creek", p_max=800.00)
+#rye_house = pylon.Generator(None, name="Rye House", p_max=715.00)
+#shoreham = pylon.Generator(None, name="Shoreham", p_max=400.00)
+#black_law = pylon.Generator(None, name="Black Law", p_max=124.00)
+#seabank_1 = pylon.Generator(None, name="Seabank 1", p_max=812.00)
+#seabank_2 = pylon.Generator(None, name="Seabank 2", p_max=410.00)
+#spalding = pylon.Generator(None, name="Spalding", p_max=860.00)
+#uskmouth = pylon.Generator(None, name="Uskmouth", p_max=363.00)
