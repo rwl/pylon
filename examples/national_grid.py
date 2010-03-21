@@ -500,65 +500,52 @@ gbus = {
     "Cottam Development Centre": (cottam, 400.0),
 #    "Enfield": (waltham_cross, 400.0),
     "Killingholme": (killingholme, 400.0),
-    "Shotton": ()
+    "Shotton": (deeside, 400.0),
+#    "Teesside Power Station": (grangetown, 275.0),
+    "Immingham CHP": (killingholme, 400.0),
+    "Indian Queens": (indian_queens, 400.0),
+    "Dinorwig": (dinorwig, 400.0),
+    "Ffestiniog": (pentir, 400.0),
+    "Rugeley": (rugeley, 400.0),
+    "Deeside": (deeside, 400.0),
+#    "Saltend": (saltend_north, 275.0),
+    "Oldbury": (walham, 400.0),
+    "Wylfa": (wylfa, 400.0),
+#    "Fellside CHP", (sellafield, 132.0),
+    "Sutton Bridge": (walpole, 400.0),
+#    "Ballylumford B": (ireland, 132.0),
+#    "Ballylumford C": (ireland, 132.0),
+    "Rocksavage": (frodsham, 400.0),
+#    "Aberthaw B": (abertham, 275.0),
+#    "Tilbury B": (tilbury, 275.0),
+    "Didcot A": (didcot, 400.0),
+    "Cowes": (fawley, 400.0),
+    "Didcot GT": (didcot, 400.0),
+    "Littlebrook GT": (littlebrook, 400.0),
+    "Fawley": (fawley, 400.0),
+    "Littlebrook D": (littlebrook, 400.0),
+    "Didcot B": (didcot, 400.0),
+    "Great Yarmouth": (norwich_main, 400.0),
+    "Little Barford": (eaton_socon, 400.0),
+#    "Foyers": (foyers, 275.0),
+#    "Glendoe": (glendoe, 132.0),
+#    "Sloy": (sloy, 132.0),
+#    "Hadyard Hill": (hadyard, 132.0),
+#    "Peterhead": (peterhead, 275.0),
+#    "Fife Power Station": (glenrothes, 275.0),
+    "Keadby": (keadby, 400.0),
+    "Medway": (grain_1, 400.0),
+#    "Ferrybridge C": (ferrybridge, 275.0),
+#    "Fiddler's Ferry": (filders_ferry, 275.0),
+#    "Cruachan": (cruachan, 275.0),
+    "Cockenzie": (cockenzie, 400.0),
+#    "Longannet": (longannet, 275.0),
+    "Damhead Creek": (kingsnorth, 400.0),
+    "Rye House": (rye_house, 400.0),
+#    "Shoreham": (bolney, 400.0),
+#    "Black Law": (black_law, 132.0),
+    "Seabank 1": (seabank, 400.0),
+    "Seabank 2": (seabank, 400.0),
+    "Spalding": (spalding_north, 400.0),
+    "Uskmouth": (imperial_park, 400.0)
 }
-
-#sutton_bridge = pylon.Generator(None, name="Sutton Bridge", p_max=803.00)
-#cottam = pylon.Generator(None, name="Cottam", p_max=2008.00)
-#west_burton = pylon.Generator(None, name="West Burton", p_max=2012.00)
-#kingsnorth = pylon.Generator(None, name="Kingsnorth", p_max=1940.00)
-#ironbridge = pylon.Generator(None, name="Ironbridge", p_max=970.00)
-#ratcliffe = pylon.Generator(None, name="Ratcliffe", p_max=2000.00)
-#grain_ = pylon.Generator(None, name="Grain ", p_max=1300.00)
-#taylors_lane_gt = pylon.Generator(None, name="Taylor's Lane GT", p_max=132.00)
-#connahs_quay = pylon.Generator(None, name="Connahs Quay", p_max=1380.00)
-#cottam_development_centre = pylon.Generator(None, name="Cottam Development Centre", p_max=400.00)
-#enfield = pylon.Generator(None, name="Enfield", p_max=392.00)
-#killingholme = pylon.Generator(None, name="Killingholme", p_max=900.00)
-#shotton = pylon.Generator(None, name="Shotton", p_max=180.00)
-#teesside_power_station = pylon.Generator(None, name="Teesside Power Station", p_max=1875.00)
-#immingham_chp = pylon.Generator(None, name="Immingham CHP", p_max=1240.00)
-#indian_queens = pylon.Generator(None, name="Indian Queens", p_max=140.00)
-#dinorwig = pylon.Generator(None, name="Dinorwig", p_max=1728.00)
-#ffestiniog = pylon.Generator(None, name="Ffestiniog", p_max=360.00)
-#rugeley_ = pylon.Generator(None, name="Rugeley ", p_max=1006.00)
-#deeside_ = pylon.Generator(None, name="Deeside ", p_max=500.00)
-#saltend_ = pylon.Generator(None, name="Saltend ", p_max=1200.00)
-#oldbury = pylon.Generator(None, name="Oldbury", p_max=434.00)
-#wylfa = pylon.Generator(None, name="Wylfa", p_max=980.00)
-#fellside_chp = pylon.Generator(None, name="Fellside CHP", p_max=180.00)
-#ballylumford_b = pylon.Generator(None, name="Ballylumford B", p_max=540.00)
-#ballylumford_c = pylon.Generator(None, name="Ballylumford C", p_max=616.00)
-#rocksavage = pylon.Generator(None, name="Rocksavage", p_max=748.00)
-#aberthaw_b = pylon.Generator(None, name="Aberthaw B", p_max=1586.00)
-#tilbury_b_ = pylon.Generator(None, name="Tilbury B ", p_max=1063.00)
-#didcot_a = pylon.Generator(None, name="Didcot A", p_max=1958.00)
-#cowes_ = pylon.Generator(None, name="Cowes ", p_max=140.00)
-#didcot_gt = pylon.Generator(None, name="Didcot GT", p_max=100.00)
-#littlebrook_gt = pylon.Generator(None, name="Littlebrook GT", p_max=105.00)
-#fawley_ = pylon.Generator(None, name="Fawley ", p_max=968.00)
-#littlebrook_d_ = pylon.Generator(None, name="Littlebrook D ", p_max=1370.00)
-#didcot_b = pylon.Generator(None, name="Didcot B", p_max=1390.00)
-#great_yarmouth = pylon.Generator(None, name="Great Yarmouth", p_max=420.00)
-#little_barford = pylon.Generator(None, name="Little Barford", p_max=665.00)
-#foyers = pylon.Generator(None, name="Foyers", p_max=300.00)
-#glendoe = pylon.Generator(None, name="Glendoe", p_max=100.00)
-#sloy = pylon.Generator(None, name="Sloy", p_max=152.50)
-#hadyard_hill = pylon.Generator(None, name="Hadyard Hill", p_max=120.00)
-#peterhead = pylon.Generator(None, name="Peterhead", p_max=1540.00)
-#fife_power_station = pylon.Generator(None, name="Fife Power Station", p_max=123.00)
-#keadby = pylon.Generator(None, name="Keadby", p_max=749.00)
-#medway = pylon.Generator(None, name="Medway", p_max=688.00)
-#ferrybridge_c = pylon.Generator(None, name="Ferrybridge C", p_max=1960.00)
-#fiddlers_ferry = pylon.Generator(None, name="Fiddler's Ferry", p_max=1980.00)
-#cruachan = pylon.Generator(None, name="Cruachan", p_max=440.00)
-#cockenzie = pylon.Generator(None, name="Cockenzie", p_max=1152.00)
-#longannet = pylon.Generator(None, name="Longannet", p_max=2304.00)
-#damhead_creek = pylon.Generator(None, name="Damhead Creek", p_max=800.00)
-#rye_house = pylon.Generator(None, name="Rye House", p_max=715.00)
-#shoreham = pylon.Generator(None, name="Shoreham", p_max=400.00)
-#black_law = pylon.Generator(None, name="Black Law", p_max=124.00)
-#seabank_1 = pylon.Generator(None, name="Seabank 1", p_max=812.00)
-#seabank_2 = pylon.Generator(None, name="Seabank 2", p_max=410.00)
-#spalding = pylon.Generator(None, name="Spalding", p_max=860.00)
-#uskmouth = pylon.Generator(None, name="Uskmouth", p_max=363.00)
