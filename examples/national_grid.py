@@ -43,9 +43,11 @@ eccles = pylon.Bus("ECCL Eccles", v_base=400.0, position=(-2.329860668011021,55.
 # SPT 275kV
 gretna = pylon.Bus("GRNA Gretna", v_base=275.0, position=(-3.067545,54.99248))
 elvanfoot275 = pylon.Bus("ELVA Elvanfoot", v_base=275.0, position=(-3.659598516077846,55.434032701650))
-linmill = pylon.Bus("LINM Linmill", v_base=275.0)
 strathaven275 = pylon.Bus("STHA Strathaven", v_base=275.0, position=(-4.081388297064154,55.7534299786771))
 kilmarnock_south275 = pylon.Bus("KILS Kilmarnock South", v_base=400.0, position=(-4.463855094935374,55.5758378468798))
+
+# SPT 132kV
+linmill = pylon.Bus("LINM Linmill", v_base=132.0)
 
 # NGET
 harker = pylon.Bus("Harker", v_base=400.0)
