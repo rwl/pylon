@@ -5,7 +5,6 @@ import csv
 import zipfile
 import xml.etree.ElementTree as ET
 import geolocator.gislib
-from bin.examples.national_grid import heysham, keadby
 
 file = zipfile.ZipFile("spt.kmz", "r")
 
@@ -27,25 +26,6 @@ root = tree.getroot()
 #    name = pl.findtext("./{http://www.opengis.net/kml/2.2}name")
 #    print '    "%s": (%s),' % (name, coord[:-3])
 
-reader = csv.reader(open('generators.csv'), delimiter=',', quotechar='"')
-for row in reader:
-#    print ", ".join(row)
-
-    p_max = float(row[3])
-    g = pylon.Generator(None, name=row[1], p=p_max, p_max=p_max)
-    g._company = row[0]
-    g._fuel = row[2]
-    g._year = int(row[4])
-    g._location = row[5]
-
-    if p_max >= 100.0:
-        lc_name = row[1].lower().replace(' ', '_').replace("'", "")
-        print '%s = pylon.Generator(None, name="%s", p_max=%.2f)' % (lc_name, row[1], p_max)
-#        print '%s._company = "%s"' % (lc_name, row[0])
-#        print '%s._fuel = "%s"' % (lc_name, row[2])
-#        print '%s._year = %d' % (lc_name, int(row[4]))
-#        print '%s._location = "%s"' %(lc_name, row[5])
-
 # SPT 400kV
 hunterston = pylon.Bus("HUER Hunterston", v_base=400.0, position=(-4.890804,55.7218))
 inverkip = pylon.Bus("INKI Inverkip", v_base=400.0, position=(-4.885826,55.89851))
@@ -54,12 +34,18 @@ kilmarnock_south = pylon.Bus("KILS Kilmarnock South", v_base=400.0, position=(-4
 strathaven = pylon.Bus("STHA Strathaven", v_base=400.0, position=(-4.081388297064154,55.7534299786771))
 coalburn = pylon.Bus("COAL Coalburn", v_base=400.0, position=(-3.888577,55.5893780000000))
 elvanfoot = pylon.Bus("ELVA Elvanfoot", v_base=400.0, position=(-3.659598516077846,55.434032701650))
-gretna = pylon.Bus("GRNA Gretna", v_base=400.0, position=(-3.067545,54.99248))
 straiton = pylon.Bus("SMEA (Straiton)", v_base=400.0, position=(-3.165556231263057,55.8912564096860))
 crystal_rig = pylon.Bus("CRYR Crystal Rig", v_base=400.0, position=(-2.733333,55.83333))
 torness = pylon.Bus("TORN Torness", v_base=400.0, position=(-2.407694,55.96777))
 cockenzie = pylon.Bus("COCK Cockenzie", v_base=400.0, position=(-2.971458,55.96755))
 eccles = pylon.Bus("ECCL Eccles", v_base=400.0, position=(-2.329860668011021,55.6694176929855))
+
+# SPT 275kV
+gretna = pylon.Bus("GRNA Gretna", v_base=275.0, position=(-3.067545,54.99248))
+elvanfoot275 = pylon.Bus("ELVA Elvanfoot", v_base=275.0, position=(-3.659598516077846,55.434032701650))
+linmill = pylon.Bus("LINM Linmill", v_base=275.0)
+strathaven275 = pylon.Bus("STHA Strathaven", v_base=275.0, position=(-4.081388297064154,55.7534299786771))
+kilmarnock_south275 = pylon.Bus("KILS Kilmarnock South", v_base=400.0, position=(-4.463855094935374,55.5758378468798))
 
 # NGET
 harker = pylon.Bus("Harker", v_base=400.0)
@@ -549,3 +535,22 @@ gbus = {
     "Spalding": (spalding_north, 400.0),
     "Uskmouth": (imperial_park, 400.0)
 }
+
+reader = csv.reader(open('generators.csv'), delimiter=',', quotechar='"')
+for row in reader:
+#    print ", ".join(row)
+
+    p_max = float(row[3])
+    g = pylon.Generator(None, name=row[1], p=p_max, p_max=p_max)
+    g._company = row[0]
+    g._fuel = row[2]
+    g._year = int(row[4])
+    g._location = row[5]
+
+#    if p_max >= 100.0:
+#        lc_name = row[1].lower().replace(' ', '_').replace("'", "")
+#        print '%s = pylon.Generator(None, name="%s", p_max=%.2f)' % (lc_name, row[1], p_max)
+#        print '%s._company = "%s"' % (lc_name, row[0])
+#        print '%s._fuel = "%s"' % (lc_name, row[2])
+#        print '%s._year = %d' % (lc_name, int(row[4]))
+#        print '%s._location = "%s"' %(lc_name, row[5])
