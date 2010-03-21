@@ -3,6 +3,7 @@ import pylon
 import kmldom
 import zipfile
 import xml.etree.ElementTree as ET
+import geolocator.gislib
 
 file = zipfile.ZipFile("spt.kmz", "r")
 
@@ -14,30 +15,30 @@ file = zipfile.ZipFile("spt.kmz", "r")
 #kml = kmldom.AsKml(element)
 #doc = kmldom.AsDocument(kml.get_feature())
 
+#tree = ET.parse(file.open("doc.kml"))
 tree = ET.parse("doc.kml")
 root = tree.getroot()
-for node in root:
-    print "foo:", node
 
-for pl in root.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-    print pl
-
-tree.write("/tmp/et.xml")
+#for pl in root.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+#    point = pl.find("./{http://www.opengis.net/kml/2.2}Point")
+#    coord = point.findtext(".//{http://www.opengis.net/kml/2.2}coordinates")
+#    name = pl.findtext("./{http://www.opengis.net/kml/2.2}name")
+#    print "%s v_base=400.0, position=(%s), v_base=400.0)" % (name, coord[:-3])
 
 # SPT 400kV
-hunterston = pylon.Bus("HUER Hunterston", v_base=400.0)
-inverkip = pylon.Bus("INKI Inverkip", v_base=400.0)
-devol_moor = pylon.Bus("DEVM Devol Moor", v_base=400.0)
-kilmarnock_south = pylon.Bus("KILS Kilmarnock South", v_base=400.0)
-strathaven = pylon.Bus("STHA Strathaven", v_base=400.0)
-coalburn = pylon.Bus("COAL Coalburn", v_base=400.0)
-elvanfoot = pylon.Bus("ELVA Elvanfoot", v_base=400.0)
-gretna = pylon.Bus("GRNA Gretna", v_base=400.0)
-straiton = pylon.Bus("SMEA (Straiton)", v_base=400.0)
-crystal_rig = pylon.Bus("CRYR Crystal Rig", v_base=400.0)
-torness = pylon.Bus("TORN Torness", v_base=400.0)
-cockenzie = pylon.Bus("COCK Cockenzie", v_base=400.0)
-eccles = pylon.Bus("ECCL Eccles", v_base=400.0)
+hunterston = pylon.Bus("HUER Hunterston", v_base=400.0, position=(-4.890804,55.7218))
+inverkip = pylon.Bus("INKI Inverkip", v_base=400.0, position=(-4.885826,55.89851))
+devol_moor = pylon.Bus("DEVM Devol Moor", v_base=400.0, position=(-4.708608,55.91584))
+kilmarnock_south = pylon.Bus("KILS Kilmarnock South", v_base=400.0, position=(-4.463855094935374,55.5758378468798))
+strathaven = pylon.Bus("STHA Strathaven", v_base=400.0, position=(-4.081388297064154,55.7534299786771))
+coalburn = pylon.Bus("COAL Coalburn", v_base=400.0, position=(-3.888577,55.5893780000000))
+elvanfoot = pylon.Bus("ELVA Elvanfoot", v_base=400.0, position=(-3.659598516077846,55.434032701650))
+gretna = pylon.Bus("GRNA Gretna", v_base=400.0, position=(-3.067545,54.99248))
+straiton = pylon.Bus("SMEA (Straiton)", v_base=400.0, position=(-3.165556231263057,55.8912564096860))
+crystal_rig = pylon.Bus("CRYR Crystal Rig", v_base=400.0, position=(-2.733333,55.83333))
+torness = pylon.Bus("TORN Torness", v_base=400.0, position=(-2.407694,55.96777))
+cockenzie = pylon.Bus("COCK Cockenzie", v_base=400.0, position=(-2.971458,55.96755))
+eccles = pylon.Bus("ECCL Eccles", v_base=400.0, position=(-2.329860668011021,55.6694176929855))
 
 # NGET
 harker = pylon.Bus("Harker", v_base=400.0)
@@ -316,3 +317,8 @@ ngt_400 = [
     pylon.Branch(norton, lackenby, 1),
     pylon.Branch(stella_west, eccles, 2)
 ]
+
+for branch in spt_400:
+    km = geolocator.gislib.getDistance(branch.from_bus.position,
+                                       branch.to_bus.position)
+    branch._length = km
