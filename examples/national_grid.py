@@ -19,11 +19,11 @@ file = zipfile.ZipFile("spt.kmz", "r")
 tree = ET.parse("doc.kml")
 root = tree.getroot()
 
-#for pl in root.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-#    point = pl.find("./{http://www.opengis.net/kml/2.2}Point")
-#    coord = point.findtext(".//{http://www.opengis.net/kml/2.2}coordinates")
-#    name = pl.findtext("./{http://www.opengis.net/kml/2.2}name")
-#    print "%s v_base=400.0, position=(%s), v_base=400.0)" % (name, coord[:-3])
+for pl in root.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+    point = pl.find("./{http://www.opengis.net/kml/2.2}Point")
+    coord = point.findtext(".//{http://www.opengis.net/kml/2.2}coordinates")
+    name = pl.findtext("./{http://www.opengis.net/kml/2.2}name")
+    print '    "%s": (%s),' % (name, coord[:-3])
 
 # SPT 400kV
 hunterston = pylon.Bus("HUER Hunterston", v_base=400.0, position=(-4.890804,55.7218))
@@ -55,7 +55,7 @@ deeside = pylon.Bus("Deeside", v_base=400.0)
 frodsham = pylon.Bus("Frodsham", v_base=400.0)
 dinorwig = pylon.Bus("Dinorwig", v_base=400.0)
 pentir = pylon.Bus("Pentir", v_base=400.0)
-wylfa = pylon.Bus("Wlyfa", v_base=400.0)
+wylfa = pylon.Bus("Wylfa", v_base=400.0)
 trawsfynydd = pylon.Bus("Trawsfynydd", v_base=400.0)
 legacy = pylon.Bus("Legacy", v_base=400.0)
 cellarhead = pylon.Bus("Cellarhead", v_base=400.0)
@@ -75,7 +75,7 @@ seabank = pylon.Bus("Seabank", v_base=400.0)
 melksham = pylon.Bus("Melksham", v_base=400.0)
 minety = pylon.Bus("Minety", v_base=400.0)
 cowley = pylon.Bus("Cowley", v_base=400.0)
-didcot = pylon.Bus("didcot", v_base=400.0)
+didcot = pylon.Bus("Didcot", v_base=400.0)
 bramley = pylon.Bus("Bramley", v_base=400.0)
 fleet = pylon.Bus("Fleet", v_base=400.0)
 lovedean = pylon.Bus("Lovedean", v_base=400.0)
@@ -95,7 +95,7 @@ indian_queens = pylon.Bus("Indian Queens", v_base=400.0)
 taunton = pylon.Bus("Taunton", v_base=400.0)
 hinkley_point = pylon.Bus("Hinkley Point", v_base=400.0)
 bolney = pylon.Bus("Bolney", v_base=400.0)
-ninfield = pylon.Bus("ninfield", v_base=400.0)
+ninfield = pylon.Bus("Ninfield", v_base=400.0)
 dugeness = pylon.Bus("Dugeness", v_base=400.0)
 sellindge = pylon.Bus("Sellindge", v_base=400.0)
 canterbury_north = pylon.Bus("Canterbury North", v_base=400.0)
@@ -110,7 +110,7 @@ northfleet_east = pylon.Bus("Northfleet East", v_base=400.0)
 barking = pylon.Bus("Barking", v_base=400.0)
 west_ham = pylon.Bus("Westham", v_base=400.0)
 city_road = pylon.Bus("City Road", v_base=400.0)
-unknown = pylon.Bus(v_base=400.0)
+unknown = pylon.Bus("Unknown", v_base=400.0)
 coryton = pylon.Bus("Coryton", v_base=400.0)
 rayleigh_main = pylon.Bus("Rayleigh Main", v_base=400.0)
 bramford = pylon.Bus("Bramford", v_base=400.0)
@@ -127,7 +127,7 @@ ratcliffe_on_soar = pylon.Bus("Ratcliffe on Soar", v_base=400.0)
 grendon = pylon.Bus("Grendon", v_base=400.0)
 staythorpe = pylon.Bus("Staythorpe", v_base=400.0)
 cottam = pylon.Bus("Cottam", v_base=400.0)
-high_marnham = pylon.Bus("", v_base=400.0)
+high_marnham = pylon.Bus("High Marnham", v_base=400.0)
 eaton_socon = pylon.Bus("Eaton Socon", v_base=400.0)
 burwell_main = pylon.Bus("Burwell Main", v_base=400.0)
 walpole = pylon.Bus("Walpole", v_base=400.0)
@@ -139,7 +139,7 @@ south_humber_bank = pylon.Bus("South Humber Bank", v_base=400.0)
 killingholme = pylon.Bus("Killingholme", v_base=400.0)
 humber_refinery = pylon.Bus("Humber Refinery", v_base=400.0)
 creyke_beck = pylon.Bus("Creyke Beck", v_base=400.0)
-thornton = pylon.Bus("Thorton", v_base=400.0)
+thornton = pylon.Bus("Thornton", v_base=400.0)
 drax = pylon.Bus("Drax", v_base=400.0)
 eggsborough = pylon.Bus("Eggsborough", v_base=400.0)
 thorpe_marsh = pylon.Bus("Thorpe Marsh", v_base=400.0)
@@ -164,7 +164,7 @@ spt_400 =[
 ]
 
 ngt_400 = [
-    pylon.Branch(gretna, harker, 1),
+#    pylon.Branch(gretna, harker, 1),
     pylon.Branch(harker, hutton_1, 1),
     pylon.Branch(harker, hutton_2, 1),
     pylon.Branch(hutton_1, heysham, 1),
@@ -315,10 +315,128 @@ ngt_400 = [
     pylon.Branch(osbaldwick, norton, 2),
     pylon.Branch(thornton, lackenby, 2),
     pylon.Branch(norton, lackenby, 1),
-    pylon.Branch(stella_west, eccles, 2)
+#    pylon.Branch(stella_west, eccles, 2)
 ]
 
-for branch in spt_400:
-    km = geolocator.gislib.getDistance(branch.from_bus.position,
-                                       branch.to_bus.position)
-    branch._length = km
+ngt400_positions = {
+    "Heysham": (-2.889817603523912,54.0325236986067),
+    "Harker": (-2.964096026479853,54.941846049675),
+    "Stella West": (-1.742668520653984,54.978276476945),
+    "Hutton 1": (-2.878398,54.63229),
+    "Hutton 2": (-2.878398,54.63229),
+    "Penwortham": (-2.756124320870268,53.7431662182153),
+    "Padham": (-2.32743339134566,53.7946834966753),
+    "Kearsley": (-2.357770946840267,53.5377766590708),
+    "Daines": (-2.379557204711549,53.4260405728584),
+    "Macclesfield": (-2.12819,53.26084),
+    "Deeside": (-3.077540243994436,53.2305482761804),
+    "Frodsham": (-2.71658663783474,53.3093371100614),
+    "Dinorwig": (-4.114295,53.13252),
+    "Pentir": (-4.158379606801104,53.1873950383748),
+    "Wylfa": (-4.482851,53.41551),
+    "Trawsfynydd": (-3.920197,52.9041759999999),
+    "Legacy": (-3.053872186273413,53.0286738665159),
+    "Cellarhead": (-2.082495385368309,53.0406605212692),
+    "Drakelow": (-1.652883295804878,52.7735809534174),
+    "Willington East": (-1.54682558029362,52.8550177962872),
+    "Ironbridge": (-2.512461354749406,52.63042022629),
+    "Rugeley": (-1.915175206703827,52.7565966969897),
+    "Hams Hall": (-1.705175,52.52460),
+    "Feckenham": (-1.972769170536403,52.250893686137),
+    "Walham": (-2.254009436290156,51.8787882330553),
+    "Rassau": (-3.226400903855693,51.8097757307408),
+    "Pembroke": (-4.990532875435625,51.6818581510822),
+    "Swansea North": (-3.946629,51.62044),
+    "Cilfynydd": (-3.300734811688061,51.63565875699),
+    "Imperial Park": (-3.03103738672417,51.5477246010170),
+    "Seabank": (-2.670597,51.53923),
+    "Melksham": (-2.150838076072542,51.3935690570800),
+    "Minety": (-2.001723670712312,51.607467880478),
+    "Cowley": (-2.05375,51.83071),
+    "Didcot": (-1.260540031340124,51.6228122042465),
+    "Bramley": (-1.077823390677238,51.3359022827527),
+    "Fleet": (-0.8424104618638506,51.2760494702930),
+    "Lovedean": (-1.039536,50.91746),
+    "Botley Wood": (-1.232179486820255,50.8844629252112),
+    "Fawley": (-1.328109620825974,50.8179476146304),
+    "Marchwood": (-1.453906825286801,50.8894825276846),
+    "Nursling": (-1.466244682528629,50.9449060784875),
+    "Mannington": (-1.895043818044795,50.8467433695566),
+    "Chickerell 1": (-2.486609385822157,50.6245668505529),
+    "Chickerell 2": (-2.486609385822157,50.6245668505529),
+    "Axminster": (-3.000022577344986,50.7815653966007),
+    "Exeter": (-3.533617,50.721),
+    "Langage": (-4.01056,50.3885669999999),
+    "Indian Queens": (-4.931884,50.3924820000000),
+    "Landulph 1": (-4.239615,50.4385),
+    "Landulph 2": (-4.239615,50.4385),
+    "Taunton": (-3.103446,51.01465),
+    "Hinkley Point": (-3.132477,51.20817),
+    "Bolney": (-0.202842,50.99530),
+    "Dugeness": (0.9628562932696613,50.913030697050),
+    "Ninfield": (0.4480812218590008,50.8813635730430),
+    "Sellindge": (0.975537741715635,51.1064631014820),
+    "Canterbury North": (1.080517,51.27726),
+    "Kemsley": (0.7414941631712446,51.3681916704523),
+    "Rowdown": (-0.003386563770761878,51.3518003628730),
+    "Beddington": (-0.1283540801114123,51.3733056462245),
+    "Littlebrook": (0.263184,51.33664),
+    "Grain 1": (0.715028,51.4451809999999),
+    "Grain 2": (0.715028,51.4451809999999),
+    "Kingsnorth": (0.602274,51.4180510000000),
+    "Northfleet East": (0.3119321650873028,51.4322322177975),
+    "Barking": (0.08147799999999999,51.5362789999999),
+    "Westham": (0.008677708408581874,51.5348504682561),
+    "City Road": (-0.094483,51.52895),
+    "Coryton": (0.5020520000000001,51.5131889999999),
+    "Rayleigh Main": (0.605291,51.58599),
+    "Bramford": (1.062241581797233,52.0713632981939),
+    "Sizewell": (1.619797,52.21394),
+    "Norwich Main": (1.299331958266214,52.6280405377592),
+    "Pelham": (0.1182422422810963,51.9348864665105),
+    "Rye House": (0.009131,51.762),
+    "Wymondley Main": (-0.2502147770611752,51.9272221773639),
+    "Sundon 1": (-0.5029223827557178,51.9362228169973),
+    "Sundon 2": (-0.5029223827557178,51.9362228169973),
+    "East Claydon": (-0.9072092603580684,51.9264101973322),
+    "Enderby": (-1.215557231312531,52.5978401151180),
+    "Ratcliffe on Soar": (-1.06799,52.72516),
+    "Grendon": (-1.592186,52.59089),
+    "Staythorpe": (-0.8688527981499279,53.0769776244108),
+    "Cottam": (-0.7814806033729527,53.3036457390875),
+    "High Marnham": (-0.7926447342129663,53.2292778505215),
+    "Eaton Socon": (-0.3024698538888043,52.2148676366807),
+    "Burwell Main": (0.3134943085383525,52.2806737919393),
+    "Walpole": (0.1983293309076296,52.7266414133630),
+    "Spalding North": (-0.13214,52.8076),
+    "West Burton": (-1.88019,54.262),
+    "Keadby": (-0.7568794563348045,53.5979583972366),
+    "Grimsby West": (-0.07549271835070896,53.5649618767681),
+    "South Humber Bank": (-0.1446758205689241,53.6013154086385),
+    "Killingholme": (-0.255287,53.65656),
+    "Humber Refinery": (-0.257908,53.64031),
+    "Creyke Beck": (-0.4154484881061148,53.8005040149857),
+    "Thornton": (-0.8479640000000001,53.8987390000000),
+    "Drax": (-0.9968258156419276,53.7366118702590),
+    "Eggsborough": (-1.127134887878601,53.7120631007537),
+    "Thorpe Marsh": (-1.087041587989168,53.578547484096),
+    "Brinsworth": (-1.351971793113087,53.4013477809212),
+    "Stocksbridge": (-1.585843,53.48021),
+    "Monk Fryston": (-1.266460874903959,53.7561415622095),
+    "Osbaldwick": (-1.023464695761978,53.9566381755846),
+    "Norton": (-1.364392917288791,54.5925123172160),
+    "Lackenby": (-1.131592177533348,54.5667677394419),
+
+    "Unknown": (0.0,0.0)
+}
+
+for l in spt_400:
+    km = geolocator.gislib.getDistance(l.from_bus.position, l.to_bus.position)
+    l._length = km
+
+for l in ngt_400:
+    from_pos = ngt400_positions[l.from_bus.name]
+    to_pos = ngt400_positions[l.to_bus.name]
+    km = geolocator.gislib.getDistance(from_pos, to_pos)
+    print "km", km
+    l._length = km
