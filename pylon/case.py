@@ -59,7 +59,8 @@ class Bus(Named):
 
     def __init__(self, name=None, type=PQ, v_base=100.0,
             v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
-            p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0):
+            p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0,
+            position=None):
         """ Initialises a new Bus instance.
         """
         # Unique name.
@@ -104,6 +105,9 @@ class Bus(Named):
         # Lagrangian multiplier for voltage constraint.
         self.mu_vmin = 0.0
         self.mu_vmax = 0.0
+
+        # Tuple of bus coordinates.
+        self.position = (0.0, 0.0) if position is None else position
 
         # Bus index, managed at a case level.
         self._i = 0
