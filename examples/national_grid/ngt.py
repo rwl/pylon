@@ -164,11 +164,8 @@ def get_transformers(path, bus_map1, bus_map2, voltages=(400,275)):
     _ = branch_reader.next() # skip first row
     branches = []
     for row in branch_reader:
-    #    print ", ".join(row)
 
         s = [str(voltage)[0] for voltage in voltages]
-
-#        print s, row[0][4], row[1][4]
 
         if row[0][4] not in s or row[1][4] not in s:
 #            print "Skipping: " + ", ".join(row)
@@ -232,10 +229,6 @@ def get_generators(path, bus_map, voltage=400, licensee="SPT"):
     _ = generator_reader.next() # skip first row
     generators = []
     for row in generator_reader:
-#        print ", ".join(row)
-##        print row[9][4], str(voltage)[0]
-#        print row[11], licensee
-#        print len(row[9])
 
         if not len(row[9]) >= 4:
 #            print "No Bus: " + ", ".join(row)
