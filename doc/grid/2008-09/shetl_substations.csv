@@ -1,0 +1,249 @@
+"Site Name","Site Code","Voltage (kV)","Demand Tariff Zone","Generation Tariff Zone","LV Shunt Susceptance"
+"Akron Wind",AKRW,33,1,1,0
+"Ark Hill Wind",ARHW,33,1,4,0
+"Ark Hill Wind",ARHW,132,1,4,0
+"Ballindalloch Muir Wind",BAMW,33,1,5,0
+"Beinn an Tuirc",BTUI,33,1,5,0
+"Beinn an Tuirc 2",BTU2,33,1,5,0
+"Beinn Tharsuinn",BETH,33,1,1,0
+"Ben Aketil",BENA,33,1,3,0
+Boyndie,BOYN,33,1,1,0
+"Braes of Doune Wind",BRDU,33,1,4,0
+"Calliachar Wind",CALI,275,1,4,0
+"Camster Windfarm",CAMW,33,1,1,0
+Cashlie,CASH,33,1,4,0
+Causeymire,CAUS,33,1,1,0
+"Deucherin Hill",DEUC,33,1,5,0
+Inverawe,INAW,33,1,5,0
+"Loch Nant",NANT,132,1,5,0
+Novar,NOVA,33,1,5,0
+Shira,SHRA,33,1,5,0
+"Stoneywood Mills",STOM,33,1,1,0
+Tangy,TANG,33,1,5,0
+"Western Isles HVDC",WEST,400,1,3,0
+Abernethy,ABNE,33,1,4,0
+Abernethy,ABNE,132,1,4,0
+Aigas,AIGA,132,1,1,0
+Alness,ALNE,33,1,1,0
+Alness,ALNE,132,1,1,0
+Arbroath,ARBR,33,1,4,0
+Arbroath,ARBR,132,1,4,0
+Ardkinglas,ARDK,33,1,5,0
+Ardkinglas,ARDK,132,1,5,0
+Ardmore,ARMO,33,1,3,0
+Ardmore,ARMO,132,1,3,0
+Ardross,ARDR,275,2,7,0
+"Aultmore Wind",AULW,33,1,1,0
+"Aultmore Wind",AULW,132,1,1,0
+Beauly,BEAU,33,1,1,0
+Beauly,BEAU,132,1,1,0
+Beauly,BEAU,275,1,1,0
+Beauly,BEAU,400,1,1,0
+Birkhill,BIHI,132,1,4,0
+Blackhillock,BLHI,275,1,1,0
+Blackhillock,BLHI,275,1,1,0
+"Boat of Garten",BOAG,33,1,1,0
+"Boat of Garten",BOAG,132,1,1,0
+"Bonnybridge Boundary",BONB,275,1,5,0
+"Bonnybridge Boundary",BONB,400,1,5,0
+Braco,BRAC,33,1,6,0
+Braco,BRAC,275,1,6,0
+Brechin,BREC,132,1,4,0
+"Bridge of Dun",BRID,33,1,4,0
+"Bridge of Dun",BRID,33,1,4,0
+"Bridge of Dun",BRID,132,1,4,0
+Broadford,BROA,33,1,3,0
+Broadford,BROA,132,1,3,0
+Brora,BROR,33,1,1,0
+Brora,BROR,132,1,1,0
+Burghmuir,BUMU,33,1,4,0
+Burghmuir,BUMU,132,1,4,0
+"Carn Kitty",CAKW,33,1,1,0
+"Carn Kitty",CAKW,275,1,1,0
+"Carolina Port",CARP,132,1,4,0
+Carradale,CAAD,33,1,5,0
+Carradale,CAAD,132,1,5,0
+Cashley,CASS,33,1,4,0
+Cashley,CASS,132,1,4,0
+Ceannacroc,CEAN,33,1,3,0
+Ceannacroc,CEAN,132,1,3,0
+Charleston,CHAR,33,1,4,0
+Charleston,CHAR,132,1,4,0
+Clachan,CLAC,33,1,5,0
+Clachan,CLAC,132,1,5,0
+"Clashindarroch Wind",CLAS,33,1,1,0
+"Clashindarroch Wind",CLAS,275,1,1,0
+Clayhills,CLAY,33,1,1,0
+Clayhills,CLAY,132,1,1,0
+Clunie,CLUN,132,1,4,0
+"Coupar Angus",COUA,33,1,4,0
+"Coupar Angus",COUA,33,1,4,0
+"Coupar Angus",COUA,132,1,4,0
+"Coupar Angus",COUA,275,1,4,0
+Craigiebuckler,CRAI,33,1,1,0
+Craigiebuckler,CRAI,132,1,1,0
+Culligran,CULL,132,1,1,0
+Dallas,DAAS,33,1,1,0
+Dallas,DAAS,275,1,1,0
+Deanie,DEAN,132,1,1,0
+Denside,DENS,132,1,4,0
+Dounreay,DOUN,33,1,1,0
+Dounreay,DOUN,132,1,1,0
+Dounreay,DOUN,275,1,1,0
+Dudhope,DUDH,33,1,4,0
+Dudhope,DUDH,132,1,4,0
+Dunbeath,DUBE,33,1,1,0
+Dunbeath,DUBE,132,1,1,0
+Dunoon,DUNO,33,1,5,0
+Dunoon,DUNO,132,1,5,0
+Dunvegan,DUGR,33,1,3,0
+Dunvegan,DUGR,132,1,3,0
+Dyce,DYCE,33,1,1,0
+Dyce,DYCE,132,1,1,0
+Edinbane,EDIN,33,1,3,0
+Edinbane,EDIN,132,1,3,0
+Elgin,ELGI,33,1,1,0
+Elgin,ELGI,132,1,1,0
+Eredine,ERED,33,1,5,0
+Eredine,ERED,132,1,5,0
+Errochty,ERRO,132,1,4,0
+Errochty,ERRO,132,1,4,0
+Errochty,ERRO,275,1,4,0
+Errochty,ERRO,400,1,4,0
+Fairwind,FAIW,33,9,17,0
+"Farr Windfarm",FAAR,33,1,1,0
+"Farr Windfarm",FAAR,132,1,1,0
+Fasnakyle,FASN,33,1,3,0
+Fasnakyle,FASN,275,1,3,0
+Fiddes,FIDD,33,1,4,0
+Fiddes,FIDD,132,1,4,0
+Finlarig,FINL,132,1,4,0
+Foggieton,FOGG,132,1,1,0
+"Fort Augustus",FAUG,33,1,3,0
+"Fort Augustus",FAUG,132,1,3,0
+"Fort Augustus",FAUG,275,1,3,0
+"Fort Augustus",FAUG,400,1,3,0
+"Fort William",FWIL,33,1,3,0
+"Fort William",FWIL,132,1,3,0
+Foyers,FOYE,33,1,1,0
+Foyers,FOYE,275,1,1,0
+Fraserburgh,FRAS,33,1,2,0
+Fraserburgh,FRAS,132,1,2,0
+"Gareloch Boundary",GARB,132,1,5,0
+"Glen Agnes",GLAG,132,1,4,0
+"Glen Doe Substation",GLDO,132,1,3,0
+Glenfarclas,GLFA,33,1,1,0
+Glenfarclas,GLFA,132,1,1,0
+Glenmoriston,GLEN,132,1,3,0
+"Glenrothes Boundary",GLRB,275,1,6,0
+"Gordonbush Wind",GORW,33,1,1,0
+"Gordonbush Wind",GORW,275,1,1,0
+"Griffin Wind (Aberfeldy)",GRIF,33,1,4,0
+"Griffin Wind (Aberfeldy)",GRIF,132,1,4,0
+"Grudie Bridge",GRUB,33,1,1,0
+"Grudie Bridge",GRUB,132,1,1,0
+Inveraray,INVE,132,1,5,0
+Invergarry,INGA,132,1,3,0
+Inverness,INNE,33,1,1,0
+Inverness,INNE,132,1,1,0
+Inverugie,INRU,132,1,2,0
+Keith,KEIT,33,1,1,0
+Keith,KEIT,33,1,1,0
+Keith,KEIT,132,1,1,0
+Keith,KEIT,275,1,1,0
+Kilchrenan,KILC,132,1,5,0
+Killin,KIIN,33,1,4,0
+Killin,KIIN,132,1,4,0
+Kilmorack,KIOR,132,1,1,0
+"Kincardine Boundary",KINB,275,1,6,0
+Kinlochleven,KILO,33,1,3,0
+Kinlochleven,KILO,132,1,3,0
+Kintore,KINT,33,1,1,0
+Kintore,KINT,132,1,1,0
+Kintore,KINT,275,1,1,0
+Laggan,LAGG,132,1,3,0
+Lairg,LAIR,33,1,1,0
+Lairg,LAIR,132,1,1,0
+"Loch Lundie",LOCL,132,1,3,0
+Lochay,LOCH,33,1,4,0
+Lochay,LOCH,132,1,4,0
+Luichart,LUIC,132,1,1,0
+Lumbs,LUMB,132,1,2,0
+Lunanhead,LUNA,33,1,4,0
+Lunanhead,LUNA,132,1,4,0
+Lyndhurst,LYND,33,1,4,0
+Lyndhurst,LYND,132,1,4,0
+Macduff,MACD,33,1,1,0
+Macduff,MACD,132,1,1,0
+"Mid Hill Wind Stonehaven",MIHW,33,1,1,0
+"Mid Hill Wind Stonehaven",MIHW,275,1,1,0
+"Millenium Wind (Ceanacroc)",MILW,33,1,3,0
+"Millenium Wind (Ceanacroc)",MILW,132,1,3,0
+"Milton of Craigie",MILC,33,1,4,0
+"Milton of Craigie",MILC,132,1,4,0
+Mossford,MOSS,132,1,1,0
+Moultavie,MOTA,132,1,1,0
+Mybster,MYBS,33,1,1,0
+Mybster,MYBS,132,1,1,0
+Nairn,NAIR,33,1,1,0
+Nairn,NAIR,132,1,1,0
+Orrin,ORRI,33,1,1,0
+Orrin,ORRI,132,1,1,0
+Persley,PERS,33,1,1,0
+Persley,PERS,132,1,1,0
+Persley,PERS,275,1,1,0
+Peterhead,PEHE,132,1,2,0
+Peterhead,PEHE,275,1,2,0
+"Peterhead Grange",PEHG,33,1,2,0
+"Peterhead Grange",PEHG,132,1,2,0
+"Port Ann",PORA,33,1,5,0
+"Port Ann",PORA,132,1,5,0
+Quoich,QUOI,132,1,3,0
+Rannoch,RANN,33,1,4,0
+Rannoch,RANN,132,1,4,0
+Redmoss,REDM,33,1,1,0
+Redmoss,REDM,132,1,1,0
+Shin,SHIN,132,1,1,0
+Sloy,SLOY,132,1,5,0
+Sloy,SLOY,132,1,5,0
+"St Fergus",SFER,132,1,2,0
+"St Fergus Gas Terminal",SFEG,132,1,2,0
+"St Fergus Mobil",SFEM,132,1,2,0
+"St Fillians",SFIL,33,1,4,0
+"St Fillians",SFIL,132,1,4,0
+"Strathbrora Wind (Brora)",STRB,33,1,1,0
+"Strathbrora Wind (Brora)",STRB,275,1,1,0
+"Strathy Wind",STRW,33,1,1,0
+"Strathy Wind",STRW,132,1,1,0
+"Strathy Wind",STRW,275,1,1,0
+Strichen,STRI,33,1,2,0
+Strichen,STRI,132,1,2,0
+Tarland,TARL,33,1,1,0
+Tarland,TARL,132,1,1,0
+Taynuilt,TAYN,33,1,5,0
+Taynuilt,TAYN,132,1,5,0
+Tealing,TEAL,132,1,4,0
+Tealing,TEAL,275,1,4,0
+Thurso,THSO,33,1,1,0
+Thurso,THSO,132,1,1,0
+"Tummel Bridge",TUMB,33,1,4,0
+"Tummel Bridge",TUMB,132,1,4,0
+"Westfield Boundary",WFIB,275,1,6,0
+"Whistlefield Boundary",WHTB,132,1,5,0
+Willowdale,WIOW,33,1,1,0
+Willowdale,WIOW,132,1,1,0
+Woodhill,WOHI,33,1,1,0
+Woodhill,WOHI,132,1,1,0
+"Cairn Uish Rothes",CAIR,33,1,1,0
+"Cruach Mhor Glendaruel",CRMH,33,1,5,0
+Errochty,ERQB,132,1,4,0
+"Fairburn Wind",FAWI,33,1,1,0
+"Fernock Wind",FERN,132,1,5,0
+"Glens of Foundland",GLOF,33,1,1,0
+Inveranan,INVR,132,1,4,0
+"Kingsburn Wind farm Fintry Stirling",KIBU,33,1,5,0
+Kirkwall,KIWA,132,1,1,0
+Lubreoch,LUBR,33,1,4,0
+"Paul's Hill Aberlour",PAUH,33,1,1,0
+"Shetland HVDC",SHET,275,1,1,0
+"Stacain Wind Farm Sron Mor Inveraray",STAC,33,1,5,1
