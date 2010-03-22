@@ -1,0 +1,334 @@
+"Site Name","Site Code","Voltage (kV)","Demand Tariff Zone","Generation Tariff Zone","LV Shunt Susceptance"
+Auchencorth,AUCO,33,2,7,0
+Auchencorth,AUCO,132,2,7,0
+Barmoor,BARM,33,2,7,0
+Dersalloch,DERS,33,2,7,0
+Dersalloch,DERS,132,2,7,0
+"Drone Hill",DRHI,33,2,7,0
+Earlsburn,EARB,33,2,6,0
+"Gretna Green",GRNA,132,2,7,0
+"Gretna Green",GRNA,400,2,7,0
+Harburn,HARB,132,2,7,0
+Harburn,HARB,275,2,7,0
+"Harrows Law",HLAW,33,2,7,0
+"Harrows Law",HLAW,132,2,7,0
+"Junction B",JUNV,132,2,7,0
+"Aikengall Wind Farm",AIKE,33,2,7,0
+Andershaw,ANDE,33,2,7,0
+Andershaw,ANDE,132,2,7,0
+Arecleoch,AREC,33,2,7,0
+Arecleoch,AREC,132,2,7,0
+Auchencrosh,AUCH,275,2,8,0
+Auchenwynd,AUCW,132,2,7,0
+Ayr,AYRR,33,2,7,0
+Ayr,AYRR,275,2,7,0
+Ayr,AYRR,275,2,7,0
+Bainsford,BAIN,33,2,6,0
+Bainsford,BAIN,132,2,6,0
+Bathgate,BAGA,33,2,6,0
+Bathgate,BAGA,132,2,6,0
+Bathgate,BAGA,132,2,6,0
+Berwick,BERW,33,2,7,0
+Berwick,BERW,132,2,7,0
+Berwick,BERW,132,2,7,0
+"Black Law",BLLA,33,2,7,0
+"Black Law",BLLA,33,2,7,0
+"Black Law",BLLA,132,2,7,0
+Bonnybridge,BONN,33,2,6,0
+Bonnybridge,BONN,132,2,6,0
+Bonnybridge,BONN,275,2,6,0
+Bonnybridge,BONB,275,2,6,0
+Bonnybridge,BONB,400,2,6,0
+Braehead,BRAE,132,2,5,0
+"Braehead Park",BRAP,33,2,5,0
+"Braehead Park",BRAP,132,2,5,0
+"Braehead Park",BRAP,132,2,5,0
+Broxburn,BROX,33,2,7,0
+Broxburn,BROX,132,2,7,0
+Broxburn,BROX,132,2,7,0
+Busby,BUSB,275,2,7,0
+Carntyne,CATY,33,2,6,0
+Carntyne,CATY,132,2,6,0
+Carsfad,CAFA,132,2,7,0
+Chapelcross,CHAP,33,2,7,0
+Chapelcross,CHAP,132,2,7,0
+"Charlotte Street",CHAS,33,2,6,0
+"Charlotte Street",CHAS,275,2,6,0
+Clyde,CLYD,33,2,7,0
+Clyde,CLYD,275,2,7,0
+"Clyde's Mill",CLYM,33,2,6,0
+"Clyde's Mill",CLYM,275,2,6,0
+Coalburn,COAL,132,2,7,0
+Coalburn,COAL,400,2,7,0
+Coatbridge,COAT,33,2,7,0
+Coatbridge,COAT,275,2,7,0
+Coatbridge,COAT,275,2,7,0
+Cockenzie,COCK,33,2,7,0
+Cockenzie,COCK,275,2,7,0
+Cockenzie,COCK,400,2,7,0
+Cockenzie,COCK,400,2,7,0
+Coylton,COYL,33,2,7,0
+Coylton,COYL,132,2,7,0
+Coylton,COYL,275,2,7,0
+"Coylton Tee",COYT,132,2,7,0
+"Coylton West",COYW,275,2,7,0
+"Coylton West",COYW,275,2,7,0
+Crookston,CROO,33,2,7,0
+Crookston,CROO,33,2,7,0
+Crookston,CROO,132,2,7,0
+Crookston,CROO,132,2,7,0
+Cruachan,CRUA,275,1,5,0
+Cruachan,CRUA,275,1,5,0
+Cruachan,CRUA,275,1,5,0
+Cruachan,CRUA,275,1,5,0
+Cumbernauld,CUMB,33,2,6,0
+Cumbernauld,CUMB,132,2,6,0
+Cupar,CUPA,33,2,6,0
+Cupar,CUPA,132,2,6,0
+Currie,CURR,132,2,7,0
+Currie,CURR,275,2,7,0
+Dalmally,DALL,275,1,5,0
+Dalmarnock,DALM,132,2,5,0
+Dalmarnock,DALM,275,2,5,0
+"Denny North",DENN,132,2,6,0
+"Denny North",DENN,275,2,6,0
+"Denny North",DENN,400,2,6,0
+"Devol Moor (Port Galsgow)",DEVM,33,2,5,0
+"Devol Moor (Port Galsgow)",DEVM,132,2,5,0
+"Devol Moor (Port Galsgow)",DEVM,400,2,5,0
+Devonside,DEVO,33,2,6,0
+Devonside,DEVO,132,2,6,0
+"Dewar Place",DEWP,33,2,7,0
+"Dewar Place",DEWP,275,2,7,0
+"Dewar Place",DEWP,275,2,7,0
+Drumchapel,DRUM,33,2,6,0
+Drumchapel,DRUM,275,2,6,0
+Drumchapel,DRUM,275,2,6,0
+Drumcross,DRCR,33,2,5,0
+Drumcross,DRCR,132,2,5,0
+Drumcross,DRCR,132,2,5,0
+Dumfries,DUMF,33,2,7,0
+Dumfries,DUMF,33,2,7,0
+Dumfries,DUMF,132,2,7,0
+Dunbar,DUNB,33,2,7,0
+Dunbar,DUNB,132,2,7,0
+Dunbar,DUNB,132,2,7,0
+Dunfermline,DUNF,33,2,6,0
+Dunfermline,DUNF,132,2,6,0
+Dunfermline,DUNF,132,2,6,0
+"Dunlaw Extension",DUNE,33,2,7,0
+"Dunlaw Extension",DUNE,132,2,7,0
+"Earlshaugh Wind Farm",EHAU,33,2,7,0
+"Earlshaugh Wind Farm",EHAU,132,2,7,0
+Earlstoun,EAST,132,2,7,0
+"East Kilbride",EKIL,33,2,7,0
+"East Kilbride",EKIL,275,2,7,0
+"East Kilbride",EKIL,275,2,7,0
+"East Kilbride",EKIL,275,2,7,0
+"East Kilbride",EKIL,275,2,7,0
+"East Kilbride South",EKIS,33,2,7,0
+"East Kilbride South",EKIS,275,2,7,0
+Easterhouse,EERH,33,2,6,0
+Easterhouse,EERH,275,2,6,0
+Ecclefechan,ECCF,132,2,7,0
+Ecclefechan,ECCF,132,2,7,0
+Eccles,ECCL,33,2,7,0
+Eccles,ECCL,132,2,7,0
+Eccles,ECCL,400,2,7,0
+Elderslie,ELDE,33,2,7,0
+Elderslie,ELDE,132,2,7,0
+Elderslie,ELDE,132,2,7,0
+Elvanfoot,ELVA,275,2,7,0
+Elvanfoot,ELVA,275,2,7,0
+Elvanfoot,ELVA,400,2,7,0
+Erskine,ERSK,33,2,5,0
+Erskine,ERSK,132,2,5,0
+Erskine,ERSK,132,2,5,0
+Essenside,ESST,132,2,6,0
+Essenside,ESST,132,2,6,0
+Essenside,ESST,132,2,6,0
+Fallago,FALL,33,2,7,0
+Fallago,FALL,132,2,7,0
+Fallago,FALL,400,2,7,0
+"Fife Energy",FIFE,132,2,6,0
+"Fife Energy",FIFE,132,2,6,0
+Galashiels,GALA,33,2,7,0
+Galashiels,GALA,132,2,7,0
+Gareloch,GARE,132,2,5,0
+Giffnock,GIFF,33,2,7,0
+Giffnock,GIFF,275,2,7,0
+Glenlee,GLLE,132,2,7,0
+Glenluce,GLLU,33,2,7,0
+Glenluce,GLLU,132,2,7,0
+Glenniston,GLNI,33,2,6,0
+Glenniston,GLNI,132,2,6,0
+Glenrothes,GLRO,33,2,6,0
+Glenrothes,GLRO,275,2,6,0
+"Glenrothes Border",GLRB,275,2,6,0
+Gorgie,GORG,33,2,7,0
+Gorgie,GORG,132,2,7,0
+Govan,GOVA,33,2,5,0
+Govan,GOVA,132,2,5,0
+Grangemouth,GRMO,33,2,6,0
+Grangemouth,GRMO,275,2,6,0
+"Hadyard Hill",HADH,33,2,7,0
+"Hadyard Hill",HADH,132,2,7,0
+"Hagg's Road",HAGR,33,2,5,0
+"Hagg's Road",HAGR,132,2,5,0
+Harestanes,HARE,33,2,7,0
+Harestanes,HARE,132,2,7,0
+"Harestanes Wind Farm",HEAR,33,2,7,0
+"Harestanes Wind Farm",HEAR,132,2,7,0
+"Harker Border Node",HAKB,132,2,7,0
+"Harker Border Node",HAKB,400,2,7,0
+Hawick,HAWI,33,2,7,0
+Hawick,HAWI,132,2,7,0
+Helensburgh,HELE,33,2,5,0
+Helensburgh,HELE,132,2,5,0
+Hunterston,HUER,132,2,7,0
+Hunterston,HUER,400,2,7,0
+"Hunterston Farm",HUNF,33,2,7,0
+"Hunterston Farm",HUNF,132,2,7,0
+Innerwick,INWI,132,2,7,0
+Inverarnan,INVR,275,2,5,0
+Inverkeithing,INKE,33,2,6,0
+Inverkeithing,INKE,132,2,6,0
+Inverkip,INKI,132,2,7,0
+Inverkip,INKI,400,2,7,0
+Johnstone,JOHN,33,2,7,0
+Johnstone,JOHN,132,2,7,0
+"Junction A",JUNA,132,2,7,0
+Kaimes,KAIM,33,2,7,0
+Kaimes,KAIM,132,2,7,0
+Kaimes,KAIM,275,2,7,0
+Kendoon,KEOO,132,2,7,0
+Kilbowie,KILB,33,2,5,0
+Kilbowie,KILB,132,2,5,0
+Killermont,KIER,33,2,6,0
+Killermont,KIER,132,2,6,0
+"Kilmarnock South",KILS,33,2,7,0
+"Kilmarnock South",KILS,132,2,7,0
+"Kilmarnock South",KILS,275,2,7,0
+"Kilmarnock South",KILS,400,2,7,0
+"Kilmarnock Town",KILT,33,2,7,0
+"Kilmarnock Town",KILT,275,2,7,0
+Kilwinning,KILW,33,2,7,0
+Kilwinning,KILW,132,2,7,0
+Kincardine,KINC,275,2,6,0
+"Kincardine Border",KINB,275,2,6,0
+"Kyle North",KYLN,33,2,7,0
+"Kyle North",KYLN,132,2,7,0
+"Kyle South",KYLS,33,2,7,0
+Lambhill,LAMB,275,2,5,0
+Leven,LEVE,33,2,6,0
+Leven,LEVE,132,2,6,0
+"Leven Tee",LEVT,132,2,6,0
+"Limmer Hill",LIMM,33,2,7,0
+"Limmer Hill",LIMM,132,2,7,0
+Linnmill,LINM,33,2,7,0
+Linnmill,LINM,132,2,7,0
+Livingstone,LING,33,2,7,0
+Livingstone,LING,132,2,7,0
+Longannet,LOAN,275,2,6,0
+Longannet,LOAN,275,2,6,0
+"Mark's Hill",MAHI,33,2,7,0
+"Mark's Hill",MAHI,132,2,7,0
+"Mark's Hill",MAHI,275,2,7,0
+Maybole,MAYB,33,2,7,0
+Maybole,MAYB,132,2,7,0
+"Maybole Tee",MAYT,132,2,7,0
+Meadowhead,MEAD,132,2,7,0
+Meadowhead,MEAD,132,2,7,0
+Moffat,MOFF,132,2,7,0
+Moffat,MOFF,400,2,7,0
+Mossmorran,MOSM,33,2,6,0
+Mossmorran,MOSM,132,2,6,0
+Mossmorran,MOSM,275,2,6,0
+Neilston,NEIW,33,2,7,0
+Neilston,NEIL,132,2,7,0
+Neilston,NEIW,132,2,7,0
+Neilston,NEIL,275,2,7,0
+Neilston,NEIL,400,2,7,0
+"New Cumnock",NECU,132,2,7,0
+"New Cumnock",NECU,275,2,7,0
+Newarthill,NEAR,33,2,6,0
+Newarthill,NEAR,275,2,6,0
+"Newton Stewart",NETS,33,2,7,0
+"Newton Stewart",NETS,132,2,7,0
+Paisley,PAIS,33,2,7,0
+Paisley,PAIS,132,2,7,0
+Partick,PART,33,2,6,0
+Partick,PART,132,2,6,0
+"Port Dundas",PORD,33,2,6,0
+"Port Dundas",PORD,275,2,6,0
+Portobello,POOB,33,2,7,0
+Portobello,POOB,275,2,7,0
+Ravenscraig,RAVE,33,2,7,0
+Ravenscraig,RAVE,275,2,7,0
+Redhouse,REDH,33,2,6,0
+Redhouse,REDH,132,2,6,0
+Saltcoats,SACO,33,2,7,0
+Saltcoats,SACO,132,2,7,0
+"Sell Moor",SELM,132,2,7,0
+Shrubhill,SHRU,33,2,7,0
+Shrubhill,SHRU,275,2,7,0
+Sighthill,SIGH,33,2,7,0
+Sighthill,SIGH,275,2,7,0
+Smeaton,SMEA,132,2,7,0
+Smeaton,SMEA,275,2,7,0
+Smeaton,SMEA,400,2,7,0
+"Spango Valley",SPAV,33,2,5,0
+"Spango Valley",SPAV,132,2,5,0
+"St Andrews Cross",SANX,33,2,7,0
+"St Andrews Cross",SANX,132,2,7,0
+"Stella West Border Node",STWB,400,2,7,0
+Stirling,STIR,33,2,6,0
+Stirling,STIR,132,2,6,0
+Strathaven,STHA,33,2,7,0
+Strathaven,STHA,275,2,7,0
+Strathaven,STHA,400,2,7,0
+Strathleven,STLE,33,2,5,0
+Strathleven,STLE,132,2,5,0
+"Telford Road",TELR,33,2,7,0
+"Telford Road",TELR,132,2,7,0
+Toddleburn,TODD,33,2,7,0
+Tongland,TONG,132,2,7,0
+Ulzieside,ULZI,33,2,7,0
+"Waterhead Moor",WAMR,33,2,5,0
+"Waterhead Moor",WAMR,132,2,5,0
+"West George Street",WGEO,33,2,6,0
+"West George Street",WGEO,275,2,6,0
+Westfield,WFIE,33,2,6,0
+Westfield,WFIE,132,2,6,0
+Westfield,WFIE,275,2,6,0
+Whistlefield,WHTL,33,2,5,0
+Whistlefield,WHTL,132,2,5,0
+Whitehouse,WHHO,33,2,7,0
+Whitehouse,WHHO,275,2,7,0
+Windyhill,WIYH,132,2,5,0
+Windyhill,WIYH,275,2,5,0
+Windyhill,WIYH,400,2,5,0
+"Wishaw (Gowkthrapple)",WISH,33,2,7,0
+"Wishaw (Gowkthrapple)",WISH,132,2,7,0
+"Wishaw (Gowkthrapple)",WISH,275,2,7,0
+"Black Craig 40MW Wind Farm",BLCW,33,2,7,0
+"Black Craig 40MW Wind Farm",BLCW,132,2,7,0
+"Crystal Rigg Duns",CRYR,33,2,7,0
+"Crystal Rigg Duns",CRYR,132,2,7,0
+"Crystal Rigg Duns",CRYR,400,2,7,0
+"Ewe Hill",EWEH,33,2,7,0
+"Ewe Hill",EWEH,132,2,7,0
+"Gareloch Border Node",GARB,132,2,5,0
+"Grangemouth CHP",BPGR,33,2,6,0
+Longpark,LOPA,33,2,7,0
+Longpark,LOPA,132,2,7,0
+Margree,MARG,33,2,7,0
+Margree,MARG,132,2,7,0
+Newfield,NEWF,33,2,7,0
+Newfield,NEWF,132,2,7,0
+Torness,TORN,132,2,7,0
+Torness,TORN,400,2,7,0
+"Westfield Border Node",WFIB,275,2,6,0
+"Whistlefield Border Node",WHTB,132,2,5,0
+Whitelee,WLEE,33,2,7,0
+Whitelee,WLEE,275,2,7,0
