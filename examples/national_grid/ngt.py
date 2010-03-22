@@ -50,23 +50,6 @@ def get_bus_map(path, bus_map=None, voltage=400):
     return bus_map
 
 
-bus_map400 = {}
-for path in BUS_DATA:
-    bus_map400 = get_bus_map(path, bus_map400, 400)
-
-bus_map275 = {}
-for path in BUS_DATA:
-    bus_map275 = get_bus_map(path, bus_map275, 275)
-
-bus_map132 = {}
-for path in BUS_DATA:
-    bus_map132 = get_bus_map(path, bus_map132, 132)
-
-bus_map33 = {}
-for path in BUS_DATA:
-    bus_map33 = get_bus_map(path, bus_map33, 033)
-
-
 def add_shunts(path, bus_map, voltage=400):
     shunt_reader = csv.reader(open(path), delimiter=',', quotechar='"')
 
@@ -92,18 +75,6 @@ def add_shunts(path, bus_map, voltage=400):
                 raise
 
     return bus_map
-
-for path in SHUNT_DATA:
-    add_shunts(path, bus_map400, voltage=400)
-
-#for path in SHUNT_DATA:
-#    add_shunts(path, bus_map275, voltage=275)
-#
-#for path in SHUNT_DATA:
-#    add_shunts(path, bus_map132, voltage=132)
-#
-#for path in SHUNT_DATA:
-#    add_shunts(path, bus_map33, voltage=33)
 
 
 def get_branches(path, bus_map, voltage=400):
@@ -141,20 +112,6 @@ def get_branches(path, bus_map, voltage=400):
         branches.append(l)
 
     return branches
-
-
-branches400 = []
-for path in BRANCH_DATA:
-    branches400.extend(get_branches(path, bus_map400, 400))
-
-branches275 = []
-for path in BRANCH_DATA:
-    branches275.extend(get_branches(path, bus_map275, 275))
-
-branches132 = []
-for path in BRANCH_DATA:
-    branches132.extend(get_branches(path, bus_map132, 132))
-
 
 
 def get_transformers(path, bus_map1, bus_map2, voltages=(400,275)):
@@ -208,19 +165,6 @@ def get_transformers(path, bus_map1, bus_map2, voltages=(400,275)):
 
     return branches
 
-transformers400 = []
-for path in TRANSFORMER_DATA:
-    transformers400.extend(
-        get_transformers(path, bus_map400, bus_map275, (400, 275)))
-
-#transformers275 = []
-#for path in BRANCH_DATA:
-#    transformers275.extend(get_transformers(path, bus_map275, 275))
-#
-#transformers132 = []
-#for path in BRANCH_DATA:
-#    transformers132.extend(get_transformers(path, bus_map132, 132))
-
 
 def get_generators(path, bus_map, voltage=400, licensee="SPT"):
     generator_reader = csv.reader(open(path),
@@ -268,10 +212,71 @@ def get_generators(path, bus_map, voltage=400, licensee="SPT"):
 
     return generators
 
-generators = get_generators("data/generator_unit_data.csv",
-                            bus_map400, voltage=400, licensee="SPT")
+def main():
+    bus_map400 = {}
+    for path in BUS_DATA:
+        bus_map400 = get_bus_map(path, bus_map400, 400)
 
-#print len(bus_map400), len(bus_map275), len(bus_map132), len(bus_map33)
-#print len(branches400)#, len(branches275), len(branches132), len(branches33)
-#len(branches)
-print len(generators)
+    bus_map275 = {}
+    for path in BUS_DATA:
+        bus_map275 = get_bus_map(path, bus_map275, 275)
+
+    bus_map132 = {}
+    for path in BUS_DATA:
+        bus_map132 = get_bus_map(path, bus_map132, 132)
+
+    bus_map33 = {}
+    for path in BUS_DATA:
+        bus_map33 = get_bus_map(path, bus_map33, 033)
+
+    for path in SHUNT_DATA:
+        add_shunts(path, bus_map400, voltage=400)
+
+    #for path in SHUNT_DATA:
+    #    add_shunts(path, bus_map275, voltage=275)
+    #
+    #for path in SHUNT_DATA:
+    #    add_shunts(path, bus_map132, voltage=132)
+    #
+    #for path in SHUNT_DATA:
+    #    add_shunts(path, bus_map33, voltage=33)
+
+
+    branches400 = []
+    for path in BRANCH_DATA:
+        branches400.extend(get_branches(path, bus_map400, 400))
+
+    branches275 = []
+    for path in BRANCH_DATA:
+        branches275.extend(get_branches(path, bus_map275, 275))
+
+    branches132 = []
+    for path in BRANCH_DATA:
+        branches132.extend(get_branches(path, bus_map132, 132))
+
+    transformers400 = []
+    for path in TRANSFORMER_DATA:
+        transformers400.extend(
+            get_transformers(path, bus_map400, bus_map275, (400, 275)))
+
+    #transformers275 = []
+    #for path in BRANCH_DATA:
+    #    transformers275.extend(get_transformers(path, bus_map275, 275))
+    #
+    #transformers132 = []
+    #for path in BRANCH_DATA:
+    #    transformers132.extend(get_transformers(path, bus_map132, 132))
+
+    generators400 = get_generators("data/generator_unit_data.csv",
+                                bus_map400, voltage=400, licensee="SPT")
+
+    case = pylon.Case(buses=bus_map400.values(),
+                      branches=branches400+transformers400,
+                      generators=generators400)
+
+    case.save_matpower("/tmp/ngt.m")
+#    case.save_psse("/tmp/ngt.raw")
+
+
+if __name__ == '__main__':
+    main()
