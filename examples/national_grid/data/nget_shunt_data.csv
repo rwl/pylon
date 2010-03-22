@@ -1,0 +1,303 @@
+"Site Name",Node,"Unit Number","Mvar Generation","Mvar Absorption","Compensation Type","Connection Voltage (kV)"
+ABERTHAW,ABTH12,1,60,,"Mechanically Switched Capacitor",132
+ABERTHAW,ABTH12,2,60,,"Mechanically Switched Capacitor",132
+ABHAM,ABHA11,1,45,,"Mechanically Switched Capacitor",132
+ABHAM,ABHA12,2,45,,"Mechanically Switched Capacitor",132
+ALVERDISCOTT,ALVE10,1,60,,"Mechanically Switched Capacitor",132
+BARKING,BARK10,1,,60,Reactor,132
+BARKING,BARK10,2,,60,Reactor,132
+BEDDINGTON,BEDD11,1,,60,Reactor,132
+BEDDINGTON,BEDD11,2,,60,Reactor,132
+BEDDINGTON,BEDD11,3,,60,Reactor,132
+BEDDINGTON,BEDD11,4,,60,Reactor,132
+BEDDINGTON,BEDD1A,2,,15,Reactor,132
+BEDDINGTON,BEDD1B,1,,15,Reactor,132
+BEDDINGTON,BEDD21,2,150,,"Mechanically Switched Capacitor",275
+BEDDINGTON,BEDD21,1,,100,Reactor,275
+BEDDINGTON,BEDD22,1,150,,"Mechanically Switched Capacitor",275
+BEDDINGTON,BEDD22,1,,100,Reactor,275
+BERKSWELL,BESW10,1,60,,"Mechanically Switched Capacitor",132
+BERKSWELL,BESW10,2,60,,"Mechanically Switched Capacitor",132
+BERKSWELL,BESW10,3,60,,"Mechanically Switched Capacitor",132
+BERKSWELL,BESW20,1,150,,"Mechanically Switched Capacitor",275
+BIRKENHEAD,BIRK10,1,,60,Reactor,132
+"BISHOPS WOOD",BISW10,1,60,,"Mechanically Switched Capacitor",132
+"BISHOPS WOOD",BISW10,2,60,,"Mechanically Switched Capacitor",132
+"BISHOPS WOOD",BISW10,3,60,,"Mechanically Switched Capacitor",132
+BLYTH,BLYT21,1,150,,"Mechanically Switched Capacitor",275
+BLYTH,BLYT22,2,150,,"Mechanically Switched Capacitor",275
+BOLNEY,BOLN11,4,60,,"Mechanically Switched Capacitor",132
+BOLNEY,BOLN12,1,60,,"Mechanically Switched Capacitor",132
+BOLNEY,BOLN12,1,,60,Reactor,132
+BOLNEY,BOLN13,2,60,,"Mechanically Switched Capacitor",132
+BOLNEY,BOLN13,2,,60,Reactor,132
+BOLNEY,BOLN14,3,60,,"Mechanically Switched Capacitor",132
+BOLNEY,BOLN40,1,225,,"Mechanically Switched Capacitor",400
+"BRADFORD WEST",BRAW11,1,,60,Reactor,132
+"BRADFORD WEST",BRAW12,1,60,,"Mechanically Switched Capacitor",132
+"BRADFORD WEST",BRAW12,2,,60,Reactor,132
+BRAMFORD,BRFO10,1,60,,"Mechanically Switched Capacitor",132
+BRAMFORD,BRFO10,2,60,,"Mechanically Switched Capacitor",132
+BRAMFORD,BRFO10,3,60,,"Mechanically Switched Capacitor",132
+BREDBURY,BRED10,1,,60,Reactor,132
+BREDBURY,BRED10,2,,60,Reactor,132
+BRIDGEWATER,BRWA10,1,45,,"Mechanically Switched Capacitor",132
+BRIDGEWATER,BRWA10,2,45,,"Mechanically Switched Capacitor",132
+BRIDGEWATER,BRWA2B,,60,,SVC,"Tertiary Connected"
+BUSHBURY,BUSH10,1,60,,"Mechanically Switched Capacitor",132
+BUSHBURY,BUSH10,2,60,,"Mechanically Switched Capacitor",132
+BUSHBURY,BUSH10,3,60,,"Mechanically Switched Capacitor",132
+BUSHBURY,BUSH10,1,,60,Reactor,132
+BUSHBURY,BUSH20,1,150,,"Mechanically Switched Capacitor",275
+BUSTLEHOLM,BUST10,1,20,,"Mechanically Switched Capacitor",132
+BUSTLEHOLM,BUST10,1,,60,Reactor,132
+BUSTLEHOLM,BUST10,2,,60,Reactor,132
+CAPENHURST,CAPE21,1,150,,"Mechanically Switched Capacitor",275
+CELLARHEAD,CELL11,2,60,,"Mechanically Switched Capacitor",132
+CELLARHEAD,CELL11,3,60,,"Mechanically Switched Capacitor",132
+CELLARHEAD,CELL11,4,60,,"Mechanically Switched Capacitor",132
+CELLARHEAD,CELL11,1,,60,Reactor,132
+CELLARHEAD,CELL11,2,,60,Reactor,132
+CELLARHEAD,CELL12,1,60,,"Mechanically Switched Capacitor",132
+CELLARHEAD,CELL40,1,225,,"Mechanically Switched Capacitor",400
+CELLARHEAD,CELL40,2,225,,"Mechanically Switched Capacitor",400
+CELLARHEAD,CELL40,5,150,-75,SVC,400
+CELLARHEAD,CELL40,6,150,-75,SVC,400
+CHESTERFIELD,CHTE11,1,,60,Reactor,132
+CHICKERELL,CHIC10,1,,60,Reactor,132
+CHICKERELL,CHIC42,1,225,,"Mechanically Switched Capacitor",400
+CILFYNYDD,CILF2A,2,,60,Reactor,275
+CILFYNYDD,CILF2B,1,,60,Reactor,275
+CILFYNYDD,CILF40,1,,200,Reactor,400
+"CITY ROAD",CITR11,2,55,,"Mechanically Switched Capacitor",132
+"CITY ROAD",CITR12,1,55,,"Mechanically Switched Capacitor",132
+"CITY ROAD",CITR41,1,,200,Reactor,400
+"CONNAH'S QUAY",CONQ11,1,,60,Reactor,132
+COVENTRY,COVE10,1,60,,"Mechanically Switched Capacitor",132
+COVENTRY,COVE10,2,60,,"Mechanically Switched Capacitor",132
+COVENTRY,COVE10,3,60,,"Mechanically Switched Capacitor",132
+COVENTRY,COVE10,1,,60,Reactor,132
+COVENTRY,COVE20,,60,,SVC,"Tertiary Connected"
+COWLEY,COWL10,1,60,,"Mechanically Switched Capacitor",132
+COWLEY,COWL10,2,60,,"Mechanically Switched Capacitor",132
+COWLEY,COWL10,3,60,,"Mechanically Switched Capacitor",132
+COWLEY,COWL40,1,,200,Reactor,400
+DRAKELOW,DRAK21,6,150,-75,SVC,275
+DRAKELOW,DRAK41,1,225,,"Mechanically Switched Capacitor",400
+DRAKELOW,DRAK42,1,225,,"Mechanically Switched Capacitor",400
+DRAX,DRAX11,2,,60,Reactor,132
+DRAX,DRAX12,1,,60,Reactor,132
+"EAST CLAYDON",ECLA10,1,60,,"Mechanically Switched Capacitor",132
+"EAST CLAYDON",ECLA10,2,60,,"Mechanically Switched Capacitor",132
+"EAST CLAYDON",ECLA10,3,60,,"Mechanically Switched Capacitor",132
+"EAST CLAYDON",ECLA10,1,,60,Reactor,132
+"EAST CLAYDON",ECLA10,2,,60,Reactor,132
+"EAST CLAYDON",ECLA40,1,225,,"Mechanically Switched Capacitor",400
+"EAST CLAYDON",ECLA40,2,225,,"Mechanically Switched Capacitor",400
+"EAST CLAYDON",ECLA40,6,150,-75,SVC,400
+ELLAND,ELLA12,1,,60,Reactor,132
+ELSTREE,ELST21,,60,,SVC,"Tertiary Connected"
+ELSTREE,ELST22,,60,,SVC,"Tertiary Connected"
+ELSTREE,ELST40,1,,200,Reactor,400
+ENDERBY,ENDE40,1,225,,"Mechanically Switched Capacitor",400
+ENDERBY,ENDE40,2,225,,"Mechanically Switched Capacitor",400
+EXETER,EXET10,1,51,,"Mechanically Switched Capacitor",132
+EXETER,EXET10,1,56,,"Mechanically Switched Capacitor",132
+EXETER,EXET40,3,150,-75,SVC,400
+EXETER,EXET41,5,150,-75,SVC,400
+EXETER,EXET42,4,60,-30,"Synchronous Compensator",400
+FECKENHAM,FECK20,1,,60,Reactor,275
+FECKENHAM,FECK20,6,150,-75,SVC,275
+FLEET,FLEE11,1,52,,"Mechanically Switched Capacitor",132
+FLEET,FLEE11,2,52,,"Mechanically Switched Capacitor",132
+FLEET,FLEE11,3,52,,"Mechanically Switched Capacitor",132
+FLEET,FLEE11,2,,60,Reactor,132
+FLEET,FLEE12,1,,60,Reactor,132
+FLEET,FLEE40,1,225,,"Mechanically Switched Capacitor",400
+GLOUCESTER,GLOU11,1,60,,"Mechanically Switched Capacitor",132
+GLOUCESTER,GLOU11,1,,60,Reactor,132
+GLOUCESTER,GLOU11,2,,60,Reactor,132
+GLOUCESTER,GLOU12,2,60,,"Mechanically Switched Capacitor",132
+GLOUCESTER,GLOU12,3,60,,"Mechanically Switched Capacitor",132
+GRENDON,GREN11,1,,60,Reactor,132
+GRENDON,GREN12,1,60,,"Mechanically Switched Capacitor",132
+GRENDON,GREN12,2,60,,"Mechanically Switched Capacitor",132
+GRENDON,GREN12,3,60,,"Mechanically Switched Capacitor",132
+GRENDON,GREN40,1,225,,"Mechanically Switched Capacitor",400
+GRENDON,GREN40,2,225,,"Mechanically Switched Capacitor",400
+GRENDON,GREN40,3,225,,"Mechanically Switched Capacitor",400
+GRENDON,GREN40,4,225,,"Mechanically Switched Capacitor",400
+"HAMS HALL",HAMH40,1,225,,"Mechanically Switched Capacitor",400
+"HAMS HALL",HAMH40,2,225,,"Mechanically Switched Capacitor",400
+"HAMS HALL",HAMH40,,60,,SVC,"Tertiary Connected"
+HARKER,HARK21,1,150,,"Mechanically Switched Capacitor",275
+HARKER,HARK21,7,150,-75,SVC,275
+HARKER,HARK22,8,150,-75,SVC,275
+HARKER,HARK40,1,225,,"Mechanically Switched Capacitor",400
+HURST,HURS1A,1,,60,Reactor,132
+HURST,HURS1B,2,,60,Reactor,132
+HURST,HURS20,1,150,,"Mechanically Switched Capacitor",275
+HURST,HURS20,1,,100,Reactor,275
+HURST,HURS20,2,,100,Reactor,275
+HURST,HURS20,3,,100,Reactor,275
+"INDIAN QUEENS",INDQ10,1,60,,"Mechanically Switched Capacitor",132
+"INDIAN QUEENS",INDQ10,2,60,,"Mechanically Switched Capacitor",132
+"INDIAN QUEENS",INDQ10,3,60,,"Mechanically Switched Capacitor",132
+"INDIAN QUEENS",INDQ10,1,,60,Reactor,132
+"INDIAN QUEENS",INDQ40,1,225,,"Mechanically Switched Capacitor",400
+"INDIAN QUEENS",INDQ40,1,,200,Reactor,400
+"IRON ACTON",IROA1,1,45,,"Mechanically Switched Capacitor",132
+"IRON ACTON",IROA20,,60,,SVC,"Tertiary Connected"
+"IRON ACTON",IROA20,,60,,SVC,"Tertiary Connected"
+IRONBRIDGE,IRON11,2,60,,"Mechanically Switched Capacitor",132
+IRONBRIDGE,IRON12,1,60,,"Mechanically Switched Capacitor",132
+IRONBRIDGE,IRON12,3,60,,"Mechanically Switched Capacitor",132
+IRONBRIDGE,IRON40,1,225,,"Mechanically Switched Capacitor",400
+IVER,IVER21,1,40,-30,"Synchronous Compensator",275
+IVER,IVER21,3,40,-30,"Synchronous Compensator",275
+IVER,IVER22,2,,60,Reactor,275
+IVER,IVER22,2,40,-30,"Synchronous Compensator",275
+IVER,IVER2A,1,,60,Reactor,275
+JORDANTHORPE,JORD30,1,,60,Reactor,33
+KEARSLEY,KEAR11,1,52,,"Mechanically Switched Capacitor",132
+KEARSLEY,KEAR11,2,52,,"Mechanically Switched Capacitor",132
+KEARSLEY,KEAR11,3,52,,"Mechanically Switched Capacitor",132
+KEARSLEY,KEAR11,1,,60,Reactor,132
+KINGSNORTH,KINO10,1,,60,Reactor,132
+KINGSNORTH,KINO10,2,,60,Reactor,132
+KIRKBY,KIBY11,1,45,,"Mechanically Switched Capacitor",132
+KIRKBY,KIBY11,4,45,,"Mechanically Switched Capacitor",132
+KIRKBY,KIBY12,2,45,,"Mechanically Switched Capacitor",132
+KIRKBY,KIBY12,3,45,,"Mechanically Switched Capacitor",132
+KIRKSTALL,KIRK10,1,,60,Reactor,132
+KIRKSTALL,KIRK10,2,,60,Reactor,132
+KIRKSTALL,KIRK20,1,150,,"Mechanically Switched Capacitor",275
+LACKENBY,LACK60,1,60,,"Mechanically Switched Capacitor",66
+LALEHAM,LALE20,1,,100,Reactor,275
+LALEHAM,LALE20,2,,100,Reactor,275
+LANDULPH,LAND10,1,60,,"Mechanically Switched Capacitor",132
+LANDULPH,LAND10,1,,60,Reactor,132
+LANDULPH,LAND40,,60,,SVC,"Tertiary Connected"
+LEGACY,LEGA11,1,,60,Reactor,132
+LEGACY,LEGA11,2,,60,Reactor,132
+LEGACY,LEGA40,1,225,,"Mechanically Switched Capacitor",400
+"LISTER DRIVE",LISD20,1,,100,Reactor,275
+LOVEDEAN,LOVE11,1,,60,Reactor,132
+LOVEDEAN,LOVE12,2,,60,Reactor,132
+LOVEDEAN,LOVE40,1,225,,"Mechanically Switched Capacitor",400
+LOVEDEAN,LOVE40,1,,200,Reactor,400
+LOVEDEAN,LOVE40,5,150,-75,SVC,400
+MANNINGTON,MANN10,1,60,,"Mechanically Switched Capacitor",132
+MANNINGTON,MANN10,2,60,,"Mechanically Switched Capacitor",132
+MANNINGTON,MANN10,3,60,,"Mechanically Switched Capacitor",132
+MANNINGTON,MANN10,4,60,,"Mechanically Switched Capacitor",132
+MANNINGTON,MANN10,5,60,,"Mechanically Switched Capacitor",132
+MANNINGTON,MANN10,6,60,,"Mechanically Switched Capacitor",132
+MANNINGTON,MANN40,1,150,-75,SVC,400
+MANNINGTON,MANN41,2,150,-75,SVC,400
+MELKSHAM,MELK10,1,60,,"Mechanically Switched Capacitor",132
+MELKSHAM,MELK10,2,60,,"Mechanically Switched Capacitor",132
+MELKSHAM,MELK10,3,60,,"Mechanically Switched Capacitor",132
+MELKSHAM,MELK2A,2,,60,Reactor,275
+MELKSHAM,MELK2B,1,,60,Reactor,275
+MELKSHAM,MELK40,1,,200,Reactor,400
+"MILL HILL",MILH11,1,,60,Reactor,132
+"MILL HILL",MILH11,2,,60,Reactor,132
+"MONK FRYSTON",MONF22,1,150,,"Mechanically Switched Capacitor",275
+NECHELLS,NECH11,1,,60,Reactor,132
+NECHELLS,NECH12,2,,60,Reactor,132
+NEWCROSS,NEWX20,1,,100,Reactor,275
+NEWCROSS,NEWX20,2,,100,Reactor,275
+NINFIELD,NINF40,6,150,-150,SVC,400
+NORTON,NORT12,1,60,,"Mechanically Switched Capacitor",132
+"NORWICH TROWSE",NORW10,1,60,,"Mechanically Switched Capacitor",132
+"NORWICH TROWSE",NORW10,2,60,,"Mechanically Switched Capacitor",132
+"NORWICH TROWSE",NORW10,3,60,,"Mechanically Switched Capacitor",132
+"OCKER HILL",OCKH20,1,150,,"Mechanically Switched Capacitor",275
+OLDBURY,OLDB10,1,,60,Reactor,132
+OLDBURY,OLDB20,,60,,SVC,"Tertiary Connected"
+OSBALDWICK,OSBA11,1,,60,Reactor,132
+PELHAM,PELH11,1,,60,Reactor,132
+PELHAM,PELH12,2,,60,Reactor,132
+PELHAM,PELH40,5,150,-75,SVC,400
+PELHAM,PELH40,6,150,-75,SVC,400
+PEMBROKE,PEMB10,1,,60,Reactor,132
+PEMBROKE,PEMB10,2,,60,Reactor,132
+PENN,PENN20,,60,,SVC,"Tertiary Connected"
+PENTIR,PENT40,1,,200,Reactor,400
+PENWORTHAM,PEWO21,1,,60,Reactor,275
+PITSMOOR,PITS32,1,,60,Reactor,33
+PITSMOOR,PITS32,2,,60,Reactor,33
+PYLE,PYLE20,,60,,SVC,"Tertiary Connected"
+PYLE,PYLE20,,60,,SVC,"Tertiary Connected"
+RAINHILL,RAIN11,1,45,,"Mechanically Switched Capacitor",132
+RAINHILL,RAIN11,3,45,,"Mechanically Switched Capacitor",132
+RAINHILL,RAIN12,2,45,,"Mechanically Switched Capacitor",132
+RAINHILL,RAIN12,4,45,,"Mechanically Switched Capacitor",132
+RATCLIFFE-ON-SOAR,RATS10,1,,60,Reactor,132
+RAYLEIGH,RAYL12,1,,60,Reactor,132
+ROCHDALE,ROCH10,1,60,,"Mechanically Switched Capacitor",132
+ROCHDALE,ROCH10,2,60,,"Mechanically Switched Capacitor",132
+ROCHDALE,ROCH10,3,60,,"Mechanically Switched Capacitor",132
+SELLINDGE,SELL40,1,1040,,Filter,
+SELLINDGE,SELL40,1,,200,Reactor,400
+SELLINDGE,SELL40,1,150,-150,SVC,400
+SELLINDGE,SELL40,2,150,-150,SVC,400
+"SKELTON GRANGE",SKLG10,1,60,,"Mechanically Switched Capacitor",132
+"SKELTON GRANGE",SKLG10,2,60,,"Mechanically Switched Capacitor",132
+"SKELTON GRANGE",SKLG10,3,60,,"Mechanically Switched Capacitor",132
+"SKELTON GRANGE",SKLG20,1,150,,"Mechanically Switched Capacitor",275
+"SKELTON GRANGE",SKLG20,1,,100,Reactor,275
+SPENNYMOOR,SPEN10,1,,60,Reactor,132
+"ST JOHNS WOOD",SJOW11,1,60,,"Mechanically Switched Capacitor",132
+"ST JOHNS WOOD",SJOW11,2,60,,"Mechanically Switched Capacitor",132
+"ST JOHNS WOOD",SJOW11,3,60,,"Mechanically Switched Capacitor",132
+"ST JOHNS WOOD",SJOW1W,1,,60,Reactor,132
+"ST JOHNS WOOD",SJOW20,1,150,-106,SVC,275
+"ST JOHNS WOOD",SJOW20,3,150,-106,SVC,275
+"ST JOHNS WOOD",SJOW40,1,,200,Reactor,400
+STAYTHORPE,STAY41,1,225,,"Mechanically Switched Capacitor",400
+SUNDON,SUND11,1,,60,Reactor,132
+SUNDON,SUND12,2,,60,Reactor,132
+SUNDON,SUND41,1,225,,"Mechanically Switched Capacitor",400
+SUNDON,SUND41,7,60,-30,"Synchronous Compensator",400
+SUNDON,SUND42,1,225,,"Mechanically Switched Capacitor",400
+SUNDON,SUND42,6,60,-30,"Synchronous Compensator",400
+SWANSEA,SWAN12,1,60,,"Mechanically Switched Capacitor",132
+SWANSEA,SWAN12,2,60,,"Mechanically Switched Capacitor",132
+SWANSEA,SWAN12,3,60,,"Mechanically Switched Capacitor",132
+"THORPE MARSH",THOM40,1,,200,Reactor,400
+"TOTTENHAM EAST",TOTE21,1,,100,Reactor,275
+"TOTTENHAM WEST",TOTW21,1,,100,Reactor,275
+"TOTTENHAM WEST",TOTW22,2,,100,Reactor,275
+TYNEMOUTH,TYNE10,1,,60,Reactor,132
+USKMOUTH,USKM10,1,45,,"Mechanically Switched Capacitor",132
+WALPOLE,WALP11,1,60,,"Mechanically Switched Capacitor",132
+WALPOLE,WALP11,2,60,,"Mechanically Switched Capacitor",132
+WALPOLE,WALP11,3,60,,"Mechanically Switched Capacitor",132
+WALPOLE,WALP12,1,,60,Reactor,132
+WALPOLE,WALP1M,2,,60,Reactor,132
+WARLEY,WARL10,1,45,,"Mechanically Switched Capacitor",132
+WARLEY,WARL10,2,45,,"Mechanically Switched Capacitor",132
+WARLEY,WARL10,3,45,,"Mechanically Switched Capacitor",132
+"WEST BOLDON",WBOL60,1,60,,"Mechanically Switched Capacitor",66
+"WEST BURTON",WBUR40,1,,200,Reactor,400
+"WEST HAM",WHAM40,1,225,,"Mechanically Switched Capacitor",400
+"WEST MELTON",WMEL12,1,45,,"Mechanically Switched Capacitor",132
+"WEST MELTON",WMEL12,2,45,,"Mechanically Switched Capacitor",132
+"WEST MELTON",WMEL12,3,45,,"Mechanically Switched Capacitor",132
+"WEST WEYBRIDGE",WWEY21,,60,-30,"Synchronous Compensator",275
+"WEST WEYBRIDGE",WWEY21,,60,-30,"Synchronous Compensator",275
+WHITEGATE,WHGA10,1,,60,Reactor,132
+WHITEGATE,WHGA20,1,150,,"Mechanically Switched Capacitor",275
+WILLESDEN,WISD10,1,,60,Reactor,132
+WILLESDEN,WISD10,2,,60,Reactor,132
+WILLINGTON,WILE40,1,225,,"Mechanically Switched Capacitor",400
+WILLINGTON,WILE40,8,150,-75,SVC,400
+WILLINGTON,WILE40,,225,,"Mechanically Switched Capacitor",400
+WIMBLEDON,WIMB20,1,,100,Reactor,275
+WIMBLEDON,WIMB20,2,,100,Reactor,275
+WYMONDLEY,WYMO40,1,225,,"Mechanically Switched Capacitor",400
+WYMONDLEY,WYMO40,2,225,,"Mechanically Switched Capacitor",400
+"CREYKE BECK",CREB11,1,,60,Reactor,132
+"CREYKE BECK",CREB11,2,,60,Reactor,132
