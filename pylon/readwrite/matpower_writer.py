@@ -98,8 +98,8 @@ class MATPOWERWriter(CaseWriter):
             else:
                 raise ValueError
             v_data["type"] = bustype
-            v_data["Pd"] = v.p_demand * base_mva
-            v_data["Qd"] = v.q_demand * base_mva
+            v_data["Pd"] = v.p_demand
+            v_data["Qd"] = v.q_demand
             v_data["Gs"] = v.g_shunt
             v_data["Bs"] = v.b_shunt
             # TODO: Implement areas

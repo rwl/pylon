@@ -1,6 +1,8 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
+import os
 import sys
+import math
 import csv
 import logging
 import pylon
@@ -11,28 +13,33 @@ logger = logging.getLogger()
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
 
-BUS_DATA = ["data/spt_substations.csv",
-            "data/shetl_substations.csv",
-            "data/nget_substations.csv"
+DATA_DIR = "./data/"
+
+BUS_DATA = [os.path.join(DATA_DIR, "spt_substations.csv"),
+            os.path.join(DATA_DIR, "shetl_substations.csv"),
+            os.path.join(DATA_DIR, "nget_substations.csv")
             ]
 
-SHUNT_DATA = ["data/spt_shunt_data.csv",
-              "data/shetl_shunt_data.csv",
-              "data/nget_shunt_data.csv"
+LOAD_DATA = [os.path.join(DATA_DIR, "demand_generation_pf-2009_10wp.csv"),
+             os.path.join(DATA_DIR, "demand_generation_pf-2009_10sop.csv")]
+
+SHUNT_DATA = [os.path.join(DATA_DIR, "spt_shunt_data.csv"),
+              os.path.join(DATA_DIR, "shetl_shunt_data.csv"),
+              os.path.join(DATA_DIR, "nget_shunt_data.csv")
               ]
 
 BRANCH_DATA = [
-               "data/spt_circuit_param.csv",
-               "data/shetl_circuit_param.csv",
-               "data/nget_circuit_param.csv"
+               os.path.join(DATA_DIR, "spt_circuit_param.csv"),
+               os.path.join(DATA_DIR, "shetl_circuit_param.csv"),
+               os.path.join(DATA_DIR, "nget_circuit_param.csv")
                ]
 
-TRANSFORMER_DATA = ["data/spt_transformer_details.csv",
-                    "data/shetl_transformer_details.csv",
-                    "data/nget_transformer_details.csv"
+TRANSFORMER_DATA = [os.path.join(DATA_DIR, "spt_transformer_details.csv"),
+                    os.path.join(DATA_DIR, "shetl_transformer_details.csv"),
+                    os.path.join(DATA_DIR, "nget_transformer_details.csv")
                     ]
 
-GENERATOR_DATA = ["data/generator_unit_data.csv"]
+GENERATOR_DATA = [os.path.join(DATA_DIR, "generator_unit_data.csv")]
 
 def get_bus_map(path, bus_map=None, voltage=400):
     bus_map = {} if bus_map is None else bus_map
@@ -57,6 +64,38 @@ def get_bus_map(path, bus_map=None, voltage=400):
                     print "Duplicate bus:", name, bus_map[name].v_base, voltage
 #                else:
 #                    print "Duplicate bus (equal voltage):", name
+
+    return bus_map
+
+
+def add_loads(path, bus_map, voltage=400, others=None):
+    others = [] if others is None else others
+
+    load_reader = csv.reader(open(path), delimiter=',', quotechar='"')
+
+    _ = load_reader.next() # skip first row
+
+    for row in load_reader:
+        pf = float(row[2])
+        Sd = float(row[3])
+#        dg = float(row[5])
+        node_id = row[6]
+
+        if len(node_id):
+            if node_id[4] == str(voltage)[0]:
+                if bus_map.has_key(node_id[:4]):
+                    node = bus_map[node_id[:4]]
+                else:
+                    print "Load bus not found.", node_id[:4], node_id, voltage
+                    found = [oth[node_id[:4]].v_base for oth in others if oth.has_key(node_id[:4])]
+                    if found:
+                        print "Load bus %s found at: %s" % (node_id[:4], found)
+                    continue
+
+                Pd = Sd * pf
+                Qd = math.sqrt(Sd**2 - Pd**2)
+                node.p_demand += Pd
+                node.q_demand += Qd
 
     return bus_map
 
@@ -262,7 +301,11 @@ def get_generators(path, bus_map, voltage=400, licensee="SPT", aggregate=False, 
                 g.q_min += q_min
                 g.q_max += q_max
             else:
-                g = pylon.Generator(node, name, p_min=p_min, p_max=p_max, q_min=q_min, q_max=q_max)
+                node.type = pylon.PV
+
+                g = pylon.Generator(node, name,
+                                    p_min=p_min, p_max=p_max,
+                                    q_min=q_min, q_max=q_max)
 
                 print "Generator:", name, node.name, p_max
 
@@ -387,13 +430,22 @@ def main():
 #               branches275 + \
 #               branches132 + \
 
-
-    case = pylon.Case(buses=buses, branches=branches, generators=generators)
-
     print len(buses), len(branches), len(generators)
 
-    case.save_matpower("/tmp/ngt.m")
-#    case.save_psse("/tmp/ngt.raw")
+    for path in LOAD_DATA:
+        add_loads(path, bus_map400, 400, maps)
+#        add_loads(path, bus_map275, 275, maps)
+#        add_loads(path, bus_map132, 132, maps)
+#        add_loads(path, bus_map66, 66, maps)
+#        add_loads(path, bus_map33, 33, maps)
+#        add_loads(path, bus_map11, 11, maps)
+
+        case = pylon.Case(buses=buses, branches=branches, generators=generators)
+
+        root, _ = os.path.splitext(os.path.basename(path))
+        ident = root.split("-")[-1]
+        case.save_matpower("/tmp/ngt-%s.m" % ident)
+#        case.save_psse("/tmp/ngt.raw")
 
 
 if __name__ == '__main__':
