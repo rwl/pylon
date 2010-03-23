@@ -81,7 +81,7 @@ class MATPOWERWriter(CaseWriter):
         """ Writes bus data in MATPOWER format.
         """
         labels = ["bus_id", "type", "Pd", "Qd", "Gs", "Bs", "area", "Vm", "Va",
-            "baseKV", "zone", "Vmax", "Vmin"]
+            "baseKV", "Vmax", "Vmin"]
 
         base_mva = self.case.base_mva
 
@@ -107,7 +107,7 @@ class MATPOWERWriter(CaseWriter):
             v_data["Vm"] = v.v_magnitude_guess
             v_data["Va"] = v.v_angle_guess
             v_data["baseKV"] = v.v_base
-            v_data["zone"] = v.zone
+#            v_data["zone"] = v.zone
             v_data["Vmax"] = v.v_max
             v_data["Vmin"] = v.v_min
 

@@ -70,7 +70,7 @@ class CaseWriter(object):
                 file = open(file_or_filename, "wb")
                 self._write_data(file)
             except Exception, detail:
-                logger.error("Error writing Dot data: %s" % detail)
+                logger.error("Error writing data: %s" % detail)
             finally:
                 if file is not None:
                     file.close()
