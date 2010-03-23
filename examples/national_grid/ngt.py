@@ -1,6 +1,15 @@
+__author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
+
+import sys
+import csv
+import logging
 import pylon
 
-import csv
+logger = logging.getLogger()
+
+logger = logging.getLogger()
+logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.setLevel(logging.DEBUG)
 
 BUS_DATA = ["data/spt_substations.csv",
             "data/shetl_substations.csv",
@@ -89,7 +98,7 @@ def add_shunts(path, bus_map, voltage=400):
     return bus_map
 
 
-def get_branches(path, bus_map, voltage=400, others=None):
+def get_branches(path, bus_map, voltage=400, others=None, season="winter"):
     others = [] if others is None else others
 
     branch_reader = csv.reader(open(path), delimiter=',', quotechar='"')
@@ -126,10 +135,22 @@ def get_branches(path, bus_map, voltage=400, others=None):
                 print "Bus %s found at: %s" % (n2_id[:4], found)
             continue
 
-        l = pylon.Branch(node1, node2,
-                         r=float(row[5]), x=float(row[6]), b=float(row[7]),
-                         rate_a=float(row[8]), rate_b=float(row[9]),
-                         rate_c=float(row[10]))
+        r = float(row[5]) / 100.0
+        x = float(row[6]) / 100.0
+        b = float(row[7]) / 100.0
+
+        if season == "winter":
+            rate_a = float(row[8])
+        elif season == "autumn":
+            rate_a = float(row[9])
+        elif season == "summer":
+            rate_a = float(row[10])
+        elif season == "spring":
+            rate_a = float(row[11])
+        else:
+            raise
+
+        l = pylon.Branch(node1, node2, r=r, x=x, b=b, rate_a=rate_a)
         branches.append(l)
 
     return branches
@@ -179,15 +200,19 @@ def get_transformers(path, voltage_map, others=None):
 
         print "Transformer:", node1.name, node1.v_base, node2.v_base
 
-        l = pylon.Branch(node1, node2, name=node1.name,
-                         r=float(row[2]), x=float(row[3]), b=float(row[3]),
-                         rate_a=float(row[5]))
+        r = float(row[2]) / 100.0
+        x = float(row[3]) / 100.0
+        b = float(row[4]) / 100.0
+        rate_a = float(row[5])
+
+        l = pylon.Branch(node1, node2, name=node1.name, r=r, x=x, b=b,
+                         rate_a=rate_a)
         branches.append(l)
 
     return branches
 
 
-def get_generators(path, bus_map, voltage=400, licensee="SPT", others=None):
+def get_generators(path, bus_map, voltage=400, licensee="SPT", aggregate=False, others=None):
     others = [] if others is None else others
 
     generator_reader = csv.reader(open(path),
@@ -195,6 +220,7 @@ def get_generators(path, bus_map, voltage=400, licensee="SPT", others=None):
 
     _ = generator_reader.next() # skip first row
     generators = []
+    gen_map = {}
     for row in generator_reader:
 
         if not len(row[9]) >= 4:
@@ -202,19 +228,18 @@ def get_generators(path, bus_map, voltage=400, licensee="SPT", others=None):
             continue
 
         if row[9][4] == str(voltage)[0] and row[11] == licensee:
+            node_id = row[9]
 
             try:
-                node = bus_map[row[9][:4]]
+                node = bus_map[node_id[:4]]
             except KeyError:
-                print "Generator bus not found: %s %s %d" % (row[9][:5], row[4], voltage)
-                found = [oth[row[9][:4]].v_base for oth in others if oth.has_key(row[9][:4])]
+                print "Generator bus not found: %s %s %d" % (node_id[:5], row[4], voltage)
+                found = [oth[node_id[:4]].v_base for oth in others if oth.has_key(node_id[:4])]
                 if found:
-                    print "Gen bus %s found at: %s" % (row[9][:4], found)
+                    print "Gen bus %s found at: %s" % (node_id[:4], found)
                 continue
 
             name = row[0] if not len(row[1]) else "%s-%s" % (row[0], row[1])
-
-#            print "Generator:", name, node.name
 
             if not len(row[4]):
                 continue
@@ -230,13 +255,29 @@ def get_generators(path, bus_map, voltage=400, licensee="SPT", others=None):
             else:
                 q_max = float(row[7])
 
-            g = pylon.Generator(node, name, p_min=p_min, p_max=p_max, q_min=q_min, q_max=q_max)
+            if gen_map.has_key(row[9][:5]):
+                g = gen_map[node_id[:5]]
+                g.p_min += p_min
+                g.p_max += p_max
+                g.q_min += q_min
+                g.q_max += q_max
+            else:
+                g = pylon.Generator(node, name, p_min=p_min, p_max=p_max, q_min=q_min, q_max=q_max)
+
+                print "Generator:", name, node.name, p_max
+
+                if aggregate:
+                    gen_map[node_id[:5]] = g
+
             g._company = row[2]
             g._fuel = row[3]
 
             generators.append(g)
 
-    return generators
+    if aggregate:
+        return gen_map.values()
+    else:
+        return generators
 
 def main():
     bus_map400 = {}
@@ -288,48 +329,51 @@ def main():
     for path in BRANCH_DATA:
         branches400.extend(get_branches(path, bus_map400, 400, maps))
 
-    branches275 = []
-    for path in BRANCH_DATA:
-        branches275.extend(get_branches(path, bus_map275, 275, maps))
-
-    branches132 = []
-    for path in BRANCH_DATA:
-        branches132.extend(get_branches(path, bus_map132, 132, maps))
+#    branches275 = []
+#    for path in BRANCH_DATA:
+#        branches275.extend(get_branches(path, bus_map275, 275, maps))
+#
+#    branches132 = []
+#    for path in BRANCH_DATA:
+#        branches132.extend(get_branches(path, bus_map132, 132, maps))
 
     # Transformers.
     transformers = []
     for path in TRANSFORMER_DATA:
         transformers.extend(
-            get_transformers(path, {"4": bus_map400, "2": bus_map275,
-                                    "1": bus_map132}, maps))
+            get_transformers(path, {"4": bus_map400,
+                                    "2": bus_map275,
+#                                    "1": bus_map132
+                                    }, maps))
 
     # Generators.
+    aggregate = False
     generators = []
     for path in GENERATOR_DATA:
-        generators.extend(get_generators(path, bus_map400, voltage=400, licensee="SPT", others=maps))
-        generators.extend(get_generators(path, bus_map400, voltage=400, licensee="SHETL", others=maps))
-        generators.extend(get_generators(path, bus_map400, voltage=400, licensee="NGET", others=maps))
+        generators.extend(get_generators(path, bus_map400, voltage=400, licensee="SPT", aggregate=aggregate, others=maps))
+        generators.extend(get_generators(path, bus_map400, voltage=400, licensee="SHETL", aggregate=aggregate, others=maps))
+        generators.extend(get_generators(path, bus_map400, voltage=400, licensee="NGET", aggregate=aggregate, others=maps))
 
-        generators.extend(get_generators(path, bus_map275, voltage=275, licensee="SPT", others=maps))
-        generators.extend(get_generators(path, bus_map275, voltage=275, licensee="SHETL", others=maps))
-        generators.extend(get_generators(path, bus_map275, voltage=275, licensee="NGET", others=maps))
-
-        generators.extend(get_generators(path, bus_map132, voltage=132, licensee="SPT", others=maps))
-        generators.extend(get_generators(path, bus_map132, voltage=132, licensee="SHETL", others=maps))
-        generators.extend(get_generators(path, bus_map132, voltage=132, licensee="NGET", others=maps))
-
-        generators.extend(get_generators(path, bus_map66, voltage=66, licensee="SPT", others=maps))
-        generators.extend(get_generators(path, bus_map66, voltage=66, licensee="SHETL", others=maps))
-        generators.extend(get_generators(path, bus_map66, voltage=66, licensee="NGET", others=maps))
-
-        generators.extend(get_generators(path, bus_map33, voltage=33, licensee="SPT", others=maps))
-        generators.extend(get_generators(path, bus_map33, voltage=33, licensee="SHETL", others=maps))
-        generators.extend(get_generators(path, bus_map33, voltage=33, licensee="NGET", others=maps))
-
-        # Assume "5" used in substation code to indicate 11kV.
-        generators.extend(get_generators(path, bus_map11, voltage=511, licensee="SPT", others=maps))
-        generators.extend(get_generators(path, bus_map11, voltage=511, licensee="SHETL", others=maps))
-        generators.extend(get_generators(path, bus_map11, voltage=511, licensee="NGET", others=maps))
+#        generators.extend(get_generators(path, bus_map275, voltage=275, licensee="SPT", others=maps))
+#        generators.extend(get_generators(path, bus_map275, voltage=275, licensee="SHETL", others=maps))
+#        generators.extend(get_generators(path, bus_map275, voltage=275, licensee="NGET", others=maps))
+#
+#        generators.extend(get_generators(path, bus_map132, voltage=132, licensee="SPT", others=maps))
+#        generators.extend(get_generators(path, bus_map132, voltage=132, licensee="SHETL", others=maps))
+#        generators.extend(get_generators(path, bus_map132, voltage=132, licensee="NGET", others=maps))
+#
+#        generators.extend(get_generators(path, bus_map66, voltage=66, licensee="SPT", others=maps))
+#        generators.extend(get_generators(path, bus_map66, voltage=66, licensee="SHETL", others=maps))
+#        generators.extend(get_generators(path, bus_map66, voltage=66, licensee="NGET", others=maps))
+#
+#        generators.extend(get_generators(path, bus_map33, voltage=33, licensee="SPT", others=maps))
+#        generators.extend(get_generators(path, bus_map33, voltage=33, licensee="SHETL", others=maps))
+#        generators.extend(get_generators(path, bus_map33, voltage=33, licensee="NGET", others=maps))
+#
+#        # Assume "5" used in substation code to indicate 11kV.
+#        generators.extend(get_generators(path, bus_map11, voltage=511, licensee="SPT", others=maps))
+#        generators.extend(get_generators(path, bus_map11, voltage=511, licensee="SHETL", others=maps))
+#        generators.extend(get_generators(path, bus_map11, voltage=511, licensee="NGET", others=maps))
 
     buses = bus_map400.values() + \
             bus_map275.values() + \
@@ -338,10 +382,11 @@ def main():
             bus_map33.values() + \
             bus_map11.values()
 
-    branches = branches400 + \
-               branches275 + \
-               branches132 + \
-               transformers
+    branches = transformers + \
+               branches400# + \
+#               branches275 + \
+#               branches132 + \
+
 
     case = pylon.Case(buses=buses, branches=branches, generators=generators)
 
