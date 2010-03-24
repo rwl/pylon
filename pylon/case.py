@@ -92,6 +92,9 @@ class Bus(Named):
         # Shunt susceptance (MVAr (injected) at V = 1.0 p.u.).
         self.b_shunt = b_shunt
 
+        self.area = 1
+        self.zone = 1
+
         # Voltage magnitude, typically determined by a routine.
         self.v_magnitude = 0.0
         # Voltage angle, typically determined by a routine.

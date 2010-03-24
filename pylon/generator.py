@@ -126,6 +126,9 @@ class Generator(Named):
         self.mu_pmin = 0.0
         self.mu_pmax = 0.0
 
+        self.mu_qmin = 0.0
+        self.mu_qmax = 0.0
+
         # Unit Commitment -----------------------------------------------------
 
         # Ramp up rate (p.u./h).
