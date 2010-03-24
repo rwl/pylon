@@ -1,10 +1,12 @@
-import pylon
+__author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 import csv
 #import kmldom
 import zipfile
 import xml.etree.ElementTree as ET
 import geolocator.gislib
+
+import pylon
 
 file = zipfile.ZipFile("spt.kmz", "r")
 
