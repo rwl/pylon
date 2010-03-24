@@ -27,19 +27,13 @@
 import logging
 
 from numpy import \
-    array, flatnonzero, Inf, any, isnan, log, ones, r_, finfo, zeros, dot, \
-    absolute, asmatrix
+    array, flatnonzero, Inf, any, isnan, ones, r_, finfo, zeros, dot, \
+    absolute
 
 from numpy.linalg import norm
 
 from scipy.sparse import csr_matrix, vstack, hstack, eye
 from scipy.sparse.linalg import spsolve
-
-#------------------------------------------------------------------------------
-#  Logging:
-#------------------------------------------------------------------------------
-
-logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -72,13 +66,14 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
     # default argument values
 #    l = array([]) if A is None else l
 #    u = array([]) if A is None else u
-    l = -Inf * ones(nA, 1) if l is None else l
-    u =  Inf * ones(nA, 1) if u is None else u
+    l = -Inf * ones(nA) if l is None else l
+    u =  Inf * ones(nA) if u is None else u
     xmin = -Inf * ones(x0.shape[0]) if xmin is None else xmin
     xmax =  Inf * ones(x0.shape[0]) if xmax is None else xmax
     if gh_fcn is None:
         nonlinear = False
-        gn = hn = None
+        gn = array([])
+        hn = array([])
     else:
         nonlinear = True
 
@@ -111,8 +106,8 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
     sigma = 0.1
     z0 = 1
     alpha_min = 1e-8
-    rho_min = 0.95
-    rho_max = 1.05
+#    rho_min = 0.95
+#    rho_max = 1.05
     mu_threshold = 1e-5
 
     # initialize
@@ -148,10 +143,8 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
     df = df * opt["cost_mult"]
     if nonlinear:
         hn, gn, dhn, dgn = gh_fcn(x)        # non-linear constraints
-#        h = hn if Ae is None else r_[hn, Ae * x - be] # inequality constraints
-#        g = gn if Ai is None else r_[gn, Ai * x - bi] # equality constraints
-        h = r_[hn, -bi] if Ai is None else r_[hn, Ai * x - bi] # inequality constraints
-        g = r_[gn, -be] if Ae is None else r_[gn, Ae * x - be] # equality constraints
+        h = hn if Ai is None else r_[hn, Ai * x - bi] # inequality constraints
+        g = gn if Ae is None else r_[gn, Ae * x - be] # equality constraints
 
         if (dhn is None) and (Ai is None):
             dh = None
@@ -190,25 +183,28 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
     lam = zeros(neq)
     z = z0 * ones(niq)
     mu = z0 * ones(niq)
-    k = flatnonzero(g < -z0)
-    z[k] = -g[k]
+    k = flatnonzero(h < -z0)
+    z[k] = -h[k]
     k = flatnonzero((gamma / z) > z0)
-    if len(k):
-        mu[k] = gamma / z[k]
+    mu[k] = gamma / z[k]
     e = ones(niq)
 
     # check tolerance
     f0 = f
-    if opt["step_control"]:
-        L = f + lam.T * g + mu.T * (h + z) - gamma * sum(log(z))
+#    if opt["step_control"]:
+#        L = f + lam.T * g + mu.T * (h + z) - gamma * sum(log(z))
 
     Lx = df
     Lx = Lx + dg * lam if dg is not None else Lx
     Lx = Lx + dh * mu  if dh is not None else Lx
+
+    gnorm = norm(g, Inf) if len(g) else 0.0
+    lam_norm = norm(lam, Inf) if len(lam) else 0.0
+    mu_norm = norm(mu, Inf) if len(mu) else 0.0
     feascond = \
-        max([norm(g, Inf), max(h)]) / (1 + max([norm(x, Inf), norm(z, Inf)]))
+        max([gnorm, max(h)]) / (1 + max([norm(x, Inf), norm(z, Inf)]))
     gradcond = \
-        norm(Lx, Inf) / (1 + max([norm(lam, Inf), norm(mu, Inf)]))
+        norm(Lx, Inf) / (1 + max([lam_norm, mu_norm]))
     compcond = dot(z, mu) / (1 + norm(x, Inf))
     costcond = absolute(f - f0) / (1 + absolute(f0))
 
@@ -218,23 +214,23 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
         'stepsize': 0, 'obj': f / opt["cost_mult"], 'alphap': 0, 'alphad': 0}
 
     if opt["verbose"]:
-        s = '-sc' if opt.step_control else ''
+        s = '-sc' if opt["step_control"] else ''
         version, date = '1.0b2', '24-Mar-2010'
-        logger.info('Python Interior Point Solver -- PIPS%s, Version %s, %s' %
-                    (s, version, date))
-        logger.info(" it    objective   step size   feascond     gradcond     "
-                    "compcond     costcond  ")
-        logger.info("----  ------------ --------- ------------ ------------ "
-                    "------------ ------------")
-        logger.info("%3d  %12.8g %10s %12g %12g %12g %12g" %
+        print 'Python Interior Point Solver - PIPS%s, Version %s, %s' % \
+                    (s, version, date)
+        print " it    objective   step size   feascond     gradcond     " \
+              "compcond     costcond  "
+        print "----  ------------ --------- ------------ ------------ " \
+              "------------ ------------"
+        print "%3d  %12.8g %10s %12g %12g %12g %12g" % \
             (i, (f / opt["cost_mult"]), "",
-             feascond, gradcond, compcond, costcond))
+             feascond, gradcond, compcond, costcond)
 
     if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
         compcond < opt["comptol"] and costcond < opt["costtol"]:
         converged = True
         if opt["verbose"]:
-            logger.info("Converged!")
+            print "Converged!"
 
     # do Newton iterations
     while (not converged and i < opt["max_it"]):
@@ -246,9 +242,9 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
                  "ineqnonlin": mu[range(niqnln)]}
         if nonlinear:
             if hess_fcn is None:
-                logger.error("pips: Hessian evaluation via finite differences "
-                             "not yet implemented.\nPlease provide "
-                             "your own hessian evaluation function.")
+                print "pips: Hessian evaluation via finite differences " \
+                      "not yet implemented.\nPlease provide " \
+                      "your own hessian evaluation function."
             Lxx = hess_fcn(x, lmbda)
         else:
             _, _, d2f = f_fcn(x)      # cost
@@ -258,10 +254,10 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
         rmu = range(len(mu))
         mudiag = csr_matrix((mu, (rmu, rmu))) if len(mu) else None
         dh_zinv = None if dh is None else dh * zinvdiag
-        M = Lxx if dg is None else Lxx + dh_zinv * mudiag * dh.T
-        N = Lx if dg is None else Lx + dh_zinv * (mudiag * h + gamma * e)
+        M = Lxx if dh is None else Lxx + dh_zinv * mudiag * dh.T
+        N = Lx if dh is None else Lx + dh_zinv * (mudiag * h + gamma * e)
 
-        Ab = M if dh is None else vstack([
+        Ab = M if dg is None else vstack([
             hstack([M, dg]),
             hstack([dg.T, csr_matrix((neq, neq))])
         ])
@@ -271,11 +267,11 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
 
         dx = dxdlam[:nx]
         dlam = dxdlam[nx:nx + neq]
-        dz = -h - z if dg is None else -h - z - dh.T * dx
-        dmu = -mu if dg is None else -mu + zinvdiag * (gamma * e - mudiag * dz)
+        dz = -h - z if dh is None else -h - z - dh.T * dx
+        dmu = -mu if dh is None else -mu + zinvdiag * (gamma * e - mudiag * dz)
 
         # optional step-size control
-        sc = False
+#        sc = False
         if opt["step_control"]:
             raise NotImplementedError
 #            x1 = x + dx
@@ -339,11 +335,11 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
         f = f * opt["cost_mult"]
         df = df * opt["cost_mult"]
         if nonlinear:
-            gn, hn, dgn, dhn = gh_fcn(x)                   # nln constraints
+            hn, gn, dhn, dgn = gh_fcn(x)                   # nln constraints
 #            g = gn if Ai is None else r_[gn, Ai * x - bi] # ieq constraints
 #            h = hn if Ae is None else r_[hn, Ae * x - be] # eq constraints
-            h = r_[hn, -bi] if Ai is None else r_[hn, Ai * x - bi] # ieq constr
-            g = r_[gn, be] if Ae is None else r_[gn, Ae * x - be]  # eq constr
+            h = hn if Ai is None else r_[hn, Ai * x - bi] # ieq constr
+            g = gn if Ae is None else r_[gn, Ae * x - be]  # eq constr
 
             if (dhn is None) and (Ai is None):
                 dh = None
@@ -371,10 +367,13 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
         Lx = Lx + dg * lam if dg is not None else Lx
         Lx = Lx + dh * mu  if dh is not None else Lx
 
+        gnorm = norm(g, Inf) if len(g) else 0.0
+        lam_norm = norm(lam, Inf) if len(lam) else 0.0
+        mu_norm = norm(mu, Inf) if len(mu) else 0.0
         feascond = \
-            max([norm(g, Inf), max(h)]) / (1+max([norm(x, Inf), norm(z, Inf)]))
+            max([gnorm, max(h)]) / (1+max([norm(x, Inf), norm(z, Inf)]))
         gradcond = \
-            norm(Lx, Inf) / (1 + max([norm(lam, Inf), norm(mu, Inf)]))
+            norm(Lx, Inf) / (1 + max([lam_norm, mu_norm]))
         compcond = dot(z, mu) / (1 + norm(x, Inf))
         costcond = float(absolute(f - f0) / (1 + absolute(f0)))
 
@@ -384,20 +383,20 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
             'alphap': alphap, 'alphad': alphad}
 
         if opt["verbose"]:
-            logger.info("%3d  %12.8g %10.5g %12g %12g %12g %12g" %
+            print "%3d  %12.8g %10.5g %12g %12g %12g %12g" % \
                 (i, (f / opt["cost_mult"]), norm(dx), feascond, gradcond,
-                 compcond, costcond))
+                 compcond, costcond)
 
         if feascond < opt["feastol"] and gradcond < opt["gradtol"] and \
             compcond < opt["comptol"] and costcond < opt["costtol"]:
             converged = True
             if opt["verbose"]:
-                logger.info("Converged!")
+                print "Converged!"
         else:
             if any(isnan(x)) or (alphap < alpha_min) or \
                 (alphad < alpha_min) or (gamma < EPS) or (gamma > 1.0 / EPS):
                 if opt["verbose"]:
-                    logger.info("Numerically failed.")
+                    print "Numerically failed."
                 eflag = -1
                 break
             f0 = f
@@ -407,7 +406,7 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
 
     if opt["verbose"]:
         if not converged:
-            logger.info("Did not converge in %d iterations." % i)
+            print "Did not converge in %d iterations." % i
 
     # package results
     if eflag != -1:
