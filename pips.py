@@ -214,10 +214,10 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
         'stepsize': 0, 'obj': f / opt["cost_mult"], 'alphap': 0, 'alphad': 0}
 
     if opt["verbose"]:
-        s = '-sc' if opt["step_control"] else ''
-        version, date = '1.0b2', '24-Mar-2010'
-        print 'Python Interior Point Solver - PIPS%s, Version %s, %s' % \
-                    (s, version, date)
+#        s = '-sc' if opt["step_control"] else ''
+#        version, date = '1.0b2', '24-Mar-2010'
+#        print 'Python Interior Point Solver - PIPS%s, Version %s, %s' % \
+#                    (s, version, date)
         print " it    objective   step size   feascond     gradcond     " \
               "compcond     costcond  "
         print "----  ------------ --------- ------------ ------------ " \
@@ -465,31 +465,44 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
     return solution
 
 #------------------------------------------------------------------------------
-#  "pdipm_qp" function:
+#  "qps" function:
 #------------------------------------------------------------------------------
 
-def pips_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
-    """ Wrapper function for a primal-dual interior point QP solver.
+def qps(H, c, A, l, u, xmin=None, xmax=None, x0=None, opt=None):
+    """ Quadratic Program Solver based on PIPS.
     """
-    nx = len(c)
-
-    if H is None:
+    if H is None or H.nnz == 0:
+        if A is None or A.nnz == 0 and \
+           xmin is None or len(xmin) == 0 and \
+           xmax is None or len(xmax) == 0:
+            print 'qps: LP problem must include constraints or variable bounds'
+            return
+        else:
+            if A is not None and A.nnz >= 0:
+                nx = A.shape[1]
+            elif xmin is not None and len(xmin) > 0:
+                nx = xmin.shape[0]
+            elif xmax is not None and len(xmax) > 0:
+                nx = xmax.shape[0]
         H = csr_matrix((nx, nx))
+    else:
+        nx = H.shape[0]
 
-    if VLB is None:
-        VLB = ones(nx) * -Inf
+    xmin = -Inf * ones(nx) if xmin is None else xmin
+    xmax =  Inf * ones(nx) if xmax is None else xmax
 
-    if VUB is None:
-        VUB = ones(nx) * Inf
+    c = zeros(nx) if c is None else c
 
-    if x0 is None:
-        x0 = zeros(nx)
-        k = flatnonzero( (VUB < 1e10) & (VLB > -1e10) )
-        x0[k] = ((VUB[k] + VLB[k]) / 2)
-        k = flatnonzero( (VUB < 1e10) & (VLB <= -1e10) )
-        x0[k] = VUB[k] - 1
-        k = flatnonzero( (VUB >= 1e10) & (VLB > -1e10) )
-        x0[k] = VLB[k] + 1
+#    if x0 is None:
+#        x0 = zeros(nx)
+#        k = flatnonzero( (VUB < 1e10) & (VLB > -1e10) )
+#        x0[k] = ((VUB[k] + VLB[k]) / 2)
+#        k = flatnonzero( (VUB < 1e10) & (VLB <= -1e10) )
+#        x0[k] = VUB[k] - 1
+#        k = flatnonzero( (VUB >= 1e10) & (VLB > -1e10) )
+#        x0[k] = VLB[k] + 1
+
+    x0 = zeros(nx) if x0 is None else x0
 
     opt = {} if opt is None else opt
     if not opt.has_key("cost_mult"):
@@ -498,22 +511,23 @@ def pips_qp(H, c, A, b, VLB=None, VUB=None, x0=None, N=0, opt=None):
     def qp_f(x):
         f = 0.5 * dot(x.T * H, x) + dot(c.T, x)
         df = H * x + c
-        return f, df, H
+        d2f = H
+        return f, df, d2f
 
-    def qp_gh(x):
-        g = array([])
-        h = array([])
-        dg = None
-        dh = None
-        return g, h, dg, dh
+#    def qp_gh(x):
+#        g = array([])
+#        h = array([])
+#        dg = None
+#        dh = None
+#        return g, h, dg, dh
+#
+#    def qp_hessian(x, lmbda):
+#        Lxx = H * opt["cost_mult"]
+#        return Lxx
 
-    def qp_hessian(x, lmbda):
-        Lxx = H * opt["cost_mult"]
-        return Lxx
+#    l = -Inf * ones(b.shape[0])
+#    l[:N] = b[:N]
 
-    l = -Inf * ones(b.shape[0])
-    l[:N] = b[:N]
-
-    return pips(qp_f, qp_gh, qp_hessian, x0, VLB, VUB, A, l, b, opt)
+    return pips(qp_f, x0, A, l, u, xmin, xmax, opt=opt)
 
 # EOF -------------------------------------------------------------------------
