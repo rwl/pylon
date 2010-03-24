@@ -692,12 +692,12 @@ class Case(Named, Serializable):
         F = C - A * csr_matrix((conj(Ibus), (ib, ib)))
         G = csr_matrix((ones(nb) / abs(V), (ib, ib)))
 
-        Haa = E + F
-        Hva = 1j * G * (E - F)
-        Hav = Hva.T
-        Hvv = G * (C + C.T) * G
+        Gaa = E + F
+        Gva = 1j * G * (E - F)
+        Gav = Gva.T
+        Gvv = G * (C + C.T) * G
 
-        return Haa, Hav, Hva, Hvv
+        return Gaa, Gav, Gva, Gvv
 
     #--------------------------------------------------------------------------
     #  Second derivative of complex branch current w.r.t. voltage:
@@ -710,12 +710,12 @@ class Case(Named, Serializable):
         ib = range(nb)
         diaginvVm = csr_matrix((ones(nb) / abs(V), (ib, ib)))
 
-        Gaa = csr_matrix((-(Ybr.T * lam) / V, (ib, ib)))
-        Gva = -1j * Gaa * diaginvVm
-        Gav = Gva
-        Gvv = csr_matrix((nb, nb))
+        Haa = csr_matrix((-(Ybr.T * lam) / V, (ib, ib)))
+        Hva = -1j * Haa * diaginvVm
+        Hav = Hva
+        Hvv = csr_matrix((nb, nb))
 
-        return Gaa, Gav, Gva, Gvv
+        return Haa, Hav, Hva, Hvv
 
     #--------------------------------------------------------------------------
     #  Second derivative of complex power flow w.r.t. voltage:
@@ -739,12 +739,12 @@ class Case(Named, Serializable):
         F = B + B.T
         G = csr_matrix((ones(nb) / abs(V), (ib, ib)))
 
-        Gaa = F - D - E
-        Gva = 1j * G * (B - B.T - D + E)
-        Gav = Gva.T
-        Gvv = G * F * G
+        Haa = F - D - E
+        Hva = 1j * G * (B - B.T - D + E)
+        Hav = Hva.T
+        Hvv = G * F * G
 
-        return Gaa, Gav, Gva, Gvv
+        return Haa, Hav, Hva, Hvv
 
     #--------------------------------------------------------------------------
     #  Second derivative of |complex power flow|**2 w.r.t. voltage:
@@ -760,12 +760,12 @@ class Case(Named, Serializable):
 
         Saa, Sav, Sva, Svv = self.d2Sbr_dV2(Cbr, Ybr, V, diagSbr_conj * lam)
 
-        Gaa = 2 * ( Saa + dSbr_dVa.T * diaglam * dSbr_dVa.conj() ).real
-        Gva = 2 * ( Sva + dSbr_dVm.T * diaglam * dSbr_dVa.conj() ).real
-        Gav = 2 * ( Sav + dSbr_dVa.T * diaglam * dSbr_dVm.conj() ).real
-        Gvv = 2 * ( Svv + dSbr_dVm.T * diaglam * dSbr_dVm.conj() ).real
+        Haa = 2 * ( Saa + dSbr_dVa.T * diaglam * dSbr_dVa.conj() ).real
+        Hva = 2 * ( Sva + dSbr_dVm.T * diaglam * dSbr_dVa.conj() ).real
+        Hav = 2 * ( Sav + dSbr_dVa.T * diaglam * dSbr_dVm.conj() ).real
+        Hvv = 2 * ( Svv + dSbr_dVm.T * diaglam * dSbr_dVm.conj() ).real
 
-        return Gaa, Gav, Gva, Gvv
+        return Haa, Hav, Hva, Hvv
 
     #--------------------------------------------------------------------------
     #  Second derivative of |complex current|**2 w.r.t. voltage:
@@ -781,12 +781,12 @@ class Case(Named, Serializable):
 
         Iaa, Iav, Iva, Ivv = self.d2Ibr_dV2(Ybr, V, diagIbr_conj * lam)
 
-        Gaa = 2 * ( Iaa + dIbr_dVa.T * diaglam * dIbr_dVa.conj() ).real
-        Gva = 2 * ( Iva + dIbr_dVm.T * diaglam * dIbr_dVa.conj() ).real
-        Gav = 2 * ( Iav + dIbr_dVa.T * diaglam * dIbr_dVm.conj() ).real
-        Gvv = 2 * ( Ivv + dIbr_dVm.T * diaglam * dIbr_dVm.conj() ).real
+        Haa = 2 * ( Iaa + dIbr_dVa.T * diaglam * dIbr_dVa.conj() ).real
+        Hva = 2 * ( Iva + dIbr_dVm.T * diaglam * dIbr_dVa.conj() ).real
+        Hav = 2 * ( Iav + dIbr_dVa.T * diaglam * dIbr_dVm.conj() ).real
+        Hvv = 2 * ( Ivv + dIbr_dVm.T * diaglam * dIbr_dVm.conj() ).real
 
-        return Gaa, Gav, Gva, Gvv
+        return Haa, Hav, Hva, Hvv
 
     #--------------------------------------------------------------------------
     #  Update with PF solution:
