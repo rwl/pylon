@@ -2,10 +2,10 @@ import web
 import json
 #from django.utils import simplejson
 import pylon
-urls = ('/json', 'IPylonHandler')
+urls = ('/json', 'PylonHandler')
 app = web.application(urls, globals())
 
-class IPylonHandler:
+class PylonHandler:
     def __init__(self):
         self.case = pylon.Case.load("./pylon/test/data/bench30.raw")
 
