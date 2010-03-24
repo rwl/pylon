@@ -23,6 +23,8 @@
 
 from os.path import basename, splitext
 
+from pylon.case import PQ, PV, REFERENCE, ISOLATED
+from pylon.generator import PW_LINEAR, POLYNOMIAL
 from pylon.readwrite.common import CaseWriter
 
 #------------------------------------------------------------------------------
@@ -30,7 +32,10 @@ from pylon.readwrite.common import CaseWriter
 #------------------------------------------------------------------------------
 
 class MATPOWERWriter(CaseWriter):
-    """ Write case data to a file in MATPOWER format.
+    """ Write case data to a file in MATPOWER format [1].
+
+        [1] Ray Zimmerman, "savecase.m", MATPOWER, PSERC Cornell,
+            http://www.pserc.cornell.edu/matpower/, version 4.0b2, March 2010
     """
 
     #--------------------------------------------------------------------------
@@ -43,7 +48,9 @@ class MATPOWERWriter(CaseWriter):
         super(MATPOWERWriter, self).__init__(case)
 
         # Function name must match the file name in MATLAB.
-        self.func_name = case.name
+        self._fcn_name = case.name
+
+        self._prefix = "mpc."
 
     #--------------------------------------------------------------------------
     #  "CaseWriter" interface:
@@ -53,214 +60,153 @@ class MATPOWERWriter(CaseWriter):
         """ Writes case data to file in MATPOWER format.
         """
         if isinstance(file_or_filename, basestring):
-            self.func_name, _ = splitext(basename(file_or_filename))
+            self._fcn_name, _ = splitext(basename(file_or_filename))
         else:
-            self.func_name = self.case.name
+            self._fcn_name = self.case.name
 
         super(MATPOWERWriter, self).write(file_or_filename)
 
 
-    def _write_data(self, file):
-        super(MATPOWERWriter, self)._write_data(file)
-        self.write_area_data(file)
-        file.write("return;\n")
+#    def _write_data(self, file):
+#        super(MATPOWERWriter, self)._write_data(file)
+#        self.write_area_data(file)
+#        file.write("return;\n")
 
 
     def write_case_data(self, file):
         """ Writes the case data in MATPOWER format.
         """
-        file.write("function [baseMVA, bus, gen, branch, areas, gencost] = ")
-        file.write("%s\n\n" % self.func_name)
+        file.write("function mpc = %s\n" % self._fcn_name)
+        file.write('\n%%%% MATPOWER Case Format : Version %d\n' % 2)
+        file.write("mpc.version = '%d';\n" % 2)
 
-        file.write("%%-----  Power Flow Data  -----%%\n")
-        file.write("%% System MVA base\n")
-        file.write("baseMVA = %.1f;\n\n" % self.case.base_mva)
+        file.write("\n%%%%-----  Power Flow Data  -----%%%%\n")
+        file.write("%%%% system MVA base\n")
+        file.write("%sbaseMVA = %g;\n" % (self._prefix, self.case.base_mva))
 
 
     def write_bus_data(self, file):
         """ Writes bus data in MATPOWER format.
         """
-        labels = ["bus_id", "type", "Pd", "Qd", "Gs", "Bs", "area", "Vm", "Va",
-            "baseKV", "Vmax", "Vmin"]
+#        labels = ["bus_id", "type", "Pd", "Qd", "Gs", "Bs", "area", "Vm", "Va",
+#            "baseKV", "Vmax", "Vmin"]
 
-        base_mva = self.case.base_mva
+        bus_attrs = ["_i", "type", "p_demand", "q_demand", "g_shunt","b_shunt",
+            "area", "v_magnitude_guess", "v_angle_guess", "v_base", "zone",
+            "v_max", "v_min", "p_lmbda", "q_lmbda", "mu_vmin", "mu_vmax"]
 
-        buses_data = [None] * len(self.case.buses)
-        for i, v in enumerate(self.case.buses):
-            v_data = {}
-            v_data["bus_id"] = i + 1
-            if v.type == "PQ":
-                bustype = 1
-            elif v.type == "PV":
-                bustype = 2
-            elif v.type == "ref":
-                bustype = 3
-            else:
-                raise ValueError
-            v_data["type"] = bustype
-            v_data["Pd"] = v.p_demand
-            v_data["Qd"] = v.q_demand
-            v_data["Gs"] = v.g_shunt
-            v_data["Bs"] = v.b_shunt
-            # TODO: Implement areas
-            v_data["area"] = 1
-            v_data["Vm"] = v.v_magnitude_guess
-            v_data["Va"] = v.v_angle_guess
-            v_data["baseKV"] = v.v_base
-#            v_data["zone"] = v.zone
-            v_data["Vmax"] = v.v_max
-            v_data["Vmin"] = v.v_min
+        file.write("\n%%%% bus data\n")
+        file.write("%%\tbus_i\ttype\tPd\tQd\tGs\tBs\tarea\tVm\tVa\tbaseKV"
+                   "\tzone\tVmax\tVmin\tlam_P\tlam_Q\tmu_Vmax\tmu_Vmin")
+        file.write("\n%sbus = [\n" % self._prefix)
 
-            # Convert all values to strings
-            for key in v_data.keys():
-                v_data[key] = str(v_data[key])
 
-            buses_data[i] = v_data
+        for bus in self.case.buses:
+            vals = [getattr(bus, a) for a in bus_attrs]
+            d = {PQ: 1, PV: 2, REFERENCE: 3, ISOLATED: 4}
+            vals[1] = d[vals[1]]
 
-        file.write("%% bus data" + "\n")
+            assert len(vals) == 17
 
-        file.write("%\t")
-        for label in labels:
-            file.write("%-8s" % label)
-        file.write("\n")
+            file.write("\t%d\t%d\t%g\t%g\t%g\t%g\t%d\t%.8g\t%.8g\t%g\t%d\t%g"
+                       "\t%g\t%.4f\t%.4f\t%.4f\t%.4f;\n" % tuple(vals[:]))
+        file.write("];\n")
 
-        file.write("bus = [" + "\n")
-
-        for v_data in buses_data:
-            file.write("\t")
-            for label in labels:
-                if label != labels[-1]:
-                    file.write("%-8s" % v_data[label])
-                else:
-                    file.write("%s" % v_data[label])
-            file.write(";" + "\n")
-
-        file.write("];" + "\n")
 
 
     def write_generator_data(self, file):
         """ Writes generator data in MATPOWER format.
         """
-        labels = ["bus", "Pg", "Qg", "Qmax", "Qmin", "Vg", "mBase", "status",
-            "Pmax", "Pmin"]
+        gen_attr = ["p", "q", "q_max", "q_min", "v_magnitude",
+            "base_mva", "online", "p_max", "p_min", "mu_pmax", "mu_pmin",
+            "mu_qmax", "mu_qmin"]
 
-        generators_data = [None] * len(self.case.generators)
-        for i, g in enumerate(self.case.generators):
-            g_data = {}
-            g_base = g.base_mva
-            # FIXME: Need faster way to find generator bus index
-            g_data["bus"] = 1 # Failsafe value
-            if g in self.case.generators:
-                g_data["bus"] = g.bus._i + 1
-            g_data["Pg"] = g.p * g_base
-            g_data["Qg"] = g.q * g_base
-            g_data["Qmax"] = g.q_max * g_base
-            g_data["Qmin"] = g.q_min * g_base
-            g_data["Vg"] = g.v_magnitude
-            g_data["mBase"] = g.base_mva
-            if g.online:
-                online = 1
-            else:
-                online = 0
-            g_data["status"] = online
-            g_data["Pmax"]   = g.p_max * g_base
-            g_data["Pmin"]   = g.p_min * g_base
+        file.write("\n%%%% generator data\n")
+        file.write("%%\tbus\tPg\tQg\tQmax\tQmin\tVg\tmBase\tstatus\tPmax\tPmin")
+        file.write("\tmu_Pmax\tmu_Pmin\tmu_Qmax\tmu_Qmin")
+        file.write("\n%sgen = [\n" % self._prefix)
 
-            # Convert all values to strings
-            for key in g_data.keys():
-                g_data[key] = str(g_data[key])
-
-            generators_data[i] = g_data
-
-        file.write("%% generator data" + "\n")
-
-        file.write("%\t")
-        for label in labels:
-            file.write("%-8s" % label)
-        file.write("\n")
-
-        file.write("gen = [" + "\n")
-
-        for g_data in generators_data:
-            file.write("\t")
-            for label in labels:
-                if label != labels[-1]:
-                    file.write("%-8s" % g_data[label])
-                else:
-                    file.write("%s" % g_data[label])
-            file.write(";" + "\n")
-
-        file.write("];" + "\n")
+        for generator in self.case.generators:
+            vals = [getattr(generator, a) for a in gen_attr]
+            vals.insert(0, generator.bus._i)
+            assert len(vals) == 14
+            file.write("\t%d\t%g\t%g\t%g\t%g\t%.8g\t%g\t%d\t%g\t%g\t%g\t%g"
+                       "\t%g\t%g;\n" % tuple(vals))
+        file.write("];\n")
 
 
     def write_branch_data(self, file):
         """ Writes branch data to file.
         """
-        labels = ["fbus", "tbus", "r", "x", "b", "rateA", "rateB", "rateC",
-            "ratio", "angle", "status"]
+        branch_attr = ["r", "x", "b", "rate_a", "rate_b", "rate_c",
+            "ratio", "phase_shift", "online", "ang_min", "ang_max", "p_from",
+            "q_from", "p_to", "q_to", "mu_s_from", "mu_s_to", "mu_angmin",
+            "mu_angmax"]
 
-        base_mva = self.case.base_mva
+        file.write("\n%%%% branch data\n")
+        file.write("%%\tfbus\ttbus\tr\tx\tb\trateA\trateB\trateC\tratio"
+                   "\tangle\tstatus")
+        file.write("\tangmin\tangmax")
+        file.write("\tPf\tQf\tPt\tQt")
+        file.write("\tmu_Sf\tmu_St")
+        file.write("\tmu_angmin\tmu_angmax")
+        file.write("\n%sbranch = [\n" % self._prefix)
 
-        branches_data = []
-        for e in self.case.branches:
-            e_data = {}
-            e_data["fbus"] = e.from_bus._i + 1
-            e_data["tbus"] = e.to_bus._i + 1
-            e_data["r"] = e.r
-            e_data["x"] = e.x
-            e_data["b"] = e.b
-            e_data["rateA"] = e.rate_a * base_mva
-            # TODO: Implement short term and emergency ratings
-            e_data["rateB"] = e.rate_a * base_mva
-            e_data["rateC"] = e.rate_a * base_mva
-            e_data["ratio"] = e.ratio
-            e_data["angle"] = e.phase_shift
-            if e.online:
-                online = 1
-            else:
-                online = 0
-            e_data["status"] = online
+        for branch in self.case.branches:
+            vals = [getattr(branch, a) for a in branch_attr]
 
-            # Convert all values to strings
-            for key in e_data.keys():
-                e_data[key] = str(e_data[key])
+            vals.insert(0, branch.to_bus._i)
+            vals.insert(0, branch.from_bus._i)
 
-            branches_data.append(e_data)
-
-        file.write("%% branch data" + "\n")
-
-        file.write("%\t")
-        for label in labels:
-            file.write("%-8s" % label)
-        file.write("\n")
-
-        file.write("branch = [" + "\n")
-
-        for e_data in branches_data:
-            file.write("\t")
-            for label in labels:
-                if label != labels[-1]:
-                    file.write("%-8s" % e_data[label])
-                else:
-                    file.write("%s" % e_data[label])
-            file.write(";" + "\n")
-
-        file.write("];" + "\n")
+            file.write("\t%d\t%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%d\t%g\t%g"
+                       "\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f;\n" %
+                       tuple(vals))
+        file.write("];\n")
 
 
     def write_generator_cost_data(self, file):
         """ Writes generator cost data to file.
         """
-        file.write("%% generator cost data" + "\n")
-        file.write("%\n")
-        file.write("% Piecewise linear:" + "\n")
-        file.write("%\t1\tstartup\tshutdwn\tn_point\tx1\ty1\t...\txn\tyn\n")
-        file.write("%\n")
-        file.write("% Polynomial:" + "\n")
-        file.write("%\t2\tstartup\tshutdwn\tn_coeff\tc(n-1)\t...\tc0\n")
+        file.write("\n%%%% generator cost data\n")
+        file.write("%%\t1\tstartup\tshutdown\tn\tx1\ty1\t...\txn\tyn\n")
+        file.write("%%\t2\tstartup\tshutdown\tn\tc(n-1)\t...\tc0\n")
+        file.write("%sgencost = [\n" % self._prefix)
 
-        file.write("gencost = [" + "\n")
-        file.write("];" + "\n")
+        for generator in self.case.generators:
+            n = len(generator.p_cost)
+            template = '\t%d\t%g\t%g\t%d'
+            for _ in range(n):
+                template = '%s\t%%g' % template
+            template = '%s;\n' % template
+
+            if generator.pcost_model == PW_LINEAR:
+                t = 2
+#                cp = [p for p, q in generator.p_cost]
+#                cq = [q for p, q in generator.p_cost]
+#                c = zip(cp, cq)
+                c = [v for pc in generator.p_cost for v in pc]
+            elif generator.pcost_model == POLYNOMIAL:
+                t = 1
+                c = list(generator.p_cost)
+            else:
+                raise
+
+            vals = [t, generator.c_startup, generator.c_shutdown, n] + c
+
+            file.write(template % tuple(vals))
+        file.write("];\n")
+
+
+#        file.write("%% generator cost data" + "\n")
+#        file.write("%\n")
+#        file.write("% Piecewise linear:" + "\n")
+#        file.write("%\t1\tstartup\tshutdwn\tn_point\tx1\ty1\t...\txn\tyn\n")
+#        file.write("%\n")
+#        file.write("% Polynomial:" + "\n")
+#        file.write("%\t2\tstartup\tshutdwn\tn_coeff\tc(n-1)\t...\tc0\n")
+#
+#        file.write("gencost = [" + "\n")
+#        file.write("];" + "\n")
 
     #--------------------------------------------------------------------------
     #  "MatpowerWriter" interface:

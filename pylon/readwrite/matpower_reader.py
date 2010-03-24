@@ -346,6 +346,7 @@ class MATPOWERReader(CaseReader):
         bus.p_demand = tokens["Pd"]
         bus.q_demand = tokens["Qd"]
 
+        bus.area = tokens["area"]
         bus.zone = tokens["zone"]
 
         bus.v_max = tokens["Vmax"]
