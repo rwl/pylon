@@ -33,7 +33,7 @@ from pyjamas import Window
 from pyjamas.JSONService import JSONProxy
 
 
-class IPylon:
+class Pylon:
     def __init__(self):
         self.remote_case = CaseService()
 
@@ -142,9 +142,9 @@ class CaseService(JSONProxy):
 
 if __name__ == "__main__":
     # For pyjd, set up a web server and load the HTML from there.
-    pyjd.setup("http://0.0.0.0:8080/static/ipylon.html")
-#    pyjd.setup("public/ipylon.html")
-    app = IPylon()
+    pyjd.setup("http://0.0.0.0:8080/static/pylon.html")
+#    pyjd.setup("public/pylon.html")
+    app = Pylon()
     pyjd.run() # dummy in pyjs
 
 # EOF -------------------------------------------------------------------------
