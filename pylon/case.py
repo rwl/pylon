@@ -904,7 +904,7 @@ class Case(Named, Serializable):
 
     def save_psse(self, fd):
         from pylon.readwrite import PSSEWriter
-        raise PSSEWriter(self).write(fd)
+        return PSSEWriter(self).write(fd)
 
 
     @classmethod
