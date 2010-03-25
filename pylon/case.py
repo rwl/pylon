@@ -903,7 +903,8 @@ class Case(Named, Serializable):
 
 
     def save_psse(self, fd):
-        raise NotImplementedError
+        from pylon.readwrite import PSSEWriter
+        raise PSSEWriter(self).write(fd)
 
 
     @classmethod

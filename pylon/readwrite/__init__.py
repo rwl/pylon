@@ -28,6 +28,7 @@ from matpower_reader import MATPOWERReader
 from matpower_writer import MATPOWERWriter
 
 from psse_reader import PSSEReader
+from psse_writer import PSSEWriter
 from psat_reader import PSATReader
 
 from rst_writer import ReSTWriter

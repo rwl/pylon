@@ -14,4 +14,4 @@ pylon.NewtonPF(case).solve()
 #pylon.FastDecoupledPF(case, method="XB").solve()
 
 # Print a report to screen.
-case.save_matpower(sys.stdout)
+case.save_psse(sys.stdout)
