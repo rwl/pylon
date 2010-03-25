@@ -61,9 +61,14 @@ class ProfitTask(Task):
 
 #        fixed_cost = t * g.total_cost(0.0)
 #        variable_cost = (t * g.total_cost()) - fixed_cost
-        costs = g.total_cost(round(g.p, 2),
+
+#        print "P:", g.p
+
+        costs = g.total_cost(round(g.p, 4),
                              self.env._p_cost,
                              self.env._pcost_model)
+
+#        print "C:", costs
 
         revenue = t * sum([ob.revenue for ob in offbids])
 

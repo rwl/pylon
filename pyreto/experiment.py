@@ -89,7 +89,7 @@ class MarketExperiment(object):
         """
         self.stepid += 1
 
-        logger.info("Entering simulation period %d." % self.stepid)
+        logger.info("\nEntering simulation period %d." % self.stepid)
 
         # Initialise the market.
         self.market.reset()
@@ -114,7 +114,7 @@ class MarketExperiment(object):
 #        for agent in self.agents:
 #            agent.learn()
 
-        logger.info("")
+#        logger.info("")
 
 
     def reset(self):

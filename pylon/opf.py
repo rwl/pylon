@@ -91,17 +91,17 @@ class OPF(object):
         om = self._construct_opf_model(self.case)
 
         # Call the specific solver.
-        if self.opt["verbose"]:
-            print '\nPYLON Version %s, %s', "0.4.0", "March 2010"
+#        if self.opt["verbose"]:
+#            print '\nPYLON Version %s, %s', "0.4.0", "March 2010"
         if solver_klass is not None:
             result = solver_klass(om).solve()
         elif self.dc:
-            if self.opt["verbose"]:
-                print ' -- DC Optimal Power Flow\n'
+#            if self.opt["verbose"]:
+#                print ' -- DC Optimal Power Flow\n'
             result = DCOPFSolver(om).solve()
         else:
-            if self.opt["verbose"]:
-                print ' -- AC Optimal Power Flow\n'
+#            if self.opt["verbose"]:
+#                print ' -- AC Optimal Power Flow\n'
             result = PIPSSolver(om, opt=self.opt).solve()
 
         return result

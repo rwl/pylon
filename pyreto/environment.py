@@ -184,32 +184,51 @@ class DiscreteMarketEnvironment(object):
         else:
             qty = self._p_max / n_offbids
 
-        tot_qty = 0.0
+        c_noload = self._p_cost[-1] \
+            if self._pcost_model == POLYNOMIAL else 0.0
 
+        tot_qty = 0.0
+        p0 = 0.0
+        c0 = c_noload
         for i in range(n_offbids):
             tot_qty += qty
-            if self._pcost_model == PW_LINEAR:
-                n_segments = len(p_cost) - 1
-                for j in range(n_segments):
-                    x1, y1 = p_cost[j]
-                    x2, y2 = p_cost[j + 1]
-                    if x1 <= tot_qty <= x2:
-                        m = (y2 - y1) / (x2 - x1)
-                        break
-                else:
-                    raise ValueError
-                c_noload = 0.0
-            elif self._pcost_model == POLYNOMIAL:
-                m = polyval(polyder(list(self._p_cost)), tot_qty)
-                c_noload = self._p_cost[-1]
-            else:
-                raise ValueError
+
+#            if self._pcost_model == PW_LINEAR:
+#                n_segments = len(p_cost) - 1
+#                for j in range(n_segments):
+#                    x1, y1 = p_cost[j]
+#                    x2, y2 = p_cost[j + 1]
+#                    if x1 <= tot_qty <= x2:
+#                        m = (y2 - y1) / (x2 - x1)
+#                        break
+#                else:
+#                    raise ValueError
+#                c_noload = 0.0
+#            elif self._pcost_model == POLYNOMIAL:
+#                m = polyval(polyder(list(self._p_cost)), tot_qty)
+#                c_noload = self._p_cost[-1]
+#            else:
+#                raise ValueError
+
+            p1 = tot_qty
+            c_marg = asset.total_cost(tot_qty, self._p_cost, self._pcost_model)
+
+#            print "MARG:", c_marg
 
             # Cumulative markup/markdown to ensure convexity.
-            if asset.is_load:
-                prc = m * (1.0 - sum(markups[:i + 1]))
+#            if not asset.is_load:
+#                c1 = c_marg + (c_marg * sum(markups[:i + 1]))
+#            else:
+#                c1 = c_marg - (c_marg * sum(markups[:i + 1]))
+
+            m = (c_marg - c0) / (p1 - p0)
+
+            if not asset.is_load:
+                prc = m + (m * sum(markups[:i + 1]))
             else:
-                prc = m * (1.0 + sum(markups[:i + 1]))
+                prc = m - (m * sum(markups[:i + 1]))
+
+#            print "PRC:", prc
 
             if not asset.is_load:
                 offer = Offer(asset, qty, prc, c_noload)
@@ -225,6 +244,9 @@ class DiscreteMarketEnvironment(object):
 
                 logger.info("%.2f$/MWh bid for %.2fMW to supply %s (%d%%)." %
                     (prc, -qty, asset.name, sum(markups[:i + 1]) * 100))
+
+            p0 = p1
+            c0 = c_marg
 
 
     def reset(self):

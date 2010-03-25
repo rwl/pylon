@@ -502,7 +502,7 @@ class Generator(Named):
         # Form piece-wise linear total cost function.
         for i, offbid in enumerate(offbids):
             x1, y1 = points[i]
-            x2 = points[i][0] + offbid.quantity # MW.
+            x2 = x1 + offbid.quantity # MW.
             m = offbid.price # $/MWh
             y2 = m * (x2 - x1) + y1
             points.append((x2, y2))
