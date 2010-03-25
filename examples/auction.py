@@ -28,6 +28,8 @@ from pyreto import \
     MarketExperiment, EpisodicMarketExperiment, DiscreteMarketEnvironment, \
     ContinuousMarketEnvironment, SmartMarket, ProfitTask, EpisodicProfitTask
 
+from pyreto.tools import plot_gen_cost
+
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
 from pybrain.rl.learners import Q, QLambda, SARSA, ENAC, Reinforce #@UnusedImport
@@ -37,8 +39,10 @@ from pybrain.tools.shortcuts import buildNetwork
 from pybrain.tools.plotting import MultilinePlotter
 
 # Define a path to the data file.
-DATA_DIR = join(dirname(pylon.case.__file__), "pyreto", "test", "data")
+DATA_DIR = join("..", "pyreto", "test", "data")
+# DATA_DIR = join(dirname(pylon.case.__file__), "test", "data")
 AUCTION_CASE = join(DATA_DIR, "t_auction_case.pkl")
+# AUCTION_CASE = join(DATA_DIR, "case6ww.pkl")
 
 # Set up publication quality graphs.
 #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
@@ -71,6 +75,9 @@ logger.setLevel(logging.DEBUG)
 
 # Load the case.
 case = pylon.Case.load(AUCTION_CASE)
+
+# Inspect generator costs.
+plot_gen_cost(case.generators)
 
 # Create the market and associate learning agents with each generator.
 market = SmartMarket(case)
