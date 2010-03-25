@@ -7,7 +7,7 @@ import sys
 import pylon
 
 # Data files format if recognised according to file extension.
-case = pylon.Case.load("bench30.raw")
+case = pylon.Case.load("data/bench30.raw")
 
 # Pass the case to the solver and solve.
 pylon.NewtonPF(case).solve()
