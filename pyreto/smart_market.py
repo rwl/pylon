@@ -644,7 +644,7 @@ class _OfferBid(object):
         power at a defined price.
     """
 
-    def __init__(self, generator, qty, prc, reactive=False):
+    def __init__(self, generator, qty, prc, noload_cost=0.0, reactive=False):
         # Generating unit (dispatchable load) to which the offer (bid) applies.
         self.generator = generator
 
@@ -653,6 +653,9 @@ class _OfferBid(object):
 
         # Minimum (maximum) price for sale (willing to be paid).
         self.price = prc
+
+        # Cost for running.
+        self.noload_cost = noload_cost
 
         # Does the offer/bid concern active or reactive power?
         self.reactive = reactive

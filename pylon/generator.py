@@ -498,7 +498,7 @@ class Generator(Named):
         # Sort offers/bids by price in ascending order.
         offbids.sort(key=lambda x: x.price, reverse=arebids)
 
-        points = [(0.0, 0.0)]
+        points = [(0.0, offbids[0].noload_cost)]
         # Form piece-wise linear total cost function.
         for i, offbid in enumerate(offbids):
             x1, y1 = points[i]
