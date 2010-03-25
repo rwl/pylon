@@ -4,7 +4,8 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 auction market. """
 
 #import matplotlib
-#matplotlib.use('WXAgg')
+#matplotlib.use('WXAgg')#'TkAgg')
+
 #matplotlib.rc('font', **{'family': 'sans-serif',
 #                         'sans-serif': ['Computer Modern Sans serif']})
 #matplotlib.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
@@ -113,12 +114,35 @@ for g in case.generators:
     experiment.agents.append(agent)
 
 # Prepare for plotting.
-pylab.figure(figsize=(16,8))
-#pylab.ion()
+pylab.figure(1)#figsize=(16,8))
+pylab.ion()
 pl = MultilinePlotter(autoscale=1.1, xlim=[0, 24], ylim=[0, 1],
                       maxLines=len(experiment.agents))
 pl.setLineStyle(linewidth=2)
 pl.setLegend([a.name for a in experiment.agents], loc='upper left')
+
+pylab.figure(2)
+pylab.ion()
+pl2 = MultilinePlotter(autoscale=1.1, xlim=[0, 24], ylim=[0, 1],
+                       maxLines=len(experiment.agents))
+pl2.setLineStyle(linewidth=2)
+
+pylab.figure(3)
+pylab.ion()
+plc = MultilinePlotter(autoscale=1.1, xlim=[0, 200], ylim=[0, 200],
+                       maxLines=2 * len(experiment.agents))
+plc.setLineStyle(linewidth=2)
+
+for i, generator in enumerate(case.generators):
+    if generator.pcost_model == pylon.PW_LINEAR:
+        x = scipy.array([x for x, _ in generator.p_cost])
+        y = scipy.array([y for _, y in generator.p_cost])
+    elif generator.pcost_model == pylon.POLYNOMIAL:
+        x = scipy.arange(0., generator.p_max, 5)
+        y = scipy.polyval(scipy.array(generator.p_cost), x)
+    else:
+        raise
+    plc.setData(i, x, y)
 
 # Solve an initial OPF.
 # pylon.OPF(case, market.loc_adjust=='dc').solve()
@@ -146,15 +170,17 @@ for agent in experiment.agents:
 # Execute interactions with the environment in batch mode.
 t0 = time.time()
 x = 0
-batch = 10
+batch = 2
 while x <= 1000:
     experiment.doInteractions(batch)
+
     for i, agent in enumerate(experiment.agents):
-        s, a, r = agent.history.getSequence(agent.history.getNumSequences()-1)
-        pl.addData(i, x, scipy.mean(r))
+        s,a,r = agent.history.getSequence(agent.history.getNumSequences() - 1)
+
+        pl.addData(i, x, scipy.mean(a))
+        pl2.addData(i, x, scipy.mean(r))
 
         action, reward = agent_map[agent.name]
-
         agent_map[agent.name] = (scipy.r_[action, a.flatten()],
                                  scipy.r_[reward, r.flatten()])
 
@@ -168,15 +194,27 @@ while x <= 1000:
         agent.learn()
         agent.reset()
 
+    for j, task in enumerate(experiment.tasks):
+        assert task.env.asset.pcost_model == pylon.PW_LINEAR
+        xx = [xx for xx, _ in task.env.asset.p_cost]
+        yy = [yy for _, yy in task.env.asset.p_cost]
+
+        plc.setData(j + len(case.generators), xx, yy)
+
 #    plot_gen_cost(case.generators)
 
+    pylab.figure(1)
     pl.update()
+    pylab.figure(2)
+    pl2.update()
+    pylab.figure(3)
+    plc.update()
     x += batch
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
 
-from pyreto.tools import sparkline_data
-sparkline_data(agent_map, "auctiondata.txt")
+#from pyreto.tools import sparkline_data
+#sparkline_data(agent_map, "auctiondata.txt")
 
 #table_zip = zipfile.ZipFile("%s.zip" % timestr, "w")
 #for a in experiment.agents:
@@ -185,5 +223,8 @@ sparkline_data(agent_map, "auctiondata.txt")
 #        table_zip.write(tmp_name, basename(tmp_name), zipfile.ZIP_DEFLATED)
 #table_zip.close()
 #shutil.rmtree(table_dir)
+
+pylab.figure(1)
+pl.show(popup=True)
 
 #time.sleep(6)
