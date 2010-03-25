@@ -27,7 +27,7 @@ import unittest
 from numpy import Inf, zeros
 
 from pylon import OPF, Case, Generator, REFERENCE, POLYNOMIAL, PW_LINEAR
-from pylon.opf import DCOPFSolver, PDIPMSolver
+from pylon.opf import DCOPFSolver, PIPSSolver
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -72,11 +72,11 @@ class PWLOPFTest(unittest.TestCase):
         self.assertEqual(len(gn), 6)
 
 
-    def test_voltage_angle_var(self):
+    def test_get_voltage_angle_var(self):
         """ Test the voltage angle variable.
         """
         _, refs = self.opf._ref_check(self.case)
-        Va = self.opf._voltage_angle_var(refs, self.case.buses)
+        Va = self.opf._get_voltage_angle_var(refs, self.case.buses)
 
         self.assertEqual(len(Va.v0), 30)
         for v0 in Va.v0:
@@ -93,10 +93,10 @@ class PWLOPFTest(unittest.TestCase):
             self.assertEqual(vl, -Inf)
 
 
-    def test_p_gen_var(self):
+    def test_get_pgen_var(self):
         """ Test active power variable.
         """
-        Pg = self.opf._p_gen_var(self.case.generators, self.case.base_mva)
+        Pg = self.opf._get_pgen_var(self.case.generators, self.case.base_mva)
 
         self.assertEqual(len(Pg.v0), 6)
         self.assertEqual(Pg.v0[0], 0.2354)
@@ -236,10 +236,11 @@ class PWLDCOPFSolverTest(unittest.TestCase):
     def test_constraints(self):
         """ Test equality and inequality constraints.
         """
-        AA, bb = self.solver._linear_constraints(self.om)
+        AA, ll, uu = self.solver._linear_constraints(self.om)
 
         self.assertEqual(AA.shape, (130, 42))
-        self.assertEqual(bb.shape, (130,))
+        self.assertEqual(ll.shape, (130,))
+        self.assertEqual(uu.shape, (130,))
 
 
     def test_pwl_costs(self):
@@ -359,7 +360,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
 
 
     def test_run_opf(self):
-        """ Test solution from the PDIPM solver.
+        """ Test solution from the PIPS solver.
         """
         solution = self.solver.solve()
         x = solution["x"]
@@ -375,8 +376,8 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         self.assertAlmostEqual(x[40], 753.70, places=1)
         self.assertAlmostEqual(x[41], 1008.0, places=1)
 
-        self.assertEqual(lmbda["eqnonlin"].shape, (0,))
-        self.assertEqual(lmbda["ineqnonlin"].shape, (0,))
+#        self.assertEqual(lmbda["eqnonlin"].shape, (0,))
+#        self.assertEqual(lmbda["ineqnonlin"].shape, (0,))
         self.assertEqual(lmbda["mu_l"].shape, (130,))
         self.assertEqual(lmbda["mu_u"].shape, (130,))
         self.assertEqual(lmbda["lower"].shape, (42,))
@@ -404,7 +405,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
             self.solver._unpack_model(self.om)
         ipol, ipwl, nb, nl, nw, ny, nxyz = \
             self.solver._dimension_data(buses, branches, generators)
-        AA, bb = self.solver._linear_constraints(self.om)
+        AA, ll, uu = self.solver._linear_constraints(self.om)
         Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = \
             self.solver._pwl_costs(ny, nxyz, ipwl)
         Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
@@ -417,9 +418,10 @@ class PWLDCOPFSolverTest(unittest.TestCase):
                                                 any_pwl, npol, nw)
         _, LB, UB = self.solver._var_bounds()
         x0 = self.solver._initial_interior_point(buses, generators, LB, UB, ny)
-        s = self.solver._run_opf(HH, CC, AA, bb, LB, UB, x0, self.solver.opt)
+        s = self.solver._run_opf(HH, CC, AA, ll, uu, LB, UB, x0,
+                                 self.solver.opt)
 
-        Va, Pg, f = self.solver._update_solution_data(s["x"], HH, CC, C0)
+        Va, Pg = self.solver._update_solution_data(s, HH, CC, C0)
 
         pl = 4
         self.assertAlmostEqual(Va[0], 0.0, pl)
@@ -429,11 +431,11 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         self.assertAlmostEqual(Pg[0], 0.3600, pl)
         self.assertAlmostEqual(Pg[1], 0.2818, pl)
 
-        self.assertAlmostEqual(f, 5.7328e03, pl)
+        self.assertAlmostEqual(s["f"], 5.7328e03, pl)
 
 
     def test_update_case(self):
-        """ Test solution from the PDIPM solver.
+        """ Test solution from the PIPS solver.
         """
         case = self.case
 
@@ -456,11 +458,11 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         self.assertAlmostEqual(case.generators[1].mu_pmax, 0.0, pl)
 
 #------------------------------------------------------------------------------
-#  "PDIPMSolverTest" class:
+#  "PIPSSolverTest" class:
 #------------------------------------------------------------------------------
 
-class PDIPMSolverTest(unittest.TestCase):
-    """ Test case for the PDIPM OPF solver.
+class PIPSSolverTest(unittest.TestCase):
+    """ Test case for the PIPS OPF solver.
     """
 
     def setUp(self):
@@ -471,11 +473,11 @@ class PDIPMSolverTest(unittest.TestCase):
 
         self.opf = OPF(self.case, dc=False)
         self.om = self.opf._construct_opf_model(self.case)
-        self.solver = PDIPMSolver(self.om, opt={"verbose": True})
+        self.solver = PIPSSolver(self.om, opt={"verbose": True})
 
 
     def test_solution(self):
-        """ Test solution to AC OPF using PDIPM.
+        """ Test solution to AC OPF using PIPS.
         """
 #        self.solver.opt["max_it"] = 1 # remove
 
@@ -501,8 +503,8 @@ class PDIPMSolverTest(unittest.TestCase):
         self.assertAlmostEqual(x[66],-0.0425, pl)
         self.assertAlmostEqual(x[67], 0.0589, pl)
         # y
-        self.assertAlmostEqual(x[72], 1008.0, pl)
-        self.assertAlmostEqual(x[73], 1065.7, pl)
+        self.assertAlmostEqual(x[72], 1007.99, places=1)
+        self.assertAlmostEqual(x[73], 1065.7, places=1)
 
 #------------------------------------------------------------------------------
 #  "OPFTest" class:
@@ -579,11 +581,11 @@ class PDIPMSolverTest(unittest.TestCase):
 #        self.assertEqual(g2.pcost_model, PW_LINEAR)
 #
 #
-#    def test_voltage_angle_var(self):
+#    def test_get_voltage_angle_var(self):
 #        """ Test the voltage angle variable.
 #        """
 #        _, refs = self.opf._ref_check(self.case)
-#        Va = self.opf._voltage_angle_var(refs, self.case.buses)
+#        Va = self.opf._get_voltage_angle_var(refs, self.case.buses)
 #
 #        self.assertEqual(len(Va.v0), 6)
 #        self.assertEqual(Va.v0[0], 0.0)
@@ -603,10 +605,10 @@ class PDIPMSolverTest(unittest.TestCase):
 ##        self.assertEqual(Vm.v0[3], 1.00)
 #
 #
-#    def test_p_gen_var(self):
+#    def test_get_pgen_var(self):
 #        """ Test active power variable.
 #        """
-#        Pg = self.opf._p_gen_var(self.case.generators, self.case.base_mva)
+#        Pg = self.opf._get_pgen_var(self.case.generators, self.case.base_mva)
 #
 #        self.assertEqual(len(Pg.v0), 3)
 #        self.assertEqual(Pg.v0[0], 0.0)
@@ -931,8 +933,8 @@ class PDIPMSolverTest(unittest.TestCase):
 #        self.assertAlmostEqual(x[8], 0.72, pl)
 
 
-#    def test_pdipm_qp_solution(self):
-#        """ Test the solution from the native PDIPM solver.
+#    def test_pips_qp_solution(self):
+#        """ Test the solution from the native PIPS solver.
 #        """
 #        self.opf._algorithm_parameters()
 #        self.solver.cvxopt = False
@@ -954,11 +956,11 @@ class PDIPMSolverTest(unittest.TestCase):
 #        self.assertTrue(solution["success"])
 
 #------------------------------------------------------------------------------
-#  "PDIPMSolverTest" class:
+#  "PIPSSolverTest" class:
 #------------------------------------------------------------------------------
 
-#class PDIPMSolverTest(unittest.TestCase):
-#    """ Test case for the PDIPM OPF solver.
+#class PIPSSolverTest(unittest.TestCase):
+#    """ Test case for the PIPS OPF solver.
 #    """
 #
 #    def setUp(self):
@@ -967,11 +969,11 @@ class PDIPMSolverTest(unittest.TestCase):
 #        self.case = Case.load(POLY_FILE)
 #        self.opf = OPF(self.case, dc=False)
 #        self.om = self.opf._construct_opf_model(self.case)
-#        self.solver = PDIPMSolver(self.om, opt={"verbose": True})
+#        self.solver = PIPSSolver(self.om, opt={"verbose": True})
 #
 #
 #    def test_solution(self):
-#        """ Test solution to AC OPF using PDIPM.
+#        """ Test solution to AC OPF using PIPS.
 #
 #            x =
 #

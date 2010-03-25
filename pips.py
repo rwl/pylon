@@ -465,17 +465,17 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
     return solution
 
 #------------------------------------------------------------------------------
-#  "qps" function:
+#  "qps_pips" function:
 #------------------------------------------------------------------------------
 
-def qps(H, c, A, l, u, xmin=None, xmax=None, x0=None, opt=None):
+def qps_pips(H, c, A, l, u, xmin=None, xmax=None, x0=None, opt=None):
     """ Quadratic Program Solver based on PIPS.
     """
     if H is None or H.nnz == 0:
         if A is None or A.nnz == 0 and \
            xmin is None or len(xmin) == 0 and \
            xmax is None or len(xmax) == 0:
-            print 'qps: LP problem must include constraints or variable bounds'
+            print 'qps_pips: LP problem must include constraints or variable bounds'
             return
         else:
             if A is not None and A.nnz >= 0:

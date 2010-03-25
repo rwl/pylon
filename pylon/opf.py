@@ -35,7 +35,9 @@ from scipy.sparse import lil_matrix, csr_matrix, hstack, vstack
 from util import Named
 from case import REFERENCE
 from generator import POLYNOMIAL, PW_LINEAR
-from pdipm import pdipm, pdipm_qp
+
+#from pdipm import pdipm, pdipm_qp
+from pips import pips, qps_pips
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -75,7 +77,7 @@ class OPF(object):
         # Ignore angle difference limits for branches even if specified.
         self.ignore_ang_lim = ignore_ang_lim
 
-        # Solver options (See pdipm.py for futher details).
+        # Solver options (See pips.py for futher details).
         self.opt = {} if opt is None else opt
 
     #--------------------------------------------------------------------------
@@ -89,12 +91,18 @@ class OPF(object):
         om = self._construct_opf_model(self.case)
 
         # Call the specific solver.
+        if self.opt["verbose"]:
+            print '\nPYLON Version %s, %s', "0.4.0", "March 2010"
         if solver_klass is not None:
             result = solver_klass(om).solve()
         elif self.dc:
+            if self.opt["verbose"]:
+                print ' -- DC Optimal Power Flow\n'
             result = DCOPFSolver(om).solve()
         else:
-            result = PDIPMSolver(om, opt=self.opt).solve()
+            if self.opt["verbose"]:
+                print ' -- AC Optimal Power Flow\n'
+            result = PIPSSolver(om, opt=self.opt).solve()
 
         return result
 
@@ -124,8 +132,8 @@ class OPF(object):
 #        gn = self._pwl1_to_poly(gn)
 
         # Set-up initial problem variables.
-        Va = self._voltage_angle_var(refs, bs)
-        Pg = self._p_gen_var(gn, base_mva)
+        Va = self._get_voltage_angle_var(refs, bs)
+        Pg = self._get_pgen_var(gn, base_mva)
 
         if self.dc: # DC model.
             # Get the susceptance matrices and phase shift injection vectors.
@@ -138,8 +146,8 @@ class OPF(object):
             Pf, Pt = self._branch_flow_dc(ln, Bf, Pfinj, base_mva)
         else:
             # Set-up additional AC-OPF problem variables.
-            Vm = self._voltage_magnitude_var(bs, gn)
-            Qg = self._q_gen_var(gn, base_mva)
+            Vm = self._get_voltage_magnitude_var(bs, gn)
+            Qg = self._get_qgen_var(gn, base_mva)
 
             Pmis, Qmis, Sf, St = self._nln_constraints(len(bs), len(ln))
 
@@ -216,7 +224,7 @@ class OPF(object):
     #  Optimisation variables:
     #--------------------------------------------------------------------------
 
-    def _voltage_angle_var(self, refs, buses):
+    def _get_voltage_angle_var(self, refs, buses):
         """ Returns the voltage angle variable set.
         """
         Va = array([b.v_angle_guess * (pi / 180.0) for b in buses])
@@ -229,7 +237,7 @@ class OPF(object):
         return Variable("Va", len(buses), Va, Val, Vau)
 
 
-    def _voltage_magnitude_var(self, buses, generators):
+    def _get_voltage_magnitude_var(self, buses, generators):
         """ Returns the voltage magnitude variable set.
         """
         Vm = array([b.v_magnitude_guess for b in buses])
@@ -244,7 +252,7 @@ class OPF(object):
         return Variable("Vm", len(buses), Vm, Vmin, Vmax)
 
 
-    def _p_gen_var(self, generators, base_mva):
+    def _get_pgen_var(self, generators, base_mva):
         """ Returns the generator active power set-point variable.
         """
         Pg = array([g.p / base_mva for g in generators])
@@ -255,7 +263,7 @@ class OPF(object):
         return Variable("Pg", len(generators), Pg, Pmin, Pmax)
 
 
-    def _q_gen_var(self, generators, base_mva):
+    def _get_qgen_var(self, generators, base_mva):
         """ Returns the generator reactive power variable set.
         """
         Qg = array([g.q / base_mva for g in generators])
@@ -506,55 +514,58 @@ class Solver(object):
 
         # Indexes for equality, greater than (unbounded above), less than
         # (unbounded below) and doubly-bounded box constraints.
-        ieq = flatnonzero( abs(u - l) <= EPS )
-        igt = flatnonzero( (u >=  1e10) & (l > -1e10) )
-        ilt = flatnonzero( (l <= -1e10) & (u <  1e10) )
-        ibx = flatnonzero( (abs(u - l) > EPS) & (u < 1e10) & (l > -1e10) )
+#        ieq = flatnonzero( abs(u - l) <= EPS )
+#        igt = flatnonzero( (u >=  1e10) & (l > -1e10) )
+#        ilt = flatnonzero( (l <= -1e10) & (u <  1e10) )
+#        ibx = flatnonzero( (abs(u - l) > EPS) & (u < 1e10) & (l > -1e10) )
 
         # Zero-sized sparse matrices not supported.  Assume equality
         # constraints exist.
-#        AA = A[ieq, :]
-#        if len(ilt) > 0:
-#            AA = vstack([AA, A[ilt, :]], "csr")
-#        if len(igt) > 0:
-#            AA = vstack([AA, -A[igt, :]], "csr")
-#        if len(ibx) > 0:
-#            AA = vstack([AA, A[ibx, :], -A[ibx, :]], "csr")
-        if len(ieq) or len(igt) or len(ilt) or len(ibx):
-            sig_idx = [(1, ieq), (1, ilt), (-1, igt), (1, ibx), (-1, ibx)]
-            AA = vstack([sig * A[idx, :] for sig, idx in sig_idx if len(idx)])
-        else:
-            AA = None
+##        AA = A[ieq, :]
+##        if len(ilt) > 0:
+##            AA = vstack([AA, A[ilt, :]], "csr")
+##        if len(igt) > 0:
+##            AA = vstack([AA, -A[igt, :]], "csr")
+##        if len(ibx) > 0:
+##            AA = vstack([AA, A[ibx, :], -A[ibx, :]], "csr")
+#
+#        if len(ieq) or len(igt) or len(ilt) or len(ibx):
+#            sig_idx = [(1, ieq), (1, ilt), (-1, igt), (1, ibx), (-1, ibx)]
+#            AA = vstack([sig * A[idx, :] for sig, idx in sig_idx if len(idx)])
+#        else:
+#            AA = None
+#
+#        bb = r_[u[ieq, :], u[ilt], -l[igt], u[ibx], -l[ibx]]
+#
+#        self._nieq = ieq.shape[0]
+#
+#        return AA, bb
 
-        bb = r_[u[ieq, :], u[ilt], -l[igt], u[ibx], -l[ibx]]
-
-        self._nieq = ieq.shape[0]
-
-        return AA, bb
+        return A, l, u
 
 
     def _var_bounds(self):
         """ Returns bounds on the optimisation variables.
         """
         x0 = array([])
-        LB = array([])
-        UB = array([])
+        xmin = array([])
+        xmax = array([])
 
         for var in self.om.vars:
             x0 = r_[x0, var.v0]
-            LB = r_[LB, var.vl]
-            UB = r_[UB, var.vu]
+            xmin = r_[xmin, var.vl]
+            xmax = r_[xmax, var.vu]
 
-        return x0, LB, UB
+        return x0, xmin, xmax
 
 
-    def _initial_interior_point(self, buses, generators, LB, UB, ny):
+    def _initial_interior_point(self, buses, generators, xmin, xmax, ny):
         """ Selects an interior initial point for interior point solver.
         """
         Va = self.om.get_var("Va")
         va_refs = [b.v_angle_guess * pi / 180.0 for b in buses
                    if b.type == REFERENCE]
-        x0 = (LB + UB) / 2.0
+        x0 = (xmin + xmax) / 2.0
 
         x0[Va.i1:Va.iN + 1] = va_refs[0] # Angles set to first reference angle.
 
@@ -589,7 +600,7 @@ class DCOPFSolver(Solver):
         self.Cw = zeros((0, 0))
         self.fparm = zeros((0, 0))
 
-        # Solver options (See pdipm.py for futher details).
+        # Solver options (See pips.py for futher details).
         self.opt = {} if opt is None else opt
 
 
@@ -604,7 +615,7 @@ class DCOPFSolver(Solver):
         # Compute problem dimensions.
         ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(bs, ln, gn)
         # Split the constraints in equality and inequality.
-        AA, bb = self._linear_constraints(self.om)
+        AA, ll, uu = self._linear_constraints(self.om)
         # Piece-wise linear components of the objective function.
         Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self._pwl_costs(ny, nxyz, ipwl)
         # Quadratic components of the objective function.
@@ -618,19 +629,16 @@ class DCOPFSolver(Solver):
         HH, CC, C0 = self._transform_coefficients(NN, HHw, CCw, ffparm, polycf,
                                                   any_pwl, npol, nw)
         # Bounds on the optimisation variables.
-        _, LB, UB = self._var_bounds()
+        _, xmin, xmax = self._var_bounds()
 
         # Select an interior initial point for interior point solver.
-        x0 = self._initial_interior_point(bs, gn, LB, UB, ny)
+        x0 = self._initial_interior_point(bs, gn, xmin, xmax, ny)
 
         # Call the quadratic/linear solver.
-        s = self._run_opf(HH, CC, AA, bb, LB, UB, x0, self.opt)
+        s = self._run_opf(HH, CC, AA, ll, uu, xmin, xmax, x0, self.opt)
 
         # Compute the objective function value.
-        Va, Pg, f = self._update_solution_data(s["x"], HH, CC, C0)
-
-        # Add primal objective value to solution.
-        s["f"] = f
+        Va, Pg = self._update_solution_data(s, HH, CC, C0)
 
         # Set case result attributes.
         self._update_case(bs, ln, gn, base_mva, Bf, Pfinj, Va, Pg, s["lmbda"])
@@ -741,34 +749,36 @@ class DCOPFSolver(Solver):
         return HH, CC, C0
 
 
-    def _run_opf(self, HH, CC, AA, bb, LB, UB, x0, opt):
+    def _run_opf(self, HH, CC, AA, ll, uu, xmin, xmax, x0, opt):
         """ Solves the either quadratic or linear program.
         """
         N = self._nieq
 
         if HH.nnz > 0:
-            solution = pdipm_qp(HH, CC, AA, bb, LB, UB, x0, N, opt)
+            solution = qps_pips(HH, CC, AA, ll, uu, xmin, xmax, x0, opt)
         else:
-            solution = pdipm_qp(None, CC, AA, bb, LB, UB, x0, N, opt)
+            solution = qps_pips(None, CC, AA, ll, uu, xmin, xmax, x0, opt)
 
         return solution
 
 
-    def _update_solution_data(self, x, HH, CC, C0):
+    def _update_solution_data(self, s, HH, CC, C0):
         """ Returns the voltage angle and generator set-point vectors.
         """
-#        x = solution["x"]
+        x = s["x"]
         Va_v = self.om.get_var("Va")
         Pg_v = self.om.get_var("Pg")
 
         Va = x[Va_v.i1:Va_v.iN + 1]
         Pg = x[Pg_v.i1:Pg_v.iN + 1]
-        f = 0.5 * dot(x.T * HH, x) + dot(CC.T, x)
+#        f = 0.5 * dot(x.T * HH, x) + dot(CC.T, x)
+
+        s["f"] = s["f"] + C0
 
         # Put the objective function value in the solution.
 #        solution["f"] = f
 
-        return Va, Pg, f
+        return Va, Pg
 
 
     def _update_case(self, bs, ln, gn, base_mva, Bf, Pfinj, Va, Pg, lmbda):
@@ -804,22 +814,22 @@ class DCOPFSolver(Solver):
             generator.mu_pmax = upper[Pg_v.i1:Pg_v.iN + 1][k] / base_mva
 
 #------------------------------------------------------------------------------
-#  "PDIPMSolver" class:
+#  "PIPSSolver" class:
 #------------------------------------------------------------------------------
 
-class PDIPMSolver(Solver):
+class PIPSSolver(Solver):
     """ Solves AC optimal power flow using a primal-dual interior point method.
     """
 
     def __init__(self, om, flow_lim=SFLOW, opt=None):
-        """ Initialises a new PDIPMSolver instance.
+        """ Initialises a new PIPSSolver instance.
         """
-        super(PDIPMSolver, self).__init__(om)
+        super(PIPSSolver, self).__init__(om)
 
         # Quantity to limit for branch flow constraints ("S", "P" or "I").
         self.flow_lim = flow_lim
 
-        # Options for the PDIPM.
+        # Options for the PIPS.
         self.opt = {} if opt is None else opt
 
 
@@ -873,7 +883,7 @@ class PDIPMSolver(Solver):
         # Adds a constraint on the reference bus angles.
 #        xmin, xmax = self._ref_bus_angle_constraint(bs, Va, xmin, xmax)
 
-        def ipm_f(x):
+        def costfcn(x):
             """ Evaluates the objective function, gradient and Hessian for OPF.
             """
             p_gen = x[Pg.i1:Pg.iN + 1] # Active generation in p.u.
@@ -934,7 +944,7 @@ class PDIPMSolver(Solver):
             return f, asarray(df).flatten(), d2f
 
 
-        def ipm_gh(x):
+        def consfcn(x):
             """ Evaluates nonlinear constraints and their Jacobian for OPF.
             """
             Pgen = x[Pg.i1:Pg.iN + 1] # Active generation in p.u.
@@ -959,7 +969,7 @@ class PDIPMSolver(Solver):
             #------------------------------------------------------------------
 
             # Equality constraints (power flow).
-            h = r_[mis.real,  # active power mismatch for all buses
+            g = r_[mis.real,  # active power mismatch for all buses
                    mis.imag]  # reactive power mismatch for all buses
 
             # Inequality constraints (branch flow limits).
@@ -973,7 +983,7 @@ class PDIPMSolver(Solver):
                 If = Yf * V
                 It = Yt * V
                 # Branch current limits.
-                g = r_[(If * conj(If)) - flow_max,
+                h = r_[(If * conj(If)) - flow_max,
                        (If * conj(It)) - flow_max]
             else:
                 i_fbus = [e.from_bus._i for e in ln]
@@ -984,11 +994,11 @@ class PDIPMSolver(Solver):
                 St = V[i_tbus] * conj(Yt * V)
                 if self.flow_lim == PFLOW: # active power limit, P (Pan Wei)
                     # Branch real power limits.
-                    g = r_[Sf.real()**2 - flow_max,
+                    h = r_[Sf.real()**2 - flow_max,
                            St.real()**2 - flow_max]
                 elif self.flow_lim == SFLOW: # apparent power limit, |S|
                     # Branch apparent power limits.
-                    g = r_[(Sf * conj(Sf)) - flow_max,
+                    h = r_[(Sf * conj(Sf)) - flow_max,
                            (St * conj(St)) - flow_max].real
                 else:
                     raise ValueError
@@ -1010,10 +1020,10 @@ class PDIPMSolver(Solver):
             neg_Cg = csr_matrix((-ones(ng), (i_gbus, range(ng))), (nb, ng))
 
             # Transposed Jacobian of the power balance equality constraints.
-            dh = lil_matrix((nxyz, 2 * nb))
+            dg = lil_matrix((nxyz, 2 * nb))
 
             blank = csr_matrix((nb, ng))
-            dh[iVaVmPgQg, :] = vstack([
+            dg[iVaVmPgQg, :] = vstack([
                 hstack([dSbus_dVa.real, dSbus_dVm.real, neg_Cg, blank]),
                 hstack([dSbus_dVa.imag, dSbus_dVm.imag, blank, neg_Cg])
             ], "csr").T
@@ -1039,16 +1049,16 @@ class PDIPMSolver(Solver):
 
             # Construct Jacobian of inequality constraints (branch limits) and
             # transpose it.
-            dg = lil_matrix((nxyz, 2 * nl))
-            dg[r_[iVa, iVm].T, :] = vstack([
+            dh = lil_matrix((nxyz, 2 * nl))
+            dh[r_[iVa, iVm].T, :] = vstack([
                 hstack([df_dVa, df_dVm]),
                 hstack([dt_dVa, dt_dVm])
             ], "csr").T
 
-            return g, h, dg, dh
+            return h, g, dh, dg
 
 
-        def ipm_hess(x, lmbda):
+        def hessfcn(x, lmbda):
             """ Evaluates Hessian of Lagrangian for AC OPF.
             """
             Pgen = x[Pg.i1:Pg.iN + 1] # Active generation in p.u.
@@ -1091,15 +1101,15 @@ class PDIPMSolver(Solver):
             nlam = len(lmbda["eqnonlin"]) / 2
             lamP = lmbda["eqnonlin"][:nlam]
             lamQ = lmbda["eqnonlin"][nlam:nlam + nlam]
-            Hpaa, Hpav, Hpva, Hpvv = case.d2Sbus_dV2(Ybus, V, lamP)
-            Hqaa, Hqav, Hqva, Hqvv = case.d2Sbus_dV2(Ybus, V, lamQ)
+            Gpaa, Gpav, Gpva, Gpvv = case.d2Sbus_dV2(Ybus, V, lamP)
+            Gqaa, Gqav, Gqva, Gqvv = case.d2Sbus_dV2(Ybus, V, lamQ)
 
-            d2H = vstack([
+            d2G = vstack([
                 hstack([
-                    vstack([hstack([Hpaa, Hpav]),
-                            hstack([Hpva, Hpvv])]).real +
-                    vstack([hstack([Hqaa, Hqav]),
-                            hstack([Hpva, Hpvv])]).imag,
+                    vstack([hstack([Gpaa, Gpav]),
+                            hstack([Gpva, Gpvv])]).real +
+                    vstack([hstack([Gqaa, Gqav]),
+                            hstack([Gqva, Gqvv])]).imag,
                     csr_matrix((2 * nb, nxtra))]),
                 hstack([
                     csr_matrix((nxtra, 2 * nb)),
@@ -1117,9 +1127,9 @@ class PDIPMSolver(Solver):
             if self.flow_lim == "I":
                 dIf_dVa, dIf_dVm, dIt_dVa, dIt_dVm, If, It = \
                     case.dIbr_dV(Yf, Yt, V)
-                Gfaa, Gfav, Gfva, Gfvv = \
+                Hfaa, Hfav, Hfva, Hfvv = \
                     case.d2AIbr_dV2(dIf_dVa, dIf_dVm, If, Yf, V, muF)
-                Gtaa, Gtav, Gtva, Gtvv = \
+                Htaa, Htav, Htva, Htvv = \
                     case.d2AIbr_dV2(dIt_dVa, dIt_dVm, It, Yt, V, muT)
             else:
                 f = [e.from_bus._i for e in ln]
@@ -1130,26 +1140,26 @@ class PDIPMSolver(Solver):
                 dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St = \
                     case.dSbr_dV(Yf, Yt, V)
                 if self.flow_lim == PFLOW:
-                    Gfaa, Gfav, Gfva, Gfvv = \
+                    Hfaa, Hfav, Hfva, Hfvv = \
                         case.d2ASbr_dV2(dSf_dVa.real(), dSf_dVm.real(),
                                         Sf.real(), Cf, Yf, V, muF)
-                    Gtaa, Gtav, Gtva, Gtvv = \
+                    Htaa, Htav, Htva, Htvv = \
                         case.d2ASbr_dV2(dSt_dVa.real(), dSt_dVm.real(),
                                         St.real(), Ct, Yt, V, muT)
                 elif self.flow_lim == SFLOW:
-                    Gfaa, Gfav, Gfva, Gfvv = \
+                    Hfaa, Hfav, Hfva, Hfvv = \
                         case.d2ASbr_dV2(dSf_dVa, dSf_dVm, Sf, Cf, Yf, V, muF)
-                    Gtaa, Gtav, Gtva, Gtvv = \
+                    Htaa, Htav, Htva, Htvv = \
                         case.d2ASbr_dV2(dSt_dVa, dSt_dVm, St, Ct, Yt, V, muT)
                 else:
                     raise ValueError
 
-            d2G = vstack([
+            d2H = vstack([
                 hstack([
-                    vstack([hstack([Gfaa, Gfav]),
-                            hstack([Gfva, Gfvv])]) +
-                    vstack([hstack([Gtaa, Gtav]),
-                            hstack([Gtva, Gtvv])]),
+                    vstack([hstack([Hfaa, Hfav]),
+                            hstack([Hfva, Hfvv])]) +
+                    vstack([hstack([Htaa, Htav]),
+                            hstack([Htva, Htvv])]),
                     csr_matrix((2 * nb, nxtra))
                 ]),
                 hstack([
@@ -1158,10 +1168,10 @@ class PDIPMSolver(Solver):
                 ])
             ], "csr")
 
-            return d2f + d2H + d2G
+            return d2f + d2G + d2H
 
-        # Solve using primal-dual interior point method.
-        s = pdipm(ipm_f, ipm_gh, ipm_hess, x0, xmin, xmax, A, l, u, self.opt)
+        # Solve using Python Interior Point Solver (PIPS).
+        s = pips(costfcn, x0, A, l, u, xmin, xmax, consfcn, hessfcn, self.opt)
 
         return s
 

@@ -30,7 +30,7 @@ from dcpf_test import DCPFTest
 from acpf_test import NewtonPFTest#, FastDecoupledTest
 from dcopf_test import PiecewiseLinearDCOPFTest#, DCOPFTest
 from acopf_test import ACOPFTest
-from opf_test import OPFTest, DCOPFSolverTest, PDIPMSolverTest, OPFModelTest
+from opf_test import OPFTest, DCOPFSolverTest, PIPSSolverTest, OPFModelTest
 from uc_test import UnitCommitmentTest
 
 from reader_test import MatpowerReaderTest#, PSSEReaderTest, PSATReaderTest
@@ -57,7 +57,7 @@ def suite():
     suite.addTest(unittest.makeSuite(PiecewiseLinearDCOPFTest))
 #    suite.addTest(unittest.makeSuite(OPFTest))
 #    suite.addTest(unittest.makeSuite(DCOPFSolverTest))
-#    suite.addTest(unittest.makeSuite(PDIPMSolverTest))
+#    suite.addTest(unittest.makeSuite(PIPSSolverTest))
 #    suite.addTest(unittest.makeSuite(OPFModelTest))
 
     # Read/write test cases.
