@@ -83,10 +83,10 @@ case = pylon.Case.load(AUCTION_CASE)
 market = SmartMarket(case)
 
 # Specify the discrete set of possible markups on marginal cost.
-markups = (0, 0.25, 0.5, 0.75, 1.0)
+markups = (0.1, 0.2, 0.33, 0.5, 0.6, 0.75, 1.0)
 
 # Specify the number of offers/bids each participant can submit.
-n_offbids = 2
+n_offbids = 4
 
 # Specify the desired number of discrete states.
 dim_state = 10
@@ -102,8 +102,8 @@ for g in case.generators:
     task = ProfitTask(env)
     module = ActionValueTable(dim_state, dim_action)
     module.initialize(1.0)
-    learner = SARSA(gamma=0.9)
-#    learner = Q()
+#    learner = SARSA(gamma=0.9)
+    learner = Q()
 #    learner = QLambda()
 #    learner.explorer = BoltzmannExplorer() # default is e-greedy.
     agent = LearningAgent(module, learner)
@@ -114,7 +114,7 @@ for g in case.generators:
 
 # Prepare for plotting.
 pylab.figure(figsize=(16,8))
-pylab.ion()
+#pylab.ion()
 pl = MultilinePlotter(autoscale=1.1, xlim=[0, 24], ylim=[0, 1],
                       maxLines=len(experiment.agents))
 pl.setLineStyle(linewidth=2)
@@ -146,8 +146,8 @@ for agent in experiment.agents:
 # Execute interactions with the environment in batch mode.
 t0 = time.time()
 x = 0
-batch = 2
-while x <= 24:#00:
+batch = 10
+while x <= 1000:
     experiment.doInteractions(batch)
     for i, agent in enumerate(experiment.agents):
         s, a, r = agent.history.getSequence(agent.history.getNumSequences()-1)
