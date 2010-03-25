@@ -198,8 +198,10 @@ class DiscreteMarketEnvironment(object):
                         break
                 else:
                     raise ValueError
+                c_noload = 0.0
             elif self._pcost_model == POLYNOMIAL:
                 m = polyval(polyder(list(self._p_cost)), tot_qty)
+                c_noload = self._p_cost[-1]
             else:
                 raise ValueError
 
@@ -210,14 +212,14 @@ class DiscreteMarketEnvironment(object):
                 prc = m * (1.0 + sum(markups[:i + 1]))
 
             if not asset.is_load:
-                offer = Offer(asset, qty, prc)
+                offer = Offer(asset, qty, prc, c_noload)
                 mkt.offers.append(offer)
                 self.last_action.append(offer)
 
                 logger.info("%.2fMW offered at %.2f$/MWh for %s (%d%%)." %
                     (qty, prc, asset.name, sum(markups[:i + 1]) * 100))
             else:
-                bid = Bid(asset, -qty, prc)
+                bid = Bid(asset, -qty, prc, c_noload)
                 mkt.bids.append(bid)
                 self.last_action.append(bid)
 

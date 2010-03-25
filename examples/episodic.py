@@ -8,7 +8,8 @@ import logging
 import pylab
 import scipy
 
-from pylon import Case, OPF, pyreto
+from pylon import Case, OPF
+import pyreto
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners import ENAC
@@ -21,7 +22,7 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
 
 # Saved case formats are recognised by file extension.
-case = Case.load("auction_case.pickle")
+case = Case.load("data/auction_case.pickle")
 
 # Construct a market and specify any desired limits.
 market = pyreto.SmartMarket(case, price_cap=100.0)

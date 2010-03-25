@@ -28,7 +28,7 @@ from pyreto import \
     MarketExperiment, EpisodicMarketExperiment, DiscreteMarketEnvironment, \
     ContinuousMarketEnvironment, SmartMarket, ProfitTask, EpisodicProfitTask
 
-from pyreto.tools import plot_gen_cost
+#from pyreto.tools import plot_gen_cost
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
@@ -39,10 +39,10 @@ from pybrain.tools.shortcuts import buildNetwork
 from pybrain.tools.plotting import MultilinePlotter
 
 # Define a path to the data file.
-DATA_DIR = join("..", "pyreto", "test", "data")
-# DATA_DIR = join(dirname(pylon.case.__file__), "test", "data")
-AUCTION_CASE = join(DATA_DIR, "t_auction_case.pkl")
-# AUCTION_CASE = join(DATA_DIR, "case6ww.pkl")
+# DATA_DIR = join("..", "pyreto", "test", "data")
+DATA_DIR = join(dirname(pylon.case.__file__), "test", "data")
+# AUCTION_CASE = join(DATA_DIR, "t_auction_case.pkl")
+AUCTION_CASE = join(DATA_DIR, "case6ww.pkl")
 
 # Set up publication quality graphs.
 #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
@@ -77,7 +77,7 @@ logger.setLevel(logging.DEBUG)
 case = pylon.Case.load(AUCTION_CASE)
 
 # Inspect generator costs.
-plot_gen_cost(case.generators)
+#plot_gen_cost(case.generators)
 
 # Create the market and associate learning agents with each generator.
 market = SmartMarket(case)
@@ -102,8 +102,8 @@ for g in case.generators:
     task = ProfitTask(env)
     module = ActionValueTable(dim_state, dim_action)
     module.initialize(1.0)
-#    learner = SARSA(gamma=0.95)
-    learner = Q()
+    learner = SARSA(gamma=0.9)
+#    learner = Q()
 #    learner = QLambda()
 #    learner.explorer = BoltzmannExplorer() # default is e-greedy.
     agent = LearningAgent(module, learner)
@@ -121,7 +121,7 @@ pl.setLineStyle(linewidth=2)
 pl.setLegend([a.name for a in experiment.agents], loc='upper left')
 
 # Solve an initial OPF.
-pylon.OPF(case, market.loc_adjust=='dc').solve()
+# pylon.OPF(case, market.loc_adjust=='dc').solve()
 
 # Save action and reward data for plotting.
 agent_map = {}
@@ -167,6 +167,9 @@ while x <= 24:#00:
 
         agent.learn()
         agent.reset()
+
+#    plot_gen_cost(case.generators)
+
     pl.update()
     x += batch
 
