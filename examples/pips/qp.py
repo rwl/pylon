@@ -6,7 +6,7 @@ a problem from http://www.uc.edu/sashtml/iml/chap8/sect12.htm. """
 from numpy import array, zeros, Inf
 from scipy.sparse import csr_matrix
 
-from pips import qps
+from pips import qps_pips
 
 H = csr_matrix(array([[1003.1,  4.3,     6.3,     5.9],
                       [4.3,     2.2,     2.1,     3.9],
@@ -27,4 +27,4 @@ xmax = None
 
 x0 = array([1, 0, 0, 1])
 
-solution = qps(H, c, A, l, u, xmin, xmax, x0, {"verbose": True})
+solution = qps_pips(H, c, A, l, u, xmin, xmax, x0, {"verbose": True})
