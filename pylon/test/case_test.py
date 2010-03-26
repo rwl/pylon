@@ -27,8 +27,9 @@ import unittest
 import tempfile
 from numpy import complex128
 
-from pylon import Case, Bus, Branch, Generator
+from pylon import Case, Bus, Branch, Generator, NewtonPF
 from pylon.readwrite import PickleReader
+from pylon.util import CaseReport
 
 #-------------------------------------------------------------------------------
 #  Constants:
@@ -37,6 +38,77 @@ from pylon.readwrite import PickleReader
 MP_DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
 DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
 PWL_FILE = join(dirname(__file__), "data", "case30pwl.pkl")
+
+#------------------------------------------------------------------------------
+#  "CaseReportTest" class:
+#------------------------------------------------------------------------------
+
+class CaseReportTest(unittest.TestCase):
+    """ Defines a test case for the Pylon case report.
+    """
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.case = PickleReader().read(PWL_FILE)
+
+
+    def test_report(self):
+        """ Test case report property values.
+        """
+        NewtonPF(self.case).solve()
+        report = CaseReport(self.case)
+        pl = 3
+
+        self.assertEqual(report.n_buses, 30)
+        self.assertEqual(report.n_connected_buses, 30)
+        self.assertEqual(report.n_generators, 6)
+        self.assertEqual(report.n_online_generators, 6)
+        self.assertEqual(report.n_loads, 20)
+        self.assertEqual(report.n_fixed_loads, 20)
+        self.assertEqual(report.n_online_vloads, 0)
+        self.assertEqual(report.n_shunts, 2)
+        self.assertEqual(report.n_branches, 41)
+        self.assertEqual(report.n_transformers, 0)
+        self.assertEqual(report.n_interties, 7)
+        self.assertEqual(report.n_areas, 3)
+
+        self.assertAlmostEqual(report.total_pgen_capacity, 335.0, pl)
+        self.assertAlmostEqual(report.total_qgen_capacity[0], -95.0, pl)
+        self.assertAlmostEqual(report.total_qgen_capacity[1], 405.9, pl)
+        self.assertAlmostEqual(report.online_pgen_capacity, 335.0, pl)
+        self.assertAlmostEqual(report.online_qgen_capacity[0], -95.0, pl)
+        self.assertAlmostEqual(report.online_qgen_capacity[1], 405.9, pl)
+        self.assertAlmostEqual(report.actual_pgen, 191.644, pl)
+        self.assertAlmostEqual(report.actual_qgen, 100.415, pl)
+        self.assertAlmostEqual(report.fixed_p_demand, 189.2, pl)
+        self.assertAlmostEqual(report.fixed_q_demand, 107.2, pl)
+        self.assertAlmostEqual(report.vload_p_demand[0], 0.0, pl)
+        self.assertAlmostEqual(report.vload_p_demand[1], 0.0, pl)
+        self.assertAlmostEqual(report.p_demand, 189.2, pl)
+        self.assertAlmostEqual(report.q_demand, 107.2, pl)
+        self.assertAlmostEqual(report.shunt_pinj, 0.0, pl)
+        self.assertAlmostEqual(report.shunt_qinj, 0.222, pl)
+        self.assertAlmostEqual(report.losses[0], 2.4438, pl)
+        self.assertAlmostEqual(report.losses[1], 8.9899, pl)
+#        self.assertAlmostEqual(report.q_losses, 8.9899, pl)
+#        self.assertAlmostEqual(report.branch_qinj, 15.6, pl)
+        self.assertAlmostEqual(report.total_tie_pflow, 33.181, pl)
+        self.assertAlmostEqual(report.total_tie_qflow, 27.076, pl)
+        self.assertAlmostEqual(report.min_v_magnitude[0], 0.961, pl)
+        self.assertEqual(report.min_v_magnitude[1], 7)
+        self.assertAlmostEqual(report.max_v_magnitude[0], 1.000, pl)
+#        self.assertEqual(report.max_v_magnitude[1], 0)
+        self.assertAlmostEqual(report.min_v_angle[0], -3.9582, pl)
+        self.assertEqual(report.min_v_angle[1], 18)
+        self.assertAlmostEqual(report.max_v_angle[0], 1.4762, pl)
+        self.assertEqual(report.max_v_angle[1], 12)
+#        self.assertAlmostEqual(report.max_p_losses[0], 0.2892, pl)
+#        self.assertEqual(report.max_p_losses[1], 1)
+#        self.assertEqual(report.max_p_losses[2], 5)
+#        self.assertAlmostEqual(report.max_q_losses[0], 2.0970, pl)
+#        self.assertEqual(report.max_q_losses[1], 11)
+#        self.assertEqual(report.max_q_losses[2], 12)
 
 #------------------------------------------------------------------------------
 #  "CaseTest" class:
@@ -50,6 +122,45 @@ class CaseTest(unittest.TestCase):
         """ The test runner will execute this method prior to each test.
         """
         self.case = PickleReader().read(DATA_FILE)
+
+
+    def test_pf_solution(self):
+        """ Test update of case with PF solution.
+        """
+        NewtonPF(self.case).solve()
+        pl = 4
+
+        Vm = [bus.v_magnitude for bus in self.case.buses]
+        self.assertAlmostEqual(Vm[0], 1.05, places=2)
+        self.assertAlmostEqual(Vm[3], 0.9894, pl)
+        self.assertAlmostEqual(Vm[5], 1.0044, pl)
+
+        Va = [bus.v_angle for bus in self.case.buses]
+        self.assertAlmostEqual(Va[1], -3.6712, pl)
+        self.assertAlmostEqual(Va[5], -5.9475, pl)
+
+        Pf = [branch.p_from for branch in self.case.branches]
+        self.assertAlmostEqual(Pf[0], 28.6897, pl)
+        self.assertAlmostEqual(Pf[1], 43.5849, pl)
+
+        Qf = [branch.q_from for branch in self.case.branches]
+        self.assertAlmostEqual(Qf[0], -15.4187, pl)
+        self.assertAlmostEqual(Qf[1],  20.1201, pl)
+
+        Pt = [branch.p_to for branch in self.case.branches]
+        self.assertAlmostEqual(Pt[9], -4.0470, pl)
+        self.assertAlmostEqual(Pt[10],-1.5646, pl)
+
+        Qt = [branch.q_to for branch in self.case.branches]
+        self.assertAlmostEqual(Qt[0], 12.8185, pl)
+        self.assertAlmostEqual(Qt[1],-19.9326, pl)
+
+        Pg = [generator.p for generator in self.case.generators]
+        self.assertAlmostEqual(Pg[0], 107.8755, pl)
+
+        Qg = [generator.q for generator in self.case.generators]
+        self.assertAlmostEqual(Qg[0], 15.9562, pl)
+        self.assertAlmostEqual(Qg[2], 89.6268, pl)
 
 
     def test_reset(self):
@@ -323,19 +434,19 @@ class BranchTest(unittest.TestCase):
         self.assertEqual(c.buses.index(branch2.from_bus), 0)
 
 
-    def test_losses(self):
-        """ Test the power loss properties.
-        """
-        e = Branch(Bus(), Bus())
-        e.p_from = 100.0
-        e.p_to = -90.0
-
-        self.assertAlmostEqual(e.p_losses, 10.0, places=4)
-
-        e.q_from = 30.0
-        e.q_to = -20.0
-
-        self.assertAlmostEqual(e.q_losses, 10.0, places=4)
+#    def test_losses(self):
+#        """ Test the power loss properties.
+#        """
+#        e = Branch(Bus(), Bus())
+#        e.p_from = 100.0
+#        e.p_to = -90.0
+#
+#        self.assertAlmostEqual(e.p_losses, 10.0, places=4)
+#
+#        e.q_from = 30.0
+#        e.q_to = -20.0
+#
+#        self.assertAlmostEqual(e.q_losses, 10.0, places=4)
 
 
     def test_reset(self):
