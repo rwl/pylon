@@ -40,7 +40,7 @@ class ReSTWriter(CaseWriter):
     def _write_data(self, file):
         """ Writes case data to file in ReStructuredText format.
         """
-#        self.write_case_data(file)
+        self.write_case_data(file)
 
         file.write("Bus Data\n")
         file.write("-" * 8 + "\n")
@@ -61,20 +61,17 @@ class ReSTWriter(CaseWriter):
     def write_case_data(self, file):
         """ Writes the header to file.
         """
-        title = "Power Flow Solution"
-        file.write("=" * len(title))
-        file.write("\n")
-        file.write(title)
-        file.write("\n")
-        file.write("=" * len(title))
-        file.write("\n")
+#        title = "Power Flow Solution"
+#        file.write("=" * len(title))
+#        file.write("\n")
+#        file.write("\n%s\n" % title)
+#        file.write("=" * len(title))
+#        file.write("\n")
 
         # Document subtitle.
         subtitle = self.case.name
         file.write("-" * len(subtitle))
-        file.write("\n")
-        file.write(subtitle)
-        file.write("\n")
+        file.write("\n%s\n" % subtitle)
         file.write("-" * len(subtitle))
         file.write("\n")
 
@@ -91,17 +88,15 @@ class ReSTWriter(CaseWriter):
         """ Writes bus data to a ReST table.
         """
         report = CaseReport(self.case)
-
         buses = self.case.buses
 
         col_width = 8
-        col_width_2 = col_width*2+1
+        col_width_2 = col_width * 2 + 1
         col1_width = 6
 
         sep = "=" * 6 + " " + ("=" * col_width + " ") * 6 + "\n"
 
         file.write(sep)
-
         # Line one of column headers
         file.write("Name".center(col1_width) + " ")
         file.write("Voltage (pu)".center(col_width_2) + " ")
@@ -140,16 +135,14 @@ class ReSTWriter(CaseWriter):
 #        file.write(("_"*col_width + " ")*4 + "\n")
         file.write("..".ljust(col1_width) + " " + "..".ljust(col_width) + " ")
         file.write("*Total:*".rjust(col_width) + " ")
-        val = report.total_gen_capacity
-        file.write("%8.2f" % val.real + " ")
-        file.write("%8.2f" % val.imag + " ")
-        val = report.load
-        file.write("%8.2f" % val.real + " ")
-        file.write("%8.2f" % val.imag + " ")
+        ptot = report.actual_pgen
+        qtot = report.actual_qgen
+        file.write("%8.2f " % ptot)
+        file.write("%8.2f " % qtot)
+        file.write("%8.2f " % report.p_demand)
+        file.write("%8.2f " % report.q_demand)
         file.write("\n")
-
         file.write(sep)
-
         del report
 
 
@@ -157,17 +150,15 @@ class ReSTWriter(CaseWriter):
         """ Writes branch data to a ReST table.
         """
         report = CaseReport(self.case)
-
         branches = self.case.branches
 
         col_width   = 8
         col_width_2 = col_width*2+1
         col1_width  = 7
 
-        sep = ("="*7 + " ")*3 + ("="*col_width + " ")*6 + "\n"
+        sep = ("=" * 7 + " ") * 3 + ("=" * col_width + " ") * 6 + "\n"
 
         file.write(sep)
-
         # Line one of column headers
         file.write("Name".center(col1_width) + " ")
         file.write("From".center(col1_width) + " ")
@@ -193,18 +184,18 @@ class ReSTWriter(CaseWriter):
         file.write("\n")
 
         file.write(sep)
-
         # Branch rows
+        loss = report._loss()
         for each in branches:
             file.write(each.name[:col1_width].ljust(col1_width) + " ")
             file.write(each.from_bus.name[:col1_width].ljust(col1_width)+" ")
             file.write(each.to_bus.name[:col1_width].ljust(col1_width)+" ")
-            file.write("%8.2f" % each.p_from + " ")
-            file.write("%8.2f" % each.q_from + " ")
-            file.write("%8.2f" % each.p_to + " ")
-            file.write("%8.2f" % each.q_to + " ")
-            file.write("%8.2f" % each.p_losses + " ")
-            file.write("%8.2f" % each.q_losses + " ")
+            file.write("%8.2f " % each.p_from)
+            file.write("%8.2f " % each.q_from)
+            file.write("%8.2f " % each.p_to)
+            file.write("%8.2f " % each.q_to)
+            file.write("%8.2f " % loss.real[each._i])
+            file.write("%8.2f " % loss.imag[each._i])
             file.write("\n")
 
         # Totals
@@ -214,9 +205,9 @@ class ReSTWriter(CaseWriter):
         file.write(("..".ljust(col1_width) + " ")*3)
         file.write(("..".ljust(col_width) + " ")*3)
         file.write("*Total:*".rjust(col_width) + " ")
-        val = report.losses
-        file.write("%8.2f" % val.real + " ")
-        file.write("%8.2f" % val.imag + " ")
+        pl, ql = report.losses
+        file.write("%8.2f " % pl)
+        file.write("%8.2f " % ql)
         file.write("\n")
 
         file.write(sep)
@@ -228,22 +219,21 @@ class ReSTWriter(CaseWriter):
         """ Writes generator data to a ReST table.
         """
         report = CaseReport(self.case)
-
         generators = self.case.generators
 
-        col_width   = 8
+        col_width = 8
         col_width_2 = col_width*2+1
-        col1_width  = 6
+        col1_width = 6
         col_width_bool = 3
         col_width_poly = 4
         col_width_3 = col_width_poly*3+2
 
-        sep = ("=" * col1_width + " ") * 2 + ("=" * col_width_bool + " ") + \
+        sep = ("=" * col1_width + " ") * 2 + \
+            ("=" * col_width_bool + " ") + \
             ("=" * col_width + " ") * 5 + \
             ("=" * col_width_poly + " ") * 3 + "\n"
 
         file.write(sep)
-
         # Line one of column headers.
         file.write("Name".center(col1_width) + " ")
         file.write("Bus".center(col1_width) + " ")
@@ -275,7 +265,6 @@ class ReSTWriter(CaseWriter):
         file.write("c1".center(col_width_poly) + " ")
         file.write("c0".center(col_width_poly) + " ")
         file.write("\n")
-
         file.write(sep)
 
         # Branch rows.
@@ -294,25 +283,21 @@ class ReSTWriter(CaseWriter):
             file.write("%8.2f" % each.p_max + " ")
             file.write("%8.2f" % each.p_min + " ")
             if each.pcost_model == POLYNOMIAL:
-                n2, n1, n = each.p_cost
-                file.write("%4.2f" % n2 + " ")
-                file.write("%4.1f" % n1 + " ")
-                file.write("%4.0f" % n + " ")
+                file.write("%4.2f %4.1f %4.0f" % each.p_cost)
             file.write("\n")
 
         # Totals.
         file.write(("..".ljust(col1_width) +  " ") * 2)
         file.write(("..".ljust(col_width_bool) +  " "))
         file.write("*Total:*".rjust(col1_width) + " ")
-        capacity = getattr(report, "online_capacity")
-        file.write("%8.2f" % capacity.real + " ")
-        file.write("%8.2f" % capacity.imag + " ")
+        ptot = getattr(report, "actual_pgen")
+        qtot = getattr(report, "actual_qgen")
+        file.write("%8.2f " % ptot)
+        file.write("%8.2f " % qtot)
         file.write(("..".ljust(col_width) + " ") * 2)
         file.write(("..".ljust(col_width_poly) + " ") * 3)
         file.write("\n")
-
         file.write(sep)
-
         del report
 
     #--------------------------------------------------------------------------
@@ -326,11 +311,11 @@ class ReSTWriter(CaseWriter):
 
         # Map component labels to attribute names
         components = [("Bus", "n_buses"), ("Generator", "n_generators"),
-            ("Committed Generator", "n_committed_generators"),
-            ("Load", "n_loads"), ("Fixed Load", "n_fixed"),
-            ("Despatchable Load", "n_despatchable"),# ("Shunt", "n_shunts"),
-            ("Branch", "n_branches"),# ("Transformer", "n_transformers"),
-#            ("Inter-tie", "n_inter_ties"), ("Area", "n_areas")
+            ("Committed Generator", "n_online_generators"),
+            ("Load", "n_loads"), ("Fixed Load", "n_fixed_loads"),
+            ("Despatchable Load", "n_online_vloads"), ("Shunt", "n_shunts"),
+            ("Branch", "n_branches"), ("Transformer", "n_transformers"),
+            ("Inter-tie", "n_interties"), ("Area", "n_areas")
         ]
 
         # Column 1 width
@@ -391,45 +376,53 @@ class ReSTWriter(CaseWriter):
         file.write(sep)
 
         # Rows
-        val = getattr(report, "total_gen_capacity")
+        pgen = getattr(report, "total_pgen_capacity")
+        qmin, qmax = getattr(report, "total_qgen_capacity")
+        file.write("%s %8.1f %4.1f to %4.1f\n" %
+            ("Total Gen Capacity".ljust(col1_width), pgen, qmin, qmax))
+
+        pgen = getattr(report, "online_pgen_capacity")
+        qmin, qmax = getattr(report, "online_qgen_capacity")
+        file.write("%s %8.1f %4.1f to %4.1f\n" %
+            ("On-line Capacity".ljust(col1_width), pgen, qmin, qmax))
+
+        pgen = getattr(report, "actual_pgen")
+        qgen = getattr(report, "actual_qgen")
         file.write("%s %8.1f %8.1f\n" %
-            ("Total Gen Capacity".ljust(col1_width), val.real, val.imag))
+            ("Generation (actual)".ljust(col1_width), pgen, qgen))
 
-        val = getattr(report, "online_capacity")
+        pd = getattr(report, "p_demand")
+        qd = getattr(report, "q_demand")
         file.write("%s %8.1f %8.1f\n" %
-            ("On-line Capacity".ljust(col1_width), val.real, val.imag))
+            ("Load".ljust(col1_width), pd, qd))
 
-        val = getattr(report, "generation_actual")
+        pd = getattr(report, "fixed_p_demand")
+        qd = getattr(report, "fixed_q_demand")
         file.write("%s %8.1f %8.1f\n" %
-            ("Generation (actual)".ljust(col1_width), val.real, val.imag))
+            ("  Fixed".ljust(col1_width), pd, qd))
 
-        val = getattr(report, "load")
+        pd, pmin = getattr(report, "vload_p_demand")
+        qd = getattr(report, "vload_q_demand")
+        file.write("%s %4.1f of %4.1f %8.1f\n" %
+            ("  Despatchable".ljust(col1_width), pd, pmin, qd))
+
+        pinj = getattr(report, "shunt_pinj")
+        qinj = getattr(report, "shunt_qinj")
         file.write("%s %8.1f %8.1f\n" %
-            ("Load".ljust(col1_width), val.real, val.imag))
+            ("Shunt (inj)".ljust(col1_width), pinj, qinj))
 
-        val = getattr(report, "fixed_load")
+        pl, ql = getattr(report, "losses")
         file.write("%s %8.1f %8.1f\n" %
-            ("  Fixed".ljust(col1_width), val.real, val.imag))
+            ("Losses (I^2 * Z)".ljust(col1_width), pl, ql))
 
-        val = getattr(report, "despatchable_load")
+        qinj = getattr(report, "branch_qinj")
+        file.write("%s %8s %8.1f\n" %
+            ("Branch Charging (inj)".ljust(col1_width), "-", qinj))
+
+        pval = getattr(report, "total_tie_pflow")
+        qval = getattr(report, "total_tie_qflow")
         file.write("%s %8.1f %8.1f\n" %
-            ("  Despatchable".ljust(col1_width), val.real, val.imag))
-
-#        val = getattr(report, "shunt_injection")
-#        file.write("%s %8.1f %8.1f\n" %
-#            ("Shunt (inj)".ljust(col1_width), val.real, val.imag))
-
-        val = getattr(report, "losses")
-        file.write("%s %8.1f %8.1f\n" %
-            ("Losses".ljust(col1_width), val.real, val.imag))
-
-        val = getattr(report, "branch_charging")
-        file.write("%s %8.1f %8.1f\n" %
-            ("Branch Charging (inj)".ljust(col1_width), val.real, val.imag))
-
-#        val = getattr(report, "total_inter_tie_flow")
-#        file.write("%s %8.1f %8.1f\n" %
-#            ("Total Inter-tie Flow".ljust(col1_width), val.real, val.imag))
+            ("Total Inter-tie Flow".ljust(col1_width), pval, qval))
 
         file.write(sep)
         file.write("\n")
@@ -446,7 +439,7 @@ class ReSTWriter(CaseWriter):
         col1_width  = 19
         col2_header = "Minimum"
         col3_header = "Maximum"
-        col_width   = 16
+        col_width   = 22
 
         sep = "="*col1_width +" "+ "="*col_width +" "+ "="*col_width + "\n"
 
@@ -463,14 +456,15 @@ class ReSTWriter(CaseWriter):
         file.write(sep)
 
         # Rows
-        min_val = getattr(report, "min_voltage_amplitude")
-        max_val = getattr(report, "max_voltage_amplitude")
-        file.write("%s %16.1f %16.1f\n" %
-            ("Voltage Amplitude".ljust(col1_width), min_val, max_val))
+        min_val, min_i = getattr(report, "min_v_magnitude")
+        max_val, max_i = getattr(report, "max_v_magnitude")
+        file.write("%s %7.3f p.u. @ bus %2d %7.3f p.u. @ bus %2d\n" %
+            ("Voltage Amplitude".ljust(col1_width),
+             min_val, min_i, max_val, max_i))
 
-        min_val = getattr(report, "min_voltage_phase")
-        max_val = getattr(report, "max_voltage_phase")
-        file.write("%s %16.1f %16.1f\n" %
+        min_val, min_i = getattr(report, "min_v_angle")
+        max_val, max_i = getattr(report, "max_v_angle")
+        file.write("%s %16.3f %16.3f\n" %
             ("Voltage Phase Angle".ljust(col1_width), min_val, max_val))
 
         file.write(sep)
