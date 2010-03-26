@@ -26,7 +26,9 @@ from __future__ import with_statement
 import os.path
 import pickle
 
-from itertools import count
+from numpy import ones, array, exp, pi
+
+from itertools import count, izip
 
 #from pylon.readwrite import MATPOWERReader, PickleWriter
 
@@ -191,363 +193,294 @@ def pickle_matpower_cases(case_paths, case_format=2):
         pylon.readwrite.PickleWriter(case).write(pickled_case_path)
 
 #------------------------------------------------------------------------------
-#  Change all zeros to ones:
-#------------------------------------------------------------------------------
-
-def zero2one(x):
-    if x != 0.0:
-        return x
-    else:
-        return 1.0
-
-#------------------------------------------------------------------------------
-#  'atan2' function:
-#------------------------------------------------------------------------------
-
-#def atan2(X, Y):
-#    """ atan2 function.
-#    """
-#    matrix([math.arctan2(Y, X) for k in xrange(nrows * ncols)],
-#           (nrows, ncols), 'd')
-
-#------------------------------------------------------------------------------
-#  Returns the angle of the complex argument:
-#------------------------------------------------------------------------------
-
-#def angle(z, deg=0):
-#    """ Returns the angle of the complex argument.
-#
-#        Parameters
-#        ----------
-#        z : array_like
-#            A complex number or sequence of complex numbers.
-#        deg : bool, optional
-#            Return angle in degrees if True, radians if False (default).
-#
-#        Returns
-#        -------
-#        angle : {ndarray, scalar}
-#            The counterclockwise angle from the positive real axis on
-#            the complex plane, with dtype as numpy.float64.
-#
-#        See Also
-#        --------
-#        arctan2
-#
-#        Examples
-#        --------
-#        >>> np.angle([1.0, 1.0j, 1+1j])               # in radians
-#        array([ 0.        ,  1.57079633,  0.78539816])
-#        >>> np.angle(1+1j, deg=True)                  # in degrees
-#        45.0
-#    """
-#    if deg:
-#        fact = 180 / math.pi
-#    else:
-#        fact = 1.0
-##    z = asarray(z)
-#    if z.typecode is "z":
-#        zimag = z.imag()
-#        zreal = z.real()
-#    else:
-#        zimag = 0
-#        zreal = z
-#
-#    matrix([math.arctan2(z[i].imag(), z[i].real()) for x in z])
-#
-#    return atan2(zimag, zreal) * fact
-
-#------------------------------------------------------------------------------
 #  "CaseReport" class:
 #------------------------------------------------------------------------------
 
 class CaseReport(object):
-    """ Defines a statistical case report.
-    """
 
     def __init__(self, case):
-        """ Initialises a CaseReport instance.
-        """
         self.case = case
 
 
     @property
     def n_buses(self):
-        """ Total number of buses.
-        """
         return len(self.case.buses)
 
 
     @property
     def n_connected_buses(self):
-        """ Total number of non-islanded buses.
-        """
         return len(self.case.connected_buses)
 
 
     @property
     def n_generators(self):
-        """ Total number of generators.
-        """
-        return len(self.case.generators)
+        return len([g for g in self.case.generators if not g.is_load])
+
+
+    @property
+    def online_generators(self):
+        return [g for g in self.case.generators if not g.is_load and g.online]
 
 
     @property
     def n_online_generators(self):
-        """ Total number of generators in service.
-        """
-        return len(self.case.online_generators)
-
-
-    @property
-    def committed_generators(self):
-        """ Generators that have been despatched.
-        """
-        return [g for g in self.case.generators if g.p > 0.0]
-
-
-    @property
-    def n_committed_generators(self):
-        """ Number of committed generators.
-        """
-        return len(self.committed_generators)
+        return len(self.online_generators)
 
 
     @property
     def n_loads(self):
-        """ Total number of loads.
-        """
-        return self.n_fixed + self.n_despatchable
-
-
-#    @property
-#    def n_online_loads(self):
-#        """ Number of active loads.
-#        """
-#        return len(self.case.online_loads)
+        return self.n_fixed_loads + self.n_online_vloads
 
 
     @property
-    def fixed(self):
-        """ Fixed loads.
-        """
-        return self.case.all_loads
+    def n_fixed_loads(self):
+        return len([b for b in self.case.buses if b.p_demand or b.q_demand])
 
 
     @property
-    def n_fixed(self):
-        """ Total number of fixed loads.
-        """
-        return len([bus for bus in self.case.buses if bus.p_demand > 0.0])
+    def online_vloads(self):
+        return [g for g in self.case.generators if g.is_load and g.online]
 
 
     @property
-    def despatchable(self):
-        """ Generators with negative output.
-        """
-        return [vl for vl in self.case.generators if vl.is_load]
+    def n_online_vloads(self):
+        return len(self.online_vloads)
 
 
     @property
-    def n_despatchable(self):
-        """ Number of despatchable loads.
-        """
-        return len(self.despatchable)
+    def n_shunts(self):
+        return len([b for b in self.case.buses if b.g_shunt or b.b_shunt])
+
+
+    @property
+    def interties(self):
+        return [l for l in self.case.branches
+                if l.from_bus.area != l.to_bus.area]
+
+
+    @property
+    def n_interties(self):
+        return len(self.interties)
+
+
+    @property
+    def n_areas(self):
+        s_areas = set([b.area for b in self.case.buses])
+        return len(s_areas)
 
     # Branch property getters -------------------------------------------------
 
     @property
     def n_branches(self):
-        """ Total number of branches.
-        """
         return len(self.case.branches)
 
 
     @property
-    def n_online_branches(self):
-        """ Total number of active branches.
-        """
-        return len(self.case.online_branches)
-
-
-    @property
-    def transformers(self):
-        """ Branches operating as transformers.
-        """
-        return [e for e in self.case.branches if e.ratio != 0.0]
-
-
-    @property
     def n_transformers(self):
-        """ Total number of transformers.
-        """
-        return len(self.transformers)
+        return len([e for e in self.case.branches if e.ratio != 0.0])
 
     # "How much?" property getters --------------------------------------------
 
     @property
-    def total_gen_capacity(self):
-        """ Total generation capacity.
-        """
-        p = sum([g.p_max for g in self.case.generators])
-        q = sum([g.q_max for g in self.case.generators])
-
-        return complex(p, q)
+    def total_pgen_capacity(self):
+        return sum([g.p_max for g in self.case.generators])
 
 
     @property
-    def online_capacity(self):
-        """ Total online generation capacity.
-        """
-        p = sum([g.p for g in self.case.online_generators if not g.is_load])
-        q = sum([g.q for g in self.case.online_generators if not g.is_load])
-
-        return complex(p, q)
+    def total_qgen_capacity(self):
+        q_min = sum([g.q_min for g in self.case.generators])
+        q_max = sum([g.q_max for g in self.case.generators])
+        return q_min, q_max
 
 
     @property
-    def generation_actual(self):
-        """ Total despatched generation.
-        """
-        Sg = [complex(g.p, g.q) for g in self.case.generators if not g.is_load]
-
-        return sum(Sg)
+    def online_pgen_capacity(self):
+        return sum([g.p_max for g in self.online_generators])
 
 
     @property
-    def load(self):
-        """ Total system load.
-        """
-        return self.fixed_load + self.despatchable_load
+    def online_qgen_capacity(self):
+        q_min = sum([g.q_min for g in self.online_generators])
+        q_max = sum([g.q_max for g in self.online_generators])
+        return q_min, q_max
 
 
     @property
-    def fixed_load(self):
-        """ Total fixed system load.
-        """
-        Sd = [complex(bus.p_demand, bus.q_demand) for bus in self.case.buses]
-
-        return sum(Sd)
+    def actual_pgen(self):
+        return sum([g.p for g in self.online_generators])
 
 
     @property
-    def despatchable_load(self):
-        """ Total volume of despatchable load.
-        """
-        Svl = [complex(vl.p, vl.q) for vl in self.despatchable]
-
-        return -sum(Svl)
+    def actual_qgen(self):
+        return sum([g.q for g in self.online_generators])
 
 
-#    @property
-#    def shunt_injection(self):
-#        """ Total system shunt injection.
-#        """
-#        return 0.0 + 0.0j # FIXME: Implement shunts
+    @property
+    def fixed_p_demand(self):
+        return sum([bus.p_demand for bus in self.case.buses])
+
+
+    @property
+    def fixed_q_demand(self):
+        return sum([bus.q_demand for bus in self.case.buses])
+
+
+    @property
+    def vload_p_demand(self):
+        p = -sum([g.p for g in self.online_vloads])
+        p_min = -sum([g.p_min for g in self.online_vloads])
+        return p, p_min
+
+
+    @property
+    def vload_q_demand(self):
+        return -sum([g.q for g in self.online_vloads])
+
+
+    @property
+    def p_demand(self):
+        return self.fixed_p_demand + self.vload_p_demand[0]
+
+
+    @property
+    def q_demand(self):
+        return self.fixed_q_demand + self.vload_q_demand
+
+
+    @property
+    def shunt_pinj(self):
+        pinj = 0.0
+        for bus in self.case.buses:
+            if bus.g_shunt or bus.b_shunt:
+                pinj += bus.v_magnitude**2 * bus.g_shunt
+        return pinj
+
+
+    @property
+    def shunt_qinj(self):
+        qinj = 0.0
+        for bus in self.case.buses:
+            if bus.g_shunt or bus.b_shunt:
+                qinj += bus.v_magnitude**2 * bus.b_shunt
+        return qinj
 
 
     @property
     def losses(self):
-        """ Total system losses.
-        """
-        p = sum([e.p_losses for e in self.case.branches])
-        q = sum([e.q_losses for e in self.case.branches])
+        base_mva = self.case.base_mva
+        buses = self.case.buses
+        branches = self.case.branches
 
-        return complex(p, q)
+        tap = ones(len(branches))
+        i_trx = array([i for i, e in enumerate(branches) if e.ratio != 0.0],
+                       dtype="i4")
 
+        # Set non-zero tap ratios.
+        if len(i_trx) > 0:
+            tap[i_trx] = array([e.ratio for e in branches])[i_trx]
 
-    @property
-    def branch_charging(self):
-        """ Total branch charging injections.
-        """
-        return 0.0 + 0.0j # FIXME: Calculate branch charging injections
+        Vm = array([bus.v_magnitude for bus in buses])
+        Va = array([bus.v_angle * (pi / 180.0) for bus in buses])
+        V = Vm * exp(1j * Va)
+
+        loss = array([abs(V[l.from_bus._i] / tap[l._i] - V[l.to_bus._i])**2 /
+            (l.r - 1j * l.x) * base_mva for l in branches])
+
+        return sum(loss.real), sum(loss.imag)
 
 
 #    @property
-#    def total_inter_tie_flow(self):
-#        """ Total inter-tie flow.
-#        """
-#        return 0.0 + 0.0j # FIXME: Implement inter-ties
+#    def q_losses(self):
+#        return sum([e.q_losses for e in self.case.branches])
 
 
     @property
-    def min_voltage_amplitude(self):
-        """ Minimum bus voltage amplitude.
-        """
-        if self.case.buses:
-#            l.index(min(l))
-            return min([bus.v_magnitude for bus in self.case.buses])
-        else:
-            return 0.0
+    def branch_qinj(self):
+        # fchg = abs(V(e2i(branch(:, F_BUS))) ./ tap) .^ 2 .* branch(:, BR_B) * baseMVA / 2
+        # tchg = abs(V(e2i(branch(:, T_BUS)))       ) .^ 2 .* branch(:, BR_B) * baseMVA / 2
+        # return sum(fchg) + sum(tchg)
+        return 0.0
 
 
     @property
-    def max_voltage_amplitude(self):
-        """ Maximum bus voltage amplitude.
-        """
-        if self.case.buses:
-            return max([bus.v_magnitude for bus in self.case.buses])
-        else:
-            return 0.0
+    def total_tie_pflow(self):
+        return sum([abs(t.p_from - t.p_to) for t in self.interties]) / 2.0
 
 
     @property
-    def min_voltage_phase(self):
-        """ Minimum bus voltage phase angle.
-        """
-        if self.case.buses:
-            return min([bus.v_angle for bus in self.case.buses])
-        else:
-            return 0.0
+    def total_tie_qflow(self):
+        return sum([abs(t.q_from - t.q_to) for t in self.interties]) / 2.0
 
 
     @property
-    def max_voltage_phase(self):
-        """ Maximum bus voltage phase angle.
-        """
-        if self.case.buses:
-            return max([bus.v_angle for bus in self.case.buses])
-        else:
-            return 0.0
+    def min_v_magnitude(self):
+        Vm = [bus.v_magnitude for bus in self.case.buses]
+        min_v, min_i = min(izip(Vm, count()))
+        return min_v, min_i
 
 
     @property
-    def min_p_lmbda(self):
-        """ Minimum bus active power Lagrangian multiplier.
-        """
-        if self.case.buses:
-            return min([v.p_lmbda for v in self.case.buses])
-        else:
-            return 0.0
+    def max_v_magnitude(self):
+        Vm = [bus.v_magnitude for bus in self.case.buses]
+        max_v, max_i = max(izip(Vm, count()))
+        return max_v, max_i
+
+
+    @property
+    def min_v_angle(self):
+        Va = [bus.v_angle for bus in self.case.buses]
+        min_v, min_i = min(izip(Va, count()))
+        return min_v, min_i
+
+
+    @property
+    def max_v_angle(self):
+        Va = [bus.v_angle for bus in self.case.buses]
+        max_v, max_i = max(izip(Va, count()))
+        return max_v, max_i
+
+
+    @property
+    def max_p_losses(self):
+        branches = self.case.branches
+        p_loss = self.losses[0] #[e.p_losses for e in branches]
+        max_v, max_i = max(izip(p_loss, count()))
+        return max_v, branches[max_i].from_bus._i, branches[max_i].to_bus._i
+
+
+    @property
+    def max_q_losses(self):
+        branches = self.case.branches
+        q_loss = self.losses[1] #[e.p_losses for e in branches]
+        max_v, max_i = max(izip(q_loss, count()))
+        return max_v, branches[max_i].from_bus._i, branches[max_i].to_bus._i
+
+
+    @property
+    def min_p_lambda(self):
+        p_lmbda = [bus.p_lmbda for bus in self.case.buses]
+        min_v, min_i = min(izip(p_lmbda, count()))
+        return min_v, min_i
 
 
     @property
     def max_p_lmbda(self):
-        """ Maximum bus active power Lagrangian multiplier.
-        """
-        if self.case.buses:
-            return max([v.p_lmbda for v in self.case.buses])
-        else:
-            return 0.0
+        p_lmbda = [bus.p_lmbda for bus in self.case.buses]
+        max_v, max_i = max(izip(p_lmbda, count()))
+        return max_v, max_i
 
 
     @property
     def min_q_lmbda(self):
-        """ Minimum bus reactive power Lagrangian multiplier.
-        """
-        if self.case.buses:
-            return min([v.q_lmbda for v in self.case.buses])
-        else:
-            return 0.0
+        q_lmbda = [bus.q_lmbda for bus in self.case.buses]
+        min_v, min_i = min(izip(q_lmbda, count()))
+        return min_v, min_i
 
 
     @property
     def max_q_lmbda(self):
-        """ Maximum bus reactive power Lagrangian multiplier.
-        """
-        if self.case.buses:
-            return max([v.q_lmbda for v in self.case.buses])
-        else:
-            return 0.0
+        q_lmbda = [bus.q_lmbda for bus in self.case.buses]
+        max_v, max_i = max(izip(q_lmbda, count()))
+        return max_v, max_i
 
 # EOF -------------------------------------------------------------------------

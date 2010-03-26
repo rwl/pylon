@@ -198,18 +198,18 @@ class Branch(Named):
         self._i = 0
 
 
-    @property
-    def p_losses(self):
-        """ Active power losses.
-        """
-        return self.p_from + self.p_to
+#    @property
+#    def p_losses(self):
+#        """ Active power losses.
+#        """
+#        return self.p_from + self.p_to
 
 
-    @property
-    def q_losses(self):
-        """ Reactive power losses.
-        """
-        return self.q_from + self.q_to
+#    @property
+#    def q_losses(self):
+#        """ Reactive power losses.
+#        """
+#        return self.q_from + self.q_to
 
 
     def reset(self):
@@ -813,17 +813,20 @@ class Case(Named, Serializable):
             b.v_magnitude = Vm[i]
 
         # Update Qg for all gens and Pg for swing bus.
-        gbus = [g.bus._i for g in generators]
+#        gbus = [g.bus._i for g in generators]
         refgen = [g.bus._i for g in generators if g.bus.type == REFERENCE]
 
         # Compute total injected bus powers.
-        Sg = V[gbus] * conj(Ybus[gbus, :] * V)
+#        Sg = V[gbus] * conj(Ybus[gbus, :] * V)
+        Sg = V * conj(Ybus * V)
+
 
         # Update Qg for all generators.
-        for i in gbus:
-            g = generators[i]
+#        for i in gbus:
+#            g = generators[i]
+        for g in generators:
             # inj Q + local Qd
-            g.q = Sg.imag[i] * self.base_mva + g.bus.q_demand
+            g.q = Sg.imag[g.bus._i] * self.base_mva + g.bus.q_demand
 
         # At this point any buses with more than one generator will have
         # the total Q dispatch for the bus assigned to each generator. This
