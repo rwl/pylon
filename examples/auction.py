@@ -130,7 +130,8 @@ pl2.setLineStyle(linewidth=2)
 pylab.figure(3)
 pylab.ion()
 plc = MultilinePlotter(autoscale=1.1, xlim=[0, 200], ylim=[0, 200],
-                       maxLines=2 * len(experiment.agents))
+                       maxLines=3 * len(experiment.agents))
+#plc.graphColor = plc.graphColor[:len(experiment.agents)]
 plc.setLineStyle(linewidth=2)
 
 for i, generator in enumerate(case.generators):
@@ -195,11 +196,16 @@ while x <= 1000:
         agent.reset()
 
     for j, task in enumerate(experiment.tasks):
-        assert task.env.asset.pcost_model == pylon.PW_LINEAR
-        xx = [xx for xx, _ in task.env.asset.p_cost]
-        yy = [yy for _, yy in task.env.asset.p_cost]
+        g = task.env.asset
+        assert g.pcost_model == pylon.PW_LINEAR
+        xx = [xx for xx, _ in g.p_cost]
+        yy = [yy for _, yy in g.p_cost]
 
         plc.setData(j + len(case.generators), xx, yy)
+
+        xa = [g.p, g.p]
+        yb = [0.0, g.total_cost()]
+        plc.setData(j + 2 * len(case.generators), xa, yb)
 
 #    plot_gen_cost(case.generators)
 
