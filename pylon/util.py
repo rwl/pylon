@@ -365,17 +365,13 @@ class CaseReport(object):
         return qinj
 
 
-    @property
-    def losses(self):
+    def _loss(self):
         base_mva = self.case.base_mva
         buses = self.case.buses
         branches = self.case.branches
 
         tap = ones(len(branches))
-        i_trx = array([i for i, e in enumerate(branches) if e.ratio != 0.0],
-                       dtype="i4")
-
-        # Set non-zero tap ratios.
+        i_trx = [l._i for l in branches if l.ratio != 0.0]
         if len(i_trx) > 0:
             tap[i_trx] = array([e.ratio for e in branches])[i_trx]
 
@@ -386,20 +382,36 @@ class CaseReport(object):
         loss = array([abs(V[l.from_bus._i] / tap[l._i] - V[l.to_bus._i])**2 /
             (l.r - 1j * l.x) * base_mva for l in branches])
 
+        return loss
+
+
+    @property
+    def losses(self):
+        loss = self._loss()
         return sum(loss.real), sum(loss.imag)
-
-
-#    @property
-#    def q_losses(self):
-#        return sum([e.q_losses for e in self.case.branches])
 
 
     @property
     def branch_qinj(self):
-        # fchg = abs(V(e2i(branch(:, F_BUS))) ./ tap) .^ 2 .* branch(:, BR_B) * baseMVA / 2
-        # tchg = abs(V(e2i(branch(:, T_BUS)))       ) .^ 2 .* branch(:, BR_B) * baseMVA / 2
-        # return sum(fchg) + sum(tchg)
-        return 0.0
+        base_mva = self.case.base_mva
+        buses = self.case.buses
+        branches = self.case.branches
+
+        tap = ones(len(branches))
+        i_trx = [l._i for l in branches if l.ratio != 0.0]
+        if len(i_trx) > 0:
+            tap[i_trx] = array([e.ratio for e in branches])[i_trx]
+
+        Vm = array([bus.v_magnitude for bus in buses])
+        Va = array([bus.v_angle * (pi / 180.0) for bus in buses])
+        V = Vm * exp(1j * Va)
+
+        fchg = array([abs(V[l.from_bus._i] / tap[l._i])**2 * l.b * base_mva / 2
+                      for l in branches])
+        tchg = array([abs(V[l.to_bus._i])**2 * l.b * base_mva / 2
+                      for l in branches])
+
+        return sum(fchg) + sum(tchg)
 
 
     @property
@@ -443,7 +455,7 @@ class CaseReport(object):
     @property
     def max_p_losses(self):
         branches = self.case.branches
-        p_loss = self.losses[0] #[e.p_losses for e in branches]
+        p_loss = self._loss().real
         max_v, max_i = max(izip(p_loss, count()))
         return max_v, branches[max_i].from_bus._i, branches[max_i].to_bus._i
 
@@ -451,7 +463,7 @@ class CaseReport(object):
     @property
     def max_q_losses(self):
         branches = self.case.branches
-        q_loss = self.losses[1] #[e.p_losses for e in branches]
+        q_loss = self._loss().imag
         max_v, max_i = max(izip(q_loss, count()))
         return max_v, branches[max_i].from_bus._i, branches[max_i].to_bus._i
 

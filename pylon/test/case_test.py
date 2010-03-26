@@ -91,8 +91,7 @@ class CaseReportTest(unittest.TestCase):
         self.assertAlmostEqual(report.shunt_qinj, 0.222, pl)
         self.assertAlmostEqual(report.losses[0], 2.4438, pl)
         self.assertAlmostEqual(report.losses[1], 8.9899, pl)
-#        self.assertAlmostEqual(report.q_losses, 8.9899, pl)
-#        self.assertAlmostEqual(report.branch_qinj, 15.6, pl)
+        self.assertAlmostEqual(report.branch_qinj, 15.553, pl)
         self.assertAlmostEqual(report.total_tie_pflow, 33.181, pl)
         self.assertAlmostEqual(report.total_tie_qflow, 27.076, pl)
         self.assertAlmostEqual(report.min_v_magnitude[0], 0.961, pl)
@@ -103,12 +102,12 @@ class CaseReportTest(unittest.TestCase):
         self.assertEqual(report.min_v_angle[1], 18)
         self.assertAlmostEqual(report.max_v_angle[0], 1.4762, pl)
         self.assertEqual(report.max_v_angle[1], 12)
-#        self.assertAlmostEqual(report.max_p_losses[0], 0.2892, pl)
-#        self.assertEqual(report.max_p_losses[1], 1)
-#        self.assertEqual(report.max_p_losses[2], 5)
-#        self.assertAlmostEqual(report.max_q_losses[0], 2.0970, pl)
-#        self.assertEqual(report.max_q_losses[1], 11)
-#        self.assertEqual(report.max_q_losses[2], 12)
+        self.assertAlmostEqual(report.max_p_losses[0], 0.2892, pl)
+        self.assertEqual(report.max_p_losses[1], 1)
+        self.assertEqual(report.max_p_losses[2], 5)
+        self.assertAlmostEqual(report.max_q_losses[0], 2.0970, pl)
+        self.assertEqual(report.max_q_losses[1], 11)
+        self.assertEqual(report.max_q_losses[2], 12)
 
 #------------------------------------------------------------------------------
 #  "CaseTest" class:
