@@ -9,8 +9,8 @@ Stable release
 
 Pylon is available as a compressed archive file.
 
-* `pylon.tar.gz <http://github.com/rwl/pylon/tarball/master>`_
-* `pylon.zip <http://github.com/rwl/pylon/zipball/master>`_
+* `pylon.tar.gz <http://github.com/rwl/pylon/tarball/v0.4.1>`_
+* `pylon.zip <http://github.com/rwl/pylon/zipball/v0.4.1>`_
 
 Source code repository
 ----------------------

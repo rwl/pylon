@@ -5,7 +5,7 @@ PYLON
 .. only:: html
 
   :Release: |version|
-  :Date: December 13, 2009
+  :Date: April 1, 2010
 
   **Richard Lincoln**
 
@@ -25,9 +25,8 @@ Tutorial
 .. toctree::
   :maxdepth: 2
 
-  powerflow
+  pf
   opf
-  rl
 
 
 API
@@ -39,7 +38,6 @@ API
 
   api/*
   api/readwrite/*
-  api/pyreto/*
 
 .. only:: html
 
