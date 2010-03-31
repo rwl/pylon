@@ -4,10 +4,11 @@
 Installation
 ============
 
-Pylon is a package of Python modules that must be placed on the ``PYTHON_PATH``.
+Pylon is a package of Python modules that need to be placed on the
+``PYTHON_PATH``.
 
-Pylon dependencies
-------------------
+Dependencies
+------------
 
   Python_ 2.5 or 2.6
 
@@ -15,26 +16,17 @@ Pylon dependencies
     NumPy provides additional support for multi-dimentional arrays and
     matrices.
 
+  SciPy_ 0.7
+    Packages for mathematics, science, and engineering
+
   Pyparsing_
     Pyparsing is a versatile Python module for recursive descent parsing.
 
-Pyreto dependencies
--------------------
+Recommended
+-----------
 
-  PyBrain_
-    PyBrain is a modular Machine Learning Library for Python.
-
-  SciPy_
-    Packages for mathematics, science, and engineering
-
-PylonTk dependencies
---------------------
-
-  Matplotlib_
-    A 2D plotting library for producing publication quality figures in a variety of formats and interactive environments across platforms.
-
-  NetworkX_
-    A package for the creation, manipulation, and study of the structure, dynamics, and functions of complex networks.
+  `scikits.umfpack <http://scikits.appspot.com/umfpack>`_
+    Wrappers of UMFPACK sparse direct solver to SciPy.
 
 Setuptools
 ----------
@@ -43,10 +35,11 @@ With Python_ and setuptools_ installed, simply::
 
   $ easy_install pylon
 
-Users without root access may use Virtualenv_ to build a virtual Python environment::
+Users without root access may use Virtualenv_ to build a virtual Python
+environment::
 
-  $ virtualenv env
-  $ ./env/bin/easy_install pylon
+  $ virtualenv python26
+  $ ./python26/bin/easy_install pylon
 
 To upgrade to a newer version::
 
@@ -68,13 +61,13 @@ Working directory
 
 Change in to the source directory and run IPython_::
 
-  $ cd ~/path/to/pylon-X.X
+  $ cd ~/path/to/pylon|version|
   $ ipython
 
 Access the ``pylon`` application programming inteface.
 
 .. sourcecode:: ipython
 
-  In [1]: from pylon import OPF
+  In [1]: from pylon import Case, OPF
 
 .. include:: ../links_names.txt
