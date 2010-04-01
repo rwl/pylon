@@ -99,6 +99,8 @@ class PSSEReader(CaseReader):
         case.base_mva = float(file.next().split(",")[1])
         case.name = "%s %s" % (file.next().strip(), file.next().strip())
 
+        bustype_map = {1: "PQ", 2: "PV", 3: "ref", 4: "isolated"}
+
         # I, 'NAME', BASKV, IDE, GL, BL, AREA, ZONE, VM, VA, OWNER
         bus_data = file.next().split(",")
         while bus_data[0].strip()[0] != "0":
@@ -106,6 +108,7 @@ class PSSEReader(CaseReader):
             self.bus_map[int(bus_data[0].strip())] = bus
             bus.name =  bus_data[1].strip("'").strip()
             bus.v_base = float(bus_data[2])
+            bus.type = bustype_map[int(bus_data[3])]
             bus.g_shunt = float(bus_data[4])
             bus.b_shunt = float(bus_data[5])
             bus.v_magnitude_guess = float(bus_data[8])
