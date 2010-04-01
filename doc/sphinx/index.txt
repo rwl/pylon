@@ -9,7 +9,7 @@ PYLON
 
   **Richard Lincoln**
 
-  Download `PDF <http://pylon.eee.strath.ac.uk/site/doc/manual/pylon.pdf>`_
+  Download `PDF <http://pylon.eee.strath.ac.uk/doc/manual/pylon.pdf>`_
 
   Contents:
 
@@ -27,17 +27,23 @@ Tutorial
 
   pf
   opf
-
-
+  
 API
 ---
-
 .. toctree::
   :maxdepth: 1
+  
   :glob:
+  api/case.txt
+  api/solvers.txt
 
-  api/*
-  api/readwrite/*
+.. API
+   ---
+   .. toctree::
+     :maxdepth: 1
+     :glob:
+     api/*
+     api/readwrite/*
 
 .. only:: html
 
