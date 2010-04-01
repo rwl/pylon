@@ -25,7 +25,7 @@ if sys.platform == "darwin":
                   "options": {"py2app": {"argv_emulation": True,
 #                                         "plist": {"LSPrefersPPC": True},
                                          "packages": ["numpy", "scipy"],
-                                         "includes": ["pdipm", "pyparsing"]}}}
+                                         "includes": ["pips", "pyparsing"]}}}
 elif sys.platform == "win32":
     extra_opts = {"app": [mainscript],
                   "setup_requires": ["py2exe"]}
@@ -43,8 +43,8 @@ setup(author="Richard Lincoln",
       license="Apache License, Version 2.0",
       name="Pylon",
       include_package_data=True,
-      packages=find_packages(),
-      py_modules=["pdipm"],
+      packages=["pylon", "pylon.readwrite", "pylon.test"],#find_packages(),
+      py_modules=["pips"],
       test_suite="pylon.test",
       zip_safe=True,
       **extra_opts)

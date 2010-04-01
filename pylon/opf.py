@@ -89,6 +89,8 @@ class OPF(object):
         """
         # Build an OPF model with variables and constraints.
         om = self._construct_opf_model(self.case)
+        if om is None:
+            return {"converged": False, "output": {"message": "No Ref Bus."}}
 
         # Call the specific solver.
 #        if self.opt["verbose"]:
@@ -120,7 +122,8 @@ class OPF(object):
 
         # Check for one reference bus.
         oneref, refs = self._ref_check(case)
-        if not oneref: return {"status": "error"}
+        if not oneref: #return {"status": "error"}
+            None
 
         # Remove isolated components.
         bs, ln, gn = self._remove_isolated(case)
