@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Optimal Power Flow &mdash; Pylon v0.4.1 documentation</title>
+    <link rel="stylesheet" href="_static/pylon.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.4.1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Pylon v0.4.1 documentation" href="index.html" />
+    <link rel="next" title="case – Case Components" href="api/case.html" />
+    <link rel="prev" title="Power Flow" href="pf.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="api/case.html" title="case – Case Components"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pf.html" title="Power Flow"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="index.html">Pylon v0.4.1 documentation</a> </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="optimal-power-flow">
+<span id="opf"></span><h1>Optimal Power Flow<a class="headerlink" href="#optimal-power-flow" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial provides a guide for solving an Optimal Power Flow problem
+using Pylon.</p>
+<p>First import the necessary components from Pylon.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pylon</span> <span class="kn">import</span> <span class="n">Case</span><span class="p">,</span> <span class="n">Bus</span><span class="p">,</span> <span class="n">Branch</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">OPF</span>
+</pre></div>
+</div>
+<p>Import &#8220;sys&#8221; for writing to stdout.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">sys</span>
+</pre></div>
+</div>
+<p>Create two generators, specifying their marginal cost.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">bus1</span> <span class="o">=</span> <span class="n">Bus</span><span class="p">(</span><span class="n">p_demand</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
+<span class="n">g1</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">(</span><span class="n">bus1</span><span class="p">,</span> <span class="n">p_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">p_max</span><span class="o">=</span><span class="mf">80.0</span><span class="p">,</span> <span class="n">p_cost</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+<span class="n">bus2</span> <span class="o">=</span> <span class="n">Bus</span><span class="p">()</span>
+<span class="n">g2</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">(</span><span class="n">bus2</span><span class="p">,</span> <span class="n">p_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">p_max</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">p_cost</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Connect the two generator buses</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">line</span> <span class="o">=</span> <span class="n">Branch</span><span class="p">(</span><span class="n">bus1</span><span class="p">,</span> <span class="n">bus2</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and add it all to a case.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">case</span> <span class="o">=</span> <span class="n">Case</span><span class="p">(</span><span class="n">buses</span><span class="o">=</span><span class="p">[</span><span class="n">bus1</span><span class="p">,</span> <span class="n">bus2</span><span class="p">],</span> <span class="n">branches</span><span class="o">=</span><span class="p">[</span><span class="n">line</span><span class="p">],</span> <span class="n">generators</span><span class="o">=</span><span class="p">[</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Linearised DC optimal power flow</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dc</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>or non-linear AC optimal power flow may be selected.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dc</span> <span class="o">=</span> <span class="bp">False</span>
+</pre></div>
+</div>
+<p>Pass the case to the OPF routine and solve.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">OPF</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">dc</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>View the results as ReStructuredText.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">case</span><span class="o">.</span><span class="n">save_rst</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="pf.html"
+                                  title="previous chapter">Power Flow</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="api/case.html"
+                                  title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">case</span></tt> &#8211; Case Components</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/opf.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="api/case.html" title="case – Case Components"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pf.html" title="Power Flow"
+             >previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="index.html">Pylon v0.4.1 documentation</a> </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>

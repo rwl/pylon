@@ -1,27 +1,26 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>PYLON &mdash; Pylon v0.2 documentation</title>
-    <link rel="stylesheet" href="static/pylon.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <title>PYLON &mdash; Pylon v0.4.1 documentation</title>
+    <link rel="stylesheet" href="_static/pylon.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.2',
+        VERSION:     '0.4.1',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="copyright" title="Copyright" href="copyright.html" />
-    <link rel="top" title="Pylon v0.2 documentation" href="" />
-    <link rel="next" title="INTRODUCTION" href="intro.html" /> 
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Pylon v0.4.1 documentation" href="" />
+    <link rel="next" title="Introduction" href="intro.html" /> 
   </head>
   <body>
     <div class="related">
@@ -31,77 +30,75 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="intro.html" title="INTRODUCTION"
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
              accesskey="N">next</a> |</li>
-    <li><a href="http://rwl.github.com/pylon/">PYLON Home</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
     
-        <li><a href="">Pylon v0.2 documentation</a> </li>
+        <li><a href="">Pylon v0.4.1 documentation</a> </li>
  
       </ul>
     </div>  
+
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
             
-  
   <div class="section" id="pylon">
 <h1>PYLON<a class="headerlink" href="#pylon" title="Permalink to this headline">¶</a></h1>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Release:</th><td class="field-body">0.2</td>
+<tr class="field"><th class="field-name">Release:</th><td class="field-body">0.4.1</td>
 </tr>
-<tr class="field"><th class="field-name">Date:</th><td class="field-body">April 1, 2009</td>
+<tr class="field"><th class="field-name">Date:</th><td class="field-body">April 1, 2010</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Richard W. Lincoln</strong></p>
-<p>Download <a class="reference external" href="http://rwl.github.com/pylon/pylon.pdf">PDF</a></p>
+<p><strong>Richard Lincoln</strong></p>
+<p>Download <a class="reference external" href="http://pylon.eee.strath.ac.uk/site/doc/manual/pylon.pdf">PDF</a></p>
 <p>Contents:</p>
 <ul>
-<li class="toctree-l1"><a class="reference external" href="intro.html">INTRODUCTION</a></li>
-</ul>
-<ul>
+<li class="toctree-l1"><a class="reference external" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference external" href="install.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference external" href="install.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference external" href="install.html#strongly-recommended">Strongly recommended</a></li>
-<li class="toctree-l2"><a class="reference external" href="install.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference external" href="install.html#recommended">Recommended</a></li>
 <li class="toctree-l2"><a class="reference external" href="install.html#setuptools">Setuptools</a></li>
 <li class="toctree-l2"><a class="reference external" href="install.html#installation-from-source">Installation from source</a></li>
 <li class="toctree-l2"><a class="reference external" href="install.html#working-directory">Working directory</a></li>
 </ul>
 </li>
 </ul>
+<div class="section" id="tutorial">
+<h2>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li class="toctree-l1"><a class="reference external" href="model.html">Power System Model</a><ul>
-<li class="toctree-l2"><a class="reference external" href="model.html#id1">Network</a></li>
+<li class="toctree-l1"><a class="reference external" href="pf.html">Power Flow</a></li>
+<li class="toctree-l1"><a class="reference external" href="opf.html">Optimal Power Flow</a></li>
 </ul>
-</li>
-</ul>
+</div>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li class="toctree-l1"><a class="reference external" href="parser.html">Parsers</a><ul>
-<li class="toctree-l2"><a class="reference external" href="parser.html#matpower">MATPOWER</a></li>
-<li class="toctree-l2"><a class="reference external" href="parser.html#pti-pss-e">PTI PSS/E</a></li>
-<li class="toctree-l2"><a class="reference external" href="parser.html#cim-rdf-xml">CIM RDF/XML</a></li>
+<li class="toctree-l1"><a class="reference external" href="api/case.html"><tt class="docutils literal"><span class="pre">pylon.case</span></tt> &#8211; Case Components</a></li>
+<li class="toctree-l1"><a class="reference external" href="api/solvers.html"><tt class="docutils literal"><span class="pre">pylon.dc_pf</span></tt> &#8211; DC Power Flow</a></li>
+<li class="toctree-l1"><a class="reference external" href="api/solvers.html#module-pylon.ac_pf"><tt class="docutils literal"><span class="pre">pylon.ac_pf</span></tt> &#8211; AC Power Flow</a></li>
+<li class="toctree-l1"><a class="reference external" href="api/solvers.html#module-pylon.opf"><tt class="docutils literal"><span class="pre">pylon.opf</span></tt> &#8211; Optimal Power Flow</a></li>
 </ul>
-</li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="routine.html">Routines</a><ul>
-<li class="toctree-l2"><a class="reference external" href="routine.html#dc-power-flow">DC Power Flow</a></li>
-<li class="toctree-l2"><a class="reference external" href="routine.html#newton-power-flow">Newton Power Flow</a></li>
-<li class="toctree-l2"><a class="reference external" href="routine.html#dc-optimal-power-flow">DC Optimal Power Flow</a></li>
-<li class="toctree-l2"><a class="reference external" href="routine.html#ac-optimal-power-flow">AC Optimal Power Flow</a></li>
-</ul>
-</li>
-</ul>
+<div class="section" id="indices-and-tables">
+<h3>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h3>
+<blockquote>
 <ul class="simple">
 <li><a class="reference external" href="genindex.html"><em>Index</em></a></li>
 <li><a class="reference external" href="modindex.html"><em>Module Index</em></a></li>
 <li><a class="reference external" href="search.html"><em>Search Page</em></a></li>
 </ul>
+</blockquote>
+</div>
+</div>
 </div>
 
 
@@ -110,18 +107,41 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <h3><a href="">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="">PYLON</a><ul>
+<li><a class="reference external" href="#tutorial">Tutorial</a><ul>
+</ul>
+</li>
+<li><a class="reference external" href="#api">API</a><ul>
+<li><a class="reference external" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
             <h4>Next topic</h4>
-            <p class="topless"><a href="intro.html" title="next chapter">INTRODUCTION</a></p>
+            <p class="topless"><a href="intro.html"
+                                  title="next chapter">Introduction</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
-              <li><a href="_sources/index.txt">Show Source</a></li>
+              <li><a href="_sources/index.txt"
+                     rel="nofollow">Show Source</a></li>
             </ul>
-          <h3>Quick search</h3>
-            <form class="search" action="search.html" method="get">
-              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
-              <input type="hidden" name="check_keywords" value="yes" />
-              <input type="hidden" name="area" value="default" />
-            </form>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -131,18 +151,21 @@
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
+             >index</a></li>
         <li class="right" >
-          <a href="intro.html" title="INTRODUCTION"
-             accesskey="N">next</a> |</li>
-    <li><a href="http://rwl.github.com/pylon/">PYLON Home</a> |</li>
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >next</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
     
-        <li><a href="">Pylon v0.2 documentation</a> </li>
+        <li><a href="">Pylon v0.4.1 documentation</a> </li>
  
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
     </div>
   </body>
 </html>

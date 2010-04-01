@@ -1,0 +1,476 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pylon.case – Case Components &mdash; Pylon v0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/pylon.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Pylon v0.4.1 documentation" href="../index.html" />
+    <link rel="next" title="pylon.ac_pf – AC Power Flow" href="solvers.html" />
+    <link rel="prev" title="Optimal Power Flow" href="../opf.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="solvers.html" title="pylon.ac_pf – AC Power Flow"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../opf.html" title="Optimal Power Flow"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="../index.html">Pylon v0.4.1 documentation</a> </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pylon.generator">
+<h1><tt class="xref docutils literal"><span class="pre">pylon.case</span></tt> &#8211; Case Components<a class="headerlink" href="#module-pylon.generator" title="Permalink to this headline">¶</a></h1>
+<p>Defines the Pylon power system model.</p>
+<dl class="class">
+<dt id="pylon.case.Case">
+<em class="property">class </em><tt class="descclassname">pylon.case.</tt><tt class="descname">Case</tt><big>(</big><em>name=None</em>, <em>base_mva=100.0</em>, <em>buses=None</em>, <em>branches=None</em>, <em>generators=None</em><big>)</big><a class="headerlink" href="#pylon.case.Case" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref docutils literal"><span class="pre">pylon.util.Named</span></tt>, <tt class="xref docutils literal"><span class="pre">pylon.util.Serializable</span></tt></p>
+<p>Defines representation of an electric power system as a graph
+of Bus objects connected by Branches.</p>
+<dl class="attribute">
+<dt id="pylon.case.Case.Bdc">
+<tt class="descname">Bdc</tt><a class="headerlink" href="#pylon.case.Case.Bdc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sparse susceptance matrices and phase shift injection
+vectors needed for a DC power flow [2].</p>
+<dl class="docutils">
+<dt>The bus real power injections are related to bus voltage angles by</dt>
+<dd>P = Bbus * Va + Pbusinj</dd>
+</dl>
+<p>The real power flows at the from end the lines are related to the
+bus voltage angles by</p>
+<blockquote>
+Pf = Bf * Va + Pfinj</blockquote>
+<div class="line-block">
+<div class="line">Pf |   | Bff  Bft |   | Vaf |   | Pfinj |</div>
+<div class="line-block">
+<div class="line">| = |          | * |     | + |       |</div>
+</div>
+<div class="line">Pt |   | Btf  Btt |   | Vat |   | Ptinj |</div>
+</div>
+<dl class="docutils">
+<dt>[2] Ray Zimmerman, &#8220;makeBdc.m&#8221;, MATPOWER, PSERC Cornell,</dt>
+<dd><a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, version 4.0b1, Dec 2009</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pylon.case.Case.Sbus">
+<tt class="descname">Sbus</tt><a class="headerlink" href="#pylon.case.Case.Sbus" title="Permalink to this definition">¶</a></dt>
+<dd>Net complex bus power injection vector in p.u.</dd></dl>
+
+<dl class="attribute">
+<dt id="pylon.case.Case.Y">
+<tt class="descname">Y</tt><a class="headerlink" href="#pylon.case.Case.Y" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the bus and branch admittance matrices, Yf and Yt, such
+that Yf * V is the vector of complex branch currents injected at
+each branch&#8217;s &#8220;from&#8221; bus [1].</p>
+<dl class="docutils">
+<dt>[1] Ray Zimmerman, &#8220;makeYbus.m&#8221;, MATPOWER, PSERC Cornell,</dt>
+<dd><a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, version 4.0b1, Dec 2009</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pylon.case.Case.connected_buses">
+<tt class="descname">connected_buses</tt><a class="headerlink" href="#pylon.case.Case.connected_buses" title="Permalink to this definition">¶</a></dt>
+<dd>Returns a list of buses that are connected to one or more branches
+or the first bus in a branchless system.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.d2AIbr_dV2">
+<tt class="descname">d2AIbr_dV2</tt><big>(</big><em>dIbr_dVa</em>, <em>dIbr_dVm</em>, <em>Ibr</em>, <em>Ybr</em>, <em>V</em>, <em>lam</em><big>)</big><a class="headerlink" href="#pylon.case.Case.d2AIbr_dV2" title="Permalink to this definition">¶</a></dt>
+<dd>Computes 2nd derivatives of <a href="#id1"><span class="problematic" id="id2">|</span></a>complex current|**2 w.r.t. V.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.d2ASbr_dV2">
+<tt class="descname">d2ASbr_dV2</tt><big>(</big><em>dSbr_dVa</em>, <em>dSbr_dVm</em>, <em>Sbr</em>, <em>Cbr</em>, <em>Ybr</em>, <em>V</em>, <em>lam</em><big>)</big><a class="headerlink" href="#pylon.case.Case.d2ASbr_dV2" title="Permalink to this definition">¶</a></dt>
+<dd>Computes 2nd derivatives of <a href="#id3"><span class="problematic" id="id4">|</span></a>complex power flow|**2 w.r.t. V.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.d2Ibr_dV2">
+<tt class="descname">d2Ibr_dV2</tt><big>(</big><em>Ybr</em>, <em>V</em>, <em>lam</em><big>)</big><a class="headerlink" href="#pylon.case.Case.d2Ibr_dV2" title="Permalink to this definition">¶</a></dt>
+<dd>Computes 2nd derivatives of complex branch current w.r.t. voltage.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.d2Sbr_dV2">
+<tt class="descname">d2Sbr_dV2</tt><big>(</big><em>Cbr</em>, <em>Ybr</em>, <em>V</em>, <em>lam</em><big>)</big><a class="headerlink" href="#pylon.case.Case.d2Sbr_dV2" title="Permalink to this definition">¶</a></dt>
+<dd>Computes 2nd derivatives of complex power flow w.r.t. voltage.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.d2Sbus_dV2">
+<tt class="descname">d2Sbus_dV2</tt><big>(</big><em>Ybus</em>, <em>V</em>, <em>lam</em><big>)</big><a class="headerlink" href="#pylon.case.Case.d2Sbus_dV2" title="Permalink to this definition">¶</a></dt>
+<dd>Computes 2nd derivatives of power injection w.r.t. voltage.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.dAbr_dV">
+<tt class="descname">dAbr_dV</tt><big>(</big><em>dSf_dVa</em>, <em>dSf_dVm</em>, <em>dSt_dVa</em>, <em>dSt_dVm</em>, <em>Sf</em>, <em>St</em><big>)</big><a class="headerlink" href="#pylon.case.Case.dAbr_dV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partial derivatives of squared flow magnitudes w.r.t voltage.</p>
+<p>Computes partial derivatives of apparent power w.r.t active and
+reactive power flows.  Partial derivative must equal 1 for lines
+with zero flow to avoid division by zero errors (1 comes from
+L&#8217;Hopital).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.dIbr_dV">
+<tt class="descname">dIbr_dV</tt><big>(</big><em>Yf</em>, <em>Yt</em>, <em>V</em><big>)</big><a class="headerlink" href="#pylon.case.Case.dIbr_dV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes partial derivatives of branch currents w.r.t. voltage [4].</p>
+<dl class="docutils">
+<dt>[4] Ray Zimmerman, &#8220;dIbr_dV.m&#8221;, MATPOWER, version 4.0b1,</dt>
+<dd>PSERC (Cornell), <a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.dSbr_dV">
+<tt class="descname">dSbr_dV</tt><big>(</big><em>Yf</em>, <em>Yt</em>, <em>V</em>, <em>buses=None</em>, <em>branches=None</em><big>)</big><a class="headerlink" href="#pylon.case.Case.dSbr_dV" title="Permalink to this definition">¶</a></dt>
+<dd>Computes the branch power flow vector and the partial derivative of
+branch power flow w.r.t voltage.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.dSbus_dV">
+<tt class="descname">dSbus_dV</tt><big>(</big><em>Y</em>, <em>V</em><big>)</big><a class="headerlink" href="#pylon.case.Case.dSbus_dV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the partial derivative of power injection w.r.t.
+voltage [3].</p>
+<dl class="docutils">
+<dt>[3] Ray Zimmerman, &#8220;dSbus_dV.m&#8221;, MATPOWER, version 4.0b1,</dt>
+<dd>PSERC (Cornell), <a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.deactivate_isolated">
+<tt class="descname">deactivate_isolated</tt><big>(</big><big>)</big><a class="headerlink" href="#pylon.case.Case.deactivate_isolated" title="Permalink to this definition">¶</a></dt>
+<dd>Deactivates branches and generators connected to isolated buses.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.getSbus">
+<tt class="descname">getSbus</tt><big>(</big><em>buses=None</em><big>)</big><a class="headerlink" href="#pylon.case.Case.getSbus" title="Permalink to this definition">¶</a></dt>
+<dd>Net complex bus power injection vector in p.u.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.getYbus">
+<tt class="descname">getYbus</tt><big>(</big><em>buses=None</em>, <em>branches=None</em><big>)</big><a class="headerlink" href="#pylon.case.Case.getYbus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the bus and branch admittance matrices, Yf and Yt, such
+that Yf * V is the vector of complex branch currents injected at
+each branch&#8217;s &#8220;from&#8221; bus [1].</p>
+<dl class="docutils">
+<dt>[1] Ray Zimmerman, &#8220;makeYbus.m&#8221;, MATPOWER, PSERC Cornell,</dt>
+<dd><a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, version 4.0b1, Dec 2009</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.index_branches">
+<tt class="descname">index_branches</tt><big>(</big><em>branches=None</em><big>)</big><a class="headerlink" href="#pylon.case.Case.index_branches" title="Permalink to this definition">¶</a></dt>
+<dd>Updates the indices for all brnaches.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.index_buses">
+<tt class="descname">index_buses</tt><big>(</big><em>buses=None</em><big>)</big><a class="headerlink" href="#pylon.case.Case.index_buses" title="Permalink to this definition">¶</a></dt>
+<dd>Updates the indices of all case buses.</dd></dl>
+
+<dl class="classmethod">
+<dt id="pylon.case.Case.load_matpower">
+<em class="property">classmethod </em><tt class="descname">load_matpower</tt><big>(</big><em>fd</em><big>)</big><a class="headerlink" href="#pylon.case.Case.load_matpower" title="Permalink to this definition">¶</a></dt>
+<dd>Returns a case from the given MATPOWER file object.</dd></dl>
+
+<dl class="classmethod">
+<dt id="pylon.case.Case.load_psat">
+<em class="property">classmethod </em><tt class="descname">load_psat</tt><big>(</big><em>fd</em><big>)</big><a class="headerlink" href="#pylon.case.Case.load_psat" title="Permalink to this definition">¶</a></dt>
+<dd>Returns a case object from the given PSAT data file.</dd></dl>
+
+<dl class="classmethod">
+<dt id="pylon.case.Case.load_psse">
+<em class="property">classmethod </em><tt class="descname">load_psse</tt><big>(</big><em>fd</em><big>)</big><a class="headerlink" href="#pylon.case.Case.load_psse" title="Permalink to this definition">¶</a></dt>
+<dd>Returns a case from the given PSS/E file object.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.makeB">
+<tt class="descname">makeB</tt><big>(</big><em>buses=None</em>, <em>branches=None</em>, <em>method='XB'</em><big>)</big><a class="headerlink" href="#pylon.case.Case.makeB" title="Permalink to this definition">¶</a></dt>
+<dd>Builds the FDPF matrices, B prime and B double prime.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.makeBdc">
+<tt class="descname">makeBdc</tt><big>(</big><em>buses=None</em>, <em>branches=None</em><big>)</big><a class="headerlink" href="#pylon.case.Case.makeBdc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sparse susceptance matrices and phase shift injection
+vectors needed for a DC power flow [2].</p>
+<dl class="docutils">
+<dt>The bus real power injections are related to bus voltage angles by</dt>
+<dd>P = Bbus * Va + Pbusinj</dd>
+</dl>
+<p>The real power flows at the from end the lines are related to the
+bus voltage angles by</p>
+<blockquote>
+Pf = Bf * Va + Pfinj</blockquote>
+<div class="line-block">
+<div class="line">Pf |   | Bff  Bft |   | Vaf |   | Pfinj |</div>
+<div class="line-block">
+<div class="line">| = |          | * |     | + |       |</div>
+</div>
+<div class="line">Pt |   | Btf  Btt |   | Vat |   | Ptinj |</div>
+</div>
+<dl class="docutils">
+<dt>[2] Ray Zimmerman, &#8220;makeBdc.m&#8221;, MATPOWER, PSERC Cornell,</dt>
+<dd><a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, version 4.0b1, Dec 2009</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pylon.case.Case.online_branches">
+<tt class="descname">online_branches</tt><a class="headerlink" href="#pylon.case.Case.online_branches" title="Permalink to this definition">¶</a></dt>
+<dd>Property getter for in-service branches.</dd></dl>
+
+<dl class="attribute">
+<dt id="pylon.case.Case.online_generators">
+<tt class="descname">online_generators</tt><a class="headerlink" href="#pylon.case.Case.online_generators" title="Permalink to this definition">¶</a></dt>
+<dd>All in-service generators.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.pf_solution">
+<tt class="descname">pf_solution</tt><big>(</big><em>Ybus</em>, <em>Yf</em>, <em>Yt</em>, <em>V</em><big>)</big><a class="headerlink" href="#pylon.case.Case.pf_solution" title="Permalink to this definition">¶</a></dt>
+<dd>Updates buses, generators and branches to match power flow
+solution.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.reset">
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="headerlink" href="#pylon.case.Case.reset" title="Permalink to this definition">¶</a></dt>
+<dd>Resets the result variables for all of the case componenets.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.s_demand">
+<tt class="descname">s_demand</tt><big>(</big><em>bus</em><big>)</big><a class="headerlink" href="#pylon.case.Case.s_demand" title="Permalink to this definition">¶</a></dt>
+<dd>Returns the total complex power demand.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.s_supply">
+<tt class="descname">s_supply</tt><big>(</big><em>bus</em><big>)</big><a class="headerlink" href="#pylon.case.Case.s_supply" title="Permalink to this definition">¶</a></dt>
+<dd>Returns the total complex power generation capacity.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.s_surplus">
+<tt class="descname">s_surplus</tt><big>(</big><em>bus</em><big>)</big><a class="headerlink" href="#pylon.case.Case.s_surplus" title="Permalink to this definition">¶</a></dt>
+<dd>Return the difference between supply and demand.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.save_csv">
+<tt class="descname">save_csv</tt><big>(</big><em>fd</em><big>)</big><a class="headerlink" href="#pylon.case.Case.save_csv" title="Permalink to this definition">¶</a></dt>
+<dd>Saves the case as a series of Comma-Separated Values.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.save_dot">
+<tt class="descname">save_dot</tt><big>(</big><em>fd</em><big>)</big><a class="headerlink" href="#pylon.case.Case.save_dot" title="Permalink to this definition">¶</a></dt>
+<dd>Saves a representation of the case in the Graphviz DOT language.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.save_excel">
+<tt class="descname">save_excel</tt><big>(</big><em>fd</em><big>)</big><a class="headerlink" href="#pylon.case.Case.save_excel" title="Permalink to this definition">¶</a></dt>
+<dd>Saves the case as an Excel spreadsheet.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.save_matpower">
+<tt class="descname">save_matpower</tt><big>(</big><em>fd</em><big>)</big><a class="headerlink" href="#pylon.case.Case.save_matpower" title="Permalink to this definition">¶</a></dt>
+<dd>Serialize the case as a MATPOWER data file.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.save_rst">
+<tt class="descname">save_rst</tt><big>(</big><em>fd</em><big>)</big><a class="headerlink" href="#pylon.case.Case.save_rst" title="Permalink to this definition">¶</a></dt>
+<dd>Save a reStructuredText representation of the case.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.case.Case.sort_generators">
+<tt class="descname">sort_generators</tt><big>(</big><big>)</big><a class="headerlink" href="#pylon.case.Case.sort_generators" title="Permalink to this definition">¶</a></dt>
+<dd>Reorders the list of generators according to bus index.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pylon.case.Bus">
+<em class="property">class </em><tt class="descclassname">pylon.case.</tt><tt class="descname">Bus</tt><big>(</big><em>name=None</em>, <em>type='PQ'</em>, <em>v_base=100.0</em>, <em>v_magnitude_guess=1.0</em>, <em>v_angle_guess=0.0</em>, <em>v_max=1.1000000000000001</em>, <em>v_min=0.90000000000000002</em>, <em>p_demand=0.0</em>, <em>q_demand=0.0</em>, <em>g_shunt=0.0</em>, <em>b_shunt=0.0</em>, <em>position=None</em><big>)</big><a class="headerlink" href="#pylon.case.Bus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref docutils literal"><span class="pre">pylon.util.Named</span></tt></p>
+<p>Defines a power system bus node.</p>
+<dl class="method">
+<dt id="pylon.case.Bus.reset">
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="headerlink" href="#pylon.case.Bus.reset" title="Permalink to this definition">¶</a></dt>
+<dd>Resets the result variables.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pylon.case.Branch">
+<em class="property">class </em><tt class="descclassname">pylon.case.</tt><tt class="descname">Branch</tt><big>(</big><em>from_bus</em>, <em>to_bus</em>, <em>name=None</em>, <em>online=True</em>, <em>r=0.0</em>, <em>x=0.0</em>, <em>b=0.0</em>, <em>rate_a=999.0</em>, <em>rate_b=999.0</em>, <em>rate_c=999.0</em>, <em>ratio=1.0</em>, <em>phase_shift=0.0</em>, <em>ang_min=-360.0</em>, <em>ang_max=360.0</em><big>)</big><a class="headerlink" href="#pylon.case.Branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref docutils literal"><span class="pre">pylon.util.Named</span></tt></p>
+<p>Defines a case edge that links two Bus objects.</p>
+<dl class="method">
+<dt id="pylon.case.Branch.reset">
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="headerlink" href="#pylon.case.Branch.reset" title="Permalink to this definition">¶</a></dt>
+<dd>Resets the result variables.</dd></dl>
+
+</dd></dl>
+
+<p>Defines a generator as a complex power bus injection.</p>
+<dl class="class">
+<dt id="pylon.generator.Generator">
+<em class="property">class </em><tt class="descclassname">pylon.generator.</tt><tt class="descname">Generator</tt><big>(</big><em>bus</em>, <em>name=None</em>, <em>online=True</em>, <em>base_mva=100.0</em>, <em>p=100.0</em>, <em>p_max=200.0</em>, <em>p_min=0.0</em>, <em>v_magnitude=1.0</em>, <em>q=0.0</em>, <em>q_max=30.0</em>, <em>q_min=-30.0</em>, <em>c_startup=0.0</em>, <em>c_shutdown=0.0</em>, <em>p_cost=None</em>, <em>pcost_model='poly'</em>, <em>q_cost=None</em>, <em>qcost_model=None</em><big>)</big><a class="headerlink" href="#pylon.generator.Generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref docutils literal"><span class="pre">pylon.util.Named</span></tt></p>
+<p>Defines a power system generator component. Fixes voltage magnitude
+and active power injected at parent bus. Or when at it&#8217;s reactive
+power limit fixes active and reactive power injected at parent bus.</p>
+<dl class="method">
+<dt id="pylon.generator.Generator.bids_to_pwl">
+<tt class="descname">bids_to_pwl</tt><big>(</big><em>bids</em><big>)</big><a class="headerlink" href="#pylon.generator.Generator.bids_to_pwl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the piece-wise linear total cost function using the given
+bid blocks.</p>
+<p>&#64;see: matpower3.2/extras/smartmarket/off2case.m</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pylon.generator.Generator.get_bids">
+<tt class="descname">get_bids</tt><big>(</big><em>n_points=6</em><big>)</big><a class="headerlink" href="#pylon.generator.Generator.get_bids" title="Permalink to this definition">¶</a></dt>
+<dd>Returns quantity and price bids created from the cost function.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.generator.Generator.get_offers">
+<tt class="descname">get_offers</tt><big>(</big><em>n_points=6</em><big>)</big><a class="headerlink" href="#pylon.generator.Generator.get_offers" title="Permalink to this definition">¶</a></dt>
+<dd>Returns quantity and price offers created from the cost function.</dd></dl>
+
+<dl class="attribute">
+<dt id="pylon.generator.Generator.is_load">
+<tt class="descname">is_load</tt><a class="headerlink" href="#pylon.generator.Generator.is_load" title="Permalink to this definition">¶</a></dt>
+<dd>Returns true if the generator if a dispatchable load. This may
+need to be revised to allow sensible specification of both elastic
+demand and pumped storage units.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.generator.Generator.offers_to_pwl">
+<tt class="descname">offers_to_pwl</tt><big>(</big><em>offers</em><big>)</big><a class="headerlink" href="#pylon.generator.Generator.offers_to_pwl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the piece-wise linear total cost function using the given
+offer blocks.</p>
+<p>&#64;see: matpower3.2/extras/smartmarket/off2case.m</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pylon.generator.Generator.poly_to_pwl">
+<tt class="descname">poly_to_pwl</tt><big>(</big><em>n_points=10</em><big>)</big><a class="headerlink" href="#pylon.generator.Generator.poly_to_pwl" title="Permalink to this definition">¶</a></dt>
+<dd>Sets the piece-wise linear cost attribute, converting the
+polynomial cost variable by evaluating at zero and then at
+n_points evenly spaced points between p_min and p_max.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.generator.Generator.pwl_to_poly">
+<tt class="descname">pwl_to_poly</tt><big>(</big><big>)</big><a class="headerlink" href="#pylon.generator.Generator.pwl_to_poly" title="Permalink to this definition">¶</a></dt>
+<dd>Converts the first segment of the pwl cost to linear quadratic.
+FIXME: Curve-fit for all segments.</dd></dl>
+
+<dl class="attribute">
+<dt id="pylon.generator.Generator.q_limited">
+<tt class="descname">q_limited</tt><a class="headerlink" href="#pylon.generator.Generator.q_limited" title="Permalink to this definition">¶</a></dt>
+<dd>Is the machine at it&#8217;s limit of reactive power?</dd></dl>
+
+<dl class="method">
+<dt id="pylon.generator.Generator.reset">
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="headerlink" href="#pylon.generator.Generator.reset" title="Permalink to this definition">¶</a></dt>
+<dd>Resets the result variables.</dd></dl>
+
+<dl class="method">
+<dt id="pylon.generator.Generator.total_cost">
+<tt class="descname">total_cost</tt><big>(</big><em>p=None</em>, <em>p_cost=None</em>, <em>pcost_model=None</em><big>)</big><a class="headerlink" href="#pylon.generator.Generator.total_cost" title="Permalink to this definition">¶</a></dt>
+<dd>Computes total cost for the generator at the given output level.</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="../opf.html"
+                                  title="previous chapter">Optimal Power Flow</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="solvers.html"
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">pylon.ac_pf</span></tt> &#8211; AC Power Flow</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="../_sources/api/case.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="solvers.html" title="pylon.ac_pf – AC Power Flow"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../opf.html" title="Optimal Power Flow"
+             >previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="../index.html">Pylon v0.4.1 documentation</a> </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>

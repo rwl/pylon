@@ -2,29 +2,55 @@
 PYLON
 =====
 
-.. htmlonly::
+.. only:: html
 
-	:Release: |version|
-	:Date: April 1, 2009
+  :Release: |version|
+  :Date: April 1, 2010
 
-	**Richard W. Lincoln**
+  **Richard Lincoln**
 
-	Download `PDF <http://rwl.github.com/pylon/pylon.pdf>`_
+  Download `PDF <http://pylon.eee.strath.ac.uk/site/doc/manual/pylon.pdf>`_
 
-	Contents:
+  Contents:
 
 .. toctree::
-	:maxdepth: 2
+  :maxdepth: 2
 
-	intro.rst
-	install.rst
-	model.rst
-	parser.rst
-	routine.rst
+  intro
+  install
 
-.. htmlonly::
+Tutorial
+--------
 
-	* :ref:`genindex`
-	* :ref:`modindex`
-	* :ref:`search`
+.. toctree::
+  :maxdepth: 2
+
+  pf
+  opf
+  
+API
+---
+.. toctree::
+  :maxdepth: 1
+  
+  :glob:
+  api/case.txt
+  api/solvers.txt
+
+.. API
+   ---
+   .. toctree::
+     :maxdepth: 1
+     :glob:
+     api/*
+     api/readwrite/*
+
+.. only:: html
+
+Indices and tables
+==================
+
+  * :ref:`genindex`
+  * :ref:`modindex`
+  * :ref:`search`
 

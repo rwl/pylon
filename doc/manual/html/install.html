@@ -1,28 +1,27 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installation &mdash; Pylon v0.2 documentation</title>
-    <link rel="stylesheet" href="static/pylon.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <title>Installation &mdash; Pylon v0.4.1 documentation</title>
+    <link rel="stylesheet" href="_static/pylon.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.2',
+        VERSION:     '0.4.1',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="copyright" title="Copyright" href="copyright.html" />
-    <link rel="top" title="Pylon v0.2 documentation" href="index.html" />
-    <link rel="next" title="Power System Model" href="model.html" />
-    <link rel="prev" title="INTRODUCTION" href="intro.html" /> 
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Pylon v0.4.1 documentation" href="index.html" />
+    <link rel="next" title="Power Flow" href="pf.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
   </head>
   <body>
     <div class="related">
@@ -32,88 +31,72 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="model.html" title="Power System Model"
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="pf.html" title="Power Flow"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="intro.html" title="INTRODUCTION"
+          <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
-    <li><a href="http://rwl.github.com/pylon/">PYLON Home</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
     
-        <li><a href="index.html">Pylon v0.2 documentation</a> </li>
+        <li><a href="index.html">Pylon v0.4.1 documentation</a> </li>
  
       </ul>
     </div>  
+
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
             
-  
   <div class="section" id="installation">
 <span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>Pylon is a package of Python modules.  It needs to be on the PYTHON_PATH
-environment variable and for some core dependencies to be met for model and
-solver functionality.  Optionally, easily installed additional libraries
-enable other features.</p>
+<p>Pylon is a package of Python modules that need to be placed on the
+<tt class="docutils literal"><span class="pre">PYTHON_PATH</span></tt>.</p>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<p>2.5 &lt;= <a class="reference external" href="http://www.python.org">Python</a> &lt; 3.0</p>
+<p><a class="reference external" href="http://www.python.org">Python</a> 2.5 or 2.6</p>
 <dl class="docutils">
-<dt><a class="reference external" href="http://code.enthought.com/projects/traits/">Traits</a> 3.0 or later</dt>
-<dd>Provides Python object attributes with additional characteristics.</dd>
-<dt><a class="reference external" href="http://abel.ee.ucla.edu/cvxopt/">CVXOPT</a> 1.0 or later</dt>
-<dd>CVXOPT is a free software package for convex optimization based on the
-Python programming language.</dd>
 <dt><a class="reference external" href="http://www.scipy.org/NumPy">NumPy</a> 1.2 or later</dt>
 <dd>NumPy provides additional support for multi-dimentional arrays and
 matrices.</dd>
-</dl>
-</blockquote>
-</div>
-<div class="section" id="strongly-recommended">
-<h2>Strongly recommended<a class="headerlink" href="#strongly-recommended" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<dl class="docutils">
+<dt><a class="reference external" href="http://www.scipy.org">SciPy</a> 0.7 or later</dt>
+<dd>Packages for mathematics, science, and engineering</dd>
 <dt><a class="reference external" href="http://pyparsing.wikispaces.com/">Pyparsing</a></dt>
 <dd>Pyparsing is a versatile Python module for recursive descent parsing.</dd>
-<dt><a class="reference external" href="http://www.pybrain.org">PyBrain</a></dt>
-<dd>PyBrain is a modular Machine Learning Library for Python.</dd>
-<dt><a class="reference external" href="http://ipython.scipy.org">iPython</a></dt>
-<dd>Interactive python interpreter.</dd>
-<dt><a class="reference external" href="http://www.wxpython.org/">wxPython</a></dt>
-<dd>Cross-platform GUI toolkit for the <a class="reference external" href="http://www.python.org">Python</a> programming language.</dd>
-<dt><a class="reference external" href="http://www.github.com/rwl/godot/">Godot</a></dt>
-<dd>Godot uses <a class="reference external" href="http://www.graphviz.org/">Graphviz</a> Xdot output to provide interactive graph
-visualisation.</dd>
 </dl>
 </blockquote>
 </div>
-<div class="section" id="windows">
-<h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference external" href="https://www.enthought.com/products/epd.php">Enthought Python Distribution</a> provides the majority of the dependencies
-for Pylon and is free for academic use.  <a class="reference external" href="http://abel.ee.ucla.edu/cvxopt/">CVXOPT</a> is not included, but comes as
-a <a class="reference external" href="http://abel.ee.ucla.edu/cvxopt/download-2.5-win32.php">Windows Installer</a>
-also.</p>
+<div class="section" id="recommended">
+<h2>Recommended<a class="headerlink" href="#recommended" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<dl class="docutils">
+<dt><a class="reference external" href="http://scikits.appspot.com/umfpack">scikits.umfpack</a></dt>
+<dd>Wrappers of UMFPACK sparse direct solver to SciPy.</dd>
+</dl>
+</blockquote>
 </div>
 <div class="section" id="setuptools">
 <h2>Setuptools<a class="headerlink" href="#setuptools" title="Permalink to this headline">¶</a></h2>
 <p>With <a class="reference external" href="http://www.python.org">Python</a> and <a class="reference external" href="http://peak.telecommunity.com/DevCenter/setuptools">setuptools</a> installed, simply:</p>
 <div class="highlight-python"><pre>$ easy_install pylon</pre>
 </div>
-<p><a class="reference external" href="http://pypi.python.org/pypi/virtualenv">Virtualenv</a> may be used to build a virtual Python environment:</p>
-<div class="highlight-python"><pre>$ virtualenv env
-$ ./env/bin/easy_install pylon</pre>
+<p>Users without root access may use <a class="reference external" href="http://pypi.python.org/pypi/virtualenv">Virtualenv</a> to build a virtual Python
+environment:</p>
+<div class="highlight-python"><pre>$ virtualenv python26
+$ ./python26/bin/easy_install pylon</pre>
+</div>
+<p>To upgrade to a newer version:</p>
+<div class="highlight-python"><pre>$ easy_install -U pylon</pre>
 </div>
 </div>
 <div class="section" id="installation-from-source">
 <h2>Installation from source<a class="headerlink" href="#installation-from-source" title="Permalink to this headline">¶</a></h2>
-<p>Extract the gzipped tar file:</p>
-<div class="highlight-python"><pre>$ tar xvf pylon-X.X.tar.gz</pre>
-</div>
 <p>Run the <tt class="docutils literal"><span class="pre">setup.py</span></tt> script:</p>
-<div class="highlight-python"><pre>$ cd pylon-X.X
-$ python setup.py install</pre>
+<div class="highlight-python"><pre>$ python setup.py install</pre>
 </div>
 <p>or:</p>
 <div class="highlight-python"><pre>$ python setup.py develop</pre>
@@ -122,11 +105,11 @@ $ python setup.py install</pre>
 <div class="section" id="working-directory">
 <h2>Working directory<a class="headerlink" href="#working-directory" title="Permalink to this headline">¶</a></h2>
 <p>Change in to the source directory and run <a class="reference external" href="http://ipython.scipy.org">IPython</a>:</p>
-<div class="highlight-python"><pre>$ cd ~/path/to/pylon-X.X
+<div class="highlight-python"><pre>$ cd ~/path/to/pylon-0.4.1
 $ ipython</pre>
 </div>
 <p>Access the <tt class="docutils literal"><span class="pre">pylon</span></tt> application programming inteface.</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="k">from</span> <span class="nn">pylon.api</span> <span class="k">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">DCOPFRoutine</span>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">pylon</span> <span class="kn">import</span> <span class="n">Case</span><span class="p">,</span> <span class="n">OPF</span>
 </pre></div>
 </div>
 </div>
@@ -142,8 +125,7 @@ $ ipython</pre>
             <ul>
 <li><a class="reference external" href="">Installation</a><ul>
 <li><a class="reference external" href="#dependencies">Dependencies</a></li>
-<li><a class="reference external" href="#strongly-recommended">Strongly recommended</a></li>
-<li><a class="reference external" href="#windows">Windows</a></li>
+<li><a class="reference external" href="#recommended">Recommended</a></li>
 <li><a class="reference external" href="#setuptools">Setuptools</a></li>
 <li><a class="reference external" href="#installation-from-source">Installation from source</a></li>
 <li><a class="reference external" href="#working-directory">Working directory</a></li>
@@ -152,19 +134,29 @@ $ ipython</pre>
 </ul>
 
             <h4>Previous topic</h4>
-            <p class="topless"><a href="intro.html" title="previous chapter">INTRODUCTION</a></p>
+            <p class="topless"><a href="intro.html"
+                                  title="previous chapter">Introduction</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="model.html" title="next chapter">Power System Model</a></p>
+            <p class="topless"><a href="pf.html"
+                                  title="next chapter">Power Flow</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
-              <li><a href="_sources/install.txt">Show Source</a></li>
+              <li><a href="_sources/install.txt"
+                     rel="nofollow">Show Source</a></li>
             </ul>
-          <h3>Quick search</h3>
-            <form class="search" action="search.html" method="get">
-              <input type="text" name="q" size="18" /> <input type="submit" value="Go" />
-              <input type="hidden" name="check_keywords" value="yes" />
-              <input type="hidden" name="area" value="default" />
-            </form>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -174,21 +166,24 @@ $ ipython</pre>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
+             >index</a></li>
         <li class="right" >
-          <a href="model.html" title="Power System Model"
-             accesskey="N">next</a> |</li>
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
         <li class="right" >
-          <a href="intro.html" title="INTRODUCTION"
-             accesskey="P">previous</a> |</li>
-    <li><a href="http://rwl.github.com/pylon/">PYLON Home</a> |</li>
+          <a href="pf.html" title="Power Flow"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
     
-        <li><a href="index.html">Pylon v0.2 documentation</a> </li>
+        <li><a href="index.html">Pylon v0.4.1 documentation</a> </li>
  
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.5.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
     </div>
   </body>
 </html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Power Flow &mdash; Pylon v0.4.1 documentation</title>
+    <link rel="stylesheet" href="_static/pylon.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.4.1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Pylon v0.4.1 documentation" href="index.html" />
+    <link rel="next" title="Optimal Power Flow" href="opf.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="opf.html" title="Optimal Power Flow"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="index.html">Pylon v0.4.1 documentation</a> </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="power-flow">
+<span id="pf"></span><h1>Power Flow<a class="headerlink" href="#power-flow" title="Permalink to this headline">¶</a></h1>
+<p>The &#8220;pylon&#8221; package contains classes for defining a power system model and
+power flow solvers.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pylon</span> <span class="kn">import</span> <span class="n">Case</span><span class="p">,</span> <span class="n">Bus</span><span class="p">,</span> <span class="n">Branch</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">NewtonPF</span><span class="p">,</span> <span class="n">FastDecoupledPF</span>
+</pre></div>
+</div>
+<p>Import &#8220;sys&#8221; so the report can be written to stdout.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">sys</span>
+</pre></div>
+</div>
+<p>Start by building up a one branch case with a generator at one end</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">bus1</span> <span class="o">=</span> <span class="n">Bus</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">(</span><span class="n">bus1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">80.0</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and fixed load at the other.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">bus2</span> <span class="o">=</span> <span class="n">Bus</span><span class="p">(</span><span class="n">p_demand</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">q_demand</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Connect the two buses</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">line</span> <span class="o">=</span> <span class="n">Branch</span><span class="p">(</span><span class="n">bus1</span><span class="p">,</span> <span class="n">bus2</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and add it all to a new case.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">case</span> <span class="o">=</span> <span class="n">Case</span><span class="p">(</span><span class="n">buses</span><span class="o">=</span><span class="p">[</span><span class="n">bus1</span><span class="p">,</span> <span class="n">bus2</span><span class="p">],</span> <span class="n">branches</span><span class="o">=</span><span class="p">[</span><span class="n">line</span><span class="p">],</span> <span class="n">generators</span><span class="o">=</span><span class="p">[</span><span class="n">g</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Choose to solve using either Newton&#8217;s method</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">solver</span> <span class="o">=</span> <span class="n">NewtonPF</span><span class="p">(</span><span class="n">case</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or Fast Decoupled method</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">solver</span> <span class="o">=</span> <span class="n">FastDecoupledPF</span><span class="p">(</span><span class="n">case</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>and then call the solver.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Write the case out to view the results.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">case</span><span class="o">.</span><span class="n">save_rst</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="install.html"
+                                  title="previous chapter">Installation</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="opf.html"
+                                  title="next chapter">Optimal Power Flow</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/pf.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="opf.html" title="Optimal Power Flow"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             >previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="index.html">Pylon v0.4.1 documentation</a> </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>

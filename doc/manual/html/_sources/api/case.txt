@@ -1,0 +1,22 @@
+:mod:`pylon.case` -- Case Components
+====================================
+
+.. automodule:: pylon.case
+
+.. autoclass:: Case
+   :members:
+   :show-inheritance:
+
+.. autoclass:: Bus
+   :members:
+   :show-inheritance:
+
+.. autoclass:: Branch
+   :members:
+   :show-inheritance:
+
+.. automodule:: pylon.generator
+
+.. autoclass:: Generator
+   :members:
+   :show-inheritance:

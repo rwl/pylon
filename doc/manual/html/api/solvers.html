@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pylon.dc_pf – DC Power Flow &mdash; Pylon v0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/pylon.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Pylon v0.4.1 documentation" href="../index.html" />
+    <link rel="prev" title="pylon.case – Case Components" href="case.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="case.html" title="pylon.case – Case Components"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="../index.html">Pylon v0.4.1 documentation</a> </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pylon.dc_pf">
+<h1><tt class="xref docutils literal"><span class="pre">pylon.dc_pf</span></tt> &#8211; DC Power Flow<a class="headerlink" href="#module-pylon.dc_pf" title="Permalink to this headline">¶</a></h1>
+<p>Defines a solver for DC power flow [1].</p>
+<dl class="docutils">
+<dt>[1] Ray Zimmerman, &#8220;dcpf.m&#8221;, MATPOWER, PSERC Cornell, version 3.2,</dt>
+<dd><a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, June 2007</dd>
+</dl>
+<dl class="class">
+<dt id="pylon.dc_pf.DCPF">
+<em class="property">class </em><tt class="descclassname">pylon.dc_pf.</tt><tt class="descname">DCPF</tt><big>(</big><em>case</em>, <em>solver='UMFPACK'</em><big>)</big><a class="headerlink" href="#pylon.dc_pf.DCPF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a title="(in Python v2.7)" class="reference external" href="http://docs.python.org/dev/library/functions.html#object"><tt class="xref docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Solves DC power flow [1].</p>
+<dl class="docutils">
+<dt>[1] Ray Zimmerman, &#8220;dcpf.m&#8221;, MATPOWER, PSERC Cornell, version 3.2,</dt>
+<dd><a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, June 2007</dd>
+</dl>
+<dl class="method">
+<dt id="pylon.dc_pf.DCPF.solve">
+<tt class="descname">solve</tt><big>(</big><big>)</big><a class="headerlink" href="#pylon.dc_pf.DCPF.solve" title="Permalink to this definition">¶</a></dt>
+<dd>Solves DC power flow for the given case.</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pylon.ac_pf">
+<h1><tt class="xref docutils literal"><span class="pre">pylon.ac_pf</span></tt> &#8211; AC Power Flow<a class="headerlink" href="#module-pylon.ac_pf" title="Permalink to this headline">¶</a></h1>
+<p>Defines solvers for AC power flow [1].</p>
+<p>[1] Ray Zimmerman, &#8220;runpf.m&#8221;, MATPOWER, PSERC Cornell,
+<a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, version 4.0b1, Dec 2009</p>
+<dl class="class">
+<dt id="pylon.ac_pf._ACPF">
+<em class="property">class </em><tt class="descclassname">pylon.ac_pf.</tt><tt class="descname">_ACPF</tt><big>(</big><em>case</em>, <em>qlimit=False</em>, <em>tolerance=1e-08</em>, <em>iter_max=10</em>, <em>verbose=True</em><big>)</big><a class="headerlink" href="#pylon.ac_pf._ACPF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a title="(in Python v2.7)" class="reference external" href="http://docs.python.org/dev/library/functions.html#object"><tt class="xref docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Defines a base class for AC power flow solvers [1].</p>
+<p>[1] Ray Zimmerman, &#8220;runpf.m&#8221;, MATPOWER, PSERC Cornell,
+<a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, version 4.0b1, Dec 2009</p>
+<dl class="method">
+<dt id="pylon.ac_pf._ACPF.solve">
+<tt class="descname">solve</tt><big>(</big><big>)</big><a class="headerlink" href="#pylon.ac_pf._ACPF.solve" title="Permalink to this definition">¶</a></dt>
+<dd>Override this method in subclasses.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pylon.ac_pf.NewtonPF">
+<em class="property">class </em><tt class="descclassname">pylon.ac_pf.</tt><tt class="descname">NewtonPF</tt><big>(</big><em>case</em>, <em>qlimit=False</em>, <em>tolerance=1e-08</em>, <em>iter_max=10</em>, <em>verbose=True</em><big>)</big><a class="headerlink" href="#pylon.ac_pf.NewtonPF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a title="pylon.ac_pf._ACPF" class="reference internal" href="#pylon.ac_pf._ACPF"><tt class="xref docutils literal"><span class="pre">pylon.ac_pf._ACPF</span></tt></a></p>
+<p>Solves the power flow using full Newton&#8217;s method [2].</p>
+<p>[2] Ray Zimmerman, &#8220;newtonpf.m&#8221;, MATPOWER, PSERC Cornell,
+<a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, version 4.0b1, Dec 2009</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pylon.ac_pf.FastDecoupledPF">
+<em class="property">class </em><tt class="descclassname">pylon.ac_pf.</tt><tt class="descname">FastDecoupledPF</tt><big>(</big><em>case</em>, <em>qlimit=False</em>, <em>tolerance=1e-08</em>, <em>iter_max=20</em>, <em>verbose=True</em>, <em>method='XB'</em><big>)</big><a class="headerlink" href="#pylon.ac_pf.FastDecoupledPF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a title="pylon.ac_pf._ACPF" class="reference internal" href="#pylon.ac_pf._ACPF"><tt class="xref docutils literal"><span class="pre">pylon.ac_pf._ACPF</span></tt></a></p>
+<p>Solves the power flow using fast decoupled method [3].</p>
+<p>[3] Ray Zimmerman, &#8220;fdpf.m&#8221;, MATPOWER, PSERC Cornell, version 4.0b1,
+<a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, December 2009</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pylon.opf">
+<h1><tt class="xref docutils literal"><span class="pre">pylon.opf</span></tt> &#8211; Optimal Power Flow<a class="headerlink" href="#module-pylon.opf" title="Permalink to this headline">¶</a></h1>
+<p>Defines a generalised OPF solver and an OPF model [1].</p>
+<dl class="docutils">
+<dt>[1] Ray Zimmerman, &#8220;opf.m&#8221;, MATPOWER, PSERC Cornell, version 4.0b1,</dt>
+<dd><a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, December 2009</dd>
+</dl>
+<dl class="class">
+<dt id="pylon.opf.OPF">
+<em class="property">class </em><tt class="descclassname">pylon.opf.</tt><tt class="descname">OPF</tt><big>(</big><em>case</em>, <em>dc=True</em>, <em>ignore_ang_lim=True</em>, <em>opt=None</em><big>)</big><a class="headerlink" href="#pylon.opf.OPF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a title="(in Python v2.7)" class="reference external" href="http://docs.python.org/dev/library/functions.html#object"><tt class="xref docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Defines a generalised OPF solver [1].</p>
+<dl class="docutils">
+<dt>[1] Ray Zimmerman, &#8220;opf.m&#8221;, MATPOWER, PSERC Cornell, version 4.0b1,</dt>
+<dd><a class="reference external" href="http://www.pserc.cornell.edu/matpower/">http://www.pserc.cornell.edu/matpower/</a>, December 2009</dd>
+</dl>
+<dl class="method">
+<dt id="pylon.opf.OPF.solve">
+<tt class="descname">solve</tt><big>(</big><em>solver_klass=None</em><big>)</big><a class="headerlink" href="#pylon.opf.OPF.solve" title="Permalink to this definition">¶</a></dt>
+<dd>Solves an optimal power flow and returns a results dictionary.</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="../index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href=""><tt class="docutils literal"><span class="pre">pylon.dc_pf</span></tt> &#8211; DC Power Flow</a></li>
+<li><a class="reference external" href="#module-pylon.ac_pf"><tt class="docutils literal"><span class="pre">pylon.ac_pf</span></tt> &#8211; AC Power Flow</a></li>
+<li><a class="reference external" href="#module-pylon.opf"><tt class="docutils literal"><span class="pre">pylon.opf</span></tt> &#8211; Optimal Power Flow</a></li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="case.html"
+                                  title="previous chapter"><tt class="docutils literal"><span class="pre">pylon.case</span></tt> &#8211; Case Components</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="../_sources/api/solvers.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="case.html" title="pylon.case – Case Components"
+             >previous</a> |</li>
+    <li><a href="http://pylon.eee.strath.ac.uk/">PYLON Home</a> |</li>
+    
+        <li><a href="../index.html">Pylon v0.4.1 documentation</a> </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>
