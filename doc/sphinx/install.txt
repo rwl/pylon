@@ -16,7 +16,7 @@ Dependencies
     NumPy provides additional support for multi-dimentional arrays and
     matrices.
 
-  SciPy_ 0.7
+  SciPy_ 0.7 or later
     Packages for mathematics, science, and engineering
 
   Pyparsing_
@@ -61,7 +61,7 @@ Working directory
 
 Change in to the source directory and run IPython_::
 
-  $ cd ~/path/to/pylon|version|
+  $ cd ~/path/to/pylon-0.4.1
   $ ipython
 
 Access the ``pylon`` application programming inteface.

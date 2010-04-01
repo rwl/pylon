@@ -1,8 +1,0 @@
-:mod:`opf` -- Optimal Power Flow
-======================================
-
-.. automodule:: pylon.opf
-
-.. autoclass:: OPF
-   :members: __init__
-   :show-inheritance:

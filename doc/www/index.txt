@@ -23,7 +23,7 @@ With Python_ and setuptools_ installed, run::
 Pylon will attempt to recognise the format of a data file, solve the AC power
 flow problem and output a ReStructuredText_ report by default::
 
-  $ pylon ehv3.raw
+  $ pylon case.raw
 
 Full details of the command line options are available::
 
