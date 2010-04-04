@@ -39,7 +39,7 @@ from pylon import OPF
 from pylon.main import read_case
 
 from pylon.readwrite import MATPOWERReader, ReSTWriter
-from pylon.readwrite.rst_writer import ReSTExperimentWriter
+#from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
 from environment import ContinuousMarketEnvironment
 from experiment import MarketExperiment

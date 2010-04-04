@@ -51,7 +51,7 @@ class MarketExperiment(object):
     def __init__(self, tasks, agents, market):
         """ Initialises the market experiment.
         """
-        super(MarketExperiment, self).__init__(None, None)
+#        super(MarketExperiment, self).__init__(None, None)
 
         assert len(tasks) == len(agents)
 
