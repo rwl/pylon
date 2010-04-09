@@ -39,12 +39,12 @@ from pylon import OPF
 from pylon.main import read_case
 
 from pylon.readwrite import MATPOWERReader, ReSTWriter
-#from pylon.readwrite.rst_writer import ReSTExperimentWriter
 
-from environment import ContinuousMarketEnvironment
-from experiment import MarketExperiment
-from task import EpisodicProfitTask
-from smart_market import SmartMarket
+from pyreto.environment import ContinuousMarketEnvironment
+from pyreto.experiment import MarketExperiment
+from pyreto.task import EpisodicProfitTask
+from pyreto.smart_market import SmartMarket
+from pyreto.tools import ReSTExperimentWriter
 
 #------------------------------------------------------------------------------
 #  "PyretoApplication" class:
@@ -54,16 +54,19 @@ class PyretoApplication(object):
     """ Simulates energy trade in a power system.
     """
 
-    def __init__(self, file_name="", type="any", interactions=24, ac=False):
+    def __init__(self, fileName="", type="any", interactions=24, ac=False):
         """ Initialises a new PyretoApplication instance.
         """
         # Name of the input file.
-        self.file_name = file_name
+        self.fileName = fileName
+
         # Format in which the case is stored.  Possible values are: 'any',
         # 'matpower', 'psat', 'matlab' and 'psse'.
         self.type = type
+
         # Number of interactions to perform.
         self.interactions = interactions
+
         # Use AC OPF routine?
         self.ac = ac
 
@@ -71,15 +74,15 @@ class PyretoApplication(object):
     #  Runs the application:
     #--------------------------------------------------------------------------
 
-    def __call__(self, input, output):
+    def run(self, input, output):
         """ Forms a case from the input, associates an agent with each
             generator, performs the specified number of interactions and
             writes a report to the output.
         """
         # Get the case from the input.
-        power_sys = read_case(input, self.type, self.file_name)
+        case = read_case(input, self.type, self.fileName)
 
-        experiment = one_for_one(power_sys)
+        experiment = buildExperiment(case)
 
         experiment.doInteractions(self.interactions)
 
@@ -90,12 +93,9 @@ class PyretoApplication(object):
 #  Associate one agent with each generator in the network:
 #------------------------------------------------------------------------------
 
-def one_for_one(case):
+def buildExperiment(case):
     """ Associates an agent and a task with each generator in the network.
     """
-    tasks = []
-    agents = []
-
     mkt = SmartMarket(case)
     experiment = MarketExperiment([], [], mkt)
 
@@ -124,23 +124,23 @@ def one_for_one(case):
         agent.name = "PolicyGradientAgent-%s" % generator.name
 
         # Backpropagation parameters.
-        gradient_descent = agent.learner.gd
+#        gradientDescent = agent.learner.gd
         # Learning rate (0.1-0.001, down to 1e-7 for RNNs).
         agent.alpha = 0.1
 
         # Alpha decay (0.999; 1.0 = disabled).
-#        gradient_descent.alphadecay = 1.0
+#        gradientDescent.alphadecay = 1.0
 #
 #        # momentum parameters (0.1 or 0.9)
-#        gradient_descent.momentum = 0.0
-#        gradient_descent.momentumvector = None
+#        gradientDescent.momentum = 0.0
+#        gradientDescent.momentumvector = None
 #
 #        # --- RProp parameters ---
-#        gradient_descent.rprop = False
+#        gradientDescent.rprop = False
 #        # maximum step width (1 - 20)
-#        gradient_descent.deltamax = 5.0
+#        gradientDescent.deltamax = 5.0
 #        # minimum step width (0.01 - 1e-6)
-#        gradient_descent.deltamin = 0.01
+#        gradientDescent.deltamin = 0.01
 
         # Collect tasks and agents.
         experiment.tasks.append(task)
@@ -220,7 +220,7 @@ def main():
         filename = args[0]
         infile   = open(filename)
 
-    pyreto = PyretoApplication(file_name=filename, type=options.type,
+    pyreto = PyretoApplication(fileName=filename, type=options.type,
         interactions=options.interactions, ac=options.ac)
 
     # Call the Pyreto application.

@@ -38,7 +38,7 @@ experiment = pyreto.EpisodicMarketExperiment([], [], market, p1h)
 for gen in case.generators:
     # The environment provides market and case sensor values and handles
     # submission of offers/bids to the market.
-    env = pyreto.ContinuousMarketEnvironment(gen, market, n_offbids=2)
+    env = pyreto.ContinuousMarketEnvironment([gen], market, n_offbids=2)
     # Reward is defined as profit.
     task = pyreto.EpisodicProfitTask(env, maxsteps=len(p1h))
     # Build an ANN for policy function approximation.

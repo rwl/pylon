@@ -99,7 +99,7 @@ experiment = MarketExperiment([], [], market)
 
 # Add the agents and their tasks.
 for g in case.generators:
-    env = DiscreteMarketEnvironment(g, market, dim_state, markups, n_offbids)
+    env = DiscreteMarketEnvironment([g], market, dim_state, markups, n_offbids)
     task = ProfitTask(env)
     module = ActionValueTable(dim_state, dim_action)
     module.initialize(1.0)

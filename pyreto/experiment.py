@@ -28,7 +28,7 @@ import logging
 from itertools import cycle
 
 #from pybrain.rl.experiments import Experiment, EpisodicExperiment
-from pybrain.rl.agents.optimization import OptimizationAgent
+#from pybrain.rl.agents.optimization import OptimizationAgent
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -63,6 +63,10 @@ class MarketExperiment(object):
 
         # Market to which agents submit offers/bids.
         self.market = market
+
+        #----------------------------------------------------------------------
+        #  "Experiment" interface:
+        #----------------------------------------------------------------------
 
         self.stepid = 0
 
@@ -160,7 +164,7 @@ class EpisodicMarketExperiment(object):
 
         # Load profile.
         self._profile = None
-        self._p_cycle = None
+        self._pcycle = None
         self.profile = [1.0] if profile is None else profile
 
         self.stepid = 0
@@ -179,16 +183,16 @@ class EpisodicMarketExperiment(object):
 #                self.do_optimisation[agent] = False
 
         # Save the demand at each bus.
-        self.p_orig = {}
+        self.pdemand = {}
         for bus in self.market.case.buses:
-            self.p_orig[bus] = bus.p_demand
+            self.pdemand[bus] = bus.p_demand
 
 
     def __getstate__(self):
         """ Prevents the cycle from being pickled.
         """
         result = self.__dict__.copy()
-        del result['_p_cycle']
+        del result['_pcycle']
         return result
 
 
@@ -196,25 +200,25 @@ class EpisodicMarketExperiment(object):
         """ Sets the load profile cycle when unpickling.
         """
         self.__dict__ = dict
-        self._p_cycle = cycle(self.profile)
+        self._pcycle = cycle(self.profile)
 
     #--------------------------------------------------------------------------
     #  "EpisodicMarketExperiment" interface:
     #--------------------------------------------------------------------------
 
-    def get_profile(self):
+    def getProfile(self):
         """ Returns the active power profile for the load.
         """
         return self._profile
 
 
-    def set_profile(self, profile):
+    def setProfile(self, profile):
         """ Sets the active power profile, updating the cycle iterator.
         """
-        self._p_cycle = cycle(profile)
+        self._pcycle = cycle(profile)
         self._profile = profile
 
-    profile = property(get_profile, set_profile)
+    profile = property(getProfile, setProfile)
 
     #--------------------------------------------------------------------------
     #  "EpisodicExperiment" interface:
@@ -227,7 +231,7 @@ class EpisodicMarketExperiment(object):
         for _ in range(number):
             # Restore original load levels.
             for bus in self.market.case.buses:
-                bus.p_demand = self.p_orig[bus]
+                bus.p_demand = self.pdemand[bus]
 
             # Initialise agents and their tasks.
             for task, agent in zip(self.tasks, self.agents):
@@ -275,9 +279,9 @@ class EpisodicMarketExperiment(object):
                 agent.giveReward(reward)
 
         # Scale loads.
-        c = self._p_cycle.next()
+        c = self._pcycle.next()
         for bus in self.market.case.buses:
-            bus.p_demand = self.p_orig[bus] * c
+            bus.p_demand = self.pdemand[bus] * c
 
         logger.info("") # newline
 

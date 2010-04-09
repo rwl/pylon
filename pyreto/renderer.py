@@ -41,10 +41,10 @@ class ExperimentRenderer(Renderer):
     """ Defines a renderer that displays aspects of a market experiment.
     """
 
-    def __init__(self):
-        """ Constructs a new ExperimentRenderer.
-        """
-        super(ExperimentRenderer, self).__init__()
+#    def __init__(self):
+#        """ Constructs a new ExperimentRenderer.
+#        """
+#        super(ExperimentRenderer, self).__init__()
 
     #--------------------------------------------------------------------------
     #  "Renderer" interface:

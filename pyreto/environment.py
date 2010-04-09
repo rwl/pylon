@@ -48,92 +48,122 @@ class DiscreteMarketEnvironment(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, asset, market, outdim=10, markups=None, n_offbids=1):
+    def __init__(self, generators, market, outdim=10, markups=None,
+                 numOffbids=1):
         """ Initialises the environment.
         """
         super(DiscreteMarketEnvironment, self).__init__()
 
-        # Generator instance that the agent controls.
-        self.asset = asset
+        # Generator ratings and marginal costs.  Set by 'generators' property.
+        self._gencost = {}
+
+        self.generators = generators
 
         # Auction that clears offer and bids using OPF results.
         self.market = market
 
+        self._numOffbids = 0
+        self._markups = ()
+
         # Number of offers/bids a participant submits.
-        self.n_offbids = n_offbids
+        self.numOffbids = numOffbids
 
         # Discrete markups allowed on each offer/bid.
         self.markups = (0.0,0.1,0.2,0.3) if markups is None else markups
 
         # List of all markup combinations.
-        self.all_actions = list(xselections(markups, n_offbids))
+        self._allActions = []#list(xselections(markups, n_offbids))
 
         # List of offers/bids from the previous action.
-        self.last_action = []
+        self._lastAction = []
 
         # Does a participant's offer/bid comprise quantity aswell as price.
-#        self.offbid_qty = offbid_qty
+#        self.offbidQty = offbidQty
 
         # A non-negative amount of money.
-#        money = 1e6
-
-#        assert asset.pcost_model == PW_LINEAR
-        # Asset capacity limits.
-        self._p_max = asset.p_max
-        self._p_min = asset.p_min
-        # Marginal cost function proportional to current capacity.
-        self._p_cost = asset.p_cost
-        self._pcost_model = asset.pcost_model
-
-#        # Amortised fixed costs.
-#        self.c_startup = asset.c_startup
-#        self.c_shutdown = asset.c_shutdown
+#        self.money = 1e6
 
 #        if asset.is_load:
 #            # Income received each periods.
-#            self.endowment_profile = 10
+#            self.endowmentProfile = 10
 #            # Needs and preferences for power consumption each period.
-#            self.utility_function = [1.0]
+#            self.utilityFunction = [1.0]
 #            # Savings from previous periods.
 #            self.savings = 100
 #            # Each participant is a shareholder who owns shares in generating
 #            # companies and receives an according dividend each period.
 #            self.shares = {}
 
-#        self.render = render
-#        if self.render:
-#            self.updateDone = True
-#            self.updateLock=threading.Lock()
-
         #----------------------------------------------------------------------
-        #  Set the number of action values that the environment accepts.
+        #  "Environment" interface:
         #----------------------------------------------------------------------
 
-        self.indim = len(self.all_actions)
+        # Set the number of action values that the environment accepts.
+        self.indim = len(self._all_actions) * len(self.generators)
 
-        #----------------------------------------------------------------------
-        #  Set the number of sensor values that the environment produces.
-        #----------------------------------------------------------------------
-
+        # Set the number of sensor values that the environment produces.
         self.outdim = outdim
 
     #--------------------------------------------------------------------------
-    #  "ParticipantEnvironment" interface:
+    #  "DiscreteMarketEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def setMarkups(self, markups):
+    def getGenerators(self):
+        return self._generators
+
+
+    def setGenerators(self, generators):
+        gencost = {}
+        for g in generators:
+            # Asset capacity limits.
+            gencost[g] = {}
+            gencost[g]["pMax"] = g.p_max
+            gencost[g]["pMin"] = g.p_min
+            gencost[g]["qMax"] = g.q_max
+            gencost[g]["qMin"] = g.q_min
+            # Marginal cost function proportional to current capacity.
+            gencost[g]["pCost"] = g.p_cost
+            gencost[g]["pCostModel"] = g.pcost_model
+            gencost[g]["qCost"] = g.q_cost
+            gencost[g]["qCostModel"] = g.qcost_model
+            # Amortised fixed costs.
+            gencost[g]["startup"] = g.startup
+            gencost[g]["shutdown"] = g.shutdown
+        self._gencost = gencost
+
+        self._generators = generators
+
+    # Portfolio of generators endowed to the agent.
+    generators = property(getGenerators, setGenerators)
+
+
+    def getMarkups(self):
         """ Sets the list of possible markups on marginal cost allowed
             with each offer/bid.
         """
-        self.all_actions = list(xselections(markups, self.n_offbids))
-        self.markups = markups
+        return self._markups
 
 
-    def setNumOffbids(self, n_offbids):
+    def setMarkups(self, markups):
+        n = self.numOffbids * len(self.generators)
+        self._all_actions = list(xselections(markups, n))
+        self._markups = markups
+
+    markups = property(getMarkups, setMarkups)
+
+
+    def getNumOffbids(self):
         """ Set the number of offers/bids submitted to the market.
         """
-        self.all_actions = list(xselections(self.markups, n_offbids))
-        self.n_offbids = n_offbids
+        return self._numOffbids
+
+
+    def setNumOffbids(self, numOffbids):
+        n = numOffbids * len(self.generators)
+        self._allActions = list(xselections(self.markups, n))
+        self._numOffbids = numOffbids
+
+    numOffbids = property(getNumOffbids, setNumOffbids)
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -143,14 +173,11 @@ class DiscreteMarketEnvironment(object):
         """ Returns the currently visible state of the world as a numpy array
             of doubles.
         """
-#        offbids = self.market.get_offbids(self.asset)
-
+        # TODO: Load forecast as state.
         if len(self.last_action):
             prc = mean([ob.cleared_price for ob in self.last_action])
         else:
             prc = 0.0
-
-#        print "STATE:", [ob.cleared_price for ob in self.last_action]
 
         # Divide the range of market prices in to discrete bands.
         limit = self.market.price_cap
@@ -158,7 +185,7 @@ class DiscreteMarketEnvironment(object):
 
         for i in range(len(states) - 1):
             if states[i] <= round(prc, 1) <= states[i + 1]:
-                logger.info("%s in state %d." % (self.asset.name, i))
+                logger.info("%s in state %d." % (self.name, i))
                 return array([i])
         else:
             raise ValueError, "Cleared price mean: %f" % prc
@@ -171,82 +198,56 @@ class DiscreteMarketEnvironment(object):
         """
         self.last_action = []
 
-        asset = self.asset
-        mkt = self.market
-        n_offbids = self.n_offbids
-        p_cost = self._p_cost
+        markups = self._allActions[action]
 
-        markups = self.all_actions[action]
+        for i, g in enumerate(self.generators):
+            mkt = self.market
+            nOffbids = self.numOffbids
+            pCost = self.gencost[g]["pCost"]
+            pCostModel = self.gencost[g]["pCostModel"]
 
-        # Divide available capacity equally among the offers/bids.
-        if asset.is_load:
-            qty = self._p_min / n_offbids
-        else:
-            qty = self._p_max / n_offbids
-
-        c_noload = self._p_cost[-1] \
-            if self._pcost_model == POLYNOMIAL else 0.0
-
-        tot_qty = 0.0
-        p0 = 0.0
-        c0 = c_noload
-        for i in range(n_offbids):
-            tot_qty += qty
-
-#            if self._pcost_model == PW_LINEAR:
-#                n_segments = len(p_cost) - 1
-#                for j in range(n_segments):
-#                    x1, y1 = p_cost[j]
-#                    x2, y2 = p_cost[j + 1]
-#                    if x1 <= tot_qty <= x2:
-#                        m = (y2 - y1) / (x2 - x1)
-#                        break
-#                else:
-#                    raise ValueError
-#                c_noload = 0.0
-#            elif self._pcost_model == POLYNOMIAL:
-#                m = polyval(polyder(list(self._p_cost)), tot_qty)
-#                c_noload = self._p_cost[-1]
-#            else:
-#                raise ValueError
-
-            p1 = tot_qty
-            c_marg = asset.total_cost(tot_qty, self._p_cost, self._pcost_model)
-
-#            print "MARG:", c_marg
-
-            # Cumulative markup/markdown to ensure convexity.
-#            if not asset.is_load:
-#                c1 = c_marg + (c_marg * sum(markups[:i + 1]))
-#            else:
-#                c1 = c_marg - (c_marg * sum(markups[:i + 1]))
-
-            m = (c_marg - c0) / (p1 - p0)
-
-            if not asset.is_load:
-                prc = m + (m * sum(markups[:i + 1]))
+            # Divide available capacity equally among the offers/bids.
+            if g.is_load:
+                qty = self.gencost[g]["pMin"] / nOffbids
             else:
-                prc = m - (m * sum(markups[:i + 1]))
+                qty = self.gencost[g]["pMax"] / nOffbids
 
-#            print "PRC:", prc
+            costNoLoad = pCost[-1] if pCostModel == POLYNOMIAL else 0.0
 
-            if not asset.is_load:
-                offer = Offer(asset, qty, prc, c_noload)
-                mkt.offers.append(offer)
-                self.last_action.append(offer)
+            totQty = 0.0
+            p0 = 0.0
+            c0 = costNoLoad
+            for j in range(nOffbids):
+                totQty += qty
 
-                logger.info("%.2fMW offered at %.2f$/MWh for %s (%d%%)." %
-                    (qty, prc, asset.name, sum(markups[:i + 1]) * 100))
-            else:
-                bid = Bid(asset, -qty, prc, c_noload)
-                mkt.bids.append(bid)
-                self.last_action.append(bid)
+                p1 = totQty
+                costMarginal = g.total_cost(totQty, pCost, pCostModel)
 
-                logger.info("%.2f$/MWh bid for %.2fMW to supply %s (%d%%)." %
-                    (prc, -qty, asset.name, sum(markups[:i + 1]) * 100))
+                dCdP = (costMarginal - c0) / (p1 - p0)
 
-            p0 = p1
-            c0 = c_marg
+                m0 = i * nOffbids
+                mN = m0 + j + 1
+                m = sum(markups[m0:mN])
+
+                prc = dCdP + (dCdP * m) if not g.is_load else dCdP - (dCdP * m)
+
+                if not g.is_load:
+                    offer = Offer(g, qty, prc, costNoLoad)
+                    mkt.offers.append(offer)
+                    self.last_action.append(offer)
+
+                    logger.info("%.2fMW offered at %.2f$/MWh for %s (%d%%)."
+                        % (qty, prc, g.name, m * 100))
+                else:
+                    bid = Bid(g, -qty, prc, costNoLoad)
+                    mkt.bids.append(bid)
+                    self.last_action.append(bid)
+
+                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s (%d%%)."
+                        % (prc, -qty, g.name, m * 100))
+
+                p0 = p1
+                c0 = costMarginal
 
 
     def reset(self):
@@ -262,42 +263,35 @@ class ContinuousMarketEnvironment(object):
     """ Defines a continuous representation of an electricity market.
     """
 
-    def __init__(self, asset, market, n_offbids=1, offbid_qty=False):
+    def __init__(self, generators, market, numOffbids=1, offbidQty=False):
         """ Initialises a new environment.
         """
         super(ContinuousMarketEnvironment, self).__init__()
 
+        self._generators = None
         # Generator instance that the agent controls.
-        self.asset = asset
+        self.generators = generators
 
         # Auction that clears offer and bids using OPF results.
         self.market = market
 
         # Number of offers/bids a participant submits.
-        self.n_offbids = n_offbids
+        self.numOffbids = numOffbids
 
         # Does a participant's offer/bid comprise quantity aswell as price.
-        self.offbid_qty = offbid_qty
-
-        # Asset properties.
-        self._p_max = asset.p_max
-        self._p_min = asset.p_min
-        self._p_cost = asset.p_cost
-        self._pcost_model = asset.pcost_model
+        self.offbidQty = offbidQty
 
         # List of offers/bids from the previous action.
-        self.last_action = []
+        self.lastAction = []
 
         #----------------------------------------------------------------------
+        #  "Environment" interface:
+        #----------------------------------------------------------------------
+
         # Set the number of action values that the environment accepts.
-        #----------------------------------------------------------------------
+        self.indim = numOffbids * 2 if offbidQty else numOffbids
 
-        self.indim = n_offbids * 2 if offbid_qty else n_offbids
-
-        #----------------------------------------------------------------------
         # Set the number of sensor values that the environment produces.
-        #----------------------------------------------------------------------
-
         outdim = 0
         outdim += 3                                 # f, tot_qty, mcp
         outdim += len(market.case.buses) * 1        # Va, Plam
@@ -309,25 +303,33 @@ class ContinuousMarketEnvironment(object):
     #  "ContinuousMarketEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def _get_marginal_cost(self, qty):
-        """ Returns the asset's marginal cost at the given output.
-        """
-        if self._pcost_model == PW_LINEAR:
-            n_segments = len(self._p_cost) - 1
-            for j in range(n_segments):
-                x1, y1 = self._p_cost[j]
-                x2, y2 = self._p_cost[j + 1]
-                if x1 <= qty <= x2:
-                    m = (y2 - y1) / (x2 - x1)
-                    break
-            else:
-                raise ValueError
-        elif self._pcost_model == POLYNOMIAL:
-            m = polyval(polyder(list(self._p_cost)), qty)
-        else:
-            raise ValueError
+    def getGenerators(self):
+        return self._generators
 
-        return m
+
+    def setGenerators(self, generators):
+        gencost = {}
+        for g in generators:
+            # Asset capacity limits.
+            gencost[g] = {}
+            gencost[g]["pMax"] = g.p_max
+            gencost[g]["pMin"] = g.p_min
+            gencost[g]["qMax"] = g.q_max
+            gencost[g]["qMin"] = g.q_min
+            # Marginal cost function proportional to current capacity.
+            gencost[g]["pCost"] = g.p_cost
+            gencost[g]["pCostModel"] = g.pcost_model
+            gencost[g]["qCost"] = g.q_cost
+            gencost[g]["qCostModel"] = g.qcost_model
+            # Amortised fixed costs.
+            gencost[g]["startup"] = g.startup
+            gencost[g]["shutdown"] = g.shutdown
+        self._gencost = gencost
+
+        self._generators = generators
+
+    # Portfolio of generators endowed to the agent.
+    generators = property(getGenerators, setGenerators)
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -346,31 +348,29 @@ class ContinuousMarketEnvironment(object):
             offbids = [x for x in self.market.bids if x.vload == g]
 
         # Market sensors.
-        market_sensors = zeros(3)
+        marketSensors = zeros(3)
 
         if self.market._solution.has_key("f"):
-            market_sensors[0] = self.market._solution["f"]
-        market_sensors[1] = sum([ob.cleared_quantity for ob in offbids])
+            marketSensors[0] = self.market._solution["f"]
+        marketSensors[1] = sum([ob.cleared_quantity for ob in offbids])
         if offbids:
-            market_sensors[2] = offbids[0].cleared_price
+            marketSensors[2] = offbids[0].cleared_price
 
         # Case related sensors.
 #        angles = array([bus.v_angle for bus in case.buses])
-        nodal_prc = array([bus.p_lmbda for bus in case.buses])
+        nodalPrice = array([bus.p_lmbda for bus in case.buses])
 
         flows = array([branch.p_from for branch in case.branches])
-#        mu_flow = array([branch.mu_s_from for branch in case.branches])
+#        muFlow = array([branch.mu_s_from for branch in case.branches])
 
         pg = array([g.p for g in case.generators])
-#        g_max = array([g.mu_pmax for g in case.generators])
-#        g_min = array([g.mu_pmin for g in case.generators])
+#        gMax = array([g.mu_pmax for g in case.generators])
+#        gMin = array([g.mu_pmin for g in case.generators])
 
-#        case_sensors = r_[flows, mu_flow, angles, nodal_prc, pg, g_max, g_min]
-        case_sensors = r_[flows, nodal_prc, pg]
+#        caseSensors = r_[flows, muFlow, angles, nodalPrice, pg, gMax, gMin]
+        caseSensors = r_[flows, nodalPrice, pg]
 
-#        print "SENSORS:", r_[market_sensors, case_sensors]
-
-        return r_[market_sensors, case_sensors]
+        return r_[marketSensors, caseSensors]
 
 
     def performAction(self, action):
@@ -380,43 +380,44 @@ class ContinuousMarketEnvironment(object):
         """
         self.last_action = []
 
-        asset = self.asset
-
-#        print "ACTION:", action
+        numOffbids = self.numOffbids
 
         # Participants either submit prices, where the quantity is divided
         # equally among the offers/bids, or tuples of quantity and price.
-        if not self.offbid_qty:
-            # Divide the rated capacity equally among the offers/bids.
-            if asset.is_load:
-                qty = self._p_min / self.n_offbids
-            else:
-                qty = self._p_max / self.n_offbids
+        if not self.offbidQty:
+            totQty = 0.0
+            for i, g in enumerate(self.generators):
+                pMin = self.gencost[g]["pMin"]
+                pMax = self.gencost[g]["pMax"]
+                pCost = self.gencost[g]["pCost"]
+                pCostModel = self.gencost[g]["pCostModel"]
 
-            tot_qty = 0.0
+                costNoLoad = pCost[-1] if pCostModel == POLYNOMIAL else 0.0
 
-            for i in range(self.indim):
-                tot_qty += qty
+                # Divide the rated capacity equally among the offers/bids.
+                qty = pMin / numOffbids if g.is_load else pMax / numOffbids
 
-                marginal = self._get_marginal_cost(tot_qty)
+                totQty += qty
 
-                if asset.is_load:
-                    prc = marginal * (1.0 - sum(action[:i + 1])) # markdown
-                else:
-                    prc = marginal * (1.0 + sum(action[:i + 1]))
+#                marginal = self._get_marginal_cost(tot_qty)
+                c = g.total_cost(totQty, pCost, pCostModel)
 
-                if not asset.is_load:
-                    offer = Offer(asset, qty, prc)
+                mk = sum(action[:i + 1])
+
+                prc = c * (1.0 - mk) if g.is_load else g * (1.0 + mk)
+
+                if not g.is_load:
+                    offer = Offer(g, qty, prc, costNoLoad)
                     self.market.offers.append(offer)
                     self.last_action.append(offer)
-                    logger.info("%.2fMW offered at %.2f$/MWh for %s (%.1f%%)." %
-                        (qty, prc, asset.name, sum(action[:i + 1]) * 100))
+                    logger.info("%.2fMW offered at %.2f$/MWh for %s (%.1f%%)."
+                        % (qty, prc, g.name, mk * 100))
                 else:
-                    bid = Bid(asset, -qty, prc)
+                    bid = Bid(g, -qty, prc, costNoLoad)
                     self.market.bids.append(bid)
                     self.last_action.append(bid)
-                    logger.info("%.2f$/MWh bid for %.2fMW to supply %s (%.1f%%)." %
-                        (prc, -qty, asset.name, sum(action[:i + 1]) * 100))
+                    logger.info("%.2f$/MWh bid for %.2fMW for %s (%.1f%%)."
+                        % (prc, -qty, g.name, mk * 100))
         else:
             raise NotImplementedError
 
