@@ -31,8 +31,8 @@ from pylon import Case, Bus, Generator
 from pylon.readwrite import PickleReader
 
 from pyreto import \
-    MarketExperiment, ParticipantEnvironment, SmartMarket, \
-    DiscreteTask, ContinuousTask, RothErev, PropensityTable
+    MarketExperiment, DiscreteMarketEnvironment, SmartMarket, \
+    ProfitTask, EpisodicProfitTask, RothErev, PropensityTable
 
 from pyreto.renderer import ParticipantRenderer, ExperimentRenderer
 
@@ -53,14 +53,14 @@ DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 #  Returns a test power system:
 #------------------------------------------------------------------------------
 
-def get_pickled_case():
+def getPickledCase():
     """ Returns a test power system case.
     """
     # Read case from data file.
-    return PickleReader().read(DATA_FILE)
+    return Case.load(DATA_FILE)
 
 
-def get_1bus():
+def get1Bus():
     """ Returns a simple one bus case.
     """
     bus1 = Bus(name="Bus1", p_demand=80.0)
@@ -81,11 +81,11 @@ class MarketExperimentTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-#        self.case = get_1bus()
-        self.case = get_pickled_case()
+#        self.case = get1Bus()
+        self.case = getPickledCase()
 
 
-#    def test_stateless(self):
+#    def testStateless(self):
 #        """ Test learning without state information.
 #        """
 #        mkt = SmartMarket(self.case)
@@ -100,15 +100,15 @@ class MarketExperimentTest(unittest.TestCase):
 #        exp.doInteractions(3)
 
 
-    def test_valuebased(self):
+    def testValueBased(self):
         """ Test value-based learner.
         """
         mkt = SmartMarket(self.case)
         exp = MarketExperiment([], [], mkt)
         for g in self.case.generators:
-            env = ParticipantEnvironment(g, mkt)
+            env = DiscreteMarketEnvironment([g], mkt)
             dim_state, num_actions = (10, 10)
-            exp.tasks.append(DiscreteTask(env, dim_state, num_actions))
+            exp.tasks.append(ProfitTask(env, dim_state, num_actions))
             module = ActionValueTable(dim_state, num_actions)
             module.initialize(1.0)
 #            module = ActionValueNetwork(dimState=1, numActions=4)
@@ -122,7 +122,7 @@ class MarketExperimentTest(unittest.TestCase):
                 agent.reset()
 
 
-#    def test_continuous(self):
+#    def testContinuous(self):
 #        """ Test learning with continous sensor and action spaces.
 #        """
 #        mkt = SmartMarket(self.case)
@@ -131,7 +131,7 @@ class MarketExperimentTest(unittest.TestCase):
 #        tasks = []
 #        for g in self.case.generators:
 #            # Create an environment for the agent with an asset and a market.
-#            env = ParticipantEnvironment(g, mkt, n_offbids=2)
+#            env = ParticipantEnvironment(g, mkt, numOffbids=2)
 ##            env.setRenderer(ParticipantRenderer(env.outdim, env.indim))
 ##            env.getRenderer().start()
 #

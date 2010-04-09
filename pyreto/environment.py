@@ -289,7 +289,8 @@ class ContinuousMarketEnvironment(object):
         #----------------------------------------------------------------------
 
         # Set the number of action values that the environment accepts.
-        self.indim = numOffbids * 2 if offbidQty else numOffbids
+        indim = numOffbids * 2 if offbidQty else numOffbids
+        self.indim = indim * len(self.generators)
 
         # Set the number of sensor values that the environment produces.
         outdim = 0
@@ -345,7 +346,7 @@ class ContinuousMarketEnvironment(object):
         if not g.is_load:
             offbids = [x for x in self.market.offers if x.generator == g]
         else:
-            offbids = [x for x in self.market.bids if x.vload == g]
+            offbids = [x for x in self.market.bids if x.vLoad == g]
 
         # Market sensors.
         marketSensors = zeros(3)

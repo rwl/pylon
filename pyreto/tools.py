@@ -29,18 +29,15 @@ from pylab import figure, xlabel, ylabel, plot, show, legend
 from pylon.generator import PW_LINEAR, POLYNOMIAL
 
 #------------------------------------------------------------------------------
-#  "plot_gen_cost" function:
+#  "plotGenCost" function:
 #------------------------------------------------------------------------------
 
-def plot_gen_cost(generators):
+def plotGenCost(generators):
     """ Plots the costs of the given generators.
     """
     figure()
     plots = []
     for generator in generators:
-
-        print generator.p_cost
-
         if generator.pcost_model == PW_LINEAR:
             x = [x for x, _ in generator.p_cost]
             y = [y for _, y in generator.p_cost]
@@ -56,10 +53,10 @@ def plot_gen_cost(generators):
     show()
 
 #------------------------------------------------------------------------------
-#  "sparkline_data" function:
+#  "sparklineData" function:
 #------------------------------------------------------------------------------
 
-def sparkline_data(data, filename):
+def sparklineData(data, filename):
     """ Writes reward and action data for plotting sparklines with PGF/TikZ.
 
         @see: http://www.texample.net/tikz/examples/weather-stations-data/
@@ -68,10 +65,10 @@ def sparkline_data(data, filename):
     for name in data.keys():
         action, reward = data[name]
 
-        alt_name = name.lower().replace("_", "")
+        altName = name.lower().replace("_", "")
 
         fd.write("\def")
-        fd.write("\REWARDDATA%s{" % alt_name)
+        fd.write("\REWARDDATA%s{" % altName)
         for i, r in enumerate(reward):
             fd.write("(%.2f,%.3f)" % (i / 10.0, r / 10.0)) # dimension too large
         fd.write("}\n")
@@ -79,14 +76,14 @@ def sparkline_data(data, filename):
         maxreward, maxindex = max(izip(reward, count()))
         minreward, minindex = min(izip(reward, count()))
         meanreward = scipy.mean(reward)
-        fd.write("\def\REWARDMAX%s{%.1f}\n" % (alt_name, maxreward))
-        fd.write("\def\REWARDMAXIDX%s{%d}\n" % (alt_name, maxindex))
-        fd.write("\def\REWARDMIN%s{%.1f}\n" % (alt_name, minreward))
-        fd.write("\def\REWARDMINIDX%s{%d}\n" % (alt_name, minindex))
-        fd.write("\def\REWARDMEAN%s{%.1f}\n" % (alt_name, meanreward))
+        fd.write("\def\REWARDMAX%s{%.1f}\n" % (altName, maxreward))
+        fd.write("\def\REWARDMAXIDX%s{%d}\n" % (altName, maxindex))
+        fd.write("\def\REWARDMIN%s{%.1f}\n" % (altName, minreward))
+        fd.write("\def\REWARDMINIDX%s{%d}\n" % (altName, minindex))
+        fd.write("\def\REWARDMEAN%s{%.1f}\n" % (altName, meanreward))
 
         fd.write("\def")
-        fd.write("\ACTIONDATA%s{" % alt_name)
+        fd.write("\ACTIONDATA%s{" % altName)
         for i, a in enumerate(action):
             fd.write("(%.2f,%.3f)" % (i / 10.0, a / 10.0))
         fd.write("}\n")
@@ -94,11 +91,11 @@ def sparkline_data(data, filename):
         maxaction, maxindex = max(izip(reward, count()))
         minaction, minindex = min(izip(reward, count()))
         meanaction = scipy.mean(reward)
-        fd.write("\def\ACTIONMAX%s{%.1f}\n" % (alt_name, maxaction))
-        fd.write("\def\ACTIONMAXIDX%s{%d}\n" % (alt_name, maxindex))
-        fd.write("\def\ACTIONMIN%s{%.1f}\n" % (alt_name, minaction))
-        fd.write("\def\ACTIONMINIDX%s{%d}\n" % (alt_name, minindex))
-        fd.write("\def\ACTIONMEAN%s{%.1f}\n" % (alt_name, meanaction))
+        fd.write("\def\ACTIONMAX%s{%.1f}\n" % (altName, maxaction))
+        fd.write("\def\ACTIONMAXIDX%s{%d}\n" % (altName, maxindex))
+        fd.write("\def\ACTIONMIN%s{%.1f}\n" % (altName, minaction))
+        fd.write("\def\ACTIONMINIDX%s{%d}\n" % (altName, minindex))
+        fd.write("\def\ACTIONMEAN%s{%.1f}\n" % (altName, meanaction))
     fd.close()
 
 #------------------------------------------------------------------------------
@@ -122,39 +119,39 @@ class ReSTExperimentWriter(object):
         # Write environment state data.
         file.write("State\n")
         file.write( ("-" * 5) + "\n")
-        self.write_data_table(file, type="state")
+        self.writeDataTable(file, type="state")
 
         # Write action data.
         file.write("Action\n")
         file.write( ("-" * 6) + "\n")
-        self.write_data_table(file, type="action")
+        self.writeDataTable(file, type="action")
 
         # Write reward data.
         file.write("Reward\n")
         file.write( ("-" * 6) + "\n")
-        self.write_data_table(file, type="reward")
+        self.writeDataTable(file, type="reward")
 
 
-    def write_data_table(self, file, type):
+    def writeDataTable(self, file, type):
         """ Writes agent data to an ReST table.  The 'type' argument may
             be 'state', 'action' or 'reward'.
         """
         agents = self.experiment.agents
-        n_agents = len(self.experiment.agents)
+        numAgents = len(self.experiment.agents)
 
-        col_width = 8
-        idx_col_width = 3
+        colWidth = 8
+        idxColWidth = 3
 
-        sep = ("=" * idx_col_width) + " " + \
-            ("=" * col_width + " ") * n_agents + "\n"
+        sep = ("=" * idxColWidth) + " " + \
+            ("=" * colWidth + " ") * numAgents + "\n"
 
         file.write(sep)
 
         # Table column headers.
-        file.write("..".rjust(idx_col_width) + " ")
+        file.write("..".rjust(idxColWidth) + " ")
         for agent in agents:
             # The end of the name is typically the unique part.
-            file.write(agent.name[-col_width:].center(col_width) + " ")
+            file.write(agent.name[-colWidth:].center(colWidth) + " ")
         file.write("\n")
 
         file.write(sep)
@@ -166,7 +163,7 @@ class ReSTExperimentWriter(object):
             rows, _ = (0, 0)
 
         for sequence in range( min(rows, 999) ):
-            file.write( str(sequence + 1).rjust(idx_col_width) + " " )
+            file.write( str(sequence + 1).rjust(idxColWidth) + " " )
 
             for agent in agents:
                 field = agent.history.getField( type )

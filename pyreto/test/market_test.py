@@ -58,14 +58,14 @@ DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 #        self.case.index_buses()
 #
 #
-#    def test_have_q(self):
+#    def testHaveQ(self):
 #        """ Test reactive offers/bids.
 #        """
 #        mkt = SmartMarket(self.case)
-#        self.assertFalse(mkt._reactive_market())
+#        self.assertFalse(mkt._reactiveMarket())
 #
 #
-#    def test_offers(self):
+#    def testOffers(self):
 #        """ Test market clearing of offers using results from DC OPF.
 #        """
 #        offers = [Offer(self.case.generators[0], 60.0, 20.0),
@@ -81,15 +81,15 @@ DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 #        self.assertAlmostEqual(mkt._solution["f"], 800.0, 1)
 #
 #        self.assertFalse(offers[0].accepted)
-#        self.assertAlmostEqual(offers[0].cleared_quantity, 0.0, places)
-#        self.assertAlmostEqual(offers[0].cleared_price, 10.0, places)
+#        self.assertAlmostEqual(offers[0].clearedQuantity, 0.0, places)
+#        self.assertAlmostEqual(offers[0].clearedPrice, 10.0, places)
 #
 #        self.assertTrue(offers[1].accepted)
-#        self.assertAlmostEqual(offers[1].cleared_quantity, 80.0, places)
-#        self.assertAlmostEqual(offers[1].cleared_price, 10.0, places)
+#        self.assertAlmostEqual(offers[1].clearedQuantity, 80.0, places)
+#        self.assertAlmostEqual(offers[1].clearedPrice, 10.0, places)
 #
 #
-#    def test_multiple_offers(self):
+#    def testMultipleOffers(self):
 #        """ Test market clearing of multiple offers per generator.
 #        """
 #        offers = [Offer(self.case.generators[0], 30.0, 5.0),
@@ -110,15 +110,15 @@ DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 #        self.assertFalse(offers[4].accepted)
 #
 #        places = 2
-#        self.assertAlmostEqual(offers[0].cleared_quantity, 30.0, places)
-#        self.assertAlmostEqual(offers[1].cleared_quantity, 30.0, places)
-#        self.assertAlmostEqual(offers[2].cleared_quantity, 20.0, places)
-#        self.assertAlmostEqual(offers[0].cleared_price, 10.0, places)
-#        self.assertAlmostEqual(offers[1].cleared_price, 10.0, places)
-#        self.assertAlmostEqual(offers[2].cleared_price, 10.0, places)
+#        self.assertAlmostEqual(offers[0].clearedQuantity, 30.0, places)
+#        self.assertAlmostEqual(offers[1].clearedQuantity, 30.0, places)
+#        self.assertAlmostEqual(offers[2].clearedQuantity, 20.0, places)
+#        self.assertAlmostEqual(offers[0].clearedPrice, 10.0, places)
+#        self.assertAlmostEqual(offers[1].clearedPrice, 10.0, places)
+#        self.assertAlmostEqual(offers[2].clearedPrice, 10.0, places)
 #
 #
-#    def test_first_price(self):
+#    def testFirstPrice(self):
 #        """ Test marginal offer/bid setting price.
 #        """
 #        offers = [Offer(self.case.generators[0], 60.0, 10.0),
@@ -128,20 +128,20 @@ DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 #
 #        places = 2
 #        self.assertTrue(offers[0].accepted)
-#        self.assertAlmostEqual(offers[0].cleared_quantity, 60.0, places)
-#        self.assertAlmostEqual(offers[0].cleared_price, 20.0, places)
+#        self.assertAlmostEqual(offers[0].clearedQuantity, 60.0, places)
+#        self.assertAlmostEqual(offers[0].clearedPrice, 20.0, places)
 #        self.assertTrue(offers[1].accepted)
-#        self.assertAlmostEqual(offers[1].cleared_quantity, 20.0, places)
-#        self.assertAlmostEqual(offers[1].cleared_price, 20.0, places)
+#        self.assertAlmostEqual(offers[1].clearedQuantity, 20.0, places)
+#        self.assertAlmostEqual(offers[1].clearedPrice, 20.0, places)
 #
 #
-#    def test_price_cap(self):
+#    def testPriceCap(self):
 #        """ Test price cap.
 #        """
 #        offers = [Offer(self.case.generators[0], 60.0, 10.0),
 #                  Offer(self.case.generators[1], 100.0, 20.0)]
 #
-#        mkt = SmartMarket(self.case, offers, price_cap=15.0)
+#        mkt = SmartMarket(self.case, offers, priceCap=15.0)
 #        mkt.run()
 #
 #        self.assertFalse(mkt._solution["converged"]) # Blackout.
@@ -152,7 +152,7 @@ DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 #        self.assertFalse(offers[1].accepted)
 #
 #
-#    def test_bids(self):
+#    def testBids(self):
 #        """ Test clearing offers and bids.
 #        """
 #        vl = Generator(self.case.buses[0], p_max=0.0, p_min=-50.0)
@@ -167,8 +167,8 @@ DATA_FILE = join(dirname(__file__), "data", "t_auction_case.pkl")
 #
 #        places = 2
 #        self.assertTrue(bids[0].accepted)
-#        self.assertAlmostEqual(bids[0].cleared_quantity, 40.0, places)
-#        self.assertAlmostEqual(bids[0].cleared_price, 30.0, places)
+#        self.assertAlmostEqual(bids[0].clearedQuantity, 40.0, places)
+#        self.assertAlmostEqual(bids[0].clearedPrice, 30.0, places)
 
 #------------------------------------------------------------------------------
 #  "DCMarketTestCase" class:
@@ -226,10 +226,10 @@ class DCMarketTestCase(unittest.TestCase):
         ]
 
         self.mkt = SmartMarket(self.case, self.offers, self.bids,
-            loc_adjust='dc', auction_type=FIRST_PRICE, price_cap=100.0)
+            locationalAdjustment='dc', auctionType=FIRST_PRICE, priceCap=100.0)
 
 
-    def test_dc_opf(self):
+    def testDcOpf(self):
         """ Test solving the auction case using DC OPF.
         """
         solver = OPF(self.case, True, opt={"verbose": False})
@@ -238,7 +238,7 @@ class DCMarketTestCase(unittest.TestCase):
         self.assertAlmostEqual(solution["f"], -517.81, 2)
 
 
-    def test_reset(self):
+    def testReset(self):
         """ Test resetting the market.
         """
         self.assertEqual(len(self.mkt.offers), 18)
@@ -248,32 +248,32 @@ class DCMarketTestCase(unittest.TestCase):
         self.assertEqual(len(self.mkt.bids), 0)
 
 
-    def test_have_q(self):
+    def testHaveQ(self):
         """ Test reactive offers/bids.
         """
-        self.assertFalse(self.mkt._reactive_market())
+        self.assertFalse(self.mkt._isReactiveMarket())
 
 
-    def test_withhold(self):
+    def testWithhold(self):
         """ Test witholding of invalid and limited offers/bids.
         """
-        invalid_offer = Offer(self.case.generators[0], -10.0, 20.0)
-        self.mkt.offers.append(invalid_offer)
-        self.mkt.price_cap = 80.0
+        invalidOffer = Offer(self.case.generators[0], -10.0, 20.0)
+        self.mkt.offers.append(invalidOffer)
+        self.mkt.priceCap = 80.0
 
         self.mkt._withhold_offbids()
 
         self.assertFalse(self.offers[0].withheld)
         self.assertFalse(self.offers[8].withheld)
         self.assertTrue(self.offers[11].withheld)
-        self.assertTrue(invalid_offer.withheld)
+        self.assertTrue(invalidOffer.withheld)
 
 
-    def test_offbid_to_case(self):
+    def testOffbidToCase(self):
         """ Test conversion of offers/bids to pwl functions and limit updates.
         """
-        self.mkt._withhold_offbids()
-        self.mkt._offbid_to_case()
+        self.mkt._withholdOffbids()
+        self.mkt._offbidToCase()
 
         places = 2
         generators = self.case.generators
@@ -327,28 +327,28 @@ class DCMarketTestCase(unittest.TestCase):
 #        self.assertAlmostEqual(generators[7].q_cost[2][1], 0.0, places)
 
 
-    def test_run_opf(self):
+    def testRunOPF(self):
         """ Test generator dispatch points.
         """
         mkt = self.mkt
-        mkt._withhold_offbids()
-        mkt._offbid_to_case()
-        success = mkt._run_opf()
+        mkt._withholdOffbids()
+        mkt._offbidToCase()
+        success = mkt._runOPF()
 
         self.assertTrue(success)
         self.assertAlmostEqual(mkt._solution["f"], 2802.19, 2)
 
 
-    def test_nodal_marginal_prices(self):
+    def testNodalMarginalPrices(self):
         """ Test nodal marginal prices from OPF.
         """
-        self.mkt._withhold_offbids()
-        self.mkt._offbid_to_case()
-        _ = self.mkt._run_opf()
-        gtee_offer_prc, gtee_bid_prc = self.mkt._nodal_prices(haveQ=True)
+        self.mkt._withholdOffbids()
+        self.mkt._offbidToCase()
+        _ = self.mkt._runOPF()
+        gteeOfferPrice, gteeBidPrice = self.mkt._nodalPrices(haveQ=True)
 
-        self.assertTrue(gtee_offer_prc)
-        self.assertTrue(gtee_bid_prc)
+        self.assertTrue(gteeOfferPrice)
+        self.assertTrue(gteeBidPrice)
 
         # Nodal marginal prices.
         for offbid in self.offers + self.bids:
@@ -356,68 +356,68 @@ class DCMarketTestCase(unittest.TestCase):
 
         places = 0 # TODO: Repeat using PDIPM.
         # Total dispatched quantity for associated generator.
-        self.assertAlmostEqual(self.offers[0].total_quantity, 35.6103, places)
-        self.assertAlmostEqual(self.offers[3].total_quantity, 36.0000, places)
-        self.assertAlmostEqual(self.offers[6].total_quantity, 36.0000, places)
+        self.assertAlmostEqual(self.offers[0].totalQuantity, 35.6103, places)
+        self.assertAlmostEqual(self.offers[3].totalQuantity, 36.0000, places)
+        self.assertAlmostEqual(self.offers[6].totalQuantity, 36.0000, places)
 
-        self.assertAlmostEqual(self.bids[0].total_quantity, 30.0000, places)
-        self.assertAlmostEqual(self.bids[3].total_quantity, 11.1779, places)
-        self.assertAlmostEqual(self.bids[6].total_quantity, 22.7885, places)
+        self.assertAlmostEqual(self.bids[0].totalQuantity, 30.0000, places)
+        self.assertAlmostEqual(self.bids[3].totalQuantity, 11.1779, places)
+        self.assertAlmostEqual(self.bids[6].totalQuantity, 22.7885, places)
 
 
-    def test_active_power_auction(self):
+    def testActivePowerAuction(self):
         """ Test auction for clearing offer/bid quantities and prices.
         """
-        self.mkt._withhold_offbids()
-        self.mkt._offbid_to_case()
-        _ = self.mkt._run_opf()
-        gtee_offer_prc, gtee_bid_prc = self.mkt._nodal_prices(haveQ=True)
-        self.mkt._run_auction(gtee_offer_prc, gtee_bid_prc, haveQ=True)
+        self.mkt._withholdOffbids()
+        self.mkt._offbidToCase()
+        _ = self.mkt._runOPF()
+        gteeOfferPrice, gteeBidPrice = self.mkt._nodalPrices(haveQ=True)
+        self.mkt._runAuction(gteeOfferPrice, gteeBidPrice, haveQ=True)
 
         places = 4
 
         for offer in self.offers:
-            self.assertAlmostEqual(offer.cleared_price, 50.0, places)
+            self.assertAlmostEqual(offer.clearedPrice, 50.0, places)
         for bid in self.bids:
-            self.assertAlmostEqual(bid.cleared_price, 50.0, places)
+            self.assertAlmostEqual(bid.clearedPrice, 50.0, places)
 
         offers = self.offers
-        self.assertAlmostEqual(offers[0].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[1].cleared_quantity, 23.6103, places=0)
-        self.assertAlmostEqual(offers[2].cleared_quantity, 0.0, places)
+        self.assertAlmostEqual(offers[0].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[1].clearedQuantity, 23.6103, places=0)
+        self.assertAlmostEqual(offers[2].clearedQuantity, 0.0, places)
 
-        self.assertAlmostEqual(offers[3].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[4].cleared_quantity, 24.0, places)
-        self.assertAlmostEqual(offers[5].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(offers[3].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[4].clearedQuantity, 24.0, places)
+        self.assertAlmostEqual(offers[5].clearedQuantity, 0.00, places)
 
-        self.assertAlmostEqual(offers[6].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[7].cleared_quantity, 24.0, places)
-        self.assertAlmostEqual(offers[8].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(offers[6].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[7].clearedQuantity, 24.0, places)
+        self.assertAlmostEqual(offers[8].clearedQuantity, 0.00, places)
 
-        self.assertAlmostEqual(offers[9].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[10].cleared_quantity, 24.0, places)
-        self.assertAlmostEqual(offers[11].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(offers[9].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[10].clearedQuantity, 24.0, places)
+        self.assertAlmostEqual(offers[11].clearedQuantity, 0.00, places)
 
-        self.assertAlmostEqual(offers[12].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[13].cleared_quantity, 24.0, places)
-        self.assertAlmostEqual(offers[14].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(offers[12].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[13].clearedQuantity, 24.0, places)
+        self.assertAlmostEqual(offers[14].clearedQuantity, 0.00, places)
 
-        self.assertAlmostEqual(offers[15].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[16].cleared_quantity, 24.0, places)
-        self.assertAlmostEqual(offers[17].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(offers[15].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[16].clearedQuantity, 24.0, places)
+        self.assertAlmostEqual(offers[17].clearedQuantity, 0.00, places)
 
         bids = self.bids
-        self.assertAlmostEqual(bids[0].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[1].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[2].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[0].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[1].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[2].clearedQuantity, 10.0, places)
 
-        self.assertAlmostEqual(bids[3].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[4].cleared_quantity, 1.1779, places)
-        self.assertAlmostEqual(bids[5].cleared_quantity, 0.0, places)
+        self.assertAlmostEqual(bids[3].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[4].clearedQuantity, 1.1779, places)
+        self.assertAlmostEqual(bids[5].clearedQuantity, 0.0, places)
 
-        self.assertAlmostEqual(bids[6].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[7].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[8].cleared_quantity, 2.7885, places)
+        self.assertAlmostEqual(bids[6].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[7].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[8].clearedQuantity, 2.7885, places)
 
 
     def test_constrained_market(self):
@@ -450,50 +450,50 @@ class DCMarketTestCase(unittest.TestCase):
             self.assertAlmostEqual(offers[i].cleared_price, 48.0, places)
 
         # Cleared offer quantities.
-        self.assertAlmostEqual(offers[0].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[1].cleared_quantity, 22.9995, places)
-        self.assertAlmostEqual(offers[2].cleared_quantity, 0.0, places)
+        self.assertAlmostEqual(offers[0].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[1].clearedQuantity, 22.9995, places)
+        self.assertAlmostEqual(offers[2].clearedQuantity, 0.0, places)
 
-        self.assertAlmostEqual(offers[3].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[4].cleared_quantity, 24.0, places)
-        self.assertAlmostEqual(offers[5].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(offers[3].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[4].clearedQuantity, 24.0, places)
+        self.assertAlmostEqual(offers[5].clearedQuantity, 0.00, places)
 
-        self.assertAlmostEqual(offers[6].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[7].cleared_quantity, 24.0, places)
-        self.assertAlmostEqual(offers[8].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(offers[6].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[7].clearedQuantity, 24.0, places)
+        self.assertAlmostEqual(offers[8].clearedQuantity, 0.00, places)
 
-        self.assertAlmostEqual(offers[9].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[10].cleared_quantity, 24.0, places)
-        self.assertAlmostEqual(offers[11].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(offers[9].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[10].clearedQuantity, 24.0, places)
+        self.assertAlmostEqual(offers[11].clearedQuantity, 0.00, places)
 
-        self.assertAlmostEqual(offers[12].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[13].cleared_quantity, 24.0, places)
-        self.assertAlmostEqual(offers[14].cleared_quantity, 5.3963, places)
+        self.assertAlmostEqual(offers[12].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[13].clearedQuantity, 24.0, places)
+        self.assertAlmostEqual(offers[14].clearedQuantity, 5.3963, places)
 
-        self.assertAlmostEqual(offers[15].cleared_quantity, 12.0, places)
-        self.assertAlmostEqual(offers[16].cleared_quantity, 18.0, places)
-        self.assertAlmostEqual(offers[17].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(offers[15].clearedQuantity, 12.0, places)
+        self.assertAlmostEqual(offers[16].clearedQuantity, 18.0, places)
+        self.assertAlmostEqual(offers[17].clearedQuantity, 0.00, places)
 
         # Cleared bid prices.
         for i in range(0, 3):
-            self.assertAlmostEqual(bids[i].cleared_price, 41.8831, places)
+            self.assertAlmostEqual(bids[i].clearedPrice, 41.8831, places)
         for i in range(3, 6):
-            self.assertAlmostEqual(bids[i].cleared_price, 86.4585, places)
+            self.assertAlmostEqual(bids[i].clearedPrice, 86.4585, places)
         for i in range(6, 9):
-            self.assertAlmostEqual(bids[i].cleared_price, 50.0000, places)
+            self.assertAlmostEqual(bids[i].clearedPrice, 50.0000, places)
 
         # Cleared bid quantities.
-        self.assertAlmostEqual(bids[0].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[1].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[2].cleared_quantity, 10.0, places)
+        self.assertAlmostEqual(bids[0].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[1].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[2].clearedQuantity, 10.0, places)
 
-        self.assertAlmostEqual(bids[3].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[4].cleared_quantity, 0.00, places)
-        self.assertAlmostEqual(bids[5].cleared_quantity, 0.00, places)
+        self.assertAlmostEqual(bids[3].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[4].clearedQuantity, 0.00, places)
+        self.assertAlmostEqual(bids[5].clearedQuantity, 0.00, places)
 
-        self.assertAlmostEqual(bids[6].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[7].cleared_quantity, 10.0, places)
-        self.assertAlmostEqual(bids[8].cleared_quantity, 2.7519, places)
+        self.assertAlmostEqual(bids[6].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[7].clearedQuantity, 10.0, places)
+        self.assertAlmostEqual(bids[8].clearedQuantity, 2.7519, places)
 
 ##------------------------------------------------------------------------------
 ##  "ACMarketTestCase" class:

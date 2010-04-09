@@ -50,35 +50,31 @@ class ProfitTask(Task):
     def getReward(self):
         """ Returns the reward corresponding to the last action performed.
         """
-        g = self.env.asset
         t = self.env.market.period
 
-#        offbids = self.env.market.get_offbids(g)
-        offbids = self.env.last_action
+        earnings = 0.0
+        for g in self.env.generators:
+            # Compute costs in $ (not $/hr).
+    #        fixedCost = t * g.total_cost(0.0)
+    #        variableCost = (t * g.total_cost()) - fixedCost
+            costs = g.total_cost(round(g.p, 4),
+                                 self.env.gencost[g]["pCost"],
+                                 self.env.gencost[g]["pCostModel"])
 
-        # Compute costs in $ (not $/hr).
-#        g.p_cost = self.env.marginal_cost
+    #        offbids = self.env.market.getOffbids(g)
+            offbids = [ob for ob in self.env.lastAction if ob.generator == g]
 
-#        fixed_cost = t * g.total_cost(0.0)
-#        variable_cost = (t * g.total_cost()) - fixed_cost
+            revenue = t * sum([ob.revenue for ob in offbids])
 
-#        print "P:", g.p
+            if g.is_load:
+                earnings += costs - revenue
+            else:
+                earnings += revenue - costs#(fixedCost + variableCost)
 
-        costs = g.total_cost(round(g.p, 4),
-                             self.env._p_cost,
-                             self.env._pcost_model)
+            logger.debug("Generator [%s] earnings: %.2f (%.2f, %.2f)" %
+                         (g.name, earnings, revenue, costs))
 
-#        print "C:", costs
-
-        revenue = t * sum([ob.revenue for ob in offbids])
-
-        if g.is_load:
-            earnings = costs - revenue
-        else:
-            earnings = revenue - costs#(fixed_cost + variable_cost)
-
-        logger.debug("Profit task [%s] reward: %.2f (%.2f, %.2f)" %
-                     (g.name, earnings, revenue, costs))
+        logger.debug("Task reward: %.2f" % earnings)
 
         return earnings
 
@@ -97,13 +93,13 @@ class EpisodicProfitTask(ProfitTask):
     """ Defines a task for continuous sensor and action spaces.
     """
 
-    def __init__(self, environment, maxsteps=24, discount=None):
+    def __init__(self, environment, maxSteps=24, discount=None):
         """ Initialises the task.
         """
         super(EpisodicProfitTask, self).__init__(environment)
 
         # Maximum number of time steps.
-        self.maxsteps = maxsteps
+        self.maxsteps = maxSteps
 
         # Current time step.
         self.t = 0
@@ -112,13 +108,17 @@ class EpisodicProfitTask(ProfitTask):
         self.discount = discount
 
         # Track cumulative reward.
-        self.cumreward = 0
+        self.cumulativeReward = 0
 
         # Track the number of samples.
         self.samples = 0
 
         # Maximum markup/markdown.
-        self.mark_max = 0.4
+        self.maxMarkup = 0.4
+
+        #----------------------------------------------------------------------
+        #  "Task" interface:
+        #----------------------------------------------------------------------
 
         # Limits for scaling of sensors.
         self.sensor_limits = self.getSensorLimits()
@@ -149,7 +149,7 @@ class EpisodicProfitTask(ProfitTask):
     def reset(self):
 #        super(EpisodicProfitTask, self).reset()
 #        self.env.reset()
-        self.cumreward = 0
+        self.cumulativeReward = 0
         self.samples = 0
         self.t = 0
 
@@ -160,7 +160,7 @@ class EpisodicProfitTask(ProfitTask):
     def isFinished(self):
         """ Is the current episode over?
         """
-        if self.t >= self.maxsteps:
+        if self.t >= self.maxSteps:
             return True # maximal timesteps
         return False
 
@@ -172,9 +172,9 @@ class EpisodicProfitTask(ProfitTask):
         # by default, the cumulative reward is just the sum over the episode
         if self.discount:
             reward = self.getReward()
-            self.cumreward += power(self.discount, self.samples) * reward
+            self.cumulativeReward += power(self.discount, self.samples) *reward
         else:
-            self.cumreward += self.getReward()
+            self.cumulativeReward += self.getReward()
 
     #--------------------------------------------------------------------------
     #  "EpisodicProfitTask" interface:
@@ -184,28 +184,35 @@ class EpisodicProfitTask(ProfitTask):
         """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
             one tuple per parameter, giving min and max for that parameter.
         """
-        g = self.env.asset
         case = self.env.market.case
 
         limits = []
 
         # Market sensor limits.
         limits.append((1e-6, BIGNUM)) # f
-        p_lim = self.env._p_min if g.is_load else self.env._p_max
-        limits.append((0.0, p_lim)) # quantity
-        limits.append((0.0, g.total_cost(p_lim, self.env._p_cost,
-                                         self.env._pcost_model)))
+        pLimit = 0.0
+        for g in self.env.generators:
+            if g.is_load:
+                pLimit += self.env.gencost[g]["pMin"]
+            else:
+                pLimit += self.env.gencost[g]["pMax"]
+        limits.append((0.0, pLimit)) # quantity
+        cost = max([g.total_cost(pLimit,
+                                 self.env.gencost[g]["pCost"],
+                                 self.env.gencost[g]["pCostModel"]) \
+                                 for g in self.env.generators])
+        limits.append((0.0, cost)) # mcp
 
         # Case sensor limits.
 #        limits.extend([(-180.0, 180.0) for _ in case.buses]) # Va
-        limits.extend([(0.0, BIGNUM) for _ in case.buses]) # Plam
+        limits.extend([(0.0, BIGNUM) for _ in case.buses]) # P_lambda
 
         limits.extend([(-b.rate_a, b.rate_a) for b in case.branches]) # Pf
-#        limits.extend([(-BIGNUM, BIGNUM) for b in case.branches]) # mu_f
+#        limits.extend([(-BIGNUM, BIGNUM) for b in case.branches])     # mu_f
 
         limits.extend([(g.p_min, g.p_max) for g in case.generators]) # Pg
-#        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) # Pg_max
-#        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators]) # Pg_min
+#        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators])  # Pg_max
+#        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators])  # Pg_min
 
         return limits
 
@@ -214,15 +221,16 @@ class EpisodicProfitTask(ProfitTask):
         """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
             one tuple per parameter, giving min and max for that parameter.
         """
-        n_offbids = self.env.n_offbids
-        offbid_qty = self.env.offbid_qty
+        numOffbids = self.env.numOffbids
+        offbidQty = self.env.offbidQty
 
-        actor_limits = []
-        for _ in range(n_offbids):
-            if offbid_qty:
-                actor_limits.append((0.0, self.env._p_max))
-            actor_limits.append((0.0, self.mark_max))
+        actorLimits = []
+        for _ in range(numOffbids):
+            for g in self.env.generators:
+                if offbidQty:
+                    actorLimits.append((0.0, self.env.gencost[g]["pMax"]))
+                actorLimits.append((0.0, self.maxMarkup))
 
-        return actor_limits
+        return actorLimits
 
 # EOF -------------------------------------------------------------------------

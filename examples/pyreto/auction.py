@@ -29,7 +29,7 @@ from pyreto import \
     MarketExperiment, EpisodicMarketExperiment, DiscreteMarketEnvironment, \
     ContinuousMarketEnvironment, SmartMarket, ProfitTask, EpisodicProfitTask
 
-#from pyreto.tools import plot_gen_cost
+#from pyreto.tools import plotGenCost
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
@@ -87,21 +87,21 @@ market = SmartMarket(case)
 markups = (0.1, 0.2, 0.33, 0.5, 0.6, 0.75, 1.0)
 
 # Specify the number of offers/bids each participant can submit.
-n_offbids = 4
+numOffbids = 4
 
 # Specify the desired number of discrete states.
-dim_state = 10
+dimState = 10
 
-dim_action = len(markups) * n_offbids
+dimAction = len(markups) * numOffbids
 
 # Construct an experiment to test the market.
 experiment = MarketExperiment([], [], market)
 
 # Add the agents and their tasks.
 for g in case.generators:
-    env = DiscreteMarketEnvironment([g], market, dim_state, markups, n_offbids)
+    env = DiscreteMarketEnvironment([g], market, dimState, markups, numOffbids)
     task = ProfitTask(env)
-    module = ActionValueTable(dim_state, dim_action)
+    module = ActionValueTable(dimState, dimAction)
     module.initialize(1.0)
 #    learner = SARSA(gamma=0.9)
     learner = Q()
@@ -149,24 +149,24 @@ for i, generator in enumerate(case.generators):
 # pylon.OPF(case, market.loc_adjust=='dc').solve()
 
 # Save action and reward data for plotting.
-agent_map = {}
+agentMap = {}
 for agent in experiment.agents:
-    agent_map[agent.name] = (scipy.zeros((1,)), scipy.zeros((1,)))
+    agentMap[agent.name] = (scipy.zeros((1,)), scipy.zeros((1,)))
 
 ## Save data in tables for plotting with PGF/Tikz.
-#table_map = {"state": {}, "action": {}, "reward": {}}
+#tableMap = {"state": {}, "action": {}, "reward": {}}
 #timestr = time.strftime("%Y%m%d%H%M", time.gmtime())
-#table_dir = tempfile.mkdtemp(prefix=timestr)
+#tableDir = tempfile.mkdtemp(prefix=timestr)
 #for a in experiment.agents:
 #    for t in ("state", "action", "reward"):
-#        file_name = "%s-%s.table" % (a.name, t)
-#        tmp_name = join(table_dir, file_name)
-##        tmp_fd, tmp_name = tempfile.mkstemp(".table", prefix, table_dir)
-##        os.close(tmp_fd) # gets deleted
-#        fd = file(tmp_name, "w+b")
+#        fileName = "%s-%s.table" % (a.name, t)
+#        tmp_name = join(tableDir, fileName)
+##        tmpfd, tmpName = tempfile.mkstemp(".table", prefix, tableDir)
+##        os.close(tmpfd) # gets deleted
+#        fd = file(tmpName, "w+b")
 #        fd.write("# %s %s data - %s\n" % (a.name, t, timestr))
 #        fd.close()
-#        table_map[t][a.name] = tmp_name
+#        tableMap[t][a.name] = tmpName
 
 # Execute interactions with the environment in batch mode.
 t0 = time.time()
@@ -181,13 +181,13 @@ while x <= 1000:
         pl.addData(i, x, scipy.mean(a))
         pl2.addData(i, x, scipy.mean(r))
 
-        action, reward = agent_map[agent.name]
-        agent_map[agent.name] = (scipy.r_[action, a.flatten()],
-                                 scipy.r_[reward, r.flatten()])
+        action, reward = agentMap[agent.name]
+        agentMap[agent.name] = (scipy.r_[action, a.flatten()],
+                                scipy.r_[reward, r.flatten()])
 
 #        for n, seq in (("state", s), ("action", a), ("reward", r)):
-#            tmp_name = table_map[n][agent.name]
-#            fd = file(tmp_name, "a+b")
+#            tmpName = tableMap[n][agent.name]
+#            fd = file(tmpName, "a+b")
 #            for i in range(batch):
 #                fd.write("%.1f %.5f\n" % (x + i, seq[i]))
 #            fd.close()
@@ -207,7 +207,7 @@ while x <= 1000:
         yb = [0.0, g.total_cost()]
         plc.setData(j + 2 * len(case.generators), xa, yb)
 
-#    plot_gen_cost(case.generators)
+#    plotGenCost(case.generators)
 
     pylab.figure(1)
     pl.update()
@@ -219,16 +219,16 @@ while x <= 1000:
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
 
-#from pyreto.tools import sparkline_data
-#sparkline_data(agent_map, "auctiondata.txt")
+#from pyreto.tools import sparklineData
+#sparklineData(agent_map, "auctiondata.txt")
 
-#table_zip = zipfile.ZipFile("%s.zip" % timestr, "w")
+#tableZip = zipfile.ZipFile("%s.zip" % timestr, "w")
 #for a in experiment.agents:
 #    for t in ("state", "action", "reward"):
-#        tmp_name = table_map[t][a.name]
-#        table_zip.write(tmp_name, basename(tmp_name), zipfile.ZIP_DEFLATED)
-#table_zip.close()
-#shutil.rmtree(table_dir)
+#        tmpName = tableMap[t][a.name]
+#        tableZip.write(tmpName, basename(tmpName), zipfile.ZIP_DEFLATED)
+#tableZip.close()
+#shutil.rmtree(tableDir)
 
 pylab.figure(1)
 pl.show(popup=True)

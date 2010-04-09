@@ -59,8 +59,8 @@ class SmartMarket(object):
     """
 
     def __init__(self, case, offers=None, bids=None, limits=None,
-                 loc_adjust="dc", auction_type=FIRST_PRICE,
-                 price_cap=100.0, period=1.0, decommit=False):
+                 locationalAdjustment="dc", auctionType=FIRST_PRICE,
+                 priceCap=100.0, period=1.0, decommit=False):
         """ Initialises a new SmartMarket instance.
         """
         self.case = case
@@ -75,7 +75,7 @@ class SmartMarket(object):
         self.limits = limits if limits is not None else {}
 
         # Compute locational adjustments ('ignore', 'ac', 'dc').
-        self.loc_adjust = loc_adjust
+        self.locationalAdjustment = locationalAdjustment
 
         # 'discriminative' - discriminative pricing (price equal to offer/bid)
         # 'lao'            - last accepted offer auction
@@ -90,10 +90,10 @@ class SmartMarket(object):
         # 'split'          - split the difference pricing (price set by last
         #                    accepted offer & bid)
         # 'dual laob'      - LAO sets seller price, LAB sets buyer price
-        self.auction_type = auction_type
+        self.auctionType = auctionType
 
         # Price cap. Offers greater than this are eliminated.
-        self.price_cap = price_cap
+        self.priceCap = priceCap
 
         # A list of the commitment status of each generator from the
         # previous period (for computing startup/shutdown costs).
@@ -128,13 +128,13 @@ class SmartMarket(object):
         self.bids = []
 
 
-    def get_offbids(self, g):
+    def getOffbids(self, g):
         """ Returns the offers/bids for the given generator.
         """
         if not g.is_load:
             offbids = [x for x in self.offers if x.generator == g]
         else:
-            offbids = [x for x in self.bids if x.vload == g]
+            offbids = [x for x in self.bids if x.vLoad == g]
 
         return offbids
 
@@ -146,28 +146,28 @@ class SmartMarket(object):
         t0 = time.time()
 
         # Manage reactive power offers/bids.
-        haveQ = self._reactive_market()
+        haveQ = self._isReactiveMarket()
 
         # Withhold offers/bids outwith optional price limits.
-        self._withhold_offbids()
+        self._withholdOffbids()
 
         # Convert offers/bids to pwl functions and update limits.
-        self._offbid_to_case()
+        self._offbidToCase()
 
         # Compute dispatch points and LMPs using OPF.
-        success = self._run_opf()
+        success = self._runOPF()
 
         if success:
             # Get nodal marginal prices from OPF.
-            gtee_offer_prc, gtee_bid_prc = self._nodal_prices(haveQ)
+            gteeOfferPrice, gteeBidPrice = self._nodalPrices(haveQ)
             # Determine quantity and price for each offer/bid.
-            self._run_auction(gtee_offer_prc, gtee_bid_prc, haveQ)
+            self._runAuction(gteeOfferPrice, gteeBidPrice, haveQ)
 
             logger.info("SmartMarket cleared in %.3fs" % (time.time() - t0))
         else:
             for offbid in self.offers + self.bids:
-                offbid.cleared_quantity = 0.0
-                offbid.cleared_price = 0.0
+                offbid.clearedQuantity = 0.0
+                offbid.clearedPrice = 0.0
                 offbid.accepted = False
 
                 offbid.generator.p = 0.0
@@ -177,11 +177,11 @@ class SmartMarket(object):
         return self.offers, self.bids
 
 
-    def _reactive_market(self):
+    def _isReactiveMarket(self):
         """ Returns a flag indicating the existance of offers/bids for reactive
             power.
         """
-        vloads = [g for g in self.case.generators if g.is_load]
+        vLoads = [g for g in self.case.generators if g.is_load]
 
         if [offbid for offbid in self.offers + self.bids if offbid.reactive]:
             haveQ = True
@@ -191,9 +191,9 @@ class SmartMarket(object):
         else:
             haveQ = False
 
-        combined_types = [DISCRIMINATIVE, FIRST_PRICE]#, LAO]
+        combinedTypes = [DISCRIMINATIVE, FIRST_PRICE]#, LAO]
 
-        if haveQ and vloads and self.auction_type not in combined_types:
+        if haveQ and vLoads and self.auctionType not in combinedTypes:
             logger.error("Combined active/reactive power markets with "
                 "constant power factor dispatchable loads are only "
                 "implemented for 'discriminative', 'lao' and 'first price' "
@@ -202,7 +202,7 @@ class SmartMarket(object):
         return haveQ
 
 
-    def _withhold_offbids(self):
+    def _withholdOffbids(self):
         """ Withholds offers/bids with invalid (<= 0.0) quantities or prices
             outwith the set limits.
         """
@@ -210,11 +210,11 @@ class SmartMarket(object):
 
         # Eliminate offers (but not bids) above 'price_cap'.
         if not limits.has_key('max_offer'):
-            limits['max_offer'] = self.price_cap
+            limits['max_offer'] = self.priceCap
 
         # Limit cleared offer prices after locational adjustments.
-        if not self.limits.has_key('max_cleared_offer'):
-            self.limits['max_cleared_offer'] = self.price_cap
+        if not self.limits.has_key('maxClearedOffer'):
+            self.limits['maxClearedOffer'] = self.price_cap
 
         # Withhold invalid offers/bids.
         for offer in self.offers:
@@ -230,26 +230,26 @@ class SmartMarket(object):
                 bid.withheld = True
 
         # Optionally, withhold offers/bids beyond price limits.
-        if limits.has_key("max_offer"):
+        if limits.has_key("maxOffer"):
             for offer in self.offers:
-                if offer.price > limits["max_offer"]:
+                if offer.price > limits["maxOffer"]:
                     logger.info("Offer price [%.2f] above limit [%.3f], "
-                        "withholding." % (offer.price, limits["max_offer"]))
+                        "withholding." % (offer.price, limits["maxOffer"]))
                     offer.withheld = True
 
-        if limits.has_key("min_bid"):
+        if limits.has_key("minBid"):
             for bid in self.bids:
-                if bid.price < limits["min_bid"]:
+                if bid.price < limits["minBid"]:
                     logger.info("Bid price [%.2f] below limit [%.2f], "
-                        "withholding." % (bid.price, limits["min_bid"]))
+                        "withholding." % (bid.price, limits["minBid"]))
                     bid.withheld = True
 
 
-    def _offbid_to_case(self):
+    def _offbidToCase(self):
         """ Converts offers/bids to pwl functions and updates limits.
         """
         generators = [g for g in self.case.generators if not g.is_load]
-        vloads = [g for g in self.case.generators if g.is_load]
+        vLoads = [g for g in self.case.generators if g.is_load]
 
         # Convert offers into piecewise linear segments and update limits.
         for g in generators:
@@ -259,7 +259,7 @@ class SmartMarket(object):
 
 #            print "GG:", g.p_min, g.p_max, g.p_cost, g.pcost_model
 
-        for vl in vloads:
+        for vl in vLoads:
 #            print "L: ", vl.p_min, vl.p_max, vl.p_cost
 
             vl.bids_to_pwl(self.bids)
@@ -274,12 +274,12 @@ class SmartMarket(object):
             g.p_max += 100 * self.violation
 
 
-    def _run_opf(self):
+    def _runOPF(self):
         """ Computes dispatch points and LMPs using OPF.
         """
         if self.decommit:
-            solver = UDOPF(self.case, dc=(self.loc_adjust == "dc"))
-        elif self.loc_adjust == "dc":
+            solver = UDOPF(self.case, dc=(self.locationalAdjustment == "dc"))
+        elif self.locationalAdjustment == "dc":
             solver = OPF(self.case, dc=True, opt={"verbose": True})
         else:
             solver = OPF(self.case, dc=False, opt={"verbose": True})
@@ -296,66 +296,66 @@ class SmartMarket(object):
         """ Sets the nodal prices associated with each offer/bid.
         """
         # Guarantee that cleared offer prices are >= offered prices.
-        gtee_offer_prc = True
-        gtee_bid_prc = True
+        gteeOfferPrice = True
+        gteeBidPrice = True
 
         for offer in self.offers:
             if not offer.reactive:
                 # Get nodal marginal price from OPF results.
                 offer.lmbda = offer.generator.bus.p_lmbda
-                offer.total_quantity = offer.generator.p
+                offer.totalQuantity = offer.generator.p
             else:
                 offer.lmbda = offer.generator.bus.q_lmbda
-                offer.total_quantity = abs(offer.generator.q)
+                offer.totalQuantity = abs(offer.generator.q)
         for bid in self.bids:
-            bus = bid.vload.bus
+            bus = bid.vLoad.bus
 
             if not bid.reactive:
                 # Fudge factor to include price of bundled reactive power.
-                if bid.vload.q_max == 0.0:
-                    pf = bid.vload.q_min / bid.vload.p_min
-                elif bid.vload.q_min == 0.0:
-                    pf = bid.vload.q_max / bid.vload.p_min
+                if bid.vLoad.q_max == 0.0:
+                    pf = bid.vLoad.q_min / bid.vLoad.p_min
+                elif bid.vLoad.q_min == 0.0:
+                    pf = bid.vLoad.q_max / bid.vLoad.p_min
                 else:
                     pf = 0.0
 
                 # Use bundled lambdas. For loads Q = pf * P.
                 bid.lmbda = bus.p_lmbda + pf * bus.q_lmbda
 
-                bid.total_quantity = -bid.vload.p
+                bid.totalQuantity = -bid.vLoad.p
                 # Guarantee that cleared bids are <= bids.
-                gtee_bid_prc = True
+                gteeBidPrice = True
             else:
                 # Use unbundled lambdas.
                 bid.lmbda = bus.q_lmbda
 
-                bid.total_quantity = abs(bid.vload.q)
+                bid.totalQuantity = abs(bid.vLoad.q)
                 # Allow cleared bids to be above bid price.
-                gtee_bid_prc = False
+                gteeBidPrice = False
 
-        return gtee_offer_prc, gtee_bid_prc
+        return gteeOfferPrice, gteeBidPrice
 
 
-    def _run_auction(self, gtee_offer_prc, gtee_bid_prc, haveQ):
+    def _run_auction(self, gteeOfferPrice, gteeBidPrice, haveQ):
         """ Clears an auction to determine the quantity and price for each
             offer/bid.
         """
-        p_offers = [offer for offer in self.offers if not offer.reactive]
-        p_bids = [bid for bid in self.bids if not bid.reactive]
+        pOffers = [offer for offer in self.offers if not offer.reactive]
+        pBids = [bid for bid in self.bids if not bid.reactive]
 
         # Clear offer/bid quantities and prices.
-        auction = Auction(self.case, p_offers, p_bids, self.auction_type,
-                          gtee_offer_prc, gtee_bid_prc, self.limits)
+        auction = Auction(self.case, pOffers, pBids, self.auctionType,
+                          gteeOfferPrice, gteeBidPrice, self.limits)
         auction.run()
 
         # Separate auction for reactive power.
         if haveQ:
-            q_offers = [offer for offer in self.offers if offer.reactive]
-            q_bids = [bid for bid in self.bids if bid.reactive]
+            qOffers = [offer for offer in self.offers if offer.reactive]
+            qBids = [bid for bid in self.bids if bid.reactive]
 
-            q_auction = Auction(self.case, q_offers, q_bids, self.auction_type,
-                                gtee_offer_prc, gtee_bid_prc, self.limits)
-            q_auction.run()
+            qAuction = Auction(self.case, qOffers, qBids, self.auctionType,
+                                gteeOfferPrice, gteeBidPrice, self.limits)
+            qAuction.run()
 
 #------------------------------------------------------------------------------
 #  "Auction" class:
@@ -369,8 +369,8 @@ class Auction(object):
             PSERC (Cornell), version 3.2, www.pserc.cornell.edu/matpower
     """
 
-    def __init__(self, case, offers, bids, auction_type=FIRST_PRICE,
-                 gtee_offer_prc=True, gtee_bid_prc=True, limits=None):
+    def __init__(self, case, offers, bids, auctionType=FIRST_PRICE,
+                 gteeOfferPrice=True, gteeBidPrice=True, limits=None):
         """ Initialises an new Auction instance.
         """
         self.case = case
@@ -382,13 +382,13 @@ class Auction(object):
         self.bids = bids
 
         # Pricing option.
-        self.auction_type = auction_type
+        self.auctionType = auctionType
 
         # Guarantee that cleared offers are >= offers.
-        self.guarantee_offer_price = gtee_offer_prc
+        self.guaranteeOfferPrice = gteeOfferPrice
 
         # Guarantee that cleared bids are <= bids.
-        self.guarantee_bid_price = gtee_bid_prc
+        self.guaranteeBidPrice = gteeBidPrice
 
         # Offer/bid price limits.
         self.limits = limits if limits is not None else {}
@@ -398,53 +398,53 @@ class Auction(object):
         """ Clears a set of bids and offers.
         """
         # Compute cleared offer/bid quantities from total dispatched quantity.
-        self._clear_quantities()
+        self._clearQuantities()
 
         # Compute shift values to add to lam to get desired pricing.
 #        lao, fro, lab, frb = self._first_rejected_last_accepted()
 
         # Clear offer/bid prices according to auction type.
-        self._clear_prices()
+        self._clearPrices()
 #        self._clear_prices(lao, fro, lab, frb)
 
         # Clip cleared prices according to guarantees and limits.
-        self._clip_prices()
+        self._clipPrices()
 
-        self._log_clearances()
+        self._logClearances()
 
         return self.offers, self.bids
 
 
-    def _clear_quantities(self):
+    def _clearQuantities(self):
         """ Computes the cleared quantities for each offer/bid according to
             the dispatched output from the OPF solution.
         """
         generators = [g for g in self.case.generators if not g.is_load]
-        vloads = [g for g in self.case.generators if g.is_load]
+        vLoads = [g for g in self.case.generators if g.is_load]
 
         for g in generators:
-            self._clear_quantity(self.offers, g)
+            self._clearQuantity(self.offers, g)
 
-        for vl in vloads:
-            self._clear_quantity(self.bids, vl)
+        for vl in vLoads:
+            self._clearQuantity(self.bids, vl)
 
 
-    def _clear_quantity(self, offbids, gen):
+    def _clearQuantity(self, offbids, gen):
         """ Computes the cleared bid quantity from total dispatched quantity.
         """
         # Filter out offers/bids not applicable to the generator in question.
-        g_offbids = [offer for offer in offbids if offer.generator == gen]
+        gOffbids = [offer for offer in offbids if offer.generator == gen]
 
         # Offers/bids within valid price limits (not withheld).
-        valid = [ob for ob in g_offbids if not ob.withheld]
+        valid = [ob for ob in gOffbids if not ob.withheld]
 
         # Sort offers by price in ascending order and bids in decending order.
         valid.sort(key=lambda ob: ob.price, reverse=[False, True][gen.is_load])
 
-        accepted_qty = 0.0
+        acceptedQty = 0.0
         for ob in valid:
             # Compute the fraction of the block accepted.
-            accepted = (ob.total_quantity - accepted_qty) / ob.quantity
+            accepted = (ob.totalQuantity - acceptedQty) / ob.quantity
 
             # Clip to the range 0-1.
             if accepted > 1.0:
@@ -452,7 +452,7 @@ class Auction(object):
             elif accepted < 1.0e-05:
                 accepted = 0.0
 
-            ob.cleared_quantity = accepted * ob.quantity
+            ob.clearedQuantity = accepted * ob.quantity
 
             ob.accepted = (accepted > 0.0)
 
@@ -460,14 +460,14 @@ class Auction(object):
 #            if ob.accepted:
 #                logger.info("%s [%s, %.3f, %.3f] accepted at %.2f MW." %
 #                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
-#                     ob.price, ob.cleared_quantity))
+#                     ob.price, ob.clearedQuantity))
 #            else:
 #                logger.info("%s [%s, %.3f, %.3f] rejected." %
 #                    (ob.__class__.__name__, ob.generator.name, ob.quantity,
 #                     ob.price))
 
             # Increment the accepted quantity.
-            accepted_qty += ob.quantity
+            acceptedQty += ob.quantity
 
 
 #    def _first_rejected_last_accepted(self):
@@ -489,151 +489,151 @@ class Auction(object):
 #        if lao is not None:
 #            logger.info("LAO: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
 #                        (lao.generator.name, lao.quantity,
-#                         lao.cleared_quantity, lao.price))
+#                         lao.clearedQuantity, lao.price))
 #        elif self.offers:
 #            logger.info("No accepted offers.")
 #
 #        if fro is not None:
 #            logger.info("FRO: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
 #                        (fro.generator.name, fro.quantity,
-#                         fro.cleared_quantity, fro.price))
+#                         fro.clearedQuantity, fro.price))
 #        elif self.offers:
 #            logger.info("No rejected offers.")
 #
 #
 #        # Determine last accepted bid and first rejected bid.
-#        accepted_bids = [bid for bid in self.bids if bid.accepted]
-#        accepted_bids.sort(key=lambda bid: bid.difference, reverse=True)
+#        acceptedBids = [bid for bid in self.bids if bid.accepted]
+#        acceptedBids.sort(key=lambda bid: bid.difference, reverse=True)
 #
-#        rejected_bids = [bid for bid in self.bids if not bid.accepted]
-#        rejected_bids.sort(key=lambda bid: bid.difference, reverse=True)
+#        rejectedBids = [bid for bid in self.bids if not bid.accepted]
+#        rejectedBids.sort(key=lambda bid: bid.difference, reverse=True)
 #
-#        lab = self.lab = accepted_bids[-1] if accepted_bids else None
-#        frb = self.frb = rejected_bids[0] if rejected_bids else None
+#        lab = self.lab = acceptedBids[-1] if accepted_bids else None
+#        frb = self.frb = rejectedBids[0] if rejected_bids else None
 #
 #        if lab is not None:
 #            logger.info("LAB: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
 #                        (lab.generator.name, lab.quantity,
-#                         lab.cleared_quantity, lab.price))
+#                         lab.clearedQuantity, lab.price))
 #        elif self.bids:
 #            logger.info("No accepted bids.")
 #
 #        if frb is not None:
 #            logger.info("FRB: %s, %.2fMW (%.2fMW), %.2f$/MWh" %
 #                        (frb.generator.name, frb.quantity,
-#                         frb.cleared_quantity, frb.price))
+#                         frb.clearedQuantity, frb.price))
 #        elif self.bids:
 #            logger.info("No rejected bids.")
 #
 #        return lao, fro, lab, frb
 
 
-    def _clear_prices(self):
+    def _clearPrices(self):
         """ Clears prices according to auction type.
         """
         for offbid in self.offers + self.bids:
-            if self.auction_type == DISCRIMINATIVE:
-                offbid.cleared_price = offbid.price
-            elif self.auction_type == FIRST_PRICE:
-                offbid.cleared_price = offbid.lmbda
+            if self.auctionType == DISCRIMINATIVE:
+                offbid.clearedPrice = offbid.price
+            elif self.auctionType == FIRST_PRICE:
+                offbid.clearedPrice = offbid.lmbda
             else:
                 raise ValueError
 
 
-#    def _clear_prices(self, lao, fro, lab, frb):
+#    def _clearPrices(self, lao, fro, lab, frb):
 #        """ Cleared offer/bid prices for different auction types.
 #        """
 #        for offbid in self.offers + self.bids:
 #
-#            if self.auction_type == DISCRIMINATIVE:
-#                offbid.cleared_price = offbid.price
-#            elif self.auction_type == LAO:
-#                offbid.cleared_price = offbid.lmbda + lao.price
-#            elif self.auction_type == FRO:
-#                offbid.cleared_price = offbid.lmbda + fro.price
-#            elif self.auction_type == LAB:
-#                offbid.cleared_price = offbid.lmbda + lab.price
-#            elif self.auction_type == FRB:
-#                offbid.cleared_price = offbid.lmbda + frb.price
-#            elif self.auction_type == FIRST_PRICE:
-#                offbid.cleared_price = offbid.lmbda
-#            elif self.auction_type == SECOND_PRICE:
+#            if self.auctionType == DISCRIMINATIVE:
+#                offbid.clearedPrice = offbid.price
+#            elif self.auctionType == LAO:
+#                offbid.clearedPrice = offbid.lmbda + lao.price
+#            elif self.auctionType == FRO:
+#                offbid.clearedPrice = offbid.lmbda + fro.price
+#            elif self.auctionType == LAB:
+#                offbid.clearedPrice = offbid.lmbda + lab.price
+#            elif self.auctionType == FRB:
+#                offbid.clearedPrice = offbid.lmbda + frb.price
+#            elif self.auctionType == FIRST_PRICE:
+#                offbid.clearedPrice = offbid.lmbda
+#            elif self.auctionType == SECOND_PRICE:
 #                if abs(lao.price) < 1e-5:
-#                    clr_prc = offbid.p_lmbda + min(fro.price, lab.price)
-#                    offbid.cleared_price = clr_prc
+#                    clearedPrice = offbid.lmbda + min(fro.price, lab.price)
+#                    offbid.clearedPrice = clearedPrice
 #                else:
-#                    clr_prc = offbid.p_lmbda + max(lao.price, frb.price)
-#                    offbid.cleared_price = clr_prc
-#            elif self.auction_type == SPLIT:
-#                split_price = (lao.price - lab.price) / 2.0
-#                offbid.cleared_price = offbid.lmbda + split_price
-#            elif self.auction_type == DUAL_LAOB:
+#                    clearedPrice = offbid.p_lmbda + max(lao.price, frb.price)
+#                    offbid.clearedPrice = clearedPrice
+#            elif self.auctionType == SPLIT:
+#                splitPrice = (lao.price - lab.price) / 2.0
+#                offbid.clearedPrice = offbid.lmbda + splitPrice
+#            elif self.auctionType == DUAL_LAOB:
 #                if isinstance(offbid, Offer):
-#                    offbid.cleared_price = offbid.lmbda + lao.price
+#                    offbid.clearedPrice = offbid.lmbda + lao.price
 #                else:
-#                    offbid.cleared_price = offbid.lmbda + lab.price
+#                    offbid.clearedPrice = offbid.lmbda + lab.price
 
 
-    def _clip_prices(self):
+    def _clipPrices(self):
         """ Clip cleared prices according to guarantees and limits.
         """
         # Guarantee that cleared offer prices are >= offers.
-        if self.guarantee_offer_price:
+        if self.guaranteeOfferPrice:
             for offer in self.offers:
-                if offer.accepted and offer.cleared_price < offer.price:
-                    offer.cleared_price = offer.price
+                if offer.accepted and offer.clearedPrice < offer.price:
+                    offer.clearedPrice = offer.price
 
         # Guarantee that cleared bid prices are <= bids.
-        if self.guarantee_bid_price:
+        if self.guaranteeBidPrice:
             for bid in self.bids:
-                if bid.accepted and bid.cleared_price > bid.price:
-                    bid.cleared_price = bid.price
+                if bid.accepted and bid.clearedPrice > bid.price:
+                    bid.clearedPrice = bid.price
 
         # Clip cleared offer prices.
-        if self.limits.has_key("max_cleared_offer"):
-            max_cleared_offer = self.limits["max_cleared_offer"]
+        if self.limits.has_key("maxClearedOffer"):
+            maxClearedOffer = self.limits["maxClearedOffer"]
 
             for offer in self.offers:
-                if offer.cleared_price > max_cleared_offer:
-                    offer.cleared_price = max_cleared_offer
+                if offer.clearedPrice > maxClearedOffer:
+                    offer.clearedPrice = maxClearedOffer
 
         # Clip cleared bid prices.
-        if self.limits.has_key("min_cleared_bid"):
-            min_cleared_bid = self.limits["min_cleared_bid"]
+        if self.limits.has_key("minClearedBid"):
+            minClearedBid = self.limits["minClearedBid"]
 
             for bid in self.bids:
-                if bid.cleared_price < min_cleared_bid:
-                    bid.cleared_price = min_cleared_bid
+                if bid.clearedPrice < minClearedBid:
+                    bid.clearedPrice = minClearedBid
 
         # Make prices uniform across all offers/bids for each generator after
         # clipping (except for discrim auction) since clipping may only affect
         # a single block of a multi-block generator.
-        if self.auction_type != DISCRIMINATIVE:
+        if self.auctionType != DISCRIMINATIVE:
             for g in self.case.generators:
-                g_offers = [of for of in self.offers if of.generator == g]
-                if g_offers:
-                    uniform_price = max([of.cleared_price for of in g_offers])
-                    for of in g_offers:
-                        of.cleared_price = uniform_price
+                gOffers = [of for of in self.offers if of.generator == g]
+                if gOffers:
+                    uniformPrice = max([of.clearedPrice for of in gOffers])
+                    for of in gOffers:
+                        of.clearedPrice = uniformPrice
 
-                g_bids = [bid for bid in self.bids if bid.vload == g]
-                if g_bids:
-                    uniform_price = min([bid.cleared_price for bid in g_bids])
-                    for bid in g_bids:
-                        bid.cleared_price = uniform_price
+                gBids = [bid for bid in self.bids if bid.vLoad == g]
+                if gBids:
+                    uniformPrice = min([bid.cleared_price for bid in gBids])
+                    for bid in gBids:
+                        bid.clearedPrice = uniformPrice
 
 
-    def _log_clearances(self):
+    def _logClearances(self):
         """ Logs offer/bid cleared values.
         """
         for offer in self.offers:
             logger.info("%.2fMW offer cleared at %.2f$/MWh for %s (%.2f)." %
-                        (offer.cleared_quantity, offer.cleared_price,
+                        (offer.clearedQuantity, offer.clearedPrice,
                          offer.generator.name, offer.revenue))
         for bid in self.bids:
             logger.info("%.2fMW bid cleared at %.2f$/MWh for %s (%.2f)." %
-                        (bid.cleared_quantity, bid.cleared_price,
-                         bid.vload.name, bid.revenue))
+                        (bid.clearedQuantity, bid.clearedPrice,
+                         bid.vLoad.name, bid.revenue))
 
 #------------------------------------------------------------------------------
 #  "_OfferBid" class:
@@ -644,7 +644,7 @@ class _OfferBid(object):
         power at a defined price.
     """
 
-    def __init__(self, generator, qty, prc, noload_cost=0.0, reactive=False):
+    def __init__(self, generator, qty, prc, noLoadCost=0.0, reactive=False):
         # Generating unit (dispatchable load) to which the offer (bid) applies.
         self.generator = generator
 
@@ -655,13 +655,13 @@ class _OfferBid(object):
         self.price = prc
 
         # Cost for running.
-        self.noload_cost = noload_cost
+        self.noLoadCost = noLoadCost
 
         # Does the offer/bid concern active or reactive power?
         self.reactive = reactive
 
         # Output at which the generator was dispatched.
-        self.total_quantity = 0.0
+        self.totalQuantity = 0.0
 
         # Nodal marginal active/reactive power price.
         self.lmbda = 0.0
@@ -676,10 +676,10 @@ class _OfferBid(object):
         self.cleared = False
 
         # Quantity of bid cleared by the market.
-        self.cleared_quantity = 0.0
+        self.clearedQuantity = 0.0
 
         # Price at which the bid was cleared.
-        self.cleared_price = 0.0
+        self.clearedQrice = 0.0
 
 
     @property
@@ -705,7 +705,7 @@ class _OfferBid(object):
         """ Returns the value in dollars per unit time of producing the cleared
             quantity at the cleared price.
         """
-        return self.cleared_quantity * self.cleared_price
+        return self.clearedQuantity * self.clearedPrice
 
 #------------------------------------------------------------------------------
 #  "Offer" class:
@@ -728,13 +728,13 @@ class Bid(_OfferBid):
     """ Defines a bid to buy a quantity of power at a specified price.
     """
 
-    def __init__(self, vload, qty, prc, reactive=False):
+    def __init__(self, vLoad, qty, prc, reactive=False):
         """ Initialises a new Bid instance.
         """
-        super(Bid, self).__init__(vload, qty, prc, reactive)
+        super(Bid, self).__init__(vLoad, qty, prc, reactive)
 
     @property
-    def vload(self):
+    def vLoad(self):
         """ Dispatchable load to which the bid applies. Synonym for the
             'generator' attribute.
         """
