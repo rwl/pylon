@@ -1,6 +1,6 @@
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
-""" This example demonstrates how to use Pylon to simulate an episodic power
+""" This example demonstrates how to use Pyreto to simulate an episodic power
 exchange auction market. """
 
 import sys
@@ -8,8 +8,9 @@ import logging
 import pylab
 import scipy
 
-from pylon import Case, OPF
 import pyreto
+
+from pylon import Case, OPF
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners import ENAC
@@ -25,7 +26,7 @@ logger.setLevel(logging.DEBUG)
 case = Case.load("data/auction_case.pickle")
 
 # Construct a market and specify any desired limits.
-market = pyreto.SmartMarket(case, price_cap=100.0)
+market = pyreto.SmartMarket(case, priceCap=100.0)
 
 # Define a 24-hour load profile with hourly values.
 p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
@@ -38,9 +39,9 @@ experiment = pyreto.EpisodicMarketExperiment([], [], market, p1h)
 for gen in case.generators:
     # The environment provides market and case sensor values and handles
     # submission of offers/bids to the market.
-    env = pyreto.ContinuousMarketEnvironment([gen], market, n_offbids=2)
+    env = pyreto.ContinuousMarketEnvironment([gen], market, numOffbids=2)
     # Reward is defined as profit.
-    task = pyreto.EpisodicProfitTask(env, maxsteps=len(p1h))
+    task = pyreto.EpisodicProfitTask(env, maxSteps=len(p1h))
     # Build an ANN for policy function approximation.
     net = buildNetwork(env.outdim, int(env.outdim*1.2), env.indim, bias=False)
     # Create an agent and select an episodic learner.
@@ -57,7 +58,7 @@ pylab.ion()
 plot = MultilinePlotter(autoscale=1.1, xlim=[0, len(p1h)], ylim=[0, 1])
 
 # Solve an initial OPF.
-OPF(case, market.loc_adjust=='dc').solve()
+OPF(case, market.locationalAdjustment=='dc').solve()
 
 days = 7 # number of samples per learning step
 weeks = 52 / days # number of roleouts

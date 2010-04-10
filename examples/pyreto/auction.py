@@ -78,7 +78,7 @@ logger.setLevel(logging.DEBUG)
 case = pylon.Case.load(AUCTION_CASE)
 
 # Inspect generator costs.
-#plot_gen_cost(case.generators)
+#plotGenCost(case.generators)
 
 # Create the market and associate learning agents with each generator.
 market = SmartMarket(case)

@@ -48,34 +48,34 @@ class DiscreteMarketEnvironment(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, generators, market, outdim=10, markups=None,
+    def __init__(self, generators, market, outdim=1, markups=None,
                  numOffbids=1):
         """ Initialises the environment.
         """
         super(DiscreteMarketEnvironment, self).__init__()
 
         # Generator ratings and marginal costs.  Set by 'generators' property.
-        self._gencost = {}
+        self.gencost = {}
 
         self.generators = generators
 
         # Auction that clears offer and bids using OPF results.
         self.market = market
 
-        self._numOffbids = 0
+        # List of all markup combinations.
+#        self._allActions = []
+
+        # List of offers/bids from the previous action.
+        self._lastAction = []
+
+#        self._numOffbids = 0
         self._markups = ()
 
         # Number of offers/bids a participant submits.
         self.numOffbids = numOffbids
 
         # Discrete markups allowed on each offer/bid.
-        self.markups = (0.0,0.1,0.2,0.3) if markups is None else markups
-
-        # List of all markup combinations.
-        self._allActions = []#list(xselections(markups, n_offbids))
-
-        # List of offers/bids from the previous action.
-        self._lastAction = []
+        self.markups = (0.0,) if markups is None else markups
 
         # Does a participant's offer/bid comprise quantity aswell as price.
 #        self.offbidQty = offbidQty
@@ -99,7 +99,7 @@ class DiscreteMarketEnvironment(object):
         #----------------------------------------------------------------------
 
         # Set the number of action values that the environment accepts.
-        self.indim = len(self._all_actions) * len(self.generators)
+        self.indim = len(self._allActions) * len(self.generators)
 
         # Set the number of sensor values that the environment produces.
         self.outdim = outdim
@@ -108,11 +108,11 @@ class DiscreteMarketEnvironment(object):
     #  "DiscreteMarketEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def getGenerators(self):
-        return self._generators
+    def _getGenerators(self):
+        return self.__generators
 
 
-    def setGenerators(self, generators):
+    def _setGenerators(self, generators):
         gencost = {}
         for g in generators:
             # Asset capacity limits.
@@ -127,43 +127,47 @@ class DiscreteMarketEnvironment(object):
             gencost[g]["qCost"] = g.q_cost
             gencost[g]["qCostModel"] = g.qcost_model
             # Amortised fixed costs.
-            gencost[g]["startup"] = g.startup
-            gencost[g]["shutdown"] = g.shutdown
-        self._gencost = gencost
+            gencost[g]["startup"] = g.c_startup
+            gencost[g]["shutdown"] = g.c_shutdown
+        self.gencost = gencost
 
-        self._generators = generators
+        self.__generators = generators
 
     # Portfolio of generators endowed to the agent.
-    generators = property(getGenerators, setGenerators)
+    generators = property(_getGenerators, _setGenerators)
 
 
-    def getMarkups(self):
+    def _getMarkups(self):
         """ Sets the list of possible markups on marginal cost allowed
             with each offer/bid.
         """
         return self._markups
 
 
-    def setMarkups(self, markups):
+    def _setMarkups(self, markups):
         n = self.numOffbids * len(self.generators)
-        self._all_actions = list(xselections(markups, n))
+        self._allActions = list(xselections(markups, n))
         self._markups = markups
 
-    markups = property(getMarkups, setMarkups)
+        print "mup", n, list(xselections(markups, n))
+
+    markups = property(_getMarkups, _setMarkups)
 
 
-    def getNumOffbids(self):
+    def _getNumOffbids(self):
         """ Set the number of offers/bids submitted to the market.
         """
         return self._numOffbids
 
 
-    def setNumOffbids(self, numOffbids):
+    def _setNumOffbids(self, numOffbids):
         n = numOffbids * len(self.generators)
         self._allActions = list(xselections(self.markups, n))
         self._numOffbids = numOffbids
 
-    numOffbids = property(getNumOffbids, setNumOffbids)
+        print "noff", n, list(xselections(self.markups, n))
+
+    numOffbids = property(_getNumOffbids, _setNumOffbids)
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -174,18 +178,18 @@ class DiscreteMarketEnvironment(object):
             of doubles.
         """
         # TODO: Load forecast as state.
-        if len(self.last_action):
-            prc = mean([ob.cleared_price for ob in self.last_action])
+        if len(self._lastAction):
+            prc = mean([ob.cleared_price for ob in self._lastAction])
         else:
             prc = 0.0
 
         # Divide the range of market prices in to discrete bands.
-        limit = self.market.price_cap
-        states = linspace(0.0, limit, self.outdim)
+        limit = self.market.priceCap
+        states = linspace(0.0, limit, self.outdim + 1)
 
         for i in range(len(states) - 1):
             if states[i] <= round(prc, 1) <= states[i + 1]:
-                logger.info("%s in state %d." % (self.name, i))
+                logger.info("%s in state %d." % (self.generators[0].name, i))
                 return array([i])
         else:
             raise ValueError, "Cleared price mean: %f" % prc
@@ -268,6 +272,9 @@ class ContinuousMarketEnvironment(object):
         """
         super(ContinuousMarketEnvironment, self).__init__()
 
+        # Generator ratings and marginal costs.  Set by 'generators' property.
+        self.gencost = {}
+
         self._generators = None
         # Generator instance that the agent controls.
         self.generators = generators
@@ -304,11 +311,13 @@ class ContinuousMarketEnvironment(object):
     #  "ContinuousMarketEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def getGenerators(self):
+    def _getGenerators(self):
+        """ Portfolio of generators endowed to the agent.
+        """
         return self._generators
 
 
-    def setGenerators(self, generators):
+    def _setGenerators(self, generators):
         gencost = {}
         for g in generators:
             # Asset capacity limits.
@@ -323,14 +332,13 @@ class ContinuousMarketEnvironment(object):
             gencost[g]["qCost"] = g.q_cost
             gencost[g]["qCostModel"] = g.qcost_model
             # Amortised fixed costs.
-            gencost[g]["startup"] = g.startup
-            gencost[g]["shutdown"] = g.shutdown
-        self._gencost = gencost
+            gencost[g]["startup"] = g.c_startup
+            gencost[g]["shutdown"] = g.c_shutdown
+        self.gencost = gencost
 
         self._generators = generators
 
-    # Portfolio of generators endowed to the agent.
-    generators = property(getGenerators, setGenerators)
+    generators = property(_getGenerators, _setGenerators)
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -340,9 +348,8 @@ class ContinuousMarketEnvironment(object):
         """ Returns the currently visible state of the world as a numpy array
             of doubles.
         """
-        g = self.asset
         case = self.market.case
-
+        g = self.generators[0]
         if not g.is_load:
             offbids = [x for x in self.market.offers if x.generator == g]
         else:
@@ -405,7 +412,7 @@ class ContinuousMarketEnvironment(object):
 
                 mk = sum(action[:i + 1])
 
-                prc = c * (1.0 - mk) if g.is_load else g * (1.0 + mk)
+                prc = c * (1.0 - mk) if g.is_load else c * (1.0 + mk)
 
                 if not g.is_load:
                     offer = Offer(g, qty, prc, costNoLoad)

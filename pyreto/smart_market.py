@@ -214,7 +214,7 @@ class SmartMarket(object):
 
         # Limit cleared offer prices after locational adjustments.
         if not self.limits.has_key('maxClearedOffer'):
-            self.limits['maxClearedOffer'] = self.price_cap
+            self.limits['maxClearedOffer'] = self.priceCap
 
         # Withhold invalid offers/bids.
         for offer in self.offers:
@@ -292,7 +292,7 @@ class SmartMarket(object):
         return solution["converged"]
 
 
-    def _nodal_prices(self, haveQ):
+    def _nodalPrices(self, haveQ):
         """ Sets the nodal prices associated with each offer/bid.
         """
         # Guarantee that cleared offer prices are >= offered prices.
@@ -336,7 +336,7 @@ class SmartMarket(object):
         return gteeOfferPrice, gteeBidPrice
 
 
-    def _run_auction(self, gteeOfferPrice, gteeBidPrice, haveQ):
+    def _runAuction(self, gteeOfferPrice, gteeBidPrice, haveQ):
         """ Clears an auction to determine the quantity and price for each
             offer/bid.
         """

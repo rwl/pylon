@@ -458,7 +458,7 @@ class Generator(Named):
         """
         assert self.is_load
         # Apply only those bids associated with this dispatchable load.
-        vl_bids = [bid for bid in bids if bid.vload == self]
+        vl_bids = [bid for bid in bids if bid.vLoad == self]
         # Filter out zero quantity bids.
         gt_zero = [bid for bid in vl_bids if round(bid.quantity, 4) > 0.0]
         # Ignore withheld offers.
@@ -498,7 +498,7 @@ class Generator(Named):
         # Sort offers/bids by price in ascending order.
         offbids.sort(key=lambda x: x.price, reverse=arebids)
 
-        points = [(0.0, offbids[0].noload_cost)]
+        points = [(0.0, offbids[0].noLoadCost)]
         # Form piece-wise linear total cost function.
         for i, offbid in enumerate(offbids):
             x1, y1 = points[i]

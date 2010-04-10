@@ -62,7 +62,7 @@ class ProfitTask(Task):
                                  self.env.gencost[g]["pCostModel"])
 
     #        offbids = self.env.market.getOffbids(g)
-            offbids = [ob for ob in self.env.lastAction if ob.generator == g]
+            offbids = [ob for ob in self.env._lastAction if ob.generator == g]
 
             revenue = t * sum([ob.revenue for ob in offbids])
 
@@ -99,7 +99,7 @@ class EpisodicProfitTask(ProfitTask):
         super(EpisodicProfitTask, self).__init__(environment)
 
         # Maximum number of time steps.
-        self.maxsteps = maxSteps
+        self.maxSteps = maxSteps
 
         # Current time step.
         self.t = 0
@@ -197,10 +197,12 @@ class EpisodicProfitTask(ProfitTask):
             else:
                 pLimit += self.env.gencost[g]["pMax"]
         limits.append((0.0, pLimit)) # quantity
-        cost = max([g.total_cost(pLimit,
-                                 self.env.gencost[g]["pCost"],
-                                 self.env.gencost[g]["pCostModel"]) \
-                                 for g in self.env.generators])
+#        cost = max([g.total_cost(pLimit,
+#                                 self.env.gencost[g]["pCost"],
+#                                 self.env.gencost[g]["pCostModel"]) \
+#                                 for g in self.env.generators])
+        cost = self.env.generators[0].total_cost(pLimit,
+            self.env.gencost[g]["pCost"], self.env.gencost[g]["pCostModel"])
         limits.append((0.0, cost)) # mcp
 
         # Case sensor limits.
