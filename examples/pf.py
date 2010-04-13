@@ -4,7 +4,10 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 in PSS/E Raw format. """
 
 import sys
+import logging
 import pylon
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 # Data files format if recognised according to file extension.
 case = pylon.Case.load("data/case30pwl.m")

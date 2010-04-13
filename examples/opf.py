@@ -3,10 +3,14 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 """ This example demonstrates how to solve an OPF problem. """
 
 import sys
+import logging
+
 from os.path import join, dirname
 
 import pylon.case
 from pylon import Case, OPF
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 # Define a path to the data file.
 CASE_FILE = join(dirname(pylon.case.__file__), "test", "data", "case30pwl.pkl")
