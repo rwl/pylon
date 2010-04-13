@@ -506,6 +506,42 @@ class PIPSSolverTest(unittest.TestCase):
         self.assertAlmostEqual(x[72], 1007.99, places=1)
         self.assertAlmostEqual(x[73], 1065.7, places=1)
 
+
+    def test_update_case(self):
+        """ Test solution from the PIPS solver.
+        """
+        case = self.case
+
+        _ = self.solver.solve()
+
+        pl = 4
+        self.assertAlmostEqual(case.buses[1].v_angle, -0.8097, pl)
+        self.assertAlmostEqual(case.buses[29].v_angle, -1.5253, pl)
+        self.assertAlmostEqual(case.buses[0].v_magnitude, 0.9836, pl)
+        self.assertAlmostEqual(case.buses[29].v_magnitude, 1.0391, pl)
+        self.assertAlmostEqual(case.buses[0].p_lmbda, 43.6247, pl)
+        self.assertAlmostEqual(case.buses[29].p_lmbda, 48.4146, pl)
+        self.assertAlmostEqual(case.buses[0].q_lmbda, 0.0, pl)
+        self.assertAlmostEqual(case.buses[7].q_lmbda, 18.0384, pl)
+        self.assertAlmostEqual(case.buses[0].mu_vmax, 0.0, pl)
+        self.assertAlmostEqual(case.buses[28].mu_vmax, 307.1142, pl)
+        self.assertAlmostEqual(case.buses[0].mu_vmin, 0.0, pl)
+        self.assertAlmostEqual(case.buses[29].mu_vmin, 0.0, pl)
+
+        self.assertAlmostEqual(case.branches[0].p_from, 22.5473, pl)
+        self.assertAlmostEqual(case.branches[0].p_to, -22.4421, pl)
+        self.assertAlmostEqual(case.branches[0].q_from, -1.8726, pl)
+        self.assertAlmostEqual(case.branches[0].q_to, -0.7021, pl)
+        self.assertAlmostEqual(case.branches[9].mu_s_from, 30.3085, pl)
+        self.assertAlmostEqual(case.branches[28].mu_s_to, 2.6488, pl)
+
+        self.assertAlmostEqual(case.generators[0].p, 36.0, pl)
+        self.assertAlmostEqual(case.generators[1].p, 30.7654, pl)
+        self.assertAlmostEqual(case.generators[0].mu_pmax, 0.0, pl)
+        self.assertAlmostEqual(case.generators[0].mu_pmin, 0.0, pl)
+        self.assertAlmostEqual(case.generators[0].mu_qmax, 0.0, pl)
+        self.assertAlmostEqual(case.generators[0].mu_qmin, 0.0, pl)
+
 #------------------------------------------------------------------------------
 #  "OPFTest" class:
 #------------------------------------------------------------------------------

@@ -976,6 +976,7 @@ class PIPSSolver(Solver):
                    mis.imag]  # reactive power mismatch for all buses
 
             # Inequality constraints (branch flow limits).
+            # (line constraint is actually on square of limit)
             flow_max = array([(l.rate_a / base_mva)**2 for l in ln])
             # FIXME: There must be a more elegant method for this.
             for i, v in enumerate(flow_max):
@@ -1176,7 +1177,96 @@ class PIPSSolver(Solver):
         # Solve using Python Interior Point Solver (PIPS).
         s = pips(costfcn, x0, A, l, u, xmin, xmax, consfcn, hessfcn, self.opt)
 
+        Vang, Vmag, Pgen, Qgen = self._update_solution_data(s)
+
+        self._update_case(bs, ln, gn, base_mva, Yf, Yt, Vang, Vmag, Pgen, Qgen,
+                          s["lmbda"])
+
         return s
+
+
+    def _update_solution_data(self, s):
+        """ Returns the voltage angle and generator set-point vectors.
+        """
+        x = s["x"]
+        Va_var = self.om.get_var("Va")
+        Vm_var = self.om.get_var("Vm")
+        Pg_var = self.om.get_var("Pg")
+        Qg_var = self.om.get_var("Qg")
+
+        Va = x[Va_var.i1:Va_var.iN + 1]
+        Vm = x[Vm_var.i1:Vm_var.iN + 1]
+        Pg = x[Pg_var.i1:Pg_var.iN + 1]
+        Qg = x[Pg_var.i1:Qg_var.iN + 1]
+
+#        f = 0.5 * dot(x.T * HH, x) + dot(CC.T, x)
+
+#        s["f"] = s["f"] + C0
+
+        # Put the objective function value in the solution.
+#        solution["f"] = f
+
+        return Va, Vm, Pg, Qg
+
+
+    def _update_case(self, bs, ln, gn, base_mva, Yf, Yt, Va, Vm, Pg, Qg,lmbda):
+        """ Calculates the result attribute values.
+        """
+        V = Vm * exp(1j * Va)
+
+#        Va_var = self.om.get_var("Va")
+        Vm_var = self.om.get_var("Vm")
+        Pmis = self.om.get_nln_constraint("Pmis")
+        Qmis = self.om.get_nln_constraint("Qmis")
+        Pg_var = self.om.get_var("Pg")
+        Qg_var = self.om.get_var("Qg")
+
+#        mu_l = lmbda["mu_l"]
+#        mu_u = lmbda["mu_u"]
+        lower = lmbda["lower"]
+        upper = lmbda["upper"]
+
+        ineqnonlin = lmbda["ineqnonlin"]
+        eqnonlin = lmbda["eqnonlin"]
+
+        # Indexes of constrained lines.
+        nl2 = len([i for i,l in enumerate(ln) if 0.0 < l.rate_a < 1e10])
+
+        for i, bus in enumerate(bs):
+            bus.v_angle = Va[i] * 180.0 / pi
+            bus.v_magnitude = Vm[i]
+
+            bus.p_lmbda = eqnonlin[Pmis.i1:Pmis.iN + 1][i] / base_mva
+            bus.q_lmbda = eqnonlin[Qmis.i1:Qmis.iN + 1][i] / base_mva
+
+            bus.mu_vmax = upper[Vm_var.i1:Vm_var.iN + 1][i]
+            bus.mu_vmin = lower[Vm_var.i1:Vm_var.iN + 1][i]
+
+        for l, branch in enumerate(ln):
+            Sf = V[branch.from_bus._i] * conj(Yf[l, :] * V) * base_mva
+            St = V[branch.to_bus._i] * conj(Yt[l, :] * V) * base_mva
+
+            branch.p_from = Sf.real[0]
+            branch.q_from = Sf.imag[0]
+            branch.p_to = St.real[0]
+            branch.q_to = St.imag[0]
+
+            if 0.0 < branch.rate_a < 1e10:
+                branch.mu_s_from = \
+                    2 * ineqnonlin[:nl2][l] * branch.rate_a / base_mva / base_mva
+                branch.mu_s_to = \
+                    2 * ineqnonlin[nl2:2*nl2][l] * branch.rate_a / base_mva / base_mva
+
+        for k, generator in enumerate(gn):
+            generator.p = Pg[k] * base_mva
+            generator.q = Qg[k] * base_mva
+            generator.v_magnitude = generator.bus.v_magnitude
+
+            generator.mu_pmax = upper[Pg_var.i1:Pg_var.iN + 1][k] / base_mva
+            generator.mu_pmin = lower[Pg_var.i1:Pg_var.iN + 1][k] / base_mva
+
+            generator.mu_qmax = upper[Qg_var.i1:Qg_var.iN + 1][k] / base_mva
+            generator.mu_qmin = lower[Qg_var.i1:Qg_var.iN + 1][k] / base_mva
 
 #------------------------------------------------------------------------------
 #  "OPFModel" class:
@@ -1330,6 +1420,16 @@ class OPFModel(object):
         """ Returns the constraint set with the given name.
         """
         for c in self.lin_constraints:
+            if c.name == name:
+                return c
+        else:
+            raise ValueError
+
+
+    def get_nln_constraint(self, name):
+        """ Returns the constraint set with the given name.
+        """
+        for c in self.nln_constraints:
             if c.name == name:
                 return c
         else:
