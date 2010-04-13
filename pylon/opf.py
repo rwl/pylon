@@ -94,7 +94,7 @@ class OPF(object):
 
         # Call the specific solver.
 #        if self.opt["verbose"]:
-#            print '\nPYLON Version %s, %s', "0.4.0", "March 2010"
+#            print '\nPYLON Version %s, %s', "0.4.2", "April 2010"
         if solver_klass is not None:
             result = solver_klass(om).solve()
         elif self.dc:
