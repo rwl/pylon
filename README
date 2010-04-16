@@ -9,7 +9,7 @@ used and extended easily.
 
 Pylon's features currently include:
 
-* DC and AC power flow,
+* DC and AC (Newton's method & Fast Decoupled) power flow,
 * DC and AC optimal power flow,
 * State estimation,
 * PSS/E, MATPOWER_ and PSAT_ data file parsers, and
@@ -21,7 +21,7 @@ Quick start
 
 With Python_, setuptools_ and SciPy_ installed, run::
 
-  $ easy_install pylon
+  # easy_install pylon
 
 Pylon performs an AC power flow and prints a ReStructuredText_ report by
 default::
@@ -36,9 +36,7 @@ Refer to the documentation for detailed usage information or type::
 License
 -------
 
-Pylon is licensed under the Apache License version 2.0 with the exception of
-the ``cvxopf`` module which is licensed under the GNU General Public
-License version 3.
+Pylon is licensed under the `Apache License`_ version 2.0.
 
 -------
 Credits
@@ -60,4 +58,5 @@ consortium.
 .. _MATPOWER: http://www.pserc.cornell.edu/matpower/
 .. _PSAT: http://www.power.uwaterloo.ca/~fmilano/psat.htm
 .. _ReStructuredText: http://docutils.sf.net/rst.html
+.. _`Apache License`: http://www.apache.org/licenses/LICENSE-2.0.html
 

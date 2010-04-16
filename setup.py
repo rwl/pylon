@@ -35,7 +35,8 @@ else:
 
 setup(author="Richard Lincoln",
       author_email="r.w.lincoln@gmail.com",
-      description="Port of MATPOWER to the Python programming language.",
+      description="Port of MATPOWER to Python.",
+      long_description = open('README').read().strip(),
       url="http://rwl.github.com/pylon",
       version="0.4.2",
       entry_points={"console_scripts": ["pylon = pylon.main:main"]},
