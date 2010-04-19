@@ -224,9 +224,12 @@ def main():
             solver = OPF(case, False)
         elif options.solver == "udopf":
             solver = UDOPF(case)
+        elif options.solver == "none":
+            solver = None
         else:
             logger.critical("Invalid solver [%s]." % options.solver)
-            sys.exit(1)
+#            sys.exit(1)
+            solver = None
 
         # Output writer selection.
         if options.output_type == "matpower":
@@ -244,7 +247,8 @@ def main():
             logger.critical("Invalid output type [%s]." % options.output_type)
             sys.exit(1)
 
-        solver.solve()
+        if solver is not None:
+            solver.solve()
         if not options.no_report:
             writer.write(outfile)
     else:
