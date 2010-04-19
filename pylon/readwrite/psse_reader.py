@@ -105,7 +105,9 @@ class PSSEReader(CaseReader):
         bus_data = file.next().split(",")
         while bus_data[0].strip()[0] != "0":
             bus = Bus()
-            self.bus_map[int(bus_data[0].strip())] = bus
+            i = int(bus_data[0].strip())
+            self.bus_map[i] = bus
+            bus._i = i
             bus.name =  bus_data[1].strip("'").strip()
             bus.v_base = float(bus_data[2])
             bus.type = bustype_map[int(bus_data[3])]
