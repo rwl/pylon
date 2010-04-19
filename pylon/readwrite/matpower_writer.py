@@ -64,6 +64,8 @@ class MATPOWERWriter(CaseWriter):
         else:
             self._fcn_name = self.case.name
 
+        self._fcn_name = self._fcn_name.replace(",", "").replace(" ", "_")
+
         super(MATPOWERWriter, self).write(file_or_filename)
 
 
