@@ -805,6 +805,7 @@ class Case(Named, Serializable):
 
         self.reset()
         self.index_buses()
+        self.index_branches()
 
         Va = angle(V)
         Vm = abs(V)
@@ -814,7 +815,8 @@ class Case(Named, Serializable):
 
         # Update Qg for all gens and Pg for swing bus.
 #        gbus = [g.bus._i for g in generators]
-        refgen = [g.bus._i for g in generators if g.bus.type == REFERENCE]
+        refgen = [i for i, g in enumerate(generators)
+                  if g.bus.type == REFERENCE]
 
         # Compute total injected bus powers.
 #        Sg = V[gbus] * conj(Ybus[gbus, :] * V)
@@ -846,17 +848,19 @@ class Case(Named, Serializable):
         if len(refgen) > 1:
             pass
 
+        br = [l._i for l in branches]
+        f_idx = [l.from_bus._i for l in branches]
+        t_idx = [l.to_bus._i for l in branches]
+
+        Sf = V[f_idx] * conj(Yf[br, :] * V) * self.base_mva
+        St = V[t_idx] * conj(Yt[br, :] * V) * self.base_mva
+
         # Complex power at "from" bus.
         for i, l in enumerate(branches):
-            idx_f = l.from_bus._i
-            idx_t = l.to_bus._i
-            Sf = V[idx_f] * conj(Yf[i, :] * V) * self.base_mva
-            St = V[idx_t] * conj(Yt[i, :] * V) * self.base_mva
-
-            l.p_from = Sf.real[0]
-            l.q_from = Sf.imag[0]
-            l.p_to = St.real[0]
-            l.q_to = St.imag[0]
+            l.p_from = Sf[i].real
+            l.q_from = Sf[i].imag
+            l.p_to = St[i].real
+            l.q_to = St[i].imag
 
     #--------------------------------------------------------------------------
     #  Reset case results:

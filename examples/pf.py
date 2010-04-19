@@ -13,7 +13,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 case = pylon.Case.load("data/case30pwl.m")
 
 # Pass the case to the solver and solve.
-pylon.NewtonPF(case).solve()
+pylon.NewtonPF(case, iter_max=20).solve()
 #pylon.FastDecoupledPF(case, method="XB").solve()
 
 # Print a report to screen.

@@ -105,9 +105,14 @@ class _ACPF(object):
         self.case.index_buses(b)
 
         # Index buses accoding to type.
-        try:
-            _, pq, pv, pvpq = self._index_buses(b)
-        except SlackBusError:
+#        try:
+#            _, pq, pv, pvpq = self._index_buses(b)
+#        except SlackBusError:
+#            logger.error("Swing bus required for DCPF.")
+#            return {"converged": False}
+
+        refs, pq, pv, pvpq = self._index_buses(b)
+        if len(refs) != 1:
             logger.error("Swing bus required for DCPF.")
             return {"converged": False}
 
@@ -147,6 +152,9 @@ class _ACPF(object):
                 repeat = False
 
         elapsed = time() - t0
+
+        if success:
+            logger.info("AC power flow converged in %.3fs" % elapsed)
 
         return {"success": success, "elapsed": elapsed, "iterations": i, "V":V}
 
@@ -237,6 +245,13 @@ class NewtonPF(_ACPF):
             F = self._evaluate_function(Ybus, V, Sbus, pv, pq)
             converged = self._check_convergence(F)
             i += 1
+
+        if converged:
+            logger.info("Newton's method power flow converged in %d "
+                        "iterations." % i)
+        else:
+            logger.info("Newton's method power flow did not converge in %d "
+                        "iterations." % i)
 
         return V, converged, i
 
