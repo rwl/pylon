@@ -9,8 +9,8 @@ ns = "http://www.opengis.net/kml/2.2"
 
 file = zipfile.ZipFile("national_grid.kmz", "r")
 
-#tree = ET.parse(file.open("doc.kml")) # Python 2.6 and later.
-tree = ET.parse("doc.kml")
+tree = ET.parse(file.open("doc.kml")) # Python 2.6 and later.
+#tree = ET.parse("doc.kml")
 root = tree.getroot()
 
 path_root = ET.Element("{%s}kml" % ns)
@@ -18,13 +18,18 @@ doc = ET.SubElement(path_root, "{%s}Document" % ns)
 
 style400 = ET.SubElement(doc, "{%s}Style" % ns, id="line400")
 linestyle400 = ET.SubElement(style400, "{%s}LineStyle" % ns)
-ET.SubElement(linestyle400, "{%s}color" % ns).text = "7f00ffff"
-ET.SubElement(linestyle400, "{%s}width" % ns).text = "4"
+ET.SubElement(linestyle400, "{%s}color" % ns).text = "7f00ffff" # aabbggrr
+ET.SubElement(linestyle400, "{%s}width" % ns).text = "5"
 
 style275 = ET.SubElement(doc, "{%s}Style" % ns, id="line275")
 linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
-ET.SubElement(linestyle275, "{%s}color" % ns).text = "7f7fffff"
-ET.SubElement(linestyle275, "{%s}width" % ns).text = "2"
+ET.SubElement(linestyle275, "{%s}color" % ns).text = "7f3030ff" # aabbggrr FF3030
+ET.SubElement(linestyle275, "{%s}width" % ns).text = "4"
+
+style275 = ET.SubElement(doc, "{%s}Style" % ns, id="line132")
+linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
+ET.SubElement(linestyle275, "{%s}color" % ns).text = "7fffbf00" # aabbggrr 00BFFF
+ET.SubElement(linestyle275, "{%s}width" % ns).text = "3"
 
 DATA_DIR = "./data/"
 
@@ -41,8 +46,6 @@ for path in BRANCH_DATA:
     for row in reader:
         node1_id = row[0][:4]
         node2_id = row[1][:4]
-
-
 
 #        pl1 = root.find(".//{%s}Placemark[@description='%s']" % (ns, node1_id))
 #        pl2 = root.find(".//{%s}Placemark[@description='%s']" % (ns, node1_id))
@@ -81,6 +84,8 @@ for path in BRANCH_DATA:
                     ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = "line400"
                 elif row[0][4] == "2":
                     ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = "line275"
+                elif row[0][4] == "1":
+                    ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = "line132"
 
             ls = ET.SubElement(pl_pth, "{%s}LineString" % ns)
 
