@@ -244,8 +244,7 @@ def get_transformers(path, voltage_map, others=None):
         b = float(row[4]) / 100.0
         rate_a = float(row[5])
 
-        l = pylon.Branch(node1, node2, name=node1.name, r=r, x=x, b=b,
-                         rate_a=rate_a)
+        l = pylon.Branch(node1, node2, name=node1.name, r=r, x=x, b=b, ratio=1.0, rate_a=rate_a)
         branches.append(l)
 
     return branches
@@ -441,11 +440,14 @@ def main():
 #        add_loads(path, bus_map11, 11, maps)
 
         case = pylon.Case(buses=buses, branches=branches, generators=generators)
+        case.index_buses(start=1)
 
         root, _ = os.path.splitext(os.path.basename(path))
         ident = root.split("-")[-1]
-        case.save_matpower("/tmp/ngt-%s.m" % ident)
-#        case.save_psse("/tmp/ngt.raw")
+        case.name = "NGET-%s" % ident
+
+#        case.save_matpower("/tmp/ngt-%s.m" % ident)
+        case.save_psse("/tmp/ngt-%s.raw" % ident)
 
 
 if __name__ == '__main__':

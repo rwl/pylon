@@ -136,7 +136,7 @@ class Branch(Named):
 
     def __init__(self, from_bus, to_bus, name=None, online=True, r=0.0,
             x=0.0, b=0.0, rate_a=999.0, rate_b=999.0, rate_c=999.0,
-            ratio=1.0, phase_shift=0.0, ang_min=-360.0, ang_max=360.0):
+            ratio=0.0, phase_shift=0.0, ang_min=-360.0, ang_max=360.0):
         """ Initialises a new Branch instance.
         """
         # From/source/start bus.
@@ -307,20 +307,20 @@ class Case(Named, Serializable):
     #  Update indicies:
     #--------------------------------------------------------------------------
 
-    def index_buses(self, buses=None):
+    def index_buses(self, buses=None, start=0):
         """ Updates the indices of all case buses.
         """
         bs = self.connected_buses if buses is None else buses
         for i, b in enumerate(bs):
-            b._i = i
+            b._i = start + i
 
 
-    def index_branches(self, branches=None):
+    def index_branches(self, branches=None, start=0):
         """ Updates the indices for all brnaches.
         """
         ln = self.online_branches if branches is None else branches
         for i, l in enumerate(ln):
-            l._i = i
+            l._i = start + i
 
     #--------------------------------------------------------------------------
     #  Bus injections:

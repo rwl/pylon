@@ -193,6 +193,16 @@ def pickle_matpower_cases(case_paths, case_format=2):
         pylon.readwrite.PickleWriter(case).write(pickled_case_path)
 
 #------------------------------------------------------------------------------
+#  Compare floats for equality:
+#------------------------------------------------------------------------------
+
+def feq(a, b, diff=0.00000001):
+    if abs(a - b) < diff:
+        return 1
+    else:
+        return 0
+
+#------------------------------------------------------------------------------
 #  "CaseReport" class:
 #------------------------------------------------------------------------------
 

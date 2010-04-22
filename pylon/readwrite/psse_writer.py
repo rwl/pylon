@@ -21,9 +21,13 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
+import time
+
 from pylon.readwrite.common import CaseWriter
 
 from pylon import PQ, PV, REFERENCE, ISOLATED
+
+from pylon.util import feq
 
 #------------------------------------------------------------------------------
 #  "PSSEWriter" class:
@@ -45,10 +49,12 @@ class PSSEWriter(CaseWriter):
         """
         change_code = 0
         s_base = self.case.base_mva
-        file.write("%d, %8.2f, 30 / PSS(tm)E-30 RAW created by pylon %s\n" %
-                   (change_code, s_base, "date"))
+        timestr = time.strftime("%Y%m%d%H%M", time.gmtime())
+        file.write("%d, %8.2f, 30 / PSS(tm)E-30 RAW created by Pylon (%s).\n" %
+                   (change_code, s_base, timestr))
         file.write(" %s\n" % self.case.name)
-        file.write("\n")
+        file.write(" %d BUSES, %d BRANCHES\n" %
+                   (len(self.case.buses), len(self.case.branches)))
 
 
     def write_bus_data(self, file):
@@ -59,7 +65,6 @@ class PSSEWriter(CaseWriter):
                      "area", "zone",
                      "v_magnitude_guess", "v_angle_guess"]
 
-
         for bus in self.case.buses:
             vals = [getattr(bus, a) for a in bus_attrs]
             d = {PQ: 1, PV: 2, REFERENCE: 3, ISOLATED: 4}
@@ -68,7 +73,7 @@ class PSSEWriter(CaseWriter):
 
 #            print len(vals), vals
 
-            file.write("%6d,'%10s',%10.4f,%d,%10.3f,%10.3f,%4d,%4d,%10.3f,"
+            file.write("%6d,'%-10s',%10.4f,%d,%10.3f,%10.3f,%4d,%4d,%10.3f,"
                        "%10.3f%4d\n" % tuple(vals))
         file.write(" 0 / END OF BUS DATA, BEGIN LOAD DATA\n")
 
@@ -77,14 +82,15 @@ class PSSEWriter(CaseWriter):
         load_attrs = ["_i", "area", "zone", "p_demand", "q_demand"]
 
         for bus in self.case.buses:
-            vals = [getattr(bus, a) for a in load_attrs]
-            vals.insert(1, 1) # STATUS
-            vals.insert(1, "1 ") # ID
-            vals.extend([0., 0., 0., 0.])
-            vals.append(1) # OWNER
+            if bus.p_demand > 0.0 or bus.q_demand > 0.0:
+                vals = [getattr(bus, a) for a in load_attrs]
+                vals.insert(1, 1) # STATUS
+                vals.insert(1, "1 ") # ID
+                vals.extend([0., 0., 0., 0.])
+                vals.append(1) # OWNER
 
-            file.write("%6d,'%s',%2d,%2d,%2d,%10.3f,%10.3f,%10.3f,%10.3f,"
-                       "%10.3f,%10.3f,%4d\n" % tuple(vals))
+                file.write("%6d,'%s',%2d,%2d,%2d,%10.3f,%10.3f,%10.3f,%10.3f,"
+                           "%10.3f,%10.3f,%4d\n" % tuple(vals))
 
         file.write(" 0 / END OF LOAD DATA, BEGIN GENERATOR DATA\n")
 
@@ -110,7 +116,7 @@ class PSSEWriter(CaseWriter):
             vals.append(generator.p_min)
             vals.extend([1, 1.0]) # O1,F1
 
-            file.write("%d,'%s',%10.3f,%10.3f,%10.3f,%10.3f,%10.3f,%6d,%10.3f,"
+            file.write("%6d,'%s',%10.3f,%10.3f,%10.3f,%10.3f,%10.5f,%6d,%10.3f,"
                        "%10.5f,%10.5f,%10.5f,%10.5f,%7.5f,%d,%7.1f,%10.3f,"
                        "%10.3f,%4d,%6.4f\n" % tuple(vals))
         file.write(" 0 / END OF GENERATOR DATA, BEGIN NON-TRANSFORMER BRANCH DATA\n")
@@ -123,7 +129,7 @@ class PSSEWriter(CaseWriter):
         branch_attr = ["r", "x", "b", "rate_a", "rate_b", "rate_c"]
 
         for branch in self.case.branches:
-            if branch.ratio == 0.0:
+            if feq(branch.ratio, 0.0):
                 vals = [getattr(branch, a) for a in branch_attr]
 
                 vals.insert(0, "1 ")
@@ -143,7 +149,7 @@ class PSSEWriter(CaseWriter):
         # WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD1,CONT1,RMA1,RMI1,VMA1,VMI1,NTP1,TAB1,CR1,CX1
         # WINDV2,NOMV2
         for branch in self.case.branches:
-            if branch.ratio != 0.0:
+            if not feq(branch.ratio, 0.0):
                 vals = []
                 vals.append(branch.from_bus._i)
                 vals.append(branch.to_bus._i)
@@ -154,7 +160,7 @@ class PSSEWriter(CaseWriter):
                 vals.extend([1, 1.0]) # O1,F1
 
                 file.write("%6d,%6d,%6d,'%2s',%d,%d,%d,%10.3f,%10.3f,%d,"
-                           "'%12s',%d,%4d,%6.4f\n" % tuple(vals))
+                           "'%-12s',%d,%4d,%6.4f\n" % tuple(vals))
                 file.write("%8.3f,%8.3f,%10.2f\n" % (branch.r, branch.x,
                                                    self.case.base_mva))
 
