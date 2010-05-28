@@ -1,8 +1,11 @@
 Pylon
 Copyright 2007-2010 Richard Lincoln
 
-This product includes software developed at
-The Institute for Energy and Environment (http://www.instee.strath.ac.uk).
+This product includes software developed at the Institute for Energy and
+Environment (http://www.instee.strath.ac.uk).
 
-Pylon is derived from MATPOWER -- developed at
-PSERC (Cornell) (http://www.pserc.cornell.edu/matpower/).
+Pylon is derived from MATPOWER, developed by Ray Zimmerman at PSERC (Cornell)
+(http://www.pserc.cornell.edu/matpower/).
+
+Pylon is derived from MatDyn, developed by Stijn Cole at the Katholieke
+Universiteit Leuven (http://www.esat.kuleuven.be/electa/teaching/matdyn/).
