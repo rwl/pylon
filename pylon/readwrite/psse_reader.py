@@ -173,7 +173,7 @@ class PSSEReader(CaseReader):
         while trx_data[0].strip()[0] != "0":
             trx_data2 = file.next().split(",")
             trx_data3 = file.next().split(",")
-            _ = file.next().split(",") # second winding
+            trx_data4 = file.next().split(",") # second winding
             if len(trx_data2) < 5:
                 from_bus = self.bus_map[abs(int(trx_data[0]))]
                 to_bus = self.bus_map[abs(int(trx_data[1]))]
@@ -197,8 +197,72 @@ class PSSEReader(CaseReader):
                 case.branches.append(l)
                 trx_data = file.next().split(",")
             else:
-                _ = file.next().split(",") # third winding
-                trx_data = file.next().split(",")
+                trx_data5 = file.next().split(",") # third winding
+                # Three-winding transformers are modelled as a group of three
+                # two-winding transformers with a fictitious neutral bus.
+                tmp_bus = Bus()
+                bus1 = self.bus_map[abs(int(trx_data[0]))]
+                bus2 = self.bus_map[abs(int(trx_data[1]))]
+                bus3 = self.bus_map[abs(int(trx_data[2]))]
+                l1 = Branch(tmp_bus, bus1)
+                l2 = Branch(tmp_bus, bus2)
+                l3 = Branch(tmp_bus, bus3)
+
+                b = float(trx_data[8]) # MAG2
+
+                r12 = float(trx_data2[0])
+                x12 = float(trx_data2[1])
+                r23 = float(trx_data2[3])
+                x23 = float(trx_data2[4])
+                r31 = float(trx_data2[6])
+                x31 = float(trx_data2[7])
+
+                l1.r = 0.5 * (r12 + r31 - r23)
+                l1.x = 0.5 * (x12 + x31 - x23)
+                l2.r = 0.5 * (r12 + r23 - r31)
+                l2.x = 0.5 * (x12 + x23 - x31)
+                l3.r = 0.5 * (r23 + r31 - r12)
+                l3.x = 0.5 * (x23 + x31 - x12)
+
+                assert r12 == l1.r + l2.r
+
+
+                l1.ratio = float(trx_data3[0])
+                l1.phase_shift = float(trx_data3[2])
+                l2.ratio = float(trx_data4[0])
+                l2.phase_shift = float(trx_data4[2])
+                l3.ratio = float(trx_data5[0])
+                l3.phase_shift = float(trx_data5[2])
+
+                rate_a1 = float(trx_data3[3])
+                rate_b1 = float(trx_data3[4])
+                rate_c1 = float(trx_data3[5])
+                if rate_a1 > 0.0:
+                    l1.rate_a = rate_a1
+                if rate_b1 > 0.0:
+                    l1.rate_b = rate_b1
+                if rate_c1 > 0.0:
+                    l1.rate_c = rate_c1
+
+                rate_a2 = float(trx_data4[3])
+                rate_b2 = float(trx_data4[4])
+                rate_c2 = float(trx_data4[5])
+                if rate_a2 > 0.0:
+                    l2.rate_a = rate_a2
+                if rate_b2 > 0.0:
+                    l2.rate_b = rate_b2
+                if rate_c2 > 0.0:
+                    l2.rate_c = rate_c2
+
+                rate_a3 = float(trx_data5[3])
+                rate_b3 = float(trx_data5[4])
+                rate_c3 = float(trx_data5[5])
+                if rate_a3 > 0.0:
+                    l3.rate_a = rate_a3
+                if rate_b2 > 0.0:
+                    l3.rate_b = rate_b3
+                if rate_c2 > 0.0:
+                    l3.rate_c = rate_c3
 
         return case
 
