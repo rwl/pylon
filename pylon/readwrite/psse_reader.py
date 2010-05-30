@@ -201,6 +201,9 @@ class PSSEReader(CaseReader):
                 # Three-winding transformers are modelled as a group of three
                 # two-winding transformers with a fictitious neutral bus.
                 tmp_bus = Bus()
+                tmp_bus.name = "n" + tmp_bus.name
+                tmp_bus._i = len(case.buses) + 1
+
                 bus1 = self.bus_map[abs(int(trx_data[0]))]
                 bus2 = self.bus_map[abs(int(trx_data[1]))]
                 bus3 = self.bus_map[abs(int(trx_data[2]))]
@@ -263,6 +266,98 @@ class PSSEReader(CaseReader):
                     l3.rate_b = rate_b3
                 if rate_c2 > 0.0:
                     l3.rate_c = rate_c3
+
+                case.buses.append(tmp_bus)
+                case.branches.append(l1)
+                case.branches.append(l2)
+                case.branches.append(l3)
+
+                trx_data = file.next().split(",")
+
+        # Area interchange data.
+        # I, ISW, PDES, PTOL, 'ARNAME'
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring area interchange data.")
+            trx_data = file.next().split(",")
+
+        # Two-terminal DC line data.
+        # I,MDC,RDC,SETVL,VSCHD,VCMOD,RCOMP,DELTI,METER,DCVMIN,CCCITMX,CCCACC
+        # IPR,NBR,ALFMX,ALFMN,RCR,XCR,EBASR,TRR,TAPR,TMXR,TMNR,STPR,ICR,IFR,ITR,IDR,XCAPR
+        # IPI,NBI,GAMMX,GAMMN,RCI,XCI,EBASI,TRI,TAPI,TMXI,TMNI,STPI,ICI,IFI,ITI,IDI,XCAPI
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring two-terminal DC line data.")
+            trx_data = file.next().split(",")
+
+        # VSC DC line data.
+        # 'NAME', MDC, RDC, O1, F1, ... O4, F4
+        # IBUS,TYPE,MODE,DOCET,ACSET,ALOSS,BLOSS,MINOSS,SMAX,IMAX,PWF,MAXQ,MINQ,
+        # REMOT,RMPCT
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring VSC DC line data.")
+            trx_data = file.next().split(",")
+
+        # Switched shunt data.
+        # I,MODSW,VSWHI,VSWLO,SWREM,RMPCT,'RMIDNT',BINIT,N1,B1,N2,B2,...N8,B8
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            bus = self.bus_map[abs(int(trx_data[0]))]
+            bus.b_shunt += float(trx_data[7])
+            trx_data = file.next().split(",")
+
+        # Transformer impedance correction table.
+        # I, T1, F1, T2, F2, T3, F3, ... T11, F11
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring transformer X correction table data.")
+            trx_data = file.next().split(",")
+
+        # Multi-terminal dc line data.
+        # I, NCONV, NDCBS, NDCLN, MDC, VCONV, VCMOD, VCONVN
+        # IB,N,ANGMX,ANGMN,RC,XC,EBAS,TR,TAP,TPMX,TPMN,TSTP,SETVL,DCPF,MARG,CNVCOD
+        # IDC, IB, IA, ZONE, 'NAME', IDC2, RGRND, OWNER
+        # IDC, JDC, DCCKT, RDC, LDC
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring multi-terminal dc line data.")
+            trx_data = file.next().split(",")
+
+        # Multisection line data.
+        # I,J,ID,DUM1,DUM2,...DUM9
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring multisection line data.")
+            trx_data = file.next().split(",")
+
+        # Zone data.
+        # I,'ZONAME'
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring zone data.")
+            trx_data = file.next().split(",")
+
+        # Interarea transfer data.
+        # ARFROM, ARTO, TRID, PTRAN
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring interarea transfer data.")
+            trx_data = file.next().split(",")
+
+        # Owner data.
+        # I,'OWNAME'
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring owner data.")
+            trx_data = file.next().split(",")
+
+        # FACTS device data.
+        # N,I,J,MODE,PDES,QDES,VSET,SHMX,TRMX,VTMN,VTMX,VSMX,IMX,LINX,RMPCT,OWNER,SET1,SET2,VSREF
+        trx_data = file.next().split(",")
+        while trx_data[0].strip()[0] != "0":
+            logger.warning("Ignoring FACTS device data.")
+            trx_data = file.next().split(",")
 
         return case
 
