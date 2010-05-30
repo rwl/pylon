@@ -122,8 +122,8 @@ class PSSEReader(CaseReader):
         load_data = file.next().split(",")
         while load_data[0].strip()[0] != "0":
             bus = self.bus_map[int(load_data[0].strip())]
-            bus.p_demand = float(load_data[5])
-            bus.q_demand = float(load_data[6])
+            bus.p_demand += float(load_data[5])
+            bus.q_demand += float(load_data[6])
             load_data = file.next().split(",")
 
         #I,ID,PG,QG,QT,QB,VS,IREG,MBASE,ZR,ZX,RT,XT,GTAP,STAT,RMPCT,PT,PB,O1,F1
@@ -137,7 +137,7 @@ class PSSEReader(CaseReader):
             g.q_min = float(gen_data[5])
             g.v_magnitude = float(gen_data[6])
             g.base_mva = float(gen_data[8])
-            g.online = bool(gen_data[14])
+            g.online = bool(int(gen_data[14]))
             g.p_max = float(gen_data[16])
             g.p_min = float(gen_data[17])
             case.generators.append(g)
@@ -155,7 +155,7 @@ class PSSEReader(CaseReader):
             l.rate_a = float(branch_data[6])
             l.rate_b = float(branch_data[7])
             l.rate_c = float(branch_data[8])
-            l.online = bool(branch_data[13])
+            l.online = bool(int(branch_data[13]))
             case.branches.append(l)
             branch_data = file.next().split(",")
 
@@ -179,7 +179,7 @@ class PSSEReader(CaseReader):
                 to_bus = self.bus_map[abs(int(trx_data[1]))]
                 l = Branch(from_bus, to_bus)
                 l.name = trx_data[10].strip("'").strip()
-                l.online = bool(trx_data[11])
+                l.online = bool(int(trx_data[11]))
                 l.b = float(trx_data[8])
                 l.r = float(trx_data2[0])
                 l.x = float(trx_data2[1])
@@ -212,6 +212,14 @@ class PSSEReader(CaseReader):
                 l3 = Branch(tmp_bus, bus3)
 
                 b = float(trx_data[8]) # MAG2
+                l1.b = b / 3.0
+                l2.b = b / 3.0
+                l3.b = b / 3.0
+
+                on = bool(int(trx_data[11]))
+                l1.online = on
+                l2.online = on
+                l3.online = on
 
                 r12 = float(trx_data2[0])
                 x12 = float(trx_data2[1])
