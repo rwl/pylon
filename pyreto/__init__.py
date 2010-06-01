@@ -21,5 +21,6 @@ from experiment import MarketExperiment, EpisodicMarketExperiment
 from environment import DiscreteMarketEnvironment, ContinuousMarketEnvironment
 from task import ProfitTask, EpisodicProfitTask
 from roth_erev import RothErev, PropensityTable
+from opf import CaseEnvironment, MinimiseCostTask
 
 # EOF -------------------------------------------------------------------------
