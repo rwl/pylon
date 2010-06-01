@@ -28,11 +28,17 @@ env = pyreto.CaseEnvironment(case, p1h)
 
 # Create a task.
 task = pyreto.MinimiseCostTask(env)
+
 # Create a controller network.
-net = buildNetwork(len(case.buses), len(case.online_generators), bias=False)
+nb = len([bus for bus in case.buses if bus.type == pylon.PQ])
+ng = len([g for g in case.online_generators if g.bus.type != pylon.REFERENCE])
+net = buildNetwork(nb, ng, bias=False)
+
 # Create an agent and select an episodic learner.
 agent = LearningAgent(net, ENAC())
 
 # Create an experiment.
 experiment = EpisodicExperiment(task, agent)
-experiment.doEpisodes(number=100)
+all_rewards = experiment.doEpisodes(number=200)
+
+print "Min: %.3f" % -max(max(all_rewards))
