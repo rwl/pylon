@@ -1,0 +1,9 @@
+%%MatrixMarket matrix array real general
+%case6ww voltage angle reference lower bounds
+6 1
+ 0
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf

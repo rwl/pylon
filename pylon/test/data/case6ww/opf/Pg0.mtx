@@ -1,0 +1,6 @@
+%%MatrixMarket matrix array real general
+%case6ww initial active power set-point variable
+3 1
+ 0
+ 0.5
+ 0.6

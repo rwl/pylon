@@ -1,0 +1,6 @@
+%%MatrixMarket matrix array real general
+%case6ww active power set-point lower bounds
+3 1
+ 0.5
+ 0.375
+ 0.45
