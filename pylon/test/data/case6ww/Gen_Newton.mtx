@@ -1,5 +1,5 @@
 %%MatrixMarket matrix array real general
-%case6ww gen data with solution
+%case6ww gen data with Newton's method solution
 3 21
  1
  2

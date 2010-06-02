@@ -104,6 +104,25 @@ class CaseTest(unittest.TestCase):
         self.assertTrue(mfeq2(bxBpp, mpbxBpp))
 
 
+    def testBdc(self):
+        """ Test DCPF B matrices and phase shift injection vectors.
+        """
+        B, Bf, Pbusinj, Pfinj = self.case.Bdc
+
+        mpB = mmread(join(DATA_DIR, self.case_name, "B.mtx")).tocsr()
+        self.assertTrue(mfeq2(B, mpB))
+
+        mpBf = mmread(join(DATA_DIR, self.case_name, "Bf.mtx")).tocsr()
+        self.assertTrue(mfeq2(Bf, mpBf))
+
+        mpPbusinj = mmread(join(DATA_DIR, self.case_name,
+                                "Pbusinj.mtx")).flatten()
+        self.assertTrue(abs(max(Pbusinj - mpPbusinj)) < 1e-14)
+
+        mpPfinj = mmread(join(DATA_DIR, self.case_name, "Pfinj.mtx")).flatten()
+        self.assertTrue(abs(max(Pfinj - mpPfinj)) < 1e-14)
+
+
     def test_dSbus_dV(self):
         """ Test partial derivative of power injection w.r.t. voltage.
         """

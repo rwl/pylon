@@ -1,5 +1,5 @@
 %%MatrixMarket matrix array real general
-%case6ww bus data with solution
+%case6ww bus data with Newton's method solution
 6 13
  1
  2
