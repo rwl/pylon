@@ -203,6 +203,20 @@ def feq(a, b, diff=0.00000001):
         return 0
 
 #------------------------------------------------------------------------------
+#  Compare 2D matrices for floats for equality:
+#------------------------------------------------------------------------------
+
+def mfeq2(a, b, diff=1e-14):
+    if a.shape != b.shape:
+        return False
+    rows, cols = a.shape
+    for i in range(rows):
+        for j in range(cols):
+            if feq(a[i, j], b[i, j], diff) == False:
+                return False
+    return True
+
+#------------------------------------------------------------------------------
 #  "CaseReport" class:
 #------------------------------------------------------------------------------
 

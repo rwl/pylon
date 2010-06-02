@@ -66,9 +66,9 @@ class ACPFTest(unittest.TestCase):
 
         V0 = self.solver._initial_voltage(b, g)
 
-        mV0 = mmread(join(DATA_DIR, self.case_name, "V0.mtx")).flatten()
+        mpV0 = mmread(join(DATA_DIR, self.case_name, "V0.mtx")).flatten()
 
-        self.assertTrue(alltrue(V0 == mV0))
+        self.assertTrue(alltrue(V0 == mpV0))
 
 
 if __name__ == "__main__":

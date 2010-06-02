@@ -21,7 +21,7 @@ from generator import Generator, POLYNOMIAL, PW_LINEAR
 from util import CaseReport
 
 from dc_pf import DCPF
-from ac_pf import NewtonPF, FastDecoupledPF
+from ac_pf import NewtonPF, FastDecoupledPF, XB, BX
 
 from opf import OPF
 
