@@ -29,6 +29,7 @@ from scipy import array, alltrue
 from scipy.io.mmio import mmread
 
 from pylon import Case, OPF
+from pylon.opf import Solver, DCOPFSolver
 from pylon.util import mfeq2
 
 #------------------------------------------------------------------------------
@@ -36,7 +37,6 @@ from pylon.util import mfeq2
 #------------------------------------------------------------------------------
 
 DATA_DIR = join(dirname(__file__), "data")
-OPF_DIR = join(DATA_DIR, "opf")
 
 #------------------------------------------------------------------------------
 #  "DCOPFTest" class:
@@ -49,7 +49,7 @@ class DCOPFTest(unittest.TestCase):
 
         self.case_name = "case6ww"
         self.case = None
-        self.solver = None
+        self.opf = None
 
 
     def setUp(self):
@@ -182,6 +182,189 @@ class DCOPFTest(unittest.TestCase):
 
             self.assertTrue(mfeq2(ycon.A, Ay.tocsr()))
             self.assertTrue(alltrue(ycon.u == by.flatten()))
+
+#------------------------------------------------------------------------------
+#  "SolverTest" class:
+#------------------------------------------------------------------------------
+
+class SolverTest(unittest.TestCase):
+
+    def __init__(self, methodName='runTest'):
+        super(SolverTest, self).__init__(methodName)
+
+        self.case_name = "case6ww"
+        self.case = None
+        self.opf = None
+        self.om = None
+        self.solver = None
+
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
+        self.opf = OPF(self.case, dc=True)
+        self.om = self.opf._construct_opf_model(self.case)
+        self.solver = Solver(self.om)
+
+
+    def test_constraints(self):
+        """ Test equality and inequality constraints.
+        """
+        AA, ll, uu = self.solver._linear_constraints(self.om)
+
+        mpA = mmread(join(DATA_DIR, self.case_name, "opf", "A_DC.mtx"))
+        mpl = mmread(join(DATA_DIR, self.case_name, "opf", "l_DC.mtx"))
+        mpu = mmread(join(DATA_DIR, self.case_name, "opf", "u_DC.mtx"))
+
+        self.assertTrue(mfeq2(AA, mpA.tocsr()))
+        self.assertTrue(alltrue(ll == mpl.flatten()))
+        self.assertTrue(alltrue(uu == mpu.flatten()))
+
+
+    def test_var_bounds(self):
+        """ Test bounds on optimisation variables.
+        """
+        _, xmin, xmax = self.solver._var_bounds()
+
+#        mpx0 = mmread(join(DATA_DIR, self.case_name, "opf", "x0_DC.mtx"))
+        mpxmin = mmread(join(DATA_DIR, self.case_name, "opf", "xmin_DC.mtx"))
+        mpxmax = mmread(join(DATA_DIR, self.case_name, "opf", "xmax_DC.mtx"))
+
+#        self.assertTrue(alltrue(x0 == mpx0.flatten()))
+        self.assertTrue(alltrue(xmin == mpxmin.flatten()))
+        self.assertTrue(alltrue(xmax == mpxmax.flatten()))
+
+
+    def test_initial_point(self):
+        """ Test selection of an initial interior point.
+        """
+        b, l, g, _ = self.solver._unpack_model(self.om)
+        _, LB, UB = self.solver._var_bounds()
+        _, _, _, _, _, ny, _ = self.solver._dimension_data(b, l, g)
+        x0 = self.solver._initial_interior_point(b, g, LB, UB, ny)
+
+        mpx0 = mmread(join(DATA_DIR, self.case_name, "opf", "x0_DC.mtx"))
+
+        self.assertTrue(alltrue(x0 == mpx0.flatten()))
+
+#------------------------------------------------------------------------------
+#  "DCOPFSolverTest" class:
+#------------------------------------------------------------------------------
+
+class DCOPFSolverTest(unittest.TestCase):
+
+    def __init__(self, methodName='runTest'):
+        super(DCOPFSolverTest, self).__init__(methodName)
+
+        self.case_name = "case6ww"
+        self.case = None
+        self.opf = None
+        self.om = None
+        self.solver = None
+
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
+        self.opf = OPF(self.case, dc=True)
+        self.om = self.opf._construct_opf_model(self.case)
+        self.solver = DCOPFSolver(self.om)
+
+
+    def test_pwl_costs(self):
+        """ Test piecewise linear costs.
+        """
+        b, l, g, _ = self.solver._unpack_model(self.om)
+        _, ipwl, _, _, _, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Npwl, Hpwl, Cpwl, fparm_pwl, _ = \
+            self.solver._pwl_costs(ny, nxyz, ipwl)
+
+        try:
+            mpNpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Npwl.mtx"))
+        except ValueError:
+            mpNpwl = None
+        mpHpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Hpwl.mtx"))
+        mpCpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Cpwl.mtx"))
+        mpfparm = mmread(join(DATA_DIR, self.case_name, "opf","fparm_pwl.mtx"))
+
+        if Npwl is not None:
+            self.assertTrue(alltrue(Npwl == mpNpwl.flatten()))
+        if Hpwl is not None:
+            self.assertTrue(alltrue(Hpwl == mpHpwl.flatten()))
+        self.assertTrue(alltrue(Cpwl == mpCpwl.flatten()))
+#        self.assertTrue(alltrue(fparm_pwl == mpfparm.flatten()))
+
+
+    def test_poly_costs(self):
+        """ Test quadratic costs.
+        """
+        base_mva = self.om.case.base_mva
+        b, l, g, _ = self.solver._unpack_model(self.om)
+        ipol, _, _, _, _, _, nxyz = self.solver._dimension_data(b, l, g)
+        Npol, Hpol, Cpol, fparm_pol, _, _ = \
+            self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
+
+        mpNpol = mmread(join(DATA_DIR, self.case_name, "opf", "Npol.mtx"))
+        mpHpol = mmread(join(DATA_DIR, self.case_name, "opf", "Hpol.mtx"))
+        mpCpol = mmread(join(DATA_DIR, self.case_name, "opf", "Cpol.mtx"))
+        mpfparm = mmread(join(DATA_DIR, self.case_name, "opf","fparm_pol.mtx"))
+
+        self.assertTrue(mfeq2(Npol, mpNpol.tocsr()))
+        self.assertTrue(mfeq2(Hpol, mpHpol.tocsr()))
+        self.assertTrue(alltrue(Cpol == mpCpol.flatten()))
+        self.assertTrue(alltrue(fparm_pol == mpfparm.flatten()))
+
+
+    def test_combine_costs(self):
+        """ Test combination of pwl and poly costs.
+        """
+        base_mva = self.om.case.base_mva
+        b, l, g, _ = self.solver._unpack_model(self.om)
+        ipol, ipwl, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = self.solver._pwl_costs(ny, nxyz,
+                                                                      ipwl)
+        Npol, Hpol, Cpol, fparm_pol, _, npol = \
+            self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
+        NN, HHw, CCw, ffparm = \
+            self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
+                                       Npol, Hpol, Cpol, fparm_pol, npol, nw)
+
+        mpNN = mmread(join(DATA_DIR, self.case_name, "opf", "NN.mtx"))
+        mpHHw = mmread(join(DATA_DIR, self.case_name, "opf", "HHw.mtx"))
+        mpCCw = mmread(join(DATA_DIR, self.case_name, "opf", "CCw.mtx"))
+        mpffparm = mmread(join(DATA_DIR, self.case_name, "opf", "ffparm.mtx"))
+
+        self.assertTrue(mfeq2(NN, mpNN.tocsr()))
+        self.assertTrue(mfeq2(HHw, mpHHw.tocsr()))
+        self.assertTrue(alltrue(CCw == mpCCw.flatten()))
+        self.assertTrue(alltrue(ffparm == mpffparm.flatten()))
+
+
+    def test_coefficient_transformation(self):
+        """ Test transformation of quadratic coefficients for w into
+            coefficients for X.
+        """
+        base_mva = self.om.case.base_mva
+        b, l, g, _ = self.solver._unpack_model(self.om)
+        ipol, ipwl, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
+        Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl = \
+            self.solver._pwl_costs(ny, nxyz, ipwl)
+        Npol, Hpol, Cpol, fparm_pol, polycf, npol = \
+            self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
+        NN, HHw, CCw, ffparm = \
+            self.solver._combine_costs(Npwl, Hpwl, Cpwl, fparm_pwl, any_pwl,
+                                       Npol, Hpol, Cpol, fparm_pol, npol, nw)
+        HH, CC, _ = \
+            self.solver._transform_coefficients(NN, HHw, CCw, ffparm, polycf,
+                                                any_pwl, npol, nw)
+
+        mpHH = mmread(join(DATA_DIR, self.case_name, "opf", "HH.mtx"))
+        mpCC = mmread(join(DATA_DIR, self.case_name, "opf", "CC.mtx"))
+
+        self.assertTrue(mfeq2(HH, mpHH.tocsr()))
+        self.assertTrue(mfeq2(CC, mpCC.tocsr()))
 
 
 if __name__ == "__main__":
