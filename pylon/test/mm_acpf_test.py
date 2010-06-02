@@ -28,8 +28,9 @@ from os.path import join, dirname
 from scipy import array, alltrue
 from scipy.io.mmio import mmread
 
-from pylon import Case, NewtonPF, FastDecoupledPF
+from pylon import Case, NewtonPF, FastDecoupledPF, XB, BX
 from pylon.ac_pf import _ACPF
+from pylon.util import mfeq2
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -56,19 +57,50 @@ class ACPFTest(unittest.TestCase):
         """
         self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
 
-        self.solver = _ACPF(self.case)
-
 
     def testV0(self):
         """ Test the initial voltage vector.
         """
-        b, _, g, _, _, _, _ = self.solver._unpack_case(self.case)
+        solver = _ACPF(self.case)
+        b, _, g, _, _, _, _ = solver._unpack_case(self.case)
 
-        V0 = self.solver._initial_voltage(b, g)
+        V0 = solver._initial_voltage(b, g)
 
         mpV0 = mmread(join(DATA_DIR, self.case_name, "V0.mtx")).flatten()
 
         self.assertTrue(alltrue(V0 == mpV0))
+
+
+    def testNewtonV(self):
+        """ Test the voltage vector solution from Newton's method.
+        """
+        solution = NewtonPF(self.case).solve()
+
+        mpV = mmread(join(DATA_DIR, self.case_name, "V_Newton.mtx")).flatten()
+
+        self.assertTrue(abs(max(solution["V"] - mpV)) < 1e-14)
+
+
+    def testFastDecoupledPFVXB(self):
+        """ Test the voltage vector solution from the fast-decoupled method
+            (XB version).
+        """
+        solution = FastDecoupledPF(self.case, method=XB).solve()
+
+        mpV = mmread(join(DATA_DIR, self.case_name, "V_XB.mtx")).flatten()
+
+        self.assertTrue(abs(max(solution["V"] - mpV)) < 1e-14)
+
+
+    def testFastDecoupledPFVBX(self):
+        """ Test the voltage vector solution from the fast-decoupled method
+            (BX version).
+        """
+        solution = FastDecoupledPF(self.case, method=BX).solve()
+
+        mpV = mmread(join(DATA_DIR, self.case_name, "V_BX.mtx")).flatten()
+
+        self.assertTrue(abs(max(solution["V"] - mpV)) < 1e-14)
 
 
 if __name__ == "__main__":
