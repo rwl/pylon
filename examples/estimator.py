@@ -7,13 +7,14 @@ Crow."""
 import sys
 
 from pylon import Case, StateEstimator, Measurement, PF, PT, PG, VM
+from pylon.readwrite import MATPOWERReader
 
 from numpy import array
 
 DATA_FILE = "../pylon/test/data/case3bus_P6_6.m"
 
 # Load the case file.
-case = Case.load(DATA_FILE)
+case = MATPOWERReader(case_format=1).read(DATA_FILE)
 
 # Specify the measurements.
 measurements = [
