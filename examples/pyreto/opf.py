@@ -21,7 +21,7 @@ logger.setLevel(logging.DEBUG)
 case = pylon.Case.load("../data/case6ww.pkl")
 
 # Assume initial demand is peak demand and save it.
-Pd0 = [b.p_demand for b in case.buses if b.type == PQ]
+Pd0 = [b.p_demand for b in case.buses if b.type == pylon.PQ]
 
 # Define a 24-hour load profile with hourly values.
 p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
@@ -49,7 +49,7 @@ print "Min: %.3f" % -max(max(all_rewards))
 # Determine minimum cost using PIPS.
 min_cost = numpy.zeros(len(p1h))
 for i, fraction in enumerate(p1h):
-    for j, bus in enumerate([b for b in case.buses if b.type == PQ]):
+    for j, bus in enumerate([b for b in case.buses if b.type == pylon.PQ]):
         bus.p_demand = p1h[i] * Pd0[j]
     s = pylon.OPF(case).solve()
     min_cost[i] = s["f"]
