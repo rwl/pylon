@@ -743,7 +743,7 @@ class DCOPFSolver(Solver):
         # Constant term of cost.
         C0 = 1./2. * MR.T * HMR + sum(polycf[:, 2])
 
-        return HH, CC, C0
+        return HH, CC, C0[0]
 
 
     def _run_opf(self, HH, CC, AA, ll, uu, xmin, xmax, x0, opt):

@@ -365,6 +365,27 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertTrue(alltrue(CC == mpCC.flatten()))
 
 
+    def test_solution(self):
+        """ Test DC OPF solution.
+        """
+        solution = self.solver.solve()
+        lmbda = solution["lmbda"]
+
+        mpf = mmread(join(DATA_DIR, self.case_name, "opf", "f_DC.mtx"))
+        mpx = mmread(join(DATA_DIR, self.case_name, "opf", "x_DC.mtx"))
+        mpmu_l = mmread(join(DATA_DIR, self.case_name, "opf", "mu_l_DC.mtx"))
+        mpmu_u = mmread(join(DATA_DIR, self.case_name, "opf", "mu_u_DC.mtx"))
+        mpmuLB = mmread(join(DATA_DIR, self.case_name, "opf", "muLB_DC.mtx"))
+        mpmuUB = mmread(join(DATA_DIR, self.case_name, "opf", "muUB_DC.mtx"))
+
+        self.assertAlmostEqual(solution["f"], mpf[0], places=12)
+        self.assertTrue(abs(max(solution["x"] - mpx.flatten())) < 1e-12)
+        self.assertTrue(abs(max(lmbda["mu_l"] - mpmu_l.flatten())) < 1e-12)
+        self.assertTrue(abs(max(lmbda["mu_u"] - mpmu_u.flatten())) < 1e-12)
+        self.assertTrue(abs(max(lmbda["lower"] - mpmuLB.flatten())) < 1e-12)
+        self.assertTrue(abs(max(lmbda["upper"] - mpmuUB.flatten())) < 1e-12)
+
+
 if __name__ == "__main__":
     import logging, sys
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
