@@ -25,11 +25,11 @@ import unittest
 
 from os.path import join, dirname
 
-from scipy import array, alltrue
+from scipy import alltrue
 from scipy.io.mmio import mmread
 
 from pylon import Case, OPF
-from pylon.opf import Solver, DCOPFSolver
+from pylon.opf import Solver, DCOPFSolver, PIPSSolver
 from pylon.util import mfeq2
 
 #------------------------------------------------------------------------------
@@ -43,6 +43,8 @@ DATA_DIR = join(dirname(__file__), "data")
 #------------------------------------------------------------------------------
 
 class DCOPFTest(unittest.TestCase):
+    """ Defines a test case for DC OPF.
+    """
 
     def __init__(self, methodName='runTest'):
         super(DCOPFTest, self).__init__(methodName)
@@ -170,6 +172,25 @@ class DCOPFTest(unittest.TestCase):
         self.assertTrue(alltrue(ang.u == uang.flatten()))
 
 
+#    def testVLConstPF(self):
+#        """ Test dispatchable load, constant power factor constraints.
+#        """
+##        Avl = mmread(join(DATA_DIR, self.case_name, "opf", "Avl.mtx"))
+##        lvl = mmread(join(DATA_DIR, self.case_name, "opf", "lvl.mtx"))
+##        uvl = mmread(join(DATA_DIR, self.case_name, "opf", "uvl.mtx"))
+#        self.fail("Constant power factor constraints not implemented.")
+#
+#
+#    def testPQ(self):
+#        """ Test generator PQ capability curve constraints.
+#        """
+##        Apqh = mmread(join(DATA_DIR, self.case_name, "opf", "Apqh.mtx"))
+##        ubpqh = mmread(join(DATA_DIR, self.case_name, "opf", "ubpqh.mtx"))
+##        Apql = mmread(join(DATA_DIR, self.case_name, "opf", "Apql.mtx"))
+##        ubpql = mmread(join(DATA_DIR, self.case_name, "opf", "ubpql.mtx"))
+#        self.fail("Generator PQ capability curve constraints not implemented.")
+
+
     def testAy(self):
         """ Test basin constraints for piece-wise linear gen cost variables.
         """
@@ -177,8 +198,8 @@ class DCOPFTest(unittest.TestCase):
         _, ycon = self.opf._pwl_gen_costs(gn, self.case.base_mva)
 
         if ycon is not None:
-            Ay = mmread(join(DATA_DIR, self.case_name, "opf", "Ay.mtx"))
-            by = mmread(join(DATA_DIR, self.case_name, "opf", "by.mtx"))
+            Ay = mmread(join(DATA_DIR, self.case_name, "opf", "Ay_DC.mtx"))
+            by = mmread(join(DATA_DIR, self.case_name, "opf", "by_DC.mtx"))
 
             self.assertTrue(mfeq2(ycon.A, Ay.tocsr()))
             self.assertTrue(alltrue(ycon.u == by.flatten()))
@@ -187,10 +208,36 @@ class DCOPFTest(unittest.TestCase):
 #  "SolverTest" class:
 #------------------------------------------------------------------------------
 
-class SolverTest(unittest.TestCase):
+#class SolverTest(unittest.TestCase):
+#
+#    def __init__(self, methodName='runTest'):
+#        super(SolverTest, self).__init__(methodName)
+#
+#        self.case_name = "case6ww"
+#        self.case = None
+#        self.opf = None
+#        self.om = None
+#        self.solver = None
+#
+#
+#    def setUp(self):
+#        """ The test runner will execute this method prior to each test.
+#        """
+#        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
+#        self.opf = OPF(self.case, dc=True)
+#        self.om = self.opf._construct_opf_model(self.case)
+#        self.solver = Solver(self.om)
+
+#------------------------------------------------------------------------------
+#  "DCOPFSolverTest" class:
+#------------------------------------------------------------------------------
+
+class DCOPFSolverTest(unittest.TestCase):
+    """ Defines a test case for the DC OPF solver.
+    """
 
     def __init__(self, methodName='runTest'):
-        super(SolverTest, self).__init__(methodName)
+        super(DCOPFSolverTest, self).__init__(methodName)
 
         self.case_name = "case6ww"
         self.case = None
@@ -205,7 +252,7 @@ class SolverTest(unittest.TestCase):
         self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
         self.opf = OPF(self.case, dc=True)
         self.om = self.opf._construct_opf_model(self.case)
-        self.solver = Solver(self.om)
+        self.solver = DCOPFSolver(self.om)
 
 
     def test_constraints(self):
@@ -247,30 +294,6 @@ class SolverTest(unittest.TestCase):
         mpx0 = mmread(join(DATA_DIR, self.case_name, "opf", "x0_DC.mtx"))
 
         self.assertTrue(alltrue(x0 == mpx0.flatten()))
-
-#------------------------------------------------------------------------------
-#  "DCOPFSolverTest" class:
-#------------------------------------------------------------------------------
-
-class DCOPFSolverTest(unittest.TestCase):
-
-    def __init__(self, methodName='runTest'):
-        super(DCOPFSolverTest, self).__init__(methodName)
-
-        self.case_name = "case6ww"
-        self.case = None
-        self.opf = None
-        self.om = None
-        self.solver = None
-
-
-    def setUp(self):
-        """ The test runner will execute this method prior to each test.
-        """
-        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
-        self.opf = OPF(self.case, dc=True)
-        self.om = self.opf._construct_opf_model(self.case)
-        self.solver = DCOPFSolver(self.om)
 
 
     def test_pwl_costs(self):
@@ -384,6 +407,115 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertTrue(abs(max(lmbda["mu_u"] - mpmu_u.flatten())) < 1e-12)
         self.assertTrue(abs(max(lmbda["lower"] - mpmuLB.flatten())) < 1e-12)
         self.assertTrue(abs(max(lmbda["upper"] - mpmuUB.flatten())) < 1e-12)
+
+#------------------------------------------------------------------------------
+#  "PIPSSolverTest" class:
+#------------------------------------------------------------------------------
+
+class PIPSSolverTest(unittest.TestCase):
+    """ Defines a test case for the PIPS AC OPF solver.
+    """
+
+    def __init__(self, methodName='runTest'):
+        super(PIPSSolverTest, self).__init__(methodName)
+
+        self.case_name = "case6ww"
+        self.case = None
+        self.opf = None
+        self.om = None
+        self.solver = None
+
+
+    def setUp(self):
+        """ The test runner will execute this method prior to each test.
+        """
+        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
+        self.opf = OPF(self.case, dc=False)
+        self.om = self.opf._construct_opf_model(self.case)
+        self.solver = PIPSSolver(self.om)
+
+
+    def test_constraints(self):
+        """ Test equality and inequality constraints.
+        """
+        AA, ll, uu = self.solver._linear_constraints(self.om)
+
+        if AA is not None:
+            mpA = mmread(join(DATA_DIR, self.case_name, "opf", "A_AC.mtx"))
+            mpl = mmread(join(DATA_DIR, self.case_name, "opf", "l_AC.mtx"))
+            mpu = mmread(join(DATA_DIR, self.case_name, "opf", "u_AC.mtx"))
+
+            self.assertTrue(mfeq2(AA, mpA.tocsr()))
+            self.assertTrue(alltrue(ll == mpl.flatten()))
+            self.assertTrue(alltrue(uu == mpu.flatten()))
+
+
+    def test_var_bounds(self):
+        """ Test bounds on optimisation variables.
+        """
+        _, xmin, xmax = self.solver._var_bounds()
+
+        mpxmin = mmread(join(DATA_DIR, self.case_name, "opf", "xmin_AC.mtx"))
+        mpxmax = mmread(join(DATA_DIR, self.case_name, "opf", "xmax_AC.mtx"))
+
+        self.assertTrue(alltrue(xmin == mpxmin.flatten()))
+        self.assertTrue(alltrue(xmax == mpxmax.flatten()))
+
+
+    def test_initial_point(self):
+        """ Test selection of an initial interior point.
+        """
+        b, l, g, _ = self.solver._unpack_model(self.om)
+        _, LB, UB = self.solver._var_bounds()
+        _, _, _, _, _, ny, _ = self.solver._dimension_data(b, l, g)
+        x0 = self.solver._initial_interior_point(b, g, LB, UB, ny)
+
+        mpx0 = mmread(join(DATA_DIR, self.case_name, "opf", "x0_AC.mtx"))
+
+        self.assertTrue(alltrue(x0 == mpx0.flatten()))
+
+
+    def test_solution(self):
+        """ Test AC OPF solution.
+        """
+        solution = self.solver.solve()
+        lmbda = solution["lmbda"]
+
+        f = mmread(join(DATA_DIR, self.case_name, "opf", "f_AC.mtx"))
+        x = mmread(join(DATA_DIR, self.case_name, "opf", "x_AC.mtx"))
+
+        # FIXME: Improve accuracy.
+        self.assertAlmostEqual(solution["f"], f[0], places=4)
+        self.assertTrue(abs(max(solution["x"] - x.flatten())) < 1e-6)
+
+        if len(lmbda["mu_l"]) > 0:
+            mu_l = mmread(join(DATA_DIR, self.case_name, "opf", "mu_l_AC.mtx"))
+            self.assertTrue(abs(max(lmbda["mu_l"] - mu_l.flatten())) < 1e-12)
+
+        if len(lmbda["mu_u"]) > 0:
+            mu_u = mmread(join(DATA_DIR, self.case_name, "opf", "mu_u_AC.mtx"))
+            self.assertTrue(abs(max(lmbda["mu_u"] - mu_u.flatten())) < 1e-12)
+
+        if len(lmbda["lower"]) > 0:
+            muLB = mmread(join(DATA_DIR, self.case_name, "opf", "muLB_AC.mtx"))
+            # FIXME: Improve accuracy.
+            self.assertTrue(abs(max(lmbda["lower"] - muLB.flatten())) < 1e-4)
+
+        if len(lmbda["upper"]) > 0:
+            muUB = mmread(join(DATA_DIR, self.case_name, "opf", "muUB_AC.mtx"))
+            self.assertTrue(abs(max(lmbda["upper"] - muUB.flatten())) < 1e-12)
+
+#        if len(lmbda["nl_mu_l"]) > 0:
+#            nl_mu_l = mmread(
+#                join(DATA_DIR, self.case_name, "opf", "nl_mu_l.mtx"))
+#            self.assertTrue(
+#                abs(max(lmbda["nl_mu_l"] - nl_mu_l.flatten())) < 1e-12)
+#
+#        if len(lmbda["nl_mu_l"]) > 0:
+#            nl_mu_u = mmread(
+#                join(DATA_DIR, self.case_name, "opf", "nl_mu_u.mtx"))
+#            self.assertTrue(
+#                abs(max(lmbda["nl_mu_u"] - nl_mu_u.flatten())) < 1e-12)
 
 
 if __name__ == "__main__":

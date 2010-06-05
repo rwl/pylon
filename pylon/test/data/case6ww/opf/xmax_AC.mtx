@@ -1,0 +1,21 @@
+%%MatrixMarket matrix array real general
+%case6ww AC OPF upper variable bounds
+18 1
+ 0
+ Inf
+ Inf
+ Inf
+ Inf
+ Inf
+ 1.05
+ 1.05
+ 1.07
+ 1.05
+ 1.05
+ 1.05
+ 2
+ 1.5
+ 1.8
+ 1
+ 1
+ 1

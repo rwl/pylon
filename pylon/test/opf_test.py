@@ -322,7 +322,7 @@ class PWLDCOPFSolverTest(unittest.TestCase):
         self.assertEqual(CC[0], 0.0)
         self.assertEqual(CC[36], 1.0)
 
-        self.assertEqual(C0[0], 0.0)
+        self.assertEqual(C0, 0.0)
 
 
     def test_var_bounds(self):

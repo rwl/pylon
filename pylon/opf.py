@@ -1075,12 +1075,12 @@ class PIPSSolver(Solver):
             #  Evaluate d2f.
             #------------------------------------------------------------------
 
-            d2f_dPg2 = csr_matrix((ng, 1)) # w.r.t p.u. Pg
-            d2f_dQg2 = csr_matrix((ng, 1)) # w.r.t p.u. Qg
+            d2f_dPg2 = lil_matrix((ng, 1)) # w.r.t p.u. Pg
+            d2f_dQg2 = lil_matrix((ng, 1)) # w.r.t p.u. Qg]
 
             for i in ipol:
-                d2f_dPg2[i] = polyval(polyder(list(gn[i].p_cost), 2),
-                                      Pg.v0[i] * base_mva) * base_mva**2
+                d2f_dPg2[i, 0] = polyval(polyder(list(gn[i].p_cost), 2),
+                                         Pg.v0[i] * base_mva) * base_mva**2
 #            for i in ipol:
 #                d2f_dQg2[i] = polyval(polyder(list(gn[i].p_cost), 2),
 #                                      Qg.v0[i] * base_mva) * base_mva**2
