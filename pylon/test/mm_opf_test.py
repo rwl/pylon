@@ -29,7 +29,7 @@ from scipy import alltrue
 from scipy.io.mmio import mmread
 
 from pylon import Case, OPF
-from pylon.opf import Solver, DCOPFSolver, PIPSSolver
+from pylon.opf import DCOPFSolver, PIPSSolver
 from pylon.util import mfeq2
 
 #------------------------------------------------------------------------------
@@ -172,23 +172,23 @@ class DCOPFTest(unittest.TestCase):
         self.assertTrue(alltrue(ang.u == uang.flatten()))
 
 
-#    def testVLConstPF(self):
-#        """ Test dispatchable load, constant power factor constraints.
-#        """
-##        Avl = mmread(join(DATA_DIR, self.case_name, "opf", "Avl.mtx"))
-##        lvl = mmread(join(DATA_DIR, self.case_name, "opf", "lvl.mtx"))
-##        uvl = mmread(join(DATA_DIR, self.case_name, "opf", "uvl.mtx"))
-#        self.fail("Constant power factor constraints not implemented.")
-#
-#
-#    def testPQ(self):
-#        """ Test generator PQ capability curve constraints.
-#        """
-##        Apqh = mmread(join(DATA_DIR, self.case_name, "opf", "Apqh.mtx"))
-##        ubpqh = mmread(join(DATA_DIR, self.case_name, "opf", "ubpqh.mtx"))
-##        Apql = mmread(join(DATA_DIR, self.case_name, "opf", "Apql.mtx"))
-##        ubpql = mmread(join(DATA_DIR, self.case_name, "opf", "ubpql.mtx"))
-#        self.fail("Generator PQ capability curve constraints not implemented.")
+    def testVLConstPF(self):
+        """ Test dispatchable load, constant power factor constraints.
+        """
+#        Avl = mmread(join(DATA_DIR, self.case_name, "opf", "Avl.mtx"))
+#        lvl = mmread(join(DATA_DIR, self.case_name, "opf", "lvl.mtx"))
+#        uvl = mmread(join(DATA_DIR, self.case_name, "opf", "uvl.mtx"))
+        self.fail("Constant power factor constraints not implemented.")
+
+
+    def testPQ(self):
+        """ Test generator PQ capability curve constraints.
+        """
+#        Apqh = mmread(join(DATA_DIR, self.case_name, "opf", "Apqh.mtx"))
+#        ubpqh = mmread(join(DATA_DIR, self.case_name, "opf", "ubpqh.mtx"))
+#        Apql = mmread(join(DATA_DIR, self.case_name, "opf", "Apql.mtx"))
+#        ubpql = mmread(join(DATA_DIR, self.case_name, "opf", "ubpql.mtx"))
+        self.fail("Generator PQ capability curve constraints not implemented.")
 
 
     def testAy(self):
@@ -203,30 +203,6 @@ class DCOPFTest(unittest.TestCase):
 
             self.assertTrue(mfeq2(ycon.A, Ay.tocsr()))
             self.assertTrue(alltrue(ycon.u == by.flatten()))
-
-#------------------------------------------------------------------------------
-#  "SolverTest" class:
-#------------------------------------------------------------------------------
-
-#class SolverTest(unittest.TestCase):
-#
-#    def __init__(self, methodName='runTest'):
-#        super(SolverTest, self).__init__(methodName)
-#
-#        self.case_name = "case6ww"
-#        self.case = None
-#        self.opf = None
-#        self.om = None
-#        self.solver = None
-#
-#
-#    def setUp(self):
-#        """ The test runner will execute this method prior to each test.
-#        """
-#        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
-#        self.opf = OPF(self.case, dc=True)
-#        self.om = self.opf._construct_opf_model(self.case)
-#        self.solver = Solver(self.om)
 
 #------------------------------------------------------------------------------
 #  "DCOPFSolverTest" class:
@@ -408,6 +384,51 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertTrue(abs(max(lmbda["lower"] - mpmuLB.flatten())) < 1e-12)
         self.assertTrue(abs(max(lmbda["upper"] - mpmuUB.flatten())) < 1e-12)
 
+
+    def test_integrate_solution(self):
+        """ Test integration of DC OPF solution.
+        """
+        self.solver.solve()
+
+        bus = mmread(join(DATA_DIR, self.case_name, "opf", "Bus_DC.mtx"))
+        gen = mmread(join(DATA_DIR, self.case_name, "opf", "Gen_DC.mtx"))
+        branch = mmread(join(DATA_DIR, self.case_name, "opf", "Branch_DC.mtx"))
+
+        pl = 12
+
+        # bus_i type Pd Qd Gs Bs area Vm Va baseKV zone Vmax Vmin lam_P lam_Q mu_Vmax mu_Vmin
+        for i, bs in enumerate(self.case.buses):
+            self.assertAlmostEqual(bs.v_magnitude, bus[i, 7], pl) # Vm
+            self.assertAlmostEqual(bs.v_angle, bus[i, 8], pl) # Va
+            self.assertAlmostEqual(bs.p_lmbda, bus[i, 13], pl) # lam_P
+            self.assertAlmostEqual(bs.q_lmbda, bus[i, 14], pl) # lam_Q
+            self.assertAlmostEqual(bs.mu_vmax, bus[i, 15], pl) # mu_Vmax
+            self.assertAlmostEqual(bs.mu_vmin, bus[i, 16], pl) # mu_Vmin
+
+        # bus Pg Qg Qmax Qmin Vg mBase status Pmax Pmin Pc1 Pc2 Qc1min Qc1max
+        # Qc2min Qc2max ramp_agc ramp_10 ramp_30 ramp_q apf mu_Pmax mu_Pmin
+        # mu_Qmax mu_Qmin
+        for i, gn in enumerate(self.case.generators):
+            self.assertAlmostEqual(gn.p, gen[i, 1], pl) # Pg
+            self.assertAlmostEqual(gn.q, gen[i, 2], pl) # Qg
+            self.assertAlmostEqual(gn.v_magnitude, gen[i, 5], pl) # Vg
+            self.assertAlmostEqual(gn.mu_pmax, gen[i, 21], pl) # mu_Pmax
+            self.assertAlmostEqual(gn.mu_pmin, gen[i, 22], pl) # mu_Pmin
+            self.assertAlmostEqual(gn.mu_qmax, gen[i, 23], pl) # mu_Qmax
+            self.assertAlmostEqual(gn.mu_qmin, gen[i, 24], pl) # mu_Qmin
+
+        # fbus tbus r x b rateA rateB rateC ratio angle status angmin angmax
+        # Pf Qf Pt Qt mu_Sf mu_St mu_angmin mu_angmax
+        for i, ln in enumerate(self.case.branches):
+            self.assertAlmostEqual(ln.p_from, branch[i, 13], pl) # Pf
+            self.assertAlmostEqual(ln.q_from, branch[i, 14], pl) # Qf
+            self.assertAlmostEqual(ln.p_to, branch[i, 15], pl) # Pt
+            self.assertAlmostEqual(ln.q_to, branch[i, 16], pl) # Qt
+            self.assertAlmostEqual(ln.mu_s_from, branch[i, 17], pl) # mu_Sf
+            self.assertAlmostEqual(ln.mu_s_to, branch[i, 18], pl) # mu_St
+            self.assertAlmostEqual(ln.mu_angmin, branch[i, 19], pl) # mu_angmin
+            self.assertAlmostEqual(ln.mu_angmax, branch[i, 20], pl) # mu_angmax
+
 #------------------------------------------------------------------------------
 #  "PIPSSolverTest" class:
 #------------------------------------------------------------------------------
@@ -516,6 +537,51 @@ class PIPSSolverTest(unittest.TestCase):
 #                join(DATA_DIR, self.case_name, "opf", "nl_mu_u.mtx"))
 #            self.assertTrue(
 #                abs(max(lmbda["nl_mu_u"] - nl_mu_u.flatten())) < 1e-12)
+
+
+    def test_integrate_solution(self):
+        """ Test integration of AC OPF solution.
+        """
+        self.solver.solve()
+
+        bus = mmread(join(DATA_DIR, self.case_name, "opf", "Bus_AC.mtx"))
+        gen = mmread(join(DATA_DIR, self.case_name, "opf", "Gen_AC.mtx"))
+        branch = mmread(join(DATA_DIR, self.case_name, "opf", "Branch_AC.mtx"))
+
+        pl = 6
+
+        # bus_i type Pd Qd Gs Bs area Vm Va baseKV zone Vmax Vmin lam_P lam_Q mu_Vmax mu_Vmin
+        for i, bs in enumerate(self.case.buses):
+            self.assertAlmostEqual(bs.v_magnitude, bus[i, 7], pl) # Vm
+            self.assertAlmostEqual(bs.v_angle, bus[i, 8], pl) # Va
+            self.assertAlmostEqual(bs.p_lmbda, bus[i, 13], pl) # lam_P
+            self.assertAlmostEqual(bs.q_lmbda, bus[i, 14], pl) # lam_Q
+            self.assertAlmostEqual(bs.mu_vmax, bus[i, 15], pl) # mu_Vmax
+            self.assertAlmostEqual(bs.mu_vmin, bus[i, 16], pl) # mu_Vmin
+
+        # bus Pg Qg Qmax Qmin Vg mBase status Pmax Pmin Pc1 Pc2 Qc1min Qc1max
+        # Qc2min Qc2max ramp_agc ramp_10 ramp_30 ramp_q apf mu_Pmax mu_Pmin
+        # mu_Qmax mu_Qmin
+        for i, gn in enumerate(self.case.generators):
+            self.assertAlmostEqual(gn.p, gen[i, 1], pl) # Pg
+            self.assertAlmostEqual(gn.q, gen[i, 2], pl) # Qg
+            self.assertAlmostEqual(gn.v_magnitude, gen[i, 5], pl) # Vg
+            self.assertAlmostEqual(gn.mu_pmax, gen[i, 21], pl) # mu_Pmax
+            self.assertAlmostEqual(gn.mu_pmin, gen[i, 22], pl) # mu_Pmin
+            self.assertAlmostEqual(gn.mu_qmax, gen[i, 23], pl) # mu_Qmax
+            self.assertAlmostEqual(gn.mu_qmin, gen[i, 24], pl) # mu_Qmin
+
+        # fbus tbus r x b rateA rateB rateC ratio angle status angmin angmax
+        # Pf Qf Pt Qt mu_Sf mu_St mu_angmin mu_angmax
+        for i, ln in enumerate(self.case.branches):
+            self.assertAlmostEqual(ln.p_from, branch[i, 13], pl) # Pf
+            self.assertAlmostEqual(ln.q_from, branch[i, 14], pl) # Qf
+            self.assertAlmostEqual(ln.p_to, branch[i, 15], pl) # Pt
+            self.assertAlmostEqual(ln.q_to, branch[i, 16], pl) # Qt
+            self.assertAlmostEqual(ln.mu_s_from, branch[i, 17], pl) # mu_Sf
+            self.assertAlmostEqual(ln.mu_s_to, branch[i, 18], pl) # mu_St
+            self.assertAlmostEqual(ln.mu_angmin, branch[i, 19], pl) # mu_angmin
+            self.assertAlmostEqual(ln.mu_angmax, branch[i, 20], pl) # mu_angmax
 
 
 if __name__ == "__main__":
