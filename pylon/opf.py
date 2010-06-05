@@ -688,19 +688,18 @@ class DCOPFSolver(Solver):
         if npol > 0:
             if len(iqdr) > 0:
                 polycf[iqdr, :] = array([list(g.p_cost)
-                                         for g in generators])[iqdr, :].T
+                                         for g in generators])#[iqdr, :].T
             if len(ilin) > 0:
                 polycf[ilin, 1:] = array([list(g.p_cost[:2])
-                                          for g in generators])[ilin, :].T
+                                          for g in generators])#[ilin, :].T
             # Convert to per-unit.
-            polycf *= diag([base_mva**2, base_mva, 1])
-
+            polycf = polycf * array([base_mva**2, base_mva, 1])
             Pg = self.om.get_var("Pg")
             Npol = csr_matrix((ones(npol), (rnpol, Pg.i1 + array(ipol))),
                               (npol, nxyz))
             Hpol = csr_matrix((2 * polycf[:, 0], (rnpol, rnpol)), (npol, npol))
             Cpol = polycf[:, 1]
-            fparm_pol = ones(npol) * array([1, 0, 0, 1]).T
+            fparm_pol = (ones(npol) * array([[1], [0], [0], [1]])).T
         else:
             Npol = Hpol = None
             Cpol = array([])
@@ -713,11 +712,6 @@ class DCOPFSolver(Solver):
                        Npol, Hpol, Cpol, fparm_pol, npol, nw):
         """ Combines pwl, polynomial and user-defined costs.
         """
-#        N = self.N
-#        H = self.H
-#        Cw = self.Cw
-#        fparm = self.fparm
-
         NN = vstack([n for n in [Npwl, Npol] if n is not None], "csr")
 
         if (Hpwl is not None) and (Hpol is not None):

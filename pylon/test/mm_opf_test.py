@@ -157,9 +157,9 @@ class DCOPFTest(unittest.TestCase):
         bs, ln, _ = self.opf._remove_isolated(self.case)
         ang = self.opf._voltage_angle_diff_limit(bs, ln)
 
-        try:
+        if ang.A.shape[0] != 0:
             Aang = mmread(join(DATA_DIR, self.case_name, "opf", "Aang.mtx"))
-        except ValueError:
+        else:
             Aang = None
         lang = mmread(join(DATA_DIR, self.case_name, "opf", "lang.mtx"))
         uang = mmread(join(DATA_DIR, self.case_name, "opf", "uang.mtx"))
@@ -281,10 +281,8 @@ class DCOPFSolverTest(unittest.TestCase):
         Npwl, Hpwl, Cpwl, fparm_pwl, _ = \
             self.solver._pwl_costs(ny, nxyz, ipwl)
 
-        try:
+        if Npwl is not None:
             mpNpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Npwl.mtx"))
-        except ValueError:
-            mpNpwl = None
         mpHpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Hpwl.mtx"))
         mpCpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Cpwl.mtx"))
         mpfparm = mmread(join(DATA_DIR, self.case_name, "opf","fparm_pwl.mtx"))
@@ -314,7 +312,7 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertTrue(mfeq2(Npol, mpNpol.tocsr()))
         self.assertTrue(mfeq2(Hpol, mpHpol.tocsr()))
         self.assertTrue(alltrue(Cpol == mpCpol.flatten()))
-        self.assertTrue(alltrue(fparm_pol == mpfparm.flatten()))
+        self.assertTrue(alltrue(fparm_pol == mpfparm))
 
 
     def test_combine_costs(self):
@@ -339,7 +337,7 @@ class DCOPFSolverTest(unittest.TestCase):
         self.assertTrue(mfeq2(NN, mpNN.tocsr()))
         self.assertTrue(mfeq2(HHw, mpHHw.tocsr()))
         self.assertTrue(alltrue(CCw == mpCCw.flatten()))
-        self.assertTrue(alltrue(ffparm == mpffparm.flatten()))
+        self.assertTrue(alltrue(ffparm == mpffparm))
 
 
     def test_coefficient_transformation(self):
@@ -364,7 +362,7 @@ class DCOPFSolverTest(unittest.TestCase):
         mpCC = mmread(join(DATA_DIR, self.case_name, "opf", "CC.mtx"))
 
         self.assertTrue(mfeq2(HH, mpHH.tocsr()))
-        self.assertTrue(mfeq2(CC, mpCC.tocsr()))
+        self.assertTrue(alltrue(CC == mpCC.flatten()))
 
 
 if __name__ == "__main__":
