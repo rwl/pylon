@@ -84,11 +84,11 @@ class OPF(object):
 #        if self.opt["verbose"]:
 #            print '\nPYLON Version %s, %s', "0.4.2", "April 2010"
         if solver_klass is not None:
-            result = solver_klass(om).solve()
+            result = solver_klass(om, opt=self.opt).solve()
         elif self.dc:
 #            if self.opt["verbose"]:
 #                print ' -- DC Optimal Power Flow\n'
-            result = DCOPFSolver(om).solve()
+            result = DCOPFSolver(om, opt=self.opt).solve()
         else:
 #            if self.opt["verbose"]:
 #                print ' -- AC Optimal Power Flow\n'
