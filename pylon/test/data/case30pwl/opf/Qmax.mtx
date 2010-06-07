@@ -1,0 +1,9 @@
+%%MatrixMarket matrix array real general
+%case30pwl reactive power set-point upper bounds
+6 1
+ 1.5
+ 0.6
+ 0.447
+ 0.625
+ 0.4
+ 0.487

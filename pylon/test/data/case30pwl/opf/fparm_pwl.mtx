@@ -1,0 +1,7 @@
+%%MatrixMarket matrix array real general
+%case30pwl piece-wise linear costs
+1 4
+ 1
+ 0
+ 0
+ 1

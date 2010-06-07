@@ -1,0 +1,9 @@
+%%MatrixMarket matrix array real general
+%case30pwl active power set-point upper bounds
+6 1
+ 0.8
+ 0.8
+ 0.4
+ 0.5
+ 0.3
+ 0.55

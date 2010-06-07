@@ -1,0 +1,9 @@
+%%MatrixMarket matrix array real general
+%case30pwl initial active power set-point variable
+6 1
+ 0.2354
+ 0.6097
+ 0.37
+ 0.2159
+ 0.192
+ 0.2691

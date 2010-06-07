@@ -1,0 +1,9 @@
+%%MatrixMarket matrix coordinate real general
+%case30pwl piece-wise linear costs
+1 42 6
+1 37  1
+1 38  1
+1 39  1
+1 40  1
+1 41  1
+1 42  1
