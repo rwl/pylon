@@ -1,0 +1,81 @@
+%%MatrixMarket matrix array real general
+%case30pwl AC OPF lower variable bounds
+78 1
+ 0
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0.95
+ 0
+ 0
+ 0
+ 0
+ 0
+ 0
+-0.2
+-0.2
+-0.15
+-0.15
+-0.1
+-0.15
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
+-Inf
