@@ -27,7 +27,7 @@
 import logging
 
 from numpy import \
-    array, pi, diff, Inf, ones, r_, float64, zeros
+    array, pi, diff, Inf, ones, r_, float64, zeros, arctan2, sin, cos
 
 from scipy.sparse import lil_matrix, csr_matrix, hstack
 
@@ -142,8 +142,7 @@ class OPF(object):
 
             Pmis, Qmis, Sf, St = self._nln_constraints(len(bs), len(ln))
 
-            # TODO: Dispatchable load, constant power factor constraints.
-#            vl = self._dispatchable_load_constraints(gn)
+            vl = self._const_pf_constraints(gn, base_mva)
 
             # TODO: Generator PQ capability curve constraints.
 #            PQh, PQl = self._pq_capability_curve_constraints(gn)
@@ -156,8 +155,8 @@ class OPF(object):
             constraints = [Pmis, Pf, Pt, ang]
         else:
             vars = [Va, Vm, Pg, Qg]
-            constraints = [Pmis, Qmis, Sf, St, #PQh, PQL, vl,
-                           ang]
+            constraints = [Pmis, Qmis, Sf, St, #PQh, PQL,
+                           vl, ang]
 
         # Piece-wise linear generator cost constraints.
         y, ycon = self._pwl_gen_costs(gn, base_mva)
@@ -313,6 +312,63 @@ class OPF(object):
         Pt = LinearConstraint("Pt", -Bf[il, :], lpf, upt, ["Va"])
 
         return Pf, Pt
+
+
+    def _const_pf_constraints(self, gn, base_mva):
+        """ Returns a linear constraint enforcing constant power factor for
+            dispatchable loads.
+
+            The power factor is derived from the original value of Pmin and
+            either Qmin (for inductive loads) or Qmax (for capacitive loads).
+            If both Qmin and Qmax are zero, this implies a unity power factor
+            without the need for an additional constraint.
+        """
+        ivl = array([i for i, g in enumerate(gn)
+                     if g.is_load and (g.q_min != 0.0 or g.q_max != 0.0)])
+        vl = [gn[i] for i in ivl]
+        nvl = len(vl)
+
+        ng = len(gn)
+        Pg = array([g.p for g in vl]) / base_mva
+        Qg = array([g.q for g in vl]) / base_mva
+        Pmin = array([g.p_min for g in vl]) / base_mva
+        Qmin = array([g.q_min for g in vl]) / base_mva
+        Qmax = array([g.q_max for g in vl]) / base_mva
+
+        # At least one of the Q limits must be zero (corresponding to Pmax==0).
+        for g in vl:
+            if g.qmin != 0.0 and g.q_max != 0.0:
+                logger.error("Either Qmin or Qmax must be equal to zero for "
+                "each dispatchable load.")
+
+        # Initial values of PG and QG must be consistent with specified power
+        # factor. This is to prevent a user from unknowingly using a case file
+        # which would have defined a different power factor constraint under a
+        # previous version which used PG and QG to define the power factor.
+        Qlim = (Qmin == 0.0) * Qmax + (Qmax == 0.0) * Qmin
+        if any( abs(Qg - Pg * Qlim / Pmin) > 1e-6 ):
+            logger.error("For a dispatchable load, PG and QG must be "
+                         "consistent with the power factor defined by "
+                         "PMIN and the Q limits.")
+
+        # Make Avl, lvl, uvl, for lvl <= Avl * r_[Pg, Qg] <= uvl
+        if nvl > 0:
+            xx = Pmin
+            yy = Qlim
+            pftheta = arctan2(yy, xx)
+            pc = sin(pftheta)
+            qc = -cos(pftheta)
+            ii = array([range(nvl), range(nvl)])
+            jj = r_[ivl, ivl + ng]
+            Avl = csr_matrix(r_[pc, qc], (ii, jj), (nvl, 2 * ng))
+            lvl = zeros(nvl)
+            uvl = lvl
+        else:
+            Avl = zeros((0, 2 * ng))
+            lvl = array([])
+            uvl = array([])
+
+        return LinearConstraint("vl", Avl, lvl, uvl, ["Pg", "Qg"])
 
 
     def _voltage_angle_diff_limit(self, buses, branches):

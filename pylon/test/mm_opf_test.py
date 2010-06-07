@@ -175,10 +175,18 @@ class DCOPFTest(unittest.TestCase):
     def testVLConstPF(self):
         """ Test dispatchable load, constant power factor constraints.
         """
-#        Avl = mmread(join(DATA_DIR, self.case_name, "opf", "Avl.mtx"))
-#        lvl = mmread(join(DATA_DIR, self.case_name, "opf", "lvl.mtx"))
-#        uvl = mmread(join(DATA_DIR, self.case_name, "opf", "uvl.mtx"))
-        self.fail("Constant power factor constraints not implemented.")
+        _, _, gn = self.opf._remove_isolated(self.case)
+        vl = self.opf._const_pf_constraints(gn, self.case.base_mva)
+
+        if vl.A.shape[0] != 0:
+            Avl = mmread(join(DATA_DIR, self.case_name, "opf", "Avl.mtx"))
+            self.assertTrue(mfeq2(vl.A, Avl.tocsr()))
+
+        lvl = mmread(join(DATA_DIR, self.case_name, "opf", "lang.mtx"))
+        self.assertTrue(alltrue(vl.l == lvl.flatten()))
+
+        uvl = mmread(join(DATA_DIR, self.case_name, "opf", "uang.mtx"))
+        self.assertTrue(alltrue(vl.u == uvl.flatten()))
 
 
 #    def testPQ(self):
