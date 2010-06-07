@@ -230,7 +230,7 @@ class OPF(object):
     def _get_voltage_angle_var(self, refs, buses):
         """ Returns the voltage angle variable set.
         """
-        Va = array([b.v_angle_guess * (pi / 180.0) for b in buses])
+        Va = array([b.v_angle * (pi / 180.0) for b in buses])
 
         Vau = Inf * ones(len(buses))
         Val = -Vau
@@ -243,7 +243,7 @@ class OPF(object):
     def _get_voltage_magnitude_var(self, buses, generators):
         """ Returns the voltage magnitude variable set.
         """
-        Vm = array([b.v_magnitude_guess for b in buses])
+        Vm = array([b.v_magnitude for b in buses])
 
         # For buses with generators initialise Vm from gen data.
         for g in generators:
@@ -566,7 +566,7 @@ class Solver(object):
         """ Selects an interior initial point for interior point solver.
         """
         Va = self.om.get_var("Va")
-        va_refs = [b.v_angle_guess * pi / 180.0 for b in buses
+        va_refs = [b.v_angle * pi / 180.0 for b in buses
                    if b.type == REFERENCE]
         x0 = (xmin + xmax) / 2.0
 
@@ -834,7 +834,7 @@ class PIPSSolver(Solver):
         """ Adds a constraint on the reference bus angles.
         """
         refs = [bus._i for bus in buses if bus.type == REFERENCE]
-        Varefs = array([b.v_angle_guess for b in buses if b.type == REFERENCE])
+        Varefs = array([b.v_angle for b in buses if b.type == REFERENCE])
 
         xmin[Va.i1 - 1 + refs] = Varefs
         xmax[Va.iN - 1 + refs] = Varefs
@@ -1191,7 +1191,7 @@ class PIPSSolver(Solver):
         Va = x[Va_var.i1:Va_var.iN + 1]
         Vm = x[Vm_var.i1:Vm_var.iN + 1]
         Pg = x[Pg_var.i1:Pg_var.iN + 1]
-        Qg = x[Pg_var.i1:Qg_var.iN + 1]
+        Qg = x[Qg_var.i1:Qg_var.iN + 1]
 
 #        f = 0.5 * dot(x.T * HH, x) + dot(CC.T, x)
 
