@@ -49,7 +49,7 @@ class DCOPFTest(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super(DCOPFTest, self).__init__(methodName)
 
-        self.case_name = "case6ww"
+        self.case_name = "case30pwl"
         self.case = None
         self.opf = None
 
@@ -91,6 +91,7 @@ class DCOPFTest(unittest.TestCase):
     def testPg(self):
         """ Test active power variable.
         """
+        self.case.sort_generators() # ext2int
         _, _, gn = self.opf._remove_isolated(self.case)
         Pg = self.opf._get_pgen_var(gn, self.case.base_mva)
 
@@ -106,6 +107,7 @@ class DCOPFTest(unittest.TestCase):
     def testQg(self):
         """ Test reactive power variable.
         """
+        self.case.sort_generators() # ext2int
         _, _, gn = self.opf._remove_isolated(self.case)
         Qg = self.opf._get_qgen_var(gn, self.case.base_mva)
 
@@ -115,7 +117,8 @@ class DCOPFTest(unittest.TestCase):
 
         self.assertTrue(alltrue(Qg.v0 == mpQg0.flatten()))
         self.assertTrue(alltrue(Qg.vl == mpQmin.flatten()))
-        self.assertTrue(alltrue(Qg.vu == mpQmax.flatten()))
+#        self.assertTrue(alltrue(Qg.vu == mpQmax.flatten()))
+        self.assertTrue(max(abs(Qg.vu - mpQmax.flatten())) < 1e-12)
 
 
     def testPmis(self):
@@ -131,8 +134,10 @@ class DCOPFTest(unittest.TestCase):
         mpbmis = mmread(join(DATA_DIR, self.case_name, "opf", "bmis.mtx"))
 
         self.assertTrue(mfeq2(Pmis.A, mpAmis.tocsr()))
-        self.assertTrue(alltrue(Pmis.l == mpbmis.flatten()))
-        self.assertTrue(alltrue(Pmis.u == mpbmis.flatten()))
+#        self.assertTrue(alltrue(Pmis.l == mpbmis.flatten()))
+        self.assertTrue(max(abs(Pmis.l - mpbmis.flatten())) < 1e-12)
+#        self.assertTrue(alltrue(Pmis.u == mpbmis.flatten()))
+        self.assertTrue(max(abs(Pmis.u - mpbmis.flatten())) < 1e-12)
 
 
     def testPfPt(self):
@@ -202,6 +207,7 @@ class DCOPFTest(unittest.TestCase):
     def testAy(self):
         """ Test basin constraints for piece-wise linear gen cost variables.
         """
+        self.case.sort_generators() # ext2int
         _, _, gn = self.opf._remove_isolated(self.case)
         _, ycon = self.opf._pwl_gen_costs(gn, self.case.base_mva)
 
