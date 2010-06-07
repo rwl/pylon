@@ -23,7 +23,7 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
 
 # Saved case formats are recognised by file extension.
-case = Case.load("data/auction_case.pickle")
+case = Case.load("data/t_auction_case.pkl")
 
 # Construct a market and specify any desired limits.
 market = pyreto.SmartMarket(case, priceCap=100.0)
