@@ -29,7 +29,7 @@ from numpy import \
 from scipy.sparse import lil_matrix, csr_matrix, hstack, vstack
 
 from pylon import REFERENCE
-from pylon.opf import Solver, SFLOW, IFLOW, PFLOW
+from pylon.solver import Solver, SFLOW, IFLOW, PFLOW
 
 #------------------------------------------------------------------------------
 #  "IPOPFSolver" class:

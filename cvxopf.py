@@ -35,7 +35,7 @@ from scipy.sparse import vstack, eye
 
 from cvxopt import matrix, spmatrix, mul, sparse, exp, solvers
 
-from pylon.opf import Solver, DCOPFSolver
+from pylon.solver import Solver, DCOPFSolver
 
 #------------------------------------------------------------------------------
 #  Logging:
