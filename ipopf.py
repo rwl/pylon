@@ -55,7 +55,7 @@ class IPOPFSolver(Solver):
         """ Adds a constraint on the reference bus angles.
         """
         refs = [bus._i for bus in buses if bus.type == REFERENCE]
-        Varefs = array([b.v_angle_guess for b in buses if b.type == REFERENCE])
+        Varefs = array([b.v_angle for b in buses if b.type == REFERENCE])
 
         xmin[Va.i1 - 1 + refs] = Varefs
         xmax[Va.iN - 1 + refs] = Varefs

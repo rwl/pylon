@@ -296,8 +296,8 @@ class StateEstimator(object):
         """ Returns the initial voltage profile.
         """
         if type == CASE_GUESS:
-            Va = array([b.v_angle_guess * (pi / 180.0) for b in buses])
-            Vm = array([b.v_magnitude_guess for b in buses])
+            Va = array([b.v_angle * (pi / 180.0) for b in buses])
+            Vm = array([b.v_magnitude for b in buses])
             V0 = Vm * exp(1j * Va)
         elif type == FLAT_START:
             V0 = ones(len(buses))

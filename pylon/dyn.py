@@ -611,8 +611,8 @@ class DynamicSolver:
         gbus = [g.bus._i for g in self.dyn_generators]
         ng = len(gbus)
 
-        Um = array([bus.v_magnitude_guess for bus in buses])
-        Ua = array([bus.v_angle_guess * (pi / 180.0) for bus in buses])
+        Um = array([bus.v_magnitude for bus in buses])
+        Ua = array([bus.v_angle * (pi / 180.0) for bus in buses])
         U0 = Um * exp(1j * Ua)
         U00 = U0
 

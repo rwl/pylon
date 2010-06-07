@@ -213,10 +213,10 @@ class PSSEReaderTest(TestCase):
         pl = 5
         self.assertAlmostEqual(case.buses[0].v_base, 21.6, pl)
         self.assertAlmostEqual(case.buses[41].v_base, 0.69, pl)
-        self.assertAlmostEqual(case.buses[0].v_magnitude_guess, 1.01, pl)
-        self.assertAlmostEqual(case.buses[40].v_magnitude_guess, 1.04738, pl)
-        self.assertAlmostEqual(case.buses[0].v_angle_guess, -10.4286, pl)
-        self.assertAlmostEqual(case.buses[1].v_angle_guess, -10.7806, pl)
+        self.assertAlmostEqual(case.buses[0].v_magnitude, 1.01, pl)
+        self.assertAlmostEqual(case.buses[40].v_magnitude, 1.04738, pl)
+        self.assertAlmostEqual(case.buses[0].v_angle, -10.4286, pl)
+        self.assertAlmostEqual(case.buses[1].v_angle, -10.7806, pl)
 
         # Loads.
         load_buses = [b for b in case.buses if

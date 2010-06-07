@@ -334,8 +334,8 @@ class MATPOWERReader(CaseReader):
         bus.v_base = base_kv
         bus.g_shunt = tokens["Gs"]
         bus.b_shunt = tokens["Bs"]
-        bus.v_magnitude_guess = tokens["Vm"]
-        bus.v_angle_guess = tokens["Va"]
+        bus.v_magnitude = tokens["Vm"]
+        bus.v_angle = tokens["Va"]
         bus.v_magnitude = tokens["Vm"]
         bus.v_angle = tokens["Va"]
 

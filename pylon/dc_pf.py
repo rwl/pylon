@@ -117,7 +117,7 @@ class DCPF(object):
     def _get_v_angle_guess(self, case):
         """ Make the vector of voltage phase guesses.
         """
-        v_angle = array([bus.v_angle_guess * (pi / 180.0)
+        v_angle = array([bus.v_angle * (pi / 180.0)
                          for bus in case.connected_buses])
         return v_angle
 

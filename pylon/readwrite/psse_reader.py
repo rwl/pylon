@@ -113,8 +113,8 @@ class PSSEReader(CaseReader):
             bus.type = bustype_map[int(bus_data[3])]
             bus.g_shunt = float(bus_data[4])
             bus.b_shunt = float(bus_data[5])
-            bus.v_magnitude_guess = float(bus_data[8])
-            bus.v_angle_guess = float(bus_data[9])
+            bus.v_magnitude = float(bus_data[8])
+            bus.v_angle = float(bus_data[9])
             case.buses.append(bus)
             bus_data = file.next().split(",")
 
@@ -746,10 +746,10 @@ class PSSEReader(CaseReader):
 #        bus.g_shunt = tokens["GL"]
 #        bus.b_shunt = tokens["BL"]
 #
-#        bus.v_magnitude_guess = tokens["VM"]
+#        bus.v_magnitude = tokens["VM"]
 #        bus.v_magnitude = tokens["VM"]
 #
-#        bus.v_angle_guess = tokens["VA"]
+#        bus.v_angle = tokens["VA"]
 #        bus.v_angle = tokens["VA"]
 #
 #        self.case.buses.append(bus)

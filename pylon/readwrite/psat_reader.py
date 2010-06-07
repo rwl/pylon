@@ -109,8 +109,8 @@ class PSATReader(CaseReader):
         """
         bus_no = integer.setResultsName("bus_no")
         v_base = real.setResultsName("v_base") # kV
-        v_magnitude_guess = Optional(real).setResultsName("v_magnitude_guess")
-        v_angle_guess = Optional(real).setResultsName("v_angle_guess") # radians
+        v_magnitude_guess = Optional(real).setResultsName("v_magnitude")
+        v_angle_guess = Optional(real).setResultsName("v_angle") # radians
         area = Optional(integer).setResultsName("area") # not used yet
         region = Optional(integer).setResultsName("region") # not used yet
 
@@ -373,10 +373,10 @@ class PSATReader(CaseReader):
 
         bus = Bus()
         bus.name = tokens["bus_no"]
-        bus.v_magnitude_guess = tokens["v_magnitude_guess"]
-        bus.v_angle_guess = tokens["v_angle_guess"]
-        bus.v_magnitude = tokens["v_magnitude_guess"]
-        bus.v_angle = tokens["v_angle_guess"]
+        bus.v_magnitude = tokens["v_magnitude"]
+        bus.v_angle = tokens["v_angle"]
+        bus.v_magnitude = tokens["v_magnitude"]
+        bus.v_angle = tokens["v_angle"]
 
         self.case.buses.append(bus)
 

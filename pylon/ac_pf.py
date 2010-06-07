@@ -194,10 +194,10 @@ class _ACPF(object):
             bus, as well as an initial guess for remaining magnitudes and
             angles.
         """
-        Vm = array([bus.v_magnitude_guess for bus in buses])
+        Vm = array([bus.v_magnitude for bus in buses])
 
         # Initial bus voltage angles in radians.
-        Va = array([bus.v_angle_guess * (pi / 180.0) for bus in buses])
+        Va = array([bus.v_angle * (pi / 180.0) for bus in buses])
 
         V = Vm * exp(1j * Va)
 

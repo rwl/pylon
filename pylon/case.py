@@ -58,7 +58,7 @@ class Bus(Named):
     """
 
     def __init__(self, name=None, type=PQ, v_base=100.0,
-            v_magnitude_guess=1.0, v_angle_guess=0.0, v_max=1.1, v_min=0.9,
+            v_magnitude=1.0, v_angle=0.0, v_max=1.1, v_min=0.9,
             p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0,
             position=None):
         """ Initialises a new Bus instance.
@@ -73,9 +73,9 @@ class Bus(Named):
         self.v_base = v_base
 
         # Voltage magnitude initial guess (pu).
-        self.v_magnitude_guess = v_magnitude_guess
+        self.v_magnitude = v_magnitude
         # Voltage angle initial guess (degrees).
-        self.v_angle_guess = v_angle_guess
+        self.v_angle = v_angle
 
         # Maximum voltage magnitude (pu).
         self.v_max = v_max
@@ -95,10 +95,10 @@ class Bus(Named):
         self.area = 1
         self.zone = 1
 
-        # Voltage magnitude, typically determined by a routine.
-        self.v_magnitude = 0.0
-        # Voltage angle, typically determined by a routine.
-        self.v_angle = 0.0
+#        # Voltage magnitude, typically determined by a routine.
+#        self.v_magnitude = 0.0
+#        # Voltage angle, typically determined by a routine.
+#        self.v_angle = 0.0
 
         # Lambda (GBP/MWh).
         self.p_lmbda = 0.0
@@ -119,8 +119,8 @@ class Bus(Named):
     def reset(self):
         """ Resets the result variables.
         """
-        self.v_magnitude = 0.0
-        self.v_angle = 0.0
+#        self.v_magnitude = 0.0
+#        self.v_angle = 0.0
         self.p_lmbda = 0.0
         self.q_lmbda = 0.0
         self.mu_vmin = 0.0
