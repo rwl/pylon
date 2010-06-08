@@ -26,6 +26,8 @@
 
 import logging
 
+from time import time
+
 from numpy import \
     array, pi, diff, Inf, ones, r_, float64, zeros, arctan2, sin, cos
 
@@ -75,6 +77,9 @@ class OPF(object):
     def solve(self, solver_klass=None):
         """ Solves an optimal power flow and returns a results dictionary.
         """
+        # Start the clock.
+        t0 = time()
+
         # Build an OPF model with variables and constraints.
         om = self._construct_opf_model(self.case)
         if om is None:
@@ -93,6 +98,12 @@ class OPF(object):
 #            if self.opt["verbose"]:
 #                print ' -- AC Optimal Power Flow\n'
             result = PIPSSolver(om, opt=self.opt).solve()
+
+        result["elapsed"] = time() - t0
+
+        if self.opt.has_key("verbose"):
+            if self.opt["verbose"]:
+                logger.info("OPF completed in %.3fs." % result["elapsed"])
 
         return result
 
