@@ -23,7 +23,7 @@
 
 import logging
 
-from numpy import array
+from numpy import array, zeros
 
 from pybrain.rl.environments import Environment, EpisodicTask
 
@@ -65,6 +65,9 @@ class CaseEnvironment(Environment):
         # Initial active power demand vector.
         self._Pd0 = array([b.p_demand for b in case.buses if b.type == PQ])
 
+        # Store generator set-point actions.
+        self._Pg = zeros((len(gens), len(self.profile)))
+
         #----------------------------------------------------------------------
         #  "Environment" interface:
         #----------------------------------------------------------------------
@@ -74,6 +77,20 @@ class CaseEnvironment(Environment):
 
         # Set the number of sensor values that the environment produces.
         self.outdim = len([b for b in case.buses if b.type == PQ])
+
+    #--------------------------------------------------------------------------
+    #  "CaseEnvironment" interface:
+    #--------------------------------------------------------------------------
+
+    def _setProfile(self, value):
+        g = [g for g in self.case.online_generators if g.bus.type != REFERENCE]
+        self._Pg = zeros((len(g), len(value)))
+        self._profile = value
+
+    def _getProfile(self):
+        return self._profile
+
+    profile = property(_getProfile, _setProfile)
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -97,16 +114,20 @@ class CaseEnvironment(Environment):
 
         logger.info("Action: %s" % list(action))
 
+        # Set the output of each (non-reference) generator.
         for i, g in enumerate(gs):
             g.p = action[i]
 
-        NewtonPF(self.case).solve()
-        #FastDecoupledPF(self.case).solve()
+            self._Pg[i, self._step] = action[i]
+
+        # Solve the power flow problem for the new case.
+        NewtonPF(self.case, verbose=False).solve()
+        #FastDecoupledPF(self.case, verbose=False).solve()
 
         s = [g for g in self.case.online_generators if g.bus.type == REFERENCE]
         logger.info("Slack: %.3f" % s[0].p)
 
-        # Apply load profile.
+        # Apply load profile to the demand at each bus.
         for i, b in enumerate([b for b in self.case.buses if b.type == PQ]):
             b.p_demand = self._Pd0[i] * self.profile[self._step]
 
@@ -122,12 +143,17 @@ class CaseEnvironment(Environment):
 
         self._step = 0
 
+        # Reset the set-point of each generator to its original value.
         gs = [g for g in self.case.online_generators if g.bus.type !=REFERENCE]
         for i, g in enumerate(gs):
             g.p = self._Pg0[i]
 
+        # Reset the demand at each bus to its original value.
         for i, b in enumerate([b for b in self.case.buses if b.type == PQ]):
             b.p_demand = self._Pd0[i]
+
+        # Initialise the record of generator set-points.
+        self._Pg = zeros((len(gs), len(self.profile)))
 
         self.case.reset()
 
