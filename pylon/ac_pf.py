@@ -153,7 +153,7 @@ class _ACPF(object):
 
         elapsed = time() - t0
 
-        if converged:
+        if converged and self.verbose:
             logger.info("AC power flow converged in %.3fs" % elapsed)
 
         return {"converged": converged, "elapsed": elapsed, "iterations": i,
@@ -248,11 +248,12 @@ class NewtonPF(_ACPF):
             i += 1
 
         if converged:
-            logger.info("Newton's method power flow converged in %d "
-                        "iterations." % i)
+            if self.verbose:
+                logger.info("Newton's method power flow converged in %d "
+                            "iterations." % i)
         else:
-            logger.info("Newton's method power flow did not converge in %d "
-                        "iterations." % i)
+            logger.error("Newton's method power flow did not converge in %d "
+                         "iterations." % i)
 
         return V, converged, i
 
@@ -428,7 +429,7 @@ class FastDecoupledPF(_ACPF):
                 break
 
         if self.verbose and not converged:
-            logger.info("FDPF did not converge in %d iterations." % i)
+            logger.error("FDPF did not converge in %d iterations." % i)
 
         return V, converged, i
 
