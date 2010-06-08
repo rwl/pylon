@@ -285,7 +285,7 @@ class StateEstimator(object):
             (elapsed, i)
 #            self.output_solution(sys.stdout, z, z_est)
 
-        solution = {"V": V, "success": converged, "iterations": i,
+        solution = {"V": V, "converged": converged, "iterations": i,
                     "z": z, "z_est": z_est, "error_sqrsum": error_sqrsum,
                     "elapsed": elapsed}
 

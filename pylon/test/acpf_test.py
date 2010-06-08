@@ -212,7 +212,7 @@ class NewtonPFTest(unittest.TestCase):
         result = self.solver.solve()
         V = result["V"]
 
-        self.assertTrue(result["success"])
+        self.assertTrue(result["converged"])
         self.assertEqual(result["iterations"], 3)
 
         places = 4
@@ -283,7 +283,7 @@ class FDPFTest(unittest.TestCase):
         result = self.solver.solve()
         V = result["V"]
 
-        self.assertTrue(result["success"])
+        self.assertTrue(result["converged"])
         self.assertEqual(result["iterations"], 9)
 
         places = 4

@@ -988,8 +988,8 @@ class PIPSSolverTest(unittest.TestCase):
 #        self.assertAlmostEqual(lmbda[1], 1.1899e03, places=1)
 #        self.assertAlmostEqual(lmbda[34], 3.03e01, places=1)
 #
-#        self.assertEqual(solution["howout"], "success")
-#        self.assertTrue(solution["success"])
+#        self.assertEqual(solution["howout"], "converged")
+#        self.assertTrue(solution["converged"])
 
 #------------------------------------------------------------------------------
 #  "PIPSSolverTest" class:

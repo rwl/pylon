@@ -598,7 +598,7 @@ class DynamicSolver:
 
         solution = NewtonPF(self.case).solve()
 
-        if not solution["success"]:
+        if not solution["converged"]:
             logger.error("Power flow did not converge. Exiting...")
             return {}
         elif self.verbose:

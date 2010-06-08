@@ -140,7 +140,7 @@ class _ACPF(object):
             Sbus = self.case.getSbus(b)
 
             # Run the power flow.
-            V, success, i = self._run_power_flow(Ybus, Sbus, V0, pv, pq, pvpq)
+            V, converged, i = self._run_power_flow(Ybus, Sbus, V0, pv, pq, pvpq)
 
             # Update case with solution.
             self.case.pf_solution(Ybus, Yf, Yt, V)
@@ -153,10 +153,11 @@ class _ACPF(object):
 
         elapsed = time() - t0
 
-        if success:
+        if converged:
             logger.info("AC power flow converged in %.3fs" % elapsed)
 
-        return {"success": success, "elapsed": elapsed, "iterations": i, "V":V}
+        return {"converged": converged, "elapsed": elapsed, "iterations": i,
+                "V":V}
 
 
     def _unpack_case(self, case):
