@@ -52,11 +52,11 @@ class PickleReader(CaseReader):
             file = None
             try:
                 file = open(file_or_filename, "rb")
-                case = pickle.load(file)
-            except Exception, detail:
-                logger.error("Error unpickling '%s': %s" % (fname, detail))
+            except:
+                logger.error("Error opening %s." % fname)
                 return None
             finally:
+                case = pickle.load(file)
                 if file is not None:
                     file.close()
         else:

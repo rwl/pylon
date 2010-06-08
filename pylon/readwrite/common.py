@@ -68,10 +68,10 @@ class CaseWriter(object):
             file = None
             try:
                 file = open(file_or_filename, "wb")
-                self._write_data(file)
             except Exception, detail:
-                logger.error("Error writing data: %s" % detail)
+                logger.error("Error opening %s." % detail)
             finally:
+                self._write_data(file)
                 if file is not None:
                     file.close()
         else:

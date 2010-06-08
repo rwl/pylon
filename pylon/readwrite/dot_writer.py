@@ -87,10 +87,10 @@ class DotWriter(CaseWriter):
                 file = None
                 try:
                     file = open(file_or_filename, "wb")
-                    file.write(data)
-                except Exception, detail:
-                    logger.error("Error writing Dot data: %s" % detail)
+                except:
+                    logger.error("Error opening %s." % file_or_filename)
                 finally:
+                    file.write(data)
                     if file is not None:
                         file.close()
             else:

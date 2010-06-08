@@ -211,7 +211,7 @@ class PSSEReaderTest(TestCase):
         """
         case = self.reader.read(PSSE_DATA_FILE)
 
-        self.assertEqual(len(case.buses), 42)
+        self.assertEqual(len(case.buses), 42 + 4) # 4x 3-winding trx
         pl = 5
         self.assertAlmostEqual(case.buses[0].v_base, 21.6, pl)
         self.assertAlmostEqual(case.buses[41].v_base, 0.69, pl)
@@ -270,7 +270,7 @@ class PSSEReaderTest(TestCase):
         self.assertEqual(case.branches[30].rate_b, 1100.00, pl)
         self.assertEqual(case.branches[30].rate_c, 1000.00, pl)
 
-        self.assertEqual(len(case.branches), 30 + 18 - 4) # 4 3-winding trx.
+        self.assertEqual(len(case.branches), 30 + 14 + (4*3)) # 4x 3-winding trx.
 
 
     def test_benchmark(self):

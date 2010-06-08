@@ -75,11 +75,11 @@ class PSSEReader(CaseReader):
             file = None
             try:
                 file = open(file_or_filename, "rb")
-                case = self._parse_file(file)
-            except Exception, detail:
-                logger.error("Error loading '%s': %s" % (fname, detail))
+            except:
+                logger.error("Error opening %s." % fname)
                 return None
             finally:
+                case = self._parse_file(file)
                 if file is not None:
                     file.close()
         else:
@@ -235,8 +235,7 @@ class PSSEReader(CaseReader):
                 l3.r = 0.5 * (r23 + r31 - r12)
                 l3.x = 0.5 * (x23 + x31 - x12)
 
-                assert r12 == l1.r + l2.r
-
+#                assert r12 == l1.r + l2.r
 
                 l1.ratio = float(trx_data3[0])
                 l1.phase_shift = float(trx_data3[2])
