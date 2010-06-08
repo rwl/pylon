@@ -28,7 +28,9 @@ from time import time
 from unittest import TestCase, main
 
 from pylon.readwrite import \
-    MATPOWERReader, PSSEReader, PSATReader, PickleReader, RDFReader, RDFWriter
+    MATPOWERReader, PSSEReader, PSATReader, PickleReader
+
+from pylon.readwrite.rdf_readwrite import RDFReader, RDFWriter
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -41,7 +43,7 @@ PWL_MP_DATA_FILE   = os.path.join(DATA_DIR, "case30pwl.m")
 UKGDS_DATA_FILE    = os.path.join(DATA_DIR, "ehv3.raw")
 PSSE_DATA_FILE     = os.path.join(DATA_DIR, "sample30.raw")
 BENCH_DATA_FILE    = os.path.join(DATA_DIR, "bench30.raw")
-BENCH2_DATA_FILE   = os.path.join(DATA_DIR, "bench2_30.raw")
+#BENCH2_DATA_FILE   = os.path.join(DATA_DIR, "bench2_30.raw")
 PSAT_DATA_FILE     = os.path.join(DATA_DIR, "d_006_mdl.m")
 BENCH_PICKLE_FILE  = os.path.join(DATA_DIR, "bench30.pkl")
 BENCH_RDFXML_FILE  = os.path.join(DATA_DIR, "bench30.rdf")
@@ -284,14 +286,14 @@ class PSSEReaderTest(TestCase):
 #        PickleWriter(case).write("./data/bench30.pkl")
 
 
-    def test_benchmark_two(self):
-        """ Test parsing the second benchmark case.
-        """
-        case = self.reader.read(BENCH2_DATA_FILE)
-
-        self.assertEqual(len(case.buses), 7917)
-        self.assertEqual(len(case.branches), 13014)
-        self.assertEqual(len(case.generators), 1325)
+#    def test_benchmark_two(self):
+#        """ Test parsing the second benchmark case.
+#        """
+#        case = self.reader.read(BENCH2_DATA_FILE)
+#
+#        self.assertEqual(len(case.buses), 7917)
+#        self.assertEqual(len(case.branches), 13014)
+#        self.assertEqual(len(case.generators), 1325)
 
 
 #    def test_ukgds(self):

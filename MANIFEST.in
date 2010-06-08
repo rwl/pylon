@@ -2,7 +2,6 @@ include examples/*.py
 include doc/pylon.pdf
 include LICENSE
 include NOTICE
-include README.rst
-recursive-include examples/data *.m *.raw *.pkl *.pickle
-recursive-include pylon *.m *.raw *.pickle
-exclude pylon/test/data/bench2_30.raw
+include README
+recursive-include examples/data *.m *.raw *.pkl *.mtx
+recursive-include pylon *.m *.raw *.pkl *.mtx
