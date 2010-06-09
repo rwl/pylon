@@ -1,7 +1,7 @@
 Architectures: all
-Codename: sid
+Codename: binary
 Components: main
-Date: Wed, 09 Jun 2010 17:42:15 UTC
+Date: Wed, 09 Jun 2010 18:11:32 UTC
 Description: Pylon debian packages
 Label: Pylon Debian repository
 Origin: Pylon
