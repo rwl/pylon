@@ -14,7 +14,7 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Test case for the DC Power Flow routine.
+""" Defines a test case for DC power flow.
 """
 
 #------------------------------------------------------------------------------
@@ -22,138 +22,55 @@
 #------------------------------------------------------------------------------
 
 import unittest
+
 from os.path import join, dirname
 
-from pylon.readwrite import PickleReader
-from pylon import DCPF
+from scipy import array, alltrue
+from scipy.io.mmio import mmread
+
+from pylon import Case, DCPF
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
-DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
+DATA_DIR = join(dirname(__file__), "data")
 
 #------------------------------------------------------------------------------
 #  "DCPFTest" class:
 #------------------------------------------------------------------------------
 
 class DCPFTest(unittest.TestCase):
-    """ Uses a MATPOWER data file and validates the results against those
-        obtained from running the MATPOWER rundcpf.m script with the same
-        data file. See filter_test_case.py for validation of MATPOWER data
-        file parsing.
-    """
+
+    def __init__(self, methodName='runTest'):
+        super(DCPFTest, self).__init__(methodName)
+
+        self.case_name = "case6ww"
+
+        self.case = None
+
 
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = PickleReader().read(DATA_FILE)
-        self.routine = DCPF(self.case)#"CHOLMOD")
-        self.routine.solve()
+        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
 
 
-    def test_v_angle_guess_vector(self):
-        """ Test the voltage phase guess trait of a bus.
+    def testVa(self):
+        """ Test voltage angle solution vector from DC power flow.
         """
-        Va0 = self.routine._get_v_angle_guess(self.case)
+        solver = DCPF(self.case)
+        solver.solve()
 
-        self.assertEqual(Va0.shape, (6,))
-        self.assertEqual(Va0[1], 0.0)
-        self.assertEqual(Va0[5], 0.0)
+        mpVa = mmread(join(DATA_DIR, self.case_name, "Va.mtx")).flatten()
 
-
-    def test_v_angle_vector(self):
-        """ Test the resulting voltage phase angles
-
-        Va =
-
-                 0
-           -0.0507
-           -0.0553
-           -0.0831
-           -0.0993
-           -0.1002
-
-        """
-        places = 4
-
-        vp_0 = 0.0000
-        vp_2 = -0.0553
-        vp_5 = -0.1002
-
-        v_angle = self.routine.v_angle
-
-        self.assertAlmostEqual(v_angle[0], vp_0, places)
-        self.assertAlmostEqual(v_angle[2], vp_2, places)
-        self.assertAlmostEqual(v_angle[5], vp_5, places)
-
-
-    def test_model_results(self):
-        """ Test update of the model with results.
-
-        v_magnitude =
-
-                 0
-           -2.9024
-           -3.1679
-           -4.7632
-           -5.6902
-           -5.7418
-
-        P =
-
-           25.3284
-           41.5672
-           33.1045
-            1.8537
-           32.4776
-           16.2189
-           24.7781
-           16.9317
-           44.9220
-            4.0448
-            0.2999
-
-        """
-        places = 4
-
-        case = self.routine.case
-        buses = case.connected_buses
-        branches = case.online_branches
-
-        # Buses
-        v_0 =  0.0000
-        v_3 = -4.7632
-        v_5 = -5.7418
-
-        for each_bus in buses:
-            self.assertEqual(each_bus.v_magnitude, 1.0)
-        self.assertAlmostEqual(buses[0].v_angle, v_0, places)
-        self.assertAlmostEqual(buses[3].v_angle, v_3, places)
-        self.assertAlmostEqual(buses[5].v_angle, v_5, places)
-
-        # Branches
-        p_2 = 33.1045
-        p_6 = 24.7781
-        p_9 = 4.0448
-
-        for branch in branches:
-            self.assertEqual(branch.q_from, 0.0)
-            self.assertEqual(branch.q_to, 0.0)
-            # From and to real powers are the negative of one and other
-            self.assertAlmostEqual(branch.p_from, -branch.p_to, places)
-        self.assertAlmostEqual(branches[2].p_from, p_2, places)
-        self.assertAlmostEqual(branches[6].p_from, p_6, places)
-        self.assertAlmostEqual(branches[9].p_from, p_9, places)
-
-        # Test swing bus generator set-point.
-        self.assertAlmostEqual(case.generators[0].p, 100.0, places)
+        self.assertTrue(abs(max(solver.v_angle - mpVa)) < 1e-14)
 
 
 if __name__ == "__main__":
     import logging, sys
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
+                        format="%(levelname)s: %(message)s")
     unittest.main()
 
-# EOF ------------------------------------------------------------------------
+# EOF -------------------------------------------------------------------------

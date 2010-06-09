@@ -27,13 +27,12 @@ from pylon.test.case_test import CaseTest, BusTest, BranchTest
 from pylon.test.generator_test import GeneratorTest, OfferBidToPWLTest
 
 from dcpf_test import DCPFTest
-from acpf_test import NewtonPFTest#, FastDecoupledTest
-from dcopf_test import PiecewiseLinearDCOPFTest#, DCOPFTest
-from acopf_test import ACOPFTest
-from opf_test import OPFTest, DCOPFSolverTest, PIPSSolverTest, OPFModelTest
-from uc_test import UnitCommitmentTest
+from acpf_test import ACPFTest
+from opf_test import DCOPFTest, DCOPFSolverTest, PIPSSolverTest
+from opf_model_test import OPFModelTest
 
-from reader_test import MatpowerReaderTest#, PSSEReaderTest, PSATReaderTest
+from reader_test import MatpowerReaderTest, PSSEReaderTest#, PSATReaderTest
+from se_test import StateEstimatorTest
 
 #------------------------------------------------------------------------------
 #  "suite" function:
@@ -52,18 +51,20 @@ def suite():
     suite.addTest(unittest.makeSuite(OfferBidToPWLTest))
 
     # Solver test cases.
-#    suite.addTest(unittest.makeSuite(DCPFTest))
-#    suite.addTest(unittest.makeSuite(NewtonPFTest))
-    suite.addTest(unittest.makeSuite(PiecewiseLinearDCOPFTest))
-#    suite.addTest(unittest.makeSuite(OPFTest))
-#    suite.addTest(unittest.makeSuite(DCOPFSolverTest))
-#    suite.addTest(unittest.makeSuite(PIPSSolverTest))
-#    suite.addTest(unittest.makeSuite(OPFModelTest))
+    suite.addTest(unittest.makeSuite(DCPFTest))
+    suite.addTest(unittest.makeSuite(ACPFTest))
+    suite.addTest(unittest.makeSuite(DCOPFTest))
+    suite.addTest(unittest.makeSuite(DCOPFSolverTest))
+    suite.addTest(unittest.makeSuite(PIPSSolverTest))
+    suite.addTest(unittest.makeSuite(OPFModelTest))
 
     # Read/write test cases.
     suite.addTest(unittest.makeSuite(MatpowerReaderTest))
-#    suite.addTest(unittest.makeSuite(PSSEReaderTest))
+    suite.addTest(unittest.makeSuite(PSSEReaderTest))
 #    suite.addTest(unittest.makeSuite(PSATReaderTest))
+
+    # State estimator test.
+    suite.addTest(unittest.makeSuite(StateEstimatorTest))
 
     return suite
 
