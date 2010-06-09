@@ -29,7 +29,7 @@ clean:
 	-rm -rf build/* dist/*
 
 clean_web: clean
-	cd www && make clean
+	cd website && make clean
 
 pdf: latex
 	cd build/latex && make all-pdf
@@ -37,7 +37,7 @@ pdf: latex
 all: html
 
 web: html
-	cd www && make html
+	cd website && make html
 	@echo "Build web finished."
 
 dist: clean all
@@ -51,7 +51,7 @@ public_html: dist
 	rsync -avH --delete dist/ $(WWW)/doc/manual/
 
 public_web: public_html
-	cd www && make public_html
+	cd website && make public_html
 
 html:
 	mkdir -p build/html build/doctrees
