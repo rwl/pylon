@@ -42,7 +42,7 @@ def plotGenCost(generators):
             x = [x for x, _ in generator.p_cost]
             y = [y for _, y in generator.p_cost]
         elif generator.pcost_model == POLYNOMIAL:
-            x = scipy.arange(0., generator.p_max, 5)
+            x = scipy.arange(generator.p_min, generator.p_max, 5)
             y = scipy.polyval(scipy.array(generator.p_cost), x)
         else:
             raise
