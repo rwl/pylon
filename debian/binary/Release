@@ -1,17 +1,6 @@
-Architectures: all
-Codename: binary
-Components: main
-Date: Wed, 09 Jun 2010 18:10:59 UTC
-Description: Pylon debian packages
-Label: Pylon Debian repository
+Archive: unstable
+Component: main
 Origin: Pylon
-Suite: unstable
-MD5Sum:
- c7c5ab84e334af07c387cabec1b0631f              459 Packages.gz
- d41d8cd98f00b204e9800998ecf8427e                0 Release
-SHA1:
- 3f7b505d552acec42a25660b5d73d3624866dc9b              459 Packages.gz
- da39a3ee5e6b4b0d3255bfef95601890afd80709                0 Release
-SHA256:
- c4c360e299c9fe3c8afc4f2036bf03710c4e32cb075929a0c6aeed455b885aa3              459 Packages.gz
- e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855                0 Release
+Label: Pylon
+Architecture: all
+
