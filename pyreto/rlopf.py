@@ -66,7 +66,7 @@ class CaseEnvironment(Environment):
         self._Pd0 = array([b.p_demand for b in case.buses if b.type == PQ])
 
         # Store generator set-point actions.
-        self._Pg = zeros((len(gens), len(self.profile)))
+        self._Pg = zeros((len(self.case.online_generators), len(self.profile)))
 
         #----------------------------------------------------------------------
         #  "Environment" interface:
@@ -82,15 +82,15 @@ class CaseEnvironment(Environment):
     #  "CaseEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def _setProfile(self, value):
-        g = [g for g in self.case.online_generators if g.bus.type != REFERENCE]
-        self._Pg = zeros((len(g), len(value)))
-        self._profile = value
-
-    def _getProfile(self):
-        return self._profile
-
-    profile = property(_getProfile, _setProfile)
+#    def _setProfile(self, value):
+#        g = [g for g in self.case.online_generators if g.bus.type != REFERENCE]
+#        self._Pg = zeros((len(g), len(value)))
+#        self._profile = value
+#
+#    def _getProfile(self):
+#        return self._profile
+#
+#    profile = property(_getProfile, _setProfile)
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -118,14 +118,14 @@ class CaseEnvironment(Environment):
         for i, g in enumerate(gs):
             g.p = action[i]
 
-            self._Pg[i, self._step] = action[i]
+        self._Pg[:, self._step] = [g.p for g in self.case.online_generators]
 
         # Solve the power flow problem for the new case.
         NewtonPF(self.case, verbose=False).solve()
         #FastDecoupledPF(self.case, verbose=False).solve()
 
-        s = [g for g in self.case.online_generators if g.bus.type == REFERENCE]
-        logger.info("Slack: %.3f" % s[0].p)
+#        s = [g for g in self.case.online_generators if g.bus.type == REFERENCE]
+#        logger.info("Slack: %.3f" % s[0].p)
 
         # Apply load profile to the demand at each bus.
         for i, b in enumerate([b for b in self.case.buses if b.type == PQ]):
@@ -153,7 +153,7 @@ class CaseEnvironment(Environment):
             b.p_demand = self._Pd0[i]
 
         # Initialise the record of generator set-points.
-        self._Pg = zeros((len(gs), len(self.profile)))
+        self._Pg = zeros((len(self.case.online_generators), len(self.profile)))
 
         self.case.reset()
 
@@ -187,11 +187,20 @@ class MinimiseCostTask(EpisodicTask):
     def getReward(self):
         """ Returns the reward corresponding to the last action performed.
         """
-        generators = [g for g in self.env.case.online_generators
-                      if g.bus.type != REFERENCE]
+        on = self.env.case.online_generators
+        generators = [g for g in on if g.bus.type != REFERENCE]
 
         cost = sum([g.total_cost() for g in generators])
-        logger.info("Cost: %.3f" % cost)
+
+        # Add a penalty if the output of the slack generator is infeasible.
+        ref_penalty = 10000.0
+        refs = [g for g in on if g.bus.type == REFERENCE]
+        for g in refs:
+            if not (g.p_min <= g.p <= g.p_max):
+                cost += ref_penalty
+                logger.info("Infeasible slack generator output: %.3f" % g.p)
+
+#        logger.info("Cost: %.3f" % cost)
 
         return -cost
 
