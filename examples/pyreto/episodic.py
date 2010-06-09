@@ -70,4 +70,6 @@ for week in range(weeks):
         state, action, reward = \
             agent.history.getSequence(agent.history.getNumSequences() - 1)
         plot.addData(i, week, scipy.mean(reward))
+    agent.learn()
+    agent.reset()
     plot.update()
