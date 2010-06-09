@@ -5,6 +5,7 @@
 *~
 *.autosave
 build/
+doc/build/
 dist/
 *.egg-info
 output/
