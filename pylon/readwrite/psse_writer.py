@@ -63,7 +63,7 @@ class PSSEWriter(CaseWriter):
         # I, 'NAME', BASKV, IDE, GL, BL, AREA, ZONE, VM, VA, OWNER
         bus_attrs = ["_i", "name", "v_base", "type", "g_shunt", "b_shunt",
                      "area", "zone",
-                     "v_magnitude_guess", "v_angle_guess"]
+                     "v_magnitude", "v_angle"]
 
         for bus in self.case.buses:
             vals = [getattr(bus, a) for a in bus_attrs]

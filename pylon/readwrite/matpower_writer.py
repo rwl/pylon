@@ -94,7 +94,7 @@ class MATPOWERWriter(CaseWriter):
 #            "baseKV", "Vmax", "Vmin"]
 
         bus_attrs = ["_i", "type", "p_demand", "q_demand", "g_shunt","b_shunt",
-            "area", "v_magnitude_guess", "v_angle_guess", "v_base", "zone",
+            "area", "v_magnitude", "v_angle", "v_base", "zone",
             "v_max", "v_min", "p_lmbda", "q_lmbda", "mu_vmin", "mu_vmax"]
 
         file.write("\n%%%% bus data\n")

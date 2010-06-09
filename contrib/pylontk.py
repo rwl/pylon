@@ -560,8 +560,7 @@ class CaseProperties(tkSimpleDialog.Dialog):
     def on_bus(self, event=None):
         bus = self.case.buses[int(self.bus_lb.curselection()[0])]
 
-        self.excluded = ["zone", "v_base", "v_magnitude_guess",
-                         "v_angle_guess", "v_magnitude", "v_angle", "g_shunt",
+        self.excluded = ["zone", "v_base", "v_magnitude", "v_angle", "g_shunt",
                          "b_shunt", "zone"]
         for attr in [a for a in BUS_ATTRS if a not in self.excluded]:
             value = getattr(bus, attr)
