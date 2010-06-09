@@ -8,6 +8,5 @@ dist/
 *.egg-info
 output/
 static/
+debian/python-pylon*
 
-pylon/test/data/ipsa.raw
-pylon/test/data/ipsa.seq
