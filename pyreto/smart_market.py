@@ -679,7 +679,7 @@ class _OfferBid(object):
         self.clearedQuantity = 0.0
 
         # Price at which the bid was cleared.
-        self.clearedQrice = 0.0
+        self.clearedPrice = 0.0
 
 
     @property
