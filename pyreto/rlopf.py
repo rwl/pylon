@@ -26,6 +26,7 @@ import logging
 from numpy import array, zeros
 
 from pybrain.rl.environments import Environment, EpisodicTask
+from pybrain.rl.experiments import EpisodicExperiment
 
 from pylon import PQ, REFERENCE, NewtonPF#, FastDecoupledPF
 
@@ -118,18 +119,18 @@ class CaseEnvironment(Environment):
         for i, g in enumerate(gs):
             g.p = action[i]
 
-        self._Pg[:, self._step] = [g.p for g in self.case.online_generators]
-
-        # Solve the power flow problem for the new case.
+        # Compute power flows and slack generator set-point.
         NewtonPF(self.case, verbose=False).solve()
         #FastDecoupledPF(self.case, verbose=False).solve()
 
-#        s = [g for g in self.case.online_generators if g.bus.type == REFERENCE]
-#        logger.info("Slack: %.3f" % s[0].p)
+        # Store all generator set-points (only used for plotting).
+        self._Pg[:, self._step] = [g.p for g in self.case.online_generators]
 
-        # Apply load profile to the demand at each bus.
-        for i, b in enumerate([b for b in self.case.buses if b.type == PQ]):
-            b.p_demand = self._Pd0[i] * self.profile[self._step]
+        # Apply the next load profile value to the original demand at each bus.
+        if self._step != len(self.profile) - 1:
+            pq_buses = [b for b in self.case.buses if b.type == PQ]
+            for i, b in enumerate(pq_buses):
+                b.p_demand = self._Pd0[i] * self.profile[self._step + 1]
 
         self._step += 1
 
@@ -148,12 +149,15 @@ class CaseEnvironment(Environment):
         for i, g in enumerate(gs):
             g.p = self._Pg0[i]
 
-        # Reset the demand at each bus to its original value.
+        # Apply load profile to the original demand at each bus.
         for i, b in enumerate([b for b in self.case.buses if b.type == PQ]):
-            b.p_demand = self._Pd0[i]
+            b.p_demand = self._Pd0[i] * self.profile[self._step]
 
         # Initialise the record of generator set-points.
         self._Pg = zeros((len(self.case.online_generators), len(self.profile)))
+
+        # Apply the first load profile value.
+#        self.step()
 
         self.case.reset()
 
@@ -192,13 +196,17 @@ class MinimiseCostTask(EpisodicTask):
 
         cost = sum([g.total_cost() for g in generators])
 
-        # Add a penalty if the output of the slack generator is infeasible.
-        ref_penalty = 10000.0
+
+        ref_penalty = 1000.0
         refs = [g for g in on if g.bus.type == REFERENCE]
         for g in refs:
+            # Do not receive payment for negative Pg at slack bus.
+            if g.p > 0.0:
+                cost += g.total_cost()
+            # Add a penalty if the output of the slack generator is infeasible.
             if not (g.p_min <= g.p <= g.p_max):
                 cost += ref_penalty
-                logger.info("Infeasible slack generator output: %.3f" % g.p)
+#                logger.info("Infeasible slack generator output: %.3f" % g.p)
 
 #        logger.info("Cost: %.3f" % cost)
 
@@ -243,5 +251,54 @@ class MinimiseCostTask(EpisodicTask):
         logger.info("Actor limits: %s" % limits)
 
         return limits
+
+#------------------------------------------------------------------------------
+#  "OPFExperiment" class:
+#------------------------------------------------------------------------------
+
+class OPFExperiment(EpisodicExperiment):
+    """ Defines a simple experiment subclass that saves generator set-points.
+    """
+
+    def __init__(self, agent, task):
+        super(OPFExperiment, self).__init__(agent, task)
+
+        self.Pg = None
+
+    #--------------------------------------------------------------------------
+    #  "EpisodicExperiment" interface:
+    #--------------------------------------------------------------------------
+
+    def _oneInteraction(self):
+        """ Does one interaction between the task and the agent.
+        """
+        if self.doOptimization:
+            raise Exception('When using a black-box learning algorithm, only full episodes can be done.')
+        else:
+            self.stepid += 1
+            self.agent.integrateObservation(self.task.getObservation())
+            self.task.performAction(self.agent.getAction())
+
+            # Save the cumulative sum of set-points for each period.
+            for i, g in enumerate(self.task.env.case.online_generators):
+                self.Pg[i, self.stepid - 1] = self.Pg[i, self.stepid - 1] + g.p
+
+            reward = self.task.getReward()
+            self.agent.giveReward(reward)
+            return reward
+
+
+    def doEpisodes(self, number=1):
+        """ Does the the given number of episodes.
+        """
+        env = self.task.env
+        self.Pg = zeros((len(env.case.online_generators), len(env.profile)))
+
+        rewards = super(OPFExperiment, self).doEpisodes(number)
+
+        # Average the set-points for each period.
+        self.Pg = self.Pg / number
+
+        return rewards
 
 # EOF -------------------------------------------------------------------------
