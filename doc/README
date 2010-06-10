@@ -1,0 +1,34 @@
+===================
+Pylon documentation
+===================
+
+Debian repo notes
+-----------------
+
+cd /tmp
+git clone git@github.com:rwl/pylon.git
+cd pylon
+git checkout -b gh-pages origin/gh-pages
+
+cd debian
+cp /path/to/python-pylon_X.X.X_all.deb binary
+dpkg-scanpackages binary /dev/null | gzip -9c > binary/Packages.gz
+
+cp /path/to/pylon_X.X.X.dsc source
+cp /path/to/pylon_X.X.X.tar.gz source
+cp /path/to/pylon_X.X.X_amd.changes source
+dpkg-scansources source /dev/null | gzip -9c > source/Sources.gz
+
+#apt-ftparchive -c release.conf release binary/ > binary/Release
+#apt-ftparchive -c release.conf release source/ > source/Release
+
+Sign the Release files using::
+  $ gpg -abs -o binary/Release.gpg binary/Release
+  $ gpg -abs -o source/Release.gpg source/Release
+
+To export a key for use::
+  $ gpg --armor --output pylon.asc --export 'Richard Lincoln'
+
+To add a key to apt::
+  $ sudo apt-key add pylon.asc
+
