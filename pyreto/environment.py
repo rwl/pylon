@@ -66,7 +66,7 @@ class DiscreteMarketEnvironment(object):
 #        self._allActions = []
 
         # List of offers/bids from the previous action.
-        self._lastAction = []
+        self.last_action = []
 
 #        self._numOffbids = 0
         self._markups = ()
@@ -178,8 +178,8 @@ class DiscreteMarketEnvironment(object):
             of doubles.
         """
         # TODO: Load forecast as state.
-        if len(self._lastAction):
-            prc = mean([ob.cleared_price for ob in self._lastAction])
+        if len(self.last_action):
+            prc = mean([ob.cleared_price for ob in self.last_action])
         else:
             prc = 0.0
 

@@ -62,7 +62,7 @@ class ProfitTask(Task):
                                  self.env.gencost[g]["pCostModel"])
 
     #        offbids = self.env.market.getOffbids(g)
-            offbids = [ob for ob in self.env._lastAction if ob.generator == g]
+            offbids = [ob for ob in self.env.last_action if ob.generator == g]
 
             revenue = t * sum([ob.revenue for ob in offbids])
 
