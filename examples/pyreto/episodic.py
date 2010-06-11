@@ -41,7 +41,7 @@ p1h = p1h[:6]
 experiment = pyreto.continuous.MarketExperiment([], [], market, p1h)
 
 # Associate each generator in the case with an agent.
-for gen in case.generators:
+for gen in case.generators[:1]:
     # The environment provides market and case sensor values and handles
     # submission of offers/bids to the market.
     env = pyreto.continuous.MarketEnvironment([gen], market, numOffbids=2)
@@ -62,6 +62,14 @@ for gen in case.generators:
     #learner.learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs)
 
     # Add the task and agent to the experiment.
+    experiment.tasks.append(task)
+    experiment.agents.append(agent)
+
+takers = case.generators[1:]
+for g in takers:
+    env = pyreto.continuous.MarketEnvironment([g], market, numOffbids=2)
+    task = pyreto.continuous.ProfitTask(env, maxSteps=len(p1h))
+    agent = pyreto.continuous.environment.ZeroAgent(env.outdim, env.indim)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -89,7 +97,8 @@ for week in range(weeks):
         agent.learn()
         agent.reset()
 
-        agent.learner.explorer.sigma = sigma
+        if hasattr(agent, "learner"):
+            agent.learner.explorer.sigma = sigma
 
     plot.update()
 

@@ -23,7 +23,9 @@
 
 import logging
 
-from numpy import array
+from numpy import array, zeros
+
+from pybrain.rl.agents.logging import LoggingAgent
 
 from pylon import PQ, POLYNOMIAL
 from pyreto.smart_market import Offer, Bid
@@ -33,6 +35,19 @@ from pyreto.smart_market import Offer, Bid
 #------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
+
+#------------------------------------------------------------------------------
+#  "ZeroAgent" class:
+#------------------------------------------------------------------------------
+
+class ZeroAgent(LoggingAgent):
+
+    def getAction(self):
+        self.lastaction = -1.0 * zeros(self.outdim)
+        return self.lastaction
+
+    def learn(self):
+        pass
 
 #------------------------------------------------------------------------------
 #  "MarketEnvironment" class:
