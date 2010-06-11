@@ -27,6 +27,8 @@ from scipy import power
 
 from pybrain.rl.environments import Task
 
+from pyreto.discrete.task import ProfitTask as DiscreteProfitTask
+
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -43,60 +45,12 @@ BIGNUM = 1e04
 #  "ProfitTask" class:
 #------------------------------------------------------------------------------
 
-class ProfitTask(Task):
-    """ Defines a task with discrete observations of the clearing price.
-    """
-
-    def getReward(self):
-        """ Returns the reward corresponding to the last action performed.
-        """
-        t = self.env.market.period
-
-        earnings = 0.0
-        for g in self.env.generators:
-            # Compute costs in $ (not $/hr).
-    #        fixedCost = t * g.total_cost(0.0)
-    #        variableCost = (t * g.total_cost()) - fixedCost
-            costs = g.total_cost(round(g.p, 4),
-                                 self.env.gencost[g]["pCost"],
-                                 self.env.gencost[g]["pCostModel"])
-
-    #        offbids = self.env.market.getOffbids(g)
-            offbids = [ob for ob in self.env.last_action if ob.generator == g]
-
-            revenue = t * sum([ob.revenue for ob in offbids])
-
-            if g.is_load:
-                earnings += costs - revenue
-            else:
-                earnings += revenue - costs#(fixedCost + variableCost)
-
-            logger.debug("Generator [%s] earnings: %.2f (%.2f, %.2f)" %
-                         (g.name, earnings, revenue, costs))
-
-        logger.debug("Task reward: %.2f" % earnings)
-
-        return earnings
-
-
-    def performAction(self, action):
-        """ The action vector is stripped and the only element is cast to
-            integer and given to the super class.
-        """
-        super(ProfitTask, self).performAction(int(action[0]))
-
-#------------------------------------------------------------------------------
-#  "EpisodicProfitTask" class:
-#------------------------------------------------------------------------------
-
-class EpisodicProfitTask(ProfitTask):
+class ProfitTask(DiscreteProfitTask):
     """ Defines a task for continuous sensor and action spaces.
     """
 
     def __init__(self, environment, maxSteps=24, discount=None):
-        """ Initialises the task.
-        """
-        super(EpisodicProfitTask, self).__init__(environment)
+        super(ProfitTask, self).__init__(environment)
 
         # Maximum number of time steps.
         self.maxSteps = maxSteps
@@ -132,7 +86,7 @@ class EpisodicProfitTask(ProfitTask):
 
     def getObservation(self):
         """ A filtered mapping to getSample of the underlying environment. """
-        sensors = super(EpisodicProfitTask, self).getObservation()
+        sensors = super(ProfitTask, self).getObservation()
 #        print "SENSORS:", sensors
         return sensors
 
@@ -147,7 +101,7 @@ class EpisodicProfitTask(ProfitTask):
 
 
     def reset(self):
-#        super(EpisodicProfitTask, self).reset()
+#        super(ProfitTask, self).reset()
 #        self.env.reset()
         self.cumulativeReward = 0
         self.samples = 0
@@ -177,7 +131,7 @@ class EpisodicProfitTask(ProfitTask):
             self.cumulativeReward += self.getReward()
 
     #--------------------------------------------------------------------------
-    #  "EpisodicProfitTask" interface:
+    #  "ProfitTask" interface:
     #--------------------------------------------------------------------------
 
     def getSensorLimits(self):
