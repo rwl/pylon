@@ -8,7 +8,7 @@ import logging
 import pylab
 import scipy
 
-import pyreto
+import pyreto.continuous
 
 from pylon import Case, OPF
 
@@ -27,9 +27,6 @@ case = Case.load("../data/case6ww.pkl")
 case.generators[0].p_cost = (0.0, 16.0, 200.0)
 case.generators[1].p_cost = (0.0, 2.0, 200.0)
 case.generators[2].p_cost = (0.0, 32.0, 200.0)
-case.buses[3].p_demand = 120.0
-case.buses[4].p_demand = 120.0
-case.buses[5].p_demand = 120.0
 #pyreto.tools.plotGenCost(case.generators)
 
 # Construct a market and specify any desired limits.
@@ -41,22 +38,22 @@ p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
 p1h = p1h[:6]
 
 # An experiment coordinates interactions between agents and their tasks.
-experiment = pyreto.EpisodicMarketExperiment([], [], market, p1h)
+experiment = pyreto.continuous.MarketExperiment([], [], market, p1h)
 
 # Associate each generator in the case with an agent.
 for gen in case.generators:
     # The environment provides market and case sensor values and handles
     # submission of offers/bids to the market.
-    env = pyreto.ContinuousMarketEnvironment([gen], market, numOffbids=2)
+    env = pyreto.continuous.MarketEnvironment([gen], market, numOffbids=2)
     # Reward is defined as profit.
-    task = pyreto.EpisodicProfitTask(env, maxSteps=len(p1h))
+    task = pyreto.continuous.ProfitTask(env, maxSteps=len(p1h))
     # Build an ANN for policy function approximation.
 #    net = buildNetwork(env.outdim, 7, env.indim, bias=True, outputbias=False)
     net = buildNetwork(env.outdim, env.indim, bias=False)
     # Create an agent and select an episodic learner.
     learner = ENAC()
     agent = LearningAgent(net, learner)
-    # Name the agent according to its generator.
+    # Name the agent according to its first generator's name.
     agent.name = gen.name
 
     # Adjust some parameters of the NormalExplorer.
@@ -74,12 +71,10 @@ pylab.ion()
 plot = MultilinePlotter(autoscale=1.1, xlim=[0, len(p1h)], ylim=[0, 1])
 
 # Solve an initial OPF.
-OPF(case, market.locationalAdjustment=='dc').solve()
+OPF(case, market.locationalAdjustment=='dc', opt={"verbose": False}).solve()
 
-days = 7 # number of samples per learning step
-weeks = 52 / days # number of roleouts
-
-# Do the experiment.
+weeks = 52 # number of roleouts
+days = 2 # number of samples per learning step
 for week in range(weeks):
     experiment.doEpisodes(days)
 
@@ -97,3 +92,5 @@ for week in range(weeks):
         agent.learner.explorer.sigma = sigma
 
     plot.update()
+
+pylab.savefig("/tmp/pyreto.png")

@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 #  "MarketEnvironment" class:
 #------------------------------------------------------------------------------
 
-class MarketEnvironment:
+class MarketEnvironment(object):
     """ Defines the world in which an agent acts.  It receives an input with
         .performAction() and returns an output with .getSensors(). Each
         environment requires a reference to an asset (Generator) and the whole

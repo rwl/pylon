@@ -68,7 +68,7 @@ class ProfitTask(DiscreteProfitTask):
         self.samples = 0
 
         # Maximum markup/markdown.
-        self.maxMarkup = 0.4
+        self.maxMarkup = 100.0
 
         #----------------------------------------------------------------------
         #  "Task" interface:
@@ -140,37 +140,39 @@ class ProfitTask(DiscreteProfitTask):
         """
         case = self.env.market.case
 
-        limits = []
+#        limits = []
+#
+#        # Market sensor limits.
+#        limits.append((1e-6, BIGNUM)) # f
+#        pLimit = 0.0
+#        for g in self.env.generators:
+#            if g.is_load:
+#                pLimit += self.env._g0[g]["p_min"]
+#            else:
+#                pLimit += self.env._g0[g]["p_max"]
+#        limits.append((0.0, pLimit)) # quantity
+##        cost = max([g.total_cost(pLimit,
+##                                 self.env._g0[g]["p_cost"],
+##                                 self.env._g0[g]["pcost_model"]) \
+##                                 for g in self.env.generators])
+#        cost = self.env.generators[0].total_cost(pLimit,
+#            self.env._g0[g]["p_cost"], self.env._g0[g]["pcost_model"])
+#        limits.append((0.0, cost)) # mcp
+#
+#        # Case sensor limits.
+##        limits.extend([(-180.0, 180.0) for _ in case.buses]) # Va
+#        limits.extend([(0.0, BIGNUM) for _ in case.buses]) # P_lambda
+#
+#        limits.extend([(-b.rate_a, b.rate_a) for b in case.branches]) # Pf
+##        limits.extend([(-BIGNUM, BIGNUM) for b in case.branches])     # mu_f
+#
+#        limits.extend([(g.p_min, g.p_max) for g in case.generators]) # Pg
+##        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators])  # Pg_max
+##        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators])  # Pg_min
 
-        # Market sensor limits.
-        limits.append((1e-6, BIGNUM)) # f
-        pLimit = 0.0
-        for g in self.env.generators:
-            if g.is_load:
-                pLimit += self.env.gencost[g]["pMin"]
-            else:
-                pLimit += self.env.gencost[g]["pMax"]
-        limits.append((0.0, pLimit)) # quantity
-#        cost = max([g.total_cost(pLimit,
-#                                 self.env.gencost[g]["pCost"],
-#                                 self.env.gencost[g]["pCostModel"]) \
-#                                 for g in self.env.generators])
-        cost = self.env.generators[0].total_cost(pLimit,
-            self.env.gencost[g]["pCost"], self.env.gencost[g]["pCostModel"])
-        limits.append((0.0, cost)) # mcp
+        Pdmax = sum([b.p_demand for b in case.buses])
 
-        # Case sensor limits.
-#        limits.extend([(-180.0, 180.0) for _ in case.buses]) # Va
-        limits.extend([(0.0, BIGNUM) for _ in case.buses]) # P_lambda
-
-        limits.extend([(-b.rate_a, b.rate_a) for b in case.branches]) # Pf
-#        limits.extend([(-BIGNUM, BIGNUM) for b in case.branches])     # mu_f
-
-        limits.extend([(g.p_min, g.p_max) for g in case.generators]) # Pg
-#        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators])  # Pg_max
-#        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators])  # Pg_min
-
-        return limits
+        return [(0.0, Pdmax)]
 
 
     def getActorLimits(self):
@@ -184,7 +186,7 @@ class ProfitTask(DiscreteProfitTask):
         for _ in range(numOffbids):
             for g in self.env.generators:
                 if offbidQty:
-                    actorLimits.append((0.0, self.env.gencost[g]["pMax"]))
+                    actorLimits.append((0.0, self.env._g0[g]["p_max"]))
                 actorLimits.append((0.0, self.maxMarkup))
 
         return actorLimits

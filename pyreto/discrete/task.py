@@ -50,11 +50,11 @@ class ProfitTask(Task):
     #        fixedCost = t * g.total_cost(0.0)
     #        variableCost = (t * g.total_cost()) - fixedCost
             costs = g.total_cost(round(g.p, 4),
-                                 self.env.gencost[g]["pCost"],
-                                 self.env.gencost[g]["pCostModel"])
+                                 self.env._g0[g]["p_cost"],
+                                 self.env._g0[g]["pcost_model"])
 
     #        offbids = self.env.market.getOffbids(g)
-            offbids = [ob for ob in self.env.last_action if ob.generator == g]
+            offbids = [ob for ob in self.env._lastAction if ob.generator == g]
 
             revenue = t * sum([ob.revenue for ob in offbids])
 

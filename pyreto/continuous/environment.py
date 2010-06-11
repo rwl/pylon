@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 #  "MarketEnvironment" class:
 #------------------------------------------------------------------------------
 
-class MarketEnvironment:
+class MarketEnvironment(object):
     """ Defines a continuous representation of an electricity market
         participant's environment.
     """
@@ -82,7 +82,7 @@ class MarketEnvironment:
         """ Returns the currently visible state of the world as a numpy array
             of doubles.
         """
-        Pd = sum([b.p_demand for b in self.case.buses if b.type == PQ])
+        Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
         logger.info("State: %s" % Pd)
         return array([Pd])
 
@@ -96,6 +96,13 @@ class MarketEnvironment:
             self._offbidQuantityAndMarkup(action)
         else:
             self._offbidMarkup(action)
+
+
+    def reset(self):
+        """ Re-initialises the participant's environment.
+        """
+        self.market.reset()
+
 
     @property
     def indim(self):
@@ -118,7 +125,7 @@ class MarketEnvironment:
     #  "MarketEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def _offbidQuantityAndMarkup(self, action):
+    def _offbidMarkup(self, action):
         totQty = 0.0
         for i, g in enumerate(self.generators):
             ratedPMin = self._g0[g]["p_min"]
@@ -144,7 +151,7 @@ class MarketEnvironment:
             # Get the marginal cost of generating at this output.
             c = g.total_cost(totQty, marginalPCost, marginalPCostModel)
 
-            for j in range(len(self.numOffbids)):
+            for j in range(self.numOffbids):
                 # Index of the first markup in 'action' for the current gen.
                 k = i * len(action) / len(self.generators)
                 # The markups are cumulative to ensure cost function convexity.
@@ -160,21 +167,21 @@ class MarketEnvironment:
                     offer = Offer(g, qty, prc, costNoLoad)
                     self.market.offers.append(offer)
 
-                    self.lastAction.append(offer)
+                    self._lastAction.append(offer)
                     logger.info("%.2fMW offered at %.2f$/MWh for %s (%.1f%%)."
                         % (qty, prc, g.name, mk))
                 else:
                     bid = Bid(g, -qty, prc, costNoLoad)
                     self.market.bids.append(bid)
 
-                    self.lastAction.append(bid)
+                    self._lastAction.append(bid)
                     logger.info("%.2f$/MWh bid for %.2fMW for %s (%.1f%%)."
                         % (prc, -qty, g.name, mk))
 
-        return self.lastAction
+        return self._lastAction
 
 
-    def _offbidMarkup(self, action):
+    def _offbidQuantityAndMarkup(self, action):
         raise NotImplementedError
 
 
@@ -185,25 +192,25 @@ class MarketEnvironment:
 
 
     def _setGenerators(self, generators):
-        self._generators = generators
-
         # Update the record of initial ratings and costs.
-        self._g0 = {}
+        g0 = {}
         for g in generators:
             # Asset capacity limits.
-            self._g0[g] = {}
-            self._g0[g]["p_max"] = g.p_max
-            self._g0[g]["p_min"] = g.p_min
-            self._g0[g]["q_max"] = g.q_max
-            self._g0[g]["q_min"] = g.q_min
+            g0[g] = {}
+            g0[g]["p_max"] = g.p_max
+            g0[g]["p_min"] = g.p_min
+            g0[g]["q_max"] = g.q_max
+            g0[g]["q_min"] = g.q_min
             # Marginal cost function proportional to current capacity.
-            self._g0[g]["p_cost"] = g.p_cost
-            self._g0[g]["pcost_model"] = g.pcost_model
-            self._g0[g]["q_cost"] = g.q_cost
-            self._g0[g]["qcost_model"] = g.qcost_model
+            g0[g]["p_cost"] = g.p_cost
+            g0[g]["pcost_model"] = g.pcost_model
+            g0[g]["q_cost"] = g.q_cost
+            g0[g]["qcost_model"] = g.qcost_model
             # Amortised fixed costs.
-            self._g0[g]["startup"] = g.c_startup
-            self._g0[g]["shutdown"] = g.c_shutdown
+            g0[g]["startup"] = g.c_startup
+            g0[g]["shutdown"] = g.c_shutdown
+        self._g0 = g0
+        self._generators = generators
 
     generators = property(_getGenerators, _setGenerators)
 

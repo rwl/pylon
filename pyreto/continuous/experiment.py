@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 #  "MarketExperiment" class:
 #------------------------------------------------------------------------------
 
-class MarketExperiment:
+class MarketExperiment(object):
     """ Defines a multi-agent market experiment in which loads follow an
         episodic profile.
     """
@@ -51,8 +51,7 @@ class MarketExperiment:
     def __init__(self, tasks, agents, market, profile=None):
         """ Initialises the market experiment.
         """
-        super(MarketExperiment, self).__init__(None, None)
-
+        super(MarketExperiment, self).__init__()
         assert len(tasks) == len(agents)
 
         # Tasks associate and agent with its environment.

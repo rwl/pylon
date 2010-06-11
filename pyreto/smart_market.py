@@ -280,9 +280,9 @@ class SmartMarket(object):
         if self.decommit:
             solver = UDOPF(self.case, dc=(self.locationalAdjustment == "dc"))
         elif self.locationalAdjustment == "dc":
-            solver = OPF(self.case, dc=True, opt={"verbose": True})
+            solver = OPF(self.case, dc=True)#, opt={"verbose": True})
         else:
-            solver = OPF(self.case, dc=False, opt={"verbose": True})
+            solver = OPF(self.case, dc=False)#, opt={"verbose": True})
 
         solution = self._solution = solver.solve()
 
