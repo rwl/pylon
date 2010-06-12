@@ -96,8 +96,16 @@ class ProfitTask(DiscreteProfitTask):
         """
         self.t += 1
         Task.performAction(self, action)
-        self.addReward()
+#        self.addReward()
         self.samples += 1
+
+
+    def getReward(self):
+        """ Returns the reward corresponding to the last action performed.
+        """
+        earnings = super(ProfitTask, self).getReward()
+        self.addReward(earnings)
+        return earnings
 
 
     def reset(self):
@@ -119,16 +127,17 @@ class ProfitTask(DiscreteProfitTask):
         return False
 
 
-    def addReward(self):
+    def addReward(self, r=None):
         """ A filtered mapping towards performAction of the underlying
             environment.
         """
+        r = self.getReward() if r is None else r
+
         # by default, the cumulative reward is just the sum over the episode
         if self.discount:
-            reward = self.getReward()
-            self.cumulativeReward += power(self.discount, self.samples) *reward
+            self.cumulativeReward += power(self.discount, self.samples) * r
         else:
-            self.cumulativeReward += self.getReward()
+            self.cumulativeReward += r
 
     #--------------------------------------------------------------------------
     #  "ProfitTask" interface:
@@ -172,7 +181,11 @@ class ProfitTask(DiscreteProfitTask):
 
         Pdmax = sum([b.p_demand for b in case.buses])
 
-        return [(0.0, Pdmax)]
+        sensorLimits = [(0.0, Pdmax)]
+
+        logger.debug("Sensor limits: %s" % sensorLimits)
+
+        return sensorLimits
 
 
     def getActorLimits(self):
@@ -188,6 +201,8 @@ class ProfitTask(DiscreteProfitTask):
                 if offbidQty:
                     actorLimits.append((0.0, self.env._g0[g]["p_max"]))
                 actorLimits.append((0.0, self.maxMarkup))
+
+        logger.debug("Actor limits: %s" % actorLimits)
 
         return actorLimits
 

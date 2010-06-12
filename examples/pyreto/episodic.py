@@ -8,6 +8,7 @@ import logging
 import pylab
 import scipy
 
+import pyreto.tools
 import pyreto.continuous
 
 from pylon import Case, OPF
@@ -24,10 +25,10 @@ logger.setLevel(logging.DEBUG)
 
 # Saved case formats are recognised by file extension.
 case = Case.load("../data/case6ww.pkl")
-case.generators[0].p_cost = (0.0, 16.0, 200.0)
-case.generators[1].p_cost = (0.0, 2.0, 200.0)
-case.generators[2].p_cost = (0.0, 32.0, 200.0)
-#pyreto.tools.plotGenCost(case.generators)
+case.generators[0].p_cost = (0.0, 0.9, 200.0)
+case.generators[1].p_cost = (0.0, 0.2, 200.0)
+case.generators[2].p_cost = (0.0, 0.5, 200.0)
+pyreto.tools.plotGenCost(case.generators)
 
 # Construct a market and specify any desired limits.
 market = pyreto.SmartMarket(case, priceCap=100.0)
