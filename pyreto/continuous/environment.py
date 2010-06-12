@@ -23,7 +23,7 @@
 
 import logging
 
-from numpy import array, zeros
+from numpy import array, ones
 
 from pybrain.rl.agents.logging import LoggingAgent
 
@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 class ZeroAgent(LoggingAgent):
 
     def getAction(self):
-        self.lastaction = -1.0 * zeros(self.outdim)
+        self.lastaction = -1.0 * ones(self.outdim)
         return self.lastaction
 
     def learn(self):
@@ -168,15 +168,15 @@ class MarketEnvironment(object):
 
             for j in range(self.numOffbids):
                 # Index of the first markup in 'action' for the current gen.
-                k = i * len(action) / len(self.generators)
+                k = i * (len(action) / len(self.generators))
                 # The markups are cumulative to ensure cost function convexity.
                 mk = sum(action[k:k + j + 1])
 
                 # Markup the marginal cost of the generator.
                 if not g.is_load:
-                    prc = c * (1.0 + (mk / 100.0))
+                    prc = c * ((100.0 + mk) / 100.0)
                 else:
-                    prc = c * (1.0 - (mk / 100.0))
+                    prc = c * ((100.0 + mk) / 100.0)
 
                 if not g.is_load:
                     offer = Offer(g, qty, prc, costNoLoad)
