@@ -20,8 +20,8 @@
     Note: This module is licensed under GNU GPL version 3 due to the
     CVXOPT import.
 
-    [1] Ray Zimmerman, "fmincon.m", MATPOWER, PSERC Cornell, version 4.0b1,
-        http://www.pserc.cornell.edu/matpower/, December 2009
+    [1] Ray Zimmerman, "mipsopf_solver.m", MATPOWER, PSERC Cornell,
+        version 4.0b1, http://www.pserc.cornell.edu/matpower/, Dec 2009
 """
 
 #------------------------------------------------------------------------------
@@ -30,8 +30,7 @@
 
 import logging
 
-#from numpy import pi, polyval, polyder, r_
-#from scipy.sparse import vstack, eye
+from numpy import polyval, polyder, finfo, pi
 
 from cvxopt import matrix, spmatrix, mul, sparse, exp, solvers, div, spdiag
 
@@ -44,14 +43,17 @@ from pylon.solver import Solver, DCOPFSolver, SFLOW, PFLOW, IFLOW
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
+#  Constants:
+#------------------------------------------------------------------------------
+
+EPS = finfo(float).eps
+
+#------------------------------------------------------------------------------
 #  "DCCVXOPTSolver" class:
 #------------------------------------------------------------------------------
 
 class DCCVXOPTSolver(DCOPFSolver):
-    """ Solves DC optimal power flow using CVXOPT [1].
-
-        [1] Ray Zimmerman, "dcopf.m", MATPOWER, PSERC Cornell, version 4.0b1,
-            http://www.pserc.cornell.edu/matpower/, December 2009
+    """ Solves DC optimal power flow using CVXOPT.
     """
 
     #--------------------------------------------------------------------------
@@ -87,28 +89,24 @@ class DCCVXOPTSolver(DCOPFSolver):
             raise NotImplementedError
 
 
-    def _run_opf(self, P, q, AA, bb, LB, UB, x0, opt):
+    def _run_opf(self, P, q, AA, ll, uu, xmin, xmax, x0, opt):
         """ Solves the either quadratic or linear program.
         """
-        nieq = self._nieq
-        solver = self.solver
-
-        A = AA[:nieq, :]
-        Gieq = AA[nieq:]
-        b = bb[:nieq]
-        hieq = bb[:nieq]
-
+        AAcvx = tocvx(AA)
         nx = x0.shape[0] # number of variables
         # add var limits to linear constraints
-        eyex = eye(nx, nx, format="csr")
-        G = eyex if Gieq is None else vstack([eyex, Gieq], "csr")
-        h = r_[-LB, hieq]
-        h = r_[ UB, h]
+        eyex = spmatrix(1.0, range(nx), range(nx))
+        A = sparse([eyex, AAcvx])
+        l = matrix([-xmin, ll])
+        u = matrix([ xmax, uu])
 
-        if P.nnz > 0:
-            cvx_sol = solvers.qp(P, q, G, h, A, b, solver, {"x": x0})
+        Ae, be, Ai, bi = split_linear_constraints(A, l, u)
+
+
+        if len(P.V) > 0:
+            cvx_sol = solvers.qp(P, q, Ai, bi, Ae, be, self.solver, {"x": x0})
         else:
-            cvx_sol = solvers.lp(q, G, h, A, b, solver, {"x": x0})
+            cvx_sol = solvers.lp(q, Ai, bi, Ae, be, self.solver, {"x": x0})
 
         return cvx_sol
 
@@ -154,8 +152,9 @@ class CVXOPTSolver(Solver):
         nl2 = len(il)
 
         # Linear constraints (l <= A*x <= u).
-        AA, ll, uu = self.om.linear_constraints()
-        A = tocvx(AA)
+        A, l, u = self.om.linear_constraints()
+        AA = tocvx(A)
+        Ae, be, Ai, bi = split_linear_constraints(AA, matrix(l), matrix(u))
 
         _, xmin, xmax = self._var_bounds()
 
@@ -447,9 +446,36 @@ class CVXOPTSolver(Solver):
         #     subject to  fk(x) <= 0, k = 1, ..., mnl
         #                 G*x   <= h
         #                 A*x   =  b.
-        solution = solvers.cp(F, G=Aieq, h=bieq, dims=None, A=Aeq, b=beq)
+        solution = solvers.cp(F, G=Ai, h=bi, dims=None, A=Ae, b=be)
 
         return solution
+
+
+def split_linear_constraints(A, l, u):
+    """ Returns the linear equality and inequality constraints.
+    """
+    ieq = []
+    igt = []
+    ilt = []
+    ibx = []
+    for i in range(len(l)):
+        if abs(u[i] - l[i]) <= EPS:
+            ieq.append(i)
+        elif (u[i] > 1e10) and (l[i] > -1e10):
+            igt.append(i)
+        elif (l[i] <= -1e10) and (u[i] < 1e10):
+            ilt.append(i)
+        elif (abs(u[i] - l[i]) > EPS) and (u[i] < 1e10) and (l[i] > -1e10):
+            ibx.append(i)
+        else:
+            raise ValueError
+
+    Ae = A[ieq, :]
+    Ai = sparse([A[ilt, :], -A[igt, :], A[ibx, :], -A[ibx, :]])
+    be = u[ieq, :]
+    bi = matrix([u[ilt], -l[igt], u[ibx], -l[ibx]])
+
+    return Ae, be, Ai, bi
 
 #--------------------------------------------------------------------------
 #  Partial derivative of power injection w.r.t. voltage:
