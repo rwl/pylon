@@ -202,7 +202,7 @@ class CVXOPTSolver(Solver):
             """ Evaluates the objective and nonlinear constraint functions.
             """
             if x is None:
-                return neq, x0
+                return self.om.nln_N, x0
 
             # Evaluate objective function -------------------------------------
 
@@ -214,9 +214,9 @@ class CVXOPTSolver(Solver):
             # Evaluate the objective function value.
             if len(ipol) > 0:
                 # FIXME: Implement reactive power costs.
-                f = sum([g.total_cost(xx[i]) for i, g in enumerate(gn)])
+                f0 = sum([g.total_cost(xx[i]) for i, g in enumerate(gn)])
             else:
-                f = 0
+                f0 = 0
 
             # Piecewise linear cost of P and Q.
             if ny:
@@ -224,7 +224,7 @@ class CVXOPTSolver(Solver):
                 ccost = spmatrix(matrix(1.0, (ny, 1)),
                                  range(y.i1, y.iN + 1),
                                  matrix(0.0, (ny, 1)), size=(nxyz, 1)).T
-                f = f + ccost * x
+                f0 = f0 + ccost * x
             else:
                 ccost = matrix(0.0, (1, nxyz))
             # TODO: Generalised cost term.
@@ -359,8 +359,8 @@ class CVXOPTSolver(Solver):
             dh[matrix([iVa, iVm]).T, :] = sparse([[df_dVa, dt_dVa],
                                                   [df_dVm, dt_dVm]]).T
 
-            f = matrix([f, g, h])
-            df = sparse([[df0], [dg], [dh]]).T
+            f = matrix([f0, g, h])
+            df = matrix([[df0], [dg], [dh]]).T
 
             if z is None:
                 return f, df
@@ -390,16 +390,20 @@ class CVXOPTSolver(Solver):
 
             d2f = d2f * self.opt["cost_mult"]
 
+#            print z
+
             # Evaluate Hessian of power balance constraints -------------------
 
             neqnln = 2 * nb
             niqnln = 2 * len(il) # no. of lines with constraints
 
-            eqnonlin = z[:neqnln]
-
+            eqnonlin = z[1:neqnln + 1]
             nlam = len(eqnonlin) / 2
             lamP = eqnonlin[:nlam]
             lamQ = eqnonlin[nlam:nlam + nlam]
+
+#            print "EQ:", eqnonlin.size, lamP
+
             Gpaa, Gpav, Gpva, Gpvv = d2Sbus_dV2(Ybus, V, lamP)
             Gqaa, Gqav, Gqva, Gqvv = d2Sbus_dV2(Ybus, V, lamQ)
 
@@ -411,10 +415,13 @@ class CVXOPTSolver(Solver):
 
             #  Evaluate Hessian of flow constraints ---------------------------
 
-            ineqnonlin = z[neqnln:neqnln + niqnln]
+            ineqnonlin = z[1 + neqnln:1 + neqnln + niqnln]
+
             nmu = len(ineqnonlin) / 2
             muF = ineqnonlin[:nmu]
             muT = ineqnonlin[nmu:nmu + nmu]
+
+#            print "IEQ:", ineqnonlin.size, muF
 
             if self.flow_lim == IFLOW:
                 dIf_dVa, dIf_dVm, dIt_dVa, dIt_dVm, If, It = \
@@ -424,11 +431,11 @@ class CVXOPTSolver(Solver):
                 Htaa, Htav, Htva, Htvv = \
                     d2AIbr_dV2(dIt_dVa, dIt_dVm, It, Yt, V, muT)
             else:
-                f = [e.from_bus._i for e in ln]
-                t = [e.to_bus._i for e in ln]
+                fr = [e.from_bus._i for e in ln]
+                to = [e.to_bus._i for e in ln]
                 # Line-bus connection matrices.
-                Cf = spmatrix(1.0, range(nl), f, (nl, nb))
-                Ct = spmatrix(1.0, range(nl), t, (nl, nb))
+                Cf = spmatrix(1.0, range(nl), fr, (nl, nb))
+                Ct = spmatrix(1.0, range(nl), to, (nl, nb))
                 dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St = \
                     dSbr_dV(Yf, Yt, V, bs, ln)
                 if self.flow_lim == PFLOW:
@@ -452,9 +459,11 @@ class CVXOPTSolver(Solver):
             d2H_2 = spmatrix([], [], [], (nxtra, 2 * nb + nxtra))
             d2H = sparse([d2H_1, d2H_2])
 
-            H = d2f + d2G + d2H
+            Lxx = d2f + d2G + d2H
 
-            return f, df, H
+#            print Lxx[:, 10:]
+
+            return f, df, Lxx
 
         # cp(F, G=None, h=None, dims=None, A=None, b=None, kktsolver=None)
         #

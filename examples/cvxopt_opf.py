@@ -24,7 +24,9 @@ opf = pylon.OPF(case, dc=False, opt={"verbose": True})
 solution = opf.solve(cvxopf.CVXOPTSolver)
 
 # Analyse the solution.
-if solution["converged"]:
-    print "Completed in %.3fs." % solution["elapsed"]
-else:
-    print "Failed!"
+print solution["status"]
+print solution["x"]
+#if solution["converged"]:
+#    print "Completed in %.3fs." % solution["elapsed"]
+#else:
+#    print "Failed!"
