@@ -125,7 +125,7 @@ class CVXOPTSolver(Solver):
     """ Solves AC optimal power flow using convex optimization.
     """
 
-    def __init__(self, om, flow_lim="S"):
+    def __init__(self, om, opt=None, flow_lim=SFLOW):
         """ Initialises a new CVXOPTSolver instance.
         """
         super(CVXOPTSolver, self).__init__(om)
@@ -133,11 +133,33 @@ class CVXOPTSolver(Solver):
         # Quantity to limit for branch flow constraints ("S", "P" or "I").
         self.flow_lim = flow_lim
 
+        self.opt = {} if opt is None else opt
+
+        if self.opt.has_key("verbose"):
+            solvers.options["show_progress"] = self.opt["verbose"]
+        if self.opt.has_key("max_it"):
+            solvers.options["maxiters"] = self.opt["max_it"]
+        if self.opt.has_key("feastol"):
+            solvers.options["feastol"] = self.opt["feastol"]
+        if self.opt.has_key("gradtol"):
+            raise NotImplementedError
+        if self.opt.has_key("comptol"):
+            raise NotImplementedError
+        if self.opt.has_key("costtol"):
+            raise NotImplementedError
+        if self.opt.has_key("max_red"):
+            raise NotImplementedError
+        if self.opt.has_key("step_control"):
+            raise NotImplementedError
+        if self.opt.has_key("cost_mult"):
+            raise NotImplementedError
+
 
     def solve(self):
         j = 0 + 1j
         case = self.om.case
         base_mva = case.base_mva
+        self.opt["cost_mult"] = 1e-4
         # Unpack the OPF model.
         bs, ln, gn, cp = self._unpack_model(self.om)
         # Compute problem dimensions.
@@ -153,7 +175,10 @@ class CVXOPTSolver(Solver):
 
         # Linear constraints (l <= A*x <= u).
         A, l, u = self.om.linear_constraints()
-        AA = tocvx(A)
+        if A is None:
+            AA = spmatrix([], [], [], (0, self.om.var_N))
+        else:
+            AA = tocvx(A)
         Ae, be, Ai, bi = split_linear_constraints(AA, matrix(l), matrix(u))
 
         _, xmin, xmax = self._var_bounds()
@@ -215,12 +240,12 @@ class CVXOPTSolver(Solver):
                 df_dPgQg[i] = \
                     base_mva * polyval(polyder(list(gn[i].p_cost)), xx[i])
 
-            df = matrix(0.0, (nxyz, 1))
-            df[iPg] = df_dPgQg[:ng]
-            df[iQg] = df_dPgQg[ng:ng + ng]
+            df0 = matrix(0.0, (nxyz, 1))
+            df0[iPg] = df_dPgQg[:ng]
+            df0[iQg] = df_dPgQg[ng:ng + ng]
 
             # Piecewise linear cost of P and Q.
-            df = df + ccost.T
+            df0 = df0 + ccost.T
             # TODO: Generalised cost term.
 
             # Evaluate cost Hessian -------------------------------------------
@@ -238,7 +263,7 @@ class CVXOPTSolver(Solver):
 
             Vang = x[Va.i1:Va.iN + 1]
             Vmag = x[Vm.i1:Vm.iN + 1]
-            V = Vmag * exp(1j * Vang)
+            V = mul(Vmag, exp(1j * Vang))
 
             # Evaluate the power flow equations.
             mis = mul(V, conj(Ybus * V)) - Sbus
@@ -267,26 +292,26 @@ class CVXOPTSolver(Solver):
                 i_fbus = [e.from_bus._i for e in ln]
                 i_tbus = [e.to_bus._i for e in ln]
                 # Complex power injected at "from" bus (p.u.).
-                Sf = V[i_fbus] * conj(Yf * V)
+                Sf = mul(V[i_fbus], conj(Yf * V))
                 # Complex power injected at "to" bus (p.u.).
-                St = V[i_tbus] * conj(Yt * V)
+                St = mul(V[i_tbus], conj(Yt * V))
                 if self.flow_lim == PFLOW: # active power limit, P (Pan Wei)
                     # Branch real power limits.
                     h = matrix([Sf.real()**2 - flow_max,
                                 St.real()**2 - flow_max])
                 elif self.flow_lim == SFLOW: # apparent power limit, |S|
                     # Branch apparent power limits.
-                    h = matrix([(Sf * conj(Sf)) - flow_max,
-                                (St * conj(St)) - flow_max]).real()
+                    h = matrix([mul(Sf, conj(Sf)) - flow_max,
+                                mul(St, conj(St)) - flow_max]).real()
                 else:
                     raise ValueError
 
             # Evaluate partial derivatives of constraints ---------------------
 
-            iVa = range(Va.i1, Va.iN + 1)
-            iVm = range(Vm.i1, Vm.iN + 1)
-            iPg = range(Pg.i1, Pg.iN + 1)
-            iQg = range(Qg.i1, Qg.iN + 1)
+            iVa = matrix(range(Va.i1, Va.iN + 1))
+            iVm = matrix(range(Vm.i1, Vm.iN + 1))
+            iPg = matrix(range(Pg.i1, Pg.iN + 1))
+            iQg = matrix(range(Qg.i1, Qg.iN + 1))
             iVaVmPgQg = matrix([iVa, iVm, iPg, iQg]).T
 
             # Compute partials of injected bus powers.
@@ -301,9 +326,12 @@ class CVXOPTSolver(Solver):
             dg = spmatrix([], [], [], (nxyz, 2 * nb))
 
             blank = spmatrix([], [], [], (nb, ng))
+
             dg[iVaVmPgQg, :] = sparse([
-                [dSbus_dVa.real(), dSbus_dVm.real(), neg_Cg, blank],
-                [dSbus_dVa.imag(), dSbus_dVm.imag(), blank, neg_Cg]
+                [dSbus_dVa.real(), dSbus_dVa.imag()],
+                [dSbus_dVm.real(), dSbus_dVm.imag()],
+                [neg_Cg, blank],
+                [blank, neg_Cg]
             ]).T
 
             # Compute partials of flows w.r.t V.
@@ -328,11 +356,11 @@ class CVXOPTSolver(Solver):
             # Construct Jacobian of inequality constraints (branch limits) and
             # transpose it.
             dh = spmatrix([], [], [], (nxyz, 2 * nl))
-            dh[matrix([iVa, iVm]).T, :] = sparse([[df_dVa, df_dVm],
-                                                  [dt_dVa, dt_dVm]]).T
+            dh[matrix([iVa, iVm]).T, :] = sparse([[df_dVa, dt_dVa],
+                                                  [df_dVm, dt_dVm]]).T
 
             f = matrix([f, g, h])
-            df = matrix([df, dg, dh])
+            df = sparse([[df0], [dg], [dh]]).T
 
             if z is None:
                 return f, df
@@ -362,9 +390,7 @@ class CVXOPTSolver(Solver):
 
             d2f = d2f * self.opt["cost_mult"]
 
-            #------------------------------------------------------------------
-            #  Evaluate Hessian of power balance constraints.
-            #------------------------------------------------------------------
+            # Evaluate Hessian of power balance constraints -------------------
 
             neqnln = 2 * nb
             niqnln = 2 * len(il) # no. of lines with constraints
@@ -377,22 +403,19 @@ class CVXOPTSolver(Solver):
             Gpaa, Gpav, Gpva, Gpvv = d2Sbus_dV2(Ybus, V, lamP)
             Gqaa, Gqav, Gqva, Gqvv = d2Sbus_dV2(Ybus, V, lamQ)
 
-            d2G = sparse([[sparse([[Gpaa, Gpav],
-                                   [Gpva, Gpvv]]).real() +
-                           sparse([[Gqaa, Gqav],
-                                   [Gqva, Gqvv]]).imag(),
-                           spmatrix([], [], [], (2 * nb, nxtra))],
-                          [sparse([spmatrix([], [], [], (nxtra, 2 * nb)),
-                                   spmatrix([], [], [], (nxtra, nxtra))])]])
+            d2G_1 = sparse([[sparse([[Gpaa, Gpva], [Gpav, Gpvv]]).real() +
+                           sparse([[Gqaa, Gqva], [Gqav, Gqvv]]).imag()],
+                           [spmatrix([], [], [], (2 * nb, nxtra))]])
+            d2G_2 = spmatrix([], [], [], (nxtra, 2 * nb + nxtra))
+            d2G = sparse([d2G_1, d2G_2])
 
-            #------------------------------------------------------------------
-            #  Evaluate Hessian of flow constraints.
-            #------------------------------------------------------------------
+            #  Evaluate Hessian of flow constraints ---------------------------
 
             ineqnonlin = z[neqnln:neqnln + niqnln]
             nmu = len(ineqnonlin) / 2
             muF = ineqnonlin[:nmu]
             muT = ineqnonlin[nmu:nmu + nmu]
+
             if self.flow_lim == IFLOW:
                 dIf_dVa, dIf_dVm, dIt_dVa, dIt_dVm, If, It = \
                     dIbr_dV(Yf, Yt, V)
@@ -407,7 +430,7 @@ class CVXOPTSolver(Solver):
                 Cf = spmatrix(1.0, range(nl), f, (nl, nb))
                 Ct = spmatrix(1.0, range(nl), t, (nl, nb))
                 dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St = \
-                    dSbr_dV(Yf, Yt, V)
+                    dSbr_dV(Yf, Yt, V, bs, ln)
                 if self.flow_lim == PFLOW:
                     Hfaa, Hfav, Hfva, Hfvv = \
                         d2ASbr_dV2(dSf_dVa.real(), dSf_dVm.real(),
@@ -423,18 +446,11 @@ class CVXOPTSolver(Solver):
                 else:
                     raise ValueError
 
-            d2H = sparse([
-                [
-                    sparse([[Hfaa, Hfav],
-                            [Hfva, Hfvv]]) +
-                    sparse([[Htaa, Htav],
-                            [Htva, Htvv]]),
-                    spmatrix([], [], [], (2 * nb, nxtra))
-                ],
-                [
-                    spmatrix([], [], [], (nxtra, 2 * nb)),
-                    spmatrix([], [], [], (nxtra, nxtra))
-                ]])
+            d2H_1 = sparse([[sparse([[Hfaa, Hfva], [Hfav, Hfvv]]) +
+                             sparse([[Htaa, Htva], [Htav, Htvv]])],
+                            [spmatrix([], [], [], (2 * nb, nxtra))]])
+            d2H_2 = spmatrix([], [], [], (nxtra, 2 * nb + nxtra))
+            d2H = sparse([d2H_1, d2H_2])
 
             H = d2f + d2G + d2H
 
@@ -481,7 +497,7 @@ def split_linear_constraints(A, l, u):
 #  Partial derivative of power injection w.r.t. voltage:
 #--------------------------------------------------------------------------
 
-def dSbus_dV(self, Y, V):
+def dSbus_dV(Y, V):
     """ Computes the partial derivative of power injection w.r.t. voltage.
 
         References:
