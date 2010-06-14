@@ -156,22 +156,24 @@ class CVXOPTSolver(Solver):
 
 
     def solve(self):
-        j = 0 + 1j
         case = self.om.case
         base_mva = case.base_mva
         self.opt["cost_mult"] = 1e-4
         # Unpack the OPF model.
-        bs, ln, gn, cp = self._unpack_model(self.om)
+        bs, ln, gn, _ = self._unpack_model(self.om)
         # Compute problem dimensions.
         ng = len(gn)
-        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(bs, ln, gn)
+        ipol, _, nb, nl, _, ny, nxyz = self._dimension_data(bs, ln, gn)
         # The number of non-linear equality constraints.
-        neq = 2 * nb
+#        neq = 2 * nb
         # The number of control variables.
-        nc = 2 * nb + 2 * ng
+#        nc = 2 * nb + 2 * ng
         # Indexes of constrained lines.
         il = matrix([i for i,l in enumerate(ln) if 0.0 < l.rate_a < 1e10])
-        nl2 = len(il)
+#        nl2 = len(il)
+
+        neqnln = 2 * nb # no. of non-linear equality constraints
+        niqnln = 2 * len(il) # no. of lines with constraints
 
         # Linear constraints (l <= A*x <= u).
         A, l, u = self.om.linear_constraints()
@@ -202,7 +204,9 @@ class CVXOPTSolver(Solver):
             """ Evaluates the objective and nonlinear constraint functions.
             """
             if x is None:
-                return self.om.nln_N, x0
+                # Include power mismatch constraint twice to force equality.
+                nln_N = self.om.nln_N + neqnln
+                return nln_N, x0
 
             # Evaluate objective function -------------------------------------
 
@@ -250,7 +254,7 @@ class CVXOPTSolver(Solver):
 
             # Evaluate cost Hessian -------------------------------------------
 
-            d2f = None
+#            d2f = None
 
             # Evaluate nonlinear equality constraints -------------------------
 
@@ -337,7 +341,7 @@ class CVXOPTSolver(Solver):
             # Compute partials of flows w.r.t V.
             if self.flow_lim == IFLOW:
                 dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
-                    dIbr_dV(YYf, YYt, V)
+                    dIbr_dV(Yf, Yt, V)
             else:
                 dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
                     dSbr_dV(Yf, Yt, V, bs, ln)
@@ -359,15 +363,15 @@ class CVXOPTSolver(Solver):
             dh[matrix([iVa, iVm]).T, :] = sparse([[df_dVa, dt_dVa],
                                                   [df_dVm, dt_dVm]]).T
 
-            f = matrix([f0, g, h])
-            df = matrix([[df0], [dg], [dh]]).T
+            f = matrix([f0, g, h, -g])
+            df = matrix([[df0], [dg], [dh], [-dg]]).T
 
             if z is None:
                 return f, df
 
             # Evaluate cost Hessian -------------------------------------------
 
-            nxtra = nxyz - 2 * nb
+            nxtra = nxyz - (2 * nb)
 
             # Evaluate d2f ----------------------------------------------------
 
@@ -390,19 +394,12 @@ class CVXOPTSolver(Solver):
 
             d2f = d2f * self.opt["cost_mult"]
 
-#            print z
-
             # Evaluate Hessian of power balance constraints -------------------
-
-            neqnln = 2 * nb
-            niqnln = 2 * len(il) # no. of lines with constraints
 
             eqnonlin = z[1:neqnln + 1]
             nlam = len(eqnonlin) / 2
             lamP = eqnonlin[:nlam]
             lamQ = eqnonlin[nlam:nlam + nlam]
-
-#            print "EQ:", eqnonlin.size, lamP
 
             Gpaa, Gpav, Gpva, Gpvv = d2Sbus_dV2(Ybus, V, lamP)
             Gqaa, Gqav, Gqva, Gqvv = d2Sbus_dV2(Ybus, V, lamQ)
@@ -420,8 +417,6 @@ class CVXOPTSolver(Solver):
             nmu = len(ineqnonlin) / 2
             muF = ineqnonlin[:nmu]
             muT = ineqnonlin[nmu:nmu + nmu]
-
-#            print "IEQ:", ineqnonlin.size, muF
 
             if self.flow_lim == IFLOW:
                 dIf_dVa, dIf_dVm, dIt_dVa, dIt_dVm, If, It = \
@@ -460,8 +455,6 @@ class CVXOPTSolver(Solver):
             d2H = sparse([d2H_1, d2H_2])
 
             Lxx = d2f + d2G + d2H
-
-#            print Lxx[:, 10:]
 
             return f, df, Lxx
 
