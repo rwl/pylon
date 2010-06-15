@@ -486,25 +486,29 @@ class PIPSSolver(Solver):
 #        xmin, xmax = self._ref_bus_angle_constraint(bs, Va, xmin, xmax)
 
         # Solve using Python Interior Point Solver (PIPS).
-        s = pips(self.costfcn, x0, A, l, u, xmin, xmax,
-                 self.consfcn, self.hessfcn, self.opt)
+        s = self._solve(x0, A, l, u, xmin, xmax)
 
         Vang, Vmag, Pgen, Qgen = self._update_solution_data(s)
 
-        self._update_case(self._bs, self._ln, self._gn, self._base_mva, self._Yf, self._Yt, Vang, Vmag, Pgen, Qgen,
-                          s["lmbda"])
+        self._update_case(self._bs, self._ln, self._gn, self._base_mva,
+            self._Yf, self._Yt, Vang, Vmag, Pgen, Qgen, s["lmbda"])
 
         return s
 
-    def costfcn(self, x):
-        """ Evaluates the objective function, gradient and Hessian for OPF.
+
+    def _solve(self, x0, A, l, u, xmin, xmax):
+        """ Solves using Python Interior Point Solver (PIPS).
+        """
+        s = pips(self._costfcn, x0, A, l, u, xmin, xmax,
+                 self._consfcn, self._hessfcn, self.opt)
+        return s
+
+
+    def _f(self, x):
+        """ Evaluates the objective function.
         """
         p_gen = x[self._Pg.i1:self._Pg.iN + 1] # Active generation in p.u.
         q_gen = x[self._Qg.i1:self._Qg.iN + 1] # Reactive generation in p.u.
-
-        #------------------------------------------------------------------
-        #  Evaluate the objective function.
-        #------------------------------------------------------------------
 
         # Polynomial cost of P and Q.
         xx = r_[p_gen, q_gen] * self._base_mva
@@ -516,17 +520,25 @@ class PIPSSolver(Solver):
         # Piecewise linear cost of P and Q.
         if self._ny:
             y = self.om.get_var("y")
-            ccost = csr_matrix((ones(self._ny),
+            self._ccost = csr_matrix((ones(self._ny),
                 (range(y.i1, y.iN + 1), zeros(self._ny))),
                 shape=(self._nxyz, 1)).T
-            f = f + ccost * x
+            f = f + self._ccost * x
         else:
-            ccost = zeros((1, self._nxyz))
+            self._ccost = zeros((1, self._nxyz))
         # TODO: Generalised cost term.
 
-        #------------------------------------------------------------------
-        #  Evaluate cost gradient.
-        #------------------------------------------------------------------
+        return f
+
+
+    def _df(self, x):
+        """ Evaluates the cost gradient.
+        """
+        p_gen = x[self._Pg.i1:self._Pg.iN + 1] # Active generation in p.u.
+        q_gen = x[self._Qg.i1:self._Qg.iN + 1] # Reactive generation in p.u.
+
+        # Polynomial cost of P and Q.
+        xx = r_[p_gen, q_gen] * self._base_mva
 
         iPg = range(self._Pg.i1, self._Pg.iN + 1)
         iQg = range(self._Qg.i1, self._Qg.iN + 1)
@@ -547,27 +559,28 @@ class PIPSSolver(Solver):
         df[iQg] = df_dPgQg[self._ng:self._ng + self._ng]
 
         # Piecewise linear cost of P and Q.
-        df = df + ccost.T
+        df = df + self._ccost.T
         # TODO: Generalised cost term.
 
-        #------------------------------------------------------------------
-        #  Evaluate cost Hessian.
-        #------------------------------------------------------------------
+        return asarray(df).flatten()
 
+
+    def _d2f(self, x):
+        """ Evaluates the cost Hessian.
+        """
         d2f = None
+        return d2f
 
-        return f, asarray(df).flatten(), d2f
 
-
-    def consfcn(self, x):
-        """ Evaluates nonlinear constraints and their Jacobian for OPF.
+    def _gh(self, x):
+        """ Evaluates the constraint function values.
         """
         Pgen = x[self._Pg.i1:self._Pg.iN + 1] # Active generation in p.u.
         Qgen = x[self._Qg.i1:self._Qg.iN + 1] # Reactive generation in p.u.
 
-        for i, g in enumerate(self._gn):
-            g.p = Pgen[i] * self._base_mva # active generation in MW
-            g.q = Qgen[i] * self._base_mva # reactive generation in MVAr
+        for i, gen in enumerate(self._gn):
+            gen.p = Pgen[i] * self._base_mva # active generation in MW
+            gen.q = Qgen[i] * self._base_mva # reactive generation in MVAr
 
         # Rebuild the net complex bus power injection vector in p.u.
         Sbus = self.om.case.getSbus(self._bs)
@@ -578,10 +591,6 @@ class PIPSSolver(Solver):
 
         # Evaluate the power flow equations.
         mis = V * conj(self._Ybus * V) - Sbus
-
-        #------------------------------------------------------------------
-        #  Evaluate constraint function values.
-        #------------------------------------------------------------------
 
         # Equality constraints (power flow).
         g = r_[mis.real,  # active power mismatch for all buses
@@ -619,15 +628,19 @@ class PIPSSolver(Solver):
             else:
                 raise ValueError
 
-        #------------------------------------------------------------------
-        #  Evaluate partials of constraints.
-        #------------------------------------------------------------------
+        return h, g
 
+
+    def _dgh(self, x):
         iVa = range(self._Va.i1, self._Va.iN + 1)
         iVm = range(self._Vm.i1, self._Vm.iN + 1)
         iPg = range(self._Pg.i1, self._Pg.iN + 1)
         iQg = range(self._Qg.i1, self._Qg.iN + 1)
         iVaVmPgQg = r_[iVa, iVm, iPg, iQg].T
+
+        Vang = x[iVa]
+        Vmag = x[iVm]
+        V = Vmag * exp(1j * Vang)
 
         # Compute partials of injected bus powers.
         dSbus_dVm, dSbus_dVa = self.om.case.dSbus_dV(self._Ybus, V)
@@ -652,7 +665,8 @@ class PIPSSolver(Solver):
                 self.om.case.dIbr_dV(self._Yf, self._Yt, V)
         else:
             dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
-                self.om.case.dSbr_dV(self._Yf, self._Yt, V, self._bs, self._ln)
+                self.om.case.dSbr_dV(self._Yf, self._Yt, V,
+                                     self._bs, self._ln)
         if self.flow_lim == PFLOW:
             dFf_dVa = dFf_dVa.real
             dFf_dVm = dFf_dVm.real
@@ -673,10 +687,29 @@ class PIPSSolver(Solver):
             hstack([dt_dVa, dt_dVm])
         ], "csr").T
 
+        return dh, dg
+
+
+    def _costfcn(self, x):
+        """ Evaluates the objective function, gradient and Hessian for OPF.
+        """
+        f = self._f(x)
+        df = self._df(x)
+        d2f = self._d2f(x)
+
+        return f, df, d2f
+
+
+    def _consfcn(self, x):
+        """ Evaluates nonlinear constraints and their Jacobian for OPF.
+        """
+        h, g = self._gh(x)
+        dh, dg = self._dgh(x)
+
         return h, g, dh, dg
 
 
-    def hessfcn(self, x, lmbda):
+    def _hessfcn(self, x, lmbda):
         """ Evaluates Hessian of Lagrangian for AC OPF.
         """
         Pgen = x[self._Pg.i1:self._Pg.iN + 1] # Active generation in p.u.
