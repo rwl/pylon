@@ -449,17 +449,18 @@ class PIPSSolver(Solver):
         """ Solves AC optimal power flow.
         """
         case = self.om.case
-        base_mva = case.base_mva
+        self._base_mva = case.base_mva
         # TODO: Find an explanation for this value.
         self.opt["cost_mult"] = 1e-4
 
         # Unpack the OPF model.
-        bs, ln, gn, cp = self._unpack_model(self.om)
+        self._bs, self._ln, self._gn, _ = self._unpack_model(self.om)
         # Compute problem dimensions.
-        ipol, ipwl, nb, nl, nw, ny, nxyz = self._dimension_data(bs, ln, gn)
+        self._ipol, _, self._nb, self._nl, _, self._ny, self._nxyz = \
+            self._dimension_data(self._bs, self._ln, self._gn)
 
         # Compute problem dimensions.
-        ng = len(gn)
+        self._ng = len(self._gn)
 #        gpol = [g for g in gn if g.pcost_model == POLYNOMIAL]
 
         # Linear constraints (l <= A*x <= u).
@@ -469,332 +470,342 @@ class PIPSSolver(Solver):
         _, xmin, xmax = self._var_bounds()
 
         # Select an interior initial point for interior point solver.
-        x0 = self._initial_interior_point(bs, gn, xmin, xmax, ny)
+        x0 = self._initial_interior_point(self._bs, self._gn, xmin, xmax, self._ny)
 
         # Build admittance matrices.
-        Ybus, Yf, Yt = case.Y
+        self._Ybus, self._Yf, self._Yt = case.Y
 
         # Optimisation variables.
-        Va = self.om.get_var("Va")
-        Vm = self.om.get_var("Vm")
-        Pg = self.om.get_var("Pg")
-        Qg = self.om.get_var("Qg")
+
+        self._Pg = self.om.get_var("Pg")
+        self._Qg = self.om.get_var("Qg")
+        self._Va = self.om.get_var("Va")
+        self._Vm = self.om.get_var("Vm")
 
         # Adds a constraint on the reference bus angles.
 #        xmin, xmax = self._ref_bus_angle_constraint(bs, Va, xmin, xmax)
 
-        def costfcn(x):
-            """ Evaluates the objective function, gradient and Hessian for OPF.
-            """
-            p_gen = x[Pg.i1:Pg.iN + 1] # Active generation in p.u.
-            q_gen = x[Qg.i1:Qg.iN + 1] # Reactive generation in p.u.
+        # Solve using Python Interior Point Solver (PIPS).
+        s = pips(self.costfcn, x0, A, l, u, xmin, xmax,
+                 self.consfcn, self.hessfcn, self.opt)
 
-            #------------------------------------------------------------------
-            #  Evaluate the objective function.
-            #------------------------------------------------------------------
+        Vang, Vmag, Pgen, Qgen = self._update_solution_data(s)
 
-            # Polynomial cost of P and Q.
-            xx = r_[p_gen, q_gen] * base_mva
-            if len(ipol) > 0:
-                f = sum([g.total_cost(xx[i]) for i,g in enumerate(gn)])
-            else:
-                f = 0
+        self._update_case(self._bs, self._ln, self._gn, self._base_mva, self._Yf, self._Yt, Vang, Vmag, Pgen, Qgen,
+                          s["lmbda"])
 
-            # Piecewise linear cost of P and Q.
-            if ny:
-                y = self.om.get_var("y")
-                ccost = csr_matrix((ones(ny),
-                    (range(y.i1, y.iN + 1), zeros(ny))), shape=(nxyz, 1)).T
-                f = f + ccost * x
-            else:
-                ccost = zeros((1, nxyz))
-            # TODO: Generalised cost term.
+        return s
 
-            #------------------------------------------------------------------
-            #  Evaluate cost gradient.
-            #------------------------------------------------------------------
+    def costfcn(self, x):
+        """ Evaluates the objective function, gradient and Hessian for OPF.
+        """
+        p_gen = x[self._Pg.i1:self._Pg.iN + 1] # Active generation in p.u.
+        q_gen = x[self._Qg.i1:self._Qg.iN + 1] # Reactive generation in p.u.
 
-            iPg = range(Pg.i1, Pg.iN + 1)
-            iQg = range(Qg.i1, Qg.iN + 1)
+        #------------------------------------------------------------------
+        #  Evaluate the objective function.
+        #------------------------------------------------------------------
 
-            # Polynomial cost of P and Q.
-            df_dPgQg = zeros((2 * ng, 1))        # w.r.t p.u. Pg and Qg
+        # Polynomial cost of P and Q.
+        xx = r_[p_gen, q_gen] * self._base_mva
+        if len(self._ipol) > 0:
+            f = sum([g.total_cost(xx[i]) for i,g in enumerate(self._gn)])
+        else:
+            f = 0
+
+        # Piecewise linear cost of P and Q.
+        if self._ny:
+            y = self.om.get_var("y")
+            ccost = csr_matrix((ones(self._ny),
+                (range(y.i1, y.iN + 1), zeros(self._ny))),
+                shape=(self._nxyz, 1)).T
+            f = f + ccost * x
+        else:
+            ccost = zeros((1, self._nxyz))
+        # TODO: Generalised cost term.
+
+        #------------------------------------------------------------------
+        #  Evaluate cost gradient.
+        #------------------------------------------------------------------
+
+        iPg = range(self._Pg.i1, self._Pg.iN + 1)
+        iQg = range(self._Qg.i1, self._Qg.iN + 1)
+
+        # Polynomial cost of P and Q.
+        df_dPgQg = zeros((2 * self._ng, 1))        # w.r.t p.u. Pg and Qg
 #            df_dPgQg[ipol] = matrix([g.poly_cost(xx[i], 1) for g in gpol])
 #            for i, g in enumerate(gn):
 #                der = polyder(list(g.p_cost))
 #                df_dPgQg[i] = polyval(der, xx[i]) * base_mva
-            for i in ipol:
-                df_dPgQg[i] = \
-                    base_mva * polyval(polyder(list(gn[i].p_cost)), xx[i])
+        for i in self._ipol:
+            p_cost = list(self._gn[i].p_cost)
+            df_dPgQg[i] = \
+                self._base_mva * polyval(polyder(p_cost), xx[i])
 
-            df = zeros((nxyz, 1))
-            df[iPg] = df_dPgQg[:ng]
-            df[iQg] = df_dPgQg[ng:ng + ng]
+        df = zeros((self._nxyz, 1))
+        df[iPg] = df_dPgQg[:self._ng]
+        df[iQg] = df_dPgQg[self._ng:self._ng + self._ng]
 
-            # Piecewise linear cost of P and Q.
-            df = df + ccost.T
-            # TODO: Generalised cost term.
+        # Piecewise linear cost of P and Q.
+        df = df + ccost.T
+        # TODO: Generalised cost term.
 
-            #------------------------------------------------------------------
-            #  Evaluate cost Hessian.
-            #------------------------------------------------------------------
+        #------------------------------------------------------------------
+        #  Evaluate cost Hessian.
+        #------------------------------------------------------------------
 
-            d2f = None
+        d2f = None
 
-            return f, asarray(df).flatten(), d2f
+        return f, asarray(df).flatten(), d2f
 
 
-        def consfcn(x):
-            """ Evaluates nonlinear constraints and their Jacobian for OPF.
-            """
-            Pgen = x[Pg.i1:Pg.iN + 1] # Active generation in p.u.
-            Qgen = x[Qg.i1:Qg.iN + 1] # Reactive generation in p.u.
+    def consfcn(self, x):
+        """ Evaluates nonlinear constraints and their Jacobian for OPF.
+        """
+        Pgen = x[self._Pg.i1:self._Pg.iN + 1] # Active generation in p.u.
+        Qgen = x[self._Qg.i1:self._Qg.iN + 1] # Reactive generation in p.u.
 
-            for i, g in enumerate(gn):
-                g.p = Pgen[i] * base_mva # active generation in MW
-                g.q = Qgen[i] * base_mva # reactive generation in MVAr
+        for i, g in enumerate(self._gn):
+            g.p = Pgen[i] * self._base_mva # active generation in MW
+            g.q = Qgen[i] * self._base_mva # reactive generation in MVAr
 
-            # Rebuild the net complex bus power injection vector in p.u.
-            Sbus = case.getSbus(bs)
+        # Rebuild the net complex bus power injection vector in p.u.
+        Sbus = self.om.case.getSbus(self._bs)
 
-            Vang = x[Va.i1:Va.iN + 1]
-            Vmag = x[Vm.i1:Vm.iN + 1]
-            V = Vmag * exp(1j * Vang)
+        Vang = x[self._Va.i1:self._Va.iN + 1]
+        Vmag = x[self._Vm.i1:self._Vm.iN + 1]
+        V = Vmag * exp(1j * Vang)
 
-            # Evaluate the power flow equations.
-            mis = V * conj(Ybus * V) - Sbus
+        # Evaluate the power flow equations.
+        mis = V * conj(self._Ybus * V) - Sbus
 
-            #------------------------------------------------------------------
-            #  Evaluate constraint function values.
-            #------------------------------------------------------------------
+        #------------------------------------------------------------------
+        #  Evaluate constraint function values.
+        #------------------------------------------------------------------
 
-            # Equality constraints (power flow).
-            g = r_[mis.real,  # active power mismatch for all buses
-                   mis.imag]  # reactive power mismatch for all buses
+        # Equality constraints (power flow).
+        g = r_[mis.real,  # active power mismatch for all buses
+               mis.imag]  # reactive power mismatch for all buses
 
-            # Inequality constraints (branch flow limits).
-            # (line constraint is actually on square of limit)
-            flow_max = array([(l.rate_a / base_mva)**2 for l in ln])
-            # FIXME: There must be a more elegant method for this.
-            for i, v in enumerate(flow_max):
-                if v == 0.0:
-                    flow_max[i] = Inf
+        # Inequality constraints (branch flow limits).
+        # (line constraint is actually on square of limit)
+        flow_max = array([(l.rate_a / self._base_mva)**2 for l in self._ln])
+        # FIXME: There must be a more elegant method for this.
+        for i, v in enumerate(flow_max):
+            if v == 0.0:
+                flow_max[i] = Inf
 
-            if self.flow_lim == IFLOW:
-                If = Yf * V
-                It = Yt * V
-                # Branch current limits.
-                h = r_[(If * conj(If)) - flow_max,
-                       (If * conj(It)) - flow_max]
+        if self.flow_lim == IFLOW:
+            If = self._Yf * V
+            It = self._Yt * V
+            # Branch current limits.
+            h = r_[(If * conj(If)) - flow_max,
+                   (If * conj(It)) - flow_max]
+        else:
+            i_fbus = [e.from_bus._i for e in self._ln]
+            i_tbus = [e.to_bus._i for e in self._ln]
+            # Complex power injected at "from" bus (p.u.).
+            Sf = V[i_fbus] * conj(self._Yf * V)
+            # Complex power injected at "to" bus (p.u.).
+            St = V[i_tbus] * conj(self._Yt * V)
+            if self.flow_lim == PFLOW: # active power limit, P (Pan Wei)
+                # Branch real power limits.
+                h = r_[Sf.real()**2 - flow_max,
+                       St.real()**2 - flow_max]
+            elif self.flow_lim == SFLOW: # apparent power limit, |S|
+                # Branch apparent power limits.
+                h = r_[(Sf * conj(Sf)) - flow_max,
+                       (St * conj(St)) - flow_max].real
             else:
-                i_fbus = [e.from_bus._i for e in ln]
-                i_tbus = [e.to_bus._i for e in ln]
-                # Complex power injected at "from" bus (p.u.).
-                Sf = V[i_fbus] * conj(Yf * V)
-                # Complex power injected at "to" bus (p.u.).
-                St = V[i_tbus] * conj(Yt * V)
-                if self.flow_lim == PFLOW: # active power limit, P (Pan Wei)
-                    # Branch real power limits.
-                    h = r_[Sf.real()**2 - flow_max,
-                           St.real()**2 - flow_max]
-                elif self.flow_lim == SFLOW: # apparent power limit, |S|
-                    # Branch apparent power limits.
-                    h = r_[(Sf * conj(Sf)) - flow_max,
-                           (St * conj(St)) - flow_max].real
-                else:
-                    raise ValueError
+                raise ValueError
 
-            #------------------------------------------------------------------
-            #  Evaluate partials of constraints.
-            #------------------------------------------------------------------
+        #------------------------------------------------------------------
+        #  Evaluate partials of constraints.
+        #------------------------------------------------------------------
 
-            iVa = range(Va.i1, Va.iN + 1)
-            iVm = range(Vm.i1, Vm.iN + 1)
-            iPg = range(Pg.i1, Pg.iN + 1)
-            iQg = range(Qg.i1, Qg.iN + 1)
-            iVaVmPgQg = r_[iVa, iVm, iPg, iQg].T
+        iVa = range(self._Va.i1, self._Va.iN + 1)
+        iVm = range(self._Vm.i1, self._Vm.iN + 1)
+        iPg = range(self._Pg.i1, self._Pg.iN + 1)
+        iQg = range(self._Qg.i1, self._Qg.iN + 1)
+        iVaVmPgQg = r_[iVa, iVm, iPg, iQg].T
 
-            # Compute partials of injected bus powers.
-            dSbus_dVm, dSbus_dVa = case.dSbus_dV(Ybus, V)
+        # Compute partials of injected bus powers.
+        dSbus_dVm, dSbus_dVa = self.om.case.dSbus_dV(self._Ybus, V)
 
-            i_gbus = [gen.bus._i for gen in gn]
-            neg_Cg = csr_matrix((-ones(ng), (i_gbus, range(ng))), (nb, ng))
+        i_gbus = [gen.bus._i for gen in self._gn]
+        neg_Cg = csr_matrix((-ones(self._ng),
+                             (i_gbus, range(self._ng))),
+                             (self._nb, self._ng))
 
-            # Transposed Jacobian of the power balance equality constraints.
-            dg = lil_matrix((nxyz, 2 * nb))
+        # Transposed Jacobian of the power balance equality constraints.
+        dg = lil_matrix((self._nxyz, 2 * self._nb))
 
-            blank = csr_matrix((nb, ng))
-            dg[iVaVmPgQg, :] = vstack([
-                hstack([dSbus_dVa.real, dSbus_dVm.real, neg_Cg, blank]),
-                hstack([dSbus_dVa.imag, dSbus_dVm.imag, blank, neg_Cg])
-            ], "csr").T
+        blank = csr_matrix((self._nb, self._ng))
+        dg[iVaVmPgQg, :] = vstack([
+            hstack([dSbus_dVa.real, dSbus_dVm.real, neg_Cg, blank]),
+            hstack([dSbus_dVa.imag, dSbus_dVm.imag, blank, neg_Cg])
+        ], "csr").T
 
-            # Compute partials of flows w.r.t V.
-            if self.flow_lim == IFLOW:
-                dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
-                    case.dIbr_dV(Yf, Yt, V)
-            else:
-                dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
-                    case.dSbr_dV(Yf, Yt, V, bs, ln)
-            if self.flow_lim == PFLOW:
-                dFf_dVa = dFf_dVa.real
-                dFf_dVm = dFf_dVm.real
-                dFt_dVa = dFt_dVa.real
-                dFt_dVm = dFt_dVm.real
-                Ff = Ff.real
-                Ft = Ft.real
+        # Compute partials of flows w.r.t V.
+        if self.flow_lim == IFLOW:
+            dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
+                self.om.case.dIbr_dV(self._Yf, self._Yt, V)
+        else:
+            dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft = \
+                self.om.case.dSbr_dV(self._Yf, self._Yt, V, self._bs, self._ln)
+        if self.flow_lim == PFLOW:
+            dFf_dVa = dFf_dVa.real
+            dFf_dVm = dFf_dVm.real
+            dFt_dVa = dFt_dVa.real
+            dFt_dVm = dFt_dVm.real
+            Ff = Ff.real
+            Ft = Ft.real
 
-            # Squared magnitude of flow (complex power, current or real power).
-            df_dVa, df_dVm, dt_dVa, dt_dVm = \
-                case.dAbr_dV(dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft)
+        # Squared magnitude of flow (complex power, current or real power).
+        df_dVa, df_dVm, dt_dVa, dt_dVm = \
+            self.om.case.dAbr_dV(dFf_dVa, dFf_dVm, dFt_dVa, dFt_dVm, Ff, Ft)
 
-            # Construct Jacobian of inequality constraints (branch limits) and
-            # transpose it.
-            dh = lil_matrix((nxyz, 2 * nl))
-            dh[r_[iVa, iVm].T, :] = vstack([
-                hstack([df_dVa, df_dVm]),
-                hstack([dt_dVa, dt_dVm])
-            ], "csr").T
+        # Construct Jacobian of inequality constraints (branch limits) and
+        # transpose it.
+        dh = lil_matrix((self._nxyz, 2 * self._nl))
+        dh[r_[iVa, iVm].T, :] = vstack([
+            hstack([df_dVa, df_dVm]),
+            hstack([dt_dVa, dt_dVm])
+        ], "csr").T
 
-            return h, g, dh, dg
+        return h, g, dh, dg
 
 
-        def hessfcn(x, lmbda):
-            """ Evaluates Hessian of Lagrangian for AC OPF.
-            """
-            Pgen = x[Pg.i1:Pg.iN + 1] # Active generation in p.u.
-            Qgen = x[Qg.i1:Qg.iN + 1] # Reactive generation in p.u.
+    def hessfcn(self, x, lmbda):
+        """ Evaluates Hessian of Lagrangian for AC OPF.
+        """
+        Pgen = x[self._Pg.i1:self._Pg.iN + 1] # Active generation in p.u.
+        Qgen = x[self._Qg.i1:self._Qg.iN + 1] # Reactive generation in p.u.
 
-            for i, g in enumerate(gn):
-                g.p = Pgen[i] * base_mva # active generation in MW
-                g.q = Qgen[i] * base_mva # reactive generation in MVAr
+        for i, g in enumerate(self._gn):
+            g.p = Pgen[i] * self._base_mva # active generation in MW
+            g.q = Qgen[i] * self._base_mva # reactive generation in MVAr
 
-            Vang = x[Va.i1:Va.iN + 1]
-            Vmag = x[Vm.i1:Vm.iN + 1]
-            V = Vmag * exp(1j * Vang)
-            nxtra = nxyz - 2 * nb
+        Vang = x[self._Va.i1:self._Va.iN + 1]
+        Vmag = x[self._Vm.i1:self._Vm.iN + 1]
+        V = Vmag * exp(1j * Vang)
+        nxtra = self._nxyz - 2 * self._nb
 
-            #------------------------------------------------------------------
-            #  Evaluate d2f.
-            #------------------------------------------------------------------
+        #------------------------------------------------------------------
+        #  Evaluate d2f.
+        #------------------------------------------------------------------
 
-            d2f_dPg2 = lil_matrix((ng, 1)) # w.r.t p.u. Pg
-            d2f_dQg2 = lil_matrix((ng, 1)) # w.r.t p.u. Qg]
+        d2f_dPg2 = lil_matrix((self._ng, 1)) # w.r.t p.u. Pg
+        d2f_dQg2 = lil_matrix((self._ng, 1)) # w.r.t p.u. Qg]
 
-            for i in ipol:
-                d2f_dPg2[i, 0] = polyval(polyder(list(gn[i].p_cost), 2),
-                                         Pg.v0[i] * base_mva) * base_mva**2
+        for i in self._ipol:
+            p_cost = list(self._gn[i].p_cost)
+            d2f_dPg2[i, 0] = polyval(polyder(p_cost, 2),
+                self._Pg.v0[i] * self._base_mva) * self._base_mva**2
 #            for i in ipol:
 #                d2f_dQg2[i] = polyval(polyder(list(gn[i].p_cost), 2),
 #                                      Qg.v0[i] * base_mva) * base_mva**2
 
-            i = r_[range(Pg.i1, Pg.iN + 1), range(Qg.i1, Qg.iN + 1)]
+        i = r_[range(self._Pg.i1, self._Pg.iN + 1),
+               range(self._Qg.i1, self._Qg.iN + 1)]
 
-            d2f = csr_matrix((vstack([d2f_dPg2, d2f_dQg2]).toarray().flatten(),
-                              (i, i)), shape=(nxyz, nxyz))
-            # TODO: Generalised cost model.
-            d2f = d2f * self.opt["cost_mult"]
+        d2f = csr_matrix((vstack([d2f_dPg2, d2f_dQg2]).toarray().flatten(),
+                          (i, i)), shape=(self._nxyz, self._nxyz))
+        # TODO: Generalised cost model.
+        d2f = d2f * self.opt["cost_mult"]
 
-            #------------------------------------------------------------------
-            #  Evaluate Hessian of power balance constraints.
-            #------------------------------------------------------------------
+        #------------------------------------------------------------------
+        #  Evaluate Hessian of power balance constraints.
+        #------------------------------------------------------------------
 
-            nlam = len(lmbda["eqnonlin"]) / 2
-            lamP = lmbda["eqnonlin"][:nlam]
-            lamQ = lmbda["eqnonlin"][nlam:nlam + nlam]
-            Gpaa, Gpav, Gpva, Gpvv = case.d2Sbus_dV2(Ybus, V, lamP)
-            Gqaa, Gqav, Gqva, Gqvv = case.d2Sbus_dV2(Ybus, V, lamQ)
+        nlam = len(lmbda["eqnonlin"]) / 2
+        lamP = lmbda["eqnonlin"][:nlam]
+        lamQ = lmbda["eqnonlin"][nlam:nlam + nlam]
+        Gpaa, Gpav, Gpva, Gpvv = self.om.case.d2Sbus_dV2(self._Ybus, V, lamP)
+        Gqaa, Gqav, Gqva, Gqvv = self.om.case.d2Sbus_dV2(self._Ybus, V, lamQ)
 
-            d2G = vstack([
-                hstack([
-                    vstack([hstack([Gpaa, Gpav]),
-                            hstack([Gpva, Gpvv])]).real +
-                    vstack([hstack([Gqaa, Gqav]),
-                            hstack([Gqva, Gqvv])]).imag,
-                    csr_matrix((2 * nb, nxtra))]),
-                hstack([
-                    csr_matrix((nxtra, 2 * nb)),
-                    csr_matrix((nxtra, nxtra))
-                ])
-            ], "csr")
+        d2G = vstack([
+            hstack([
+                vstack([hstack([Gpaa, Gpav]),
+                        hstack([Gpva, Gpvv])]).real +
+                vstack([hstack([Gqaa, Gqav]),
+                        hstack([Gqva, Gqvv])]).imag,
+                csr_matrix((2 * self._nb, nxtra))]),
+            hstack([
+                csr_matrix((nxtra, 2 * self._nb)),
+                csr_matrix((nxtra, nxtra))
+            ])
+        ], "csr")
 
-            #------------------------------------------------------------------
-            #  Evaluate Hessian of flow constraints.
-            #------------------------------------------------------------------
+        #------------------------------------------------------------------
+        #  Evaluate Hessian of flow constraints.
+        #------------------------------------------------------------------
 
-            nmu = len(lmbda["ineqnonlin"]) / 2
-            muF = lmbda["ineqnonlin"][:nmu]
-            muT = lmbda["ineqnonlin"][nmu:nmu + nmu]
-            if self.flow_lim == "I":
-                dIf_dVa, dIf_dVm, dIt_dVa, dIt_dVm, If, It = \
-                    case.dIbr_dV(Yf, Yt, V)
+        nmu = len(lmbda["ineqnonlin"]) / 2
+        muF = lmbda["ineqnonlin"][:nmu]
+        muT = lmbda["ineqnonlin"][nmu:nmu + nmu]
+        if self.flow_lim == "I":
+            dIf_dVa, dIf_dVm, dIt_dVa, dIt_dVm, If, It = \
+                self.om.case.dIbr_dV(self._Yf, self._Yt, V)
+            Hfaa, Hfav, Hfva, Hfvv = \
+                self.om.case.d2AIbr_dV2(dIf_dVa, dIf_dVm, If, self._Yf, V, muF)
+            Htaa, Htav, Htva, Htvv = \
+                self.om.case.d2AIbr_dV2(dIt_dVa, dIt_dVm, It, self._Yt, V, muT)
+        else:
+            f = [e.from_bus._i for e in self._ln]
+            t = [e.to_bus._i for e in self._ln]
+            # Line-bus connection matrices.
+            Cf = csr_matrix((ones(self._nl), (range(self._nl), f)), (self._nl, self._nb))
+            Ct = csr_matrix((ones(self._nl), (range(self._nl), t)), (self._nl, self._nb))
+            dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St = \
+                self.om.case.dSbr_dV(self._Yf, self._Yt, V)
+            if self.flow_lim == PFLOW:
                 Hfaa, Hfav, Hfva, Hfvv = \
-                    case.d2AIbr_dV2(dIf_dVa, dIf_dVm, If, Yf, V, muF)
+                    self.om.case.d2ASbr_dV2(dSf_dVa.real(), dSf_dVm.real(),
+                                            Sf.real(), Cf, self._Yf, V, muF)
                 Htaa, Htav, Htva, Htvv = \
-                    case.d2AIbr_dV2(dIt_dVa, dIt_dVm, It, Yt, V, muT)
+                    self.om.case.d2ASbr_dV2(dSt_dVa.real(), dSt_dVm.real(),
+                                            St.real(), Ct, self._Yt, V, muT)
+            elif self.flow_lim == SFLOW:
+                Hfaa, Hfav, Hfva, Hfvv = \
+                    self.om.case.d2ASbr_dV2(
+                        dSf_dVa, dSf_dVm, Sf, Cf, self._Yf, V, muF)
+                Htaa, Htav, Htva, Htvv = \
+                    self.om.case.d2ASbr_dV2(
+                        dSt_dVa, dSt_dVm, St, Ct, self._Yt, V, muT)
             else:
-                f = [e.from_bus._i for e in ln]
-                t = [e.to_bus._i for e in ln]
-                # Line-bus connection matrices.
-                Cf = csr_matrix((ones(nl), (range(nl), f)), (nl, nb))
-                Ct = csr_matrix((ones(nl), (range(nl), t)), (nl, nb))
-                dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St = \
-                    case.dSbr_dV(Yf, Yt, V)
-                if self.flow_lim == PFLOW:
-                    Hfaa, Hfav, Hfva, Hfvv = \
-                        case.d2ASbr_dV2(dSf_dVa.real(), dSf_dVm.real(),
-                                        Sf.real(), Cf, Yf, V, muF)
-                    Htaa, Htav, Htva, Htvv = \
-                        case.d2ASbr_dV2(dSt_dVa.real(), dSt_dVm.real(),
-                                        St.real(), Ct, Yt, V, muT)
-                elif self.flow_lim == SFLOW:
-                    Hfaa, Hfav, Hfva, Hfvv = \
-                        case.d2ASbr_dV2(dSf_dVa, dSf_dVm, Sf, Cf, Yf, V, muF)
-                    Htaa, Htav, Htva, Htvv = \
-                        case.d2ASbr_dV2(dSt_dVa, dSt_dVm, St, Ct, Yt, V, muT)
-                else:
-                    raise ValueError
+                raise ValueError
 
-            d2H = vstack([
-                hstack([
-                    vstack([hstack([Hfaa, Hfav]),
-                            hstack([Hfva, Hfvv])]) +
-                    vstack([hstack([Htaa, Htav]),
-                            hstack([Htva, Htvv])]),
-                    csr_matrix((2 * nb, nxtra))
-                ]),
-                hstack([
-                    csr_matrix((nxtra, 2 * nb)),
-                    csr_matrix((nxtra, nxtra))
-                ])
-            ], "csr")
+        d2H = vstack([
+            hstack([
+                vstack([hstack([Hfaa, Hfav]),
+                        hstack([Hfva, Hfvv])]) +
+                vstack([hstack([Htaa, Htav]),
+                        hstack([Htva, Htvv])]),
+                csr_matrix((2 * self._nb, nxtra))
+            ]),
+            hstack([
+                csr_matrix((nxtra, 2 * self._nb)),
+                csr_matrix((nxtra, nxtra))
+            ])
+        ], "csr")
 
-            return d2f + d2G + d2H
-
-        # Solve using Python Interior Point Solver (PIPS).
-        s = pips(costfcn, x0, A, l, u, xmin, xmax, consfcn, hessfcn, self.opt)
-
-        Vang, Vmag, Pgen, Qgen = self._update_solution_data(s)
-
-        self._update_case(bs, ln, gn, base_mva, Yf, Yt, Vang, Vmag, Pgen, Qgen,
-                          s["lmbda"])
-
-        return s
+        return d2f + d2G + d2H
 
 
     def _update_solution_data(self, s):
         """ Returns the voltage angle and generator set-point vectors.
         """
         x = s["x"]
-        Va_var = self.om.get_var("Va")
-        Vm_var = self.om.get_var("Vm")
-        Pg_var = self.om.get_var("Pg")
-        Qg_var = self.om.get_var("Qg")
+#        Va_var = self.om.get_var("Va")
+#        Vm_var = self.om.get_var("Vm")
+#        Pg_var = self.om.get_var("Pg")
+#        Qg_var = self.om.get_var("Qg")
 
-        Va = x[Va_var.i1:Va_var.iN + 1]
-        Vm = x[Vm_var.i1:Vm_var.iN + 1]
-        Pg = x[Pg_var.i1:Pg_var.iN + 1]
-        Qg = x[Qg_var.i1:Qg_var.iN + 1]
+        Va = x[self._Va.i1:self._Va.iN + 1]
+        Vm = x[self._Vm.i1:self._Vm.iN + 1]
+        Pg = x[self._Pg.i1:self._Pg.iN + 1]
+        Qg = x[self._Qg.i1:self._Qg.iN + 1]
 
 #        f = 0.5 * dot(x.T * HH, x) + dot(CC.T, x)
 
@@ -812,11 +823,11 @@ class PIPSSolver(Solver):
         V = Vm * exp(1j * Va)
 
 #        Va_var = self.om.get_var("Va")
-        Vm_var = self.om.get_var("Vm")
+        Vm_var = self._Vm
         Pmis = self.om.get_nln_constraint("Pmis")
         Qmis = self.om.get_nln_constraint("Qmis")
-        Pg_var = self.om.get_var("Pg")
-        Qg_var = self.om.get_var("Qg")
+        Pg_var = self._Pg
+        Qg_var = self._Qg
 
 #        mu_l = lmbda["mu_l"]
 #        mu_u = lmbda["mu_u"]
