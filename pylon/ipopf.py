@@ -21,8 +21,7 @@
 #  Imports:
 #------------------------------------------------------------------------------
 
-# http://code.google.com/p/pyipopt/
-import pyipopt
+import pyipopt # http://github.com/rwl/pyipopt
 
 from numpy import Inf, ones, r_, zeros
 
@@ -38,41 +37,9 @@ class IPOPFSolver(PIPSSolver):
     """ Solves AC optimal power flow using IPOPT.
     """
 
-    def _g(self, x, user_data=None):
-        A = user_data["A"]
-        h, g = self._g()
-        if A is None:
-            b = r_[g, h]
-        else:
-            b = r_[g, h, A * x]
-        return b
-
-
-    def _dg(self, x, flag, user_data=None):
-        A = user_data["A"]
-        dh, dg = self._dgh(x)
-        if A is None:
-            J = vstack([dg.T, dh.T], "coo")
-        else:
-            J = vstack([dg.T, dh.T, A], "coo")
-
-        if flag:
-            return (J.row, J.col)
-        else:
-            return J.data
-
-
-    def _h(self, x, lagrange, obj_factor, flag, user_data=None):
-        neqnln = user_data["neqnln"]
-        niqnln = user_data["niqnln"]
-        lmbda = {"eqnonlin": lagrange[:neqnln],
-                 "ineqnonlin": lagrange[neqnln:neqnln + niqnln]}
-        H = tril(self._hessfcn(x, lmbda), format="coo")
-        if flag:
-            return (H.row, H.col)
-        else:
-            return H.data
-
+    #--------------------------------------------------------------------------
+    #  PIPSSolver interface:
+    #--------------------------------------------------------------------------
 
     def _solve(self, x0, A, l, u, xmin, xmax):
         """ Solves using the Interior Point OPTimizer.
@@ -86,35 +53,76 @@ class IPOPFSolver(PIPSSolver):
 
         user_data = {"A": A, "neqnln": neqnln, "niqnln": niqnln}
 
-        J0 = self._dg(x0, False, user_data)
-        H0 = self._h(x0, ones(neqnln + niqnln), None, False, user_data)
+        self._f(x0)
+        Jdata = self._dg(x0, False, user_data)
+#        Hdata = self._h(x0, ones(neqnln + niqnln), None, False, user_data)
+
+        lmbda = {"eqnonlin": ones(neqnln),
+                 "ineqnonlin": ones(niqnln)}
+        H = tril(self._hessfcn(x0, lmbda), format="coo")
+        self._Hrow, self._Hcol = H.row, H.col
 
         n = len(x0) # the number of variables
+        xl = xmin
+        xu = xmax
         gl = r_[zeros(2 * self._nb), -Inf * ones(2 * nl2), l]
         gu = r_[zeros(2 * self._nb),       zeros(2 * nl2), u]
         m = len(gl) # the number of constraints
-        nnzj = len(J0) # the number of nonzeros in Jacobian matrix
-        nnzh = len(H0) # the number of non-zeros in Hessian matrix
+        nnzj = len(Jdata) # the number of nonzeros in Jacobian matrix
+        nnzh = 0#len(H.data) # the number of non-zeros in Hessian matrix
 
-        f_fcn = self._f
-        df_fcn = self._df
-        g_fcn = self._g
-        dg_fcn = self._dg
-        h_fcn = self._h
+        f_fcn, df_fcn, g_fcn, dg_fcn, h_fcn = \
+            self._f, self._df, self._g, self._dg, self._h
 
-        nlp = pyipopt.create(n, xmin, xmax, m, gl, gu, nnzj, nnzh,
-                             f_fcn, df_fcn, g_fcn, dg_fcn, h_fcn)
+        nlp = pyipopt.create(n, xl, xu, m, gl, gu, nnzj, nnzh,
+                             f_fcn, df_fcn, g_fcn, dg_fcn)#, h_fcn)
+
+#        print dir(nlp)
+#        nlp.str_option("print_options_documentation", "yes")
+#        nlp.int_option("max_iter", 10)
 
 #        x, zl, zu, obj = nlp.solve(x0)
         success = nlp.solve(x0, user_data)
         nlp.close()
 
-        print "Success:", success
-        print "Solution of the primal variables, x"
-#        print x
-        print "Solution of the bound multipliers, z_L and z_U"
-#        print zl, zu
-        print "Objective value"
-#        print "f(x*) =", obj
+    #--------------------------------------------------------------------------
+    #  IPOPFSolver interface:
+    #--------------------------------------------------------------------------
+
+    def _g(self, x, user_data):
+        A = user_data["A"]
+        h, g = self._gh(x)
+        if A is None:
+            b = r_[g, h]
+        else:
+            b = r_[g, h, A * x]
+        return b
+
+
+    def _dg(self, x, flag, user_data):
+        A = user_data["A"]
+        dh, dg = self._dgh(x)
+        if A is None:
+            J = vstack([dg.T, dh.T], "coo")
+        else:
+            J = vstack([dg.T, dh.T, A], "coo")
+        if flag:
+#            return (J.row, J.col)
+            return (J.col, J.row)
+        else:
+            return J.data
+
+
+    def _h(self, x, lagrange, obj_factor, flag, user_data=None):
+        if flag:
+#            return (self._Hrow, self._Hcol)
+            return (self._Hcol, self._Hrow)
+        else:
+            neqnln = user_data["neqnln"]
+            niqnln = user_data["niqnln"]
+            lmbda = {"eqnonlin": lagrange[:neqnln],
+                     "ineqnonlin": lagrange[neqnln:neqnln + niqnln]}
+            H = tril(self._hessfcn(x, lmbda), format="coo")
+            return H.data
 
 # EOF -------------------------------------------------------------------------

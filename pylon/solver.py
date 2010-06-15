@@ -504,7 +504,7 @@ class PIPSSolver(Solver):
         return s
 
 
-    def _f(self, x):
+    def _f(self, x, user_data=None):
         """ Evaluates the objective function.
         """
         p_gen = x[self._Pg.i1:self._Pg.iN + 1] # Active generation in p.u.
@@ -531,7 +531,7 @@ class PIPSSolver(Solver):
         return f
 
 
-    def _df(self, x):
+    def _df(self, x, user_data=None):
         """ Evaluates the cost gradient.
         """
         p_gen = x[self._Pg.i1:self._Pg.iN + 1] # Active generation in p.u.
