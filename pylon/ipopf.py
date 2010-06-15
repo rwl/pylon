@@ -74,12 +74,11 @@ class IPOPFSolver(PIPSSolver):
             return H.data
 
 
-
     def _solve(self, x0, A, l, u, xmin, xmax):
         """ Solves using the Interior Point OPTimizer.
         """
         # Indexes of constrained lines.
-        il = [i for i,l in enumerate(self._ln) if 0.0 < l.rate_a < 1e10]
+        il = [i for i,ln in enumerate(self._ln) if 0.0 < ln.rate_a < 1e10]
         nl2 = len(il)
 
         neqnln = 2 * self._nb # no. of non-linear equality constraints
@@ -87,15 +86,24 @@ class IPOPFSolver(PIPSSolver):
 
         user_data = {"A": A, "neqnln": neqnln, "niqnln": niqnln}
 
+        J0 = self._dg(x0, False, user_data)
+        H0 = self._h(x0, ones(neqnln + niqnln), None, False, user_data)
+
         n = len(x0) # the number of variables
         gl = r_[zeros(2 * self._nb), -Inf * ones(2 * nl2), l]
         gu = r_[zeros(2 * self._nb),       zeros(2 * nl2), u]
         m = len(gl) # the number of constraints
-        nnzj = 0 # the number of nonzeros in Jacobian matrix
-        nnzh = 0 # the number of non-zeros in Hessian matrix
+        nnzj = len(J0) # the number of nonzeros in Jacobian matrix
+        nnzh = len(H0) # the number of non-zeros in Hessian matrix
+
+        f_fcn = self._f
+        df_fcn = self._df
+        g_fcn = self._g
+        dg_fcn = self._dg
+        h_fcn = self._h
 
         nlp = pyipopt.create(n, xmin, xmax, m, gl, gu, nnzj, nnzh,
-                             self._f, self._df, self._g, self._dg, self._h)
+                             f_fcn, df_fcn, g_fcn, dg_fcn, h_fcn)
 
 #        x, zl, zu, obj = nlp.solve(x0)
         success = nlp.solve(x0, user_data)
