@@ -48,16 +48,14 @@ from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
     CSVWriter, DotWriter, PickleReader, PickleWriter
 
-#from pylon.readwrite.rst_writer import ReSTExperimentWriter
-
-from pyreto.main import one_for_one
+from pyreto.tools import ReSTExperimentWriter
 
 from pylon.readwrite.common import BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
 logger = logging.getLogger('pylon')
 
-CASE_6_WW = os.path.dirname(__file__) + "/test/data/case6ww.pkl"
-CASE_30   = os.path.dirname(__file__) + "/test/data/case30pwl.pkl"
+CASE_6_WW = os.path.dirname(pylon.__file__) + "/test/data/case6ww.pkl"
+CASE_30   = os.path.dirname(pylon.__file__) + "/test/data/case30pwl.pkl"
 
 
 class PylonTk(object):
@@ -273,8 +271,8 @@ class PylonTk(object):
 
     def set_case(self, case):
         self.case = case
-        e = one_for_one(case)
-        self.set_experiment(e)
+#        e = one_for_one(case)
+#        self.set_experiment(e)
 
         self.root.title("PylonTk:  %s" % self.case.name)
         self.case_name.set("Current Case:  %s" % self.case.name)
@@ -496,11 +494,11 @@ class PylonTk(object):
 
 
     def on_dcopf(self):
-        OPF(self.case, dc=True).solve()
+        OPF(self.case, dc=True, opt={"verbose": True}).solve()
 
 
     def on_acopf(self):
-        OPF(self.case, dc=False).solve()
+        OPF(self.case, dc=False, opt={"verbose": True}).solve()
 
 
     def on_duopf(self):
