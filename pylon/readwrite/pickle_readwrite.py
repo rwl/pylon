@@ -56,8 +56,8 @@ class PickleReader(CaseReader):
                 logger.error("Error opening %s." % fname)
                 return None
             finally:
-                case = pickle.load(file)
                 if file is not None:
+                    case = pickle.load(file)
                     file.close()
         else:
             file = file_or_filename
@@ -83,12 +83,12 @@ class PickleWriter(CaseWriter):
             file = None
             try:
                 file = open(file_or_filename, "wb")
-                pickle.dump(self.case, file)
-            except Exception, detail:
-                logger.error("Error writing to '%s': %s" % (fname, detail))
+            except:
+                logger.error("Error opening '%s'." % (fname))
                 return False
             finally:
                 if file is not None:
+                    pickle.dump(self.case, file)
                     file.close()
         else:
             file = file_or_filename

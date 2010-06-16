@@ -59,8 +59,8 @@ class RDFReader(CaseReader):
                 logger.error("Error loading %s." % fname)
                 return None
             finally:
-                case = self._parse_rdf(file)
                 if file is not None:
+                    case = self._parse_rdf(file)
                     file.close()
         else:
             file = file_or_filename

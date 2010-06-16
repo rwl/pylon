@@ -71,8 +71,8 @@ class CaseWriter(object):
             except Exception, detail:
                 logger.error("Error opening %s." % detail)
             finally:
-                self._write_data(file)
                 if file is not None:
+                    self._write_data(file)
                     file.close()
         else:
             file = file_or_filename

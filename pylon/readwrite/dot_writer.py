@@ -90,8 +90,8 @@ class DotWriter(CaseWriter):
                 except:
                     logger.error("Error opening %s." % file_or_filename)
                 finally:
-                    file.write(data)
                     if file is not None:
+                        file.write(data)
                         file.close()
             else:
                 file = file_or_filename

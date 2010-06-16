@@ -79,8 +79,8 @@ class PSSEReader(CaseReader):
                 logger.error("Error opening %s." % fname)
                 return None
             finally:
-                case = self._parse_file(file)
                 if file is not None:
+                    case = self._parse_file(file)
                     file.close()
         else:
             file = file_or_filename
