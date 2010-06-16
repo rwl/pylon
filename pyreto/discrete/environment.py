@@ -23,11 +23,12 @@
 
 import logging
 
-from scipy import array, mean, linspace
+from scipy import array, linspace
 
-from pylon import POLYNOMIAL
+from pylon import POLYNOMIAL, PQ
 
 from pyreto.smart_market import Offer, Bid
+from pyreto.util import xselections
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -47,8 +48,8 @@ class MarketEnvironment(object):
         .performAction() method.
     """
 
-    def __init__(self, generators, market, outdim=1, markups=None,
-                 numOffbids=1):
+    def __init__(self, generators, market, numStates=1, markups=None,
+                 numOffbids=1, offbidQty=False):
         """ Initialises the environment.
         """
         super(MarketEnvironment, self).__init__()
@@ -64,6 +65,9 @@ class MarketEnvironment(object):
 
         # Auction that clears offer and bids using OPF results.
         self.market = market
+
+        # The number of discrete states for the environment.
+        self.numStates = numStates
 
         # List of all markup combinations.
 #        self._allActions = []
@@ -81,7 +85,11 @@ class MarketEnvironment(object):
         self.markups = (0.0,) if markups is None else markups
 
         # Does a participant's offer/bid comprise quantity aswell as price.
-#        self.offbidQty = offbidQty
+        self.offbidQty = offbidQty
+
+        # A discrete environment provides one integer sensor and accepts
+        # one integer as an action.
+        self.indim = self.outdim = 1
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -91,22 +99,17 @@ class MarketEnvironment(object):
         """ Returns the currently visible state of the world as a numpy array
             of doubles.
         """
-        # TODO: Load forecast as state.
-        if len(self.last_action):
-            prc = mean([ob.cleared_price for ob in self.last_action])
-        else:
-            prc = 0.0
+        Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
 
         # Divide the range of market prices in to discrete bands.
-        limit = self.market.priceCap
-        states = linspace(0.0, limit, self.outdim + 1)
+        states = linspace(0.0, self._Pd0, self.numStates + 1)
 
         for i in range(len(states) - 1):
-            if states[i] <= round(prc, 1) <= states[i + 1]:
+            if states[i] <= round(Pd, 1) <= states[i + 1]:
                 logger.info("%s in state %d." % (self.generators[0].name, i))
                 return array([i])
         else:
-            raise ValueError, "Cleared price mean: %f" % prc
+            raise ValueError, "Demand greater than peak [%.3f]." % Pd
 
 
     def performAction(self, action):
@@ -166,23 +169,6 @@ class MarketEnvironment(object):
 
                 p0 = p1
                 c0 = costMarginal
-
-    @property
-    def indim(self):
-        """ The number of action values that the environment accepts.
-        """
-        indim = len(self._allActions) * len(self.generators)
-
-        if self.offbidQty:
-            return indim * 2
-        else:
-            return indim
-
-    @property
-    def outdim(self):
-        """ The number of sensor values that the environment produces.
-        """
-        return 1
 
 
     def reset(self):
@@ -255,23 +241,6 @@ class MarketEnvironment(object):
         print "noff", n, list(xselections(self.markups, n))
 
     numOffbids = property(_getNumOffbids, _setNumOffbids)
-
-#------------------------------------------------------------------------------
-#  "xselections" function:
-#------------------------------------------------------------------------------
-
-def xselections(items, n):
-    """ Takes n elements (not necessarily distinct) from the sequence, order
-        matters.
-
-        @see: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/190465
-    """
-    if n==0:
-        yield []
-    else:
-        for i in xrange(len(items)):
-            for ss in xselections(items, n-1):
-                yield [items[i]]+ss
 
 # EOF -------------------------------------------------------------------------
 

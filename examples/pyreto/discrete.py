@@ -6,7 +6,7 @@ of a power exchange auction market. """
 import sys
 import logging
 import pylon
-import pyreto
+import pyreto.discrete
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable
@@ -17,25 +17,35 @@ for handler in logger.handlers: logger.removeHandler(handler) # rm pybrain
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
 
+# Load the electric power system model.
 case = pylon.Case.load("../data/case6ww.pkl")
 
+# Create a power exchange auction market and specify a price cap.
 market = pyreto.SmartMarket(case, priceCap=100.0)
 
-# Define a non-learning agent.
-env1 = pyreto.DiscreteMarketEnvironment([case.generators[0],
-                                         case.generators[1]], market)
-task1 = pyreto.ProfitTask(env1)
-agent1 = LearningAgent(ActionValueTable(1, 1))
+# Create an empty multi-agent experiment and then populate it.
+experiment = pyreto.discrete.MarketExperiment([], [], market)
 
-# Define a learning agent.
-env2 = pyreto.DiscreteMarketEnvironment([case.generators[2]], market,
-                                        outdim=10, numOffbids=2,
-                                        markups=(0.1, 0.2, 0.33, 0.5))
-task2 = pyreto.ProfitTask(env2)
-module2 = ActionValueTable(numStates=10, numActions=2*4)
-agent2 = LearningAgent(module2, Q())
+# A participant may submit any number of offers/bids for each of the
+# generators in its portfolio.
+nOffer = 1
 
-experiment = pyreto.MarketExperiment([task1, task2], [agent1, agent2], market)
+# Associate a learning agent with the first generator.
+env1 = pyreto.discrete.MarketEnvironment(case.generators[:1], market,
+                                         numStates=10, numOffbids=nOffer,
+                                         markups=(10, 20, 33, 50))
+task1 = pyreto.discrete.ProfitTask(env1)
+module1 = ActionValueTable(numStates=env1.outdim, numActions=env1.indim)
+agent1 = LearningAgent(module1, Q())
+experiment.tasks.append(task1)
+experiment.agents.append(agent1)
+
+# Define a non-learning agent that will bid maximum power at marginal cost.
+env2 = pyreto.discrete.MarketEnvironment(case.generators[1:], market, nOffer)
+task2 = pyreto.discrete.ProfitTask(env2)
+agent2 = pyreto.util.ZeroAgent(env2.outdim, env2.indim)
+experiment.tasks.append(task2)
+experiment.agents.append(agent2)
 
 x = 0
 batch = 2
