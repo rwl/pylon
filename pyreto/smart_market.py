@@ -648,13 +648,13 @@ class _OfferBid(object):
         # Generating unit (dispatchable load) to which the offer (bid) applies.
         self.generator = generator
 
-        # Quantity of power being offered for sale (or bid to be bought).
+        # Quantity of power being offered for sale (or bid to be bought) [MW].
         self.quantity = qty
 
-        # Minimum (maximum) price for sale (willing to be paid).
+        # Minimum (maximum) price for sale (willing to be paid) [$/MWh].
         self.price = prc
 
-        # Cost for running.
+        # Cost for running [$].
         self.noLoadCost = noLoadCost
 
         # Does the offer/bid concern active or reactive power?

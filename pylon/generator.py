@@ -23,6 +23,8 @@
 
 import logging
 
+from numpy import polyval
+
 from util import Named
 
 #------------------------------------------------------------------------------
@@ -194,9 +196,10 @@ class Generator(Named):
                 # Use the last segment for values outwith the cost curve.
 #                result = m*p + c
         elif pcost_model == POLYNOMIAL:
-            result = p_cost[-1]
-            for i in range(1, len(p_cost)):
-                result += p_cost[-(i + 1)] * p**i
+#            result = p_cost[-1]
+#            for i in range(1, len(p_cost)):
+#                result += p_cost[-(i + 1)] * p**i
+            result = polyval(p_cost, p)
         else:
             raise ValueError
 

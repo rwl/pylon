@@ -68,7 +68,7 @@ class ProfitTask(DiscreteProfitTask):
         self.samples = 0
 
         # Maximum markup/markdown.
-        self.maxMarkup = 100.0
+        self.maxMarkup = 30.0
 
         #----------------------------------------------------------------------
         #  "Task" interface:

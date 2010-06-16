@@ -23,11 +23,11 @@
 
 import logging
 
-from numpy import array, ones
+from numpy import array, ones, polyval, polyder
 
 from pybrain.rl.agents.logging import LoggingAgent
 
-from pylon import PQ, POLYNOMIAL
+from pylon import PQ, POLYNOMIAL, PW_LINEAR
 from pyreto.smart_market import Offer, Bid
 
 #------------------------------------------------------------------------------
@@ -107,6 +107,8 @@ class MarketEnvironment(object):
             @param action: an action that should be executed in the Environment
             @type action: array: [ g1_qty, g1_prc, g2_qty, g2_prc, ... ]
         """
+        self._lastAction = []
+
         if self.offbidQty:
             self._offbidQuantityAndMarkup(action)
         else:
@@ -116,6 +118,7 @@ class MarketEnvironment(object):
     def reset(self):
         """ Re-initialises the participant's environment.
         """
+        self._lastAction = []
         self.market.reset()
 
 
@@ -145,12 +148,12 @@ class MarketEnvironment(object):
         for i, g in enumerate(self.generators):
             ratedPMin = self._g0[g]["p_min"]
             ratedPMax = self._g0[g]["p_max"]
-            marginalPCost = self._g0[g]["p_cost"]
-            marginalPCostModel = self._g0[g]["pcost_model"]
+            margPCost = self._g0[g]["p_cost"]
+            margPCostModel = self._g0[g]["pcost_model"]
 
             # Determine the cost at zero output.
-            if marginalPCostModel == POLYNOMIAL:
-                costNoLoad = marginalPCost[-1]
+            if margPCostModel == POLYNOMIAL:
+                costNoLoad = margPCost[-1]
             else:
                 costNoLoad = 0.0
 
@@ -164,7 +167,7 @@ class MarketEnvironment(object):
             totQty += qty
 
             # Get the marginal cost of generating at this output.
-            c = g.total_cost(totQty, marginalPCost, marginalPCostModel)
+#            c = g.total_cost(totQty, marginalPCost, marginalPCostModel)
 
             for j in range(self.numOffbids):
                 # Index of the first markup in 'action' for the current gen.
@@ -172,17 +175,33 @@ class MarketEnvironment(object):
                 # The markups are cumulative to ensure cost function convexity.
                 mk = sum(action[k:k + j + 1])
 
+                # Marginal cost.
+                if margPCostModel == POLYNOMIAL:
+                    cmarg = polyval(polyder(margPCost), totQty)
+                elif margPCostModel == PW_LINEAR:
+                    n_segments = len(margPCost) - 1
+                    for i in range(n_segments):
+                        x1, y1 = margPCost[i]
+                        x2, y2 = margPCost[i + 1]
+                        if x1 <= totQty <= x2:
+                            cmarg = (y2 - y1) / (x2 - x1)
+                    else:
+                        raise ValueError, "Invalid bid quantity [%f]." % totQty
+                else:
+                    raise ValueError
+
                 # Markup the marginal cost of the generator.
                 if not g.is_load:
-                    prc = c * ((100.0 + mk) / 100.0)
+                    prc = cmarg * ((100.0 + mk) / 100.0)
                 else:
-                    prc = c * ((100.0 + mk) / 100.0)
+                    prc = cmarg * ((100.0 + mk) / 100.0)
 
                 if not g.is_load:
                     offer = Offer(g, qty, prc, costNoLoad)
                     self.market.offers.append(offer)
 
                     self._lastAction.append(offer)
+
                     logger.info("%.2fMW offered at %.2f$/MWh for %s (%.1f%%)."
                         % (qty, prc, g.name, mk))
                 else:
@@ -190,6 +209,7 @@ class MarketEnvironment(object):
                     self.market.bids.append(bid)
 
                     self._lastAction.append(bid)
+
                     logger.info("%.2f$/MWh bid for %.2fMW for %s (%.1f%%)."
                         % (prc, -qty, g.name, mk))
 

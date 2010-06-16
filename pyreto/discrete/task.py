@@ -44,11 +44,12 @@ class ProfitTask(Task):
         """
         t = self.env.market.period
 
-        earnings = 0.0
+        totalEarnings = 0.0
         for g in self.env.generators:
             # Compute costs in $ (not $/hr).
     #        fixedCost = t * g.total_cost(0.0)
     #        variableCost = (t * g.total_cost()) - fixedCost
+
             costs = g.total_cost(round(g.p, 4),
                                  self.env._g0[g]["p_cost"],
                                  self.env._g0[g]["pcost_model"])
@@ -56,17 +57,30 @@ class ProfitTask(Task):
     #        offbids = self.env.market.getOffbids(g)
             offbids = [ob for ob in self.env._lastAction if ob.generator == g]
 
+#            print self.env._lastAction
+#            print g.name
+#            for ob in offbids:
+#                print ob.cleared
+#                print ob.accepted
+#                print ob.withheld
+#                print ob.clearedQuantity
+#                print ob.clearedPrice
+
             revenue = t * sum([ob.revenue for ob in offbids])
+            if offbids:
+                revenue += offbids[0].noLoadCost
 
             if g.is_load:
-                earnings += costs - revenue
+                earnings = costs - revenue
             else:
-                earnings += revenue - costs#(fixedCost + variableCost)
+                earnings = revenue - costs#(fixedCost + variableCost)
 
             logger.debug("Generator [%s] earnings: %.2f (%.2f, %.2f)" %
                          (g.name, earnings, revenue, costs))
 
-        logger.debug("Task reward: %.2f" % earnings)
+            totalEarnings += earnings
+
+        logger.debug("Task reward: %.2f" % totalEarnings)
 
         return earnings
 

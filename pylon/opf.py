@@ -131,7 +131,7 @@ class OPF(object):
         self.case.index_buses(bs)
 
         # Convert single-block piecewise-linear costs into linear polynomial.
-#        gn = self._pwl1_to_poly(gn)
+        gn = self._pwl1_to_poly(gn)
 
         # Set-up initial problem variables.
         Va = self._get_voltage_angle_var(refs, bs)
