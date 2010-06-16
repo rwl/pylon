@@ -29,7 +29,7 @@ from pyreto import \
     MarketExperiment, EpisodicMarketExperiment, DiscreteMarketEnvironment, \
     ContinuousMarketEnvironment, SmartMarket, ProfitTask, EpisodicProfitTask
 
-#from pyreto.tools import plotGenCost
+#from pyreto.util import plotGenCost
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable#, ActionValueNetwork
@@ -219,7 +219,7 @@ while x <= 1000:
 
 logger.info("Example completed in %.3fs" % (time.time() - t0))
 
-#from pyreto.tools import sparklineData
+#from pyreto.util import sparklineData
 #sparklineData(agent_map, "auctiondata.txt")
 
 #tableZip = zipfile.ZipFile("%s.zip" % timestr, "w")

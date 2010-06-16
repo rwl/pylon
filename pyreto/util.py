@@ -26,7 +26,39 @@ import scipy
 from itertools import count, izip
 from pylab import figure, xlabel, ylabel, plot, show, legend
 
+from pybrain.rl.agents.logging import LoggingAgent
+
 from pylon.generator import PW_LINEAR, POLYNOMIAL
+
+#------------------------------------------------------------------------------
+#  "ZeroAgent" class:
+#------------------------------------------------------------------------------
+
+class ZeroAgent(LoggingAgent):
+
+    def getAction(self):
+        self.lastaction = -1.0 * scipy.ones(self.outdim)
+        return self.lastaction
+
+    def learn(self):
+        pass
+
+#------------------------------------------------------------------------------
+#  "xselections" function:
+#------------------------------------------------------------------------------
+
+def xselections(items, n):
+    """ Takes n elements (not necessarily distinct) from the sequence, order
+        matters.
+
+        @see: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/190465
+    """
+    if n==0:
+        yield []
+    else:
+        for i in xrange(len(items)):
+            for ss in xselections(items, n-1):
+                yield [items[i]]+ss
 
 #------------------------------------------------------------------------------
 #  "plotGenCost" function:

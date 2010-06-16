@@ -48,7 +48,7 @@ from pylon.readwrite import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
     CSVWriter, DotWriter, PickleReader, PickleWriter
 
-from pyreto.tools import ReSTExperimentWriter
+from pyreto.util import ReSTExperimentWriter
 
 from pylon.readwrite.common import BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 

@@ -8,7 +8,7 @@ import logging
 import pylab
 import scipy
 
-import pyreto.tools
+import pyreto.util
 import pyreto.continuous
 
 from pylon import Case, OPF
@@ -28,7 +28,7 @@ case = Case.load("../data/case6ww.pkl")
 case.generators[0].p_cost = (0.0, 9.0, 200.0)
 case.generators[1].p_cost = (0.0, 2.0, 200.0)
 case.generators[2].p_cost = (0.0, 5.0, 200.0)
-#pyreto.tools.plotGenCost(case.generators)
+#pyreto.util.plotGenCost(case.generators)
 
 # Construct a market and specify any desired limits.
 market = pyreto.SmartMarket(case, priceCap=100.0)
@@ -74,7 +74,7 @@ takers = case.generators[1:]
 for g in takers:
     env = pyreto.continuous.MarketEnvironment([g], market, numOffbids)
     task = pyreto.continuous.ProfitTask(env, maxSteps=len(p1h))
-    agent = pyreto.continuous.environment.ZeroAgent(env.outdim, env.indim)
+    agent = pyreto.util.ZeroAgent(env.outdim, env.indim)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 

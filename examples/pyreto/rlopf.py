@@ -10,7 +10,7 @@ import pylab
 import pylon
 import pyreto
 
-from pyreto.tools import plotGenCost
+from pyreto.util import plotGenCost
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners import ENAC, Reinforce
@@ -19,7 +19,6 @@ from pybrain.rl.agents import OptimizationAgent
 from pybrain.optimization import HillClimber, CMAES, ExactNES, PGPE, FEM
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.tools.plotting import MultilinePlotter
-from pybrain.tools.example_tools import ExTools
 
 logger = logging.getLogger()
 for handler in logger.handlers: logger.removeHandler(handler) # rm pybrain
