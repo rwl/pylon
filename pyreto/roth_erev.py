@@ -16,7 +16,9 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #-------------------------------------------------------------------------------
 
-""" Defines learner modules that use the Roth-Erev method.
+""" Defines classes that implement the Roth-Erev reinforcement learning method.
+    The original Roth-Erev reinforcement learning algorithm was presented by
+    A. Roth and I. Erev in:
 
     A. E. Roth, I. Erev, D. Fudenberg, J. Kagel, J. Emilie and R. X. Xing,
     "Learning in Extensive-Form Games: Experimental Data and Simple Dynamic
@@ -26,6 +28,11 @@
     Erev, Ido and Roth, Alvin E., "Predicting How People Play Games:
     Reinforcement Learning in Experimental Games with Unique, Mixed Strategy
     Equilibria", The American Economic Review, 88-4, pp 848--881, 1998
+
+    Implementation adapted from the RothErevLearner in JRELM by Charles
+    Gieseler which was itself adapted, in part, from the RothErevLearner in the
+    Java JLCRAgent Simulator API (JASA) by Steve Phelps, Department of Computer
+    Science, University of Liverpool.  For further details see:
 
     Charles Gieseler, "A Java Reinforcement Learning Module for the Repast
     Toolkit: Facilitating Study and Implementation with Reinforcement Learning
@@ -42,25 +49,14 @@ import random
 import scipy
 
 from pybrain.rl.learners.valuebased.valuebased import ValueBasedLearner
-from pybrain.structure.modules.module import Module
+from pybrain.rl.learners.valuebased import ActionValueTable
 
 #------------------------------------------------------------------------------
 #  "RothErev" class:
 #------------------------------------------------------------------------------
 
 class RothErev(ValueBasedLearner):
-    """ Reinforcement learning algorithms make use of a policy to represent
-        learned knowledge. Policies themselves require access to the space of
-        possible actions, represented by ActionDomains. As such an
-        ReinforcementLearner will make use of with a StatelessPolicy and an
-        ActionDomain.
-
-        Experimentation, initial propensity and recency.
-
-        A. E. Roth, I. Erev, D. Fudenberg, J. Kagel, J. Emilie and R. X. Xing,
-        "Learning in Extensive-Form Games: Experimental Data and Simple Dynamic
-        Models in the Intermediate Term," Games and Economic Behavior,
-        Special Issue: Nobel Symposium, vol. 8, January 1995, 164-212.
+    """ Defines the Roth-Erev reinforcement learning method presented in:
 
         A. E. Roth, I. Erev, "Predicting How People Play Games with Unique
         Mixed-Strategy Equilibria," American Economics Review, Volume 88,
@@ -71,27 +67,36 @@ class RothErev(ValueBasedLearner):
                  initialPropensity=100.0, recency=0.5):
         # Cooling parameter for Gibbs-Boltmann cooling.
         # For the Gibbs-Boltzmann probability method used in VRELearner.
-        self.boltzmannTemp = boltzmannTemp
-        self.useBoltz = useBoltz
+#        self.boltzmannTemp = boltzmannTemp
+#        self.useBoltz = useBoltz
 
         # The tendency for experimentation among action choices. The algorithm
         # will sometimes choose non-optimal Actions in favour of exploring the
         # domain. This allows the algortithm to get a more accurate picture of
         # the domain and find Actions that yield better rewards than previously
         # known.
+        # Note: Be careful not to choose value e where (1-e) == e / (N - 1),
+        # where N is the size of the action domain (i.e. e == 0.75 and N == 4).
+        # This will result in all    action propensities receiving the same
+        # experience update value, regardless of the last action chosen.
+        # Action choice probabilities will then remain uniform and no learning
+        # will occur.
+        assert 0.0 <= experimentation <= 1.0
         self.experimentation = experimentation
 
         # The initial propensity value assigned to all actions. Used instead of
         # a scaling parameter.
+        assert initialPropensity >= 0.0
         self.initialPropensity = initialPropensity
 
         # The degree to which actions are 'forgotten'. Used to degrade the
         # propensity for choosing actions. Meant to make recent experience more
         # prominent than past experience in the action choice process.
+        assert 0.0 <= recency <= 1.0
         self.recency = recency
 
         # Number of possible actions.
-        self.domainSize = -1
+#        self.domainSize = -1
 
         # Represents learned knowledge.
 #        self.policy = REPolicy()
@@ -101,10 +106,10 @@ class RothErev(ValueBasedLearner):
 
         # List of action ID's in the domain. Allows us to map from propensities
         # to actions in the domain.
-        self.actionIDList = []
+#        self.actionIDList = []
 
         # How many times this learner has been updated.
-        self.period = 0
+#        self.period = 0
 
         # Initialise the choice probabilities.
 #        if policy is not None:
@@ -112,28 +117,70 @@ class RothErev(ValueBasedLearner):
 
         self.init()
 
+    #--------------------------------------------------------------------------
+    #  Learner interface:
+    #--------------------------------------------------------------------------
 
-    def setModule(self, module):
-        super(RothErev, self).setModule(module)
-        self.domainSize = len(module.actionDomain)
-        self.actionIDList = module.actionDomain.keys()
+    def learn(self):
+        """ Learn on the current dataset, for a single epoch.
 
+            This activates the learning process according to the modified
+            Roth-Erev learning algorithm. Feedback is interpreted as reward
+            for the last action chosen by this engine. Entries in the policy
+            associated with this Action are updated accordingly.
 
-    def init(self):
-        """ Finishes initialising the learner.
+            Initiate the learning process using given feedback. Feedback is
+            associated with a the last Action chosen by this engine and is
+            interpreted as a reward for that Action. It is used to update the
+            probability for choosing the Action according to the specific
+            learning algorithm.
+
+            Feedback is parameterized since required input will vary depending
+            on the specific reinforcement learning algorithm and the particular
+            simulation environment.
+
+            Note: Most often feedback is for the last Action chosen, so given
+            ActionID will usually point to this Action. As such, many RLEnigine
+            implementations may also provide update() methods that simply
+            accept feedback and associate it with the last Action chosen.
         """
-        self.domainSize = len(self.module.actionDomain)
-        self.actionIDList = self.module.actionDomain.keys()
-
-        initProp = self.initialPropensity
-
-        for ID in self.actionIDList:
-            self.module.setPropensity(ID, initProp)
-
-        self.lastSelectedAction = self.chooseAction()
+#        reward = self.ds.getSequence(self.ds.getNumSequences())[2]
+        rewards = self.ds['reward']
+        self.updatePropensities(rewards[-1])
+        self.updateProbabilities()
+#        self.period += 1
 
 
-    def updatePropensities(self, reward):
+    def reset(self):
+        """ Clear all learned knowledge. The Action propensities are set to the
+            current initial value and the probability values in the policy.
+        """
+        super(RothErev, self).reset()
+        self.init()
+
+    #--------------------------------------------------------------------------
+    #  RothErev interface:
+    #--------------------------------------------------------------------------
+
+#    def setModule(self, module):
+#        super(RothErev, self).setModule(module)
+#        self.domainSize = len(module.actionDomain)
+#        self.actionIDList = module.actionDomain.keys()
+
+
+#    def init(self):
+#        """ Finishes initialising the learner.
+#        """
+#        self.domainSize = len(self.module.actionDomain)
+#        self.actionIDList = self.module.actionDomain.keys()
+#
+#        for ID in self.actionIDList:
+#            self.module.setPropensity(ID, self.initialPropensity)
+#
+#        self.lastSelectedAction = self.chooseAction()
+
+
+    def _updatePropensities(self, reward):
         """ Update the propensities for all actions. The propensity for last
             action chosen will be updated using the feedback value that
             resulted from performing the action.
@@ -147,14 +194,15 @@ class RothErev(ValueBasedLearner):
         """
         phi = self.recency
 
-        for i in range(self.domainSize):
-            carryOver = (1 - phi) * self.module.getPropensity(i)
+        for i in range(self.module.numActions):
+            carryOver = (1 - phi) * self.module.getValue(0, i)
             experience = self.experience(i, reward)
-            self.module.setPropensity(i, carryOver + experience)
+#            self.module.setPropensity(i, carryOver + experience)
+            self.module.updateValue(0, i, carryOver + experience)
 #            propensities[i] = (1 - r) * propensities[i] + experience(i, reward)
 
 
-    def experience(self, actionIndex, reward):
+    def _experience(self, actionIndex, reward):
         """ This is the standard experience function for the Roth-Erev
             algorithm. Here propensities for all actions are updated and
             similarity does not come into play. That is, all action choices are
@@ -173,7 +221,8 @@ class RothErev(ValueBasedLearner):
                           |_ r_j * (e /(n-1))    if i != j
         """
         e = self.experimentation
-        rewardedIndex = self.actionIDList.index(self.lastSelectedAction)
+#        rewardedIndex = self.actionIDList.index(self.lastSelectedAction)
+        rewardedIndex = self.lastSelectedAction
 
         if actionIndex == rewardedIndex:
             experience = reward * (1 - e)
@@ -188,8 +237,10 @@ class RothErev(ValueBasedLearner):
             Uses a proportional probability unless the given parameters say to
             use a Gibbs-Bolztmann distribution.
         """
-        if self.parameters.useBoltz:
-            self.generateBoltzmanProbs()
+#        if self.parameters.useBoltz:
+#            self.generateBoltzmanProbs()
+        if self.explorer is not None:
+            return self.explorer.activate(self.state, self.action)
         else:
             # Proportional probability method.
             propensities = self.module.propensities
@@ -220,92 +271,65 @@ class RothErev(ValueBasedLearner):
             newProb = math.exp(propensities[index] / coolingParam) / summedExps
             self.module.setProbability(actionID, newProb)
 
+#------------------------------------------------------------------------------
+#  "VariantRothErev" class:
+#------------------------------------------------------------------------------
 
-    def learn(self):
-        """ Learn on the current dataset, for a single epoch.
+class VariantRothErev(RothErev):
+    """ Variant Roth-Erev Learner
 
-            This activates the learning process according to the modified
-            Roth-Erev learning algorithm. Feedback is interpreted as reward
-            for the last action chosen by this engine. Entries in the policy
-            associated with this Action are updated accordingly.
+        This ReinforcementLearner implements a variation of the Roth-Erev
+        algorithm as presented in:
 
-            Initiate the learning process using given feedback. Feedback is
-            associated with a the last Action chosen by this engine and is
-            interpreted as a reward for that Action. It is used to update the
-            probability for choosing the Action according to the specific
-            learning algorithm.
+            James Nicolaisen, Valentin Petrov, and Leigh Tesfatsion, "Market
+            Power and Efficiency in a Computational Electricity Market with
+            Discriminatory Double-Auction Pricing," IEEE Transactions on
+            Evolutionary Computation, Volume 5, Number 5, 2001, 504-523.
 
-            Feedback is parameterized since required input will vary depending
-            on the specific reinforcement learning algorithm and the particular
-            simulation environment.
+        @see RothErev for details on the original Roth-Erev algorithm.
+    """
 
-            Note: Most often feedback is for the last Action chosen, so given
-            ActionID will usually point to this Action. As such, many RLEnigine
-            implementations may also provide update() methods that simply
-            accept feedback and associate it with the last Action chosen.
+    def updateProbabilities(self):
+        """ Updates the probability for each action to be chosen in the policy.
         """
-#        reward = self.ds.getSequence(self.ds.getNumSequences())[2]
-        rewards = self.ds['reward']
-        self.updatePropensities(rewards[-1])
-        self.updateProbabilities()
-        self.period += 1
+        self.generateBoltzmanProbs()
 
 
-#    def getAction(self):
-#        """ Activates the module with the last observation and stores the
-#            result as last action.
-#
-#            Elicits a new choice of action. The action will be chosen according
-#            to selection rule of the SimpleStatelessPolicy. Actions are chosen
-#            from a DiscreteFiniteDomain.
-#        """
-##        nextAction = self.policy.generateAction()
-#        nextAction = super(RothErev, self).getAction()
-##        self.lastSelectedAction = nextAction
-#        return nextAction
+    def experience(self, actionIndex, reward):
+        """ This is an altered version of the experience function for used in
+            the standard Roth-Erev algorithm.  Like in RELearner, propensities
+            for all actions are updated and similarity does not come into play.
+            If the actionIndex points to the action the reward is associated
+            with (usually the last action taken) then simply adjust the weight
+            by the experimentation. Otherwise increase the weight of the action
+            by a small portion of its current propensity.
 
+            If j is the index of the last action chosen, r_j is the reward
+            received for performing j, i is the current action being updated,
+            q_i is the propensity for i, n is the size of the action domain and
+            e is the experimentation parameter, then this experience function
+            can be expressed as:
 
-    def reset(self):
-        """ Clear all learned knowledge. The Action propensities are set to the
-            current initial value and the probability values in the policy.
+                          |  r_j * (1-e)         if i = j
+              E(i, r_j) = |
+                          |_ q_i * (e /(n-1))    if i != j
         """
-        super(RothErev, self).reset()
-        self.init()
+        e = self.parameters.experimentation
+        rewardedIndex = self.actionIDList.index(self.lastSelectedAction)
 
+        if actionIndex == rewardedIndex:
+            experience = reward * (1 - e)
+        else:
+            propensity = self.policy.getPropensity(actionIndex)
+            experience = propensity * (e / (self.domainSize - 1))
 
-#    def makeParameters(self):
-#        """ Create a default set of parameters that can be used with this
-#            learner.
-#        """
-#        raise NotImplementedError
-
-
-    def validateParameters(self):
-        """ Checks that the current values for all parameters are valid.
-        """
-        valid = True
-        if self.boltzmannTemp < 0.0:
-            raise ValueError, "Cooling parameter for Gibbs/Bolzmann "
-            "probability generation must be a positive value."
-            valid = False
-        if not 0.0 <= self.experimentation <= 1.0:
-            raise ValueError, "Experimentation value must be between "
-            "zero and one."
-            valid = False
-        if self.initialPropensity < 0.0:
-            raise ValueError, "Initial propensity value must be "
-            "nonnegative."
-            valid = False
-        if not 0.0 <= self.recency <= 1.0:
-            raise ValueError, "Recency value must be between zero and one."
-            valid = False
-        return valid
+        return experience
 
 #------------------------------------------------------------------------------
 #  "PropensityTable" class:
 #------------------------------------------------------------------------------
 
-class PropensityTable(Module):
+class PropensityTable(ActionValueTable):
     """ Interface for building a stateless reinforcement learning policy. This
         type of policy simply maintains a distribution guiding action choice
         irrespective of the current state of the world. That is, it simply
@@ -318,9 +342,7 @@ class PropensityTable(Module):
     """
 
     def __init__(self, numActions, actionDomain, initProbs=None, name=None):
-        Module.__init__(self, 1, 1, name)
-        self.numStates = numStates
-        self.numActions = numActions
+        ActionValueTable.__init__(self, 1, numActions, name)
 
         # Each possible action has a propensity associated with it. Essentially
         # the likelyhood that each action will be chosen.
@@ -353,7 +375,7 @@ class PropensityTable(Module):
         # Generates randomEngine events (action selections) according to the
         # probabilities over all actions in the ActionDomain. Probabilities
         # are maintained in probDistFunction.
-        self.eventGenerator = eventGenerator
+#        self.eventGenerator = eventGenerator
 
         # The collection of possible Actions an agent is allowed to perform.
 #        domain = [0, 1, 2, 3] # N S E W
@@ -387,14 +409,14 @@ class PropensityTable(Module):
         self.propensities = scipy.zeros(self.numActions)
 
 
-    def getPropensity(self, ID):
-        index = self.actionIDList.index(ID)
-        return self.propensities[index]
-
-
-    def setPropensity(self, ID, prop):
-        index = self.actionIDList.index(ID)
-        self.propensities[index] = prop
+#    def getPropensity(self, ID):
+#        index = self.actionIDList.index(ID)
+#        return self.propensities[index]
+#
+#
+#    def setPropensity(self, ID, prop):
+#        index = self.actionIDList.index(ID)
+#        self.propensities[index] = prop
 
 
     def generateAction(self):
@@ -458,60 +480,6 @@ def eventGenerator(distrib):
         eventIndex += 1
 
     yield eventIndex - 1
-
-#------------------------------------------------------------------------------
-#  "VariantRothErev" class:
-#------------------------------------------------------------------------------
-
-class VariantRothErev(RothErev):
-    """ Variant Roth-Erev Learner
-
-        This ReinforcementLearner implements a variation of the Roth-Ere'ev
-        algorithm as presented in:
-
-            James Nicolaisen, Valentin Petrov, and Leigh Tesfatsion, "Market
-            Power and Efficiency in a Computational Electricity Market with
-            Discriminatory Double-Auction Pricing," IEEE Transactions on
-            Evolutionary Computation, Volume 5, Number 5, 2001, 504-523.
-
-        See RELearner for details on the original Roth-Erev algorithm
-    """
-
-    def updateProbabilities(self):
-        """ Updates the probability for each action to be chosen in the policy.
-        """
-        self.generateBoltzmanProbs()
-
-
-    def experience(self, actionIndex, reward):
-        """ This is an altered version of the experience function for used in
-            the standard Roth-Erev algorithm.  Like in RELearner, propensities
-            for all actions are updated and similarity does not come into play.
-            If the actionIndex points to the action the reward is associated
-            with (usually the last action taken) then simply adjust the weight
-            by the experimentation. Otherwise increase the weight of the action
-            by a small portion of its current propensity.
-
-            If j is the index of the last action chosen, r_j is the reward
-            received for performing j, i is the current action being updated,
-            q_i is the propensity for i, n is the size of the action domain and
-            e is the experimentation parameter, then this experience function
-            can be expressed as:
-
-                          |  r_j * (1-e)         if i = j
-              E(i, r_j) = |
-                          |_ q_i * (e /(n-1))    if i != j
-        """
-        e = self.parameters.experimentation
-        rewardedIndex = self.actionIDList.index(self.lastSelectedAction)
-
-        if actionIndex == rewardedIndex:
-            experience = reward * (1 - e)
-        else:
-            propensity = self.policy.getPropensity(actionIndex)
-            experience = propensity * (e / (self.domainSize - 1))
-
-        return experience
 
 #class Action:
 #    """ For classes representing the operations that an agent can perform in a
