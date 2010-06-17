@@ -1,0 +1,724 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>pylon.generator</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            ><a class="navbar" target="_top" href="http://rwl.github.com/pylon">Pylon</a></th>
+          </tr></table></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="pylon-module.html">Package&nbsp;pylon</a> ::
+        Module&nbsp;generator
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="pylon.generator-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="pylon.generator-module.html">Module pylon.generator</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment"># Copyright (C) 2010 Richard Lincoln</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment"># Licensed under the Apache License, Version 2.0 (the "License");</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment"># you may not use this file except in compliance with the License.</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment"># You may obtain a copy of the License at</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#     http://www.apache.org/licenses/LICENSE-2.0</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment"># Unless required by applicable law or agreed to in writing, software</tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment"># distributed under the License is distributed on an "AS IS" BASIS,</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment"># See the License for the specific language governing permissions and</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment"># limitations under the License.</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-docstring">""" Defines a generator as a complex power bus injection.</tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  Imports:</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">import</tt> <tt class="py-name">polyval</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Module pylon.util=pylon.util-module.html"><a title="pylon.util" class="py-name" href="#" onclick="return doclink('link-0', 'util', 'link-0');">util</a></tt> <tt class="py-keyword">import</tt> <tt id="link-1" class="py-name" targets="Class pylon.util.Named=pylon.util.Named-class.html"><a title="pylon.util.Named" class="py-name" href="#" onclick="return doclink('link-1', 'Named', 'link-1');">Named</a></tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  Constants:</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"><tt id="link-2" class="py-name" targets="Variable pylon.generator.GENERATOR=pylon.generator-module.html#GENERATOR"><a title="pylon.generator.GENERATOR" class="py-name" href="#" onclick="return doclink('link-2', 'GENERATOR', 'link-2');">GENERATOR</a></tt> <tt class="py-op">=</tt> <tt class="py-string">"generator"</tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"><tt id="link-3" class="py-name" targets="Variable pylon.generator.DISPATCHABLE_LOAD=pylon.generator-module.html#DISPATCHABLE_LOAD"><a title="pylon.generator.DISPATCHABLE_LOAD" class="py-name" href="#" onclick="return doclink('link-3', 'DISPATCHABLE_LOAD', 'link-3');">DISPATCHABLE_LOAD</a></tt> <tt class="py-op">=</tt> <tt class="py-string">"vload"</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt id="link-4" class="py-name" targets="Variable pylon.generator.POLYNOMIAL=pylon.generator-module.html#POLYNOMIAL"><a title="pylon.generator.POLYNOMIAL" class="py-name" href="#" onclick="return doclink('link-4', 'POLYNOMIAL', 'link-4');">POLYNOMIAL</a></tt> <tt class="py-op">=</tt> <tt class="py-string">"poly"</tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt id="link-5" class="py-name" targets="Variable pylon.generator.PW_LINEAR=pylon.generator-module.html#PW_LINEAR"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-5', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> <tt class="py-op">=</tt> <tt class="py-string">"pwl"</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  Logging:</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt id="link-6" class="py-name" targets="Variable pylon.ac_pf.logger=pylon.ac_pf-module.html#logger,Variable pylon.case.logger=pylon.case-module.html#logger,Variable pylon.dc_pf.logger=pylon.dc_pf-module.html#logger,Variable pylon.dyn.logger=pylon.dyn-module.html#logger,Variable pylon.estimator.logger=pylon.estimator-module.html#logger,Variable pylon.generator.logger=pylon.generator-module.html#logger,Variable pylon.main.logger=pylon.main-module.html#logger,Variable pylon.opf.logger=pylon.opf-module.html#logger,Variable pylon.readwrite.common.logger=pylon.readwrite.common-module.html#logger,Variable pylon.readwrite.dot_writer.logger=pylon.readwrite.dot_writer-module.html#logger,Variable pylon.readwrite.matpower_reader.logger=pylon.readwrite.matpower_reader-module.html#logger,Variable pylon.readwrite.pickle_readwrite.logger=pylon.readwrite.pickle_readwrite-module.html#logger,Variable pylon.readwrite.psat_reader.logger=pylon.readwrite.psat_reader-module.html#logger,Variable pylon.readwrite.psse_reader.logger=pylon.readwrite.psse_reader-module.html#logger,Variable pylon.readwrite.rdf_readwrite.logger=pylon.readwrite.rdf_readwrite-module.html#logger,Variable pylon.solver.logger=pylon.solver-module.html#logger,Variable pylon.ud_opf.logger=pylon.ud_opf-module.html#logger"><a title="pylon.ac_pf.logger
+pylon.case.logger
+pylon.dc_pf.logger
+pylon.dyn.logger
+pylon.estimator.logger
+pylon.generator.logger
+pylon.main.logger
+pylon.opf.logger
+pylon.readwrite.common.logger
+pylon.readwrite.dot_writer.logger
+pylon.readwrite.matpower_reader.logger
+pylon.readwrite.pickle_readwrite.logger
+pylon.readwrite.psat_reader.logger
+pylon.readwrite.psse_reader.logger
+pylon.readwrite.rdf_readwrite.logger
+pylon.solver.logger
+pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-6', 'logger', 'link-6');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-name">__name__</tt><tt class="py-op">)</tt> </tt>
+<a name="Generator"></a><div id="Generator-def"><a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  "Generator" class:</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt> <a class="py-toggle" href="#" id="Generator-toggle" onclick="return toggle('Generator');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html">Generator</a><tt class="py-op">(</tt><tt class="py-base-class">Named</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="Generator-expanded"><a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line">    <tt class="py-docstring">""" Defines a power system generator component. Fixes voltage magnitude</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line"><tt class="py-docstring">        and active power injected at parent bus. Or when at it's reactive</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"><tt class="py-docstring">        power limit fixes active and reactive power injected at parent bus.</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"> </tt>
+<a name="Generator.__init__"></a><div id="Generator.__init__-def"><a name="L55"></a><tt class="py-lineno"> 55</tt> <a class="py-toggle" href="#" id="Generator.__init__-toggle" onclick="return toggle('Generator.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">bus</tt><tt class="py-op">,</tt> <tt class="py-param">name</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">online</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">,</tt> <tt class="py-param">base_mva</tt><tt class="py-op">=</tt><tt class="py-number">100.0</tt><tt class="py-op">,</tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line">                 <tt class="py-param">p</tt><tt class="py-op">=</tt><tt class="py-number">100.0</tt><tt class="py-op">,</tt> <tt class="py-param">p_max</tt><tt class="py-op">=</tt><tt class="py-number">200.0</tt><tt class="py-op">,</tt> <tt class="py-param">p_min</tt><tt class="py-op">=</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-param">v_magnitude</tt><tt class="py-op">=</tt><tt class="py-number">1.0</tt><tt class="py-op">,</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line">                 <tt class="py-param">q</tt><tt class="py-op">=</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-param">q_max</tt><tt class="py-op">=</tt><tt class="py-number">30.0</tt><tt class="py-op">,</tt> <tt class="py-param">q_min</tt><tt class="py-op">=</tt><tt class="py-op">-</tt><tt class="py-number">30.0</tt><tt class="py-op">,</tt> <tt class="py-param">c_startup</tt><tt class="py-op">=</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-param">c_shutdown</tt><tt class="py-op">=</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line">                 <tt class="py-param">p_cost</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">pcost_model</tt><tt class="py-op">=</tt><tt id="link-7" class="py-name"><a title="pylon.generator.POLYNOMIAL" class="py-name" href="#" onclick="return doclink('link-7', 'POLYNOMIAL', 'link-4');">POLYNOMIAL</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line">                 <tt class="py-param">q_cost</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">qcost_model</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.__init__-expanded"><a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line">        <tt class="py-docstring">""" Initialises a new Generator instance.</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line">        <tt class="py-comment">#: Busbar to which the generator is connected.</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">bus</tt> <tt class="py-op">=</tt> <tt class="py-name">bus</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line">        <tt class="py-comment">#: Unique name.</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-8" class="py-name" targets="Variable pylon.util.Named.name=pylon.util.Named-class.html#name"><a title="pylon.util.Named.name" class="py-name" href="#" onclick="return doclink('link-8', 'name', 'link-8');">name</a></tt> <tt class="py-op">=</tt> <tt id="link-9" class="py-name"><a title="pylon.util.Named.name" class="py-name" href="#" onclick="return doclink('link-9', 'name', 'link-8');">name</a></tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line">        <tt class="py-comment">#: Is the generator in service?</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">online</tt> <tt class="py-op">=</tt> <tt class="py-name">online</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line">        <tt class="py-comment">#: Machine MVA base.</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">base_mva</tt> <tt class="py-op">=</tt> <tt class="py-name">base_mva</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line">        <tt class="py-comment">#: Active power output (MW).</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p</tt> <tt class="py-op">=</tt> <tt class="py-name">p</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line">        <tt class="py-comment">#: Maximum active power output (MW).</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_max</tt> <tt class="py-op">=</tt> <tt class="py-name">p_max</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line">        <tt class="py-comment">#: Minimum active power output (MW).</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_min</tt> <tt class="py-op">=</tt> <tt class="py-name">p_min</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line"> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line">        <tt class="py-comment">#: Voltage magnitude setpoint (pu).</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">v_magnitude</tt> <tt class="py-op">=</tt> <tt class="py-name">v_magnitude</tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line">        <tt class="py-comment">#: Reactive power output (MVAr).</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q</tt> <tt class="py-op">=</tt> <tt class="py-name">q</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line">        <tt class="py-comment">#: Maximum reactive power (MVAr).</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_max</tt> <tt class="py-op">=</tt> <tt class="py-name">q_max</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line">        <tt class="py-comment">#: Minimum reactive power (MVAr).</tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_min</tt> <tt class="py-op">=</tt> <tt class="py-name">q_min</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line">        <tt class="py-comment">#: Start up cost.</tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">c_startup</tt> <tt class="py-op">=</tt> <tt class="py-name">c_startup</tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">        <tt class="py-comment">#: Shut down cost.</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">c_shutdown</tt> <tt class="py-op">=</tt> <tt class="py-name">c_shutdown</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">        <tt class="py-comment">#: Active power cost model: 'poly' or 'pwl' (default: 'poly')</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-keyword">if</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">p_cost</tt><tt class="py-op">,</tt> <tt class="py-name">tuple</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt id="link-10" class="py-name"><a title="pylon.generator.POLYNOMIAL" class="py-name" href="#" onclick="return doclink('link-10', 'POLYNOMIAL', 'link-4');">POLYNOMIAL</a></tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">p_cost</tt><tt class="py-op">,</tt> <tt class="py-name">list</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt id="link-11" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-11', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt class="py-name">pcost_model</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line"> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line">        <tt class="py-comment">#: Reactive power cost model: 'poly', 'pwl' or None (default: 'poly')</tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-keyword">if</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">q_cost</tt><tt class="py-op">,</tt> <tt class="py-name">tuple</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">qcost_model</tt> <tt class="py-op">=</tt> <tt id="link-12" class="py-name"><a title="pylon.generator.POLYNOMIAL" class="py-name" href="#" onclick="return doclink('link-12', 'POLYNOMIAL', 'link-4');">POLYNOMIAL</a></tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">q_cost</tt><tt class="py-op">,</tt> <tt class="py-name">list</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">qcost_model</tt> <tt class="py-op">=</tt> <tt id="link-13" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-13', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">qcost_model</tt> <tt class="py-op">=</tt> <tt class="py-name">qcost_model</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line"> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">        <tt class="py-comment">#: Active power cost represented either by a tuple of quadratic</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment">#: polynomial coefficients or a list of piece-wise linear coordinates</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment">#: according to the value of the 'pcost_model' attribute.</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-keyword">if</tt> <tt class="py-name">p_cost</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-name">p_cost</tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">==</tt> <tt id="link-14" class="py-name"><a title="pylon.generator.POLYNOMIAL" class="py-name" href="#" onclick="return doclink('link-14', 'POLYNOMIAL', 'link-4');">POLYNOMIAL</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-number">0.01</tt><tt class="py-op">,</tt> <tt class="py-number">0.1</tt><tt class="py-op">,</tt> <tt class="py-number">10.0</tt><tt class="py-op">)</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">            <tt class="py-keyword">elif</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">==</tt> <tt id="link-15" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-15', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-name">p_max</tt><tt class="py-op">,</tt> <tt class="py-number">10.0</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line">            <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line">                <tt class="py-keyword">raise</tt> <tt class="py-name">ValueError</tt> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line"> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line">        <tt class="py-comment">#: Reactive power cost.</tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_cost</tt> <tt class="py-op">=</tt> <tt class="py-name">q_cost</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line"> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line">        <tt class="py-comment">#: Kuhn-Tucker multiplier on lower Pg limit (u/MW where the objective</tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment">#: function has units u).</tt> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">mu_pmin</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line">        <tt class="py-comment">#: Kuhn-Tucker multiplier on upper Pg limit (u/MW where the objective</tt> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment">#: function has units u).</tt> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">mu_pmax</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line">        <tt class="py-comment">#: Kuhn-Tucker multiplier on lower Qg limit (u/MVAr where the objective</tt> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment">#: function has units u).</tt> </tt>
+<a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">mu_qmin</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line">        <tt class="py-comment">#: Kuhn-Tucker multiplier on upper Qg limit (u/MVAr where the objective</tt> </tt>
+<a name="L138"></a><tt class="py-lineno">138</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment">#: function has units u).</tt> </tt>
+<a name="L139"></a><tt class="py-lineno">139</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">mu_qmax</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+</div><a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line"> </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line">        <tt class="py-comment"># Unit Commitment -----------------------------------------------------</tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line">        <tt class="py-comment"># Ramp up rate (p.u./h).</tt> </tt>
+<a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        self.rate_up = rate_up</tt> </tt>
+<a name="L145"></a><tt class="py-lineno">145</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment"># Ramp down rate (p.u./h).</tt> </tt>
+<a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        self.rate_down = rate_down</tt> </tt>
+<a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line">        <tt class="py-comment"># Minimum running time (h).</tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        self.min_up = min_up</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment"># Minimum shut down time (h).</tt> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        self.min_down = min_down</tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line">        <tt class="py-comment"># Initial number of periods up.</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        self.initial_up = initial_up</tt> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment"># Initial number of periods down.</tt> </tt>
+<a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        self.initial_down = initial_down</tt> </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">property</tt> </tt>
+<a name="Generator.q_limited"></a><div id="Generator.q_limited-def"><a name="L159"></a><tt class="py-lineno">159</tt> <a class="py-toggle" href="#" id="Generator.q_limited-toggle" onclick="return toggle('Generator.q_limited');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#q_limited">q_limited</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.q_limited-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.q_limited-expanded"><a name="L160"></a><tt class="py-lineno">160</tt>  <tt class="py-line">        <tt class="py-docstring">""" Is the machine at it's limit of reactive power?</tt> </tt>
+<a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q</tt> <tt class="py-op">&gt;=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_max</tt><tt class="py-op">)</tt> <tt class="py-keyword">or</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q</tt> <tt class="py-op">&lt;=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_min</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">True</tt> </tt>
+<a name="L164"></a><tt class="py-lineno">164</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L165"></a><tt class="py-lineno">165</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">False</tt> </tt>
+</div><a name="L166"></a><tt class="py-lineno">166</tt>  <tt class="py-line"> </tt>
+<a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">property</tt> </tt>
+<a name="Generator.is_load"></a><div id="Generator.is_load-def"><a name="L168"></a><tt class="py-lineno">168</tt> <a class="py-toggle" href="#" id="Generator.is_load-toggle" onclick="return toggle('Generator.is_load');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#is_load">is_load</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.is_load-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.is_load-expanded"><a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line">        <tt class="py-docstring">""" Returns true if the generator if a dispatchable load. This may</tt> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line"><tt class="py-docstring">            need to be revised to allow sensible specification of both elastic</tt> </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line"><tt class="py-docstring">            demand and pumped storage units.</tt> </tt>
+<a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_min</tt> <tt class="py-op">&lt;</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt> <tt class="py-keyword">and</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_max</tt> <tt class="py-op">==</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L174"></a><tt class="py-lineno">174</tt>  <tt class="py-line"> </tt>
+<a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line"> </tt>
+<a name="Generator.reset"></a><div id="Generator.reset-def"><a name="L176"></a><tt class="py-lineno">176</tt> <a class="py-toggle" href="#" id="Generator.reset-toggle" onclick="return toggle('Generator.reset');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#reset">reset</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.reset-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.reset-expanded"><a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line">        <tt class="py-docstring">""" Resets the result variables.</tt> </tt>
+<a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">mu_pmin</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">mu_pmax</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+</div><a name="L181"></a><tt class="py-lineno">181</tt>  <tt class="py-line"> </tt>
+<a name="L182"></a><tt class="py-lineno">182</tt>  <tt class="py-line"> </tt>
+<a name="Generator.total_cost"></a><div id="Generator.total_cost-def"><a name="L183"></a><tt class="py-lineno">183</tt> <a class="py-toggle" href="#" id="Generator.total_cost-toggle" onclick="return toggle('Generator.total_cost');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#total_cost">total_cost</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">p</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">p_cost</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">pcost_model</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.total_cost-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.total_cost-expanded"><a name="L184"></a><tt class="py-lineno">184</tt>  <tt class="py-line">        <tt class="py-docstring">""" Computes total cost for the generator at the given output level.</tt> </tt>
+<a name="L185"></a><tt class="py-lineno">185</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L186"></a><tt class="py-lineno">186</tt>  <tt class="py-line">        <tt class="py-name">p</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p</tt> <tt class="py-keyword">if</tt> <tt class="py-name">p</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt> <tt class="py-keyword">else</tt> <tt class="py-name">p</tt> </tt>
+<a name="L187"></a><tt class="py-lineno">187</tt>  <tt class="py-line">        <tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-keyword">if</tt> <tt class="py-name">p_cost</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt> <tt class="py-keyword">else</tt> <tt class="py-name">p_cost</tt> </tt>
+<a name="L188"></a><tt class="py-lineno">188</tt>  <tt class="py-line">        <tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-keyword">if</tt> <tt class="py-name">pcost_model</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt> <tt class="py-keyword">else</tt> <tt class="py-name">pcost_model</tt> </tt>
+<a name="L189"></a><tt class="py-lineno">189</tt>  <tt class="py-line"> </tt>
+<a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">pcost_model</tt> <tt class="py-op">==</tt> <tt id="link-16" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-16', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L191"></a><tt class="py-lineno">191</tt>  <tt class="py-line">            <tt class="py-name">n_segments</tt> <tt class="py-op">=</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">p_cost</tt><tt class="py-op">)</tt> <tt class="py-op">-</tt> <tt class="py-number">1</tt> </tt>
+<a name="L192"></a><tt class="py-lineno">192</tt>  <tt class="py-line">            <tt class="py-comment"># Iterate over the piece-wise linear segments.</tt> </tt>
+<a name="L193"></a><tt class="py-lineno">193</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">n_segments</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L194"></a><tt class="py-lineno">194</tt>  <tt class="py-line">                <tt class="py-name">x1</tt><tt class="py-op">,</tt> <tt class="py-name">y1</tt> <tt class="py-op">=</tt> <tt class="py-name">p_cost</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> </tt>
+<a name="L195"></a><tt class="py-lineno">195</tt>  <tt class="py-line">                <tt class="py-name">x2</tt><tt class="py-op">,</tt> <tt class="py-name">y2</tt> <tt class="py-op">=</tt> <tt class="py-name">p_cost</tt><tt class="py-op">[</tt><tt class="py-name">i</tt> <tt class="py-op">+</tt> <tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L196"></a><tt class="py-lineno">196</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-name">x1</tt> <tt class="py-op">&lt;=</tt> <tt class="py-name">p</tt> <tt class="py-op">&lt;=</tt> <tt class="py-name">x2</tt><tt class="py-op">:</tt> </tt>
+<a name="L197"></a><tt class="py-lineno">197</tt>  <tt class="py-line">                    <tt class="py-name">m</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">y2</tt> <tt class="py-op">-</tt> <tt class="py-name">y1</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt><tt class="py-name">x2</tt> <tt class="py-op">-</tt> <tt class="py-name">x1</tt><tt class="py-op">)</tt> </tt>
+<a name="L198"></a><tt class="py-lineno">198</tt>  <tt class="py-line">                    <tt class="py-name">c</tt> <tt class="py-op">=</tt> <tt class="py-name">y1</tt> <tt class="py-op">-</tt> <tt class="py-name">m</tt> <tt class="py-op">*</tt> <tt class="py-name">x1</tt> </tt>
+<a name="L199"></a><tt class="py-lineno">199</tt>  <tt class="py-line">                    <tt class="py-name">result</tt> <tt class="py-op">=</tt> <tt class="py-name">m</tt><tt class="py-op">*</tt><tt class="py-name">p</tt> <tt class="py-op">+</tt> <tt class="py-name">c</tt> </tt>
+<a name="L200"></a><tt class="py-lineno">200</tt>  <tt class="py-line">                    <tt class="py-keyword">break</tt> </tt>
+<a name="L201"></a><tt class="py-lineno">201</tt>  <tt class="py-line">            <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L202"></a><tt class="py-lineno">202</tt>  <tt class="py-line">                <tt class="py-keyword">raise</tt> <tt class="py-name">ValueError</tt><tt class="py-op">,</tt> <tt class="py-string">"Value [%f] outwith pwl cost curve."</tt> <tt class="py-op">%</tt> <tt class="py-name">p</tt> </tt>
+<a name="L203"></a><tt class="py-lineno">203</tt>  <tt class="py-line">                <tt class="py-comment"># Use the last segment for values outwith the cost curve.</tt> </tt>
+<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                result = m*p + c</tt> </tt>
+<a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-keyword">elif</tt> <tt class="py-name">pcost_model</tt> <tt class="py-op">==</tt> <tt id="link-17" class="py-name"><a title="pylon.generator.POLYNOMIAL" class="py-name" href="#" onclick="return doclink('link-17', 'POLYNOMIAL', 'link-4');">POLYNOMIAL</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L206"></a><tt class="py-lineno">206</tt>  <tt class="py-line"><tt class="py-comment">#            result = p_cost[-1]</tt> </tt>
+<a name="L207"></a><tt class="py-lineno">207</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            for i in range(1, len(p_cost)):</tt> </tt>
+<a name="L208"></a><tt class="py-lineno">208</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                result += p_cost[-(i + 1)] * p**i</tt> </tt>
+<a name="L209"></a><tt class="py-lineno">209</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-name">result</tt> <tt class="py-op">=</tt> <tt class="py-name">polyval</tt><tt class="py-op">(</tt><tt class="py-name">p_cost</tt><tt class="py-op">,</tt> <tt class="py-name">p</tt><tt class="py-op">)</tt> </tt>
+<a name="L210"></a><tt class="py-lineno">210</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L211"></a><tt class="py-lineno">211</tt>  <tt class="py-line">            <tt class="py-keyword">raise</tt> <tt class="py-name">ValueError</tt> </tt>
+<a name="L212"></a><tt class="py-lineno">212</tt>  <tt class="py-line"> </tt>
+<a name="L213"></a><tt class="py-lineno">213</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-18" class="py-name" targets="Variable pylon.generator.Generator.is_load=pylon.generator.Generator-class.html#is_load"><a title="pylon.generator.Generator.is_load" class="py-name" href="#" onclick="return doclink('link-18', 'is_load', 'link-18');">is_load</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L214"></a><tt class="py-lineno">214</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-op">-</tt><tt class="py-name">result</tt> </tt>
+<a name="L215"></a><tt class="py-lineno">215</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L216"></a><tt class="py-lineno">216</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">result</tt> </tt>
+</div><a name="L217"></a><tt class="py-lineno">217</tt>  <tt class="py-line"> </tt>
+<a name="L218"></a><tt class="py-lineno">218</tt>  <tt class="py-line"> </tt>
+<a name="L219"></a><tt class="py-lineno">219</tt>  <tt class="py-line"><tt class="py-comment">#    def poly_cost(self, val=None, der=0, reactive=False):</tt> </tt>
+<a name="L220"></a><tt class="py-lineno">220</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        """ Evaluates polynomial generator cost and derivatives.</tt> </tt>
+<a name="L221"></a><tt class="py-lineno">221</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        """</tt> </tt>
+<a name="L222"></a><tt class="py-lineno">222</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        cost_model = self.qcost_model if reactive else self.pcost_model</tt> </tt>
+<a name="L223"></a><tt class="py-lineno">223</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        cost = self.q_cost if reactive else self.p_cost</tt> </tt>
+<a name="L224"></a><tt class="py-lineno">224</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        if val is None: val = self.q if reactive else self.p</tt> </tt>
+<a name="L225"></a><tt class="py-lineno">225</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L226"></a><tt class="py-lineno">226</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        if cost_model == PW_LINEAR:</tt> </tt>
+<a name="L227"></a><tt class="py-lineno">227</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            logger.error("Cost must be polynomial.")</tt> </tt>
+<a name="L228"></a><tt class="py-lineno">228</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            return</tt> </tt>
+<a name="L229"></a><tt class="py-lineno">229</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L230"></a><tt class="py-lineno">230</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        # 1st column is constant term, 2nd linear, etc.</tt> </tt>
+<a name="L231"></a><tt class="py-lineno">231</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        c = list(reversed(cost))</tt> </tt>
+<a name="L232"></a><tt class="py-lineno">232</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L233"></a><tt class="py-lineno">233</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        print c</tt> </tt>
+<a name="L234"></a><tt class="py-lineno">234</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L235"></a><tt class="py-lineno">235</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        # Do derivatives.</tt> </tt>
+<a name="L236"></a><tt class="py-lineno">236</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        for d in range(der):</tt> </tt>
+<a name="L237"></a><tt class="py-lineno">237</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            if len(c) &gt;= 2:</tt> </tt>
+<a name="L238"></a><tt class="py-lineno">238</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                c = c[1:len(c) - d + 1]</tt> </tt>
+<a name="L239"></a><tt class="py-lineno">239</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            else:</tt> </tt>
+<a name="L240"></a><tt class="py-lineno">240</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                c = 0.0</tt> </tt>
+<a name="L241"></a><tt class="py-lineno">241</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                break</tt> </tt>
+<a name="L242"></a><tt class="py-lineno">242</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            for k in range(1, len(c) - d):</tt> </tt>
+<a name="L243"></a><tt class="py-lineno">243</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                c[k] *= k</tt> </tt>
+<a name="L244"></a><tt class="py-lineno">244</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L245"></a><tt class="py-lineno">245</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        # Evaluate polynomial.</tt> </tt>
+<a name="L246"></a><tt class="py-lineno">246</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        if len(c) == 0:</tt> </tt>
+<a name="L247"></a><tt class="py-lineno">247</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            f = 0.0</tt> </tt>
+<a name="L248"></a><tt class="py-lineno">248</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        else:</tt> </tt>
+<a name="L249"></a><tt class="py-lineno">249</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            f = c[0] # constant term</tt> </tt>
+<a name="L250"></a><tt class="py-lineno">250</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            for k in range(1, len(c)):</tt> </tt>
+<a name="L251"></a><tt class="py-lineno">251</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                f += c[k] * val**(k-1)</tt> </tt>
+<a name="L252"></a><tt class="py-lineno">252</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L253"></a><tt class="py-lineno">253</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        return f</tt> </tt>
+<a name="L254"></a><tt class="py-lineno">254</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L255"></a><tt class="py-lineno">255</tt>  <tt class="py-line"> </tt>
+<a name="Generator.pwl_to_poly"></a><div id="Generator.pwl_to_poly-def"><a name="L256"></a><tt class="py-lineno">256</tt> <a class="py-toggle" href="#" id="Generator.pwl_to_poly-toggle" onclick="return toggle('Generator.pwl_to_poly');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#pwl_to_poly">pwl_to_poly</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.pwl_to_poly-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.pwl_to_poly-expanded"><a name="L257"></a><tt class="py-lineno">257</tt>  <tt class="py-line">        <tt class="py-docstring">""" Converts the first segment of the pwl cost to linear quadratic.</tt> </tt>
+<a name="L258"></a><tt class="py-lineno">258</tt>  <tt class="py-line"><tt class="py-docstring">            FIXME: Curve-fit for all segments.</tt> </tt>
+<a name="L259"></a><tt class="py-lineno">259</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L260"></a><tt class="py-lineno">260</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">==</tt> <tt id="link-19" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-19', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L261"></a><tt class="py-lineno">261</tt>  <tt class="py-line">            <tt class="py-name">x0</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L262"></a><tt class="py-lineno">262</tt>  <tt class="py-line">            <tt class="py-name">y0</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L263"></a><tt class="py-lineno">263</tt>  <tt class="py-line">            <tt class="py-name">x1</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L264"></a><tt class="py-lineno">264</tt>  <tt class="py-line">            <tt class="py-name">y1</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L265"></a><tt class="py-lineno">265</tt>  <tt class="py-line">            <tt class="py-name">m</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">y1</tt> <tt class="py-op">-</tt> <tt class="py-name">y0</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt><tt class="py-name">x1</tt> <tt class="py-op">-</tt> <tt class="py-name">x0</tt><tt class="py-op">)</tt> </tt>
+<a name="L266"></a><tt class="py-lineno">266</tt>  <tt class="py-line">            <tt class="py-name">c</tt> <tt class="py-op">=</tt> <tt class="py-name">y0</tt> <tt class="py-op">-</tt> <tt class="py-name">m</tt> <tt class="py-op">*</tt> <tt class="py-name">x0</tt> </tt>
+<a name="L267"></a><tt class="py-lineno">267</tt>  <tt class="py-line"> </tt>
+<a name="L268"></a><tt class="py-lineno">268</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt id="link-20" class="py-name"><a title="pylon.generator.POLYNOMIAL" class="py-name" href="#" onclick="return doclink('link-20', 'POLYNOMIAL', 'link-4');">POLYNOMIAL</a></tt> </tt>
+<a name="L269"></a><tt class="py-lineno">269</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">m</tt><tt class="py-op">,</tt> <tt class="py-name">c</tt><tt class="py-op">)</tt> </tt>
+<a name="L270"></a><tt class="py-lineno">270</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L271"></a><tt class="py-lineno">271</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> </tt>
+</div><a name="L272"></a><tt class="py-lineno">272</tt>  <tt class="py-line"> </tt>
+<a name="L273"></a><tt class="py-lineno">273</tt>  <tt class="py-line"> </tt>
+<a name="Generator.poly_to_pwl"></a><div id="Generator.poly_to_pwl-def"><a name="L274"></a><tt class="py-lineno">274</tt> <a class="py-toggle" href="#" id="Generator.poly_to_pwl-toggle" onclick="return toggle('Generator.poly_to_pwl');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#poly_to_pwl">poly_to_pwl</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">n_points</tt><tt class="py-op">=</tt><tt class="py-number">10</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.poly_to_pwl-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.poly_to_pwl-expanded"><a name="L275"></a><tt class="py-lineno">275</tt>  <tt class="py-line">        <tt class="py-docstring">""" Sets the piece-wise linear cost attribute, converting the</tt> </tt>
+<a name="L276"></a><tt class="py-lineno">276</tt>  <tt class="py-line"><tt class="py-docstring">            polynomial cost variable by evaluating at zero and then at</tt> </tt>
+<a name="L277"></a><tt class="py-lineno">277</tt>  <tt class="py-line"><tt class="py-docstring">            n_points evenly spaced points between p_min and p_max.</tt> </tt>
+<a name="L278"></a><tt class="py-lineno">278</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L279"></a><tt class="py-lineno">279</tt>  <tt class="py-line">        <tt class="py-keyword">assert</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">==</tt> <tt id="link-21" class="py-name"><a title="pylon.generator.POLYNOMIAL" class="py-name" href="#" onclick="return doclink('link-21', 'POLYNOMIAL', 'link-4');">POLYNOMIAL</a></tt> </tt>
+<a name="L280"></a><tt class="py-lineno">280</tt>  <tt class="py-line">        <tt class="py-name">p_min</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_min</tt> </tt>
+<a name="L281"></a><tt class="py-lineno">281</tt>  <tt class="py-line">        <tt class="py-name">p_max</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_max</tt> </tt>
+<a name="L282"></a><tt class="py-lineno">282</tt>  <tt class="py-line">        <tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L283"></a><tt class="py-lineno">283</tt>  <tt class="py-line"> </tt>
+<a name="L284"></a><tt class="py-lineno">284</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">p_min</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0.0</tt><tt class="py-op">:</tt> </tt>
+<a name="L285"></a><tt class="py-lineno">285</tt>  <tt class="py-line">            <tt class="py-comment"># Make the first segment go from the origin to p_min.</tt> </tt>
+<a name="L286"></a><tt class="py-lineno">286</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-name">step</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">p_max</tt> <tt class="py-op">-</tt> <tt class="py-name">p_min</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt><tt class="py-name">n_points</tt> <tt class="py-op">-</tt> <tt class="py-number">2</tt><tt class="py-op">)</tt> </tt>
+<a name="L287"></a><tt class="py-lineno">287</tt>  <tt class="py-line"> </tt>
+<a name="L288"></a><tt class="py-lineno">288</tt>  <tt class="py-line">            <tt class="py-name">y0</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-22" class="py-name" targets="Method pylon.generator.Generator.total_cost()=pylon.generator.Generator-class.html#total_cost"><a title="pylon.generator.Generator.total_cost" class="py-name" href="#" onclick="return doclink('link-22', 'total_cost', 'link-22');">total_cost</a></tt><tt class="py-op">(</tt><tt class="py-number">0.0</tt><tt class="py-op">)</tt> </tt>
+<a name="L289"></a><tt class="py-lineno">289</tt>  <tt class="py-line">            <tt class="py-name">p_cost</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-name">y0</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L290"></a><tt class="py-lineno">290</tt>  <tt class="py-line"> </tt>
+<a name="L291"></a><tt class="py-lineno">291</tt>  <tt class="py-line">            <tt class="py-name">x</tt> <tt class="py-op">=</tt> <tt class="py-name">p_min</tt> </tt>
+<a name="L292"></a><tt class="py-lineno">292</tt>  <tt class="py-line">            <tt class="py-name">n_points</tt> <tt class="py-op">-=</tt> <tt class="py-number">1</tt> </tt>
+<a name="L293"></a><tt class="py-lineno">293</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L294"></a><tt class="py-lineno">294</tt>  <tt class="py-line">            <tt class="py-name">step</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">p_max</tt> <tt class="py-op">-</tt> <tt class="py-name">p_min</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt><tt class="py-name">n_points</tt> <tt class="py-op">-</tt> <tt class="py-number">1</tt><tt class="py-op">)</tt> </tt>
+<a name="L295"></a><tt class="py-lineno">295</tt>  <tt class="py-line">            <tt class="py-name">x</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L296"></a><tt class="py-lineno">296</tt>  <tt class="py-line"> </tt>
+<a name="L297"></a><tt class="py-lineno">297</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">_</tt> <tt class="py-keyword">in</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">n_points</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L298"></a><tt class="py-lineno">298</tt>  <tt class="py-line">            <tt class="py-name">y</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-23" class="py-name"><a title="pylon.generator.Generator.total_cost" class="py-name" href="#" onclick="return doclink('link-23', 'total_cost', 'link-22');">total_cost</a></tt><tt class="py-op">(</tt><tt class="py-name">x</tt><tt class="py-op">)</tt> </tt>
+<a name="L299"></a><tt class="py-lineno">299</tt>  <tt class="py-line">            <tt class="py-name">p_cost</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">x</tt><tt class="py-op">,</tt> <tt class="py-name">y</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L300"></a><tt class="py-lineno">300</tt>  <tt class="py-line">            <tt class="py-name">x</tt> <tt class="py-op">+=</tt> <tt class="py-name">step</tt> </tt>
+<a name="L301"></a><tt class="py-lineno">301</tt>  <tt class="py-line"> </tt>
+<a name="L302"></a><tt class="py-lineno">302</tt>  <tt class="py-line">        <tt class="py-comment"># Change the cost model and set the new cost.</tt> </tt>
+<a name="L303"></a><tt class="py-lineno">303</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt id="link-24" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-24', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L304"></a><tt class="py-lineno">304</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-name">p_cost</tt> </tt>
+</div><a name="L305"></a><tt class="py-lineno">305</tt>  <tt class="py-line"> </tt>
+<a name="L306"></a><tt class="py-lineno">306</tt>  <tt class="py-line"> </tt>
+<a name="Generator.get_offers"></a><div id="Generator.get_offers-def"><a name="L307"></a><tt class="py-lineno">307</tt> <a class="py-toggle" href="#" id="Generator.get_offers-toggle" onclick="return toggle('Generator.get_offers');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#get_offers">get_offers</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">n_points</tt><tt class="py-op">=</tt><tt class="py-number">6</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.get_offers-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.get_offers-expanded"><a name="L308"></a><tt class="py-lineno">308</tt>  <tt class="py-line">        <tt class="py-docstring">""" Returns quantity and price offers created from the cost function.</tt> </tt>
+<a name="L309"></a><tt class="py-lineno">309</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L310"></a><tt class="py-lineno">310</tt>  <tt class="py-line">        <tt class="py-keyword">from</tt> <tt class="py-name">pyreto</tt><tt class="py-op">.</tt><tt class="py-name">smart_market</tt> <tt class="py-keyword">import</tt> <tt class="py-name">Offer</tt> </tt>
+<a name="L311"></a><tt class="py-lineno">311</tt>  <tt class="py-line"> </tt>
+<a name="L312"></a><tt class="py-lineno">312</tt>  <tt class="py-line">        <tt class="py-name">qtyprc</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-25" class="py-name" targets="Method pylon.generator.Generator._get_qtyprc()=pylon.generator.Generator-class.html#_get_qtyprc"><a title="pylon.generator.Generator._get_qtyprc" class="py-name" href="#" onclick="return doclink('link-25', '_get_qtyprc', 'link-25');">_get_qtyprc</a></tt><tt class="py-op">(</tt><tt class="py-name">n_points</tt><tt class="py-op">)</tt> </tt>
+<a name="L313"></a><tt class="py-lineno">313</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-op">[</tt><tt class="py-name">Offer</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">,</tt> <tt class="py-name">qty</tt><tt class="py-op">,</tt> <tt class="py-name">prc</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">qty</tt><tt class="py-op">,</tt> <tt class="py-name">prc</tt> <tt class="py-keyword">in</tt> <tt class="py-name">qtyprc</tt><tt class="py-op">]</tt> </tt>
+</div><a name="L314"></a><tt class="py-lineno">314</tt>  <tt class="py-line"> </tt>
+<a name="L315"></a><tt class="py-lineno">315</tt>  <tt class="py-line"> </tt>
+<a name="Generator.get_bids"></a><div id="Generator.get_bids-def"><a name="L316"></a><tt class="py-lineno">316</tt> <a class="py-toggle" href="#" id="Generator.get_bids-toggle" onclick="return toggle('Generator.get_bids');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#get_bids">get_bids</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">n_points</tt><tt class="py-op">=</tt><tt class="py-number">6</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.get_bids-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.get_bids-expanded"><a name="L317"></a><tt class="py-lineno">317</tt>  <tt class="py-line">        <tt class="py-docstring">""" Returns quantity and price bids created from the cost function.</tt> </tt>
+<a name="L318"></a><tt class="py-lineno">318</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L319"></a><tt class="py-lineno">319</tt>  <tt class="py-line">        <tt class="py-keyword">from</tt> <tt class="py-name">pyreto</tt><tt class="py-op">.</tt><tt class="py-name">smart_market</tt> <tt class="py-keyword">import</tt> <tt class="py-name">Bid</tt> </tt>
+<a name="L320"></a><tt class="py-lineno">320</tt>  <tt class="py-line"> </tt>
+<a name="L321"></a><tt class="py-lineno">321</tt>  <tt class="py-line">        <tt class="py-name">qtyprc</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-26" class="py-name"><a title="pylon.generator.Generator._get_qtyprc" class="py-name" href="#" onclick="return doclink('link-26', '_get_qtyprc', 'link-25');">_get_qtyprc</a></tt><tt class="py-op">(</tt><tt class="py-name">n_points</tt><tt class="py-op">)</tt> </tt>
+<a name="L322"></a><tt class="py-lineno">322</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-op">[</tt><tt class="py-name">Bid</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">,</tt> <tt class="py-name">qty</tt><tt class="py-op">,</tt> <tt class="py-name">prc</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">qty</tt><tt class="py-op">,</tt> <tt class="py-name">prc</tt> <tt class="py-keyword">in</tt> <tt class="py-name">qtyprc</tt><tt class="py-op">]</tt> </tt>
+</div><a name="L323"></a><tt class="py-lineno">323</tt>  <tt class="py-line"> </tt>
+<a name="L324"></a><tt class="py-lineno">324</tt>  <tt class="py-line"> </tt>
+<a name="Generator._get_qtyprc"></a><div id="Generator._get_qtyprc-def"><a name="L325"></a><tt class="py-lineno">325</tt> <a class="py-toggle" href="#" id="Generator._get_qtyprc-toggle" onclick="return toggle('Generator._get_qtyprc');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#_get_qtyprc">_get_qtyprc</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">n_points</tt><tt class="py-op">=</tt><tt class="py-number">6</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator._get_qtyprc-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator._get_qtyprc-expanded"><a name="L326"></a><tt class="py-lineno">326</tt>  <tt class="py-line">        <tt class="py-docstring">""" Returns a list of tuples of the form (qty, prc) created from the</tt> </tt>
+<a name="L327"></a><tt class="py-lineno">327</tt>  <tt class="py-line"><tt class="py-docstring">            cost function.  If the cost function is polynomial it will be</tt> </tt>
+<a name="L328"></a><tt class="py-lineno">328</tt>  <tt class="py-line"><tt class="py-docstring">            converted to piece-wise linear using poly_to_pwl(n_points).</tt> </tt>
+<a name="L329"></a><tt class="py-lineno">329</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L330"></a><tt class="py-lineno">330</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">==</tt> <tt id="link-27" class="py-name"><a title="pylon.generator.POLYNOMIAL" class="py-name" href="#" onclick="return doclink('link-27', 'POLYNOMIAL', 'link-4');">POLYNOMIAL</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L331"></a><tt class="py-lineno">331</tt>  <tt class="py-line">            <tt class="py-comment"># Convert polynomial cost function to piece-wise linear.</tt> </tt>
+<a name="L332"></a><tt class="py-lineno">332</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-28" class="py-name" targets="Method pylon.generator.Generator.poly_to_pwl()=pylon.generator.Generator-class.html#poly_to_pwl"><a title="pylon.generator.Generator.poly_to_pwl" class="py-name" href="#" onclick="return doclink('link-28', 'poly_to_pwl', 'link-28');">poly_to_pwl</a></tt><tt class="py-op">(</tt><tt class="py-name">n_points</tt><tt class="py-op">)</tt> </tt>
+<a name="L333"></a><tt class="py-lineno">333</tt>  <tt class="py-line"> </tt>
+<a name="L334"></a><tt class="py-lineno">334</tt>  <tt class="py-line">        <tt class="py-name">n_segments</tt> <tt class="py-op">=</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt><tt class="py-op">)</tt> <tt class="py-op">-</tt> <tt class="py-number">1</tt> </tt>
+<a name="L335"></a><tt class="py-lineno">335</tt>  <tt class="py-line"> </tt>
+<a name="L336"></a><tt class="py-lineno">336</tt>  <tt class="py-line">        <tt class="py-name">qtyprc</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L337"></a><tt class="py-lineno">337</tt>  <tt class="py-line"> </tt>
+<a name="L338"></a><tt class="py-lineno">338</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">n_segments</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L339"></a><tt class="py-lineno">339</tt>  <tt class="py-line">            <tt class="py-name">x1</tt><tt class="py-op">,</tt> <tt class="py-name">y1</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> </tt>
+<a name="L340"></a><tt class="py-lineno">340</tt>  <tt class="py-line">            <tt class="py-name">x2</tt><tt class="py-op">,</tt> <tt class="py-name">y2</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">i</tt> <tt class="py-op">+</tt> <tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L341"></a><tt class="py-lineno">341</tt>  <tt class="py-line"> </tt>
+<a name="L342"></a><tt class="py-lineno">342</tt>  <tt class="py-line">            <tt class="py-name">quantity</tt> <tt class="py-op">=</tt> <tt class="py-name">x2</tt> <tt class="py-op">-</tt> <tt class="py-name">x1</tt> </tt>
+<a name="L343"></a><tt class="py-lineno">343</tt>  <tt class="py-line">            <tt class="py-name">price</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">y2</tt> <tt class="py-op">-</tt> <tt class="py-name">y1</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-name">quantity</tt> </tt>
+<a name="L344"></a><tt class="py-lineno">344</tt>  <tt class="py-line"> </tt>
+<a name="L345"></a><tt class="py-lineno">345</tt>  <tt class="py-line">            <tt class="py-name">qtyprc</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">quantity</tt><tt class="py-op">,</tt> <tt class="py-name">price</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L346"></a><tt class="py-lineno">346</tt>  <tt class="py-line"> </tt>
+<a name="L347"></a><tt class="py-lineno">347</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">qtyprc</tt> </tt>
+</div><a name="L348"></a><tt class="py-lineno">348</tt>  <tt class="py-line"> </tt>
+<a name="L349"></a><tt class="py-lineno">349</tt>  <tt class="py-line"> </tt>
+<a name="L350"></a><tt class="py-lineno">350</tt>  <tt class="py-line"><tt class="py-comment">#    def offers_bids_to_pwl(self, offers, bids):</tt> </tt>
+<a name="L351"></a><tt class="py-lineno">351</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        """ Updates the piece-wise linear total cost function using the given</tt> </tt>
+<a name="L352"></a><tt class="py-lineno">352</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            offer/bid blocks.</tt> </tt>
+<a name="L353"></a><tt class="py-lineno">353</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L354"></a><tt class="py-lineno">354</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            @see: matpower4.0b1/extras/smartmarket/off2case.m</tt> </tt>
+<a name="L355"></a><tt class="py-lineno">355</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        """</tt> </tt>
+<a name="L356"></a><tt class="py-lineno">356</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">##        offbids = offers + bids</tt> </tt>
+<a name="L357"></a><tt class="py-lineno">357</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        valid_offers = [offer for offer in offers if</tt> </tt>
+<a name="L358"></a><tt class="py-lineno">358</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                        offer.generator == self and</tt> </tt>
+<a name="L359"></a><tt class="py-lineno">359</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                        not offer.withheld and</tt> </tt>
+<a name="L360"></a><tt class="py-lineno">360</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                        round(offer.quantity, 4) &gt; 0.0]</tt> </tt>
+<a name="L361"></a><tt class="py-lineno">361</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L362"></a><tt class="py-lineno">362</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        valid_bids = [bid for bid in bids if</tt> </tt>
+<a name="L363"></a><tt class="py-lineno">363</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                      bid.vload == self and</tt> </tt>
+<a name="L364"></a><tt class="py-lineno">364</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                      not bid.withheld and</tt> </tt>
+<a name="L365"></a><tt class="py-lineno">365</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                      round(offer.quantity, 4) &gt; 0.0]</tt> </tt>
+<a name="L366"></a><tt class="py-lineno">366</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L367"></a><tt class="py-lineno">367</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        p_offers = [v for v in valid_offers if not v.reactive]</tt> </tt>
+<a name="L368"></a><tt class="py-lineno">368</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        q_offers = [v for v in valid_offers if v.reactive]</tt> </tt>
+<a name="L369"></a><tt class="py-lineno">369</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        p_bids = [v for v in valid_bids if not bid.reactive]</tt> </tt>
+<a name="L370"></a><tt class="py-lineno">370</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        q_bids = [v for v in valid_bids if bid.reactive]</tt> </tt>
+<a name="L371"></a><tt class="py-lineno">371</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L372"></a><tt class="py-lineno">372</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        if p_offers and not self.is_load:</tt> </tt>
+<a name="L373"></a><tt class="py-lineno">373</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            logger.warning("Offer no allowed for vload [%s]." % self.name)</tt> </tt>
+<a name="L374"></a><tt class="py-lineno">374</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            p_offers = []</tt> </tt>
+<a name="L375"></a><tt class="py-lineno">375</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        if q_offers and self.q_max &lt;= 0.0:</tt> </tt>
+<a name="L376"></a><tt class="py-lineno">376</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            logger.warning("Q offer not allowed for gen [%s]." % self.name)</tt> </tt>
+<a name="L377"></a><tt class="py-lineno">377</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            q_offers = []</tt> </tt>
+<a name="L378"></a><tt class="py-lineno">378</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        if p_bids and self.is_load:</tt> </tt>
+<a name="L379"></a><tt class="py-lineno">379</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            logger.warning("Bid not allowed for generator [%s]." % self.name)</tt> </tt>
+<a name="L380"></a><tt class="py-lineno">380</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            p_bids = []</tt> </tt>
+<a name="L381"></a><tt class="py-lineno">381</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        if q_bids and self.q_min &gt;= 0.0:</tt> </tt>
+<a name="L382"></a><tt class="py-lineno">382</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            logger.warning("Q bid not allowed for gen [%s]." % self.name)</tt> </tt>
+<a name="L383"></a><tt class="py-lineno">383</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            q_bids = []</tt> </tt>
+<a name="L384"></a><tt class="py-lineno">384</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L385"></a><tt class="py-lineno">385</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        if p_offers:</tt> </tt>
+<a name="L386"></a><tt class="py-lineno">386</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.p_cost = self._offbids_to_points(p_offers)</tt> </tt>
+<a name="L387"></a><tt class="py-lineno">387</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.pcost_model = PW_LINEAR</tt> </tt>
+<a name="L388"></a><tt class="py-lineno">388</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.online = True</tt> </tt>
+<a name="L389"></a><tt class="py-lineno">389</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        else:</tt> </tt>
+<a name="L390"></a><tt class="py-lineno">390</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.p_cost = [(0.0, 0.0), (self.p_max, 0.0)]</tt> </tt>
+<a name="L391"></a><tt class="py-lineno">391</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.pcost_model = PW_LINEAR</tt> </tt>
+<a name="L392"></a><tt class="py-lineno">392</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            if q_offers:</tt> </tt>
+<a name="L393"></a><tt class="py-lineno">393</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                # Dispatch at zero real power without shutting down</tt> </tt>
+<a name="L394"></a><tt class="py-lineno">394</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                # if capacity offered for reactive power.</tt> </tt>
+<a name="L395"></a><tt class="py-lineno">395</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                self.p_min = 0.0</tt> </tt>
+<a name="L396"></a><tt class="py-lineno">396</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                self.p_max = 0.0</tt> </tt>
+<a name="L397"></a><tt class="py-lineno">397</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                self.online = True</tt> </tt>
+<a name="L398"></a><tt class="py-lineno">398</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L399"></a><tt class="py-lineno">399</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        if q_offers or q_bids:</tt> </tt>
+<a name="L400"></a><tt class="py-lineno">400</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            offer_points = self._offbids_to_points(q_offers)</tt> </tt>
+<a name="L401"></a><tt class="py-lineno">401</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            bid_points = self._offbids_to_points(q_bids, True)</tt> </tt>
+<a name="L402"></a><tt class="py-lineno">402</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#</tt> </tt>
+<a name="L403"></a><tt class="py-lineno">403</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.qcost_model = PW_LINEAR</tt> </tt>
+<a name="L404"></a><tt class="py-lineno">404</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.online = True</tt> </tt>
+<a name="L405"></a><tt class="py-lineno">405</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            if not p_offers:</tt> </tt>
+<a name="L406"></a><tt class="py-lineno">406</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                # Dispatch at zero real power without shutting down</tt> </tt>
+<a name="L407"></a><tt class="py-lineno">407</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                # if capacity offered for reactive power.</tt> </tt>
+<a name="L408"></a><tt class="py-lineno">408</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                self.p_min = 0.0</tt> </tt>
+<a name="L409"></a><tt class="py-lineno">409</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                self.p_max = 0.0</tt> </tt>
+<a name="L410"></a><tt class="py-lineno">410</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#                self.online = True</tt> </tt>
+<a name="L411"></a><tt class="py-lineno">411</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#        else:</tt> </tt>
+<a name="L412"></a><tt class="py-lineno">412</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.q_cost = [(0.0, 0.0), (self.q_max, 0.0)]</tt> </tt>
+<a name="L413"></a><tt class="py-lineno">413</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.qcost_model = PW_LINEAR</tt> </tt>
+<a name="L414"></a><tt class="py-lineno">414</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L415"></a><tt class="py-lineno">415</tt>  <tt class="py-line"> </tt>
+<a name="Generator.offers_to_pwl"></a><div id="Generator.offers_to_pwl-def"><a name="L416"></a><tt class="py-lineno">416</tt> <a class="py-toggle" href="#" id="Generator.offers_to_pwl-toggle" onclick="return toggle('Generator.offers_to_pwl');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#offers_to_pwl">offers_to_pwl</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">offers</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.offers_to_pwl-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.offers_to_pwl-expanded"><a name="L417"></a><tt class="py-lineno">417</tt>  <tt class="py-line">        <tt class="py-docstring">""" Updates the piece-wise linear total cost function using the given</tt> </tt>
+<a name="L418"></a><tt class="py-lineno">418</tt>  <tt class="py-line"><tt class="py-docstring">            offer blocks.</tt> </tt>
+<a name="L419"></a><tt class="py-lineno">419</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L420"></a><tt class="py-lineno">420</tt>  <tt class="py-line"><tt class="py-docstring">            @see: matpower3.2/extras/smartmarket/off2case.m</tt> </tt>
+<a name="L421"></a><tt class="py-lineno">421</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L422"></a><tt class="py-lineno">422</tt>  <tt class="py-line">        <tt class="py-keyword">assert</tt> <tt class="py-keyword">not</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-29" class="py-name"><a title="pylon.generator.Generator.is_load" class="py-name" href="#" onclick="return doclink('link-29', 'is_load', 'link-18');">is_load</a></tt> </tt>
+<a name="L423"></a><tt class="py-lineno">423</tt>  <tt class="py-line">        <tt class="py-comment"># Only apply offers associated with this generator.</tt> </tt>
+<a name="L424"></a><tt class="py-lineno">424</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">g_offers</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">offer</tt> <tt class="py-keyword">for</tt> <tt class="py-name">offer</tt> <tt class="py-keyword">in</tt> <tt class="py-name">offers</tt> <tt class="py-keyword">if</tt> <tt class="py-name">offer</tt><tt class="py-op">.</tt><tt id="link-30" class="py-name" targets="Method pylon.dyn.DynamicCase.generator()=pylon.dyn.DynamicCase-class.html#generator,Module pylon.generator=pylon.generator-module.html"><a title="pylon.dyn.DynamicCase.generator
+pylon.generator" class="py-name" href="#" onclick="return doclink('link-30', 'generator', 'link-30');">generator</a></tt> <tt class="py-op">==</tt> <tt class="py-name">self</tt><tt class="py-op">]</tt> </tt>
+<a name="L425"></a><tt class="py-lineno">425</tt>  <tt class="py-line">        <tt class="py-comment"># Fliter out zero quantity offers.</tt> </tt>
+<a name="L426"></a><tt class="py-lineno">426</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">gt_zero</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">offr</tt> <tt class="py-keyword">for</tt> <tt class="py-name">offr</tt> <tt class="py-keyword">in</tt> <tt class="py-name">g_offers</tt> <tt class="py-keyword">if</tt> <tt class="py-name">round</tt><tt class="py-op">(</tt><tt class="py-name">offr</tt><tt class="py-op">.</tt><tt class="py-name">quantity</tt><tt class="py-op">,</tt> <tt class="py-number">4</tt><tt class="py-op">)</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0.0</tt><tt class="py-op">]</tt> </tt>
+<a name="L427"></a><tt class="py-lineno">427</tt>  <tt class="py-line">        <tt class="py-comment"># Ignore withheld offers.</tt> </tt>
+<a name="L428"></a><tt class="py-lineno">428</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">valid</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">offer</tt> <tt class="py-keyword">for</tt> <tt class="py-name">offer</tt> <tt class="py-keyword">in</tt> <tt class="py-name">gt_zero</tt> <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">offer</tt><tt class="py-op">.</tt><tt class="py-name">withheld</tt><tt class="py-op">]</tt> </tt>
+<a name="L429"></a><tt class="py-lineno">429</tt>  <tt class="py-line"> </tt>
+<a name="L430"></a><tt class="py-lineno">430</tt>  <tt class="py-line">        <tt class="py-name">p_offers</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">v</tt> <tt class="py-keyword">for</tt> <tt class="py-name">v</tt> <tt class="py-keyword">in</tt> <tt class="py-name">valid</tt> <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">v</tt><tt class="py-op">.</tt><tt class="py-name">reactive</tt><tt class="py-op">]</tt> </tt>
+<a name="L431"></a><tt class="py-lineno">431</tt>  <tt class="py-line">        <tt class="py-name">q_offers</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">v</tt> <tt class="py-keyword">for</tt> <tt class="py-name">v</tt> <tt class="py-keyword">in</tt> <tt class="py-name">valid</tt> <tt class="py-keyword">if</tt> <tt class="py-name">v</tt><tt class="py-op">.</tt><tt class="py-name">reactive</tt><tt class="py-op">]</tt> </tt>
+<a name="L432"></a><tt class="py-lineno">432</tt>  <tt class="py-line"> </tt>
+<a name="L433"></a><tt class="py-lineno">433</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">p_offers</tt><tt class="py-op">:</tt> </tt>
+<a name="L434"></a><tt class="py-lineno">434</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-31" class="py-name" targets="Method pylon.generator.Generator._offbids_to_points()=pylon.generator.Generator-class.html#_offbids_to_points"><a title="pylon.generator.Generator._offbids_to_points" class="py-name" href="#" onclick="return doclink('link-31', '_offbids_to_points', 'link-31');">_offbids_to_points</a></tt><tt class="py-op">(</tt><tt class="py-name">p_offers</tt><tt class="py-op">)</tt> </tt>
+<a name="L435"></a><tt class="py-lineno">435</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt id="link-32" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-32', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L436"></a><tt class="py-lineno">436</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">online</tt> <tt class="py-op">=</tt> <tt class="py-name">True</tt> </tt>
+<a name="L437"></a><tt class="py-lineno">437</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L438"></a><tt class="py-lineno">438</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_max</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L439"></a><tt class="py-lineno">439</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt id="link-33" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-33', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L440"></a><tt class="py-lineno">440</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">q_offers</tt><tt class="py-op">:</tt> </tt>
+<a name="L441"></a><tt class="py-lineno">441</tt>  <tt class="py-line">                <tt class="py-comment"># Dispatch at zero real power without shutting down</tt> </tt>
+<a name="L442"></a><tt class="py-lineno">442</tt>  <tt class="py-line"><tt class="py-comment"></tt>                <tt class="py-comment"># if capacity offered for reactive power.</tt> </tt>
+<a name="L443"></a><tt class="py-lineno">443</tt>  <tt class="py-line"><tt class="py-comment"></tt>                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_min</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L444"></a><tt class="py-lineno">444</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_max</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L445"></a><tt class="py-lineno">445</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">online</tt> <tt class="py-op">=</tt> <tt class="py-name">True</tt> </tt>
+<a name="L446"></a><tt class="py-lineno">446</tt>  <tt class="py-line">            <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L447"></a><tt class="py-lineno">447</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">online</tt> <tt class="py-op">=</tt> <tt class="py-name">False</tt> </tt>
+<a name="L448"></a><tt class="py-lineno">448</tt>  <tt class="py-line"> </tt>
+<a name="L449"></a><tt class="py-lineno">449</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">q_offers</tt><tt class="py-op">:</tt> </tt>
+<a name="L450"></a><tt class="py-lineno">450</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_cost</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-34" class="py-name"><a title="pylon.generator.Generator._offbids_to_points" class="py-name" href="#" onclick="return doclink('link-34', '_offbids_to_points', 'link-31');">_offbids_to_points</a></tt><tt class="py-op">(</tt><tt class="py-name">q_offers</tt><tt class="py-op">)</tt> </tt>
+<a name="L451"></a><tt class="py-lineno">451</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">qcost_model</tt> <tt class="py-op">=</tt> <tt id="link-35" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-35', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L452"></a><tt class="py-lineno">452</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L453"></a><tt class="py-lineno">453</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_cost</tt> <tt class="py-op">=</tt> <tt class="py-name">None</tt><tt class="py-comment">#[(0.0, 0.0), (self.q_max, 0.0)]</tt> </tt>
+<a name="L454"></a><tt class="py-lineno">454</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">qcost_model</tt> <tt class="py-op">=</tt> <tt id="link-36" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-36', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L455"></a><tt class="py-lineno">455</tt>  <tt class="py-line"> </tt>
+<a name="L456"></a><tt class="py-lineno">456</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">p_offers</tt><tt class="py-op">)</tt> <tt class="py-keyword">and</tt> <tt class="py-keyword">not</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">q_offers</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L457"></a><tt class="py-lineno">457</tt>  <tt class="py-line">            <tt id="link-37" class="py-name"><a title="pylon.ac_pf.logger
+pylon.case.logger
+pylon.dc_pf.logger
+pylon.dyn.logger
+pylon.estimator.logger
+pylon.generator.logger
+pylon.main.logger
+pylon.opf.logger
+pylon.readwrite.common.logger
+pylon.readwrite.dot_writer.logger
+pylon.readwrite.matpower_reader.logger
+pylon.readwrite.pickle_readwrite.logger
+pylon.readwrite.psat_reader.logger
+pylon.readwrite.psse_reader.logger
+pylon.readwrite.rdf_readwrite.logger
+pylon.solver.logger
+pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-37', 'logger', 'link-6');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"No valid offers for generator, shutting down."</tt><tt class="py-op">)</tt> </tt>
+<a name="L458"></a><tt class="py-lineno">458</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">online</tt> <tt class="py-op">=</tt> <tt class="py-name">False</tt> </tt>
+<a name="L459"></a><tt class="py-lineno">459</tt>  <tt class="py-line"> </tt>
+<a name="L460"></a><tt class="py-lineno">460</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-38" class="py-name" targets="Method pylon.generator.Generator._adjust_limits()=pylon.generator.Generator-class.html#_adjust_limits"><a title="pylon.generator.Generator._adjust_limits" class="py-name" href="#" onclick="return doclink('link-38', '_adjust_limits', 'link-38');">_adjust_limits</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L461"></a><tt class="py-lineno">461</tt>  <tt class="py-line"> </tt>
+<a name="L462"></a><tt class="py-lineno">462</tt>  <tt class="py-line"> </tt>
+<a name="Generator.bids_to_pwl"></a><div id="Generator.bids_to_pwl-def"><a name="L463"></a><tt class="py-lineno">463</tt> <a class="py-toggle" href="#" id="Generator.bids_to_pwl-toggle" onclick="return toggle('Generator.bids_to_pwl');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#bids_to_pwl">bids_to_pwl</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">bids</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator.bids_to_pwl-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator.bids_to_pwl-expanded"><a name="L464"></a><tt class="py-lineno">464</tt>  <tt class="py-line">        <tt class="py-docstring">""" Updates the piece-wise linear total cost function using the given</tt> </tt>
+<a name="L465"></a><tt class="py-lineno">465</tt>  <tt class="py-line"><tt class="py-docstring">            bid blocks.</tt> </tt>
+<a name="L466"></a><tt class="py-lineno">466</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L467"></a><tt class="py-lineno">467</tt>  <tt class="py-line"><tt class="py-docstring">            @see: matpower3.2/extras/smartmarket/off2case.m</tt> </tt>
+<a name="L468"></a><tt class="py-lineno">468</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L469"></a><tt class="py-lineno">469</tt>  <tt class="py-line">        <tt class="py-keyword">assert</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-39" class="py-name"><a title="pylon.generator.Generator.is_load" class="py-name" href="#" onclick="return doclink('link-39', 'is_load', 'link-18');">is_load</a></tt> </tt>
+<a name="L470"></a><tt class="py-lineno">470</tt>  <tt class="py-line">        <tt class="py-comment"># Apply only those bids associated with this dispatchable load.</tt> </tt>
+<a name="L471"></a><tt class="py-lineno">471</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">vl_bids</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">bid</tt> <tt class="py-keyword">for</tt> <tt class="py-name">bid</tt> <tt class="py-keyword">in</tt> <tt class="py-name">bids</tt> <tt class="py-keyword">if</tt> <tt class="py-name">bid</tt><tt class="py-op">.</tt><tt class="py-name">vLoad</tt> <tt class="py-op">==</tt> <tt class="py-name">self</tt><tt class="py-op">]</tt> </tt>
+<a name="L472"></a><tt class="py-lineno">472</tt>  <tt class="py-line">        <tt class="py-comment"># Filter out zero quantity bids.</tt> </tt>
+<a name="L473"></a><tt class="py-lineno">473</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">gt_zero</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">bid</tt> <tt class="py-keyword">for</tt> <tt class="py-name">bid</tt> <tt class="py-keyword">in</tt> <tt class="py-name">vl_bids</tt> <tt class="py-keyword">if</tt> <tt class="py-name">round</tt><tt class="py-op">(</tt><tt class="py-name">bid</tt><tt class="py-op">.</tt><tt class="py-name">quantity</tt><tt class="py-op">,</tt> <tt class="py-number">4</tt><tt class="py-op">)</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0.0</tt><tt class="py-op">]</tt> </tt>
+<a name="L474"></a><tt class="py-lineno">474</tt>  <tt class="py-line">        <tt class="py-comment"># Ignore withheld offers.</tt> </tt>
+<a name="L475"></a><tt class="py-lineno">475</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">valid_bids</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">bid</tt> <tt class="py-keyword">for</tt> <tt class="py-name">bid</tt> <tt class="py-keyword">in</tt> <tt class="py-name">gt_zero</tt> <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">bid</tt><tt class="py-op">.</tt><tt class="py-name">withheld</tt><tt class="py-op">]</tt> </tt>
+<a name="L476"></a><tt class="py-lineno">476</tt>  <tt class="py-line"> </tt>
+<a name="L477"></a><tt class="py-lineno">477</tt>  <tt class="py-line">        <tt class="py-name">p_bids</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">v</tt> <tt class="py-keyword">for</tt> <tt class="py-name">v</tt> <tt class="py-keyword">in</tt> <tt class="py-name">valid_bids</tt> <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">v</tt><tt class="py-op">.</tt><tt class="py-name">reactive</tt><tt class="py-op">]</tt> </tt>
+<a name="L478"></a><tt class="py-lineno">478</tt>  <tt class="py-line">        <tt class="py-name">q_bids</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">v</tt> <tt class="py-keyword">for</tt> <tt class="py-name">v</tt> <tt class="py-keyword">in</tt> <tt class="py-name">valid_bids</tt> <tt class="py-keyword">if</tt> <tt class="py-name">v</tt><tt class="py-op">.</tt><tt class="py-name">reactive</tt><tt class="py-op">]</tt> </tt>
+<a name="L479"></a><tt class="py-lineno">479</tt>  <tt class="py-line"> </tt>
+<a name="L480"></a><tt class="py-lineno">480</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">p_bids</tt><tt class="py-op">:</tt> </tt>
+<a name="L481"></a><tt class="py-lineno">481</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-40" class="py-name"><a title="pylon.generator.Generator._offbids_to_points" class="py-name" href="#" onclick="return doclink('link-40', '_offbids_to_points', 'link-31');">_offbids_to_points</a></tt><tt class="py-op">(</tt><tt class="py-name">p_bids</tt><tt class="py-op">,</tt> <tt class="py-name">True</tt><tt class="py-op">)</tt> </tt>
+<a name="L482"></a><tt class="py-lineno">482</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt id="link-41" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-41', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L483"></a><tt class="py-lineno">483</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">online</tt> <tt class="py-op">=</tt> <tt class="py-name">True</tt> </tt>
+<a name="L484"></a><tt class="py-lineno">484</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L485"></a><tt class="py-lineno">485</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_max</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L486"></a><tt class="py-lineno">486</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">pcost_model</tt> <tt class="py-op">=</tt> <tt id="link-42" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-42', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L487"></a><tt class="py-lineno">487</tt>  <tt class="py-line">            <tt id="link-43" class="py-name"><a title="pylon.ac_pf.logger
+pylon.case.logger
+pylon.dc_pf.logger
+pylon.dyn.logger
+pylon.estimator.logger
+pylon.generator.logger
+pylon.main.logger
+pylon.opf.logger
+pylon.readwrite.common.logger
+pylon.readwrite.dot_writer.logger
+pylon.readwrite.matpower_reader.logger
+pylon.readwrite.pickle_readwrite.logger
+pylon.readwrite.psat_reader.logger
+pylon.readwrite.psse_reader.logger
+pylon.readwrite.rdf_readwrite.logger
+pylon.solver.logger
+pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-43', 'logger', 'link-6');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"No valid active power bids for dispatchable load "</tt> </tt>
+<a name="L488"></a><tt class="py-lineno">488</tt>  <tt class="py-line">                        <tt class="py-string">"[%s], shutting down."</tt> <tt class="py-op">%</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-44" class="py-name"><a title="pylon.util.Named.name" class="py-name" href="#" onclick="return doclink('link-44', 'name', 'link-8');">name</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L489"></a><tt class="py-lineno">489</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">online</tt> <tt class="py-op">=</tt> <tt class="py-name">False</tt> </tt>
+<a name="L490"></a><tt class="py-lineno">490</tt>  <tt class="py-line"> </tt>
+<a name="L491"></a><tt class="py-lineno">491</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">q_bids</tt><tt class="py-op">:</tt> </tt>
+<a name="L492"></a><tt class="py-lineno">492</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_cost</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-45" class="py-name"><a title="pylon.generator.Generator._offbids_to_points" class="py-name" href="#" onclick="return doclink('link-45', '_offbids_to_points', 'link-31');">_offbids_to_points</a></tt><tt class="py-op">(</tt><tt class="py-name">q_bids</tt><tt class="py-op">,</tt> <tt class="py-name">True</tt><tt class="py-op">)</tt> </tt>
+<a name="L493"></a><tt class="py-lineno">493</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">qcost_model</tt> <tt class="py-op">=</tt> <tt id="link-46" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-46', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L494"></a><tt class="py-lineno">494</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">online</tt> <tt class="py-op">=</tt> <tt class="py-name">True</tt> </tt>
+<a name="L495"></a><tt class="py-lineno">495</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L496"></a><tt class="py-lineno">496</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_cost</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_min</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_max</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L497"></a><tt class="py-lineno">497</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">qcost_model</tt> <tt class="py-op">=</tt> <tt id="link-47" class="py-name"><a title="pylon.generator.PW_LINEAR" class="py-name" href="#" onclick="return doclink('link-47', 'PW_LINEAR', 'link-5');">PW_LINEAR</a></tt> </tt>
+<a name="L498"></a><tt class="py-lineno">498</tt>  <tt class="py-line"><tt class="py-comment">#            logger.info("No valid bids for dispatchable load, shutting down.")</tt> </tt>
+<a name="L499"></a><tt class="py-lineno">499</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#            self.online = False</tt> </tt>
+<a name="L500"></a><tt class="py-lineno">500</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L501"></a><tt class="py-lineno">501</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-48" class="py-name"><a title="pylon.generator.Generator._adjust_limits" class="py-name" href="#" onclick="return doclink('link-48', '_adjust_limits', 'link-38');">_adjust_limits</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L502"></a><tt class="py-lineno">502</tt>  <tt class="py-line"> </tt>
+<a name="L503"></a><tt class="py-lineno">503</tt>  <tt class="py-line"> </tt>
+<a name="Generator._offbids_to_points"></a><div id="Generator._offbids_to_points-def"><a name="L504"></a><tt class="py-lineno">504</tt> <a class="py-toggle" href="#" id="Generator._offbids_to_points-toggle" onclick="return toggle('Generator._offbids_to_points');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#_offbids_to_points">_offbids_to_points</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">offbids</tt><tt class="py-op">,</tt> <tt class="py-param">arebids</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator._offbids_to_points-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator._offbids_to_points-expanded"><a name="L505"></a><tt class="py-lineno">505</tt>  <tt class="py-line">        <tt class="py-docstring">""" Returns a list of points for a piece-wise linear function from the</tt> </tt>
+<a name="L506"></a><tt class="py-lineno">506</tt>  <tt class="py-line"><tt class="py-docstring">            given offer/bid blocks.</tt> </tt>
+<a name="L507"></a><tt class="py-lineno">507</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L508"></a><tt class="py-lineno">508</tt>  <tt class="py-line">        <tt class="py-comment"># Sort offers/bids by price in ascending order.</tt> </tt>
+<a name="L509"></a><tt class="py-lineno">509</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">offbids</tt><tt class="py-op">.</tt><tt class="py-name">sort</tt><tt class="py-op">(</tt><tt class="py-name">key</tt><tt class="py-op">=</tt><tt class="py-keyword">lambda</tt> <tt class="py-name">x</tt><tt class="py-op">:</tt> <tt class="py-name">x</tt><tt class="py-op">.</tt><tt class="py-name">price</tt><tt class="py-op">,</tt> <tt class="py-name">reverse</tt><tt class="py-op">=</tt><tt class="py-name">arebids</tt><tt class="py-op">)</tt> </tt>
+<a name="L510"></a><tt class="py-lineno">510</tt>  <tt class="py-line"> </tt>
+<a name="L511"></a><tt class="py-lineno">511</tt>  <tt class="py-line">        <tt class="py-name">points</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-name">offbids</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">noLoadCost</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L512"></a><tt class="py-lineno">512</tt>  <tt class="py-line">        <tt class="py-comment"># Form piece-wise linear total cost function.</tt> </tt>
+<a name="L513"></a><tt class="py-lineno">513</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-keyword">for</tt> <tt class="py-name">i</tt><tt class="py-op">,</tt> <tt class="py-name">offbid</tt> <tt class="py-keyword">in</tt> <tt class="py-name">enumerate</tt><tt class="py-op">(</tt><tt class="py-name">offbids</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L514"></a><tt class="py-lineno">514</tt>  <tt class="py-line">            <tt class="py-name">x1</tt><tt class="py-op">,</tt> <tt class="py-name">y1</tt> <tt class="py-op">=</tt> <tt class="py-name">points</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> </tt>
+<a name="L515"></a><tt class="py-lineno">515</tt>  <tt class="py-line">            <tt class="py-name">x2</tt> <tt class="py-op">=</tt> <tt class="py-name">x1</tt> <tt class="py-op">+</tt> <tt class="py-name">offbid</tt><tt class="py-op">.</tt><tt class="py-name">quantity</tt> <tt class="py-comment"># MW.</tt> </tt>
+<a name="L516"></a><tt class="py-lineno">516</tt>  <tt class="py-line">            <tt class="py-name">m</tt> <tt class="py-op">=</tt> <tt class="py-name">offbid</tt><tt class="py-op">.</tt><tt class="py-name">price</tt> <tt class="py-comment"># $/MWh</tt> </tt>
+<a name="L517"></a><tt class="py-lineno">517</tt>  <tt class="py-line">            <tt class="py-name">y2</tt> <tt class="py-op">=</tt> <tt class="py-name">m</tt> <tt class="py-op">*</tt> <tt class="py-op">(</tt><tt class="py-name">x2</tt> <tt class="py-op">-</tt> <tt class="py-name">x1</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-name">y1</tt> </tt>
+<a name="L518"></a><tt class="py-lineno">518</tt>  <tt class="py-line">            <tt class="py-name">points</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">x2</tt><tt class="py-op">,</tt> <tt class="py-name">y2</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L519"></a><tt class="py-lineno">519</tt>  <tt class="py-line"> </tt>
+<a name="L520"></a><tt class="py-lineno">520</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">arebids</tt><tt class="py-op">:</tt> </tt>
+<a name="L521"></a><tt class="py-lineno">521</tt>  <tt class="py-line">            <tt class="py-name">points</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-op">-</tt><tt class="py-name">x</tt><tt class="py-op">,</tt> <tt class="py-op">-</tt><tt class="py-name">y</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">x</tt><tt class="py-op">,</tt> <tt class="py-name">y</tt> <tt class="py-keyword">in</tt> <tt class="py-name">points</tt><tt class="py-op">]</tt> </tt>
+<a name="L522"></a><tt class="py-lineno">522</tt>  <tt class="py-line">            <tt class="py-name">points</tt><tt class="py-op">.</tt><tt class="py-name">reverse</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L523"></a><tt class="py-lineno">523</tt>  <tt class="py-line"> </tt>
+<a name="L524"></a><tt class="py-lineno">524</tt>  <tt class="py-line">        <tt class="py-name">n_segs</tt> <tt class="py-op">=</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">points</tt><tt class="py-op">)</tt> <tt class="py-op">-</tt> <tt class="py-number">1</tt> </tt>
+<a name="L525"></a><tt class="py-lineno">525</tt>  <tt class="py-line">        <tt id="link-49" class="py-name"><a title="pylon.ac_pf.logger
+pylon.case.logger
+pylon.dc_pf.logger
+pylon.dyn.logger
+pylon.estimator.logger
+pylon.generator.logger
+pylon.main.logger
+pylon.opf.logger
+pylon.readwrite.common.logger
+pylon.readwrite.dot_writer.logger
+pylon.readwrite.matpower_reader.logger
+pylon.readwrite.pickle_readwrite.logger
+pylon.readwrite.psat_reader.logger
+pylon.readwrite.psse_reader.logger
+pylon.readwrite.rdf_readwrite.logger
+pylon.solver.logger
+pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-49', 'logger', 'link-6');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"%d segment pwl cost function: %s"</tt> <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">n_segs</tt><tt class="py-op">,</tt> <tt class="py-name">points</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L526"></a><tt class="py-lineno">526</tt>  <tt class="py-line"> </tt>
+<a name="L527"></a><tt class="py-lineno">527</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">points</tt> </tt>
+</div><a name="L528"></a><tt class="py-lineno">528</tt>  <tt class="py-line"> </tt>
+<a name="L529"></a><tt class="py-lineno">529</tt>  <tt class="py-line"> </tt>
+<a name="Generator._adjust_limits"></a><div id="Generator._adjust_limits-def"><a name="L530"></a><tt class="py-lineno">530</tt> <a class="py-toggle" href="#" id="Generator._adjust_limits-toggle" onclick="return toggle('Generator._adjust_limits');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.generator.Generator-class.html#_adjust_limits">_adjust_limits</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Generator._adjust_limits-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Generator._adjust_limits-expanded"><a name="L531"></a><tt class="py-lineno">531</tt>  <tt class="py-line">        <tt class="py-docstring">""" Sets the active power limits, 'p_max' and 'p_min', according to</tt> </tt>
+<a name="L532"></a><tt class="py-lineno">532</tt>  <tt class="py-line"><tt class="py-docstring">            the pwl cost function points.</tt> </tt>
+<a name="L533"></a><tt class="py-lineno">533</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L534"></a><tt class="py-lineno">534</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-50" class="py-name"><a title="pylon.generator.Generator.is_load" class="py-name" href="#" onclick="return doclink('link-50', 'is_load', 'link-18');">is_load</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L535"></a><tt class="py-lineno">535</tt>  <tt class="py-line"><tt class="py-comment">#            self.p_min = min([point[0] for point in self.p_cost])</tt> </tt>
+<a name="L536"></a><tt class="py-lineno">536</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_max</tt> <tt class="py-op">=</tt> <tt class="py-name">max</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">point</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> <tt class="py-keyword">for</tt> <tt class="py-name">point</tt> <tt class="py-keyword">in</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L537"></a><tt class="py-lineno">537</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L538"></a><tt class="py-lineno">538</tt>  <tt class="py-line">            <tt class="py-name">p_min</tt> <tt class="py-op">=</tt> <tt class="py-name">min</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">point</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> <tt class="py-keyword">for</tt> <tt class="py-name">point</tt> <tt class="py-keyword">in</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_cost</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L539"></a><tt class="py-lineno">539</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_max</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L540"></a><tt class="py-lineno">540</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_min</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_min</tt> <tt class="py-op">*</tt> <tt class="py-name">p_min</tt> <tt class="py-op">/</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_min</tt> </tt>
+<a name="L541"></a><tt class="py-lineno">541</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_max</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">q_max</tt> <tt class="py-op">*</tt> <tt class="py-name">p_min</tt> <tt class="py-op">/</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_min</tt> </tt>
+<a name="L542"></a><tt class="py-lineno">542</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">p_min</tt> <tt class="py-op">=</tt> <tt class="py-name">p_min</tt> </tt>
+</div></div><a name="L543"></a><tt class="py-lineno">543</tt>  <tt class="py-line"> </tt>
+<a name="L544"></a><tt class="py-lineno">544</tt>  <tt class="py-line"><tt class="py-comment"># EOF -------------------------------------------------------------------------</tt> </tt>
+<a name="L545"></a><tt class="py-lineno">545</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            ><a class="navbar" target="_top" href="http://rwl.github.com/pylon">Pylon</a></th>
+          </tr></table></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Thu Jun 17 15:59:57 2010
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>
