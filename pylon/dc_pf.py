@@ -58,10 +58,10 @@ class DCPF(object):
     def __init__(self, case, solver="UMFPACK"):
         """ Initialises a DCPF instance.
         """
-        # Solved case.
+        #: Solved case.
         self.case = case
 
-        # Vector of voltage phase angles.
+        #: Vector of voltage phase angles.
         self.v_angle = None
 
 

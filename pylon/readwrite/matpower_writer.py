@@ -47,7 +47,7 @@ class MATPOWERWriter(CaseWriter):
         """
         super(MATPOWERWriter, self).__init__(case)
 
-        # Function name must match the file name in MATLAB.
+        #: Function name must match the file name in MATLAB.
         self._fcn_name = case.name
 
         self._prefix = "mpc."

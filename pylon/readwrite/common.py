@@ -57,7 +57,7 @@ class CaseWriter(object):
     def __init__(self, case):
         """ Initialises a new CaseWriter instance.
         """
-        # Case to be written.
+        #: Case to be written.
         self.case = case
 
 

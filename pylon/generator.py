@@ -59,41 +59,41 @@ class Generator(Named):
                  q_cost=None, qcost_model=None):
         """ Initialises a new Generator instance.
         """
-        # Busbar to which the generator is connected.
+        #: Busbar to which the generator is connected.
         self.bus = bus
 
-        # Unique name.
+        #: Unique name.
         self.name = name
 
-        # Is the generator in service?
+        #: Is the generator in service?
         self.online = online
 
-        # Machine MVA base.
+        #: Machine MVA base.
         self.base_mva = base_mva
 
-        # Active power output (MW).
+        #: Active power output (MW).
         self.p = p
-        # Maximum active power output (MW).
+        #: Maximum active power output (MW).
         self.p_max = p_max
-        # Minimum active power output (MW).
+        #: Minimum active power output (MW).
         self.p_min = p_min
 
-        # Voltage magnitude setpoint (pu).
+        #: Voltage magnitude setpoint (pu).
         self.v_magnitude = v_magnitude
 
-        # Reactive power output (MVAr).
+        #: Reactive power output (MVAr).
         self.q = q
-        # Maximum reactive power (MVAr).
+        #: Maximum reactive power (MVAr).
         self.q_max = q_max
-        # Minimum reactive power (MVAr).
+        #: Minimum reactive power (MVAr).
         self.q_min = q_min
 
-        # Start up cost.
+        #: Start up cost.
         self.c_startup = c_startup
-        # Shut down cost.
+        #: Shut down cost.
         self.c_shutdown = c_shutdown
 
-        # Active power cost model: 'poly' or 'pwl' (default: 'poly')
+        #: Active power cost model: 'poly' or 'pwl' (default: 'poly')
         if isinstance(p_cost, tuple):
             self.pcost_model = POLYNOMIAL
         elif isinstance(p_cost, list):
@@ -101,7 +101,7 @@ class Generator(Named):
         else:
             self.pcost_model = pcost_model
 
-        # Reactive power cost model: 'poly', 'pwl' or None (default: 'poly')
+        #: Reactive power cost model: 'poly', 'pwl' or None (default: 'poly')
         if isinstance(q_cost, tuple):
             self.qcost_model = POLYNOMIAL
         elif isinstance(q_cost, list):
@@ -109,9 +109,9 @@ class Generator(Named):
         else:
             self.qcost_model = qcost_model
 
-        # Active power cost represented either by a tuple of quadratic
-        # polynomial coefficients or a list of piece-wise linear coordinates
-        # according to the value of the 'pcost_model' attribute.
+        #: Active power cost represented either by a tuple of quadratic
+        #: polynomial coefficients or a list of piece-wise linear coordinates
+        #: according to the value of the 'pcost_model' attribute.
         if p_cost is not None:
             self.p_cost = p_cost
         else:
@@ -122,13 +122,20 @@ class Generator(Named):
             else:
                 raise ValueError
 
-        # Reactive power cost.
+        #: Reactive power cost.
         self.q_cost = q_cost
 
+        #: Kuhn-Tucker multiplier on lower Pg limit (u/MW where the objective
+        #: function has units u).
         self.mu_pmin = 0.0
+        #: Kuhn-Tucker multiplier on upper Pg limit (u/MW where the objective
+        #: function has units u).
         self.mu_pmax = 0.0
-
+        #: Kuhn-Tucker multiplier on lower Qg limit (u/MVAr where the objective
+        #: function has units u).
         self.mu_qmin = 0.0
+        #: Kuhn-Tucker multiplier on upper Qg limit (u/MVAr where the objective
+        #: function has units u).
         self.mu_qmax = 0.0
 
         # Unit Commitment -----------------------------------------------------

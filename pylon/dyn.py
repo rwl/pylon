@@ -77,25 +77,25 @@ class DynamicCase(object):
     def __init__(self, case, frequency=50.0, stepsize=0.01, stoptime=1):
         """ Constructs a new DynamicCase instance.
         """
-        # Power flow case.
+        #: Power flow case.
         self.case = case
 
-        # Dynamic generators.
+        #: Dynamic generators.
         self.dyn_generators = []
 
-        # Generator exciters.
+        #: Generator exciters.
         self.exciters = []
 
-        # Generator governors.
+        #: Generator governors.
         self.governors = []
 
-        # Network frequency (Hz).
+        #: Network frequency (Hz).
         self.freq = frequency
 
-        # Stepsize of the integration algorithm (s).
+        #: Stepsize of the integration algorithm (s).
         self.stepsize = stepsize
 
-        # Stoptime of the simulation (s).
+        #: Stoptime of the simulation (s).
         self.stoptime = stoptime
 
 
@@ -565,28 +565,28 @@ class DynamicSolver:
     def __init__(self, dyn_case, method=None, tol=1e-04,
                  minstep=1e-03, maxstep=1e02, verbose=True, plot=True):
 
-        # Dynamic case.
+        #: Dynamic case.
         self.dyn_case = dyn_case
 
-        # Integration method.
+        #: Integration method.
         self.method = ModifiedEuler() if method is None else method
 
-        # Specify the tolerance of the error. This argument is only used for
-        # the Runge-Kutta Fehlberg and Higham and Hall methods.
+        #: Specify the tolerance of the error. This argument is only used for
+        #: the Runge-Kutta Fehlberg and Higham and Hall methods.
         self.tol = tol
 
-        # Sets the minimum step size. Only used by the adaptive step size
-        # algorithms: Runge-Kutta Fehlberg and Higham and Hall methods.
+        #: Sets the minimum step size. Only used by the adaptive step size
+        #: algorithms: Runge-Kutta Fehlberg and Higham and Hall methods.
         self.minstep = minstep
 
-        # Sets the maximal step size. Only used by the adaptive step size
-        # algorithms: Runge-Kutta Fehlberg and Higham and Hall methods.
+        #: Sets the maximal step size. Only used by the adaptive step size
+        #: algorithms: Runge-Kutta Fehlberg and Higham and Hall methods.
         self.maxstep = maxstep
 
-        # Print progress output?
+        #: Print progress output?
         self.verbose = verbose
 
-        # Draw plot?
+        #: Draw plot?
         self.plot = plot
 
 
@@ -958,9 +958,10 @@ class RungeKutta(object):
     """
 
     def __init__(self):
-        # Runge-Kutta coefficients.
+        #: Runge-Kutta coefficients.
         self._a = array([0.0, 0.0, 0.0, 0.0, 1.0/2.0, 0.0, 0.0, 0.0, 0.0,
                          1.0/2.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+        #: Runge-Kutta coefficients.
         self._b = array([1.0/6.0, 2.0/6.0, 2.0/6.0, 1.0/6.0])
         # self._c = array([0.0, 1.0/2.0, 1.0/2.0, 1.0]) # not used
 
@@ -1131,14 +1132,16 @@ class RungeKuttaFehlberg(RungeKutta):
         super(self, RungeKuttaFehlberg).__init__(t, Xgen0, Pgen, Vgen0, Xexc0,
             Pexc, Vexc0, Xgov0, Pgov, Vgov0, augYbus_solver, gbus, stepsize)
 
-        # Runge-Kutta coefficients
+        #: Runge-Kutta coefficients
         self._a = array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0/4.0, 0.0, 0.0, 0.0, 0.0,
                          3.0/32.0, 9.0/32.0, 0.0, 0.0, 0.0, 1932.0/2197.0,
                          -7200.0/2197.0, 7296.0/2197.0, 0.0, 0.0, 439.0/216.0,
                          -8.0, 3680.0/513.0, -845.0/4104.0, 0.0, -8.0/27.0,
                          2.0, -3544.0/2565.0, 1859.0/4104.0, -11.0/40.0])
+        #: Runge-Kutta coefficients.
         self._b1 = array([25.0/216.0, 0.0, 1408.0/2565.0, 2197.0/4104.0,
                           -1.0/5.0, 0.0])
+        #: Runge-Kutta coefficients.
         self._b2 = array([16.0/135.0, 0.0, 6656.0/12825.0, 28561.0/56430.0,
                           -9.0/50.0, 2.0/55.0,])
         # c = array([0.0, 1.0/4.0, 3.0/8.0, 12.0/13.0, 1.0, 1.0/2.0,])#not used
@@ -1491,7 +1494,7 @@ class RungeKuttaHighamHall(RungeKuttaFehlberg):
         super(self, RungeKuttaHighamHall).__init__(t, Xgen0, Pgen, Vgen0,Xexc0,
             Pexc, Vexc0, Xgov0, Pgov, Vgov0, augYbus_solver, gbus, stepsize)
 
-        # Runge-Kutta coefficients.
+        #: Runge-Kutta coefficients.
         self._a = array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0/9.0, 0.0, 0.0, 0.0,
                          0.0, 0.0, 1.0/12.0, 1.0/4.0, 0.0, 0.0, 0.0, 0.0,
                          1.0/8.0, 0.0, 3.0/8.0, 0.0, 0.0, 0.0, 91.0/500.0,
@@ -1499,8 +1502,10 @@ class RungeKuttaHighamHall(RungeKuttaFehlberg):
                          -11.0/20.0, 27.0/20.0, 12.0/5.0, -36.0/5.0, 5.0, 0.0,
                          1.0/12.0, 0.0, 27.0/32.0, -4.0/3.0, 125.0/96.0,
                          5.0/48.0])
+        #: Runge-Kutta coefficients.
         self._b1 = array([1.0/12.0, 0.0, 27.0/32.0, -4.0/3.0, 125.0/96.0,
                           5.0/48.0, 0.0])
+        #: Runge-Kutta coefficients.
         self._b2 = array([2.0/15.0, 0.0, 27.0/80.0, -2.0/15.0, 25.0/48.0,
                           1.0/24.0, 1.0/10.0,])
         # c = array([0.0, 2.0/9.0, 1.0/3.0, 1.0/2.0, 3.0/5.0, 1.0, 1.0,])
@@ -1836,50 +1841,50 @@ class DynamicGenerator:
         """ Constructs a new DynamicGenerator instance.
         """
 
-        # Power flow generator.
+        #: Power flow generator.
         self.generator = generator
 
-        # Exciter model.
+        #: Exciter model.
         self.exciter = exciter
 
-        # Governor model.
+        #: Governor model.
         self.governor = governor
 
-        # Classical or 4th order model.
+        #: Classical or 4th order model.
         self.model = model
 
-        # Inertia constant.
+        #: Inertia constant.
         self.h = h
 
-        # Damping constant.
+        #: Damping constant.
         self.d = d
 
         # Classical model -----------------------------------------------------
 
-        # Reactance (p.u.).
+        #: Reactance (p.u.).
         self.x = x
 
-        # Transient reactance (p.u.).
+        #: Transient reactance (p.u.).
         self.x_tr = x_tr
 
         # 4th order model -----------------------------------------------------
 
-        # d-axis reactance (p.u.).
+        #: d-axis reactance (p.u.).
         self.xd = xd
 
-        # q-axis reactance (p.u.).
+        #: q-axis reactance (p.u.).
         self.xq = xq
 
-        # d-axis transient reactance (p.u.).
+        #: d-axis transient reactance (p.u.).
         self.xd_tr = xd_tr
 
-        # q-axis transient reactance (p.u.).
+        #: q-axis transient reactance (p.u.).
         self.xq_tr = xq_tr
 
-        # d-axis time constant (s).
+        #: d-axis time constant (s).
         self.td = td
 
-        # q-axis time constant (s).
+        #: q-axis time constant (s).
         self.tq = tq
 
 #------------------------------------------------------------------------------
@@ -1894,40 +1899,40 @@ class Exciter:
                  ke=0.0, te=0.0, kf=0.0, tf=0.0, aex=0.0, bex=0.0,
                  ur_min=-1.5, ur_max=1.5):
 
-        # Power flow generator.
+        #: Power flow generator.
         self.generator = generator
 
-        # Exciter model.
+        #: Exciter model.
         self.model = model
 
-        # Amplifier gain.
+        #: Amplifier gain.
         self.ka = ka
 
-        # Amplifier time constant.
+        #: Amplifier time constant.
         self.ta = ta
 
-        # Exciter gain.
+        #: Exciter gain.
         self.ke = ke
 
-        # Exciter time constant.
+        #: Exciter time constant.
         self.te = te
 
-        # Stabiliser gain.
+        #: Stabiliser gain.
         self.kf = kf
 
-        # Stabiliser time constant.
+        #: Stabiliser time constant.
         self.tf = tf
 
-        # Parameter saturation function.
+        #: Parameter saturation function.
         self.aex = aex
 
-        # Parameter saturation function.
+        #: Parameter saturation function.
         self.bex = bex
 
-        # Lower voltage limit.
+        #: Lower voltage limit.
         self.ur_min = ur_min
 
-        # Upper voltage limit.
+        #: Upper voltage limit.
         self.ur_max = ur_max
 
 #------------------------------------------------------------------------------
@@ -1941,34 +1946,34 @@ class Governor:
     def __init__(self, generator, model=CONST_POWER, k=0.0, t1=0.0, t2=0.0,
                  t3=0.0, p_up=0.0, p_down=0.0, p_max=0.0, p_min=0.0):
 
-        # Power flow generator.
+        #: Power flow generator.
         self.generator = generator
 
-        # Governor model.
+        #: Governor model.
         self.model = model
 
-        # Droop.
+        #: Droop.
         self.k = k
 
-        # Time constant.
+        #: Time constant.
         self.t1 = t1
 
-        # Time constant.
+        #: Time constant.
         self.t2 = t2
 
-        # Servo motor time constant.
+        #: Servo motor time constant.
         self.t3 = t3
 
-        # Upper ramp limit.
+        #: Upper ramp limit.
         self.p_up = p_up
 
-        # Lower ramp limit.
+        #: Lower ramp limit.
         self.p_down = p_down
 
-        # Maxmimum turbine output.
+        #: Maxmimum turbine output.
         self.p_max = p_max
 
-        # Minimum turbine output.
+        #: Minimum turbine output.
         self.p_min = p_min
 
 #------------------------------------------------------------------------------
@@ -1982,10 +1987,10 @@ class Event:
     def __init__(self, time, type):
         """ Constructs a new Event instance.
         """
-        # Instant of change (s).
+        #: Instant of change (s).
         self.time = time
 
-        # Bus or branch event.
+        #: Bus or branch event.
         self.type = type
 
 #------------------------------------------------------------------------------
@@ -2001,16 +2006,16 @@ class BusChange:
 
     def __init__(self, bus, time, param, newval):
 
-        # Bus with new parameter value.
+        #: Bus with new parameter value.
         self.bus = bus
 
-        # Instant of change (s).
+        #: Instant of change (s).
         self.time = time
 
-        # Bus parameter to change.
+        #: Bus parameter to change.
         self.param = param
 
-        # New parameter value.
+        #: New parameter value.
         self.newval = newval
 
 #------------------------------------------------------------------------------
@@ -2023,16 +2028,16 @@ class BranchChange:
 
     def __init__(self, branch, time, param, newval):
 
-        # Branch with new parameter value.
+        #: Branch with new parameter value.
         self.branch = branch
 
-        # Instant of change (s).
+        #: Instant of change (s).
         self.time = time
 
-        # Bus parameter to change.
+        #: Bus parameter to change.
         self.param = param
 
-        # New parameter value.
+        #: New parameter value.
         self.newval = newval
 
 # EOF -------------------------------------------------------------------------

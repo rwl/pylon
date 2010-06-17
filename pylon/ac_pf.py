@@ -73,19 +73,19 @@ class _ACPF(object):
                  iter_max=10, verbose=True):
         """ Initialises a new ACPF instance.
         """
-        # Solved case.
+        #: Solved case.
         self.case = case
 
-        # Enforce Q limits on generators.
+        #: Enforce Q limits on generators.
         self.qlimit = qlimit
 
-        # Convergence tolerance.
+        #: Convergence tolerance.
         self.tolerance = tolerance
 
-        # Maximum number of iterations.
+        #: Maximum number of iterations.
         self.iter_max = iter_max
 
-        # Print progress information.
+        #: Print progress information.
         self.verbose = verbose
 
     #--------------------------------------------------------------------------
@@ -359,7 +359,7 @@ class FastDecoupledPF(_ACPF):
         """
         super(FastDecoupledPF, self).__init__(case, qlimit, tolerance,
                                               iter_max, verbose)
-        # Use XB or BX method?
+        #: Use XB or BX method?
         self.method = method
 
 

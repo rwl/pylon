@@ -46,32 +46,32 @@ class MarketEnvironment(object):
     def __init__(self, generators, market, numOffbids=1, offbidQty=False):
         super(MarketEnvironment, self).__init__()
 
-        # Save initial generator ratings and costs as these will be overwritten
-        # when offers/bids are submitted to the market. Set by "generators"
-        # property.
+        #: Save initial generator ratings and costs as these will be
+        #: overwritten when offers/bids are submitted to the market. Set by
+        #: "generators" property.
         self._g0 = {}
 
-        # Portfolio of generators endowed to the agent.
+        #: Portfolio of generators endowed to the agent.
         self._generators = None
         self.generators = generators
 
-        # Auction that clears offer and bids using OPF results.
+        #: Auction that clears offer and bids using OPF results.
         self.market = market
 
-        # A participant may submit any number of offers/bids for each of the
-        # generators in its portfolio.
+        #: A participant may submit any number of offers/bids for each of the
+        #: generators in its portfolio.
         self.numOffbids = numOffbids
 
-        # A participant may offer/bid just a markup on its cost and the
-        # quantity is the maximum rated capacity of the generator divided by
-        # the number of offers/bids. Alternatively, it may also specify the
-        # quantity that is offered/bid for.
+        #: A participant may offer/bid just a markup on its cost and the
+        #: quantity is the maximum rated capacity of the generator divided by
+        #: the number of offers/bids. Alternatively, it may also specify the
+        #: quantity that is offered/bid for.
         self.offbidQty = offbidQty
 
-        # List of offers/bids from the previous action.
+        #: List of offers/bids from the previous action.
         self._lastAction = []
 
-        # Initialise the environment.
+        #: Initialise the environment.
         self.reset()
 
     #--------------------------------------------------------------------------

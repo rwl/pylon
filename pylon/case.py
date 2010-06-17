@@ -66,53 +66,53 @@ class Bus(Named):
         # Unique name.
         self.name = name
 
-        # Bus type: 'PQ', 'PV', 'ref' and 'isolated' (default: 'PQ')
+        #: Bus type: 'PQ', 'PV', 'ref' and 'isolated' (default: 'PQ')
         self.type = type
 
-        # Base voltage.
+        #: Base voltage.
         self.v_base = v_base
 
-        # Voltage magnitude initial guess (pu).
+        #: Voltage magnitude initial guess (pu).
         self.v_magnitude = v_magnitude
-        # Voltage angle initial guess (degrees).
+        #: Voltage angle initial guess (degrees).
         self.v_angle = v_angle
 
-        # Maximum voltage magnitude (pu).
+        #: Maximum voltage magnitude (pu).
         self.v_max = v_max
-        # Minimum voltage magnitude (pu).
+        #: Minimum voltage magnitude (pu).
         self.v_min = v_min
 
-        # Total fixed active power load at this bus.
+        #: Total fixed active power load at this bus.
         self.p_demand = p_demand
-        # Total fixed reactive power load at this bus.
+        #: Total fixed reactive power load at this bus.
         self.q_demand = q_demand
 
-        # Shunt conductance (MW (demanded) at V = 1.0 p.u.).
+        #: Shunt conductance (MW (demanded) at V = 1.0 p.u.).
         self.g_shunt = g_shunt
-        # Shunt susceptance (MVAr (injected) at V = 1.0 p.u.).
+        #: Shunt susceptance (MVAr (injected) at V = 1.0 p.u.).
         self.b_shunt = b_shunt
 
         self.area = 1
         self.zone = 1
 
-#        # Voltage magnitude, typically determined by a routine.
+#        #: Voltage magnitude, typically determined by a routine.
 #        self.v_magnitude = 0.0
-#        # Voltage angle, typically determined by a routine.
+#        #: Voltage angle, typically determined by a routine.
 #        self.v_angle = 0.0
 
-        # Lambda (GBP/MWh).
+        #: Lambda (GBP/MWh).
         self.p_lmbda = 0.0
-        # Lambda (GBP/MVAr-hr).
+        #: Lambda (GBP/MVAr-hr).
         self.q_lmbda = 0.0
 
-        # Lagrangian multiplier for voltage constraint.
+        #: Lagrangian multiplier for voltage constraint.
         self.mu_vmin = 0.0
         self.mu_vmax = 0.0
 
-        # Tuple of bus coordinates.
+        #: Tuple of bus coordinates.
         self.position = (0.0, 0.0) if position is None else position
 
-        # Bus index, managed at a case level.
+        #: Bus index, managed at a case level.
         self._i = 0
 
 
@@ -139,62 +139,62 @@ class Branch(Named):
             ratio=0.0, phase_shift=0.0, ang_min=-180.0, ang_max=180.0):
         """ Initialises a new Branch instance.
         """
-        # From/source/start bus.
+        #: From/source/start bus.
         self.from_bus = from_bus
-        # To/target/end bus.
+        #: To/target/end bus.
         self.to_bus = to_bus
 
-        # Unique name.
+        #: Unique name.
         self.name = name
-        # Is the branch in service?
+        #: Is the branch in service?
         self.online = online
 
-        # Positive sequence resistance (pu).
+        #: Positive sequence resistance (pu).
         self.r = r
-        # Positive sequence reactance (pu).
+        #: Positive sequence reactance (pu).
         self.x = x
-        # Total positive sequence line charging susceptance (pu).
+        #: Total positive sequence line charging susceptance (pu).
         self.b = b
 
-        # General purpose maximum MVA rating (MVA).
+        #: General purpose maximum MVA rating (MVA).
         self.rate_a = rate_a
         self.rate_b = rate_b
         self.rate_c = rate_c
 
-        # Transformer off nominal turns ratio.
+        #: Transformer off nominal turns ratio.
         self.ratio = ratio
 
-        # Phase shift angle (degrees).
+        #: Phase shift angle (degrees).
         self.phase_shift = phase_shift
 
-        # Minimum voltage angle difference (angle(Vf) - angle(Vt)) (degrees).
+        #: Minimum voltage angle difference (angle(Vf) - angle(Vt)) (degrees).
         self.ang_min = ang_min
 
-        # Maximum voltage angle difference (angle(Vf) - angle(Vt)) (degrees).
+        #: Maximum voltage angle difference (angle(Vf) - angle(Vt)) (degrees).
         self.ang_max = ang_max
 
         # Power flow results --------------------------------------------------
 
-        # Active power injected at the from bus (MW).
+        #: Active power injected at the from bus (MW).
         self.p_from = 0.0
-        # Active power injected at the to bus (MW).
+        #: Active power injected at the to bus (MW).
         self.p_to = 0.0
-        # Reactive power injected at the from bus (MVAr).
+        #: Reactive power injected at the from bus (MVAr).
         self.q_from = 0.0
-        # Reactive power injected at the to bus (MVAr).
+        #: Reactive power injected at the to bus (MVAr).
         self.q_to = 0.0
 
-        # |S_from| mu.
+        #: |S_from| mu.
         self.mu_s_from = 0.0
-        # |S_to| mu.
+        #: |S_to| mu.
         self.mu_s_to = 0.0
 
-        # Lower bus voltage angle difference limit constraint multiplier.
+        #: Lower bus voltage angle difference limit constraint multiplier.
         self.mu_angmin = 0.0
-        # Upper bus voltage angle difference limit constraint multiplier.
+        #: Upper bus voltage angle difference limit constraint multiplier.
         self.mu_angmax = 0.0
 
-        # Branch index, managed at a case level.
+        #: Branch index, managed at a case level.
         self._i = 0
 
 
@@ -239,19 +239,19 @@ class Case(Named, Serializable):
             generators=None):
         """ Initialises a new Case instance.
         """
-        # Unique name.
+        #: Unique name.
         self.name = name
 
-        # Base apparent power (MVA).
+        #: Base apparent power (MVA).
         self.base_mva = base_mva
 
-        # Busbars.
+        #: Busbars.
         self.buses = buses if buses is not None else []
 
-        # Transmission lines, transformers and phase shifters.
+        #: Transmission lines, transformers and phase shifters.
         self.branches = branches if branches is not None else []
 
-        # Generating units and dispatchable loads.
+        #: Generating units and dispatchable loads.
         self.generators = generators if generators is not None else []
 
     #--------------------------------------------------------------------------

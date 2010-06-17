@@ -45,6 +45,7 @@ class DCPFTest(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super(DCPFTest, self).__init__(methodName)
 
+        #: Name of the folder in which the MatrixMarket data exists.
         self.case_name = "case6ww"
 
         self.case = None

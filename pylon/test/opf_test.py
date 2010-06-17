@@ -49,7 +49,9 @@ class DCOPFTest(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super(DCOPFTest, self).__init__(methodName)
 
+        #: Name of the folder in which the MatrixMarket data exists.
         self.case_name = "case30pwl"
+
         self.case = None
         self.opf = None
 

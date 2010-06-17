@@ -58,16 +58,16 @@ class OPF(object):
     def __init__(self, case, dc=True, ignore_ang_lim=True, opt=None):
         """ Initialises a new OPF instance.
         """
-        # Case under optimisation.
+        #: Case under optimisation.
         self.case = case
 
-        # Use DC power flow formulation.
+        #: Use DC power flow formulation.
         self.dc = dc
 
-        # Ignore angle difference limits for branches even if specified.
+        #: Ignore angle difference limits for branches even if specified.
         self.ignore_ang_lim = ignore_ang_lim
 
-        # Solver options (See pips.py for futher details).
+        #: Solver options (See pips.py for futher details).
         self.opt = {} if opt is None else opt
 
     #--------------------------------------------------------------------------
@@ -516,10 +516,15 @@ class OPFModel(object):
     """
 
     def __init__(self, case):
+        #: Case to which the model relates.
         self.case = case
+        #: Optimisation variables.
         self.vars = []
+        #: Linear constraints.
         self.lin_constraints = []
+        #: Non-linear constraints.
         self.nln_constraints = []
+        #: User defined costs.
         self.costs = []
 
 
@@ -691,22 +696,22 @@ class OPFModel(object):
 class Set(Named):
 
     def __init__(self, name, N):
-
+        #: String identifier.
         self.name = name
 
-        # Starting index.
+        #: Starting index.
         self.i0 = 0
 
-        # Ending index.
+        #: Ending index.
         self.iN = 0
 
-        # Number in set.
+        #: Number in set.
         self.N = N
 
-        # Number of sets.
+        #: Number of sets.
         self.NS = 0
 
-        # Ordered list of sets.
+        #: Ordered list of sets.
         self.order = []
 
 #------------------------------------------------------------------------------
@@ -722,19 +727,19 @@ class Variable(Set):
         """
         super(Variable, self).__init__(name, N)
 
-        # Initial value of the variables. Zero by default.
+        #: Initial value of the variables. Zero by default.
         if v0 is None:
             self.v0 = zeros(N)
         else:
             self.v0 = v0
 
-        # Lower bound on the variables. Unbounded below be default.
+        #: Lower bound on the variables. Unbounded below be default.
         if vl is None:
             self.vl = -Inf * ones(N)
         else:
             self.vl = vl
 
-        # Upper bound on the variables. Unbounded above by default.
+        #: Upper bound on the variables. Unbounded above by default.
         if vu is None:
             self.vu = Inf * ones(N)
         else:

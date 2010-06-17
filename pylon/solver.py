@@ -63,10 +63,10 @@ class Solver(object):
     """
 
     def __init__(self, om):
-        # Optimal power flow model.
+        #: Optimal power flow model.
         self.om = om
 
-        # Number of equality constraints.
+        #: Number of equality constraints.
         self._nieq = 0
 
 
@@ -206,7 +206,7 @@ class DCOPFSolver(Solver):
         self.Cw = zeros((0, 0))
         self.fparm = zeros((0, 0))
 
-        # Solver options (See pips.py for futher details).
+        #: Solver options (See pips.py for futher details).
         self.opt = {} if opt is None else opt
 
 
@@ -426,10 +426,10 @@ class PIPSSolver(Solver):
         """
         super(PIPSSolver, self).__init__(om)
 
-        # Quantity to limit for branch flow constraints ("S", "P" or "I").
+        #: Quantity to limit for branch flow constraints ("S", "P" or "I").
         self.flow_lim = flow_lim
 
-        # Options for the PIPS.
+        #: Options for the PIPS.
         self.opt = {} if opt is None else opt
 
 

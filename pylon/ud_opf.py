@@ -71,30 +71,30 @@ class UDOPF(object):
             feasibility_tol=1e-7):
         """ Initialises a new UDOPF instance.
         """
-        # Use DC OPF solver?
+        #: Use DC OPF solver?
         self.dc = dc
         self.solver = None
 
-        # Optimised case.
+        #: Optimised case.
         self.case = case
 
-        # Choice of solver (May be None or "mosek" (or "glpk" for linear
-        # formulation)). Specify None to use the Python solver from CVXOPT.
+        #: Choice of solver (May be None or "mosek" (or "glpk" for linear
+        #: formulation)). Specify None to use the Python solver from CVXOPT.
         self.solver = solver
 
-        # Turns the output to the screen on or off.
+        #: Turns the output to the screen on or off.
         self.show_progress = show_progress
 
-        # Maximum number of iterations.
+        #: Maximum number of iterations.
         self.max_iterations = max_iterations
 
-        # Absolute accuracy.
+        #: Absolute accuracy.
         self.absolute_tol = absolute_tol
 
-        # Relative accuracy.
+        #: Relative accuracy.
         self.relative_tol = relative_tol
 
-        # Tolerance for feasibility conditions.
+        #: Tolerance for feasibility conditions.
         self.feasibility_tol = feasibility_tol
 
 

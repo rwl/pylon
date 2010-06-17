@@ -52,32 +52,32 @@ class ProfitTask(DiscreteProfitTask):
     def __init__(self, environment, maxSteps=24, discount=None):
         super(ProfitTask, self).__init__(environment)
 
-        # Maximum number of time steps.
+        #: Maximum number of time steps.
         self.maxSteps = maxSteps
 
-        # Current time step.
+        #: Current time step.
         self.t = 0
 
-        # Discount factor.
+        #: Discount factor.
         self.discount = discount
 
-        # Track cumulative reward.
+        #: Track cumulative reward.
         self.cumulativeReward = 0
 
-        # Track the number of samples.
+        #: Track the number of samples.
         self.samples = 0
 
-        # Maximum markup/markdown.
+        #: Maximum markup/markdown.
         self.maxMarkup = 30.0
 
         #----------------------------------------------------------------------
         #  "Task" interface:
         #----------------------------------------------------------------------
 
-        # Limits for scaling of sensors.
+        #: Limits for scaling of sensors.
         self.sensor_limits = self.getSensorLimits()
 
-        # Limits for scaling of actors.
+        #: Limits for scaling of actors.
         self.actor_limits = self.getActorLimits()
 
     #--------------------------------------------------------------------------

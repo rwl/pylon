@@ -54,16 +54,16 @@ class MarketExperiment(object):
         super(MarketExperiment, self).__init__()
         assert len(tasks) == len(agents)
 
-        # Tasks associate and agent with its environment.
+        #: Tasks associate and agent with its environment.
         self.tasks = tasks
 
-        # Agents capable of producing actions based on previous observations.
+        #: Agents capable of producing actions based on previous observations.
         self.agents = agents
 
-        # Market to which agents submit offers/bids.
+        #: Market to which agents submit offers/bids.
         self.market = market
 
-        # Load profile.
+        #: Load profile.
         self._profile = None
         self._pcycle = None
         self.profile = [1.0] if profile is None else profile
@@ -83,7 +83,7 @@ class MarketExperiment(object):
 #            else:
 #                self.do_optimisation[agent] = False
 
-        # Save the demand at each bus.
+        #: Save the demand at each bus.
         self.pdemand = {}
         for bus in self.market.case.buses:
             self.pdemand[bus] = bus.p_demand

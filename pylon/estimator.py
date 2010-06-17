@@ -77,24 +77,25 @@ class StateEstimator(object):
                  max_iter=100, tolerance=1e-05, verbose=True):
         """ Initialises a new StateEstimator instance.
         """
+        #: Case whose state is to be estimated.
         self.case = case
 
-        # Measured values for the case.
+        #: Measured values for the case.
         self.measurements = measurements
 
-        # Measurement variances.
+        #: Measurement variances.
         self.sigma = zeros(8) if sigma is None else sigma
 
-        # Initial guess for voltage magnitude vector.
+        #: Initial guess for voltage magnitude vector.
         self.v_mag_guess = v_mag_guess
 
-        # Maximum number of iterations.
+        #: Maximum number of iterations.
         self.max_iter = max_iter
 
-        # Convergence tolerance.
+        #: Convergence tolerance.
         self.tolerance = tolerance
 
-        # Log progress information.
+        #: Log progress information.
         self.verbose = verbose
 
     #--------------------------------------------------------------------------
@@ -357,13 +358,13 @@ class Measurement(object):
     def __init__(self, bus_or_line, type, value):
         """ Initialises a new Measurement instance.
         """
-        # Bus or branch component at which the measure was made.
+        #: Bus or branch component at which the measure was made.
         self.b_or_l = bus_or_line
 
-        # Type of value measured.
+        #: Type of value measured.
         self.type = type
 
-        # Measurement value.
+        #: Measurement value.
         self.value = value
 
 # EOF -------------------------------------------------------------------------

@@ -66,10 +66,10 @@ class RothErev(ValueBasedLearner):
         1998, 848-881.
     """
 
-    # Does the algorithm work on-policy or off-policy?
+    #: Does the algorithm work on-policy or off-policy?
     offPolicy = False
 
-    # Does the algorithm run in batch mode or online?
+    #: Does the algorithm run in batch mode or online?
     batchMode = True
 
 
@@ -80,40 +80,38 @@ class RothErev(ValueBasedLearner):
         #  ValuebasedLearner interface:
         #----------------------------------------------------------------------
 
-        # Default exploration according to a discrete probability distribution
-        # function.
+        #: Default exploration according to a discrete probability distribution
+        #: function.
         self.explorer = ProportionalExplorer()
 
         #----------------------------------------------------------------------
         #  RothErev interface:
         #----------------------------------------------------------------------
 
-        # The tendency for experimentation among action choices. The algorithm
-        # will sometimes choose non-optimal actions in favour of exploring the
-        # domain. This allows the algortithm to get a more accurate picture of
-        # the domain and find actions that yield better rewards than previously
-        # known.
-        # Note: Be careful not to choose value e where (1-e) == e / (N - 1),
-        # where N is the size of the action domain (i.e. e == 0.75 and N == 4).
-        # This will result in all    action propensities receiving the same
-        # experience update value, regardless of the last action chosen.
-        # Action choice probabilities will then remain uniform and no learning
-        # will occur.
+        #: The tendency for experimentation among action choices. The algorithm
+        #: will sometimes choose non-optimal actions in favour of exploring the
+        #: domain.
+        #: Note: Be careful not to choose value e where (1-e) == e / (N - 1),
+        #: where N is the size of the action domain (i.e. e == 0.75 and N == 4)
+        #: This will result in all    action propensities receiving the same
+        #: experience update value, regardless of the last action chosen.
+        #: Action choice probabilities will then remain uniform and no learning
+        #: will occur.
         assert 0.0 <= experimentation <= 1.0
         self.experimentation = experimentation
 
-        # The initial propensity value assigned to all actions. Used instead of
-        # a scaling parameter.
+        #: The initial propensity value assigned to all actions. Used instead of
+        #: a scaling parameter.
         assert initialPropensity >= 0.0
         self.initialPropensity = initialPropensity
 
-        # The degree to which actions are 'forgotten'. Used to degrade the
-        # propensity for choosing actions. Meant to make recent experience more
-        # prominent than past experience in the action choice process.
+        #: The degree to which actions are 'forgotten'. Used to degrade the
+        #: propensity for choosing actions. Meant to make recent experience
+        #: more prominent than past experience in the action choice process.
         assert 0.0 <= recency <= 1.0
         self.recency = recency
 
-        # Last action chosen from the policy.
+        #: Last action chosen from the policy.
         self._lastSelectedAction = -1
 
     #--------------------------------------------------------------------------

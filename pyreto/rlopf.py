@@ -50,33 +50,33 @@ class CaseEnvironment(Environment):
         #  "CaseEnvironment" interface:
         #----------------------------------------------------------------------
 
-        # Case to be optimised.
+        #: Case to be optimised.
         self.case = case
 
-        # Load profile expressed as an array of values between 0.0 and 1.0.
+        #: Load profile expressed as an array of values between 0.0 and 1.0.
         self.profile = [1.0] if profile is None else profile
 
-        # Count of profile steps.
+        #: Count of profile steps.
         self._step = 0
 
-        # Initial generator set-points.
+        #: Initial generator set-points.
         gens = [g for g in case.online_generators if g.bus.type != REFERENCE]
         self._Pg0 = array([g.p for g in gens])
 
-        # Initial active power demand vector.
+        #: Initial active power demand vector.
         self._Pd0 = array([b.p_demand for b in case.buses if b.type == PQ])
 
-        # Store generator set-point actions.
+        #: Store generator set-point actions.
         self._Pg = zeros((len(self.case.online_generators), len(self.profile)))
 
         #----------------------------------------------------------------------
         #  "Environment" interface:
         #----------------------------------------------------------------------
 
-        # Set the number of action values that the environment accepts.
+        #: Set the number of action values that the environment accepts.
         self.indim = len(gens)
 
-        # Set the number of sensor values that the environment produces.
+        #: Set the number of sensor values that the environment produces.
         self.outdim = len([b for b in case.buses if b.type == PQ])
 
     #--------------------------------------------------------------------------
@@ -178,10 +178,10 @@ class MinimiseCostTask(EpisodicTask):
         #  "Task" interface:
         #----------------------------------------------------------------------
 
-        # Limits for scaling of sensors.
+        #: Limits for scaling of sensors.
         self.sensor_limits = self.getSensorLimits()
 
-        # Limits for scaling of actors.
+        #: Limits for scaling of actors.
         self.actor_limits = self.getActorLimits()
 
     #--------------------------------------------------------------------------

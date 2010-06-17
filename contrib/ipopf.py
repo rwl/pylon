@@ -44,10 +44,10 @@ class IPOPFSolver(Solver):
         """
         super(IPOPFSolver, self).__init__(om)
 
-        # Quantity to limit for branch flow constraints ("S", "P" or "I").
+        #: Quantity to limit for branch flow constraints ("S", "P" or "I").
         self.flow_lim = flow_lim
 
-        # Options for the PIPS.
+        #: Options for the PIPS.
         self.opt = {} if opt is None else opt
 
 

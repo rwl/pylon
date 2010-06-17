@@ -50,13 +50,13 @@ class MarketExperiment(object):
 
         assert len(tasks) == len(agents)
 
-        # Tasks associate and agent with its environment.
+        #: Tasks associate and agent with its environment.
         self.tasks = tasks
 
-        # Agents capable of producing actions based on previous observations.
+        #: Agents capable of producing actions based on previous observations.
         self.agents = agents
 
-        # Market to which agents submit offers/bids.
+        #: Market to which agents submit offers/bids.
         self.market = market
 
         #----------------------------------------------------------------------

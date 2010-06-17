@@ -47,8 +47,10 @@ class ACPFTest(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super(ACPFTest, self).__init__(methodName)
 
+        #: Name of the folder in which the MatrixMarket data exists.
         self.case_name = "case6ww"
 
+        #: Case under test.
         self.case = None
 
 

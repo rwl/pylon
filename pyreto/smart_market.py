@@ -63,61 +63,62 @@ class SmartMarket(object):
                  priceCap=100.0, period=1.0, decommit=False):
         """ Initialises a new SmartMarket instance.
         """
+        #: Power system case.
         self.case = case
 
-        # Offers to sell a quantity of power at a particular price.
+        #: Offers to sell a quantity of power at a particular price.
         self.offers = offers if offers is not None else []
 
-        # Bids to buy power.
+        #: Bids to buy power.
         self.bids = bids if bids is not None else []
 
-        # Offer/bid limits.
+        #: Offer/bid limits.
         self.limits = limits if limits is not None else {}
 
-        # Compute locational adjustments ('ignore', 'ac', 'dc').
+        #: Compute locational adjustments ('ignore', 'ac', 'dc').
         self.locationalAdjustment = locationalAdjustment
 
-        # 'discriminative' - discriminative pricing (price equal to offer/bid)
-        # 'lao'            - last accepted offer auction
-        # 'fro'            - first rejected offer auction
-        # 'lab'            - last accepted bid auction
-        # 'frb'            - first rejected bid auction
-        # 'first price'    - first price auction (marginal unit, offer or bid,
-        #                    sets the price)
-        # 'second price'   - second price auction (if offer is marginal, then
-        #                    price is set by min(fro, lab), if bid, then
-        #                    max(frb, lao)
-        # 'split'          - split the difference pricing (price set by last
-        #                    accepted offer & bid)
-        # 'dual laob'      - LAO sets seller price, LAB sets buyer price
+        #: 'discriminative' - discriminative pricing (price equal to offer/bid)
+        #: 'lao'            - last accepted offer auction
+        #: 'fro'            - first rejected offer auction
+        #: 'lab'            - last accepted bid auction
+        #: 'frb'            - first rejected bid auction
+        #: 'first price'    - first price auction (marginal unit, offer or bid,
+        #:                    sets the price)
+        #: 'second price'   - second price auction (if offer is marginal, then
+        #:                    price is set by min(fro, lab), if bid, then
+        #:                    max(frb, lao)
+        #: 'split'          - split the difference pricing (price set by last
+        #:                    accepted offer & bid)
+        #: 'dual laob'      - LAO sets seller price, LAB sets buyer price
         self.auctionType = auctionType
 
-        # Price cap. Offers greater than this are eliminated.
+        #: Price cap. Offers greater than this are eliminated.
         self.priceCap = priceCap
 
-        # A list of the commitment status of each generator from the
-        # previous period (for computing startup/shutdown costs).
+        #: A list of the commitment status of each generator from the
+        #: previous period (for computing startup/shutdown costs).
 #        if g_online:
 #            self.g_online = g_online
 #        else:
 #            self.g_online = [True] * len(case.generators)
 
-        # Time duration of the dispatch period in hours.
+        #: Time duration of the dispatch period in hours.
         self.period = period
 
-        # Constraint violation tolerance.
+        #: Constraint violation tolerance.
         self.violation = 5e-6
 
-        # Guarantee that cleared offers are >= offers.
+        #: Guarantee that cleared offers are >= offers.
 #        self.guarantee_offer_price = True
 
-        # Guarantee that cleared bids are <= bids.
+        #: Guarantee that cleared bids are <= bids.
 #        self.guarantee_bid_price = True
 
-        # Should the unit decommitment algorithm be used?
+        #: Should the unit decommitment algorithm be used?
         self.decommit = decommit
 
-        # Solver solution dictionary.
+        #: Solver solution dictionary.
         self._solution = {}
 
 
@@ -373,24 +374,25 @@ class Auction(object):
                  gteeOfferPrice=True, gteeBidPrice=True, limits=None):
         """ Initialises an new Auction instance.
         """
+        #: Power system case.
         self.case = case
 
-        # Offers to produce a quantity of energy at a specified price.
+        #: Offers to produce a quantity of energy at a specified price.
         self.offers = offers
 
-        # Bids to buy a quantity of energy at a specified price.
+        #: Bids to buy a quantity of energy at a specified price.
         self.bids = bids
 
-        # Pricing option.
+        #: Pricing option.
         self.auctionType = auctionType
 
-        # Guarantee that cleared offers are >= offers.
+        #: Guarantee that cleared offers are >= offers.
         self.guaranteeOfferPrice = gteeOfferPrice
 
-        # Guarantee that cleared bids are <= bids.
+        #: Guarantee that cleared bids are <= bids.
         self.guaranteeBidPrice = gteeBidPrice
 
-        # Offer/bid price limits.
+        #: Offer/bid price limits.
         self.limits = limits if limits is not None else {}
 
 
@@ -645,40 +647,40 @@ class _OfferBid(object):
     """
 
     def __init__(self, generator, qty, prc, noLoadCost=0.0, reactive=False):
-        # Generating unit (dispatchable load) to which the offer (bid) applies.
+        #: Generating unit (dispatchable load) to which the offer (bid) applies.
         self.generator = generator
 
-        # Quantity of power being offered for sale (or bid to be bought) [MW].
+        #: Quantity of power being offered for sale (or bid to be bought) [MW].
         self.quantity = qty
 
-        # Minimum (maximum) price for sale (willing to be paid) [$/MWh].
+        #: Minimum (maximum) price for sale (willing to be paid) [$/MWh].
         self.price = prc
 
-        # Cost for running [$].
+        #: Cost for running [$].
         self.noLoadCost = noLoadCost
 
-        # Does the offer/bid concern active or reactive power?
+        #: Does the offer/bid concern active or reactive power?
         self.reactive = reactive
 
-        # Output at which the generator was dispatched.
+        #: Output at which the generator was dispatched.
         self.totalQuantity = 0.0
 
-        # Nodal marginal active/reactive power price.
+        #: Nodal marginal active/reactive power price.
         self.lmbda = 0.0
 
-        # Is the bid valid?
+        #: Is the bid valid?
         self.withheld = False
 
-        # Has the bid been partially or fully accepted?
+        #: Has the bid been partially or fully accepted?
         self.accepted = False
 
-        # Has the offer/bid passed through the clearing process?
+        #: Has the offer/bid passed through the clearing process?
         self.cleared = False
 
-        # Quantity of bid cleared by the market.
+        #: Quantity of bid cleared by the market.
         self.clearedQuantity = 0.0
 
-        # Price at which the bid was cleared.
+        #: Price at which the bid was cleared.
         self.clearedPrice = 0.0
 
 

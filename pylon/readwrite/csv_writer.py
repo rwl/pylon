@@ -42,7 +42,7 @@ class CSVWriter(CaseWriter):
         """
         super(CSVWriter, self).__init__(case)
 
-        # For writing CSV files.
+        #: For writing CSV files.
         self.writer = None
 
     #--------------------------------------------------------------------------

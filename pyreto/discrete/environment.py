@@ -54,41 +54,41 @@ class MarketEnvironment(object):
         """
         super(MarketEnvironment, self).__init__()
 
-        # Save initial generator ratings and costs as these will be overwritten
-        # when offers/bids are submitted to the market. Set by "generators"
-        # property.
+        #: Save initial generator ratings and costs as these will be
+        #: overwritten when offers/bids are submitted to the market. Set by
+        #: "generators" property.
         self._g0 = {}
 
-        # Portfolio of generators endowed to the agent.
+        #: Portfolio of generators endowed to the agent.
         self._generators = None
         self.generators = generators
 
-        # Auction that clears offer and bids using OPF results.
+        #: Auction that clears offer and bids using OPF results.
         self.market = market
 
-        # The number of discrete states for the environment.
+        #: The number of discrete states for the environment.
         self.numStates = numStates
 
-        # List of all markup combinations.
+        #: List of all markup combinations.
 #        self._allActions = []
 
-        # List of offers/bids from the previous action.
+        #: List of offers/bids from the previous action.
         self.lastAction = []
 
 #        self._numOffbids = 0
         self._markups = ()
 
-        # Number of offers/bids a participant submits.
+        #: Number of offers/bids a participant submits.
         self.numOffbids = numOffbids
 
-        # Discrete markups allowed on each offer/bid.
+        #: Discrete markups allowed on each offer/bid.
         self.markups = (0.0,) if markups is None else markups
 
-        # Does a participant's offer/bid comprise quantity aswell as price.
+        #: Does a participant's offer/bid comprise quantity aswell as price.
         self.offbidQty = offbidQty
 
-        # A discrete environment provides one integer sensor and accepts
-        # one integer as an action.
+        #: A discrete environment provides one integer sensor and accepts
+        #: one integer as an action.
         self.indim = self.outdim = 1
 
     #--------------------------------------------------------------------------

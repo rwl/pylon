@@ -54,16 +54,16 @@ class MATPOWERReader(CaseReader):
     def __init__(self, case_format=2):
         """ Initialises a new MATPOWERReader instance.
         """
-        # MATPOWER case format.  Version 2 introduced in MATPOWER 4.0b1.
+        #: MATPOWER case format.  Version 2 introduced in MATPOWER 4.0b1.
         self.case_format = case_format
 
-        # Path to the data file or file object.
+        #: Path to the data file or file object.
         self.file_or_filename = None
 
-        # The resulting case.
+        #: The resulting case.
         self.case = None
 
-        # Count of generators to which cost data has been applied.
+        #: Count of generators to which cost data has been applied.
         self.costed = 0
 
     #--------------------------------------------------------------------------
