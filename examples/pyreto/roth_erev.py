@@ -8,9 +8,10 @@ import pylab
 
 from pybrain.rl.environments.mazes import Maze, MDPMazeTask
 from pybrain.rl.agents import LearningAgent
+from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 from pybrain.rl.experiments import Experiment
 
-from pyreto import RothErev, PropensityTable # GNU GPL'd
+from pyreto.roth_erev import RothErev, PropensityTable, VariantRothErev #@UnusedImport
 
 
 # create the maze with walls (1)
@@ -33,8 +34,13 @@ task = MDPMazeTask(env)
 table = PropensityTable(4)
 table.initialize(1.0)
 
-# create agent with controller and learner - use SARSA(), Q() or QLambda() here
+# create agent with controller and learner
 learner = RothErev()
+#learner = VariantRothErev()
+
+# standard exploration is according to a discrete probability distribution
+# function, but a different type can be chosen as well
+#learner.explorer = BoltzmannExplorer()
 
 # create agent
 agent = LearningAgent(table, learner)

@@ -17,7 +17,6 @@
 from smart_market import \
     SmartMarket, Offer, Bid, DISCRIMINATIVE, FIRST_PRICE
 
-from roth_erev import RothErev, PropensityTable
 from rlopf import CaseEnvironment, MinimiseCostTask
 
 # EOF -------------------------------------------------------------------------
