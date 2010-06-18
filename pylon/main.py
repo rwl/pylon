@@ -120,17 +120,17 @@ def main():
     parser.add_option("-o", "--output", dest="output", metavar="FILE",
         help="Write the solution report to FILE.")
 
-    parser.add_option("-q", "--quiet", action="store_true", dest="quiet",
-        default=False, help="Print less information.")
+#    parser.add_option("-q", "--quiet", action="store_true", dest="quiet",
+#        default=False, help="Print less information.")
 
-#    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
-#        default=False, help="Print debug information.")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+        default=False, help="Print more information.")
 
 #    parser.add_option("-g", "--gui", action="store_true", dest="gui",
 #        default=False, help="Use the portable graphical interface to Pylon.")
 
-    parser.add_option("-n", "--no-report", action="store_true",
-        dest="no_report", default=False, help="Suppress report output.")
+#    parser.add_option("-n", "--no-report", action="store_true",
+#        dest="no_report", default=False, help="Suppress report output.")
 
     parser.add_option("-d", "--debug", action="store_true", dest="debug",
         default=False, help="Print debug information.")
@@ -157,22 +157,23 @@ def main():
     parser.add_option("-T", "--output-type", dest="output_type",
         metavar="OUTPUT_TYPE", default="rst", help="Indicates the output "
         "format type.  The type swhich are currently supported include: rst, "
-        "matpower, csv and excel [default: %default].")
+        "matpower, csv, excel and none [default: %default].")
 
     (options, args) = parser.parse_args()
 
-    if options.quiet:
-        logger.setLevel(logging.CRITICAL)
+    if options.verbose:
+        logger.setLevel(logging.INFO)
     elif options.debug:
         logger.setLevel(logging.DEBUG)
     else:
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.ERROR)
 
     # Output.
     if options.output:
         if options.output == "-":
             outfile = sys.stdout
             logger.setLevel(logging.CRITICAL) # must stay quiet
+#            options.output_type = "none"
         else:
             outfile = open(options.output, "wb")
     else:
@@ -249,7 +250,7 @@ def main():
 
         if solver is not None:
             solver.solve()
-        if not options.no_report:
+        if options.output_type != "none":
             writer.write(outfile)
     else:
         logger.critical("Unable to read case data.")
