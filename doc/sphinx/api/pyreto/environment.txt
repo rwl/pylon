@@ -1,8 +1,0 @@
-:mod:`environment` -- Participant Environment
-=============================================
-
-.. automodule:: pyreto.environment
-
-.. autoclass:: ParticipantEnvironment
-   :members: __init__
-   :show-inheritance:

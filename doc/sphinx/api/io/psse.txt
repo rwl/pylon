@@ -1,7 +1,7 @@
-:mod:`psse_reader` -- PSS/E Reader
+:mod:`psse` -- PSS/E Reader
 ==================================
 
-.. automodule:: pylon.readwrite.psse_reader
+.. automodule:: pylon.io.psse
 
 .. autoclass:: PSSEReader
    :members: __init__

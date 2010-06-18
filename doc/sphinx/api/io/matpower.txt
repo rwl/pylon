@@ -1,7 +1,7 @@
-:mod:`matpower_reader` -- MATPOWER Reader
+:mod:`matpower` -- MATPOWER Reader
 =========================================
 
-.. automodule:: pylon.readwrite.matpower_reader
+.. automodule:: pylon.io.matpower
 
 .. autoclass:: MATPOWERReader
    :members: __init__

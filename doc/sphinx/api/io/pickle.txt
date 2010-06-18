@@ -1,7 +1,7 @@
-:mod:`pickle_readwrite` -- Pickle Reader and Writer
+:mod:`pickle_io` -- Pickle Reader and Writer
 ===================================================
 
-.. automodule:: pylon.readwrite.pickle_readwrite
+.. automodule:: pylon.io.pickle
 
 .. autoclass:: PickleReader
    :members: __init__

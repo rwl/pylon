@@ -9,7 +9,7 @@ PYLON
 
   **Richard Lincoln**
 
-  Download `PDF <http://pylon.eee.strath.ac.uk/doc/manual/pylon.pdf>`_
+  Download `PDF <http://rwl.github.com/pylon/doc/manual/pylon_manual.pdf>`_
 
   Contents:
 
@@ -17,6 +17,7 @@ PYLON
   :maxdepth: 2
 
   intro
+  copyright
   install
 
 Tutorial
@@ -27,12 +28,12 @@ Tutorial
 
   pf
   opf
-  
+
 API
 ---
 .. toctree::
   :maxdepth: 1
-  
+
   :glob:
   api/case.txt
   api/solvers.txt
@@ -43,7 +44,7 @@ API
      :maxdepth: 1
      :glob:
      api/*
-     api/readwrite/*
+     api/io/*
 
 .. only:: html
 

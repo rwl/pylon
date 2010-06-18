@@ -13,7 +13,7 @@ a Matlab package for solving power flow and optimal power flow problems.
   <pylon.generator.Generator>` classes and solvers for power flow and optimal
   power flow problems.
 
-:mod:`pylon.readwrite <pylon.readwrite>`
+:mod:`pylon.io <pylon.io>`
   Parsers for power system data files with support for MATPOWER_, PSS/E, and
   PSAT_.  Also, defines case serializers for MATPOWER_, PSS/E, CSV and Excel
   formats.  Case reports are available in ReStructuredText_ format.

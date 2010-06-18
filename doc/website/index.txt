@@ -25,6 +25,10 @@ flow problem and output a ReStructuredText_ report by default::
 
   $ pylon case.raw
 
+To convert a PSS/E case into MATPOWER format run::
+
+  $ pylon -s none -T matpower case.raw > case.m
+
 Full details of the command line options are available::
 
   $ pylon --help
@@ -32,16 +36,22 @@ Full details of the command line options are available::
 Refer to the documentation for detailed usage information.
 
 -------
+Support
+-------
+
+There is a Google `discussion forum
+<http://groups.google.co.uk/group/pylon-dev>`_ for Pylon
+(pylon-dev@googlegroups.com).
+
+-------
 Credits
 -------
 
-Pylon is developed by Richard Lincoln (r.w.lincoln@gmail.com).
-
-Pylon is translated from MATPOWER_ by R. D. Zimmerman, C. E. Murillo-Sanchez &
-D. Gan.
-
-Pylon is funded by the `Engineering and Physical Sciences Research Council
-<http://www.epsrc.ac.uk/default.htm>`_ through `Grant GR/T28836/01
+Pylon is developed by Richard Lincoln (r.w.lincoln@gmail.com).  It is
+translated from MATPOWER_ by R. D. Zimmerman, C. E. Murillo-Sanchez &
+D. Gan.  Development was originally funded by the `Engineering and Physical
+Sciences Research Council <http://www.epsrc.ac.uk/default.htm>`_ through
+`Grant GR/T28836/01
 <http://gow.epsrc.ac.uk/ViewGrant.aspx?GrantRef=GR/T28836/01>`_.
 
 .. include:: ../links_names.txt

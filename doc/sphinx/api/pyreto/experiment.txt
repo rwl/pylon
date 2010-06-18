@@ -1,8 +1,0 @@
-:mod:`experiment` -- Market Experiment
-======================================
-
-.. automodule:: pyreto.experiment
-
-.. autoclass:: MarketExperiment
-   :members: __init__
-   :show-inheritance:

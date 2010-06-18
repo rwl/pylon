@@ -31,7 +31,8 @@ from psse import PSSEWriter
 from psat import PSATReader
 
 from rst import ReSTWriter
-#from excel import ExcelWriter, CSVWriter
+#from excel import ExcelWriter
+from excel import CSVWriter
 from dot import DotWriter
 
 #from rdf_io import RDFReader, RDFWriter
