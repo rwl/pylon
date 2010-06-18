@@ -26,7 +26,7 @@ import unittest
 
 from scipy import array
 
-from pylon.readwrite import PickleReader
+from pylon.io import PickleReader
 from pylon.estimator import StateEstimator, Measurement, PF, PT, PG, VM
 
 #------------------------------------------------------------------------------

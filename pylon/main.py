@@ -26,7 +26,7 @@ import sys
 import logging
 import optparse
 
-from pylon.readwrite import MATPOWERReader, PSSEReader, PSATReader, \
+from pylon.io import MATPOWERReader, PSSEReader, PSATReader, \
     MATPOWERWriter, ReSTWriter, CSVWriter, PickleReader, PickleWriter
 
 from pylon import DCPF, NewtonPF, FastDecoupledPF, OPF, UDOPF
@@ -239,7 +239,7 @@ def main():
         elif options.output_type == "csv":
             writer = CSVWriter(case)
         elif options.output_type == "excel":
-            from pylon.readwrite.excel_writer import ExcelWriter
+            from pylon.io.excel import ExcelWriter
             writer = ExcelWriter(case)
         elif options.output_type == "pickle":
             writer = PickleWriter(case)

@@ -30,7 +30,7 @@ from pyparsing import Optional, Literal, ZeroOrMore
 
 from pylon import Case, Bus, Branch, Generator
 
-from pylon.readwrite.common import CaseReader
+from pylon.io.common import CaseReader
 
 #------------------------------------------------------------------------------
 #  Logging:

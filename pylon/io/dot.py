@@ -25,7 +25,7 @@ import logging
 import subprocess
 import StringIO
 
-from pylon.readwrite.common import CaseWriter
+from pylon.io.common import CaseWriter
 
 #------------------------------------------------------------------------------
 #  Logging:

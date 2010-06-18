@@ -7,7 +7,7 @@ Crow."""
 import sys
 
 from pylon import Case, StateEstimator, Measurement, PF, PT, PG, VM
-from pylon.readwrite import MATPOWERReader
+from pylon.io import MATPOWERReader
 
 from numpy import array
 

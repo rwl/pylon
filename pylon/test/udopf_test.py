@@ -27,7 +27,7 @@ import unittest
 
 from os.path import dirname, join
 
-from pylon.readwrite import PickleReader
+from pylon.io import PickleReader
 from pylon.ud_opf import UDOPF
 
 #------------------------------------------------------------------------------

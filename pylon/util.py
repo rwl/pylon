@@ -30,7 +30,7 @@ from numpy import ones, array, exp, pi
 
 from itertools import count, izip
 
-#from pylon.readwrite import MATPOWERReader, PickleWriter
+#from pylon.io import MATPOWERReader, PickleWriter
 
 #------------------------------------------------------------------------------
 #  File extension for load/save protocol mapping:
@@ -174,14 +174,14 @@ def pickle_matpower_cases(case_paths, case_format=2):
     """ Parses the MATPOWER case files at the given paths and pickles the
         resulting Case objects to the same directory.
     """
-    import pylon.readwrite
+    import pylon.io
 
     if isinstance(case_paths, basestring):
         case_paths = [case_paths]
 
     for case_path in case_paths:
         # Read the MATPOWER case file.
-        case = pylon.readwrite.MATPOWERReader(case_format).read(case_path)
+        case = pylon.io.MATPOWERReader(case_format).read(case_path)
 
         # Give the new file the same name, but with a different extension.
         dir_path = os.path.dirname(case_path)
@@ -190,7 +190,7 @@ def pickle_matpower_cases(case_paths, case_format=2):
         pickled_case_path = os.path.join(dir_path, root + '.pkl')
 
         # Pickle the resulting Pylon Case object.
-        pylon.readwrite.PickleWriter(case).write(pickled_case_path)
+        pylon.io.PickleWriter(case).write(pickled_case_path)
 
 #------------------------------------------------------------------------------
 #  Compare floats for equality:

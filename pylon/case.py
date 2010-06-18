@@ -897,7 +897,7 @@ class Case(Named, Serializable):
     def save_matpower(self, fd):
         """ Serialize the case as a MATPOWER data file.
         """
-        from pylon.readwrite import MATPOWERWriter
+        from pylon.io import MATPOWERWriter
         MATPOWERWriter(self).write(fd)
 
 
@@ -905,12 +905,12 @@ class Case(Named, Serializable):
     def load_matpower(cls, fd):
         """ Returns a case from the given MATPOWER file object.
         """
-        from pylon.readwrite import MATPOWERReader
+        from pylon.io import MATPOWERReader
         return MATPOWERReader().read(fd)
 
 
     def save_psse(self, fd):
-        from pylon.readwrite import PSSEWriter
+        from pylon.io import PSSEWriter
         return PSSEWriter(self).write(fd)
 
 
@@ -918,7 +918,7 @@ class Case(Named, Serializable):
     def load_psse(cls, fd):
         """ Returns a case from the given PSS/E file object.
         """
-        from pylon.readwrite import PSSEReader
+        from pylon.io import PSSEReader
         return PSSEReader().read(fd)
 
 
@@ -930,35 +930,35 @@ class Case(Named, Serializable):
     def load_psat(cls, fd):
         """ Returns a case object from the given PSAT data file.
         """
-        from pylon.readwrite import PSATReader
+        from pylon.io import PSATReader
         return PSATReader().read(fd)
 
 
     def save_rst(self, fd):
         """ Save a reStructuredText representation of the case.
         """
-        from pylon.readwrite import ReSTWriter
+        from pylon.io import ReSTWriter
         ReSTWriter(self).write(fd)
 
 
     def save_csv(self, fd):
         """ Saves the case as a series of Comma-Separated Values.
         """
-        from pylon.readwrite import CSVWriter
+        from pylon.io import CSVWriter
         CSVWriter(self).write(fd)
 
 
     def save_excel(self, fd):
         """ Saves the case as an Excel spreadsheet.
         """
-        from pylon.readwrite.excel_writer import ExcelWriter
+        from pylon.io.excel import ExcelWriter
         ExcelWriter(self).write(fd)
 
 
     def save_dot(self, fd):
         """ Saves a representation of the case in the Graphviz DOT language.
         """
-        from pylon.readwrite import DotWriter
+        from pylon.io import DotWriter
         DotWriter(self).write(fd)
 
 # EOF -------------------------------------------------------------------------

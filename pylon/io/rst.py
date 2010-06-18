@@ -23,7 +23,7 @@
 
 from pylon.util import CaseReport
 from pylon.generator import POLYNOMIAL
-from pylon.readwrite.common import CaseWriter
+from pylon.io.common import CaseWriter
 
 #------------------------------------------------------------------------------
 #  "ReSTWriter" class:

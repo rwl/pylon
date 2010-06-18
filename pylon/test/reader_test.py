@@ -27,10 +27,10 @@ from time import time
 
 from unittest import TestCase, main
 
-from pylon.readwrite import \
+from pylon.io import \
     MATPOWERReader, PSSEReader, PSATReader, PickleReader
 
-from pylon.readwrite.rdf_readwrite import RDFReader, RDFWriter
+from pylon.io.rdf import RDFReader, RDFWriter
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -329,19 +329,19 @@ class PSSEReaderTest(TestCase):
 #        self.assertEqual(len(case.branches), 2602)
 #        self.assertEqual(len(case.generators), 313)
 #
-##        from pylon.readwrite.pickle_readwrite import PickleWriter
+##        from pylon.io.pickle_io import PickleWriter
 ##        t1 = time()
 ##        PickleWriter(case).write("/tmp/bench30.pkl")
 ##        print "write elapse:", time() - t1
 #
-##        from pylon.readwrite.rdf_readwrite import RDFWriter
+##        from pylon.io.rdf_io import RDFWriter
 ##        RDFWriter(case).write("./data/bench.rdf")
 
 #------------------------------------------------------------------------------
-#  "RDFReadWriteTest" class:
+#  "RDFioTest" class:
 #------------------------------------------------------------------------------
 
-#class RDFReadWriteTest(TestCase):
+#class RDFioTest(TestCase):
 #    """ Defines a test case for RDF reading/writing.
 #    """
 #

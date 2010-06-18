@@ -26,7 +26,7 @@ import os.path
 import cPickle as pickle
 import logging
 
-from pylon.readwrite.common import CaseReader, CaseWriter
+from pylon.io.common import CaseReader, CaseWriter
 
 #------------------------------------------------------------------------------
 #  Logging:

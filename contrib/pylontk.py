@@ -44,13 +44,13 @@ import pylon
 from pylon import \
     Case, DCPF, NewtonPF, FastDecoupledPF, OPF, UDOPF
 
-from pylon.readwrite import \
+from pylon.io import \
     MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
     CSVWriter, DotWriter, PickleReader, PickleWriter
 
 from pyreto.util import ReSTExperimentWriter
 
-from pylon.readwrite.common import BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
+from pylon.io.common import BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
 logger = logging.getLogger('pylon')
 
@@ -372,7 +372,7 @@ class PylonTk(object):
 
 
     def on_excel(self):
-        from pylon.readwrite.excel_writer import ExcelWriter
+        from pylon.io.excel import ExcelWriter
         filename = asksaveasfilename(filetypes=[("Excel file", ".xls")])
         if filename:
             ExcelWriter(self.case).write(filename)

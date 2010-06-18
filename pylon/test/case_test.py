@@ -31,7 +31,7 @@ from scipy import alltrue
 from scipy.io.mmio import mmread
 
 from pylon import Case, Bus, Branch, Generator, NewtonPF, XB, BX
-from pylon.readwrite import PickleReader
+from pylon.io import PickleReader
 from pylon.util import CaseReport, mfeq2
 
 #-------------------------------------------------------------------------------

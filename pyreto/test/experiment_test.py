@@ -28,7 +28,7 @@ import unittest
 from os.path import dirname, join
 
 from pylon import Case, Bus, Generator
-from pylon.readwrite import PickleReader
+from pylon.io import PickleReader
 
 from pyreto import \
     MarketExperiment, DiscreteMarketEnvironment, SmartMarket, \

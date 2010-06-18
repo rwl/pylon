@@ -28,7 +28,7 @@ from rdflib.Graph import Graph
 from rdflib import URIRef, Literal, BNode, Namespace
 from rdflib import RDF
 
-from pylon.readwrite.common import \
+from pylon.io.common import \
     CaseWriter, CaseReader, BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
 #------------------------------------------------------------------------------

@@ -15,27 +15,25 @@
 #------------------------------------------------------------------------------
 
 """ For example:
-        from pylon.readwrite import MATPOWERReader
+        from pylon.io import MATPOWERReader
 """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
 
-from pickle_readwrite import PickleReader, PickleWriter
+from pylon.io.pickle import PickleReader, PickleWriter
 
-from matpower_reader import MATPOWERReader
-from matpower_writer import MATPOWERWriter
+from matpower import MATPOWERReader, MATPOWERWriter
 
-from psse_reader import PSSEReader
-from psse_writer import PSSEWriter
-from psat_reader import PSATReader
+from psse import PSSEReader
+from psse import PSSEWriter
+from psat import PSATReader
 
-from rst_writer import ReSTWriter
-from csv_writer import CSVWriter
-#from excel_writer import ExcelWriter
-from dot_writer import DotWriter
+from rst import ReSTWriter
+#from excel import ExcelWriter, CSVWriter
+from dot import DotWriter
 
-#from rdf_readwrite import RDFReader, RDFWriter
+#from rdf_io import RDFReader, RDFWriter
 
 # EOF -------------------------------------------------------------------------
