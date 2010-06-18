@@ -102,21 +102,21 @@
 <a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  Logging:</tt> </tt>
 <a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
 <a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
-<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt id="link-3" class="py-name" targets="Variable pylon.ac_pf.logger=pylon.ac_pf-module.html#logger,Variable pylon.case.logger=pylon.case-module.html#logger,Variable pylon.dc_pf.logger=pylon.dc_pf-module.html#logger,Variable pylon.dyn.logger=pylon.dyn-module.html#logger,Variable pylon.estimator.logger=pylon.estimator-module.html#logger,Variable pylon.generator.logger=pylon.generator-module.html#logger,Variable pylon.main.logger=pylon.main-module.html#logger,Variable pylon.opf.logger=pylon.opf-module.html#logger,Variable pylon.readwrite.common.logger=pylon.readwrite.common-module.html#logger,Variable pylon.readwrite.dot_writer.logger=pylon.readwrite.dot_writer-module.html#logger,Variable pylon.readwrite.matpower_reader.logger=pylon.readwrite.matpower_reader-module.html#logger,Variable pylon.readwrite.pickle_readwrite.logger=pylon.readwrite.pickle_readwrite-module.html#logger,Variable pylon.readwrite.psat_reader.logger=pylon.readwrite.psat_reader-module.html#logger,Variable pylon.readwrite.psse_reader.logger=pylon.readwrite.psse_reader-module.html#logger,Variable pylon.readwrite.rdf_readwrite.logger=pylon.readwrite.rdf_readwrite-module.html#logger,Variable pylon.solver.logger=pylon.solver-module.html#logger,Variable pylon.ud_opf.logger=pylon.ud_opf-module.html#logger"><a title="pylon.ac_pf.logger
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt id="link-3" class="py-name" targets="Variable pylon.ac_pf.logger=pylon.ac_pf-module.html#logger,Variable pylon.case.logger=pylon.case-module.html#logger,Variable pylon.dc_pf.logger=pylon.dc_pf-module.html#logger,Variable pylon.dyn.logger=pylon.dyn-module.html#logger,Variable pylon.estimator.logger=pylon.estimator-module.html#logger,Variable pylon.generator.logger=pylon.generator-module.html#logger,Variable pylon.io.common.logger=pylon.io.common-module.html#logger,Variable pylon.io.dot.logger=pylon.io.dot-module.html#logger,Variable pylon.io.matpower.logger=pylon.io.matpower-module.html#logger,Variable pylon.io.pickle.logger=pylon.io.pickle-module.html#logger,Variable pylon.io.psat.logger=pylon.io.psat-module.html#logger,Variable pylon.io.psse.logger=pylon.io.psse-module.html#logger,Variable pylon.io.rdf.logger=pylon.io.rdf-module.html#logger,Variable pylon.main.logger=pylon.main-module.html#logger,Variable pylon.opf.logger=pylon.opf-module.html#logger,Variable pylon.solver.logger=pylon.solver-module.html#logger,Variable pylon.ud_opf.logger=pylon.ud_opf-module.html#logger"><a title="pylon.ac_pf.logger
 pylon.case.logger
 pylon.dc_pf.logger
 pylon.dyn.logger
 pylon.estimator.logger
 pylon.generator.logger
+pylon.io.common.logger
+pylon.io.dot.logger
+pylon.io.matpower.logger
+pylon.io.pickle.logger
+pylon.io.psat.logger
+pylon.io.psse.logger
+pylon.io.rdf.logger
 pylon.main.logger
 pylon.opf.logger
-pylon.readwrite.common.logger
-pylon.readwrite.dot_writer.logger
-pylon.readwrite.matpower_reader.logger
-pylon.readwrite.pickle_readwrite.logger
-pylon.readwrite.psat_reader.logger
-pylon.readwrite.psse_reader.logger
-pylon.readwrite.rdf_readwrite.logger
 pylon.solver.logger
 pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-3', 'logger', 'link-3');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-name">__name__</tt><tt class="py-op">)</tt> </tt>
 <a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"> </tt>
@@ -278,11 +278,11 @@ pylon.util.CaseReport.online_generators" class="py-name" href="#" onclick="retur
 <a name="L201"></a><tt class="py-lineno">201</tt>  <tt class="py-line">            <tt class="py-name">Sgen</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">Sgbus</tt> <tt class="py-op">*</tt> <tt class="py-name">baseMVA</tt> <tt class="py-op">+</tt> <tt class="py-name">Sd</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-name">baseMVA</tt> </tt>
 <a name="L202"></a><tt class="py-lineno">202</tt>  <tt class="py-line"> </tt>
 <a name="L203"></a><tt class="py-lineno">203</tt>  <tt class="py-line">            <tt class="py-name">z_est</tt> <tt class="py-op">=</tt> <tt class="py-name">r_</tt><tt class="py-op">[</tt> </tt>
-<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line">                <tt class="py-name">Sfe</tt><tt class="py-op">[</tt><tt class="py-name">idx_zPf</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-45" class="py-name" targets="Variable pylon.readwrite.parsing_util.real=pylon.readwrite.parsing_util-module.html#real"><a title="pylon.readwrite.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-45', 'real', 'link-45');">real</a></tt><tt class="py-op">,</tt> </tt>
-<a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line">                <tt class="py-name">Ste</tt><tt class="py-op">[</tt><tt class="py-name">idx_zPt</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-46" class="py-name"><a title="pylon.readwrite.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-46', 'real', 'link-45');">real</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line">                <tt class="py-name">Sfe</tt><tt class="py-op">[</tt><tt class="py-name">idx_zPf</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-45" class="py-name" targets="Variable pylon.io.parsing_util.real=pylon.io.parsing_util-module.html#real"><a title="pylon.io.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-45', 'real', 'link-45');">real</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line">                <tt class="py-name">Ste</tt><tt class="py-op">[</tt><tt class="py-name">idx_zPt</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-46" class="py-name"><a title="pylon.io.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-46', 'real', 'link-45');">real</a></tt><tt class="py-op">,</tt> </tt>
 <a name="L206"></a><tt class="py-lineno">206</tt>  <tt class="py-line">                <tt class="py-name">Sfe</tt><tt class="py-op">[</tt><tt class="py-name">idx_zQf</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">imag</tt><tt class="py-op">,</tt> </tt>
 <a name="L207"></a><tt class="py-lineno">207</tt>  <tt class="py-line">                <tt class="py-name">Ste</tt><tt class="py-op">[</tt><tt class="py-name">idx_zQt</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">imag</tt><tt class="py-op">,</tt> </tt>
-<a name="L208"></a><tt class="py-lineno">208</tt>  <tt class="py-line">                <tt class="py-name">Sgen</tt><tt class="py-op">[</tt><tt class="py-name">idx_zPg</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-47" class="py-name"><a title="pylon.readwrite.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-47', 'real', 'link-45');">real</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L208"></a><tt class="py-lineno">208</tt>  <tt class="py-line">                <tt class="py-name">Sgen</tt><tt class="py-op">[</tt><tt class="py-name">idx_zPg</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-47" class="py-name"><a title="pylon.io.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-47', 'real', 'link-45');">real</a></tt><tt class="py-op">,</tt> </tt>
 <a name="L209"></a><tt class="py-lineno">209</tt>  <tt class="py-line">                <tt class="py-name">Sgen</tt><tt class="py-op">[</tt><tt class="py-name">idx_zQg</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">imag</tt><tt class="py-op">,</tt> </tt>
 <a name="L210"></a><tt class="py-lineno">210</tt>  <tt class="py-line">                <tt class="py-name">abs</tt><tt class="py-op">(</tt><tt class="py-name">V</tt><tt class="py-op">[</tt><tt class="py-name">idx_zVm</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
 <a name="L211"></a><tt class="py-lineno">211</tt>  <tt class="py-line">                <tt class="py-name">angle</tt><tt class="py-op">(</tt><tt class="py-name">V</tt><tt class="py-op">[</tt><tt class="py-name">idx_zVa</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
@@ -293,18 +293,18 @@ pylon.util.CaseReport.online_generators" class="py-name" href="#" onclick="retur
 <a name="L216"></a><tt class="py-lineno">216</tt>  <tt class="py-line">            <tt class="py-name">dSf_dVa</tt><tt class="py-op">,</tt> <tt class="py-name">dSf_dVm</tt><tt class="py-op">,</tt> <tt class="py-name">dSt_dVa</tt><tt class="py-op">,</tt> <tt class="py-name">dSt_dVm</tt><tt class="py-op">,</tt> <tt class="py-name">_</tt><tt class="py-op">,</tt> <tt class="py-name">_</tt> <tt class="py-op">=</tt> <tt id="link-50" class="py-name"><a title="pylon.case" class="py-name" href="#" onclick="return doclink('link-50', 'case', 'link-0');">case</a></tt><tt class="py-op">.</tt><tt id="link-51" class="py-name" targets="Method pylon.case.Case.dSbr_dV()=pylon.case.Case-class.html#dSbr_dV"><a title="pylon.case.Case.dSbr_dV" class="py-name" href="#" onclick="return doclink('link-51', 'dSbr_dV', 'link-51');">dSbr_dV</a></tt><tt class="py-op">(</tt><tt class="py-name">Yf</tt><tt class="py-op">,</tt> <tt class="py-name">Yt</tt><tt class="py-op">,</tt><tt class="py-name">V</tt><tt class="py-op">)</tt> </tt>
 <a name="L217"></a><tt class="py-lineno">217</tt>  <tt class="py-line"> </tt>
 <a name="L218"></a><tt class="py-lineno">218</tt>  <tt class="py-line">            <tt class="py-comment"># Get sub-matrix of H relating to line flow.</tt> </tt>
-<a name="L219"></a><tt class="py-lineno">219</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-name">dPF_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">dSf_dVa</tt><tt class="py-op">.</tt><tt id="link-52" class="py-name"><a title="pylon.readwrite.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-52', 'real', 'link-45');">real</a></tt> <tt class="py-comment"># from end</tt> </tt>
+<a name="L219"></a><tt class="py-lineno">219</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-name">dPF_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">dSf_dVa</tt><tt class="py-op">.</tt><tt id="link-52" class="py-name"><a title="pylon.io.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-52', 'real', 'link-45');">real</a></tt> <tt class="py-comment"># from end</tt> </tt>
 <a name="L220"></a><tt class="py-lineno">220</tt>  <tt class="py-line">            <tt class="py-name">dQF_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">dSf_dVa</tt><tt class="py-op">.</tt><tt class="py-name">imag</tt> </tt>
-<a name="L221"></a><tt class="py-lineno">221</tt>  <tt class="py-line">            <tt class="py-name">dPF_dVm</tt> <tt class="py-op">=</tt> <tt class="py-name">dSf_dVm</tt><tt class="py-op">.</tt><tt id="link-53" class="py-name"><a title="pylon.readwrite.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-53', 'real', 'link-45');">real</a></tt> </tt>
+<a name="L221"></a><tt class="py-lineno">221</tt>  <tt class="py-line">            <tt class="py-name">dPF_dVm</tt> <tt class="py-op">=</tt> <tt class="py-name">dSf_dVm</tt><tt class="py-op">.</tt><tt id="link-53" class="py-name"><a title="pylon.io.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-53', 'real', 'link-45');">real</a></tt> </tt>
 <a name="L222"></a><tt class="py-lineno">222</tt>  <tt class="py-line">            <tt class="py-name">dQF_dVm</tt> <tt class="py-op">=</tt> <tt class="py-name">dSf_dVm</tt><tt class="py-op">.</tt><tt class="py-name">imag</tt> </tt>
-<a name="L223"></a><tt class="py-lineno">223</tt>  <tt class="py-line">            <tt class="py-name">dPT_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">dSt_dVa</tt><tt class="py-op">.</tt><tt id="link-54" class="py-name"><a title="pylon.readwrite.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-54', 'real', 'link-45');">real</a></tt> <tt class="py-comment"># to end</tt> </tt>
+<a name="L223"></a><tt class="py-lineno">223</tt>  <tt class="py-line">            <tt class="py-name">dPT_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">dSt_dVa</tt><tt class="py-op">.</tt><tt id="link-54" class="py-name"><a title="pylon.io.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-54', 'real', 'link-45');">real</a></tt> <tt class="py-comment"># to end</tt> </tt>
 <a name="L224"></a><tt class="py-lineno">224</tt>  <tt class="py-line">            <tt class="py-name">dQT_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">dSt_dVa</tt><tt class="py-op">.</tt><tt class="py-name">imag</tt> </tt>
-<a name="L225"></a><tt class="py-lineno">225</tt>  <tt class="py-line">            <tt class="py-name">dPT_dVm</tt> <tt class="py-op">=</tt> <tt class="py-name">dSt_dVm</tt><tt class="py-op">.</tt><tt id="link-55" class="py-name"><a title="pylon.readwrite.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-55', 'real', 'link-45');">real</a></tt> </tt>
+<a name="L225"></a><tt class="py-lineno">225</tt>  <tt class="py-line">            <tt class="py-name">dPT_dVm</tt> <tt class="py-op">=</tt> <tt class="py-name">dSt_dVm</tt><tt class="py-op">.</tt><tt id="link-55" class="py-name"><a title="pylon.io.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-55', 'real', 'link-45');">real</a></tt> </tt>
 <a name="L226"></a><tt class="py-lineno">226</tt>  <tt class="py-line">            <tt class="py-name">dQT_dVm</tt> <tt class="py-op">=</tt> <tt class="py-name">dSt_dVm</tt><tt class="py-op">.</tt><tt class="py-name">imag</tt> </tt>
 <a name="L227"></a><tt class="py-lineno">227</tt>  <tt class="py-line">            <tt class="py-comment"># Get sub-matrix of H relating to generator output.</tt> </tt>
-<a name="L228"></a><tt class="py-lineno">228</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-name">dPG_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">dSbus_dVa</tt><tt class="py-op">[</tt><tt class="py-name">gbus</tt><tt class="py-op">,</tt> <tt class="py-op">:</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-56" class="py-name"><a title="pylon.readwrite.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-56', 'real', 'link-45');">real</a></tt> </tt>
+<a name="L228"></a><tt class="py-lineno">228</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-name">dPG_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">dSbus_dVa</tt><tt class="py-op">[</tt><tt class="py-name">gbus</tt><tt class="py-op">,</tt> <tt class="py-op">:</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-56" class="py-name"><a title="pylon.io.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-56', 'real', 'link-45');">real</a></tt> </tt>
 <a name="L229"></a><tt class="py-lineno">229</tt>  <tt class="py-line">            <tt class="py-name">dQG_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">dSbus_dVa</tt><tt class="py-op">[</tt><tt class="py-name">gbus</tt><tt class="py-op">,</tt> <tt class="py-op">:</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">imag</tt> </tt>
-<a name="L230"></a><tt class="py-lineno">230</tt>  <tt class="py-line">            <tt class="py-name">dPG_dVm</tt> <tt class="py-op">=</tt> <tt class="py-name">dSbus_dVm</tt><tt class="py-op">[</tt><tt class="py-name">gbus</tt><tt class="py-op">,</tt> <tt class="py-op">:</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-57" class="py-name"><a title="pylon.readwrite.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-57', 'real', 'link-45');">real</a></tt> </tt>
+<a name="L230"></a><tt class="py-lineno">230</tt>  <tt class="py-line">            <tt class="py-name">dPG_dVm</tt> <tt class="py-op">=</tt> <tt class="py-name">dSbus_dVm</tt><tt class="py-op">[</tt><tt class="py-name">gbus</tt><tt class="py-op">,</tt> <tt class="py-op">:</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-57" class="py-name"><a title="pylon.io.parsing_util.real" class="py-name" href="#" onclick="return doclink('link-57', 'real', 'link-45');">real</a></tt> </tt>
 <a name="L231"></a><tt class="py-lineno">231</tt>  <tt class="py-line">            <tt class="py-name">dQG_dVm</tt> <tt class="py-op">=</tt> <tt class="py-name">dSbus_dVm</tt><tt class="py-op">[</tt><tt class="py-name">gbus</tt><tt class="py-op">,</tt> <tt class="py-op">:</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">imag</tt> </tt>
 <a name="L232"></a><tt class="py-lineno">232</tt>  <tt class="py-line">            <tt class="py-comment"># Get sub-matrix of H relating to voltage angle.</tt> </tt>
 <a name="L233"></a><tt class="py-lineno">233</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt class="py-name">dVa_dVa</tt> <tt class="py-op">=</tt> <tt class="py-name">csr_matrix</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">ones</tt><tt class="py-op">(</tt><tt class="py-name">nb</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">nb</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">nb</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
@@ -340,15 +340,15 @@ pylon.dc_pf.logger
 pylon.dyn.logger
 pylon.estimator.logger
 pylon.generator.logger
+pylon.io.common.logger
+pylon.io.dot.logger
+pylon.io.matpower.logger
+pylon.io.pickle.logger
+pylon.io.psat.logger
+pylon.io.psse.logger
+pylon.io.rdf.logger
 pylon.main.logger
 pylon.opf.logger
-pylon.readwrite.common.logger
-pylon.readwrite.dot_writer.logger
-pylon.readwrite.matpower_reader.logger
-pylon.readwrite.pickle_readwrite.logger
-pylon.readwrite.psat_reader.logger
-pylon.readwrite.psse_reader.logger
-pylon.readwrite.rdf_readwrite.logger
 pylon.solver.logger
 pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-58', 'logger', 'link-3');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Iteration [%d]: Norm of mismatch: %.3f"</tt> <tt class="py-op">%</tt> </tt>
 <a name="L261"></a><tt class="py-lineno">261</tt>  <tt class="py-line">                            <tt class="py-op">(</tt><tt class="py-name">i</tt><tt class="py-op">,</tt> <tt class="py-name">normF</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
@@ -416,99 +416,99 @@ pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-58',
 <a name="L323"></a><tt class="py-lineno">323</tt>  <tt class="py-line">        <tt class="py-name">col_width</tt> <tt class="py-op">=</tt> <tt class="py-number">11</tt> </tt>
 <a name="L324"></a><tt class="py-lineno">324</tt>  <tt class="py-line">        <tt class="py-name">sep</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-string">"="</tt> <tt class="py-op">*</tt> <tt class="py-name">col_width</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-number">4</tt> <tt class="py-op">+</tt> <tt class="py-string">"\n"</tt> </tt>
 <a name="L325"></a><tt class="py-lineno">325</tt>  <tt class="py-line"> </tt>
-<a name="L326"></a><tt class="py-lineno">326</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-65" class="py-name" targets="Method pylon.readwrite.common.CaseWriter.write()=pylon.readwrite.common.CaseWriter-class.html#write,Method pylon.readwrite.csv_writer.CSVWriter.write()=pylon.readwrite.csv_writer.CSVWriter-class.html#write,Method pylon.readwrite.dot_writer.DotWriter.write()=pylon.readwrite.dot_writer.DotWriter-class.html#write,Method pylon.readwrite.excel_writer.ExcelWriter.write()=pylon.readwrite.excel_writer.ExcelWriter-class.html#write,Method pylon.readwrite.matpower_writer.MATPOWERWriter.write()=pylon.readwrite.matpower_writer.MATPOWERWriter-class.html#write,Method pylon.readwrite.pickle_readwrite.PickleWriter.write()=pylon.readwrite.pickle_readwrite.PickleWriter-class.html#write"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-65', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"State Estimation\n"</tt><tt class="py-op">)</tt> </tt>
-<a name="L327"></a><tt class="py-lineno">327</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-66" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-66', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"-"</tt> <tt class="py-op">*</tt> <tt class="py-number">16</tt> <tt class="py-op">+</tt> <tt class="py-string">"\n"</tt><tt class="py-op">)</tt> </tt>
-<a name="L328"></a><tt class="py-lineno">328</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-67" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-67', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">sep</tt><tt class="py-op">)</tt> </tt>
-<a name="L329"></a><tt class="py-lineno">329</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-68" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-68', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"Type"</tt><tt class="py-op">.</tt><tt class="py-name">center</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
-<a name="L330"></a><tt class="py-lineno">330</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-69" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-69', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"Name"</tt><tt class="py-op">.</tt><tt class="py-name">center</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
-<a name="L331"></a><tt class="py-lineno">331</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-70" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-70', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"Measurement"</tt><tt class="py-op">.</tt><tt class="py-name">center</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
-<a name="L332"></a><tt class="py-lineno">332</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-71" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-71', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"Estimation"</tt><tt class="py-op">.</tt><tt class="py-name">center</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
-<a name="L333"></a><tt class="py-lineno">333</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-72" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-72', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"\n"</tt><tt class="py-op">)</tt> </tt>
-<a name="L334"></a><tt class="py-lineno">334</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-73" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-73', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">sep</tt><tt class="py-op">)</tt> </tt>
+<a name="L326"></a><tt class="py-lineno">326</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-65" class="py-name" targets="Method pylon.io.common.CaseWriter.write()=pylon.io.common.CaseWriter-class.html#write,Method pylon.io.dot.DotWriter.write()=pylon.io.dot.DotWriter-class.html#write,Method pylon.io.excel.CSVWriter.write()=pylon.io.excel.CSVWriter-class.html#write,Method pylon.io.excel.ExcelWriter.write()=pylon.io.excel.ExcelWriter-class.html#write,Method pylon.io.matpower.MATPOWERWriter.write()=pylon.io.matpower.MATPOWERWriter-class.html#write,Method pylon.io.pickle.PickleWriter.write()=pylon.io.pickle.PickleWriter-class.html#write"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-65', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"State Estimation\n"</tt><tt class="py-op">)</tt> </tt>
+<a name="L327"></a><tt class="py-lineno">327</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-66" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-66', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"-"</tt> <tt class="py-op">*</tt> <tt class="py-number">16</tt> <tt class="py-op">+</tt> <tt class="py-string">"\n"</tt><tt class="py-op">)</tt> </tt>
+<a name="L328"></a><tt class="py-lineno">328</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-67" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-67', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">sep</tt><tt class="py-op">)</tt> </tt>
+<a name="L329"></a><tt class="py-lineno">329</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-68" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-68', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"Type"</tt><tt class="py-op">.</tt><tt class="py-name">center</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
+<a name="L330"></a><tt class="py-lineno">330</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-69" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-69', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"Name"</tt><tt class="py-op">.</tt><tt class="py-name">center</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
+<a name="L331"></a><tt class="py-lineno">331</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-70" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-70', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"Measurement"</tt><tt class="py-op">.</tt><tt class="py-name">center</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
+<a name="L332"></a><tt class="py-lineno">332</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-71" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-71', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"Estimation"</tt><tt class="py-op">.</tt><tt class="py-name">center</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
+<a name="L333"></a><tt class="py-lineno">333</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-72" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-72', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"\n"</tt><tt class="py-op">)</tt> </tt>
+<a name="L334"></a><tt class="py-lineno">334</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-73" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-73', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">sep</tt><tt class="py-op">)</tt> </tt>
 <a name="L335"></a><tt class="py-lineno">335</tt>  <tt class="py-line"> </tt>
 <a name="L336"></a><tt class="py-lineno">336</tt>  <tt class="py-line">        <tt class="py-name">c</tt> <tt class="py-op">=</tt> <tt class="py-number">0</tt> </tt>
 <a name="L337"></a><tt class="py-lineno">337</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">t</tt> <tt class="py-keyword">in</tt> <tt class="py-op">[</tt><tt id="link-74" class="py-name"><a title="pylon.estimator.PF" class="py-name" href="#" onclick="return doclink('link-74', 'PF', 'link-4');">PF</a></tt><tt class="py-op">,</tt> <tt id="link-75" class="py-name"><a title="pylon.estimator.PT" class="py-name" href="#" onclick="return doclink('link-75', 'PT', 'link-5');">PT</a></tt><tt class="py-op">,</tt> <tt id="link-76" class="py-name"><a title="pylon.estimator.QF" class="py-name" href="#" onclick="return doclink('link-76', 'QF', 'link-6');">QF</a></tt><tt class="py-op">,</tt> <tt id="link-77" class="py-name"><a title="pylon.estimator.QT" class="py-name" href="#" onclick="return doclink('link-77', 'QT', 'link-7');">QT</a></tt><tt class="py-op">,</tt> <tt id="link-78" class="py-name"><a title="pylon.estimator.PG" class="py-name" href="#" onclick="return doclink('link-78', 'PG', 'link-8');">PG</a></tt><tt class="py-op">,</tt> <tt id="link-79" class="py-name"><a title="pylon.estimator.QG" class="py-name" href="#" onclick="return doclink('link-79', 'QG', 'link-9');">QG</a></tt><tt class="py-op">,</tt> <tt id="link-80" class="py-name"><a title="pylon.estimator.VM" class="py-name" href="#" onclick="return doclink('link-80', 'VM', 'link-11');">VM</a></tt><tt class="py-op">,</tt> <tt id="link-81" class="py-name"><a title="pylon.estimator.VA" class="py-name" href="#" onclick="return doclink('link-81', 'VA', 'link-10');">VA</a></tt><tt class="py-op">]</tt><tt class="py-op">:</tt> </tt>
 <a name="L338"></a><tt class="py-lineno">338</tt>  <tt class="py-line">            <tt class="py-keyword">for</tt> <tt class="py-name">meas</tt> <tt class="py-keyword">in</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">measurements</tt><tt class="py-op">:</tt> </tt>
 <a name="L339"></a><tt class="py-lineno">339</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-name">meas</tt><tt class="py-op">.</tt><tt class="py-name">type</tt> <tt class="py-op">==</tt> <tt class="py-name">t</tt><tt class="py-op">:</tt> </tt>
 <a name="L340"></a><tt class="py-lineno">340</tt>  <tt class="py-line">                    <tt class="py-name">n</tt> <tt class="py-op">=</tt> <tt class="py-name">meas</tt><tt class="py-op">.</tt><tt class="py-name">b_or_l</tt><tt class="py-op">.</tt><tt id="link-82" class="py-name" targets="Variable pylon.util.Named.name=pylon.util.Named-class.html#name"><a title="pylon.util.Named.name" class="py-name" href="#" onclick="return doclink('link-82', 'name', 'link-82');">name</a></tt><tt class="py-op">[</tt><tt class="py-op">:</tt><tt class="py-name">col_width</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">ljust</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> </tt>
-<a name="L341"></a><tt class="py-lineno">341</tt>  <tt class="py-line">                    <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-83" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-83', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">t</tt><tt class="py-op">.</tt><tt class="py-name">ljust</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
-<a name="L342"></a><tt class="py-lineno">342</tt>  <tt class="py-line">                    <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-84" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-84', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">n</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
-<a name="L343"></a><tt class="py-lineno">343</tt>  <tt class="py-line">                    <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-85" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-85', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"%11.5f "</tt> <tt class="py-op">%</tt> <tt class="py-name">z</tt><tt class="py-op">[</tt><tt class="py-name">c</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
-<a name="L344"></a><tt class="py-lineno">344</tt>  <tt class="py-line">                    <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-86" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-86', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"%11.5f\n"</tt> <tt class="py-op">%</tt> <tt class="py-name">z_est</tt><tt class="py-op">[</tt><tt class="py-name">c</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L341"></a><tt class="py-lineno">341</tt>  <tt class="py-line">                    <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-83" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-83', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">t</tt><tt class="py-op">.</tt><tt class="py-name">ljust</tt><tt class="py-op">(</tt><tt class="py-name">col_width</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
+<a name="L342"></a><tt class="py-lineno">342</tt>  <tt class="py-line">                    <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-84" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-84', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">n</tt> <tt class="py-op">+</tt> <tt class="py-string">" "</tt><tt class="py-op">)</tt> </tt>
+<a name="L343"></a><tt class="py-lineno">343</tt>  <tt class="py-line">                    <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-85" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-85', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"%11.5f "</tt> <tt class="py-op">%</tt> <tt class="py-name">z</tt><tt class="py-op">[</tt><tt class="py-name">c</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L344"></a><tt class="py-lineno">344</tt>  <tt class="py-line">                    <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-86" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-86', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"%11.5f\n"</tt> <tt class="py-op">%</tt> <tt class="py-name">z_est</tt><tt class="py-op">[</tt><tt class="py-name">c</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
 <a name="L345"></a><tt class="py-lineno">345</tt>  <tt class="py-line"><tt class="py-comment">#                    fd.write("%s\t%s\t%.3f\t%.3f\n" % (t, n, z[c], z_est[c]))</tt> </tt>
 <a name="L346"></a><tt class="py-lineno">346</tt>  <tt class="py-line"><tt class="py-comment"></tt>                    <tt class="py-name">c</tt> <tt class="py-op">+=</tt> <tt class="py-number">1</tt> </tt>
 <a name="L347"></a><tt class="py-lineno">347</tt>  <tt class="py-line"> </tt>
-<a name="L348"></a><tt class="py-lineno">348</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-87" class="py-name"><a title="pylon.readwrite.common.CaseWriter.write
-pylon.readwrite.csv_writer.CSVWriter.write
-pylon.readwrite.dot_writer.DotWriter.write
-pylon.readwrite.excel_writer.ExcelWriter.write
-pylon.readwrite.matpower_writer.MATPOWERWriter.write
-pylon.readwrite.pickle_readwrite.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-87', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"\nWeighted sum of error squares = %.4f\n"</tt> <tt class="py-op">%</tt> <tt class="py-name">error_sqrsum</tt><tt class="py-op">)</tt> </tt>
+<a name="L348"></a><tt class="py-lineno">348</tt>  <tt class="py-line">        <tt class="py-name">fd</tt><tt class="py-op">.</tt><tt id="link-87" class="py-name"><a title="pylon.io.common.CaseWriter.write
+pylon.io.dot.DotWriter.write
+pylon.io.excel.CSVWriter.write
+pylon.io.excel.ExcelWriter.write
+pylon.io.matpower.MATPOWERWriter.write
+pylon.io.pickle.PickleWriter.write" class="py-name" href="#" onclick="return doclink('link-87', 'write', 'link-65');">write</a></tt><tt class="py-op">(</tt><tt class="py-string">"\nWeighted sum of error squares = %.4f\n"</tt> <tt class="py-op">%</tt> <tt class="py-name">error_sqrsum</tt><tt class="py-op">)</tt> </tt>
 </div></div><a name="L349"></a><tt class="py-lineno">349</tt>  <tt class="py-line"> </tt>
 <a name="L350"></a><tt class="py-lineno">350</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
 <a name="L351"></a><tt class="py-lineno">351</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  "Measurement" class:</tt> </tt>
@@ -566,7 +566,7 @@ expandto(location.href);
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Thu Jun 17 16:00:00 2010
+    Generated by Epydoc 3.0.1 on Fri Jun 18 15:48:37 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
