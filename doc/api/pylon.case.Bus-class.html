@@ -60,15 +60,15 @@
 <!-- ==================== CLASS DESCRIPTION ==================== -->
 <h1 class="epydoc">Class Bus</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.case-pysrc.html#Bus">source&nbsp;code</a></span></p>
 <pre class="base-tree">
-object --+    
-         |    
-<a href="pylon.util.Named-class.html">util.Named</a> --+
-             |
-            <strong class="uidshort">Bus</strong>
+ object --+    
+          |    
+<a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a> --+
+              |
+             <strong class="uidshort">Bus</strong>
 </pre>
 
 <hr />
-<p>Defines a power system bus node.</p>
+<p>Defines a power system busbar.</p>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
@@ -106,7 +106,7 @@ object --+
         <span class="summary-sig-arg">g_shunt</span>=<span class="summary-sig-default">0.0</span>,
         <span class="summary-sig-arg">b_shunt</span>=<span class="summary-sig-default">0.0</span>,
         <span class="summary-sig-arg">position</span>=<span class="summary-sig-default">None</span>)</span><br />
-      Initialises a new Bus instance.</td>
+      x.__init__(...) initializes x; see x.__class__.__doc__ for signature</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Bus.__init__">source&nbsp;code</a></span>
             
@@ -123,7 +123,7 @@ object --+
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="reset"></a><span class="summary-sig-name">reset</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Resets the result variables.</td>
+      Resets the readonly variables.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Bus.reset">source&nbsp;code</a></span>
             
@@ -135,10 +135,10 @@ object --+
   </tr>
   <tr>
     <td colspan="2" class="summary">
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util.Named-class.html">util.Named</a></code></b> (private):
-      <code><a href="pylon.util.Named-class.html#_generate_name" onclick="show_private();">_generate_name</a></code>,
-      <code><a href="pylon.util.Named-class.html#_get_name" onclick="show_private();">_get_name</a></code>,
-      <code><a href="pylon.util.Named-class.html#_set_name" onclick="show_private();">_set_name</a></code>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b> (private):
+      <code><a href="pylon.util._Named-class.html#_generate_name" onclick="show_private();">_generate_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_get_name" onclick="show_private();">_get_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_set_name" onclick="show_private();">_set_name</a></code>
       </p></div>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__delattr__</code>,
@@ -173,9 +173,9 @@ object --+
 </tr>
   <tr>
     <td colspan="2" class="summary">
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util.Named-class.html">util.Named</a></code></b> (private):
-      <code><a href="pylon.util.Named-class.html#_name" onclick="show_private();">_name</a></code>,
-      <code><a href="pylon.util.Named-class.html#_name_ids" onclick="show_private();">_name_ids</a></code>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b> (private):
+      <code><a href="pylon.util._Named-class.html#_name" onclick="show_private();">_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_name_ids" onclick="show_private();">_name_ids</a></code>
       </p></div>
     </td>
   </tr>
@@ -281,6 +281,22 @@ object --+
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
+        <a name="area"></a><span class="summary-name">area</span><br />
+      Power system area (unused).
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="zone"></a><span class="summary-name">zone</span><br />
+      Control zone (unused).
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
         <a name="p_lmbda"></a><span class="summary-name">p_lmbda</span><br />
       Lambda (GBP/MWh).
     </td>
@@ -305,8 +321,8 @@ object --+
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="position"></a><span class="summary-name">position</span><br />
-      Tuple of bus coordinates.
+        <a name="mu_vmax"></a><span class="summary-name">mu_vmax</span><br />
+      Lagrangian multiplier for voltage constraint.
     </td>
   </tr>
 <tr class="private">
@@ -337,8 +353,8 @@ object --+
 </tr>
   <tr>
     <td colspan="2" class="summary">
-    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util.Named-class.html">util.Named</a></code></b>:
-      <code><a href="pylon.util.Named-class.html#name">name</a></code>
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b>:
+      <code><a href="pylon.util._Named-class.html#name">name</a></code>
       </p>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__class__</code>
@@ -391,10 +407,12 @@ object --+
     </td>
   </tr></table>
   
-  <p>Initialises a new Bus instance.</p>
+  <p>x.__init__(...) initializes x; see x.__class__.__doc__ for 
+  signature</p>
   <dl class="fields">
     <dt>Overrides:
         object.__init__
+        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
   </dl>
 </td></tr></table>
@@ -428,7 +446,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Jun 18 15:48:34 2010
+    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:02 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

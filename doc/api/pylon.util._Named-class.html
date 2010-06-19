@@ -3,7 +3,7 @@
           "DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <title>pylon.ac_pf.NewtonPF</title>
+  <title>pylon.util._Named</title>
   <link rel="stylesheet" href="epydoc.css" type="text/css" />
   <script type="text/javascript" src="epydoc.js"></script>
 </head>
@@ -40,8 +40,8 @@
     <td width="100%">
       <span class="breadcrumbs">
         <a href="pylon-module.html">Package&nbsp;pylon</a> ::
-        <a href="pylon.ac_pf-module.html">Module&nbsp;ac_pf</a> ::
-        Class&nbsp;NewtonPF
+        <a href="pylon.util-module.html">Module&nbsp;util</a> ::
+        Class&nbsp;_Named
       </span>
     </td>
     <td>
@@ -51,28 +51,29 @@
     onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
         <tr><td align="right"><span class="options"
             >[<a href="frames.html" target="_top">frames</a
-            >]&nbsp;|&nbsp;<a href="pylon.ac_pf.NewtonPF-class.html"
+            >]&nbsp;|&nbsp;<a href="pylon.util._Named-class.html"
             target="_top">no&nbsp;frames</a>]</span></td></tr>
       </table>
     </td>
   </tr>
 </table>
 <!-- ==================== CLASS DESCRIPTION ==================== -->
-<h1 class="epydoc">Class NewtonPF</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF">source&nbsp;code</a></span></p>
+<h1 class="epydoc">Class _Named</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.util-pysrc.html#_Named">source&nbsp;code</a></span></p>
 <pre class="base-tree">
-object --+    
-         |    
-     <a href="pylon.ac_pf._ACPF-class.html" onclick="show_private();">_ACPF</a> --+
-             |
-            <strong class="uidshort">NewtonPF</strong>
+object --+
+         |
+        <strong class="uidshort">_Named</strong>
 </pre>
 
+<dl><dt>Known Subclasses:</dt>
+<dd>
+      <ul class="subclass-list">
+<li><a href="pylon.generator.Generator-class.html">generator.Generator</a></li><li>, <a href="pylon.case.Branch-class.html">case.Branch</a></li><li>, <a href="pylon.case.Bus-class.html">case.Bus</a></li><li>, <a href="pylon.case.Case-class.html">case.Case</a></li><li>, <a href="pylon.dyn.DynamicCase-class.html">dyn.DynamicCase</a></li><li class="private">, <a href="pylon.opf._Set-class.html" onclick="show_private();">opf._Set</a></li>  </ul>
+</dd></dl>
+
 <hr />
-<p>Solves the power flow using full Newton's method.</p>
-  <p>Based on newtonpf.m from MATPOWER by Ray Zimmerman, developed at PSERC
-  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
-  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
-  info.</p>
+<p>Base class taken from PyBrain for objects guaranteed to have a unique 
+  name.</p>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
@@ -97,17 +98,10 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="pylon.ac_pf.NewtonPF-class.html#_run_power_flow" class="summary-sig-name" onclick="show_private();">_run_power_flow</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">Ybus</span>,
-        <span class="summary-sig-arg">Sbus</span>,
-        <span class="summary-sig-arg">V</span>,
-        <span class="summary-sig-arg">pv</span>,
-        <span class="summary-sig-arg">pq</span>,
-        <span class="summary-sig-arg">pvpq</span>,
-        <span class="summary-sig-arg">**kw_args</span>)</span><br />
-      Solves the power flow using a full Newton's method.</td>
+          <td><span class="summary-sig"><a name="_generate_name"></a><span class="summary-sig-name">_generate_name</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Return a unique name for this object.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._run_power_flow">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.util-pysrc.html#_Named._generate_name">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -121,18 +115,10 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_one_iteration"></a><span class="summary-sig-name">_one_iteration</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">F</span>,
-        <span class="summary-sig-arg">Ybus</span>,
-        <span class="summary-sig-arg">V</span>,
-        <span class="summary-sig-arg">Vm</span>,
-        <span class="summary-sig-arg">Va</span>,
-        <span class="summary-sig-arg">pv</span>,
-        <span class="summary-sig-arg">pq</span>,
-        <span class="summary-sig-arg">pvpq</span>)</span><br />
-      Performs one Newton iteration.</td>
+          <td><span class="summary-sig"><a name="_get_name"></a><span class="summary-sig-name">_get_name</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the name, which is generated if it has not been already.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._one_iteration">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.util-pysrc.html#_Named._get_name">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -146,56 +132,11 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_evaluate_function"></a><span class="summary-sig-name">_evaluate_function</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">Ybus</span>,
-        <span class="summary-sig-arg">V</span>,
-        <span class="summary-sig-arg">Sbus</span>,
-        <span class="summary-sig-arg">pv</span>,
-        <span class="summary-sig-arg">pq</span>)</span><br />
-      Evaluates F(x).</td>
+          <td><span class="summary-sig"><a href="pylon.util._Named-class.html#_set_name" class="summary-sig-name" onclick="show_private();">_set_name</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">value</span>)</span><br />
+      Changes name to 'value'.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._evaluate_function">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_check_convergence"></a><span class="summary-sig-name">_check_convergence</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">F</span>)</span><br />
-      Checks if the solution has converged to within the specified 
-      tolerance.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._check_convergence">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_build_jacobian"></a><span class="summary-sig-name">_build_jacobian</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">Ybus</span>,
-        <span class="summary-sig-arg">V</span>,
-        <span class="summary-sig-arg">pv</span>,
-        <span class="summary-sig-arg">pq</span>,
-        <span class="summary-sig-arg">pvpq</span>)</span><br />
-      Returns the Jacobian matrix.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._build_jacobian">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.util-pysrc.html#_Named._set_name">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -205,19 +146,11 @@ object --+
   </tr>
   <tr>
     <td colspan="2" class="summary">
-    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.ac_pf._ACPF-class.html" onclick="show_private();">_ACPF</a></code></b>:
-      <code><a href="pylon.ac_pf._ACPF-class.html#__init__">__init__</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#solve">solve</a></code>
-      </p>
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.ac_pf._ACPF-class.html" onclick="show_private();">_ACPF</a></code></b> (private):
-      <code><a href="pylon.ac_pf._ACPF-class.html#_index_buses" onclick="show_private();">_index_buses</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#_initial_voltage" onclick="show_private();">_initial_voltage</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#_unpack_case" onclick="show_private();">_unpack_case</a></code>
-      </p></div>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__delattr__</code>,
       <code>__getattribute__</code>,
       <code>__hash__</code>,
+      <code>__init__</code>,
       <code>__new__</code>,
       <code>__reduce__</code>,
       <code>__reduce_ex__</code>,
@@ -228,32 +161,35 @@ object --+
     </td>
   </tr>
 </table>
-<!-- ==================== INSTANCE VARIABLES ==================== -->
-<a name="section-InstanceVariables"></a>
+<!-- ==================== CLASS VARIABLES ==================== -->
+<a name="section-ClassVariables"></a>
 <table class="summary" border="1" cellpadding="3"
        cellspacing="0" width="100%" bgcolor="white">
 <tr bgcolor="#70b0f0" class="table-header">
   <td colspan="2" class="table-header">
     <table border="0" cellpadding="0" cellspacing="0" width="100%">
       <tr valign="top">
-        <td align="left"><span class="table-header">Instance Variables</span></td>
+        <td align="left"><span class="table-header">Class Variables</span></td>
         <td align="right" valign="top"
-         ><span class="options">[<a href="#section-InstanceVariables"
+         ><span class="options">[<a href="#section-ClassVariables"
          class="privatelink" onclick="toggle_private();"
          >hide private</a>]</span></td>
       </tr>
     </table>
   </td>
 </tr>
-  <tr>
-    <td colspan="2" class="summary">
-    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.ac_pf._ACPF-class.html" onclick="show_private();">_ACPF</a></code></b>:
-      <code><a href="pylon.ac_pf._ACPF-class.html#case">case</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#iter_max">iter_max</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#qlimit">qlimit</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#tolerance">tolerance</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#verbose">verbose</a></code>
-      </p>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="_name"></a><span class="summary-name">_name</span> = <code title="None">None</code>
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="_name_ids"></a><span class="summary-name">_name_ids</span> = <code title="count(0)">count(0)</code>
     </td>
   </tr>
 </table>
@@ -274,6 +210,14 @@ object --+
     </table>
   </td>
 </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="pylon.util._Named-class.html#name" class="summary-name">name</a><br />
+      Returns the name, which is generated if it has not been already.
+    </td>
+  </tr>
   <tr>
     <td colspan="2" class="summary">
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
@@ -300,32 +244,62 @@ object --+
   </td>
 </tr>
 </table>
-<a name="_run_power_flow"></a>
+<a name="_set_name"></a>
 <div class="private">
 <table class="details" border="1" cellpadding="3"
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">_run_power_flow</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">Ybus</span>,
-        <span class="sig-arg">Sbus</span>,
-        <span class="sig-arg">V</span>,
-        <span class="sig-arg">pv</span>,
-        <span class="sig-arg">pq</span>,
-        <span class="sig-arg">pvpq</span>,
-        <span class="sig-arg">**kw_args</span>)</span>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_set_name</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">value</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._run_power_flow">source&nbsp;code</a></span>&nbsp;
+    ><span class="codelink"><a href="pylon.util-pysrc.html#_Named._set_name">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
   
-  <p>Solves the power flow using a full Newton's method.</p>
+  <p>Changes name to 'value'. Uniquity no longer guaranteed.</p>
   <dl class="fields">
-    <dt>Overrides:
-        <a href="pylon.ac_pf._ACPF-class.html#_run_power_flow" onclick="show_private();">_ACPF._run_power_flow</a>
-    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== PROPERTY DETAILS ==================== -->
+<a name="section-PropertyDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Property Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-PropertyDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="name"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">name</h3>
+  <p>Returns the name, which is generated if it has not been already.</p>
+  <dl class="fields">
+    <dt>Get Method:</dt>
+    <dd class="value"><span class="summary-sig"><a href="pylon.util._Named-class.html#_get_name" class="summary-sig-name" onclick="show_private();">_get_name</a>(<span class="summary-sig-arg">self</span>)</span>
+        - Returns the name, which is generated if it has not been already.
+    </dd>
+    <dt>Set Method:</dt>
+    <dd class="value"><span class="summary-sig"><a href="pylon.util._Named-class.html#_set_name" class="summary-sig-name" onclick="show_private();">_set_name</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">value</span>)</span>
+        - Changes name to 'value'.
+    </dd>
   </dl>
 </td></tr></table>
 </div>
@@ -358,7 +332,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:02 2010
+    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:03 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

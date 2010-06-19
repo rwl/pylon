@@ -60,20 +60,20 @@
 <!-- ==================== CLASS DESCRIPTION ==================== -->
 <h1 class="epydoc">Class Case</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.case-pysrc.html#Case">source&nbsp;code</a></span></p>
 <pre class="base-tree">
-       object --+    
-                |    
-       <a href="pylon.util.Named-class.html">util.Named</a> --+
-                    |
-       object --+   |
-                |   |
-<a href="pylon.util.Serializable-class.html">util.Serializable</a> --+
-                    |
-                   <strong class="uidshort">Case</strong>
+        object --+    
+                 |    
+       <a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a> --+
+                     |
+        object --+   |
+                 |   |
+<a href="pylon.util._Serializable-class.html" onclick="show_private();">util._Serializable</a> --+
+                     |
+                    <strong class="uidshort">Case</strong>
 </pre>
 
 <hr />
-<p>Defines representation of an electric power system as a graph of Bus 
-  objects connected by Branches.</p>
+<p>Defines an electric power system model as a graph of busbars connected
+  by branches.</p>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
@@ -104,7 +104,7 @@
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">branches</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">generators</span>=<span class="summary-sig-default">None</span>)</span><br />
-      Initialises a new Case instance.</td>
+      x.__init__(...) initializes x; see x.__class__.__doc__ for signature</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.__init__">source&nbsp;code</a></span>
             
@@ -122,7 +122,7 @@
         <tr>
           <td><span class="summary-sig"><a name="getSbus"></a><span class="summary-sig-name">getSbus</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>)</span><br />
-      Net complex bus power injection vector in p.u.</td>
+      Returns the net complex bus power injection vector in p.u.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.getSbus">source&nbsp;code</a></span>
             
@@ -155,10 +155,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="index_buses"></a><span class="summary-sig-name">index_buses</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.case.Case-class.html#index_buses" class="summary-sig-name">index_buses</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">start</span>=<span class="summary-sig-default">0</span>)</span><br />
-      Updates the indices of all case buses.</td>
+      Updates the indices of all buses.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.index_buses">source&nbsp;code</a></span>
             
@@ -174,10 +174,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="index_branches"></a><span class="summary-sig-name">index_branches</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.case.Case-class.html#index_branches" class="summary-sig-name">index_branches</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">branches</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">start</span>=<span class="summary-sig-default">0</span>)</span><br />
-      Updates the indices for all brnaches.</td>
+      Updates the indices of all branches.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.index_branches">source&nbsp;code</a></span>
             
@@ -243,16 +243,15 @@
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="pylon.case.Case-class.html#getYbus" class="summary-sig-name">getYbus</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">branches</span>=<span class="summary-sig-default">None</span>)</span><br />
-      Returns the bus and branch admittance matrices, Yf and Yt, such
-that Yf * V is the vector of complex branch currents injected at
-each branch's &quot;from&quot; bus [1].</td>
+      Based on makeYbus.m from MATPOWER by Ray Zimmerman, developed at 
+      PSERC Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.getYbus">source&nbsp;code</a></span>
             
@@ -264,15 +263,16 @@ each branch's &quot;from&quot; bus [1].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="makeB"></a><span class="summary-sig-name">makeB</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.case.Case-class.html#makeB" class="summary-sig-name">makeB</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">branches</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">method</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">XB</code><code class="variable-quote">'</code></span>)</span><br />
-      Builds the FDPF matrices, B prime and B double prime.</td>
+      Based on makeB.m from MATPOWER by Ray Zimmerman, developed at PSERC 
+      Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.makeB">source&nbsp;code</a></span>
             
@@ -284,15 +284,14 @@ each branch's &quot;from&quot; bus [1].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="pylon.case.Case-class.html#makeBdc" class="summary-sig-name">makeBdc</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">branches</span>=<span class="summary-sig-default">None</span>)</span><br />
-      Returns the sparse susceptance matrices and phase shift injection
-vectors needed for a DC power flow [2].</td>
+      The bus real power injections are related to bus voltage angles by:</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.makeBdc">source&nbsp;code</a></span>
             
@@ -304,14 +303,15 @@ vectors needed for a DC power flow [2].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="pylon.case.Case-class.html#dSbus_dV" class="summary-sig-name">dSbus_dV</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Y</span>,
         <span class="summary-sig-arg">V</span>)</span><br />
-      Computes the partial derivative of power injection w.r.t.</td>
+      Based on dSbus_dV.m from MATPOWER by Ray Zimmerman, developed at 
+      PSERC Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.dSbus_dV">source&nbsp;code</a></span>
             
@@ -323,7 +323,7 @@ vectors needed for a DC power flow [2].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
@@ -331,7 +331,8 @@ vectors needed for a DC power flow [2].</td>
         <span class="summary-sig-arg">Yf</span>,
         <span class="summary-sig-arg">Yt</span>,
         <span class="summary-sig-arg">V</span>)</span><br />
-      Computes partial derivatives of branch currents w.r.t.</td>
+      Based on dIbr_dV.m from MATPOWER by Ray Zimmerman, developed at PSERC
+      Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.dIbr_dV">source&nbsp;code</a></span>
             
@@ -343,18 +344,18 @@ vectors needed for a DC power flow [2].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="dSbr_dV"></a><span class="summary-sig-name">dSbr_dV</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.case.Case-class.html#dSbr_dV" class="summary-sig-name">dSbr_dV</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Yf</span>,
         <span class="summary-sig-arg">Yt</span>,
         <span class="summary-sig-arg">V</span>,
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">branches</span>=<span class="summary-sig-default">None</span>)</span><br />
-      Computes the branch power flow vector and the partial derivative of 
-      branch power flow w.r.t voltage.</td>
+      Based on dSbr_dV.m from MATPOWER by Ray Zimmerman, developed at PSERC
+      Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.dSbr_dV">source&nbsp;code</a></span>
             
@@ -366,7 +367,7 @@ vectors needed for a DC power flow [2].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
@@ -377,7 +378,8 @@ vectors needed for a DC power flow [2].</td>
         <span class="summary-sig-arg">dSt_dVm</span>,
         <span class="summary-sig-arg">Sf</span>,
         <span class="summary-sig-arg">St</span>)</span><br />
-      Partial derivatives of squared flow magnitudes w.r.t voltage.</td>
+      Based on dAbr_dV.m from MATPOWER by Ray Zimmerman, developed at PSERC
+      Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.dAbr_dV">source&nbsp;code</a></span>
             
@@ -389,7 +391,7 @@ vectors needed for a DC power flow [2].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
@@ -397,7 +399,8 @@ vectors needed for a DC power flow [2].</td>
         <span class="summary-sig-arg">Ybus</span>,
         <span class="summary-sig-arg">V</span>,
         <span class="summary-sig-arg">lam</span>)</span><br />
-      Computes 2nd derivatives of power injection w.r.t.</td>
+      Based on d2Sbus_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+      PSERC Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.d2Sbus_dV2">source&nbsp;code</a></span>
             
@@ -409,7 +412,7 @@ vectors needed for a DC power flow [2].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
@@ -417,7 +420,8 @@ vectors needed for a DC power flow [2].</td>
         <span class="summary-sig-arg">Ybr</span>,
         <span class="summary-sig-arg">V</span>,
         <span class="summary-sig-arg">lam</span>)</span><br />
-      Computes 2nd derivatives of complex branch current w.r.t.</td>
+      Based on d2Ibr_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+      PSERC Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.d2Ibr_dV2">source&nbsp;code</a></span>
             
@@ -429,7 +433,7 @@ vectors needed for a DC power flow [2].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
@@ -438,7 +442,8 @@ vectors needed for a DC power flow [2].</td>
         <span class="summary-sig-arg">Ybr</span>,
         <span class="summary-sig-arg">V</span>,
         <span class="summary-sig-arg">lam</span>)</span><br />
-      Computes 2nd derivatives of complex power flow w.r.t.</td>
+      Based on d2Sbr_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+      PSERC Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.d2Sbr_dV2">source&nbsp;code</a></span>
             
@@ -450,7 +455,7 @@ vectors needed for a DC power flow [2].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
@@ -462,7 +467,8 @@ vectors needed for a DC power flow [2].</td>
         <span class="summary-sig-arg">Ybr</span>,
         <span class="summary-sig-arg">V</span>,
         <span class="summary-sig-arg">lam</span>)</span><br />
-      Computes 2nd derivatives of |complex power flow|**2 w.r.t.</td>
+      Based on d2ASbr_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+      PSERC Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.d2ASbr_dV2">source&nbsp;code</a></span>
             
@@ -474,7 +480,7 @@ vectors needed for a DC power flow [2].</td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
@@ -485,7 +491,8 @@ vectors needed for a DC power flow [2].</td>
         <span class="summary-sig-arg">Ybr</span>,
         <span class="summary-sig-arg">V</span>,
         <span class="summary-sig-arg">lam</span>)</span><br />
-      Computes 2nd derivatives of |complex current|**2 w.r.t.</td>
+      Based on d2AIbr_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+      PSERC Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.d2AIbr_dV2">source&nbsp;code</a></span>
             
@@ -501,12 +508,13 @@ vectors needed for a DC power flow [2].</td>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="pf_solution"></a><span class="summary-sig-name">pf_solution</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.case.Case-class.html#pf_solution" class="summary-sig-name">pf_solution</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Ybus</span>,
         <span class="summary-sig-arg">Yf</span>,
         <span class="summary-sig-arg">Yt</span>,
         <span class="summary-sig-arg">V</span>)</span><br />
-      Updates buses, generators and branches to match power flow solution.</td>
+      Based on pfsoln.m from MATPOWER by Ray Zimmerman, developed at PSERC 
+      Cornell.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.pf_solution">source&nbsp;code</a></span>
             
@@ -523,26 +531,9 @@ vectors needed for a DC power flow [2].</td>
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="reset"></a><span class="summary-sig-name">reset</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Resets the result variables for all of the case componenets.</td>
+      Resets the readonly variables for all of the case components.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.reset">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="deactivate_isolated"></a><span class="summary-sig-name">deactivate_isolated</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Deactivates branches and generators connected to isolated buses.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.case-pysrc.html#Case.deactivate_isolated">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -575,7 +566,8 @@ vectors needed for a DC power flow [2].</td>
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="save_psse"></a><span class="summary-sig-name">save_psse</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">fd</span>)</span></td>
+        <span class="summary-sig-arg">fd</span>)</span><br />
+      Serialize the case as a PSS/E data file.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.case-pysrc.html#Case.save_psse">source&nbsp;code</a></span>
             
@@ -676,15 +668,15 @@ vectors needed for a DC power flow [2].</td>
   </tr>
   <tr>
     <td colspan="2" class="summary">
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util.Named-class.html">util.Named</a></code></b> (private):
-      <code><a href="pylon.util.Named-class.html#_generate_name" onclick="show_private();">_generate_name</a></code>,
-      <code><a href="pylon.util.Named-class.html#_get_name" onclick="show_private();">_get_name</a></code>,
-      <code><a href="pylon.util.Named-class.html#_set_name" onclick="show_private();">_set_name</a></code>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b> (private):
+      <code><a href="pylon.util._Named-class.html#_generate_name" onclick="show_private();">_generate_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_get_name" onclick="show_private();">_get_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_set_name" onclick="show_private();">_set_name</a></code>
       </p></div>
-    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util.Serializable-class.html">util.Serializable</a></code></b>:
-      <code><a href="pylon.util.Serializable-class.html#save">save</a></code>,
-      <code><a href="pylon.util.Serializable-class.html#save_pickle">save_pickle</a></code>,
-      <code><a href="pylon.util.Serializable-class.html#save_to_file_object">save_to_file_object</a></code>
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Serializable-class.html" onclick="show_private();">util._Serializable</a></code></b>:
+      <code><a href="pylon.util._Serializable-class.html#save">save</a></code>,
+      <code><a href="pylon.util._Serializable-class.html#save_pickle">save_pickle</a></code>,
+      <code><a href="pylon.util._Serializable-class.html#save_to_file_object">save_to_file_object</a></code>
       </p>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__delattr__</code>,
@@ -773,10 +765,10 @@ vectors needed for a DC power flow [2].</td>
   </tr>
   <tr>
     <td colspan="2" class="summary">
-    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util.Serializable-class.html">util.Serializable</a></code></b>:
-      <code><a href="pylon.util.Serializable-class.html#load">load</a></code>,
-      <code><a href="pylon.util.Serializable-class.html#load_from_file_object">load_from_file_object</a></code>,
-      <code><a href="pylon.util.Serializable-class.html#load_pickle">load_pickle</a></code>
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Serializable-class.html" onclick="show_private();">util._Serializable</a></code></b>:
+      <code><a href="pylon.util._Serializable-class.html#load">load</a></code>,
+      <code><a href="pylon.util._Serializable-class.html#load_from_file_object">load_from_file_object</a></code>,
+      <code><a href="pylon.util._Serializable-class.html#load_pickle">load_pickle</a></code>
       </p>
     </td>
   </tr>
@@ -800,9 +792,9 @@ vectors needed for a DC power flow [2].</td>
 </tr>
   <tr>
     <td colspan="2" class="summary">
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util.Named-class.html">util.Named</a></code></b> (private):
-      <code><a href="pylon.util.Named-class.html#_name" onclick="show_private();">_name</a></code>,
-      <code><a href="pylon.util.Named-class.html#_name_ids" onclick="show_private();">_name_ids</a></code>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b> (private):
+      <code><a href="pylon.util._Named-class.html#_name" onclick="show_private();">_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_name_ids" onclick="show_private();">_name_ids</a></code>
       </p></div>
     </td>
   </tr>
@@ -896,7 +888,7 @@ vectors needed for a DC power flow [2].</td>
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
         <a href="pylon.case.Case-class.html#online_generators" class="summary-name">online_generators</a><br />
-      All in-service generators.
+      Returns all in-service generators connected to non-isolated buses.
     </td>
   </tr>
 <tr>
@@ -904,7 +896,7 @@ vectors needed for a DC power flow [2].</td>
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
         <a href="pylon.case.Case-class.html#online_branches" class="summary-name">online_branches</a><br />
-      Property getter for in-service branches.
+      Returns all in-service branches connected to non-isolated buses.
     </td>
   </tr>
 <tr>
@@ -912,26 +904,24 @@ vectors needed for a DC power flow [2].</td>
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
         <a href="pylon.case.Case-class.html#Sbus" class="summary-name">Sbus</a><br />
-      Net complex bus power injection vector in p.u.
+      Returns the net complex bus power injection vector in p.u.
     </td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
         <a href="pylon.case.Case-class.html#Y" class="summary-name">Y</a><br />
-      Returns the bus and branch admittance matrices, Yf and Yt, such
-that Yf * V is the vector of complex branch currents injected at
-each branch's &quot;from&quot; bus [1].
+      Based on makeYbus.m from MATPOWER by Ray Zimmerman, developed at 
+      PSERC Cornell.
     </td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
         <a href="pylon.case.Case-class.html#Bdc" class="summary-name">Bdc</a><br />
-      Returns the sparse susceptance matrices and phase shift injection
-vectors needed for a DC power flow [2].
+      The bus real power injections are related to bus voltage angles by:
     </td>
   </tr>
   <tr>
@@ -980,11 +970,63 @@ vectors needed for a DC power flow [2].
     </td>
   </tr></table>
   
-  <p>Initialises a new Case instance.</p>
+  <p>x.__init__(...) initializes x; see x.__class__.__doc__ for 
+  signature</p>
   <dl class="fields">
     <dt>Overrides:
         object.__init__
+        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="index_buses"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">index_buses</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">buses</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">start</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.case-pysrc.html#Case.index_buses">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Updates the indices of all buses.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>start</code></strong> (int) - Starting index, typically 0 or 1.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="index_branches"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">index_branches</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">branches</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">start</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.case-pysrc.html#Case.index_branches">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Updates the indices of all branches.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>start</code></strong> (int) - Starting index, typically 0 or 1.</li>
+    </ul></dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1004,16 +1046,49 @@ vectors needed for a DC power flow [2].
     </td>
   </tr></table>
   
-  <pre class="literalblock">
-Returns the bus and branch admittance matrices, Yf and Yt, such
-that Yf * V is the vector of complex branch currents injected at
-each branch's &quot;from&quot; bus [1].
-
-[1] Ray Zimmerman, &quot;makeYbus.m&quot;, MATPOWER, PSERC Cornell,
-    http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
-
-</pre>
+  <p>Based on makeYbus.m from MATPOWER by Ray Zimmerman, developed at PSERC
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>A triple consisting of the bus admittance matrix (i.e. for all 
+          buses) and the matrices Yf and Yt which, when multiplied by a 
+          complex voltage vector, yield the vector currents injected into 
+          each line from the &quot;from&quot; and &quot;to&quot; buses 
+          respectively of each line.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="makeB"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">makeB</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">buses</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">branches</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">method</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">XB</code><code class="variable-quote">'</code></span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.case-pysrc.html#Case.makeB">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Based on makeB.m from MATPOWER by Ray Zimmerman, developed at PSERC 
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>method</code></strong> (string) - Specify &quot;XB&quot; or &quot;BX&quot; method.</li>
+    </ul></dd>
+    <dt>Returns: tuple</dt>
+        <dd>Two matrices, B prime and B double prime, used in the fast 
+          decoupled power flow solver.</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1033,27 +1108,27 @@ each branch's &quot;from&quot; bus [1].
     </td>
   </tr></table>
   
-  <pre class="literalblock">
-Returns the sparse susceptance matrices and phase shift injection
-vectors needed for a DC power flow [2].
-
-The bus real power injections are related to bus voltage angles by
-    P = Bbus * Va + Pbusinj
-
-The real power flows at the from end the lines are related to the
-bus voltage angles by
-    Pf = Bf * Va + Pfinj
-
-| Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
-|    | = |          | * |     | + |       |
-| Pt |   | Btf  Btt |   | Vat |   | Ptinj |
-
-
-[2] Ray Zimmerman, &quot;makeBdc.m&quot;, MATPOWER, PSERC Cornell,
-    http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
-
+  <p>The bus real power injections are related to bus voltage angles 
+  by:</p>
+<pre class="literalblock">
+       P = Bbus * Va + Pbusinj
 </pre>
+  <p>The real power flows at the from end the lines are related to the bus 
+  voltage angles by:</p>
+<pre class="literalblock">
+       Pf = Bf * Va + Pfinj
+
+       | Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
+       |    | = |          | * |     | + |       |
+       | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
+</pre>
+  <p>Based on makeBdc.m from MATPOWER by Ray Zimmerman, developed at PSERC 
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>B matrices and phase shift injection vectors for DC power flow.</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1073,15 +1148,14 @@ bus voltage angles by
     </td>
   </tr></table>
   
-  <pre class="literalblock">
-Computes the partial derivative of power injection w.r.t.
-voltage [3].
-
-[3] Ray Zimmerman, &quot;dSbus_dV.m&quot;, MATPOWER, version 4.0b1,
-    PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
-
-</pre>
+  <p>Based on dSbus_dV.m from MATPOWER by Ray Zimmerman, developed at PSERC
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>The partial derivatives of power injection w.r.t. voltage 
+          magnitude and voltage angle.</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1102,14 +1176,44 @@ voltage [3].
     </td>
   </tr></table>
   
-  <pre class="literalblock">
-Computes partial derivatives of branch currents w.r.t. voltage [4].
-
-[4] Ray Zimmerman, &quot;dIbr_dV.m&quot;, MATPOWER, version 4.0b1,
-    PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
-
-</pre>
+  <p>Based on dIbr_dV.m from MATPOWER by Ray Zimmerman, developed at PSERC 
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>The partial derivatives of branch currents w.r.t. voltage 
+          magnitude and voltage angle.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="dSbr_dV"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">dSbr_dV</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Yf</span>,
+        <span class="sig-arg">Yt</span>,
+        <span class="sig-arg">V</span>,
+        <span class="sig-arg">buses</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">branches</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.case-pysrc.html#Case.dSbr_dV">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Based on dSbr_dV.m from MATPOWER by Ray Zimmerman, developed at PSERC 
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
+  <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>The branch power flow vectors and the partial derivatives of 
+          branch power flow w.r.t voltage magnitude and voltage angle.</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1133,11 +1237,16 @@ Computes partial derivatives of branch currents w.r.t. voltage [4].
     </td>
   </tr></table>
   
-  <p>Partial derivatives of squared flow magnitudes w.r.t voltage.</p>
-  <p>Computes partial derivatives of apparent power w.r.t active and 
-  reactive power flows.  Partial derivative must equal 1 for lines with 
-  zero flow to avoid division by zero errors (1 comes from L'Hopital).</p>
+  <p>Based on dAbr_dV.m from MATPOWER by Ray Zimmerman, developed at PSERC 
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>The partial derivatives of the squared flow magnitudes w.r.t 
+          voltage magnitude and voltage angle given the flows and flow 
+          sensitivities. Flows could be complex current or complex or real 
+          power.</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1158,8 +1267,13 @@ Computes partial derivatives of branch currents w.r.t. voltage [4].
     </td>
   </tr></table>
   
-  <p>Computes 2nd derivatives of power injection w.r.t. voltage.</p>
+  <p>Based on d2Sbus_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+  PSERC Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>The 2nd derivatives of power injection w.r.t. voltage.</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1180,8 +1294,13 @@ Computes partial derivatives of branch currents w.r.t. voltage [4].
     </td>
   </tr></table>
   
-  <p>Computes 2nd derivatives of complex branch current w.r.t. voltage.</p>
+  <p>Based on d2Ibr_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+  PSERC Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>The 2nd derivatives of complex branch current w.r.t. voltage.</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1203,8 +1322,13 @@ Computes partial derivatives of branch currents w.r.t. voltage [4].
     </td>
   </tr></table>
   
-  <p>Computes 2nd derivatives of complex power flow w.r.t. voltage.</p>
+  <p>Based on d2Sbr_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+  PSERC Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>The 2nd derivatives of complex power flow w.r.t. voltage.</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1229,8 +1353,13 @@ Computes partial derivatives of branch currents w.r.t. voltage [4].
     </td>
   </tr></table>
   
-  <p>Computes 2nd derivatives of |complex power flow|**2 w.r.t. V.</p>
+  <p>Based on d2ASbr_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+  PSERC Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>The 2nd derivatives of |complex power flow|**2 w.r.t. V.</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1254,7 +1383,40 @@ Computes partial derivatives of branch currents w.r.t. voltage [4].
     </td>
   </tr></table>
   
-  <p>Computes 2nd derivatives of |complex current|**2 w.r.t. V.</p>
+  <p>Based on d2AIbr_dV2.m from MATPOWER by Ray Zimmerman, developed at 
+  PSERC Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
+  <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>The 2nd derivatives of |complex current|**2 w.r.t. V.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="pf_solution"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">pf_solution</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Ybus</span>,
+        <span class="sig-arg">Yf</span>,
+        <span class="sig-arg">Yt</span>,
+        <span class="sig-arg">V</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.case-pysrc.html#Case.pf_solution">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Based on pfsoln.m from MATPOWER by Ray Zimmerman, developed at PSERC 
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
+  <p>Updates buses, generators and branches to match a power flow 
+  solution.</p>
   <dl class="fields">
   </dl>
 </td></tr></table>
@@ -1301,11 +1463,11 @@ first bus in a branchless system.
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <h3 class="epydoc">online_generators</h3>
-  <p>All in-service generators.</p>
+  <p>Returns all in-service generators connected to non-isolated buses.</p>
   <dl class="fields">
     <dt>Get Method:</dt>
     <dd class="value"><span class="summary-sig"><i>unreachable</i>.online_generators(<span class="summary-sig-arg">self</span>)</span>
-        - All in-service generators.
+        - Returns all in-service generators connected to non-isolated buses.
     </dd>
   </dl>
 </td></tr></table>
@@ -1316,11 +1478,11 @@ first bus in a branchless system.
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <h3 class="epydoc">online_branches</h3>
-  <p>Property getter for in-service branches.</p>
+  <p>Returns all in-service branches connected to non-isolated buses.</p>
   <dl class="fields">
     <dt>Get Method:</dt>
     <dd class="value"><span class="summary-sig"><i>unreachable</i>.online_branches(<span class="summary-sig-arg">self</span>)</span>
-        - Property getter for in-service branches.
+        - Returns all in-service branches connected to non-isolated buses.
     </dd>
   </dl>
 </td></tr></table>
@@ -1331,12 +1493,12 @@ first bus in a branchless system.
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <h3 class="epydoc">Sbus</h3>
-  <p>Net complex bus power injection vector in p.u.</p>
+  <p>Returns the net complex bus power injection vector in p.u.</p>
   <dl class="fields">
     <dt>Get Method:</dt>
     <dd class="value"><span class="summary-sig"><a href="pylon.case.Case-class.html#getSbus" class="summary-sig-name">getSbus</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>)</span>
-        - Net complex bus power injection vector in p.u.
+        - Returns the net complex bus power injection vector in p.u.
     </dd>
   </dl>
 </td></tr></table>
@@ -1347,24 +1509,20 @@ first bus in a branchless system.
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <h3 class="epydoc">Y</h3>
-  <pre class="literalblock">
-Returns the bus and branch admittance matrices, Yf and Yt, such
-that Yf * V is the vector of complex branch currents injected at
-each branch's &quot;from&quot; bus [1].
-
-[1] Ray Zimmerman, &quot;makeYbus.m&quot;, MATPOWER, PSERC Cornell,
-    http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
-
-</pre>
+  <p>Based on makeYbus.m from MATPOWER by Ray Zimmerman, developed at PSERC
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
     <dt>Get Method:</dt>
     <dd class="value"><span class="summary-sig"><a href="pylon.case.Case-class.html#getYbus" class="summary-sig-name">getYbus</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">branches</span>=<span class="summary-sig-default">None</span>)</span>
-        - Returns the bus and branch admittance matrices, Yf and Yt, such
-that Yf * V is the vector of complex branch currents injected at
-each branch's &quot;from&quot; bus [1].
+        - Based on makeYbus.m from MATPOWER by Ray Zimmerman, developed at 
+      PSERC Cornell.
     </dd>
+    <dt>Type:</dt>
+      <dd>tuple</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1374,34 +1532,33 @@ each branch's &quot;from&quot; bus [1].
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <h3 class="epydoc">Bdc</h3>
-  <pre class="literalblock">
-Returns the sparse susceptance matrices and phase shift injection
-vectors needed for a DC power flow [2].
-
-The bus real power injections are related to bus voltage angles by
-    P = Bbus * Va + Pbusinj
-
-The real power flows at the from end the lines are related to the
-bus voltage angles by
-    Pf = Bf * Va + Pfinj
-
-| Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
-|    | = |          | * |     | + |       |
-| Pt |   | Btf  Btt |   | Vat |   | Ptinj |
-
-
-[2] Ray Zimmerman, &quot;makeBdc.m&quot;, MATPOWER, PSERC Cornell,
-    http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
-
+  <p>The bus real power injections are related to bus voltage angles 
+  by:</p>
+<pre class="literalblock">
+       P = Bbus * Va + Pbusinj
 </pre>
+  <p>The real power flows at the from end the lines are related to the bus 
+  voltage angles by:</p>
+<pre class="literalblock">
+       Pf = Bf * Va + Pfinj
+
+       | Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
+       |    | = |          | * |     | + |       |
+       | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
+</pre>
+  <p>Based on makeBdc.m from MATPOWER by Ray Zimmerman, developed at PSERC 
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  information.</p>
   <dl class="fields">
     <dt>Get Method:</dt>
     <dd class="value"><span class="summary-sig"><a href="pylon.case.Case-class.html#makeBdc" class="summary-sig-name">makeBdc</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">buses</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">branches</span>=<span class="summary-sig-default">None</span>)</span>
-        - Returns the sparse susceptance matrices and phase shift injection
-vectors needed for a DC power flow [2].
+        - The bus real power injections are related to bus voltage angles by:
     </dd>
+    <dt>Type:</dt>
+      <dd>tuple</dd>
   </dl>
 </td></tr></table>
 </div>
@@ -1434,7 +1591,7 @@ vectors needed for a DC power flow [2].
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Jun 18 15:48:34 2010
+    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:03 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

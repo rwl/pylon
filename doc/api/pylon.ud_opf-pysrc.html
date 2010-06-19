@@ -75,33 +75,34 @@
 <a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
 <a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
 <a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-docstring">""" The standard OPF formulation has no mechanism for completely shutting down</tt> </tt>
-<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">    generators which are very expensive to operate. Instead they are simply</tt> </tt>
-<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-docstring">    dispatched at their minimum generation limits. PYLON includes the</tt> </tt>
-<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-docstring">    capability to run an optimal power flow combined with a unit decommitment</tt> </tt>
-<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-docstring">    for a single time period, which allows it to shut down these expensive</tt> </tt>
-<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-docstring">    units and find a least cost commitment and dispatch [1].</tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">generators which are very expensive to operate. Instead they are simply</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-docstring">dispatched at their minimum generation limits. PYLON includes the</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-docstring">capability to run an optimal power flow combined with a unit decommitment</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-docstring">for a single time period, which allows it to shut down these expensive</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-docstring">units and find a least cost commitment and dispatch.</tt> </tt>
 <a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
-<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-docstring">    [1] Ray Zimmerman, "MATPOWER User's Manual", MATPOWER, PSERC Cornell,</tt> </tt>
-<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring">        version 3.2, http://www.pserc.cornell.edu/matpower/, September, 2007</tt> </tt>
-<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
-<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"> </tt>
-<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
-<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  Imports:</tt> </tt>
-<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
-<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
-<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">time</tt> </tt>
-<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
-<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">random</tt> </tt>
-<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"> </tt>
-<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">import</tt> <tt class="py-name">matrix</tt> </tt>
-<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"> </tt>
-<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package pylon=pylon-module.html"><a title="pylon" class="py-name" href="#" onclick="return doclink('link-0', 'pylon', 'link-0');">pylon</a></tt> <tt class="py-keyword">import</tt> <tt id="link-1" class="py-name" targets="Class pylon.opf.OPF=pylon.opf.OPF-class.html"><a title="pylon.opf.OPF" class="py-name" href="#" onclick="return doclink('link-1', 'OPF', 'link-1');">OPF</a></tt> </tt>
-<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"> </tt>
-<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
-<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  Logging:</tt> </tt>
-<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
-<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
-<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt id="link-2" class="py-name" targets="Variable pylon.ac_pf.logger=pylon.ac_pf-module.html#logger,Variable pylon.case.logger=pylon.case-module.html#logger,Variable pylon.dc_pf.logger=pylon.dc_pf-module.html#logger,Variable pylon.dyn.logger=pylon.dyn-module.html#logger,Variable pylon.estimator.logger=pylon.estimator-module.html#logger,Variable pylon.generator.logger=pylon.generator-module.html#logger,Variable pylon.io.common.logger=pylon.io.common-module.html#logger,Variable pylon.io.dot.logger=pylon.io.dot-module.html#logger,Variable pylon.io.matpower.logger=pylon.io.matpower-module.html#logger,Variable pylon.io.pickle.logger=pylon.io.pickle-module.html#logger,Variable pylon.io.psat.logger=pylon.io.psat-module.html#logger,Variable pylon.io.psse.logger=pylon.io.psse-module.html#logger,Variable pylon.io.rdf.logger=pylon.io.rdf-module.html#logger,Variable pylon.main.logger=pylon.main-module.html#logger,Variable pylon.opf.logger=pylon.opf-module.html#logger,Variable pylon.solver.logger=pylon.solver-module.html#logger,Variable pylon.ud_opf.logger=pylon.ud_opf-module.html#logger"><a title="pylon.ac_pf.logger
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-docstring">See also:</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring">  - Ray Zimmerman, "MATPOWER User's Manual", MATPOWER, PSERC Cornell,</tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring">    version 3.2, U{http://www.pserc.cornell.edu/matpower/}, September, 2007</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  Imports:</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">time</tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">random</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">import</tt> <tt class="py-name">matrix</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package pylon=pylon-module.html"><a title="pylon" class="py-name" href="#" onclick="return doclink('link-0', 'pylon', 'link-0');">pylon</a></tt> <tt class="py-keyword">import</tt> <tt id="link-1" class="py-name" targets="Class pylon.opf.OPF=pylon.opf.OPF-class.html"><a title="pylon.opf.OPF" class="py-name" href="#" onclick="return doclink('link-1', 'OPF', 'link-1');">OPF</a></tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  Logging:</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt id="link-2" class="py-name" targets="Variable pylon.ac_pf.logger=pylon.ac_pf-module.html#logger,Variable pylon.case.logger=pylon.case-module.html#logger,Variable pylon.dc_pf.logger=pylon.dc_pf-module.html#logger,Variable pylon.dyn.logger=pylon.dyn-module.html#logger,Variable pylon.estimator.logger=pylon.estimator-module.html#logger,Variable pylon.generator.logger=pylon.generator-module.html#logger,Variable pylon.io.common.logger=pylon.io.common-module.html#logger,Variable pylon.io.dot.logger=pylon.io.dot-module.html#logger,Variable pylon.io.matpower.logger=pylon.io.matpower-module.html#logger,Variable pylon.io.pickle.logger=pylon.io.pickle-module.html#logger,Variable pylon.io.psat.logger=pylon.io.psat-module.html#logger,Variable pylon.io.psse.logger=pylon.io.psse-module.html#logger,Variable pylon.io.rdf.logger=pylon.io.rdf-module.html#logger,Variable pylon.main.logger=pylon.main-module.html#logger,Variable pylon.opf.logger=pylon.opf-module.html#logger,Variable pylon.solver.logger=pylon.solver-module.html#logger,Variable pylon.ud_opf.logger=pylon.ud_opf-module.html#logger"><a title="pylon.ac_pf.logger
 pylon.case.logger
 pylon.dc_pf.logger
 pylon.dyn.logger
@@ -118,24 +119,23 @@ pylon.main.logger
 pylon.opf.logger
 pylon.solver.logger
 pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-2', 'logger', 'link-2');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-name">__name__</tt><tt class="py-op">)</tt> </tt>
-<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"> </tt>
-<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
-<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  "UDOPF" class:</tt> </tt>
-<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
-<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
-<a name="UDOPF"></a><div id="UDOPF-def"><a name="L50"></a><tt class="py-lineno"> 50</tt> <a class="py-toggle" href="#" id="UDOPF-toggle" onclick="return toggle('UDOPF');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="pylon.ud_opf.UDOPF-class.html">UDOPF</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-</div><div id="UDOPF-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="UDOPF-expanded"><a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">    <tt class="py-docstring">""" Solves a combined unit decommitment and optimal power flow for a</tt> </tt>
-<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"><tt class="py-docstring">        single time period. Uses an algorithm similar to dynamic programming.</tt> </tt>
-<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line"><tt class="py-docstring">        It proceeds through a sequence of stages, where stage N has N</tt> </tt>
-<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"><tt class="py-docstring">        generators shut down, starting with N=0. In each stage, it forms a list</tt> </tt>
-<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"><tt class="py-docstring">        of candidates (gens at their Pmin limits) and computes the cost with</tt> </tt>
-<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"><tt class="py-docstring">        each one of them shut down. It selects the least cost case as the</tt> </tt>
-<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"><tt class="py-docstring">        starting point for the next stage, continuing until there are no more</tt> </tt>
-<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-docstring">        candidates to be shut down or no more improvement can be gained by</tt> </tt>
-<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"><tt class="py-docstring">        shutting something down [2].</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#  "UDOPF" class:</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#------------------------------------------------------------------------------</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
+<a name="UDOPF"></a><div id="UDOPF-def"><a name="L51"></a><tt class="py-lineno"> 51</tt> <a class="py-toggle" href="#" id="UDOPF-toggle" onclick="return toggle('UDOPF');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="pylon.ud_opf.UDOPF-class.html">UDOPF</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="UDOPF-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="UDOPF-expanded"><a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line">    <tt class="py-docstring">""" Solves a combined unit decommitment and optimal power flow for a</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line"><tt class="py-docstring">    single time period. Uses an algorithm similar to dynamic programming.</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"><tt class="py-docstring">    It proceeds through a sequence of stages, where stage N has N generators</tt> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"><tt class="py-docstring">    shut down, starting with N=0. In each stage, it forms a list of candidates</tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"><tt class="py-docstring">    (gens at their Pmin limits) and computes the cost with each one of them</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"><tt class="py-docstring">    shut down. It selects the least cost case as the starting point for the</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-docstring">    next stage, continuing until there are no more candidates to be shut down</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"><tt class="py-docstring">    or no more improvement can be gained by shutting something down.</tt> </tt>
 <a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
-<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-docstring">        [2] Ray Zimmerman, "uopf.m", MATPOWER, PSERC Cornell, version 3.2,</tt> </tt>
-<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-docstring">            http://www.pserc.cornell.edu/matpower/, March, 2006</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-docstring">    Based on uopf.m from MATPOWER by Ray Zimmerman, developed at PSERC</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-docstring">    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.</tt> </tt>
 <a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
 <a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"> </tt>
 <a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line">    <tt class="py-comment">#--------------------------------------------------------------------------</tt> </tt>
@@ -207,7 +207,7 @@ pylon.io.rdf.logger
 pylon.main.logger
 pylon.opf.logger
 pylon.solver.logger
-pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-12', 'logger', 'link-2');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Solving OPF with unit decommitment [%s]."</tt> <tt class="py-op">%</tt> <tt id="link-13" class="py-name"><a title="pylon.case" class="py-name" href="#" onclick="return doclink('link-13', 'case', 'link-4');">case</a></tt><tt class="py-op">.</tt><tt id="link-14" class="py-name" targets="Variable pylon.util.Named.name=pylon.util.Named-class.html#name"><a title="pylon.util.Named.name" class="py-name" href="#" onclick="return doclink('link-14', 'name', 'link-14');">name</a></tt><tt class="py-op">)</tt> </tt>
+pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-12', 'logger', 'link-2');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Solving OPF with unit decommitment [%s]."</tt> <tt class="py-op">%</tt> <tt id="link-13" class="py-name"><a title="pylon.case" class="py-name" href="#" onclick="return doclink('link-13', 'case', 'link-4');">case</a></tt><tt class="py-op">.</tt><tt id="link-14" class="py-name" targets="Variable pylon.util._Named.name=pylon.util._Named-class.html#name"><a title="pylon.util._Named.name" class="py-name" href="#" onclick="return doclink('link-14', 'name', 'link-14');">name</a></tt><tt class="py-op">)</tt> </tt>
 <a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"> </tt>
 <a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">        <tt class="py-comment"># 1. Begin at stage zero (N = 0), assuming all generators are on-line</tt> </tt>
 <a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-comment"># with all limits in place. At most one generator shutdown per stage.</tt> </tt>
@@ -272,7 +272,7 @@ pylon.opf.logger
 pylon.solver.logger
 pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-23', 'logger', 'link-2');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Shutting down generator [%s] to satisfy all "</tt> </tt>
 <a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line">                        <tt class="py-string">"p_min limits."</tt> <tt class="py-op">%</tt> <tt id="link-24" class="py-name"><a title="pylon.dyn.DynamicCase.generator
-pylon.generator" class="py-name" href="#" onclick="return doclink('link-24', 'generator', 'link-22');">generator</a></tt><tt class="py-op">.</tt><tt id="link-25" class="py-name"><a title="pylon.util.Named.name" class="py-name" href="#" onclick="return doclink('link-25', 'name', 'link-14');">name</a></tt><tt class="py-op">)</tt> </tt>
+pylon.generator" class="py-name" href="#" onclick="return doclink('link-24', 'generator', 'link-22');">generator</a></tt><tt class="py-op">.</tt><tt id="link-25" class="py-name"><a title="pylon.util._Named.name" class="py-name" href="#" onclick="return doclink('link-25', 'name', 'link-14');">name</a></tt><tt class="py-op">)</tt> </tt>
 <a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line"> </tt>
 <a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line">            <tt class="py-comment"># Shut down most expensive unit.</tt> </tt>
 <a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line"><tt class="py-comment"></tt>            <tt id="link-26" class="py-name"><a title="pylon.dyn.DynamicCase.generator
@@ -296,7 +296,7 @@ pylon.util.CaseReport.online_generators" class="py-name" href="#" onclick="retur
 <a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line">                                   <tt class="py-name">abstol</tt><tt class="py-op">,</tt> <tt class="py-name">reltol</tt><tt class="py-op">,</tt> <tt class="py-name">feastol</tt><tt class="py-op">)</tt> </tt>
 <a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line"> </tt>
 <a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line">        <tt class="py-comment"># Initial solve fo the OPF problem.</tt> </tt>
-<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">solution</tt> <tt class="py-op">=</tt> <tt id="link-37" class="py-name"><a title="pylon.solver" class="py-name" href="#" onclick="return doclink('link-37', 'solver', 'link-3');">solver</a></tt><tt class="py-op">.</tt><tt id="link-38" class="py-name" targets="Method pylon.ac_pf._ACPF.solve()=pylon.ac_pf._ACPF-class.html#solve,Method pylon.dc_pf.DCPF.solve()=pylon.dc_pf.DCPF-class.html#solve,Method pylon.dyn.DynamicSolver.solve()=pylon.dyn.DynamicSolver-class.html#solve,Method pylon.dyn.ModifiedEuler.solve()=pylon.dyn.ModifiedEuler-class.html#solve,Method pylon.dyn.ModifiedEuler2.solve()=pylon.dyn.ModifiedEuler2-class.html#solve,Method pylon.dyn.RungeKutta.solve()=pylon.dyn.RungeKutta-class.html#solve,Method pylon.dyn.RungeKuttaFehlberg.solve()=pylon.dyn.RungeKuttaFehlberg-class.html#solve,Method pylon.dyn.RungeKuttaHighamHall.solve()=pylon.dyn.RungeKuttaHighamHall-class.html#solve,Method pylon.opf.OPF.solve()=pylon.opf.OPF-class.html#solve,Method pylon.solver.DCOPFSolver.solve()=pylon.solver.DCOPFSolver-class.html#solve,Method pylon.solver.PIPSSolver.solve()=pylon.solver.PIPSSolver-class.html#solve,Method pylon.solver.PIPSSolver.solve()=pylon.solver.PIPSSolver-class.html#solve,Method pylon.solver.Solver.solve()=pylon.solver.Solver-class.html#solve,Method pylon.ud_opf.UDOPF.solve()=pylon.ud_opf.UDOPF-class.html#solve"><a title="pylon.ac_pf._ACPF.solve
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-name">solution</tt> <tt class="py-op">=</tt> <tt id="link-37" class="py-name"><a title="pylon.solver" class="py-name" href="#" onclick="return doclink('link-37', 'solver', 'link-3');">solver</a></tt><tt class="py-op">.</tt><tt id="link-38" class="py-name" targets="Method pylon.ac_pf._ACPF.solve()=pylon.ac_pf._ACPF-class.html#solve,Method pylon.dc_pf.DCPF.solve()=pylon.dc_pf.DCPF-class.html#solve,Method pylon.dyn.DynamicSolver.solve()=pylon.dyn.DynamicSolver-class.html#solve,Method pylon.dyn.ModifiedEuler.solve()=pylon.dyn.ModifiedEuler-class.html#solve,Method pylon.dyn.ModifiedEuler2.solve()=pylon.dyn.ModifiedEuler2-class.html#solve,Method pylon.dyn.RungeKutta.solve()=pylon.dyn.RungeKutta-class.html#solve,Method pylon.dyn.RungeKuttaFehlberg.solve()=pylon.dyn.RungeKuttaFehlberg-class.html#solve,Method pylon.dyn.RungeKuttaHighamHall.solve()=pylon.dyn.RungeKuttaHighamHall-class.html#solve,Method pylon.opf.OPF.solve()=pylon.opf.OPF-class.html#solve,Method pylon.solver.DCOPFSolver.solve()=pylon.solver.DCOPFSolver-class.html#solve,Method pylon.solver.PIPSSolver.solve()=pylon.solver.PIPSSolver-class.html#solve,Method pylon.solver._Solver.solve()=pylon.solver._Solver-class.html#solve,Method pylon.ud_opf.UDOPF.solve()=pylon.ud_opf.UDOPF-class.html#solve"><a title="pylon.ac_pf._ACPF.solve
 pylon.dc_pf.DCPF.solve
 pylon.dyn.DynamicSolver.solve
 pylon.dyn.ModifiedEuler.solve
@@ -307,8 +307,7 @@ pylon.dyn.RungeKuttaHighamHall.solve
 pylon.opf.OPF.solve
 pylon.solver.DCOPFSolver.solve
 pylon.solver.PIPSSolver.solve
-pylon.solver.PIPSSolver.solve
-pylon.solver.Solver.solve
+pylon.solver._Solver.solve
 pylon.ud_opf.UDOPF.solve" class="py-name" href="#" onclick="return doclink('link-38', 'solve', 'link-38');">solve</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
 <a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line"> </tt>
 <a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line">        <tt class="py-name">status</tt> <tt class="py-op">=</tt> <tt class="py-name">solution</tt><tt class="py-op">[</tt><tt class="py-string">"status"</tt><tt class="py-op">]</tt> </tt>
@@ -415,7 +414,7 @@ pylon.main.logger
 pylon.opf.logger
 pylon.solver.logger
 pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-50', 'logger', 'link-2');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Attempting OPF with generator '%s' shutdown."</tt> <tt class="py-op">%</tt> </tt>
-<a name="L223"></a><tt class="py-lineno">223</tt>  <tt class="py-line">                    <tt class="py-name">candidate</tt><tt class="py-op">.</tt><tt id="link-51" class="py-name"><a title="pylon.util.Named.name" class="py-name" href="#" onclick="return doclink('link-51', 'name', 'link-14');">name</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L223"></a><tt class="py-lineno">223</tt>  <tt class="py-line">                    <tt class="py-name">candidate</tt><tt class="py-op">.</tt><tt id="link-51" class="py-name"><a title="pylon.util._Named.name" class="py-name" href="#" onclick="return doclink('link-51', 'name', 'link-14');">name</a></tt><tt class="py-op">)</tt> </tt>
 <a name="L224"></a><tt class="py-lineno">224</tt>  <tt class="py-line"> </tt>
 <a name="L225"></a><tt class="py-lineno">225</tt>  <tt class="py-line">                <tt class="py-comment"># Run OPF.</tt> </tt>
 <a name="L226"></a><tt class="py-lineno">226</tt>  <tt class="py-line"><tt class="py-comment"></tt>                <tt class="py-name">solution</tt> <tt class="py-op">=</tt> <tt id="link-52" class="py-name"><a title="pylon.solver" class="py-name" href="#" onclick="return doclink('link-52', 'solver', 'link-3');">solver</a></tt><tt class="py-op">(</tt><tt id="link-53" class="py-name"><a title="pylon.case" class="py-name" href="#" onclick="return doclink('link-53', 'case', 'link-4');">case</a></tt><tt class="py-op">)</tt> </tt>
@@ -453,7 +452,7 @@ pylon.io.rdf.logger
 pylon.main.logger
 pylon.opf.logger
 pylon.solver.logger
-pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-57', 'logger', 'link-2');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Shutting down generator '%s'."</tt><tt class="py-op">,</tt> <tt class="py-name">candidate</tt><tt class="py-op">.</tt><tt id="link-58" class="py-name"><a title="pylon.util.Named.name" class="py-name" href="#" onclick="return doclink('link-58', 'name', 'link-14');">name</a></tt><tt class="py-op">)</tt> </tt>
+pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-57', 'logger', 'link-2');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Shutting down generator '%s'."</tt><tt class="py-op">,</tt> <tt class="py-name">candidate</tt><tt class="py-op">.</tt><tt id="link-58" class="py-name"><a title="pylon.util._Named.name" class="py-name" href="#" onclick="return doclink('link-58', 'name', 'link-14');">name</a></tt><tt class="py-op">)</tt> </tt>
 <a name="L246"></a><tt class="py-lineno">246</tt>  <tt class="py-line"> </tt>
 <a name="L247"></a><tt class="py-lineno">247</tt>  <tt class="py-line">                <tt class="py-name">stage_online</tt> <tt class="py-op">=</tt> <tt class="py-name">overall_online</tt> </tt>
 <a name="L248"></a><tt class="py-lineno">248</tt>  <tt class="py-line">                <tt class="py-name">stage_cost</tt>   <tt class="py-op">=</tt> <tt class="py-name">overall_cost</tt> </tt>
@@ -477,8 +476,7 @@ pylon.dyn.RungeKuttaHighamHall.solve
 pylon.opf.OPF.solve
 pylon.solver.DCOPFSolver.solve
 pylon.solver.PIPSSolver.solve
-pylon.solver.PIPSSolver.solve
-pylon.solver.Solver.solve
+pylon.solver._Solver.solve
 pylon.ud_opf.UDOPF.solve" class="py-name" href="#" onclick="return doclink('link-63', 'solve', 'link-38');">solve</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
 <a name="L257"></a><tt class="py-lineno">257</tt>  <tt class="py-line"> </tt>
 <a name="L258"></a><tt class="py-lineno">258</tt>  <tt class="py-line">        <tt class="py-comment"># Compute elapsed time and log it.</tt> </tt>
@@ -511,10 +509,10 @@ pylon.ud_opf.logger" class="py-name" href="#" onclick="return doclink('link-64',
 <a name="L269"></a><tt class="py-lineno">269</tt>  <tt class="py-line"><tt class="py-comment"></tt> </tt>
 <a name="fair_max"></a><div id="fair_max-def"><a name="L270"></a><tt class="py-lineno">270</tt> <a class="py-toggle" href="#" id="fair_max-toggle" onclick="return toggle('fair_max');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="pylon.ud_opf-module.html#fair_max">fair_max</a><tt class="py-op">(</tt><tt class="py-param">x</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
 </div><div id="fair_max-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="fair_max-expanded"><a name="L271"></a><tt class="py-lineno">271</tt>  <tt class="py-line">    <tt class="py-docstring">""" Takes a single iterable as an argument and returns the same output as</tt> </tt>
-<a name="L272"></a><tt class="py-lineno">272</tt>  <tt class="py-line"><tt class="py-docstring">        the built-in function max with two output parameters, except that where</tt> </tt>
-<a name="L273"></a><tt class="py-lineno">273</tt>  <tt class="py-line"><tt class="py-docstring">        the maximum value occurs at more than one position in the  vector, the</tt> </tt>
-<a name="L274"></a><tt class="py-lineno">274</tt>  <tt class="py-line"><tt class="py-docstring">        index is chosen randomly from these positions as opposed to just</tt> </tt>
-<a name="L275"></a><tt class="py-lineno">275</tt>  <tt class="py-line"><tt class="py-docstring">        choosing the first occurance.</tt> </tt>
+<a name="L272"></a><tt class="py-lineno">272</tt>  <tt class="py-line"><tt class="py-docstring">    the built-in function max with two output parameters, except that where</tt> </tt>
+<a name="L273"></a><tt class="py-lineno">273</tt>  <tt class="py-line"><tt class="py-docstring">    the maximum value occurs at more than one position in the  vector, the</tt> </tt>
+<a name="L274"></a><tt class="py-lineno">274</tt>  <tt class="py-line"><tt class="py-docstring">    index is chosen randomly from these positions as opposed to just choosing</tt> </tt>
+<a name="L275"></a><tt class="py-lineno">275</tt>  <tt class="py-line"><tt class="py-docstring">    the first occurance.</tt> </tt>
 <a name="L276"></a><tt class="py-lineno">276</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
 <a name="L277"></a><tt class="py-lineno">277</tt>  <tt class="py-line">    <tt class="py-name">value</tt> <tt class="py-op">=</tt> <tt class="py-name">max</tt><tt class="py-op">(</tt><tt class="py-name">x</tt><tt class="py-op">)</tt> </tt>
 <a name="L278"></a><tt class="py-lineno">278</tt>  <tt class="py-line">    <tt class="py-comment"># List indexes of max value.</tt> </tt>
@@ -560,7 +558,7 @@ expandto(location.href);
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Jun 18 15:48:37 2010
+    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:04 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

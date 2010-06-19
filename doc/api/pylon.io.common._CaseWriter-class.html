@@ -3,7 +3,7 @@
           "DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <title>pylon.io.matpower.MATPOWERWriter</title>
+  <title>pylon.io.common._CaseWriter</title>
   <link rel="stylesheet" href="epydoc.css" type="text/css" />
   <script type="text/javascript" src="epydoc.js"></script>
 </head>
@@ -41,8 +41,8 @@
       <span class="breadcrumbs">
         <a href="pylon-module.html">Package&nbsp;pylon</a> ::
         <a href="pylon.io-module.html">Package&nbsp;io</a> ::
-        <a href="pylon.io.matpower-module.html">Module&nbsp;matpower</a> ::
-        Class&nbsp;MATPOWERWriter
+        <a href="pylon.io.common-module.html">Module&nbsp;common</a> ::
+        Class&nbsp;_CaseWriter
       </span>
     </td>
     <td>
@@ -52,28 +52,28 @@
     onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
         <tr><td align="right"><span class="options"
             >[<a href="frames.html" target="_top">frames</a
-            >]&nbsp;|&nbsp;<a href="pylon.io.matpower.MATPOWERWriter-class.html"
+            >]&nbsp;|&nbsp;<a href="pylon.io.common._CaseWriter-class.html"
             target="_top">no&nbsp;frames</a>]</span></td></tr>
       </table>
     </td>
   </tr>
 </table>
 <!-- ==================== CLASS DESCRIPTION ==================== -->
-<h1 class="epydoc">Class MATPOWERWriter</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter">source&nbsp;code</a></span></p>
+<h1 class="epydoc">Class _CaseWriter</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter">source&nbsp;code</a></span></p>
 <pre class="base-tree">
-        object --+    
-                 |    
-<a href="pylon.io.common._CaseWriter-class.html" onclick="show_private();">common._CaseWriter</a> --+
-                     |
-                    <strong class="uidshort">MATPOWERWriter</strong>
+object --+
+         |
+        <strong class="uidshort">_CaseWriter</strong>
 </pre>
 
+<dl><dt>Known Subclasses:</dt>
+<dd>
+      <ul class="subclass-list">
+<li><a href="pylon.io.dot.DotWriter-class.html">dot.DotWriter</a></li><li>, <a href="pylon.io.psse.PSSEWriter-class.html">psse.PSSEWriter</a></li><li>, <a href="pylon.io.rdf.RDFWriter-class.html">rdf.RDFWriter</a></li><li>, <a href="pylon.io.pickle.PickleWriter-class.html">pickle.PickleWriter</a></li><li>, <a href="pylon.io.rst.ReSTWriter-class.html">rst.ReSTWriter</a></li><li>, <a href="pylon.io.matpower.MATPOWERWriter-class.html">matpower.MATPOWERWriter</a></li><li>, <a href="pylon.io.excel.CSVWriter-class.html">excel.CSVWriter</a></li><li>, <a href="pylon.io.excel.ExcelWriter-class.html">excel.ExcelWriter</a></li>  </ul>
+</dd></dl>
+
 <hr />
-<p>Write case data to a file in MATPOWER format.</p>
-  <p>Based on savecase.m from MATPOWER by Ray Zimmerman, developed at PSERC
-  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
-  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
-  info.</p>
+<p>Defines a base class for writers of case data.</p>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
@@ -98,11 +98,28 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="pylon.io.matpower.MATPOWERWriter-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.io.common._CaseWriter-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">case</span>)</span><br />
-      Initialises a new MATPOWERWriter instance.</td>
+      Initialises a new _CaseWriter instance.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.__init__">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_write_data"></a><span class="summary-sig-name">_write_data</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">file</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter._write_data">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -116,11 +133,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="pylon.io.matpower.MATPOWERWriter-class.html#write" class="summary-sig-name">write</a>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a name="write"></a><span class="summary-sig-name">write</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">file_or_filename</span>)</span><br />
-      Writes case data to file in MATPOWER format.</td>
+      Writes the case data to file.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter.write">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -134,65 +151,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="pylon.io.matpower.MATPOWERWriter-class.html#write_case_data" class="summary-sig-name">write_case_data</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">file</span>)</span><br />
-      Writes the case data in MATPOWER format.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_case_data">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a href="pylon.io.matpower.MATPOWERWriter-class.html#write_bus_data" class="summary-sig-name">write_bus_data</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">file</span>)</span><br />
-      Writes bus data in MATPOWER format.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_bus_data">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a href="pylon.io.matpower.MATPOWERWriter-class.html#write_generator_data" class="summary-sig-name">write_generator_data</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">file</span>)</span><br />
-      Writes generator data in MATPOWER format.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_generator_data">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a href="pylon.io.matpower.MATPOWERWriter-class.html#write_branch_data" class="summary-sig-name">write_branch_data</a>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a name="write_branch_data"></a><span class="summary-sig-name">write_branch_data</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">file</span>)</span><br />
       Writes branch data to file.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_branch_data">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter.write_branch_data">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -206,11 +169,47 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="pylon.io.matpower.MATPOWERWriter-class.html#write_generator_cost_data" class="summary-sig-name">write_generator_cost_data</a>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a name="write_bus_data"></a><span class="summary-sig-name">write_bus_data</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">file</span>)</span><br />
+      Writes bus data to file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter.write_bus_data">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="write_case_data"></a><span class="summary-sig-name">write_case_data</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">file</span>)</span><br />
+      Writes case data to file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter.write_case_data">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="write_generator_cost_data"></a><span class="summary-sig-name">write_generator_cost_data</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">file</span>)</span><br />
       Writes generator cost data to file.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_generator_cost_data">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter.write_generator_cost_data">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -224,11 +223,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="write_area_data"></a><span class="summary-sig-name">write_area_data</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a name="write_generator_data"></a><span class="summary-sig-name">write_generator_data</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">file</span>)</span><br />
-      Writes area data to file.</td>
+      Writes generator data to file.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_area_data">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter.write_generator_data">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -238,9 +237,6 @@
   </tr>
   <tr>
     <td colspan="2" class="summary">
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.io.common._CaseWriter-class.html" onclick="show_private();">common._CaseWriter</a></code></b> (private):
-      <code><a href="pylon.io.common._CaseWriter-class.html#_write_data" onclick="show_private();">_write_data</a></code>
-      </p></div>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__delattr__</code>,
       <code>__getattribute__</code>,
@@ -272,19 +268,12 @@
     </table>
   </td>
 </tr>
-<tr class="private">
+<tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_fcn_name"></a><span class="summary-name">_fcn_name</span><br />
-      Function name must match the file name in MATLAB.
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2" class="summary">
-    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.io.common._CaseWriter-class.html" onclick="show_private();">common._CaseWriter</a></code></b>:
-      <code><a href="pylon.io.common._CaseWriter-class.html#case">case</a></code>
-      </p>
+        <a name="case"></a><span class="summary-name">case</span><br />
+      Case to be written.
     </td>
   </tr>
 </table>
@@ -343,152 +332,14 @@
     <br /><em class="fname">(Constructor)</em>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.__init__">source&nbsp;code</a></span>&nbsp;
+    ><span class="codelink"><a href="pylon.io.common-pysrc.html#_CaseWriter.__init__">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
   
-  <p>Initialises a new MATPOWERWriter instance.</p>
+  <p>Initialises a new _CaseWriter instance.</p>
   <dl class="fields">
     <dt>Overrides:
         object.__init__
-    </dt>
-  </dl>
-</td></tr></table>
-</div>
-<a name="write"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">write</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">file_or_filename</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>Writes case data to file in MATPOWER format.</p>
-  <dl class="fields">
-    <dt>Overrides:
-        <a href="pylon.io.common._CaseWriter-class.html#write">common._CaseWriter.write</a>
-    </dt>
-  </dl>
-</td></tr></table>
-</div>
-<a name="write_case_data"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_case_data</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">file</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_case_data">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>Writes the case data in MATPOWER format.</p>
-  <dl class="fields">
-    <dt>Overrides:
-        <a href="pylon.io.common._CaseWriter-class.html#write_case_data">common._CaseWriter.write_case_data</a>
-    </dt>
-  </dl>
-</td></tr></table>
-</div>
-<a name="write_bus_data"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_bus_data</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">file</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_bus_data">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>Writes bus data in MATPOWER format.</p>
-  <dl class="fields">
-    <dt>Overrides:
-        <a href="pylon.io.common._CaseWriter-class.html#write_bus_data">common._CaseWriter.write_bus_data</a>
-    </dt>
-  </dl>
-</td></tr></table>
-</div>
-<a name="write_generator_data"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_generator_data</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">file</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_generator_data">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>Writes generator data in MATPOWER format.</p>
-  <dl class="fields">
-    <dt>Overrides:
-        <a href="pylon.io.common._CaseWriter-class.html#write_generator_data">common._CaseWriter.write_generator_data</a>
-    </dt>
-  </dl>
-</td></tr></table>
-</div>
-<a name="write_branch_data"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_branch_data</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">file</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_branch_data">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>Writes branch data to file.</p>
-  <dl class="fields">
-    <dt>Overrides:
-        <a href="pylon.io.common._CaseWriter-class.html#write_branch_data">common._CaseWriter.write_branch_data</a>
-    </dt>
-  </dl>
-</td></tr></table>
-</div>
-<a name="write_generator_cost_data"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_generator_cost_data</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">file</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERWriter.write_generator_cost_data">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>Writes generator cost data to file.</p>
-  <dl class="fields">
-    <dt>Overrides:
-        <a href="pylon.io.common._CaseWriter-class.html#write_generator_cost_data">common._CaseWriter.write_generator_cost_data</a>
     </dt>
   </dl>
 </td></tr></table>

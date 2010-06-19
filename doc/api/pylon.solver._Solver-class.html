@@ -3,7 +3,7 @@
           "DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <title>pylon.ac_pf.NewtonPF</title>
+  <title>pylon.solver._Solver</title>
   <link rel="stylesheet" href="epydoc.css" type="text/css" />
   <script type="text/javascript" src="epydoc.js"></script>
 </head>
@@ -40,8 +40,8 @@
     <td width="100%">
       <span class="breadcrumbs">
         <a href="pylon-module.html">Package&nbsp;pylon</a> ::
-        <a href="pylon.ac_pf-module.html">Module&nbsp;ac_pf</a> ::
-        Class&nbsp;NewtonPF
+        <a href="pylon.solver-module.html">Module&nbsp;solver</a> ::
+        Class&nbsp;_Solver
       </span>
     </td>
     <td>
@@ -51,28 +51,28 @@
     onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
         <tr><td align="right"><span class="options"
             >[<a href="frames.html" target="_top">frames</a
-            >]&nbsp;|&nbsp;<a href="pylon.ac_pf.NewtonPF-class.html"
+            >]&nbsp;|&nbsp;<a href="pylon.solver._Solver-class.html"
             target="_top">no&nbsp;frames</a>]</span></td></tr>
       </table>
     </td>
   </tr>
 </table>
 <!-- ==================== CLASS DESCRIPTION ==================== -->
-<h1 class="epydoc">Class NewtonPF</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF">source&nbsp;code</a></span></p>
+<h1 class="epydoc">Class _Solver</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.solver-pysrc.html#_Solver">source&nbsp;code</a></span></p>
 <pre class="base-tree">
-object --+    
-         |    
-     <a href="pylon.ac_pf._ACPF-class.html" onclick="show_private();">_ACPF</a> --+
-             |
-            <strong class="uidshort">NewtonPF</strong>
+object --+
+         |
+        <strong class="uidshort">_Solver</strong>
 </pre>
 
+<dl><dt>Known Subclasses:</dt>
+<dd>
+      <ul class="subclass-list">
+<li><a href="pylon.solver.DCOPFSolver-class.html">DCOPFSolver</a></li><li>, <a href="pylon.solver.PIPSSolver-class.html">PIPSSolver</a></li>  </ul>
+</dd></dl>
+
 <hr />
-<p>Solves the power flow using full Newton's method.</p>
-  <p>Based on newtonpf.m from MATPOWER by Ray Zimmerman, developed at PSERC
-  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
-  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
-  info.</p>
+<p>Defines a base class for many solvers.</p>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
@@ -91,23 +91,34 @@ object --+
     </table>
   </td>
 </tr>
-<tr class="private">
+<tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="pylon.ac_pf.NewtonPF-class.html#_run_power_flow" class="summary-sig-name" onclick="show_private();">_run_power_flow</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">Ybus</span>,
-        <span class="summary-sig-arg">Sbus</span>,
-        <span class="summary-sig-arg">V</span>,
-        <span class="summary-sig-arg">pv</span>,
-        <span class="summary-sig-arg">pq</span>,
-        <span class="summary-sig-arg">pvpq</span>,
-        <span class="summary-sig-arg">**kw_args</span>)</span><br />
-      Solves the power flow using a full Newton's method.</td>
+          <td><span class="summary-sig"><a href="pylon.solver._Solver-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">om</span>)</span><br />
+      x.__init__(...) initializes x; see x.__class__.__doc__ for signature</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._run_power_flow">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.solver-pysrc.html#_Solver.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="solve"></a><span class="summary-sig-name">solve</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Solves optimal power flow and returns a results dict.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="pylon.solver-pysrc.html#_Solver.solve">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -121,18 +132,11 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_one_iteration"></a><span class="summary-sig-name">_one_iteration</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">F</span>,
-        <span class="summary-sig-arg">Ybus</span>,
-        <span class="summary-sig-arg">V</span>,
-        <span class="summary-sig-arg">Vm</span>,
-        <span class="summary-sig-arg">Va</span>,
-        <span class="summary-sig-arg">pv</span>,
-        <span class="summary-sig-arg">pq</span>,
-        <span class="summary-sig-arg">pvpq</span>)</span><br />
-      Performs one Newton iteration.</td>
+          <td><span class="summary-sig"><a name="_unpack_model"></a><span class="summary-sig-name">_unpack_model</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">om</span>)</span><br />
+      Returns data from the OPF model.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._one_iteration">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.solver-pysrc.html#_Solver._unpack_model">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -146,15 +150,13 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_evaluate_function"></a><span class="summary-sig-name">_evaluate_function</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">Ybus</span>,
-        <span class="summary-sig-arg">V</span>,
-        <span class="summary-sig-arg">Sbus</span>,
-        <span class="summary-sig-arg">pv</span>,
-        <span class="summary-sig-arg">pq</span>)</span><br />
-      Evaluates F(x).</td>
+          <td><span class="summary-sig"><a name="_dimension_data"></a><span class="summary-sig-name">_dimension_data</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">buses</span>,
+        <span class="summary-sig-arg">branches</span>,
+        <span class="summary-sig-arg">generators</span>)</span><br />
+      Returns the problem dimensions.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._evaluate_function">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.solver-pysrc.html#_Solver._dimension_data">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -168,12 +170,11 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_check_convergence"></a><span class="summary-sig-name">_check_convergence</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">F</span>)</span><br />
-      Checks if the solution has converged to within the specified 
-      tolerance.</td>
+          <td><span class="summary-sig"><a name="_linear_constraints"></a><span class="summary-sig-name">_linear_constraints</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">om</span>)</span><br />
+      Returns the linear problem constraints.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._check_convergence">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.solver-pysrc.html#_Solver._linear_constraints">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -187,15 +188,32 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_build_jacobian"></a><span class="summary-sig-name">_build_jacobian</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">Ybus</span>,
-        <span class="summary-sig-arg">V</span>,
-        <span class="summary-sig-arg">pv</span>,
-        <span class="summary-sig-arg">pq</span>,
-        <span class="summary-sig-arg">pvpq</span>)</span><br />
-      Returns the Jacobian matrix.</td>
+          <td><span class="summary-sig"><a name="_var_bounds"></a><span class="summary-sig-name">_var_bounds</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns bounds on the optimisation variables.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._build_jacobian">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.solver-pysrc.html#_Solver._var_bounds">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_initial_interior_point"></a><span class="summary-sig-name">_initial_interior_point</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">buses</span>,
+        <span class="summary-sig-arg">generators</span>,
+        <span class="summary-sig-arg">xmin</span>,
+        <span class="summary-sig-arg">xmax</span>,
+        <span class="summary-sig-arg">ny</span>)</span><br />
+      Selects an interior initial point for interior point solver.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="pylon.solver-pysrc.html#_Solver._initial_interior_point">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -205,15 +223,6 @@ object --+
   </tr>
   <tr>
     <td colspan="2" class="summary">
-    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.ac_pf._ACPF-class.html" onclick="show_private();">_ACPF</a></code></b>:
-      <code><a href="pylon.ac_pf._ACPF-class.html#__init__">__init__</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#solve">solve</a></code>
-      </p>
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.ac_pf._ACPF-class.html" onclick="show_private();">_ACPF</a></code></b> (private):
-      <code><a href="pylon.ac_pf._ACPF-class.html#_index_buses" onclick="show_private();">_index_buses</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#_initial_voltage" onclick="show_private();">_initial_voltage</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#_unpack_case" onclick="show_private();">_unpack_case</a></code>
-      </p></div>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__delattr__</code>,
       <code>__getattribute__</code>,
@@ -245,15 +254,20 @@ object --+
     </table>
   </td>
 </tr>
-  <tr>
-    <td colspan="2" class="summary">
-    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.ac_pf._ACPF-class.html" onclick="show_private();">_ACPF</a></code></b>:
-      <code><a href="pylon.ac_pf._ACPF-class.html#case">case</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#iter_max">iter_max</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#qlimit">qlimit</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#tolerance">tolerance</a></code>,
-      <code><a href="pylon.ac_pf._ACPF-class.html#verbose">verbose</a></code>
-      </p>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="om"></a><span class="summary-name">om</span><br />
+      Optimal power flow model.
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="_nieq"></a><span class="summary-name">_nieq</span><br />
+      Number of equality constraints.
     </td>
   </tr>
 </table>
@@ -300,31 +314,28 @@ object --+
   </td>
 </tr>
 </table>
-<a name="_run_power_flow"></a>
-<div class="private">
+<a name="__init__"></a>
+<div>
 <table class="details" border="1" cellpadding="3"
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">_run_power_flow</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">Ybus</span>,
-        <span class="sig-arg">Sbus</span>,
-        <span class="sig-arg">V</span>,
-        <span class="sig-arg">pv</span>,
-        <span class="sig-arg">pq</span>,
-        <span class="sig-arg">pvpq</span>,
-        <span class="sig-arg">**kw_args</span>)</span>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">om</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="pylon.ac_pf-pysrc.html#NewtonPF._run_power_flow">source&nbsp;code</a></span>&nbsp;
+    ><span class="codelink"><a href="pylon.solver-pysrc.html#_Solver.__init__">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
   
-  <p>Solves the power flow using a full Newton's method.</p>
+  <p>x.__init__(...) initializes x; see x.__class__.__doc__ for 
+  signature</p>
   <dl class="fields">
     <dt>Overrides:
-        <a href="pylon.ac_pf._ACPF-class.html#_run_power_flow" onclick="show_private();">_ACPF._run_power_flow</a>
+        object.__init__
+        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
   </dl>
 </td></tr></table>
@@ -358,7 +369,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:02 2010
+    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:03 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

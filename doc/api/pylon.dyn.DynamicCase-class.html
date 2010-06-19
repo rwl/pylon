@@ -60,9 +60,15 @@
 <!-- ==================== CLASS DESCRIPTION ==================== -->
 <h1 class="epydoc">Class DynamicCase</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase">source&nbsp;code</a></span></p>
 <pre class="base-tree">
-object --+
-         |
-        <strong class="uidshort">DynamicCase</strong>
+        object --+    
+                 |    
+       <a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a> --+
+                     |
+        object --+   |
+                 |   |
+<a href="pylon.util._Serializable-class.html" onclick="show_private();">util._Serializable</a> --+
+                     |
+                    <strong class="uidshort">DynamicCase</strong>
 </pre>
 
 <hr />
@@ -108,14 +114,15 @@ object --+
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">csr_matrix</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getAugYbus"></a><span class="summary-sig-name">getAugYbus</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.dyn.DynamicCase-class.html#getAugYbus" class="summary-sig-name">getAugYbus</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">U0</span>,
         <span class="summary-sig-arg">gbus</span>)</span><br />
-      Returns the augmented bus admittance matrix.</td>
+      Based on AugYbus.m from MatDyn by Stijn Cole, developed at Katholieke
+      Universiteit Leuven.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.getAugYbus">source&nbsp;code</a></span>
             
@@ -127,13 +134,14 @@ object --+
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="generatorInit"></a><span class="summary-sig-name">generatorInit</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.dyn.DynamicCase-class.html#generatorInit" class="summary-sig-name">generatorInit</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">U0</span>)</span><br />
-      Returns initial generator conditions.</td>
+      Based on GeneratorInit.m from MatDyn by Stijn Cole, developed at 
+      Katholieke Universiteit Leuven.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.generatorInit">source&nbsp;code</a></span>
             
@@ -145,14 +153,15 @@ object --+
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="exciterInit"></a><span class="summary-sig-name">exciterInit</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.dyn.DynamicCase-class.html#exciterInit" class="summary-sig-name">exciterInit</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Xexc</span>,
         <span class="summary-sig-arg">Vexc</span>)</span><br />
-      Returns exciter initial conditions.</td>
+      Based on ExciterInit.m from MatDyn by Stijn Cole, developed at 
+      Katholieke Universiteit Leuven.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.exciterInit">source&nbsp;code</a></span>
             
@@ -164,14 +173,15 @@ object --+
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="governorInit"></a><span class="summary-sig-name">governorInit</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.dyn.DynamicCase-class.html#governorInit" class="summary-sig-name">governorInit</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Xgov</span>,
         <span class="summary-sig-arg">Vgov</span>)</span><br />
-      Returns initial governor conditions.</td>
+      Based on GovernorInit.m from MatDyn by Stijn Cole, developed at 
+      Katholieke Universiteit Leuven.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.governorInit">source&nbsp;code</a></span>
             
@@ -183,14 +193,15 @@ object --+
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">tuple</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="pylon.dyn.DynamicCase-class.html#machineCurrents" class="summary-sig-name">machineCurrents</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Xg</span>,
         <span class="summary-sig-arg">U</span>)</span><br />
-      Returns currents and electric power of generators.</td>
+      Based on MachineCurrents.m from MatDyn by Stijn Cole, developed at 
+      Katholieke Universiteit Leuven.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.machineCurrents">source&nbsp;code</a></span>
             
@@ -202,15 +213,16 @@ object --+
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">array</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="solveNetwork"></a><span class="summary-sig-name">solveNetwork</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.dyn.DynamicCase-class.html#solveNetwork" class="summary-sig-name">solveNetwork</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Xgen</span>,
         <span class="summary-sig-arg">augYbus_solver</span>,
         <span class="summary-sig-arg">gbus</span>)</span><br />
-      Solves the network.</td>
+      Based on SolveNetwork.m from MatDyn by Stijn Cole, developed at 
+      Katholieke Universiteit Leuven.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.solveNetwork">source&nbsp;code</a></span>
             
@@ -226,10 +238,11 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="exciter"></a><span class="summary-sig-name">exciter</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.dyn.DynamicCase-class.html#exciter" class="summary-sig-name">exciter</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Xexc</span>,
         <span class="summary-sig-arg">Pexc</span>,
-        <span class="summary-sig-arg">Vexc</span>)</span></td>
+        <span class="summary-sig-arg">Vexc</span>)</span><br />
+      Exciter model.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.exciter">source&nbsp;code</a></span>
             
@@ -245,10 +258,11 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="governor"></a><span class="summary-sig-name">governor</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.dyn.DynamicCase-class.html#governor" class="summary-sig-name">governor</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Xgov</span>,
         <span class="summary-sig-arg">Pgov</span>,
-        <span class="summary-sig-arg">Vgov</span>)</span></td>
+        <span class="summary-sig-arg">Vgov</span>)</span><br />
+      Governor model.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.governor">source&nbsp;code</a></span>
             
@@ -264,11 +278,12 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="generator"></a><span class="summary-sig-name">generator</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="pylon.dyn.DynamicCase-class.html#generator" class="summary-sig-name">generator</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">Xgen</span>,
         <span class="summary-sig-arg">Xexc</span>,
         <span class="summary-sig-arg">Xgov</span>,
-        <span class="summary-sig-arg">Vgen</span>)</span></td>
+        <span class="summary-sig-arg">Vgen</span>)</span><br />
+      Generator model.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.generator">source&nbsp;code</a></span>
             
@@ -280,6 +295,16 @@ object --+
   </tr>
   <tr>
     <td colspan="2" class="summary">
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b> (private):
+      <code><a href="pylon.util._Named-class.html#_generate_name" onclick="show_private();">_generate_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_get_name" onclick="show_private();">_get_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_set_name" onclick="show_private();">_set_name</a></code>
+      </p></div>
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Serializable-class.html" onclick="show_private();">util._Serializable</a></code></b>:
+      <code><a href="pylon.util._Serializable-class.html#save">save</a></code>,
+      <code><a href="pylon.util._Serializable-class.html#save_pickle">save_pickle</a></code>,
+      <code><a href="pylon.util._Serializable-class.html#save_to_file_object">save_to_file_object</a></code>
+      </p>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__delattr__</code>,
       <code>__getattribute__</code>,
@@ -291,6 +316,59 @@ object --+
       <code>__setattr__</code>,
       <code>__str__</code>
       </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS METHODS ==================== -->
+<a name="section-ClassMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Class Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-ClassMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Serializable-class.html" onclick="show_private();">util._Serializable</a></code></b>:
+      <code><a href="pylon.util._Serializable-class.html#load">load</a></code>,
+      <code><a href="pylon.util._Serializable-class.html#load_from_file_object">load_from_file_object</a></code>,
+      <code><a href="pylon.util._Serializable-class.html#load_pickle">load_pickle</a></code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS VARIABLES ==================== -->
+<a name="section-ClassVariables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Class Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-ClassVariables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b> (private):
+      <code><a href="pylon.util._Named-class.html#_name" onclick="show_private();">_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_name_ids" onclick="show_private();">_name_ids</a></code>
+      </p></div>
     </td>
   </tr>
 </table>
@@ -387,6 +465,9 @@ object --+
 </tr>
   <tr>
     <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b>:
+      <code><a href="pylon.util._Named-class.html#name">name</a></code>
+      </p>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__class__</code>
       </p>
@@ -438,6 +519,113 @@ object --+
   </dl>
 </td></tr></table>
 </div>
+<a name="getAugYbus"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getAugYbus</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">U0</span>,
+        <span class="sig-arg">gbus</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.getAugYbus">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Based on AugYbus.m from MatDyn by Stijn Cole, developed at Katholieke 
+  Universiteit Leuven. See <a 
+  href="http://www.esat.kuleuven.be/electa/teaching/matdyn/" 
+  target="_top">http://www.esat.kuleuven.be/ electa/teaching/matdyn/</a> 
+  for more information.</p>
+  <dl class="fields">
+    <dt>Returns: csr_matrix</dt>
+        <dd>The augmented bus admittance matrix.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="generatorInit"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">generatorInit</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">U0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.generatorInit">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Based on GeneratorInit.m from MatDyn by Stijn Cole, developed at 
+  Katholieke Universiteit Leuven. See <a 
+  href="http://www.esat.kuleuven.be/electa/teaching/matdyn/" 
+  target="_top">http://www.esat.kuleuven.be/ electa/teaching/matdyn/</a> 
+  for more information.</p>
+  <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>Initial generator conditions.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="exciterInit"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">exciterInit</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Xexc</span>,
+        <span class="sig-arg">Vexc</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.exciterInit">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Based on ExciterInit.m from MatDyn by Stijn Cole, developed at 
+  Katholieke Universiteit Leuven. See <a 
+  href="http://www.esat.kuleuven.be/electa/teaching/matdyn/" 
+  target="_top">http://www.esat.kuleuven.be/ electa/teaching/matdyn/</a> 
+  for more information.</p>
+  <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>Exciter initial conditions.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="governorInit"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">governorInit</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Xgov</span>,
+        <span class="sig-arg">Vgov</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.governorInit">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Based on GovernorInit.m from MatDyn by Stijn Cole, developed at 
+  Katholieke Universiteit Leuven. See <a 
+  href="http://www.esat.kuleuven.be/electa/teaching/matdyn/" 
+  target="_top">http://www.esat.kuleuven.be/ electa/teaching/matdyn/</a> 
+  for more information.</p>
+  <dl class="fields">
+    <dt>Returns: tuple</dt>
+        <dd>Initial governor conditions.</dd>
+  </dl>
+</td></tr></table>
+</div>
 <a name="machineCurrents"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
@@ -454,13 +642,129 @@ object --+
     </td>
   </tr></table>
   
-  <p>Returns currents and electric power of generators.</p>
+  <p>Based on MachineCurrents.m from MatDyn by Stijn Cole, developed at 
+  Katholieke Universiteit Leuven. See <a 
+  href="http://www.esat.kuleuven.be/electa/teaching/matdyn/" 
+  target="_top">http://www.esat.kuleuven.be/ electa/teaching/matdyn/</a> 
+  for more information.</p>
   <dl class="fields">
     <dt>Parameters:</dt>
     <dd><ul class="nomargin-top">
-        <li><strong class="pname"><code>Xg</code></strong> - generator state variables</li>
-        <li><strong class="pname"><code>U</code></strong> - generator voltages</li>
+        <li><strong class="pname"><code>Xg</code></strong> - Generator state variables.</li>
+        <li><strong class="pname"><code>U</code></strong> - Generator voltages.</li>
     </ul></dd>
+    <dt>Returns: tuple</dt>
+        <dd>Currents and electric power of generators.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="solveNetwork"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">solveNetwork</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Xgen</span>,
+        <span class="sig-arg">augYbus_solver</span>,
+        <span class="sig-arg">gbus</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.solveNetwork">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Based on SolveNetwork.m from MatDyn by Stijn Cole, developed at 
+  Katholieke Universiteit Leuven. See <a 
+  href="http://www.esat.kuleuven.be/electa/teaching/matdyn/" 
+  target="_top">http://www.esat.kuleuven.be/ electa/teaching/matdyn/</a> 
+  for more information.</p>
+  <dl class="fields">
+    <dt>Returns: array</dt>
+        <dd>Bus voltages.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="exciter"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">exciter</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Xexc</span>,
+        <span class="sig-arg">Pexc</span>,
+        <span class="sig-arg">Vexc</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.exciter">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Exciter model.</p>
+  <p>Based on Exciter.m from MatDyn by Stijn Cole, developed at Katholieke 
+  Universiteit Leuven. See <a 
+  href="http://www.esat.kuleuven.be/electa/teaching/matdyn/" 
+  target="_top">http://www.esat.kuleuven.be/electa/teaching/ matdyn/</a> 
+  for more information.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="governor"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">governor</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Xgov</span>,
+        <span class="sig-arg">Pgov</span>,
+        <span class="sig-arg">Vgov</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.governor">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Governor model.</p>
+  <p>Based on Governor.m from MatDyn by Stijn Cole, developed at Katholieke
+  Universiteit Leuven. See <a 
+  href="http://www.esat.kuleuven.be/electa/teaching/matdyn/" 
+  target="_top">http://www.esat.kuleuven.be/electa/teaching/ matdyn/</a> 
+  for more information.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="generator"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">generator</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Xgen</span>,
+        <span class="sig-arg">Xexc</span>,
+        <span class="sig-arg">Xgov</span>,
+        <span class="sig-arg">Vgen</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="pylon.dyn-pysrc.html#DynamicCase.generator">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Generator model.</p>
+  <p>Based on Generator.m from MatDyn by Stijn Cole, developed at 
+  Katholieke Universiteit Leuven. See <a 
+  href="http://www.esat.kuleuven.be/electa/teaching/matdyn/" 
+  target="_top">http://www.esat.kuleuven.be/electa/teaching/ matdyn/</a> 
+  for more information.</p>
+  <dl class="fields">
   </dl>
 </td></tr></table>
 </div>
@@ -493,7 +797,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Jun 18 15:48:34 2010
+    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:03 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

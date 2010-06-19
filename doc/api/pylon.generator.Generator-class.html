@@ -60,17 +60,16 @@
 <!-- ==================== CLASS DESCRIPTION ==================== -->
 <h1 class="epydoc">Class Generator</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.generator-pysrc.html#Generator">source&nbsp;code</a></span></p>
 <pre class="base-tree">
-object --+    
-         |    
-<a href="pylon.util.Named-class.html">util.Named</a> --+
-             |
-            <strong class="uidshort">Generator</strong>
+ object --+    
+          |    
+<a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a> --+
+              |
+             <strong class="uidshort">Generator</strong>
 </pre>
 
 <hr />
-<p>Defines a power system generator component. Fixes voltage magnitude 
-  and active power injected at parent bus. Or when at it's reactive power 
-  limit fixes active and reactive power injected at parent bus.</p>
+<p>Generators are defined as a complex power injection at a specific 
+  bus.</p>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
@@ -113,7 +112,7 @@ object --+
         <span class="summary-sig-arg">pcost_model</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">poly</code><code class="variable-quote">'</code></span>,
         <span class="summary-sig-arg">q_cost</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">qcost_model</span>=<span class="summary-sig-default">None</span>)</span><br />
-      Initialises a new Generator instance.</td>
+      x.__init__(...) initializes x; see x.__class__.__doc__ for signature</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.generator-pysrc.html#Generator.__init__">source&nbsp;code</a></span>
             
@@ -330,10 +329,10 @@ object --+
   </tr>
   <tr>
     <td colspan="2" class="summary">
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util.Named-class.html">util.Named</a></code></b> (private):
-      <code><a href="pylon.util.Named-class.html#_generate_name" onclick="show_private();">_generate_name</a></code>,
-      <code><a href="pylon.util.Named-class.html#_get_name" onclick="show_private();">_get_name</a></code>,
-      <code><a href="pylon.util.Named-class.html#_set_name" onclick="show_private();">_set_name</a></code>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b> (private):
+      <code><a href="pylon.util._Named-class.html#_generate_name" onclick="show_private();">_generate_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_get_name" onclick="show_private();">_get_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_set_name" onclick="show_private();">_set_name</a></code>
       </p></div>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__delattr__</code>,
@@ -368,9 +367,9 @@ object --+
 </tr>
   <tr>
     <td colspan="2" class="summary">
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util.Named-class.html">util.Named</a></code></b> (private):
-      <code><a href="pylon.util.Named-class.html#_name" onclick="show_private();">_name</a></code>,
-      <code><a href="pylon.util.Named-class.html#_name_ids" onclick="show_private();">_name_ids</a></code>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.util._Named-class.html" onclick="show_private();">util._Named</a></code></b> (private):
+      <code><a href="pylon.util._Named-class.html#_name" onclick="show_private();">_name</a></code>,
+      <code><a href="pylon.util._Named-class.html#_name_ids" onclick="show_private();">_name_ids</a></code>
       </p></div>
     </td>
   </tr>
@@ -632,10 +631,12 @@ object --+
     </td>
   </tr></table>
   
-  <p>Initialises a new Generator instance.</p>
+  <p>x.__init__(...) initializes x; see x.__class__.__doc__ for 
+  signature</p>
   <dl class="fields">
     <dt>Overrides:
         object.__init__
+        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
   </dl>
 </td></tr></table>
@@ -699,12 +700,13 @@ object --+
   
   <p>Updates the piece-wise linear total cost function using the given 
   offer blocks.</p>
+  <p>Based on off2case.m from MATPOWER by Ray Zimmerman, developed at PSERC
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  info.</p>
   <dl class="fields">
   </dl>
-<div class="fields">      <p><strong>See Also:</strong>
-        matpower3.2/extras/smartmarket/off2case.m
-      </p>
-</div></td></tr></table>
+</td></tr></table>
 </div>
 <a name="bids_to_pwl"></a>
 <div>
@@ -723,12 +725,13 @@ object --+
   
   <p>Updates the piece-wise linear total cost function using the given bid 
   blocks.</p>
+  <p>Based on off2case.m from MATPOWER by Ray Zimmerman, developed at PSERC
+  Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  info.</p>
   <dl class="fields">
   </dl>
-<div class="fields">      <p><strong>See Also:</strong>
-        matpower3.2/extras/smartmarket/off2case.m
-      </p>
-</div></td></tr></table>
+</td></tr></table>
 </div>
 <br />
 <!-- ==================== PROPERTY DETAILS ==================== -->
@@ -810,7 +813,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Jun 18 15:48:34 2010
+    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:03 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

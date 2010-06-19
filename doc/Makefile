@@ -33,7 +33,7 @@ clean_web: clean
 
 pdf: latex
 	cd build/latex && make all-pdf
-	cp pylon.pdf ../../
+	cp pylon_manual.pdf ../../
 
 all: html
 

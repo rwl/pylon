@@ -62,19 +62,17 @@
 <pre class="base-tree">
 object --+    
          |    
-    <a href="pylon.solver.Solver-class.html">Solver</a> --+
+   <a href="pylon.solver._Solver-class.html" onclick="show_private();">_Solver</a> --+
              |
             <strong class="uidshort">DCOPFSolver</strong>
 </pre>
 
 <hr />
-<pre class="literalblock">
-Defines a solver for DC optimal power flow [3].
-
-[3] Ray Zimmerman, &quot;dcopf_solver.m&quot;, MATPOWER, PSERC Cornell, v4.0b1,
-    http://www.pserc.cornell.edu/matpower/, December 2009
-
-</pre>
+<p>Defines a solver for DC optimal power flow [3].</p>
+  <p>Based on dcopf_solver.m from MATPOWER by Ray Zimmerman, developed at 
+  PSERC Cornell. See <a href="http://www.pserc.cornell.edu/matpower/" 
+  target="_top">http://www.pserc.cornell.edu/matpower/</a> for more 
+  info.</p>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
@@ -213,7 +211,7 @@ Defines a solver for DC optimal power flow [3].
         <span class="summary-sig-arg">any_pwl</span>,
         <span class="summary-sig-arg">npol</span>,
         <span class="summary-sig-arg">nw</span>)</span><br />
-      Transforms quadratic coefficients for w into coefficients for X.</td>
+      Transforms quadratic coefficients for w into coefficients for x.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.solver-pysrc.html#DCOPFSolver._transform_coefficients">source&nbsp;code</a></span>
             
@@ -298,12 +296,12 @@ Defines a solver for DC optimal power flow [3].
   </tr>
   <tr>
     <td colspan="2" class="summary">
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.solver.Solver-class.html">Solver</a></code></b> (private):
-      <code><a href="pylon.solver.Solver-class.html#_dimension_data" onclick="show_private();">_dimension_data</a></code>,
-      <code><a href="pylon.solver.Solver-class.html#_initial_interior_point" onclick="show_private();">_initial_interior_point</a></code>,
-      <code><a href="pylon.solver.Solver-class.html#_linear_constraints" onclick="show_private();">_linear_constraints</a></code>,
-      <code><a href="pylon.solver.Solver-class.html#_unpack_model" onclick="show_private();">_unpack_model</a></code>,
-      <code><a href="pylon.solver.Solver-class.html#_var_bounds" onclick="show_private();">_var_bounds</a></code>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.solver._Solver-class.html" onclick="show_private();">_Solver</a></code></b> (private):
+      <code><a href="pylon.solver._Solver-class.html#_dimension_data" onclick="show_private();">_dimension_data</a></code>,
+      <code><a href="pylon.solver._Solver-class.html#_initial_interior_point" onclick="show_private();">_initial_interior_point</a></code>,
+      <code><a href="pylon.solver._Solver-class.html#_linear_constraints" onclick="show_private();">_linear_constraints</a></code>,
+      <code><a href="pylon.solver._Solver-class.html#_unpack_model" onclick="show_private();">_unpack_model</a></code>,
+      <code><a href="pylon.solver._Solver-class.html#_var_bounds" onclick="show_private();">_var_bounds</a></code>
       </p></div>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__delattr__</code>,
@@ -346,11 +344,11 @@ Defines a solver for DC optimal power flow [3].
   </tr>
   <tr>
     <td colspan="2" class="summary">
-    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.solver.Solver-class.html">Solver</a></code></b>:
-      <code><a href="pylon.solver.Solver-class.html#om">om</a></code>
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.solver._Solver-class.html" onclick="show_private();">_Solver</a></code></b>:
+      <code><a href="pylon.solver._Solver-class.html#om">om</a></code>
       </p>
-    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.solver.Solver-class.html">Solver</a></code></b> (private):
-      <code><a href="pylon.solver.Solver-class.html#_nieq" onclick="show_private();">_nieq</a></code>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="pylon.solver._Solver-class.html" onclick="show_private();">_Solver</a></code></b> (private):
+      <code><a href="pylon.solver._Solver-class.html#_nieq" onclick="show_private();">_nieq</a></code>
       </p></div>
     </td>
   </tr>
@@ -440,7 +438,7 @@ Defines a solver for DC optimal power flow [3].
   <p>Solves DC optimal power flow and returns a results dict.</p>
   <dl class="fields">
     <dt>Overrides:
-        <a href="pylon.solver.Solver-class.html#solve">Solver.solve</a>
+        <a href="pylon.solver._Solver-class.html#solve">_Solver.solve</a>
     </dt>
   </dl>
 </td></tr></table>
@@ -474,7 +472,7 @@ Defines a solver for DC optimal power flow [3].
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Jun 18 15:48:35 2010
+    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:03 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

@@ -61,16 +61,15 @@
 <!-- ==================== CLASS DESCRIPTION ==================== -->
 <h1 class="epydoc">Class MATPOWERReader</h1><p class="nomargin-top"><span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader">source&nbsp;code</a></span></p>
 <pre class="base-tree">
-       object --+    
-                |    
-<a href="pylon.io.common.CaseReader-class.html">common.CaseReader</a> --+
-                    |
-                   <strong class="uidshort">MATPOWERReader</strong>
+        object --+    
+                 |    
+<a href="pylon.io.common._CaseReader-class.html" onclick="show_private();">common._CaseReader</a> --+
+                     |
+                    <strong class="uidshort">MATPOWERReader</strong>
 </pre>
 
 <hr />
-<p>Defines a method class for reading MATPOWER data files and returning a
-  Case object.</p>
+<p>Defines a reader for MATPOWER case files.</p>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
@@ -96,8 +95,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="pylon.io.matpower.MATPOWERReader-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">case_format</span>=<span class="summary-sig-default">2</span>)</span><br />
-      Initialises a new MATPOWERReader instance.</td>
+        <span class="summary-sig-arg">version</span>=<span class="summary-sig-default">2</span>)</span><br />
+      x.__init__(...) initializes x; see x.__class__.__doc__ for signature</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader.__init__">source&nbsp;code</a></span>
             
@@ -115,7 +114,7 @@
         <tr>
           <td><span class="summary-sig"><a href="pylon.io.matpower.MATPOWERReader-class.html#read" class="summary-sig-name">read</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">file_or_filename</span>)</span><br />
-      Parse a MATPOWER data file and return a case object</td>
+      Returns a Case given a MATPOWER file or file name.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader.read">source&nbsp;code</a></span>
             
@@ -131,10 +130,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_get_header_construct"></a><span class="summary-sig-name">_get_header_construct</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Returns a construct for the header of a MATPOWER data file.</td>
+          <td><span class="summary-sig"><a name="_parse_file"></a><span class="summary-sig-name">_parse_file</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">file</span>)</span><br />
+      Parses the given file-like object.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._get_header_construct">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._parse_file">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -148,11 +148,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_get_case_format_construct"></a><span class="summary-sig-name">_get_case_format_construct</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Returns a construct for the case formet expression introduced in 
-      MATPOWER 4.0.</td>
+          <td><span class="summary-sig"><a name="_parse_buses"></a><span class="summary-sig-name">_parse_buses</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">case</span>,
+        <span class="summary-sig-arg">file</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._get_case_format_construct">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._parse_buses">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -166,10 +166,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_get_base_mva_construct"></a><span class="summary-sig-name">_get_base_mva_construct</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Returns a construct for the base MVA expression.</td>
+          <td><span class="summary-sig"><a name="_parse_generators"></a><span class="summary-sig-name">_parse_generators</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">case</span>,
+        <span class="summary-sig-arg">file</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._get_base_mva_construct">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._parse_generators">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -183,10 +184,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_get_bus_array_construct"></a><span class="summary-sig-name">_get_bus_array_construct</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Returns a construct for an array of bus data.</td>
+          <td><span class="summary-sig"><a name="_parse_branches"></a><span class="summary-sig-name">_parse_branches</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">case</span>,
+        <span class="summary-sig-arg">file</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._get_bus_array_construct">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._parse_branches">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -200,10 +202,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_get_generator_array_construct"></a><span class="summary-sig-name">_get_generator_array_construct</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Returns an construct for an array of generator data.</td>
+          <td><span class="summary-sig"><a name="_parse_gencost"></a><span class="summary-sig-name">_parse_gencost</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">case</span>,
+        <span class="summary-sig-arg">file</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._get_generator_array_construct">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._parse_gencost">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -217,154 +220,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_get_branch_array_construct"></a><span class="summary-sig-name">_get_branch_array_construct</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Returns a construct for an array of branch data.</td>
+          <td><span class="summary-sig"><a name="_parse_gencost_line"></a><span class="summary-sig-name">_parse_gencost_line</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">line</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._get_branch_array_construct">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_get_area_array_construct"></a><span class="summary-sig-name">_get_area_array_construct</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Returns a construct for an array of area data.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._get_area_array_construct">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_get_generator_cost_array_construct"></a><span class="summary-sig-name">_get_generator_cost_array_construct</span>(<span class="summary-sig-arg">self</span>)</span><br />
-      Returns a construct for an array of generator cost data.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._get_generator_cost_array_construct">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_push_title"></a><span class="summary-sig-name">_push_title</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">tokens</span>)</span><br />
-      Sets the case's name.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._push_title">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_push_base_mva"></a><span class="summary-sig-name">_push_base_mva</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">tokens</span>)</span><br />
-      Set the MVA base for the case.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._push_base_mva">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_push_bus"></a><span class="summary-sig-name">_push_bus</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">tokens</span>)</span><br />
-      Adds a bus to the case.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._push_bus">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_push_generator"></a><span class="summary-sig-name">_push_generator</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">tokens</span>)</span><br />
-      Adds a generator to the respective bus.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._push_generator">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_push_branch"></a><span class="summary-sig-name">_push_branch</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">tokens</span>)</span><br />
-      Adds a branch to the case.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._push_branch">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_push_generator_cost"></a><span class="summary-sig-name">_push_generator_cost</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">string</span>,
-        <span class="summary-sig-arg">location</span>,
-        <span class="summary-sig-arg">tokens</span>)</span><br />
-      Adds cost data to generators.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._push_generator_cost">source&nbsp;code</a></span>
+            <span class="codelink"><a href="pylon.io.matpower-pysrc.html#MATPOWERReader._parse_gencost_line">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -385,56 +244,6 @@
       <code>__setattr__</code>,
       <code>__str__</code>
       </p>
-    </td>
-  </tr>
-</table>
-<!-- ==================== INSTANCE VARIABLES ==================== -->
-<a name="section-InstanceVariables"></a>
-<table class="summary" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr bgcolor="#70b0f0" class="table-header">
-  <td colspan="2" class="table-header">
-    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-      <tr valign="top">
-        <td align="left"><span class="table-header">Instance Variables</span></td>
-        <td align="right" valign="top"
-         ><span class="options">[<a href="#section-InstanceVariables"
-         class="privatelink" onclick="toggle_private();"
-         >hide private</a>]</span></td>
-      </tr>
-    </table>
-  </td>
-</tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-        <a href="pylon.io.matpower.MATPOWERReader-class.html#case_format" class="summary-name">case_format</a><br />
-      MATPOWER case format.
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-        <a name="file_or_filename"></a><span class="summary-name">file_or_filename</span><br />
-      Path to the data file or file object.
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-        <a name="case"></a><span class="summary-name">case</span><br />
-      The resulting case.
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-        <a name="costed"></a><span class="summary-name">costed</span><br />
-      Count of generators to which cost data has been applied.
     </td>
   </tr>
 </table>
@@ -489,7 +298,7 @@
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
   <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">case_format</span>=<span class="sig-default">2</span>)</span>
+        <span class="sig-arg">version</span>=<span class="sig-default">2</span>)</span>
     <br /><em class="fname">(Constructor)</em>
   </h3>
   </td><td align="right" valign="top"
@@ -497,10 +306,12 @@
     </td>
   </tr></table>
   
-  <p>Initialises a new MATPOWERReader instance.</p>
+  <p>x.__init__(...) initializes x; see x.__class__.__doc__ for 
+  signature</p>
   <dl class="fields">
     <dt>Overrides:
         object.__init__
+        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
   </dl>
 </td></tr></table>
@@ -520,43 +331,11 @@
     </td>
   </tr></table>
   
-  <p>Parse a MATPOWER data file and return a case object</p>
-  <p>file_or_filename: File name of file object with MATPOWER data return: 
-  Case object</p>
+  <p>Returns a Case given a MATPOWER file or file name.</p>
   <dl class="fields">
     <dt>Overrides:
-        <a href="pylon.io.common.CaseReader-class.html#read">common.CaseReader.read</a>
+        <a href="pylon.io.common._CaseReader-class.html#read">common._CaseReader.read</a>
     </dt>
-  </dl>
-</td></tr></table>
-</div>
-<br />
-<!-- ==================== INSTANCE VARIABLE DETAILS ==================== -->
-<a name="section-InstanceVariableDetails"></a>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr bgcolor="#70b0f0" class="table-header">
-  <td colspan="2" class="table-header">
-    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-      <tr valign="top">
-        <td align="left"><span class="table-header">Instance Variable Details</span></td>
-        <td align="right" valign="top"
-         ><span class="options">[<a href="#section-InstanceVariableDetails"
-         class="privatelink" onclick="toggle_private();"
-         >hide private</a>]</span></td>
-      </tr>
-    </table>
-  </td>
-</tr>
-</table>
-<a name="case_format"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <h3 class="epydoc">case_format</h3>
-  <p>MATPOWER case format.  Version 2 introduced in MATPOWER 4.0b1.</p>
-  <dl class="fields">
   </dl>
 </td></tr></table>
 </div>
@@ -589,7 +368,7 @@
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Jun 18 15:48:34 2010
+    Generated by Epydoc 3.0.1 on Sat Jun 19 18:23:03 2010
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
