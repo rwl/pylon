@@ -14,17 +14,18 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Python interior point solver [1].
+"""Python Interior Point Solver (PIPS).
 
-    [1] Ray Zimmerman, "mips.m", MATPOWER, PSERC Cornell, version 4.0b2,
-        http://www.pserc.cornell.edu/matpower/, March 2010
+Ported by Richard Lincoln from the MATLAB Interior Point Solver (MIPS) (v1.9)
+by Ray Zimmerman and released under the Apache License version 2.0 with his
+written permission.  MIPS is distributed as part of the MATPOWER project,
+developed at the Power System Engineering Research Center (PSERC), Cornell. See
+U{http://www.pserc.cornell.edu/matpower/} for more info.
 """
 
 #------------------------------------------------------------------------------
 #  Imports:
 #------------------------------------------------------------------------------
-
-import logging
 
 from numpy import \
     array, flatnonzero, Inf, any, isnan, ones, r_, finfo, zeros, dot, \
@@ -47,18 +48,151 @@ EPS = finfo(float).eps
 
 def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
          gh_fcn=None, hess_fcn=None, opt=None):
-    """ x, f, exitflag, output, lmbda = \
-            pips(f_fcn, x0, A, l, u, xmin, xmax, gh_fcn, hess_fcn, opt)
+    """Primal-dual interior point method for NLP (non-linear programming).
+    Minimize a function F(X) beginning from a starting point M{x0}, subject to
+    optional linear and non-linear constraints and variable bounds::
 
             min f(x)
              x
 
-        subject to
+    subject to::
 
-            h(x) = 0
-            g(x) <= 0
-            l <= A*x <= u
-            xmin <= x <= xmax
+            g(x) = 0            (non-linear equalities)
+            h(x) <= 0           (non-linear inequalities)
+            l <= A*x <= u       (linear constraints)
+            xmin <= x <= xmax   (variable bounds)
+
+    Note: The calling syntax is almost identical to that of FMINCON from
+    MathWorks' Optimization Toolbox. The main difference is that the linear
+    constraints are specified with C{A}, C{L}, C{U} instead of C{A}, C{B},
+    C{Aeq}, C{Beq}. The functions for evaluating the objective function,
+    constraints and Hessian are identical.
+
+    Example from U{http://en.wikipedia.org/wiki/Nonlinear_programming}:
+        >>> from numpy import array, r_, float64, dot
+        >>> from scipy.sparse import csr_matrix
+        >>> def f2(x):
+        ...     f = -x[0] * x[1] - x[1] * x[2]
+        ...     df = -r_[x[1], x[0] + x[2], x[1]]
+        ...     # actually not used since 'hess_fcn' is provided
+        ...     d2f = -array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], float64)
+        ...     return f, df, d2f
+        >>> def gh2(x):
+        ...     h = dot(array([[1, -1, 1],
+        ...                    [1,  1, 1]]), x**2) + array([-2.0, -10.0])
+        ...     dh = 2 * csr_matrix(array([[ x[0], x[0]],
+        ...                                [-x[1], x[1]],
+        ...                                [ x[2], x[2]]]))
+        ...     g = array([])
+        ...     dg = None
+        ...     return h, g, dh, dg
+        >>> def hess2(x, lam):
+        ...     mu = lam["ineqnonlin"]
+        ...     a = r_[dot(2 * array([1, 1]), mu), -1, 0]
+        ...     b = r_[-1, dot(2 * array([-1, 1]),mu),-1]
+        ...     c = r_[0, -1, dot(2 * array([1, 1]),mu)]
+        ...     Lxx = csr_matrix(array([a, b, c]))
+        ...     return Lxx
+        >>> x0 = array([1, 1, 0], float64)
+        >>> solution = pips(f2, x0, gh_fcn=gh2, hess_fcn=hess2)
+        >>> round(solution["f"], 11) == -7.07106725919
+        True
+        >>> solution["output"]["iterations"]
+        8
+
+    Ported by Richard Lincoln from the MATLAB Interior Point Solver (MIPS)
+    (v1.9) by Ray Zimmerman.  MIPS is distributed as part of the MATPOWER
+    project, developed at the Power System Engineering Research Center (PSERC),
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
+    MIPS was ported by Ray Zimmerman from C code written by H. Wang for his
+    PhD dissertation:
+      - "On the Computation and Application of Multi-period
+        Security-Constrained Optimal Power Flow for Real-time
+        Electricity Market Operations", Cornell University, May 2007.
+
+    See also:
+      - H. Wang, C. E. Murillo-Sanchez, R. D. Zimmerman, R. J. Thomas,
+        "On Computational Issues of Market-Based Optimal Power Flow",
+        IEEE Transactions on Power Systems, Vol. 22, No. 3, Aug. 2007,
+        pp. 1185-1193.
+
+    All parameters are optional except C{f_fcn} and C{x0}.
+    @param f_fcn: Function that evaluates the objective function, its gradients
+                  and Hessian for a given value of M{x}. If there are
+                  non-linear constraints, the Hessian information is provided
+                  by the 'hess_fcn' argument and is not required here.
+    @type f_fcn: callable
+    @param x0: Starting value of optimization vector M{x}.
+    @type x0: array
+    @param A: Optional linear constraints.
+    @type A: csr_matrix
+    @param l: Optional linear constraints. Default values are M{-Inf}.
+    @type l: array
+    @param u: Optional linear constraints. Default values are M{Inf}.
+    @type u: array
+    @param xmin: Optional lower bounds on the M{x} variables, defaults are
+                 M{-Inf}.
+    @type xmin: array
+    @param xmax: Optional upper bounds on the M{x} variables, defaults are
+                 M{Inf}.
+    @type xmax: array
+    @param gh_fcn: Function that evaluates the optional non-linear constraints
+                   and their gradients for a given value of M{x}.
+    @type gh_fcn: callable
+    @param hess_fcn: Handle to function that computes the Hessian of the
+                     Lagrangian for given values of M{x}, M{lambda} and M{mu},
+                     where M{lambda} and M{mu} are the multipliers on the
+                     equality and inequality constraints, M{g} and M{h},
+                     respectively.
+    @type hess_fcn: callable
+    @param opt: optional options dictionary with the following keys, all of
+                which are also optional (default values shown in parentheses)
+                  - C{verbose} (False) - Controls level of progress output
+                    displayed
+                  - C{feastol} (1e-6) - termination tolerance for feasibility
+                    condition
+                  - C{gradtol} (1e-6) - termination tolerance for gradient
+                    condition
+                  - C{comptol} (1e-6) - termination tolerance for
+                    complementarity condition
+                  - C{costtol} (1e-6) - termination tolerance for cost
+                    condition
+                  - C{max_it} (150) - maximum number of iterations
+                  - C{step_control} (False) - set to True to enable step-size
+                    control
+                  - C{max_red} (20) - maximum number of step-size reductions if
+                    step-control is on
+                  - C{cost_mult} (1.0) - cost multiplier used to scale the
+                    objective function for improved conditioning. Note: The
+                    same value must also be passed to the Hessian evaluation
+                    function so that it can appropriately scale the objective
+                    function term in the Hessian of the Lagrangian.
+    @type opt: dict
+
+    @rtype: dict
+    @return: The solution dictionary has the following keys:
+               - C{x} - solution vector
+               - C{f} - final objective function value
+               - C{converged} - exit status
+                   - True = first order optimality conditions satisfied
+                   - False = maximum number of iterations reached
+                   - None = numerically failed
+               - C{output} - output dictionary with keys:
+                   - C{iterations} - number of iterations performed
+                   - C{hist} - dictionary of arrays with trajectories of the
+                     following: feascond, gradcond, compcond, costcond, gamma,
+                     stepsize, obj, alphap, alphad
+                   - C{message} - exit message
+               - C{lmbda} - dictionary containing the Langrange and Kuhn-Tucker
+                 multipliers on the constraints, with keys:
+                   - C{eqnonlin} - non-linear equality constraints
+                   - C{ineqnonlin} - non-linear inequality constraints
+                   - C{mu_l} - lower (left-hand) limit on linear constraints
+                   - C{mu_u} - upper (right-hand) limit on linear constraints
+                   - C{lower} - lower bound on optimization variables
+                   - C{upper} - upper bound on optimization variables
+
+    @license: Apache License version 2.0
     """
     nx = x0.shape[0]                        # number of variables
     nA = A.shape[0] if A is not None else 0 # number of original linear constr
@@ -469,7 +603,115 @@ def pips(f_fcn, x0, A=None, l=None, u=None, xmin=None, xmax=None,
 #------------------------------------------------------------------------------
 
 def qps_pips(H, c, A, l, u, xmin=None, xmax=None, x0=None, opt=None):
-    """ Quadratic Program Solver based on PIPS.
+    """Uses the Python Interior Point Solver (PIPS) to solve the following
+    QP (quadratic programming) problem::
+
+            min 1/2 x'*H*x + C'*x
+             x
+
+    subject to::
+
+            l <= A*x <= u       (linear constraints)
+            xmin <= x <= xmax   (variable bounds)
+
+    Note the calling syntax is almost identical to that of QUADPROG from
+    MathWorks' Optimization Toolbox. The main difference is that the linear
+    constraints are specified with C{A}, C{L}, C{U} instead of C{A}, C{B},
+    C{Aeq}, C{Beq}.
+
+    See also L{pips}.
+
+    Example from U{http://www.uc.edu/sashtml/iml/chap8/sect12.htm}:
+
+        >>> from numpy import array, zeros, Inf
+        >>> from scipy.sparse import csr_matrix
+        >>> H = csr_matrix(array([[1003.1,  4.3,     6.3,     5.9],
+        ...                       [4.3,     2.2,     2.1,     3.9],
+        ...                       [6.3,     2.1,     3.5,     4.8],
+        ...                       [5.9,     3.9,     4.8,     10 ]]))
+        >>> c = zeros(4)
+        >>> A = csr_matrix(array([[1,       1,       1,       1   ],
+        ...                       [0.17,    0.11,    0.10,    0.18]]))
+        >>> l = array([1, 0.10])
+        >>> u = array([1, Inf])
+        >>> xmin = zeros(4)
+        >>> xmax = None
+        >>> x0 = array([1, 0, 0, 1])
+        >>> solution = qps_pips(H, c, A, l, u, xmin, xmax, x0)
+        >>> round(solution["f"], 11) == 1.09666678128
+        True
+        >>> solution["converged"]
+        True
+        >>> solution["output"]["iterations"]
+        10
+
+    All parameters are optional except C{H}, C{C}, C{A} and C{L}.
+    @param H: Quadratic cost coefficients.
+    @type H: csr_matrix
+    @param c: vector of linear cost coefficients
+    @type c: array
+    @param A: Optional linear constraints.
+    @type A: csr_matrix
+    @param l: Optional linear constraints. Default values are M{-Inf}.
+    @type l: array
+    @param u: Optional linear constraints. Default values are M{Inf}.
+    @type u: array
+    @param xmin: Optional lower bounds on the M{x} variables, defaults are
+                 M{-Inf}.
+    @type xmin: array
+    @param xmax: Optional upper bounds on the M{x} variables, defaults are
+                 M{Inf}.
+    @type xmax: array
+    @param x0: Starting value of optimization vector M{x}.
+    @type x0: array
+    @param opt: optional options dictionary with the following keys, all of
+                which are also optional (default values shown in parentheses)
+                  - C{verbose} (False) - Controls level of progress output
+                    displayed
+                  - C{feastol} (1e-6) - termination tolerance for feasibility
+                    condition
+                  - C{gradtol} (1e-6) - termination tolerance for gradient
+                    condition
+                  - C{comptol} (1e-6) - termination tolerance for
+                    complementarity condition
+                  - C{costtol} (1e-6) - termination tolerance for cost
+                    condition
+                  - C{max_it} (150) - maximum number of iterations
+                  - C{step_control} (False) - set to True to enable step-size
+                    control
+                  - C{max_red} (20) - maximum number of step-size reductions if
+                    step-control is on
+                  - C{cost_mult} (1.0) - cost multiplier used to scale the
+                    objective function for improved conditioning. Note: The
+                    same value must also be passed to the Hessian evaluation
+                    function so that it can appropriately scale the objective
+                    function term in the Hessian of the Lagrangian.
+    @type opt: dict
+
+    @rtype: dict
+    @return: The solution dictionary has the following keys:
+               - C{x} - solution vector
+               - C{f} - final objective function value
+               - C{converged} - exit status
+                   - True = first order optimality conditions satisfied
+                   - False = maximum number of iterations reached
+                   - None = numerically failed
+               - C{output} - output dictionary with keys:
+                   - C{iterations} - number of iterations performed
+                   - C{hist} - dictionary of arrays with trajectories of the
+                     following: feascond, gradcond, compcond, costcond, gamma,
+                     stepsize, obj, alphap, alphad
+                   - C{message} - exit message
+               - C{lmbda} - dictionary containing the Langrange and Kuhn-Tucker
+                 multipliers on the constraints, with keys:
+                   - C{eqnonlin} - non-linear equality constraints
+                   - C{ineqnonlin} - non-linear inequality constraints
+                   - C{mu_l} - lower (left-hand) limit on linear constraints
+                   - C{mu_u} - upper (right-hand) limit on linear constraints
+                   - C{lower} - lower bound on optimization variables
+                   - C{upper} - upper bound on optimization variables
+
+    @license: Apache License version 2.0
     """
     if H is None or H.nnz == 0:
         if A is None or A.nnz == 0 and \
@@ -529,5 +771,10 @@ def qps_pips(H, c, A, l, u, xmin=None, xmax=None, x0=None, opt=None):
 #    l[:N] = b[:N]
 
     return pips(qp_f, x0, A, l, u, xmin, xmax, opt=opt)
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
 
 # EOF -------------------------------------------------------------------------
