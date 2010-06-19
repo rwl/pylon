@@ -29,7 +29,7 @@ from numpy import \
 
 from scipy.sparse import csc_matrix, csr_matrix
 
-from util import Named, Serializable
+from util import _Named, _Serializable
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 #  "Bus" class:
 #------------------------------------------------------------------------------
 
-class Bus(Named):
+class Bus(_Named):
     """ Defines a power system bus node.
     """
 
@@ -130,7 +130,7 @@ class Bus(Named):
 #  "Branch" class:
 #------------------------------------------------------------------------------
 
-class Branch(Named):
+class Branch(_Named):
     """ Defines a case edge that links two Bus objects.
     """
 
@@ -230,7 +230,7 @@ class Branch(Named):
 #  "Case" class:
 #------------------------------------------------------------------------------
 
-class Case(Named, Serializable):
+class Case(_Named, _Serializable):
     """ Defines representation of an electric power system as a graph
         of Bus objects connected by Branches.
     """
@@ -891,7 +891,7 @@ class Case(Named, Serializable):
                 g.online = False
 
     #--------------------------------------------------------------------------
-    #  "Serializable" interface:
+    #  "_Serializable" interface:
     #--------------------------------------------------------------------------
 
     def save_matpower(self, fd):

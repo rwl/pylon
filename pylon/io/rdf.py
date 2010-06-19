@@ -29,7 +29,7 @@ from rdflib import URIRef, Literal, BNode, Namespace
 from rdflib import RDF
 
 from pylon.io.common import \
-    CaseWriter, CaseReader, BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
+    _CaseWriter, _CaseReader, BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 #  "RDFReader" class:
 #------------------------------------------------------------------------------
 
-class RDFReader(CaseReader):
+class RDFReader(_CaseReader):
     """ Defines a reader for pickled cases.
     """
 
@@ -81,7 +81,7 @@ class RDFReader(CaseReader):
 #  "RDFWriter" class:
 #------------------------------------------------------------------------------
 
-class RDFWriter(CaseWriter):
+class RDFWriter(_CaseWriter):
     """ Writes cases as RDF/XML.
     """
 

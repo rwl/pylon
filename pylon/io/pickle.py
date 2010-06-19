@@ -26,7 +26,7 @@ import os.path
 import cPickle as pickle
 import logging
 
-from pylon.io.common import CaseReader, CaseWriter
+from pylon.io.common import _CaseReader, _CaseWriter
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 #  "PickleReader" class:
 #------------------------------------------------------------------------------
 
-class PickleReader(CaseReader):
+class PickleReader(_CaseReader):
     """ Defines a reader for pickled cases.
     """
 
@@ -69,7 +69,7 @@ class PickleReader(CaseReader):
 #  "PickleWriter" class:
 #------------------------------------------------------------------------------
 
-class PickleWriter(CaseWriter):
+class PickleWriter(_CaseWriter):
     """ Writes a case to file using pickle.
     """
 

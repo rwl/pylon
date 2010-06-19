@@ -35,7 +35,7 @@ from os.path import basename, splitext
 
 from pylon.case import Case, Bus, Branch, PQ, PV, REFERENCE, ISOLATED
 from pylon.generator import Generator, PW_LINEAR, POLYNOMIAL
-from pylon.io.common import CaseReader, CaseWriter
+from pylon.io.common import _CaseReader, _CaseWriter
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 #  "MATPOWERReader" class:
 #------------------------------------------------------------------------------
 
-class MATPOWERReader(CaseReader):
+class MATPOWERReader(_CaseReader):
     """ Defines a reader for MATPOWER case files.
     """
 
@@ -66,7 +66,7 @@ class MATPOWERReader(CaseReader):
         """ Returns a Case given a MATPOWER file or file name.
         """
         t0 = time.time()
-        self.init()
+        self._bus_map = {}
         if isinstance(file_or_filename, basestring):
             fname = basename(file_or_filename)
             logger.info("Loading MATPOWER file [%s]." % fname)
@@ -260,7 +260,7 @@ class MATPOWERReader(CaseReader):
 #  "MATPOWERReader" class:
 #------------------------------------------------------------------------------
 
-#class MATPOWERReader(CaseReader):
+#class MATPOWERReader(_CaseReader):
 #    """ Defines a method class for reading MATPOWER data files and
 #        returning a Case object.
 #    """
@@ -708,7 +708,7 @@ class MATPOWERReader(CaseReader):
 #  "MATPOWERWriter" class:
 #------------------------------------------------------------------------------
 
-class MATPOWERWriter(CaseWriter):
+class MATPOWERWriter(_CaseWriter):
     """ Write case data to a file in MATPOWER format [1].
 
         [1] Ray Zimmerman, "savecase.m", MATPOWER, PSERC Cornell,
@@ -730,7 +730,7 @@ class MATPOWERWriter(CaseWriter):
         self._prefix = "mpc."
 
     #--------------------------------------------------------------------------
-    #  "CaseWriter" interface:
+    #  "_CaseWriter" interface:
     #--------------------------------------------------------------------------
 
     def write(self, file_or_filename):

@@ -30,7 +30,7 @@ from pyparsing import Optional, Literal, ZeroOrMore
 
 from pylon import Case, Bus, Branch, Generator
 
-from pylon.io.common import CaseReader
+from pylon.io.common import _CaseReader
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -42,13 +42,13 @@ logger = logging.getLogger(__name__)
 #  "PSATReader" class:
 #------------------------------------------------------------------------------
 
-class PSATReader(CaseReader):
+class PSATReader(_CaseReader):
     """ Defines a method class for reading PSAT data files and
         returning a Case object.
     """
 
     #--------------------------------------------------------------------------
-    #  "CaseReader" interface:
+    #  "_CaseReader" interface:
     #--------------------------------------------------------------------------
 
     def read(self, file_or_filename):

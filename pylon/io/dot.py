@@ -25,7 +25,7 @@ import logging
 import subprocess
 import StringIO
 
-from pylon.io.common import CaseWriter
+from pylon.io.common import _CaseWriter
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -45,7 +45,7 @@ GENERATOR_ATTR = {}
 #  "DOTWriter" class:
 #------------------------------------------------------------------------------
 
-class DotWriter(CaseWriter):
+class DotWriter(_CaseWriter):
     """ Write case data to file in Graphviz DOT language.
     """
 
@@ -65,7 +65,7 @@ class DotWriter(CaseWriter):
         self.gen_attr = GENERATOR_ATTR if gen_attr is None else gen_attr
 
     #--------------------------------------------------------------------------
-    #  "CaseWriter" interface:
+    #  "_CaseWriter" interface:
     #--------------------------------------------------------------------------
 
     def write(self, file_or_filename, prog=None, format='xdot'):

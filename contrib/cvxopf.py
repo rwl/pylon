@@ -34,7 +34,7 @@ from numpy import polyval, polyder, finfo, pi
 
 from cvxopt import matrix, spmatrix, mul, sparse, exp, solvers, div, spdiag
 
-from pylon.solver import Solver, DCOPFSolver, SFLOW, PFLOW, IFLOW
+from pylon.solver import _Solver, DCOPFSolver, SFLOW, PFLOW, IFLOW
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -121,7 +121,7 @@ class DCCVXOPTSolver(DCOPFSolver):
 #  "CVXOPTSolver" class:
 #------------------------------------------------------------------------------
 
-class CVXOPTSolver(Solver):
+class CVXOPTSolver(_Solver):
     """ Solves AC optimal power flow using convex optimization.
     """
 

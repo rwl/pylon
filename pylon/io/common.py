@@ -47,15 +47,15 @@ GENERATOR_ATTRS = ["name", "online", "base_mva", "p", "p_max", "p_min",
     "pcost_model", "p_cost", "qcost_model", "q_cost", "mu_pmin", "mu_pmax"]
 
 #------------------------------------------------------------------------------
-#  "CaseWriter" class:
+#  "_CaseWriter" class:
 #------------------------------------------------------------------------------
 
-class CaseWriter(object):
+class _CaseWriter(object):
     """ Defines a base class for writers of case data.
     """
 
     def __init__(self, case):
-        """ Initialises a new CaseWriter instance.
+        """ Initialises a new _CaseWriter instance.
         """
         #: Case to be written.
         self.case = case
@@ -119,10 +119,10 @@ class CaseWriter(object):
         pass
 
 #------------------------------------------------------------------------------
-#  "CaseReader" class:
+#  "_CaseReader" class:
 #------------------------------------------------------------------------------
 
-class CaseReader(object):
+class _CaseReader(object):
     """ Defines a base class for case readers.
     """
 

@@ -47,10 +47,10 @@ known_extensions = {
     'dot': 'dot'}
 
 #------------------------------------------------------------------------------
-#  "Named" class:
+#  "_Named" class:
 #------------------------------------------------------------------------------
 
-class Named(object):
+class _Named(object):
     """ Base class taken from PyBrain for objects guaranteed to have a
         unique name.
     """
@@ -87,10 +87,10 @@ class Named(object):
 #        return "<%s '%s'>" % (self.__class__.__name__, self.name)
 
 #------------------------------------------------------------------------------
-#  "Serializable" class:
+#  "_Serializable" class:
 #------------------------------------------------------------------------------
 
-class Serializable(object):
+class _Serializable(object):
     """ Defines shortcuts to serialize an object.  Taken from PyBrain.
     """
 

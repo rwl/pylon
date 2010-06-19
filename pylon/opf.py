@@ -33,7 +33,7 @@ from numpy import \
 
 from scipy.sparse import lil_matrix, csr_matrix, hstack
 
-from util import Named
+from util import _Named
 from case import REFERENCE
 from generator import PW_LINEAR
 from solver import DCOPFSolver, PIPSSolver
@@ -690,10 +690,10 @@ class OPFModel(object):
         return [c.params for c in self.costs]
 
 #------------------------------------------------------------------------------
-#  "Indexed" class:
+#  "_Set" class:
 #------------------------------------------------------------------------------
 
-class Set(Named):
+class _Set(_Named):
 
     def __init__(self, name, N):
         #: String identifier.
@@ -718,7 +718,7 @@ class Set(Named):
 #  "Variable" class:
 #------------------------------------------------------------------------------
 
-class Variable(Set):
+class Variable(_Set):
     """ Defines a set of variables.
     """
 
@@ -749,7 +749,7 @@ class Variable(Set):
 #  "LinearConstraint" class:
 #------------------------------------------------------------------------------
 
-class LinearConstraint(Set):
+class LinearConstraint(_Set):
     """ Defines a set of linear constraints.
     """
 
@@ -772,7 +772,7 @@ class LinearConstraint(Set):
 #  "NonLinearConstraint" class:
 #------------------------------------------------------------------------------
 
-class NonLinearConstraint(Set):
+class NonLinearConstraint(_Set):
     """ Defines a set of non-linear constraints.
     """
     pass
@@ -781,7 +781,7 @@ class NonLinearConstraint(Set):
 #  "Cost" class:
 #------------------------------------------------------------------------------
 
-class Cost(Set):
+class Cost(_Set):
     def __init__(self):
         self.N = None
         self.H = None

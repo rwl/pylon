@@ -29,13 +29,13 @@ from numpy import \
 from scipy.sparse import lil_matrix, csr_matrix, hstack, vstack
 
 from pylon import REFERENCE
-from pylon.solver import Solver, SFLOW, IFLOW, PFLOW
+from pylon.solver import _Solver, SFLOW, IFLOW, PFLOW
 
 #------------------------------------------------------------------------------
 #  "IPOPFSolver" class:
 #------------------------------------------------------------------------------
 
-class IPOPFSolver(Solver):
+class IPOPFSolver(_Solver):
     """ Solves AC optimal power flow using IPOPT.
     """
 

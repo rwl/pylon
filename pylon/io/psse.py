@@ -27,7 +27,7 @@ import logging
 
 from pylon import Case, Bus, Branch, Generator, PQ, PV, REFERENCE, ISOLATED
 from pylon.util import feq
-from pylon.io.common import CaseReader, CaseWriter
+from pylon.io.common import _CaseReader, _CaseWriter
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 #  "PSSEReader" class:
 #------------------------------------------------------------------------------
 
-class PSSEReader(CaseReader):
+class PSSEReader(_CaseReader):
     """ Defines a reader for PSS/E(TM) version 30 Raw files.
     """
 
@@ -365,7 +365,7 @@ class PSSEReader(CaseReader):
 #  "PSSEWriter" class:
 #------------------------------------------------------------------------------
 
-class PSSEWriter(CaseWriter):
+class PSSEWriter(_CaseWriter):
     """ Defines a class for writing a case in PSS/E format.
     """
 

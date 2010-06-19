@@ -25,13 +25,13 @@ import csv
 
 from pyExcelerator import Workbook
 
-from common import CaseWriter, BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
+from common import _CaseWriter, BUS_ATTRS, BRANCH_ATTRS, GENERATOR_ATTRS
 
 #------------------------------------------------------------------------------
 #  "ExcelWriter" class:
 #------------------------------------------------------------------------------
 
-class ExcelWriter(CaseWriter):
+class ExcelWriter(_CaseWriter):
     """ Writes case data to file in Excel format.
     """
 
@@ -89,7 +89,7 @@ class ExcelWriter(CaseWriter):
 #  "CSVWriter" class:
 #------------------------------------------------------------------------------
 
-class CSVWriter(CaseWriter):
+class CSVWriter(_CaseWriter):
     """ Writes case data to file as CSV.
     """
 
@@ -106,7 +106,7 @@ class CSVWriter(CaseWriter):
         self.writer = None
 
     #--------------------------------------------------------------------------
-    #  "CaseReader" interface:
+    #  "_CaseReader" interface:
     #--------------------------------------------------------------------------
 
     def write(self, file_or_filename):

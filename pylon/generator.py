@@ -25,7 +25,7 @@ import logging
 
 from numpy import polyval
 
-from util import Named
+from util import _Named
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 #  "Generator" class:
 #------------------------------------------------------------------------------
 
-class Generator(Named):
+class Generator(_Named):
     """ Defines a power system generator component. Fixes voltage magnitude
         and active power injected at parent bus. Or when at it's reactive
         power limit fixes active and reactive power injected at parent bus.

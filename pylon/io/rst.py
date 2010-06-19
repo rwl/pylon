@@ -23,18 +23,18 @@
 
 from pylon.util import CaseReport
 from pylon.generator import POLYNOMIAL
-from pylon.io.common import CaseWriter
+from pylon.io.common import _CaseWriter
 
 #------------------------------------------------------------------------------
 #  "ReSTWriter" class:
 #------------------------------------------------------------------------------
 
-class ReSTWriter(CaseWriter):
+class ReSTWriter(_CaseWriter):
     """ Write case data to a file in ReStructuredText format.
     """
 
     #--------------------------------------------------------------------------
-    #  "CaseWriter" interface:
+    #  "_CaseWriter" interface:
     #--------------------------------------------------------------------------
 
     def _write_data(self, file):

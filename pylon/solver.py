@@ -55,10 +55,10 @@ IFLOW = "Iflow"
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  "Solver" class:
+#  "_Solver" class:
 #------------------------------------------------------------------------------
 
-class Solver(object):
+class _Solver(object):
     """ Defines a base class for many solvers.
     """
 
@@ -188,7 +188,7 @@ class Solver(object):
 #  "DCOPFSolver" class:
 #------------------------------------------------------------------------------
 
-class DCOPFSolver(Solver):
+class DCOPFSolver(_Solver):
     """ Defines a solver for DC optimal power flow [3].
 
         [3] Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell, v4.0b1,
@@ -417,7 +417,7 @@ class DCOPFSolver(Solver):
 #  "PIPSSolver" class:
 #------------------------------------------------------------------------------
 
-class PIPSSolver(Solver):
+class PIPSSolver(_Solver):
     """ Solves AC optimal power flow using a primal-dual interior point method.
     """
 
