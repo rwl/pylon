@@ -718,10 +718,10 @@ class MATPOWERReader(_CaseReader):
 #------------------------------------------------------------------------------
 
 class MATPOWERWriter(_CaseWriter):
-    """ Write case data to a file in MATPOWER format [1].
+    """ Write case data to a file in MATPOWER format.
 
-        [1] Ray Zimmerman, "savecase.m", MATPOWER, PSERC Cornell,
-            http://www.pserc.cornell.edu/matpower/, version 4.0b2, March 2010
+    Based on savecase.m from MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     #--------------------------------------------------------------------------

@@ -14,10 +14,10 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines a generalised OPF solver and an OPF model [1].
+""" Defines a generalised OPF solver and an OPF model.
 
-    [1] Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
-        http://www.pserc.cornell.edu/matpower/, December 2009
+Based on opf.m from MATPOWER by Ray Zimmerman, developed at PSERC Cornell.
+See U{http://www.pserc.cornell.edu/matpower/} for more info.
 """
 
 #------------------------------------------------------------------------------
@@ -49,10 +49,10 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class OPF(object):
-    """ Defines a generalised OPF solver [1].
+    """ Defines a generalised OPF solver.
 
-        [1] Ray Zimmerman, "opf.m", MATPOWER, PSERC Cornell, version 4.0b1,
-            http://www.pserc.cornell.edu/matpower/, December 2009
+    Based on opf.m from MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     def __init__(self, case, dc=True, ignore_ang_lim=True, opt=None):
@@ -203,7 +203,7 @@ class OPF(object):
     def _remove_isolated(self, case):
         """ Returns non-isolated case components.
         """
-        case.deactivate_isolated()
+#        case.deactivate_isolated()
         buses = case.connected_buses
         branches = case.online_branches
         gens = case.online_generators
@@ -213,7 +213,7 @@ class OPF(object):
 
     def _pwl1_to_poly(self, generators):
         """ Converts single-block piecewise-linear costs into linear
-            polynomial.
+        polynomial.
         """
         for g in generators:
             if (g.pcost_model == PW_LINEAR) and (len(g.p_cost) == 2):
@@ -309,8 +309,8 @@ class OPF(object):
 
     def _branch_flow_dc(self, branches, Bf, Pfinj, base_mva):
         """ Returns the branch flow limit constraint.  The real power flows
-            at the from end the lines are related to the bus voltage angles
-            by Pf = Bf * Va + Pfinj.
+        at the from end the lines are related to the bus voltage angles by
+        Pf = Bf * Va + Pfinj.
         """
         # Indexes of constrained lines.
         il = array([i for i,l in enumerate(branches) if 0.0 < l.rate_a < 1e10])
@@ -327,12 +327,12 @@ class OPF(object):
 
     def _const_pf_constraints(self, gn, base_mva):
         """ Returns a linear constraint enforcing constant power factor for
-            dispatchable loads.
+        dispatchable loads.
 
-            The power factor is derived from the original value of Pmin and
-            either Qmin (for inductive loads) or Qmax (for capacitive loads).
-            If both Qmin and Qmax are zero, this implies a unity power factor
-            without the need for an additional constraint.
+        The power factor is derived from the original value of Pmin and either
+        Qmin (for inductive loads) or Qmax (for capacitive loads). If both Qmin
+        and Qmax are zero, this implies a unity power factor without the need
+        for an additional constraint.
         """
         ivl = array([i for i, g in enumerate(gn)
                      if g.is_load and (g.q_min != 0.0 or g.q_max != 0.0)])
@@ -431,10 +431,11 @@ class OPF(object):
 
     def _pwl_gen_costs(self, generators, base_mva):
         """ Returns the basin constraints for piece-wise linear gen cost
-            variables [2].  CCV cost formulation expressed as Ay * x <= by.
+        variables.  CCV cost formulation expressed as Ay * x <= by.
 
-            [2] C. E. Murillo-Sanchez, "makeAy.m", MATPOWER, PSERC Cornell,
-                version 4.0b1, http://www.pserc.cornell.edu/matpower/, Dec 09
+        Based on makeAy.m from MATPOWER by C. E. Murillo-Sanchez, developed at
+        PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more
+        information.
         """
         ng = len(generators)
         gpwl = [g for g in generators if g.pcost_model == PW_LINEAR]
@@ -513,6 +514,9 @@ class OPF(object):
 
 class OPFModel(object):
     """ Defines a model for optimal power flow.
+
+    Based on @opf_model in MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     def __init__(self, case):

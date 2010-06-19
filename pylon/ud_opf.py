@@ -15,14 +15,15 @@
 #------------------------------------------------------------------------------
 
 """ The standard OPF formulation has no mechanism for completely shutting down
-    generators which are very expensive to operate. Instead they are simply
-    dispatched at their minimum generation limits. PYLON includes the
-    capability to run an optimal power flow combined with a unit decommitment
-    for a single time period, which allows it to shut down these expensive
-    units and find a least cost commitment and dispatch [1].
+generators which are very expensive to operate. Instead they are simply
+dispatched at their minimum generation limits. PYLON includes the
+capability to run an optimal power flow combined with a unit decommitment
+for a single time period, which allows it to shut down these expensive
+units and find a least cost commitment and dispatch.
 
-    [1] Ray Zimmerman, "MATPOWER User's Manual", MATPOWER, PSERC Cornell,
-        version 3.2, http://www.pserc.cornell.edu/matpower/, September, 2007
+See also:
+  - Ray Zimmerman, "MATPOWER User's Manual", MATPOWER, PSERC Cornell,
+    version 3.2, U{http://www.pserc.cornell.edu/matpower/}, September, 2007
 """
 
 #------------------------------------------------------------------------------
@@ -49,17 +50,16 @@ logger = logging.getLogger(__name__)
 
 class UDOPF(object):
     """ Solves a combined unit decommitment and optimal power flow for a
-        single time period. Uses an algorithm similar to dynamic programming.
-        It proceeds through a sequence of stages, where stage N has N
-        generators shut down, starting with N=0. In each stage, it forms a list
-        of candidates (gens at their Pmin limits) and computes the cost with
-        each one of them shut down. It selects the least cost case as the
-        starting point for the next stage, continuing until there are no more
-        candidates to be shut down or no more improvement can be gained by
-        shutting something down [2].
+    single time period. Uses an algorithm similar to dynamic programming.
+    It proceeds through a sequence of stages, where stage N has N generators
+    shut down, starting with N=0. In each stage, it forms a list of candidates
+    (gens at their Pmin limits) and computes the cost with each one of them
+    shut down. It selects the least cost case as the starting point for the
+    next stage, continuing until there are no more candidates to be shut down
+    or no more improvement can be gained by shutting something down.
 
-        [2] Ray Zimmerman, "uopf.m", MATPOWER, PSERC Cornell, version 3.2,
-            http://www.pserc.cornell.edu/matpower/, March, 2006
+    Based on uopf.m from MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     #--------------------------------------------------------------------------
@@ -269,10 +269,10 @@ class UDOPF(object):
 
 def fair_max(x):
     """ Takes a single iterable as an argument and returns the same output as
-        the built-in function max with two output parameters, except that where
-        the maximum value occurs at more than one position in the  vector, the
-        index is chosen randomly from these positions as opposed to just
-        choosing the first occurance.
+    the built-in function max with two output parameters, except that where
+    the maximum value occurs at more than one position in the  vector, the
+    index is chosen randomly from these positions as opposed to just choosing
+    the first occurance.
     """
     value = max(x)
     # List indexes of max value.

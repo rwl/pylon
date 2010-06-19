@@ -14,10 +14,10 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" State estimation based on code by Rui Bo and James S. Thorp [1].
+""" Defines a state estimator.
 
-    [1] Ray Zimmerman and Rui Bo, "extras/se", MATPOWER, PSERC Cornell,
-        http://www.pserc.cornell.edu/matpower/, version 4.0b1, December 2009
+Based on code in MATPOWER by Rui Bo and James S. Thorp, developed at PSERC
+Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
 """
 
 #------------------------------------------------------------------------------
@@ -66,7 +66,10 @@ FROM_INPUT = "from input"
 #------------------------------------------------------------------------------
 
 class StateEstimator(object):
-    """ State estimation based on code by Rui Bo and James S. Thorp.
+    """ State estimation.
+
+    Based on code in MATPOWER by Rui Bo and James S. Thorp, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     #--------------------------------------------------------------------------

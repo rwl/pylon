@@ -14,7 +14,7 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines the Pylon power system model.
+""" Defines a bus-branch power system model.
 """
 
 #------------------------------------------------------------------------------
@@ -41,7 +41,6 @@ REFERENCE = "ref"
 ISOLATED = "isolated"
 LINE = "line"
 TRANSFORMER = "transformer"
-BIGNUM = 1e12#numpy.Inf
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -54,15 +53,13 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class Bus(_Named):
-    """ Defines a power system bus node.
+    """ Defines a power system busbar.
     """
 
     def __init__(self, name=None, type=PQ, v_base=100.0,
             v_magnitude=1.0, v_angle=0.0, v_max=1.1, v_min=0.9,
             p_demand=0.0, q_demand=0.0, g_shunt=0.0, b_shunt=0.0,
             position=None):
-        """ Initialises a new Bus instance.
-        """
         # Unique name.
         self.name = name
 
@@ -92,13 +89,10 @@ class Bus(_Named):
         #: Shunt susceptance (MVAr (injected) at V = 1.0 p.u.).
         self.b_shunt = b_shunt
 
+        #: Power system area (unused).
         self.area = 1
+        #: Control zone (unused).
         self.zone = 1
-
-#        #: Voltage magnitude, typically determined by a routine.
-#        self.v_magnitude = 0.0
-#        #: Voltage angle, typically determined by a routine.
-#        self.v_angle = 0.0
 
         #: Lambda (GBP/MWh).
         self.p_lmbda = 0.0
@@ -107,20 +101,19 @@ class Bus(_Named):
 
         #: Lagrangian multiplier for voltage constraint.
         self.mu_vmin = 0.0
+        #: Lagrangian multiplier for voltage constraint.
         self.mu_vmax = 0.0
 
         #: Tuple of bus coordinates.
-        self.position = (0.0, 0.0) if position is None else position
+#        self.position = (0.0, 0.0) if position is None else position
 
         #: Bus index, managed at a case level.
         self._i = 0
 
 
     def reset(self):
-        """ Resets the result variables.
+        """ Resets the readonly variables.
         """
-#        self.v_magnitude = 0.0
-#        self.v_angle = 0.0
         self.p_lmbda = 0.0
         self.q_lmbda = 0.0
         self.mu_vmin = 0.0
@@ -131,14 +124,13 @@ class Bus(_Named):
 #------------------------------------------------------------------------------
 
 class Branch(_Named):
-    """ Defines a case edge that links two Bus objects.
+    """ Branches are modelled as a medium length transmission line (pi-model)
+    in series with a regulating transformer at the "from" end.
     """
 
     def __init__(self, from_bus, to_bus, name=None, online=True, r=0.0,
             x=0.0, b=0.0, rate_a=999.0, rate_b=999.0, rate_c=999.0,
             ratio=0.0, phase_shift=0.0, ang_min=-180.0, ang_max=180.0):
-        """ Initialises a new Branch instance.
-        """
         #: From/source/start bus.
         self.from_bus = from_bus
         #: To/target/end bus.
@@ -156,9 +148,11 @@ class Branch(_Named):
         #: Total positive sequence line charging susceptance (pu).
         self.b = b
 
-        #: General purpose maximum MVA rating (MVA).
+        #: Long-term maximum MVA rating (MVA).
         self.rate_a = rate_a
+        #: Short-term maximum MVA rating (MVA).
         self.rate_b = rate_b
+        #: Emergency maximum MVA rating (MVA).
         self.rate_c = rate_c
 
         #: Transformer off nominal turns ratio.
@@ -198,22 +192,8 @@ class Branch(_Named):
         self._i = 0
 
 
-#    @property
-#    def p_losses(self):
-#        """ Active power losses.
-#        """
-#        return self.p_from + self.p_to
-
-
-#    @property
-#    def q_losses(self):
-#        """ Reactive power losses.
-#        """
-#        return self.q_from + self.q_to
-
-
     def reset(self):
-        """ Resets the result variables.
+        """ Resets the readonly variables.
         """
         self.p_from = 0.0
         self.p_to = 0.0
@@ -231,14 +211,12 @@ class Branch(_Named):
 #------------------------------------------------------------------------------
 
 class Case(_Named, _Serializable):
-    """ Defines representation of an electric power system as a graph
-        of Bus objects connected by Branches.
+    """ Defines an electric power system model as a graph of busbars connected
+    by branches.
     """
 
     def __init__(self, name=None, base_mva=100.0, buses=None, branches=None,
             generators=None):
-        """ Initialises a new Case instance.
-        """
         #: Unique name.
         self.name = name
 
@@ -261,7 +239,7 @@ class Case(_Named, _Serializable):
     @property
     def connected_buses(self):
         """ Returns a list of buses that are connected to one or more branches
-            or the first bus in a branchless system.
+        or the first bus in a branchless system.
         """
 #        if self.branches:
 #            from_buses = [e.from_bus for e in self.branches]
@@ -276,20 +254,20 @@ class Case(_Named, _Serializable):
 
     @property
     def online_generators(self):
-        """ All in-service generators.
+        """ Returns all in-service generators connected to non-isolated buses.
         """
         return [g for g in self.generators if g.online]
 
 
     @property
     def online_branches(self):
-        """ Property getter for in-service branches.
+        """ Returns all in-service branches connected to non-isolated buses.
         """
         return [branch for branch in self.branches if branch.online]
 
 
     def getSbus(self, buses=None):
-        """ Net complex bus power injection vector in p.u.
+        """ Returns the net complex bus power injection vector in p.u.
         """
         bs = self.buses if buses is None else buses
         s = array([self.s_surplus(v) / self.base_mva for v in bs])
@@ -308,7 +286,10 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def index_buses(self, buses=None, start=0):
-        """ Updates the indices of all case buses.
+        """ Updates the indices of all buses.
+
+        @param start: Starting index, typically 0 or 1.
+        @type start: int
         """
         bs = self.connected_buses if buses is None else buses
         for i, b in enumerate(bs):
@@ -316,7 +297,10 @@ class Case(_Named, _Serializable):
 
 
     def index_branches(self, branches=None, start=0):
-        """ Updates the indices for all brnaches.
+        """ Updates the indices of all branches.
+
+        @param start: Starting index, typically 0 or 1.
+        @type start: int
         """
         ln = self.online_branches if branches is None else branches
         for i, l in enumerate(ln):
@@ -359,12 +343,15 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def getYbus(self, buses=None, branches=None):
-        """ Returns the bus and branch admittance matrices, Yf and Yt, such
-            that Yf * V is the vector of complex branch currents injected at
-            each branch's "from" bus [1].
+        """ Based on makeYbus.m from MATPOWER by Ray Zimmerman, developed at
+        PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more
+        information.
 
-            [1] Ray Zimmerman, "makeYbus.m", MATPOWER, PSERC Cornell,
-                http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
+        @rtype: tuple
+        @return: A triple consisting of the bus admittance matrix (i.e. for all
+        buses) and the matrices Yf and Yt which, when multiplied by a complex
+        voltage vector, yield the vector currents injected into each line from
+        the "from" and "to" buses respectively of each line.
         """
         buses = self.buses if buses is None else buses
         branches = self.branches if branches is None else branches
@@ -441,7 +428,16 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def makeB(self, buses=None, branches=None, method="XB"):
-        """ Builds the FDPF matrices, B prime and B double prime.
+        """ Based on makeB.m from MATPOWER by Ray Zimmerman, developed at
+        PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more
+        information.
+
+        @param method: Specify "XB" or "BX" method.
+        @type method: string
+
+        @rtype: tuple
+        @return: Two matrices, B prime and B double prime, used in the fast
+        decoupled power flow solver.
         """
         buses = self.connected_buses if buses is None else buses
         branches = self.online_branches if branches is None else branches
@@ -477,23 +473,27 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def makeBdc(self, buses=None, branches=None):
-        """ Returns the sparse susceptance matrices and phase shift injection
-            vectors needed for a DC power flow [2].
-
-            The bus real power injections are related to bus voltage angles by
+        """ The bus real power injections are related to bus voltage angles
+        by::
                 P = Bbus * Va + Pbusinj
 
-            The real power flows at the from end the lines are related to the
-            bus voltage angles by
+        The real power flows at the from end the lines are related to the bus
+        voltage angles by::
+
                 Pf = Bf * Va + Pfinj
 
-            | Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
-            |    | = |          | * |     | + |       |
-            | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
+                | Pf |   | Bff  Bft |   | Vaf |   | Pfinj |
+                |    | = |          | * |     | + |       |
+                | Pt |   | Btf  Btt |   | Vat |   | Ptinj |
 
 
-            [2] Ray Zimmerman, "makeBdc.m", MATPOWER, PSERC Cornell,
-                http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
+        Based on makeBdc.m from MATPOWER by Ray Zimmerman, developed at
+        PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more
+        information.
+
+        @return: B matrices and phase shift injection vectors for DC power
+                 flow.
+        @rtype: tuple
         """
         buses = self.connected_buses if buses is None else buses
         branches = self.online_branches if branches is None else branches
@@ -545,11 +545,13 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def dSbus_dV(self, Y, V):
-        """ Computes the partial derivative of power injection w.r.t.
-            voltage [3].
+        """ Based on dSbus_dV.m from MATPOWER by Ray Zimmerman, developed at
+        PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more
+        information.
 
-            [3] Ray Zimmerman, "dSbus_dV.m", MATPOWER, version 4.0b1,
-                PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+        @return: The partial derivatives of power injection w.r.t. voltage
+                 magnitude and voltage angle.
+        @rtype: tuple
         """
         ib = range(len(V))
 
@@ -570,10 +572,13 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def dIbr_dV(self, Yf, Yt, V):
-        """ Computes partial derivatives of branch currents w.r.t. voltage [4].
+        """ Based on dIbr_dV.m from MATPOWER by Ray Zimmerman, developed at
+        PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more
+        information.
 
-            [4] Ray Zimmerman, "dIbr_dV.m", MATPOWER, version 4.0b1,
-                PSERC (Cornell), http://www.pserc.cornell.edu/matpower/
+        @return: The partial derivatives of branch currents w.r.t. voltage
+                 magnitude and voltage angle.
+        @rtype: tuple
         """
         i = range(len(V))
 
@@ -596,8 +601,13 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def dSbr_dV(self, Yf, Yt, V, buses=None, branches=None):
-        """ Computes the branch power flow vector and the partial derivative of
-            branch power flow w.r.t voltage.
+        """ Based on dSbr_dV.m from MATPOWER by Ray Zimmerman, developed at
+        PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more
+        information.
+
+        @return: The branch power flow vectors and the partial derivatives of
+                 branch power flow w.r.t voltage magnitude and voltage angle.
+        @rtype: tuple
         """
         buses = self.buses if buses is None else buses
         branches = self.branches if branches is None else branches
@@ -649,12 +659,15 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def dAbr_dV(self, dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm, Sf, St):
-        """ Partial derivatives of squared flow magnitudes w.r.t voltage.
+        """ Based on dAbr_dV.m from MATPOWER by Ray Zimmerman, developed at
+        PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more
+        information.
 
-            Computes partial derivatives of apparent power w.r.t active and
-            reactive power flows.  Partial derivative must equal 1 for lines
-            with zero flow to avoid division by zero errors (1 comes from
-            L'Hopital).
+        @rtype: tuple
+        @return: The partial derivatives of the squared flow magnitudes w.r.t
+                 voltage magnitude and voltage angle given the flows and flow
+                 sensitivities. Flows could be complex current or complex or
+                 real power.
         """
         il = range(len(Sf))
 
@@ -679,7 +692,12 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def d2Sbus_dV2(self, Ybus, V, lam):
-        """ Computes 2nd derivatives of power injection w.r.t. voltage.
+        """ Based on d2Sbus_dV2.m from MATPOWER by Ray Zimmerman, developed
+        at PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for
+        more information.
+
+        @rtype: tuple
+        @return: The 2nd derivatives of power injection w.r.t. voltage.
         """
         nb = len(V)
         ib = range(nb)
@@ -707,7 +725,12 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def d2Ibr_dV2(self, Ybr, V, lam):
-        """ Computes 2nd derivatives of complex branch current w.r.t. voltage.
+        """ Based on d2Ibr_dV2.m from MATPOWER by Ray Zimmerman, developed
+        at PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for
+        more information.
+
+        @rtype: tuple
+        @return: The 2nd derivatives of complex branch current w.r.t. voltage.
         """
         nb = len(V)
         ib = range(nb)
@@ -725,7 +748,12 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def d2Sbr_dV2(self, Cbr, Ybr, V, lam):
-        """ Computes 2nd derivatives of complex power flow w.r.t. voltage.
+        """ Based on d2Sbr_dV2.m from MATPOWER by Ray Zimmerman, developed
+        at PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for
+        more information.
+
+        @rtype: tuple
+        @return: The 2nd derivatives of complex power flow w.r.t. voltage.
         """
         nb = len(V)
         nl = len(lam)
@@ -754,7 +782,12 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def d2ASbr_dV2(self, dSbr_dVa, dSbr_dVm, Sbr, Cbr, Ybr, V, lam):
-        """ Computes 2nd derivatives of |complex power flow|**2 w.r.t. V.
+        """ Based on d2ASbr_dV2.m from MATPOWER by Ray Zimmerman, developed
+        at PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for
+        more information.
+
+        @rtype: tuple
+        @return: The 2nd derivatives of |complex power flow|**2 w.r.t. V.
         """
         il = range(len(lam))
 
@@ -775,7 +808,12 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def d2AIbr_dV2(self, dIbr_dVa, dIbr_dVm, Ibr, Ybr, V, lam):
-        """ Computes 2nd derivatives of |complex current|**2 w.r.t. V.
+        """ Based on d2AIbr_dV2.m from MATPOWER by Ray Zimmerman, developed
+        at PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for
+        more information.
+
+        @rtype: tuple
+        @return: The 2nd derivatives of |complex current|**2 w.r.t. V.
         """
         il = range(len(lam))
 
@@ -796,8 +834,11 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def pf_solution(self, Ybus, Yf, Yt, V):
-        """ Updates buses, generators and branches to match power flow
-            solution.
+        """ Based on pfsoln.m from MATPOWER by Ray Zimmerman, developed
+        at PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for
+        more information.
+
+        Updates buses, generators and branches to match a power flow solution.
         """
         buses = self.connected_buses
         branches = self.online_branches
@@ -867,7 +908,7 @@ class Case(_Named, _Serializable):
     #--------------------------------------------------------------------------
 
     def reset(self):
-        """ Resets the result variables for all of the case componenets.
+        """ Resets the readonly variables for all of the case components.
         """
         for bus in self.buses:
             bus.reset()
@@ -875,20 +916,6 @@ class Case(_Named, _Serializable):
             branch.reset()
         for generator in self.generators:
             generator.reset()
-
-    #--------------------------------------------------------------------------
-    #  Deactivate isolated branches and generators:
-    #--------------------------------------------------------------------------
-
-    def deactivate_isolated(self):
-        """ Deactivates branches and generators connected to isolated buses.
-        """
-        for l in self.branches:
-            if (l.from_bus.type == "isolated") or (l.to_bus.type == "isolated"):
-                l.online = False
-        for g in self.generators:
-            if g.bus.type == "isolated":
-                g.online = False
 
     #--------------------------------------------------------------------------
     #  "_Serializable" interface:
@@ -910,6 +937,8 @@ class Case(_Named, _Serializable):
 
 
     def save_psse(self, fd):
+        """ Serialize the case as a PSS/E data file.
+        """
         from pylon.io import PSSEWriter
         return PSSEWriter(self).write(fd)
 
@@ -930,7 +959,7 @@ class Case(_Named, _Serializable):
     def load_psat(cls, fd):
         """ Returns a case object from the given PSAT data file.
         """
-        from pylon.io import PSATReader
+        from pylon.io.psat import PSATReader
         return PSATReader().read(fd)
 
 

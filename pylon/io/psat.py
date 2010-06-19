@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 class PSATReader(_CaseReader):
     """ Defines a method class for reading PSAT data files and
-        returning a Case object.
+    returning a Case object.
     """
 
     #--------------------------------------------------------------------------
@@ -417,7 +417,7 @@ class PSATReader(_CaseReader):
 
     def push_slack(self, tokens):
         """ Finds the slack bus, adds a Generator with the appropriate data
-            and sets the bus type to slack.
+        and sets the bus type to slack.
         """
         logger.debug("Pushing slack data: %s" % tokens)
 
@@ -436,8 +436,8 @@ class PSATReader(_CaseReader):
 
 
     def push_pv(self, tokens):
-        """ Creates and Generator object, populates it with data,
-            finds its Bus and adds it.
+        """ Creates and Generator object, populates it with data, finds its Bus
+        and adds it.
         """
         logger.debug("Pushing PV data: %s" % tokens)
 
@@ -455,8 +455,8 @@ class PSATReader(_CaseReader):
 
 
     def push_pq(self, tokens):
-        """ Creates and Load object, populates it with data,
-            finds its Bus and adds it.
+        """ Creates and Load object, populates it with data, finds its Bus and
+        adds it.
         """
         logger.debug("Pushing PQ data: %s" % tokens)
 

@@ -71,9 +71,9 @@ class DotWriter(_CaseWriter):
     def write(self, file_or_filename, prog=None, format='xdot'):
         """ Writes the case data in Graphviz DOT language.
 
-            The format 'raw' is used to dump the Dot representation of the
-            Case object, without further processing. The output can be
-            processed by any of graphviz tools, defined in 'prog'.
+        The format 'raw' is used to dump the Dot representation of the Case
+        object, without further processing. The output can be processed by any
+        of graphviz tools, defined in 'prog'.
         """
         if prog is None:
             file = super(DotWriter, self).write(file_or_filename)
@@ -156,15 +156,14 @@ class DotWriter(_CaseWriter):
 
     def create(self, dotdata, prog="dot", format="xdot"):
         """ Creates and returns a representation of the graph using the
-            Graphviz layout program given by 'prog', according to the given
-            format.
+        Graphviz layout program given by 'prog', according to the given format.
 
-            Writes the graph to a temporary dot file and processes it with
-            the program given by 'prog' (which defaults to 'dot'), reading
-            the output and returning it as a string if the operation is
-            successful. On failure None is returned.
+        Writes the graph to a temporary dot file and processes it with the
+        program given by 'prog' (which defaults to 'dot'), reading the output
+        and returning it as a string if the operation is successful. On failure
+        None is returned.
 
-            Originally from PyDOT by Ero Carrera.
+        Based on PyDot by Ero Carrera.
         """
         import os, tempfile
         from dot2tex.dotparsing import find_graphviz

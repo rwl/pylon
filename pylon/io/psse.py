@@ -44,8 +44,6 @@ class PSSEReader(_CaseReader):
     """
 
     def __init__(self):
-        """ Initialises a new PSSE30Reader instance.
-        """
         self.init()
 
 
@@ -56,8 +54,8 @@ class PSSEReader(_CaseReader):
     def read(self, file_or_filename):
         """ Returns a case from a version 30 PSS/E raw file.
 
-            file_or_filename: File name or file like object with PSS/E data
-            return: Case object
+        @param file_or_filename: File name or file like object with PSS/E data
+        @return: Case object
         """
         t0 = time.time()
         self.init()

@@ -14,10 +14,10 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines solvers for AC power flow [1].
+""" Defines solvers for AC power flow.
 
-    [1] Ray Zimmerman, "runpf.m", MATPOWER, PSERC Cornell,
-    http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
+Based on runpf.m from MATPOWER by Ray Zimmerman, developed at PSERC Cornell.
+See U{http://www.pserc.cornell.edu/matpower/} for more information.
 """
 
 #------------------------------------------------------------------------------
@@ -59,20 +59,18 @@ class SlackBusError(Exception):
 #------------------------------------------------------------------------------
 
 class _ACPF(object):
-    """ Defines a base class for AC power flow solvers [1].
+    """ Defines a base class for AC power flow solvers.
 
-        [1] Ray Zimmerman, "runpf.m", MATPOWER, PSERC Cornell,
-        http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
+    Based on runpf.m from MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, case, qlimit=False, tolerance=1e-08,
-                 iter_max=10, verbose=True):
-        """ Initialises a new ACPF instance.
-        """
+    def __init__(self, case, qlimit=False, tolerance=1e-08, iter_max=10,
+                 verbose=True):
         #: Solved case.
         self.case = case
 
@@ -93,7 +91,14 @@ class _ACPF(object):
     #--------------------------------------------------------------------------
 
     def solve(self):
-        """ Override this method in subclasses.
+        """ Runs a power flow
+
+        @rtype: dict
+        @return: Solution dictionary with the following keys:
+                   - C{V} - final complex voltages
+                   - C{converged} - boolean value indicating if the solver
+                     converged or not
+                   - C{iterations} - the number of iterations performed
         """
         # Zero result attributes.
         self.case.reset()
@@ -178,8 +183,8 @@ class _ACPF(object):
         """ Set up indexing for updating v.
         """
         refs = [bus._i for bus in buses if bus.type == REFERENCE]
-        if len(refs) != 1:
-            raise SlackBusError
+#        if len(refs) != 1:
+#            raise SlackBusError
         pv = [bus._i for bus in buses if bus.type == PV]
         pq = [bus._i for bus in buses if bus.type == PQ]
         pvpq = pv + pq
@@ -190,10 +195,10 @@ class _ACPF(object):
     def _initial_voltage(self, buses, generators):
         """ Returns the initial vector of complex bus voltages.
 
-            The bus voltage vector contains the set point for generator
-            (including ref bus) buses, and the reference angle of the swing
-            bus, as well as an initial guess for remaining magnitudes and
-            angles.
+        The bus voltage vector contains the set point for generator
+        (including ref bus) buses, and the reference angle of the swing
+        bus, as well as an initial guess for remaining magnitudes and
+        angles.
         """
         Vm = array([bus.v_magnitude for bus in buses])
 
@@ -222,10 +227,10 @@ class _ACPF(object):
 #------------------------------------------------------------------------------
 
 class NewtonPF(_ACPF):
-    """ Solves the power flow using full Newton's method [2].
+    """ Solves the power flow using full Newton's method.
 
-        [2] Ray Zimmerman, "newtonpf.m", MATPOWER, PSERC Cornell,
-        http://www.pserc.cornell.edu/matpower/, version 4.0b1, Dec 2009
+    Based on newtonpf.m from MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     def _run_power_flow(self, Ybus, Sbus, V, pv, pq, pvpq, **kw_args):
@@ -344,10 +349,10 @@ class NewtonPF(_ACPF):
 #------------------------------------------------------------------------------
 
 class FastDecoupledPF(_ACPF):
-    """ Solves the power flow using fast decoupled method [3].
+    """ Solves the power flow using fast decoupled method.
 
-        [3] Ray Zimmerman, "fdpf.m", MATPOWER, PSERC Cornell, version 4.0b1,
-        http://www.pserc.cornell.edu/matpower/, December 2009
+    Based on fdpf.m from MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
     #--------------------------------------------------------------------------
     #  "object" interface:
@@ -453,7 +458,7 @@ class FastDecoupledPF(_ACPF):
 
     def _check_convergence(self, P, Q, i, type):
         """ Checks if the solution has converged to within the specified
-            tolerance.
+        tolerance.
         """
         normP = linalg.norm(P, Inf)
         normQ = linalg.norm(Q, Inf)

@@ -47,7 +47,7 @@ logger = logging.getLogger("pylon")
 
 def read_case(input, format=None):
     """ Returns a case object from the given input file object. The data
-        format may be optionally specified.
+    format may be optionally specified.
     """
     # Map of data file types to readers.
     format_map = {"matpower": MATPOWERReader,

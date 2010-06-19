@@ -14,9 +14,10 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines classes for dynamic simulation [1].
+""" Defines classes for dynamic simulation.
 
-    [1] Stijn Cole, "MatDyn", Katholieke Universiteit Leuven, v1.2, Feb 2010
+Based on MatDyn by Stijn Cole, developed at Katholieke Universiteit Leuven.
+See U{http://www.esat.kuleuven.be/electa/teaching/matdyn/} for more info.
 """
 
 #------------------------------------------------------------------------------
@@ -35,6 +36,8 @@ from numpy import \
 from scipy.sparse.linalg import spsolve, splu
 
 from pylon import NewtonPF
+
+from util import _Named, _Serializable
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -60,17 +63,11 @@ GENERAL_IEEE = "IEEE general speed-governing system"
 BUS_CHANGE = "bus change"
 BRANCH_CHANGE = "branch change"
 
-#MODIFIED_EULER = "modified euler"
-#RUNGE_KUTTA = "Runge-Kutta"
-#RUNGE_KUTTA_FEHLBERG = "Runge-Kutta Fehlberg"
-#HIGHAM_HALL = "Higham and Hall"
-#MODIFIED_EULER2 = "modified Euler with interface error control"
-
 #------------------------------------------------------------------------------
 #  "DynamicCase" class:
 #------------------------------------------------------------------------------
 
-class DynamicCase(object):
+class DynamicCase(_Named, _Serializable):
     """ Defines a dynamic simulation case.
     """
 
@@ -100,7 +97,12 @@ class DynamicCase(object):
 
 
     def getAugYbus(self, U0, gbus):
-        """ Returns the augmented bus admittance matrix.
+        """ Based on AugYbus.m from MatDyn by Stijn Cole, developed at
+        Katholieke Universiteit Leuven. See U{http://www.esat.kuleuven.be/
+        electa/teaching/matdyn/} for more information.
+
+        @rtype: csr_matrix
+        @return: The augmented bus admittance matrix.
         """
         j = 0 + 1j
         buses = self.case.connected_buses
@@ -128,7 +130,12 @@ class DynamicCase(object):
 
 
     def generatorInit(self, U0):
-        """ Returns initial generator conditions.
+        """ Based on GeneratorInit.m from MatDyn by Stijn Cole, developed at
+        Katholieke Universiteit Leuven. See U{http://www.esat.kuleuven.be/
+        electa/teaching/matdyn/} for more information.
+
+        @rtype: tuple
+        @return: Initial generator conditions.
         """
         j = 0 + 1j
         generators = self.dyn_generators
@@ -192,7 +199,12 @@ class DynamicCase(object):
 
 
     def exciterInit(self, Xexc, Vexc):
-        """ Returns exciter initial conditions.
+        """ Based on ExciterInit.m from MatDyn by Stijn Cole, developed at
+        Katholieke Universiteit Leuven. See U{http://www.esat.kuleuven.be/
+        electa/teaching/matdyn/} for more information.
+
+        @rtype: tuple
+        @return: Exciter initial conditions.
         """
         exciters = self.exciters
 
@@ -239,7 +251,12 @@ class DynamicCase(object):
 
 
     def governorInit(self, Xgov, Vgov):
-        """ Returns initial governor conditions.
+        """ Based on GovernorInit.m from MatDyn by Stijn Cole, developed at
+        Katholieke Universiteit Leuven. See U{http://www.esat.kuleuven.be/
+        electa/teaching/matdyn/} for more information.
+
+        @rtype: tuple
+        @return: Initial governor conditions.
         """
         governors = self.governors
 
@@ -284,10 +301,15 @@ class DynamicCase(object):
 
 
     def machineCurrents(self, Xg, U):
-        """ Returns currents and electric power of generators.
+        """ Based on MachineCurrents.m from MatDyn by Stijn Cole, developed at
+        Katholieke Universiteit Leuven. See U{http://www.esat.kuleuven.be/
+        electa/teaching/matdyn/} for more information.
 
-            @param Xg: generator state variables
-            @param U: generator voltages
+        @param Xg: Generator state variables.
+        @param U: Generator voltages.
+
+        @rtype: tuple
+        @return: Currents and electric power of generators.
         """
         generators = self.dyn_generators
 
@@ -334,7 +356,12 @@ class DynamicCase(object):
 
 
     def solveNetwork(self, Xgen, augYbus_solver, gbus):
-        """ Solves the network.
+        """ Based on SolveNetwork.m from MatDyn by Stijn Cole, developed at
+        Katholieke Universiteit Leuven. See U{http://www.esat.kuleuven.be/
+        electa/teaching/matdyn/} for more information.
+
+        @rtype: array
+        @return: Bus voltages.
         """
         generators = self.dyn_generators
         j = 0 + 1j
@@ -380,6 +407,12 @@ class DynamicCase(object):
 
 
     def exciter(self, Xexc, Pexc, Vexc):
+        """ Exciter model.
+
+        Based on Exciter.m from MatDyn by Stijn Cole, developed at Katholieke
+        Universiteit Leuven. See U{http://www.esat.kuleuven.be/electa/teaching/
+        matdyn/} for more information.
+        """
         exciters = self.exciters
 
         F = zeros(Xexc.shape)
@@ -432,6 +465,12 @@ class DynamicCase(object):
 
 
     def governor(self, Xgov, Pgov, Vgov):
+        """ Governor model.
+
+        Based on Governor.m from MatDyn by Stijn Cole, developed at Katholieke
+        Universiteit Leuven. See U{http://www.esat.kuleuven.be/electa/teaching/
+        matdyn/} for more information.
+        """
         governors = self.governors
         omegas = 2 * pi * self.freq
 
@@ -492,6 +531,12 @@ class DynamicCase(object):
 
 
     def generator(self, Xgen, Xexc, Xgov, Vgen):
+        """ Generator model.
+
+        Based on Generator.m from MatDyn by Stijn Cole, developed at Katholieke
+        Universiteit Leuven. See U{http://www.esat.kuleuven.be/electa/teaching/
+        matdyn/} for more information.
+        """
         generators = self.dyn_generators
         omegas = 2 * pi * self.freq
 
@@ -553,13 +598,17 @@ class DynamicCase(object):
 #  "DynamicSolver" class:
 #------------------------------------------------------------------------------
 
-class DynamicSolver:
+class DynamicSolver(object):
     """ Defines a solver for dynamic simulation.
 
-        The adaptive step size methods start with minimal step size. It is of
-        interest to increase minimum step size as it speeds up the
-        calculations. Generally, tolerance must be increased as well, or the
-        integration will fail.
+    The adaptive step size methods start with minimal step size. It is of
+    interest to increase minimum step size as it speeds up the calculations.
+    Generally, tolerance must be increased as well, or the integration will
+    fail.
+
+    Based on rundyn.m from MatDyn by Stijn Cole, developed at Katholieke
+    Universiteit Leuven. See U{http://www.esat.kuleuven.be/electa/teaching/
+    matdyn/} for more information.
     """
 
     def __init__(self, dyn_case, method=None, tol=1e-04,
@@ -592,6 +641,22 @@ class DynamicSolver:
 
     def solve(self):
         """ Runs dynamic simulation.
+
+        @rtype: dict
+        @return: Solution dictionary with the following keys:
+                   - C{angles} - generator angles
+                   - C{speeds} - generator speeds
+                   - C{eq_tr} - q component of transient voltage behind
+                     reactance
+                   - C{ed_tr} - d component of transient voltage behind
+                     reactance
+                   - C{efd} - Excitation voltage
+                   - C{pm} - mechanical power
+                   - C{voltages} - bus voltages
+                   - C{stepsize} - step size integration method
+                   - C{errest} - estimation of integration error
+                   - C{failed} - failed steps
+                   - C{time} - time points
         """
         t0 = time()
         buses = self.dyn_case.buses
@@ -888,8 +953,12 @@ class DynamicSolver:
 #  "ModifiedEuler" class:
 #------------------------------------------------------------------------------
 
-class ModifiedEuler:
+class ModifiedEuler(object):
     """ Modified Euler ODE solver.
+
+    Based on ModifiedEuler.m from MatDyn by Stijn Cole, developed at Katholieke
+    Universiteit Leuven. See U{http://www.esat.kuleuven.be/electa/teaching/
+    matdyn/} for more information.
     """
 
     def solve(self, t, Xgen0, Pgen, Vgen0, Xexc0, Pexc, Vexc0, Xgov0, Pgov,
@@ -955,6 +1024,10 @@ class ModifiedEuler:
 
 class RungeKutta(object):
     """ Standard 4th order Runge-Kutta ODE solver.
+
+    Based on RundeKutta.m from MatDyn by Stijn Cole, developed at Katholieke
+    Universiteit Leuven. See U{http://www.esat.kuleuven.be/electa/teaching/
+    matdyn/} for more information.
     """
 
     def __init__(self):
@@ -1124,6 +1197,10 @@ class RungeKutta(object):
 
 class RungeKuttaFehlberg(RungeKutta):
     """ Runge-Kutta Fehlberg ODE solver.
+
+    Based on RungeKuttaFehlberg.m from MatDyn by Stijn Cole, developed at
+    Katholieke Universiteit Leuven. See U{http://www.esat.kuleuven.be/electa/
+    teaching/matdyn/} for more information.
     """
 
     def __init__(self, t, Xgen0, Pgen, Vgen0, Xexc0, Pexc, Vexc0, Xgov0, Pgov,
@@ -1486,6 +1563,10 @@ class RungeKuttaFehlberg(RungeKutta):
 
 class RungeKuttaHighamHall(RungeKuttaFehlberg):
     """ Runge-Kutta Higham and Hall ODE solver.
+
+    Based on RungeKuttaHighamHall.m from MatDyn by Stijn Cole, developed at
+    Katholieke Universiteit Leuven. See U{http://www.esat.kuleuven.be/electa/
+    teaching/matdyn/} for more information.
     """
 
     def __init__(self, t, Xgen0, Pgen, Vgen0, Xexc0, Pexc, Vexc0, Xgov0, Pgov,
@@ -1696,8 +1777,12 @@ class RungeKuttaHighamHall(RungeKuttaFehlberg):
 #  "ModifiedEuler2" class:
 #------------------------------------------------------------------------------
 
-class ModifiedEuler2:
+class ModifiedEuler2(object):
     """ Modified Euler ODE solver with check on interface errors.
+
+    Based on ModifiedEuler2.m from MatDyn by Stijn Cole, developed at
+    Katholieke Universiteit Leuven. See U{http://www.esat.kuleuven.be/electa/
+    teaching/matdyn/} for more information.
     """
 
     def __init__(self, t, Xgen0, Pgen, Vgen0, Xexc0, Pexc, Vexc0, Xgov0, Pgov,
@@ -1831,16 +1916,14 @@ class ModifiedEuler2:
 #  "DynamicGenerator" class:
 #------------------------------------------------------------------------------
 
-class DynamicGenerator:
-    """ Defines a generator for dynamic simulation.
+class DynamicGenerator(object):
+    """ Defines a classical generator model and a fourth order generator model
+    for dynamic simulation.
     """
 
     def __init__(self, generator, exciter, governor, model=CLASSICAL, h=1.0,
                  d=0.01, x=1.0, x_tr=1.0, xd=1.0, xq=1.0, xd_tr=1.0, xq_tr=1.0,
                  td=1.0, tq=1.0):
-        """ Constructs a new DynamicGenerator instance.
-        """
-
         #: Power flow generator.
         self.generator = generator
 
@@ -1891,8 +1974,8 @@ class DynamicGenerator:
 #  "Exciter" class:
 #------------------------------------------------------------------------------
 
-class Exciter:
-    """ Defines a dynamic generator excitor.
+class Exciter(object):
+    """ Defines an IEEE DC1A excitation system.
     """
 
     def __init__(self, generator, model=CONST_EXCITATION, ka=0.0, ta=0.0,
@@ -1939,8 +2022,10 @@ class Exciter:
 #  "Governor" class:
 #------------------------------------------------------------------------------
 
-class Governor:
-    """ Defines a dynamic generator governor.
+class Governor(object):
+    """ Defines an IEEE model of a general speed-governing system for steam
+    turbines. It can represent a mechanical-hydraulic or electro-hydraulic
+    system by the appropriate selection of parameters.
     """
 
     def __init__(self, generator, model=CONST_POWER, k=0.0, t1=0.0, t2=0.0,
@@ -1980,7 +2065,7 @@ class Governor:
 #  "Event" class:
 #------------------------------------------------------------------------------
 
-class Event:
+class Event(object):
     """ Defines an event.
     """
 
@@ -1997,11 +2082,11 @@ class Event:
 #  "BusChange" class:
 #------------------------------------------------------------------------------
 
-class BusChange:
+class BusChange(object):
     """ Defines a bus parameter change event.
 
-        Three-phase bus faults can be simulated by changing the shunt
-        susceptance of the bus in a bus change event.
+    Three-phase bus faults can be simulated by changing the shunt
+    susceptance of the bus in a bus change event.
     """
 
     def __init__(self, bus, time, param, newval):
@@ -2022,7 +2107,7 @@ class BusChange:
 #  "BranchChange" class:
 #------------------------------------------------------------------------------
 
-class BranchChange:
+class BranchChange(object):
     """ Defines a branch parameter change event.
     """
 

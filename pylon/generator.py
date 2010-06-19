@@ -14,7 +14,7 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines a generator as a complex power bus injection.
+""" Defines a generator as a complex power injection at a bus.
 """
 
 #------------------------------------------------------------------------------
@@ -47,9 +47,7 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class Generator(_Named):
-    """ Defines a power system generator component. Fixes voltage magnitude
-        and active power injected at parent bus. Or when at it's reactive
-        power limit fixes active and reactive power injected at parent bus.
+    """ Generators are defined as a complex power injection at a specific bus.
     """
 
     def __init__(self, bus, name=None, online=True, base_mva=100.0,
@@ -57,8 +55,6 @@ class Generator(_Named):
                  q=0.0, q_max=30.0, q_min=-30.0, c_startup=0.0, c_shutdown=0.0,
                  p_cost=None, pcost_model=POLYNOMIAL,
                  q_cost=None, qcost_model=None):
-        """ Initialises a new Generator instance.
-        """
         #: Busbar to which the generator is connected.
         self.bus = bus
 
@@ -167,8 +163,8 @@ class Generator(_Named):
     @property
     def is_load(self):
         """ Returns true if the generator if a dispatchable load. This may
-            need to be revised to allow sensible specification of both elastic
-            demand and pumped storage units.
+        need to be revised to allow sensible specification of both elastic
+        demand and pumped storage units.
         """
         return (self.p_min < 0.0) and (self.p_max == 0.0)
 
@@ -255,7 +251,7 @@ class Generator(_Named):
 
     def pwl_to_poly(self):
         """ Converts the first segment of the pwl cost to linear quadratic.
-            FIXME: Curve-fit for all segments.
+        FIXME: Curve-fit for all segments.
         """
         if self.pcost_model == PW_LINEAR:
             x0 = self.p_cost[0][0]
@@ -273,8 +269,8 @@ class Generator(_Named):
 
     def poly_to_pwl(self, n_points=10):
         """ Sets the piece-wise linear cost attribute, converting the
-            polynomial cost variable by evaluating at zero and then at
-            n_points evenly spaced points between p_min and p_max.
+        polynomial cost variable by evaluating at zero and then at n_points
+        evenly spaced points between p_min and p_max.
         """
         assert self.pcost_model == POLYNOMIAL
         p_min = self.p_min
@@ -324,8 +320,8 @@ class Generator(_Named):
 
     def _get_qtyprc(self, n_points=6):
         """ Returns a list of tuples of the form (qty, prc) created from the
-            cost function.  If the cost function is polynomial it will be
-            converted to piece-wise linear using poly_to_pwl(n_points).
+        cost function.  If the cost function is polynomial it will be converted
+        to piece-wise linear using poly_to_pwl(n_points).
         """
         if self.pcost_model == POLYNOMIAL:
             # Convert polynomial cost function to piece-wise linear.
@@ -415,9 +411,10 @@ class Generator(_Named):
 
     def offers_to_pwl(self, offers):
         """ Updates the piece-wise linear total cost function using the given
-            offer blocks.
+        offer blocks.
 
-            @see: matpower3.2/extras/smartmarket/off2case.m
+        Based on off2case.m from MATPOWER by Ray Zimmerman, developed at PSERC
+        Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
         """
         assert not self.is_load
         # Only apply offers associated with this generator.
@@ -462,9 +459,10 @@ class Generator(_Named):
 
     def bids_to_pwl(self, bids):
         """ Updates the piece-wise linear total cost function using the given
-            bid blocks.
+        bid blocks.
 
-            @see: matpower3.2/extras/smartmarket/off2case.m
+        Based on off2case.m from MATPOWER by Ray Zimmerman, developed at PSERC
+        Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
         """
         assert self.is_load
         # Apply only those bids associated with this dispatchable load.
@@ -503,7 +501,7 @@ class Generator(_Named):
 
     def _offbids_to_points(self, offbids, arebids=False):
         """ Returns a list of points for a piece-wise linear function from the
-            given offer/bid blocks.
+        given offer/bid blocks.
         """
         # Sort offers/bids by price in ascending order.
         offbids.sort(key=lambda x: x.price, reverse=arebids)
@@ -529,7 +527,7 @@ class Generator(_Named):
 
     def _adjust_limits(self):
         """ Sets the active power limits, 'p_max' and 'p_min', according to
-            the pwl cost function points.
+        the pwl cost function points.
         """
         if not self.is_load:
 #            self.p_min = min([point[0] for point in self.p_cost])

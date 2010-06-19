@@ -14,10 +14,7 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines a solver for DC power flow [1].
-
-    [1] Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell, version 3.2,
-        http://www.pserc.cornell.edu/matpower/, June 2007
+""" Defines a solver for DC power flow.
 """
 
 #------------------------------------------------------------------------------
@@ -45,17 +42,17 @@ logger = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 class DCPF(object):
-    """ Solves DC power flow [1].
+    """ Solves DC power flow.
 
-        [1] Ray Zimmerman, "dcpf.m", MATPOWER, PSERC Cornell, version 3.2,
-            http://www.pserc.cornell.edu/matpower/, June 2007
+    Based on dcpf.m from MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     #--------------------------------------------------------------------------
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, case, solver="UMFPACK"):
+    def __init__(self, case):
         """ Initialises a DCPF instance.
         """
         #: Solved case.
@@ -66,7 +63,7 @@ class DCPF(object):
 
 
     def solve(self):
-        """ Solves DC power flow for the given case.
+        """ Solves a DC power flow.
         """
         case = self.case
         logger.info("Starting DC power flow [%s]." % case.name)

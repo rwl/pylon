@@ -16,8 +16,7 @@
 
 """ Defines convenience pyparsing constructs and token converters.
 
-    References:
-        sparser.py by Tim Cera timcera@earthlink.net
+Based on sparser.py by Tim Cera timcera@earthlink.net.
 """
 
 #------------------------------------------------------------------------------
@@ -168,9 +167,9 @@ comma_sep = comma.suppress()
 def make_unique_name(base, existing=[], format="%s_%s"):
     """ Return a name, unique within a context, based on the specified name.
 
-        base: the desired base name of the generated unique name.
-        existing: a sequence of the existing names to avoid returning.
-        format: a formatting specification for how the name is made unique.
+    @param base: the desired base name of the generated unique name.
+    @param existing: a sequence of the existing names to avoid returning.
+    @param format: a formatting specification for how the name is made unique.
     """
     count = 2
     name = base

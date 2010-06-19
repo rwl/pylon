@@ -86,8 +86,6 @@ class RDFWriter(_CaseWriter):
     """
 
     def __init__(self, case):
-        """ Initialises a new CaseWriter instance.
-        """
         super(RDFWriter, self).__init__(case)
 
         self.store = Graph()

@@ -14,13 +14,11 @@
 # limitations under the License.
 #------------------------------------------------------------------------------
 
-""" Defines a DC OPF solver [1] and an AC OPF solver [2].
+""" Defines a DC OPF solver and an AC OPF solver.
 
-    [1] Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell,
-        version 4.0b1, http://www.pserc.cornell.edu/matpower/, Dec 2009
-
-    [2] Ray Zimmerman, "mipsopf_solver.m", MATPOWER, PSERC Cornell,
-        version 4.0b1, http://www.pserc.cornell.edu/matpower/, Dec 2009
+Based on dcopf_solver.m  and mipsopf_solver.m from MATPOWER by Ray Zimmerman,
+developed at  Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more
+information.
 """
 
 #------------------------------------------------------------------------------
@@ -191,8 +189,8 @@ class _Solver(object):
 class DCOPFSolver(_Solver):
     """ Defines a solver for DC optimal power flow [3].
 
-        [3] Ray Zimmerman, "dcopf_solver.m", MATPOWER, PSERC Cornell, v4.0b1,
-            http://www.pserc.cornell.edu/matpower/, December 2009
+    Based on dcopf_solver.m from MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     def __init__(self, om, opt=None):
@@ -334,7 +332,7 @@ class DCOPFSolver(_Solver):
 
     def _transform_coefficients(self, NN, HHw, CCw, ffparm, polycf,
                                any_pwl, npol, nw):
-        """ Transforms quadratic coefficients for w into coefficients for X.
+        """ Transforms quadratic coefficients for w into coefficients for x.
         """
         nnw = any_pwl + npol + nw
         M = csr_matrix((ffparm[:, 3], (range(nnw), range(nnw))))
@@ -419,6 +417,9 @@ class DCOPFSolver(_Solver):
 
 class PIPSSolver(_Solver):
     """ Solves AC optimal power flow using a primal-dual interior point method.
+
+    Based on mipsopf_solver.m from MATPOWER by Ray Zimmerman, developed at
+    PSERC Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
     """
 
     def __init__(self, om, flow_lim=SFLOW, opt=None):
