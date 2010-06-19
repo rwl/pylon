@@ -28,7 +28,7 @@ from matpower import MATPOWERReader, MATPOWERWriter
 
 from psse import PSSEReader
 from psse import PSSEWriter
-from psat import PSATReader
+#from psat import PSATReader
 
 from rst import ReSTWriter
 #from excel import ExcelWriter

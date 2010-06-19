@@ -26,8 +26,9 @@ import sys
 import logging
 import optparse
 
-from pylon.io import MATPOWERReader, PSSEReader, PSATReader, \
-    MATPOWERWriter, ReSTWriter, CSVWriter, PickleReader, PickleWriter
+from pylon.io import \
+    MATPOWERReader, PSSEReader, MATPOWERWriter, ReSTWriter, CSVWriter, \
+    PickleReader, PickleWriter
 
 from pylon import DCPF, NewtonPF, FastDecoupledPF, OPF, UDOPF
 
@@ -49,7 +50,7 @@ def read_case(input, format=None):
         format may be optionally specified.
     """
     # Map of data file types to readers.
-    format_map = {"matpower": MATPOWERReader, "psat": PSATReader,
+    format_map = {"matpower": MATPOWERReader,
         "psse": PSSEReader, "pickle": PickleReader}
 
     # Read case data.
@@ -138,7 +139,7 @@ def main():
     parser.add_option("-t", "--input-type", dest="type", metavar="TYPE",
         default="any", help="The argument following the -t is used to "
         "indicate the format type of the input data file. The types which are "
-        "currently supported include: matpower, psat, psse [default: %default]"
+        "currently supported include: matpower, psse [default: %default]"
         " If not specified Pylon will try to determine the type according to "
         "the file name extension and the file header.")
 

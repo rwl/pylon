@@ -173,7 +173,7 @@ class PSATReader(_CaseReader):
         v_max = Optional(real).setResultsName("v_max") # p.u.
         v_min = Optional(real).setResultsName("v_min") # p.u.
         p_guess = Optional(real).setResultsName("p_guess") # p.u.
-         # Loss participation coefficient
+        # Loss participation coefficient
         lp_coeff = Optional(real).setResultsName("lp_coeff")
         ref_bus = Optional(boolean).setResultsName("ref_bus")
         status = Optional(boolean).setResultsName("status")
@@ -202,7 +202,7 @@ class PSATReader(_CaseReader):
         q_min = Optional(real).setResultsName("q_min") # p.u.
         v_max = Optional(real).setResultsName("v_max") # p.u.
         v_min = Optional(real).setResultsName("v_min") # p.u.
-         # Loss participation coefficient
+        # Loss participation coefficient
         lp_coeff = Optional(real).setResultsName("lp_coeff")
         status = Optional(boolean).setResultsName("status")
 

@@ -109,7 +109,7 @@ class MATPOWERReader(_CaseReader):
 
         for line in file:
             if line.startswith("%sbaseMVA" % base):
-                case_data = line.strip(";").split()
+                case_data = line.rstrip(";\n").split()
                 case.base_mva = float(case_data[-1])
             elif line.startswith("%sbus" % base):
                 self._parse_buses(case, file)
@@ -126,12 +126,13 @@ class MATPOWERReader(_CaseReader):
     def _parse_buses(self, case, file):
         bustype_map = {1: "PQ", 2: "PV", 3: "ref", 4: "isolated"}
 
-        line = file.readline()
-        while not line.startswith("]"):
-            bus_data = line.strip(";").split()
+        for line in file:
+            if line.startswith("]"):
+                break
+            bus_data = line.rstrip(";\n").split()
             bus = Bus()
             i = int(bus_data[0])
-            self.bus_map[i] = bus
+            self._bus_map[i] = bus
             bus._i = i
 
             bus.type = bustype_map[int(bus_data[1])]
@@ -148,14 +149,15 @@ class MATPOWERReader(_CaseReader):
             bus.v_min = float(bus_data[12])
 
             case.buses.append(bus)
-            line = file.readline()
         return
 
 
     def _parse_generators(self, case, file):
-        line = file.readline()
-        while not line.startswith("]"):
-            gen_data = line.strip(";").split()
+
+        for line in file:
+            if line.startswith("]"):
+                break
+            gen_data = line.strip(";\n").split()
             bus = self._bus_map[int(gen_data[0])]
             g = Generator(bus)
 
@@ -170,16 +172,16 @@ class MATPOWERReader(_CaseReader):
             g.p_min = float(gen_data[9])
 
             case.generators.append(g)
-            line = file.readline()
         return
 
 
     def _parse_branches(self, case, file):
-        line = file.readline()
-        while not line.startswith("]"):
-            branch_data = line.strip(";").split()
-            from_bus = self.bus_map[int(branch_data[0])]
-            to_bus = self.bus_map[int(branch_data[1])]
+        for line in file:
+            if line.startswith("]"):
+                break
+            branch_data = line.strip(";\n").split()
+            from_bus = self._bus_map[int(branch_data[0])]
+            to_bus = self._bus_map[int(branch_data[1])]
             l = Branch(from_bus, to_bus)
 
             l.r = float(branch_data[2])
@@ -193,16 +195,19 @@ class MATPOWERReader(_CaseReader):
             l.online = bool(branch_data[10])
 
             case.branches.append(l)
-            line = file.readline()
         return
 
 
     def _parse_gencost(self, case, file):
-        line = file.readline()
-        for g in case.generators:
+#        line = file.readline()
+#        for g in case.generators:
+
+        for i, line in enumerate(file):
             if line.startswith("]"):
-                logger.warning("No cost data for %s" % g.name)
-                continue
+                logger.warning("Missing cost data [%d]." % i)
+                break
+
+            g = case.generators[i]
 
             model, c_startup, c_shutdown, cost = self._parse_gencost_line(line)
 
@@ -211,13 +216,17 @@ class MATPOWERReader(_CaseReader):
             g.c_shutdown = c_shutdown
             g.p_cost = cost
 
-            line = file.readline()
+#            line = file.readline()
 
         if line.startswith("]"):
             logger.info("No reactive power cost data.")
             return
 
-        for g in case.generators:
+#        for g in case.generators:
+
+        for i, line in enumerate(file):
+            g = case.generators[i]
+
             if line.startswith("]"):
                 logger.warning("No Q cost data for %s" % g.name)
                 continue
@@ -227,7 +236,7 @@ class MATPOWERReader(_CaseReader):
             g.qcost_model = model
             g.q_cost = cost
 
-            line = file.readline()
+#            line = file.readline()
 
         for line in file:
             if not line.startswith("]"):
@@ -239,7 +248,7 @@ class MATPOWERReader(_CaseReader):
     def _parse_gencost_line(self, line):
         gencost_map = {1: PW_LINEAR, 2: POLYNOMIAL}
 
-        gencost_data = line.strip(";").split()
+        gencost_data = line.strip(";\n").split()
 
         model = gencost_map[int(gencost_data[0])]
         c_startup = float(gencost_data[1])
@@ -249,7 +258,7 @@ class MATPOWERReader(_CaseReader):
             d = gencost_data[-2 * n:]
             cost = []
             for j in range(n):
-                cost.append((d[2 * j], d[2 * j + 1]))
+                cost.append((float(d[2 * j]), float(d[2 * j + 1])))
         else:
             d = gencost_data[-n:]
             cost = tuple([float(a) for a in d])

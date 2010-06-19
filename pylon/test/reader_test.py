@@ -28,9 +28,7 @@ from time import time
 from unittest import TestCase, main
 
 from pylon.io import \
-    MATPOWERReader, PSSEReader, PSATReader, PickleReader
-
-from pylon.io.rdf import RDFReader, RDFWriter
+    MATPOWERReader, PSSEReader, PickleReader
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -39,6 +37,7 @@ from pylon.io.rdf import RDFReader, RDFWriter
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 MATPOWER_DATA_FILE = os.path.join(DATA_DIR, "case6ww.m")
+MP_V1_DATA_FILE    = os.path.join(DATA_DIR, "case6ww-3.2.m")
 PWL_MP_DATA_FILE   = os.path.join(DATA_DIR, "case30pwl.m")
 UKGDS_DATA_FILE    = os.path.join(DATA_DIR, "ehv3.raw")
 PSSE_DATA_FILE     = os.path.join(DATA_DIR, "sample30.raw")
@@ -127,9 +126,37 @@ class MatpowerReaderTest(ReaderTest):
 
 
     def test_case6ww(self):
-        """ Test parsing case6ww.m file.
+        """ Test parsing case6ww.m MATPOWER file.
         """
         self.case = c = self.reader.read(MATPOWER_DATA_FILE)
+
+        self._validate_base(base_mva=100.0)
+
+        # Network structure validation.
+        self._validate_object_numbers(n_buses=6, n_branches=11, n_gen=3)
+
+        self._validate_slack_bus(slack_idx=0)
+
+        self._validate_generator_connections(gbus_idxs=[0, 1, 2])
+
+        self._validate_branch_connections(
+            from_idxs=[0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4],
+            to_idxs=[1, 3, 4, 2, 3, 4, 5, 4, 5, 4, 5])
+
+        # Generator costs.
+        for g in c.generators:
+            self.assertEqual(g.pcost_model, "poly")
+            self.assertEqual(len(g.p_cost), 3)
+
+        self.assertEqual(c.generators[0].p_cost[0], 0.00533)
+        self.assertEqual(c.generators[1].p_cost[1], 10.333)
+        self.assertEqual(c.generators[2].p_cost[2], 240)
+
+
+    def test_case6ww_v1(self):
+        """ Test parsing case6ww version 1 MATPOWER file.
+        """
+        self.case = c = self.reader.read(MP_V1_DATA_FILE)
 
         self._validate_base(base_mva=100.0)
 
@@ -336,39 +363,6 @@ class PSSEReaderTest(TestCase):
 #
 ##        from pylon.io.rdf_io import RDFWriter
 ##        RDFWriter(case).write("./data/bench.rdf")
-
-#------------------------------------------------------------------------------
-#  "RDFioTest" class:
-#------------------------------------------------------------------------------
-
-#class RDFioTest(TestCase):
-#    """ Defines a test case for RDF reading/writing.
-#    """
-#
-#    def setUp(self):
-#        """ The test runner will execute this method prior to each test.
-#        """
-#        self.reader = RDFReader()
-#
-#
-#    def test_read_benchmark(self):
-#        """ Test reading the RDF benchmark case.
-#        """
-#        t0 = time()
-#        case = self.reader.read(BENCH_RDFXML_FILE)
-#        print "Read RDF time:", time() - t0
-#
-##        self.assertEqual(len(case.buses), 1648)
-##        self.assertEqual(len(case.branches), 2602)
-##        self.assertEqual(len(case.generators), 313)
-
-
-#    def test_write_benchmark(self):
-#        """ Test write case as RDF.
-#        """
-#        case = PickleReader().read(BENCH_PICKLE_FILE)
-#
-#        RDFWriter(case).write("/tmp/bench30.rdf")
 
 #------------------------------------------------------------------------------
 #  Standalone call:
