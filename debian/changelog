@@ -1,5 +1,5 @@
-pylon (0.4.3) unstable; urgency=low
+pylon (0.4.2-1) unstable; urgency=low
 
-  * Initial release. (Closes: #XXXXXX)
+  * Initial Debian release.
 
- -- Richard Lincoln <r.w.lincoln@gmail.com>  Tue, 08 Jun 2010 15:34:50 +0100
+ -- Richard Lincoln <r.w.lincoln@gmail.com>  Mon, 21 Jun 2010 10:52:13 +0100

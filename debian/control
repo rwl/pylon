@@ -11,7 +11,7 @@ Homepage: http://rwl.github.com/pylon
 
 Package: python-pylon
 Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}, python-scipy (>=0.7.2), python-pyparsing (>=1.5.0)
+Depends: ${misc:Depends}, ${python:Depends}, python-scipy (>=0.7.2)
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
-Description: Python package for solving power flow and optimal power flow problems.
+Description: Power flow and optimal power flow.
