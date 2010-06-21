@@ -11,7 +11,7 @@ from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 from pybrain.rl.experiments import Experiment
 
 from pyreto.bandit import BanditEnvironment, BanditTask
-from pyreto.roth_erev import RothErev, PropensityTable
+from pyreto.roth_erev import RothErev, PropensityTable #@UnusedImport
 from pyreto.roth_erev import VariantRothErev #@UnusedImport
 
 payouts = scipy.array([[200.0, 300.0, 100.0],  # Expected value: 210
@@ -33,17 +33,16 @@ task = BanditTask(env)
 table = PropensityTable(payouts.shape[0])
 table.initialize(500.0)
 
-learner = RothErev(experimentation=0.65, recency=0.3)
-#learner = VariantRothErev(experimentation=0.65, recency=0.3)
-
+#learner = RothErev(experimentation=0.55, recency=0.3)
+learner = VariantRothErev(experimentation=0.65, recency=0.3)
 learner.explorer = BoltzmannExplorer(tau=100.0, decay=0.9995)
 
 agent = LearningAgent(table, learner)
 
 experiment = Experiment(task, agent)
 
-epis = int(5e2)
-batch = 1
+epis = int(1e1)
+batch = 2
 avgRewards = scipy.zeros(epis)
 allActions = scipy.zeros(epis * batch)
 c = 0
@@ -56,7 +55,7 @@ for i in range(epis):
 
     c += batch
 
-pylab.figure()
-pylab.plot(avgRewards)
-pylab.plot(allActions * 100.0)
+pylab.figure(figsize=(16, 6))
+#pylab.plot(avgRewards)
+pylab.plot(allActions)
 pylab.show()

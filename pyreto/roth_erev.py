@@ -52,7 +52,7 @@ import scipy
 from pybrain.rl.learners.valuebased.valuebased import ValueBasedLearner
 from pybrain.rl.learners.valuebased import ActionValueTable
 from pybrain.rl.explorers.discrete.discrete import DiscreteExplorer
-from pybrain.utilities import drawIndex
+from pybrain.utilities import drawIndex #@UnusedImport
 
 #------------------------------------------------------------------------------
 #  "RothErev" class:
@@ -74,9 +74,11 @@ class RothErev(ValueBasedLearner):
 
 
     def __init__(self, experimentation=0.5, recency=0.5):
+        assert 0.0 <= experimentation <= 1.0
+        assert 0.0 <= recency <= 1.0
 
         #----------------------------------------------------------------------
-        #  ValuebasedLearner interface:
+        #  ValueBasedLearner interface:
         #----------------------------------------------------------------------
 
         #: Default exploration according to a discrete probability distribution
@@ -96,22 +98,12 @@ class RothErev(ValueBasedLearner):
         #: experience update value, regardless of the last action chosen.
         #: Action choice probabilities will then remain uniform and no learning
         #: will occur.
-        assert 0.0 <= experimentation <= 1.0
         self.experimentation = experimentation
-
-        #: The initial propensity value assigned to all actions. Used instead of
-        #: a scaling parameter.
-#        assert initialPropensity >= 0.0
-#        self.initialPropensity = initialPropensity
 
         #: The degree to which actions are 'forgotten'. Used to degrade the
         #: propensity for choosing actions. Meant to make recent experience
         #: more prominent than past experience in the action choice process.
-        assert 0.0 <= recency <= 1.0
         self.recency = recency
-
-        #: Last action chosen from the policy.
-        self._lastSelectedAction = -1
 
     #--------------------------------------------------------------------------
     #  Learner interface:
@@ -134,23 +126,14 @@ class RothErev(ValueBasedLearner):
             samples = [[self.dataset.getSample()]]
 
         for seq in samples:
-            for _, self._lastSelectedAction, reward in seq:
-                self._updatePropensities(reward)
-
-
-#    def reset(self):
-#        """ Clear all learned knowledge. The Action propensities are set to the
-#        current initial value and the probability values in the policy.
-#        """
-#        super(RothErev, self).reset()
-#        self.dataset.clear()
-#        self.module.initialise(self.initialPropensity)
+            for _, lastAction, reward in seq:
+                self._updatePropensities(lastAction, reward)
 
     #--------------------------------------------------------------------------
     #  RothErev interface:
     #--------------------------------------------------------------------------
 
-    def _updatePropensities(self, reward):
+    def _updatePropensities(self, lastAction, reward):
         """ Update the propensities for all actions. The propensity for last
         action chosen will be updated using the feedback value that resulted
         from performing the action.
@@ -164,13 +147,14 @@ class RothErev(ValueBasedLearner):
         """
         phi = self.recency
 
-        for i in range(self.module.numActions):
-            carryOver = (1 - phi) * self.module.getValue(0, i)
-            experience = self._experience(i, reward)
-            self.module.updateValue(0, i, carryOver + experience)
+        for action in range(self.module.numActions):
+            carryOver = (1 - phi) * self.module.getValue(0, action)
+            experience = self._experience(action, lastAction, reward)
+
+            self.module.updateValue(0, action, carryOver + experience)
 
 
-    def _experience(self, actionIndex, reward):
+    def _experience(self, action, previousAction, reward):
         """ This is the standard experience function for the Roth-Erev
         algorithm. Here propensities for all actions are updated and similarity
         does not come into play. That is, all action choices are assumed to be
@@ -190,9 +174,7 @@ class RothErev(ValueBasedLearner):
         """
         e = self.experimentation
 
-        rewardedIndex = self._lastSelectedAction
-
-        if actionIndex == rewardedIndex:
+        if action == previousAction:
             experience = reward * (1 - e)
         else:
             experience = reward * (e / (self.module.numActions - 1))
@@ -217,7 +199,7 @@ class VariantRothErev(RothErev):
     @see L{RothErev} for details on the original Roth-Erev algorithm.
     """
 
-    def experience(self, actionIndex, reward):
+    def _experience(self, action, previousAction, reward):
         """ This is an altered version of the experience function for used in
         the standard Roth-Erev algorithm.  Like in RELearner, propensities for
         all actions are updated and similarity does not come into play. If the
@@ -236,13 +218,12 @@ class VariantRothErev(RothErev):
             E(i, r_j) = |
                         |_ q_i * (e /(n-1))    if i != j
         """
-        e = self.parameters.experimentation
-        rewardedIndex = self.actionIDList.index(self.lastSelectedAction)
+        e = self.experimentation
 
-        if actionIndex == rewardedIndex:
+        if action == previousAction:
             experience = reward * (1 - e)
         else:
-            propensity = self.module.getValue(0, actionIndex)
+            propensity = self.module.getValue(0, action)
             experience = propensity * (e / (self.module.numActions - 1))
 
         return experience
@@ -275,12 +256,13 @@ class ProportionalExplorer(DiscreteExplorer):
         """
         assert self.module
 
-        propensities = self.module.propensities
+        propensities = self.module.getActionValues(0)
+
         summedProps = sum(propensities)
         probabilities = propensities / summedProps
 
-#        action = eventGenerator(probabilities)
-        action = drawIndex(probabilities)
+        action = eventGenerator(probabilities)
+#        action = drawIndex(probabilities)
 
         outbuf[:] = scipy.array([action])
 

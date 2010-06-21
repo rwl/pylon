@@ -58,18 +58,18 @@ class BanditEnvironment(Environment):
 
     def getSensors(self):
         """ the currently visible state of the world (the observation may be
-            stochastic - repeated calls returning different values)
+        stochastic - repeated calls returning different values)
         """
         return scipy.array([0])
 
 
     def performAction(self, action):
         """ perform an action on the world that changes it's internal state
-            (maybe stochastically).
+        (maybe stochastically).
 
-            All you have to do is pull one of the arm and receive a payout.
-            Each arm has a distribution of different payouts that are delivered
-            with different probabilities.
+        All you have to do is pull one of the arm and receive a payout. Each
+        arm has a distribution of different payouts that are delivered with
+        different probabilities.
         """
         distrib = self.distrib[action[0], :]
         payoutIdx = eventGenerator(distrib)
@@ -77,7 +77,8 @@ class BanditEnvironment(Environment):
 
         self.lastPayout = self.payouts[action[0], payoutIdx]
 
-        print "Payout [Arm: %d]: %.1f" % (action[0] + 1, self.lastPayout)
+        print "Payout [Arm: %d]: %.1f" % (action[0], self.lastPayout)
+        print action
 
 #------------------------------------------------------------------------------
 #  "BanditTask" class:
