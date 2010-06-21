@@ -30,15 +30,11 @@ env = BanditEnvironment(payouts, distrib)
 
 task = BanditTask(env)
 
-experimentation = 0.65
-initialPropensity = 500.0
-recency = 0.3
-
 table = PropensityTable(payouts.shape[0])
-table.initialize(initialPropensity)
+table.initialize(500.0)
 
-learner = RothErev(experimentation, initialPropensity, recency)
-#learner = VariantRothErev(experimentation, initialPropensity, recency)
+learner = RothErev(experimentation=0.65, recency=0.3)
+#learner = VariantRothErev(experimentation=0.65, recency=0.3)
 
 learner.explorer = BoltzmannExplorer(tau=100.0, decay=0.9995)
 
