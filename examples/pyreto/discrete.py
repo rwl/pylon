@@ -46,14 +46,16 @@ task = pyreto.discrete.ProfitTask(env)
 
 #print env.outdim, len(env._allActions), env.numOffbids * len(env.generators) * len(env.markups)
 
-module = ActionValueTable(numStates=env.outdim, numActions=len(env._allActions))
+module = ActionValueTable(numStates=nStates, numActions=len(env._allActions))
 
-#learner = Q()
+learner = Q()
 #learner = QLambda()
 #learner = SARSA()
+#learner.explorer = BoltzmannExplorer()
+
 #learner = pyreto.roth_erev.RothErev(experimentation=0.55, recency=0.3)
-learner = pyreto.roth_erev.VariantRothErev(experimentation=0.55, recency=0.3)
-learner.explorer = BoltzmannExplorer(tau=100.0, decay=0.9995)
+#learner = pyreto.roth_erev.VariantRothErev(experimentation=0.55, recency=0.3)
+learner.explorer = BoltzmannExplorer()#tau=100.0, decay=0.9995)
 
 agent = LearningAgent(module, learner)
 experiment.tasks.append(task)
