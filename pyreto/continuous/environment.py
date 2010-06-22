@@ -23,10 +23,11 @@
 
 import logging
 
-from numpy import array, polyval, polyder
+from numpy import array, polyval, polyder, mean
 
 from pylon import PQ, POLYNOMIAL, PW_LINEAR
 from pyreto.smart_market import Offer, Bid
+from pyreto.discrete import MarketEnvironment as DiscreteMarketEnvironment
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -38,53 +39,51 @@ logger = logging.getLogger(__name__)
 #  "MarketEnvironment" class:
 #------------------------------------------------------------------------------
 
-class MarketEnvironment(object):
+class MarketEnvironment(DiscreteMarketEnvironment):
     """ Defines a continuous representation of an electricity market
         participant's environment.
     """
 
     def __init__(self, generators, market, numOffbids=1, offbidQty=False):
-        super(MarketEnvironment, self).__init__()
+        super(MarketEnvironment, self).__init__(generators, market, 0, None,
+                                                numOffbids, offbidQty)
 
         #: Save initial generator ratings and costs as these will be
         #: overwritten when offers/bids are submitted to the market. Set by
         #: "generators" property.
-        self._g0 = {}
+#        self._g0 = {}
 
         #: Portfolio of generators endowed to the agent.
-        self._generators = None
-        self.generators = generators
+#        self._generators = None
+#        self.generators = generators
 
         #: Auction that clears offer and bids using OPF results.
-        self.market = market
+#        self.market = market
 
         #: A participant may submit any number of offers/bids for each of the
         #: generators in its portfolio.
-        self.numOffbids = numOffbids
+#        self.numOffbids = numOffbids
 
         #: A participant may offer/bid just a markup on its cost and the
         #: quantity is the maximum rated capacity of the generator divided by
         #: the number of offers/bids. Alternatively, it may also specify the
         #: quantity that is offered/bid for.
-        self.offbidQty = offbidQty
+#        self.offbidQty = offbidQty
 
         #: List of offers/bids from the previous action.
-        self._lastAction = []
+#        self._lastAction = []
 
         #: Initialise the environment.
-        self.reset()
+#        self.reset()
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
     #--------------------------------------------------------------------------
 
-    def getSensors(self):
-        """ Returns the currently visible state of the world as a numpy array
-            of doubles.
-        """
-        Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
-        logger.info("State: %s" % Pd)
-        return array([Pd])
+#    def getSensors(self):
+#        """ Returns the currently visible state of the world as a numpy array
+#            of doubles.
+#        """
 
 
     def performAction(self, action):
@@ -100,11 +99,11 @@ class MarketEnvironment(object):
             self._offbidMarkup(action)
 
 
-    def reset(self):
-        """ Re-initialises the participant's environment.
-        """
-        self._lastAction = []
-        self.market.reset()
+#    def reset(self):
+#        """ Re-initialises the participant's environment.
+#        """
+#        self._lastAction = []
+#        self.market.reset()
 
 
     @property
@@ -128,111 +127,124 @@ class MarketEnvironment(object):
     #  "MarketEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def _offbidMarkup(self, action):
-        for i, g in enumerate(self.generators):
-            ratedPMin = self._g0[g]["p_min"]
-            ratedPMax = self._g0[g]["p_max"]
-            margPCost = self._g0[g]["p_cost"]
-            margPCostModel = self._g0[g]["pcost_model"]
-
-            # Index of the first markup in 'action' for the current gen.
-            k = i * (len(action) / len(self.generators))
-
-            # Determine the cost at zero output.
-            if margPCostModel == POLYNOMIAL:
-                costNoLoad = margPCost[-1]
-            else:
-                costNoLoad = 0.0
-
-            # Divide the rated capacity equally among the offers/bids.
-            if g.is_load:
-                qty = ratedPMin / self.numOffbids
-            else:
-                qty = ratedPMax / self.numOffbids
-
-            # Get the marginal cost of generating at this output.
-#            c = g.total_cost(totQty, marginalPCost, marginalPCostModel)
-
-            totQty = 0.0
-            for j in range(self.numOffbids):
-                # Track the total quantity offered/bid for by the generator.
-                totQty += qty
-
-                # The markups are cumulative to ensure cost function convexity.
-                mk = sum(action[k:k + j + 1])
-
-                # Marginal cost.
-                if margPCostModel == POLYNOMIAL:
-                    cmarg = polyval(polyder(margPCost), totQty)
-                elif margPCostModel == PW_LINEAR:
-                    n_segments = len(margPCost) - 1
-                    for i in range(n_segments):
-                        x1, y1 = margPCost[i]
-                        x2, y2 = margPCost[i + 1]
-                        if x1 <= totQty <= x2:
-                            cmarg = (y2 - y1) / (x2 - x1)
-                    else:
-                        raise ValueError, "Invalid bid quantity [%f]." % totQty
-                else:
-                    raise ValueError
-
-                # Markup the marginal cost of the generator.
-                if not g.is_load:
-                    prc = cmarg * ((100.0 + mk) / 100.0)
-                else:
-                    prc = cmarg * ((100.0 + mk) / 100.0)
-
-                if not g.is_load:
-                    offer = Offer(g, qty, prc, costNoLoad)
-                    self.market.offers.append(offer)
-
-                    self._lastAction.append(offer)
-
-                    logger.info("%.2fMW offered at %.2f$/MWh for %s (%.1f%%)."
-                        % (qty, prc, g.name, mk))
-                else:
-                    bid = Bid(g, -qty, prc, costNoLoad)
-                    self.market.bids.append(bid)
-
-                    self._lastAction.append(bid)
-
-                    logger.info("%.2f$/MWh bid for %.2fMW for %s (%.1f%%)."
-                        % (prc, -qty, g.name, mk))
-
-        return self._lastAction
+    def _getDemandSensor(self):
+        Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
+        logger.info("State: %s" % Pd)
+        return array([Pd])
 
 
-    def _offbidQuantityAndMarkup(self, action):
-        raise NotImplementedError
+    def _getPriceSensor(self):
+        offers = [offer for offer in self._lastAction if offer.accepted]
+
+        if len(offers) > 0:
+            avgPrice = mean([ob.clearedPrice for ob in offers])
+        else:
+            avgPrice = 0.0
+
+        return array([avgPrice])
 
 
-    def _getGenerators(self):
-        """ Portfolio of generators endowed to the agent.
-        """
-        return self._generators
+#    def _offbidMarkup(self, action):
+#        for i, g in enumerate(self.generators):
+#            ratedPMin = self._g0[g]["p_min"]
+#            ratedPMax = self._g0[g]["p_max"]
+#            margPCost = self._g0[g]["p_cost"]
+#            margPCostModel = self._g0[g]["pcost_model"]
+#
+#            # Index of the first markup in 'action' for the current gen.
+#            k = i * (len(action) / len(self.generators))
+#
+#            # Determine the cost at zero output.
+#            if margPCostModel == POLYNOMIAL:
+#                costNoLoad = margPCost[-1]
+#            else:
+#                costNoLoad = 0.0
+#
+#            # Divide the rated capacity equally among the offers/bids.
+#            if g.is_load:
+#                qty = ratedPMin / self.numOffbids
+#            else:
+#                qty = ratedPMax / self.numOffbids
+#
+#            # Get the marginal cost of generating at this output.
+##            c = g.total_cost(totQty, marginalPCost, marginalPCostModel)
+#
+#            totQty = 0.0
+#            for j in range(self.numOffbids):
+#                # Track the total quantity offered/bid for by the generator.
+#                totQty += qty
+#
+#                # The markups are cumulative to ensure cost function convexity.
+#                mk = sum(action[k:k + j + 1])
+#
+#                # Marginal cost.
+#                if margPCostModel == POLYNOMIAL:
+#                    cmarg = polyval(polyder(margPCost), totQty)
+#                elif margPCostModel == PW_LINEAR:
+#                    n_segments = len(margPCost) - 1
+#                    for i in range(n_segments):
+#                        x1, y1 = margPCost[i]
+#                        x2, y2 = margPCost[i + 1]
+#                        if x1 <= totQty <= x2:
+#                            cmarg = (y2 - y1) / (x2 - x1)
+#                    else:
+#                        raise ValueError, "Invalid bid quantity [%f]." % totQty
+#                else:
+#                    raise ValueError
+#
+#                # Markup the marginal cost of the generator.
+#                if not g.is_load:
+#                    prc = cmarg * ((100.0 + mk) / 100.0)
+#                else:
+#                    prc = cmarg * ((100.0 + mk) / 100.0)
+#
+#                if not g.is_load:
+#                    offer = Offer(g, qty, prc, costNoLoad)
+#                    self.market.offers.append(offer)
+#
+#                    self._lastAction.append(offer)
+#
+#                    logger.info("%.2fMW offered at %.2f$/MWh for %s (%.1f%%)."
+#                        % (qty, prc, g.name, mk))
+#                else:
+#                    bid = Bid(g, -qty, prc, costNoLoad)
+#                    self.market.bids.append(bid)
+#
+#                    self._lastAction.append(bid)
+#
+#                    logger.info("%.2f$/MWh bid for %.2fMW for %s (%.1f%%)."
+#                        % (prc, -qty, g.name, mk))
+#
+#        return self._lastAction
 
 
-    def _setGenerators(self, generators):
-        # Update the record of initial ratings and costs.
-        g0 = {}
-        for g in generators:
-            # Asset capacity limits.
-            g0[g] = {}
-            g0[g]["p_max"] = g.p_max
-            g0[g]["p_min"] = g.p_min
-            g0[g]["q_max"] = g.q_max
-            g0[g]["q_min"] = g.q_min
-            # Marginal cost function proportional to current capacity.
-            g0[g]["p_cost"] = g.p_cost
-            g0[g]["pcost_model"] = g.pcost_model
-            g0[g]["q_cost"] = g.q_cost
-            g0[g]["qcost_model"] = g.qcost_model
-            # Amortised fixed costs.
-            g0[g]["startup"] = g.c_startup
-            g0[g]["shutdown"] = g.c_shutdown
-        self._g0 = g0
-        self._generators = generators
-
-    generators = property(_getGenerators, _setGenerators)
+#    def _getGenerators(self):
+#        """ Portfolio of generators endowed to the agent.
+#        """
+#        return self._generators
+#
+#
+#    def _setGenerators(self, generators):
+#        # Update the record of initial ratings and costs.
+#        g0 = {}
+#        for g in generators:
+#            # Asset capacity limits.
+#            g0[g] = {}
+#            g0[g]["p_max"] = g.p_max
+#            g0[g]["p_min"] = g.p_min
+#            g0[g]["q_max"] = g.q_max
+#            g0[g]["q_min"] = g.q_min
+#            # Marginal cost function proportional to current capacity.
+#            g0[g]["p_cost"] = g.p_cost
+#            g0[g]["pcost_model"] = g.pcost_model
+#            g0[g]["q_cost"] = g.q_cost
+#            g0[g]["qcost_model"] = g.qcost_model
+#            # Amortised fixed costs.
+#            g0[g]["startup"] = g.c_startup
+#            g0[g]["shutdown"] = g.c_shutdown
+#        self._g0 = g0
+#        self._generators = generators
+#
+#    generators = property(_getGenerators, _setGenerators)
 
 # EOF -------------------------------------------------------------------------

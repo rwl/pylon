@@ -57,6 +57,12 @@ class MarketEnvironment(object):
     # number of possible actions for discrete action space
     numActions = 1
 
+    #: A discrete environment accepts one integer as an action.
+    indim = 1
+
+    #: A discrete environment provides one integer sensor.
+    outdim = 1
+
     def __init__(self, generators, market, numStates=1, markups=None,
                  numOffbids=1, offbidQty=False):
         """ Initialises the environment.
@@ -89,20 +95,18 @@ class MarketEnvironment(object):
         self._numOffbids = 0
         self._markups = ()
 
-        #: Number of offers/bids a participant submits.
+        #: A participant may submit any number of offers/bids for each of the
+        #: generators in its portfolio.
         self.numOffbids = numOffbids
 
         #: Discrete percentage markups allowed on each offer/bid.
         self.markups = (0.0,) if markups is None else markups
 
-        #: Does a participant's offer/bid comprise quantity aswell as price.
+        #: A participant may offer/bid just a markup on its cost and the
+        #: quantity is the maximum rated capacity of the generator divided by
+        #: the number of offers/bids. Alternatively, it may also specify the
+        #: quantity that is offered/bid for.
         self.offbidQty = offbidQty
-
-        #: A discrete environment accepts one integer as an action.
-        self.indim = 1
-
-        #: A discrete environment provides one integer sensor.
-        self.outdim = 1
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -127,7 +131,10 @@ class MarketEnvironment(object):
         # Markups chosen for each generator.
         markups = self._allActions[action]
 
-        self._offbidMarkup(markups)
+        if self.offbidQty:
+            self._offbidQuantityAndMarkup(markups)
+        else:
+            self._offbidMarkup(markups)
 
 
     def reset(self):
@@ -243,6 +250,10 @@ class MarketEnvironment(object):
 #
 #                p0 = p1
 #                c0 = costMarginal
+
+
+    def _offbidQuantityAndMarkup(self, action):
+        raise NotImplementedError
 
 
     def _getDemandSensor(self):
