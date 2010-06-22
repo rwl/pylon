@@ -82,7 +82,7 @@ class ProfitTask(Task):
 
         logger.debug("Task reward: %.2f" % totalEarnings)
 
-        return earnings
+        return totalEarnings
 
 
     def performAction(self, action):
