@@ -129,12 +129,14 @@ class MarketEnvironment(object):
     #--------------------------------------------------------------------------
 
     def _offbidMarkup(self, action):
-        totQty = 0.0
         for i, g in enumerate(self.generators):
             ratedPMin = self._g0[g]["p_min"]
             ratedPMax = self._g0[g]["p_max"]
             margPCost = self._g0[g]["p_cost"]
             margPCostModel = self._g0[g]["pcost_model"]
+
+            # Index of the first markup in 'action' for the current gen.
+            k = i * (len(action) / len(self.generators))
 
             # Determine the cost at zero output.
             if margPCostModel == POLYNOMIAL:
@@ -148,15 +150,14 @@ class MarketEnvironment(object):
             else:
                 qty = ratedPMax / self.numOffbids
 
-            # Track the total quantity offered/bid for by the generator.
-            totQty += qty
-
             # Get the marginal cost of generating at this output.
 #            c = g.total_cost(totQty, marginalPCost, marginalPCostModel)
 
+            totQty = 0.0
             for j in range(self.numOffbids):
-                # Index of the first markup in 'action' for the current gen.
-                k = i * (len(action) / len(self.generators))
+                # Track the total quantity offered/bid for by the generator.
+                totQty += qty
+
                 # The markups are cumulative to ensure cost function convexity.
                 mk = sum(action[k:k + j + 1])
 

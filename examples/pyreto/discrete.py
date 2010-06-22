@@ -7,10 +7,12 @@ import sys
 import logging
 import pylon
 import pyreto.discrete
+import pyreto.roth_erev #@UnusedImport
 
 from pybrain.rl.agents import LearningAgent
+from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 from pybrain.rl.learners.valuebased import ActionValueTable
-from pybrain.rl.learners import Q
+from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 
 logger = logging.getLogger()
 for handler in logger.handlers: logger.removeHandler(handler) # rm pybrain
@@ -19,6 +21,10 @@ logger.setLevel(logging.DEBUG)
 
 # Load the electric power system model.
 case = pylon.Case.load("../data/case6ww.pkl")
+case.generators[0].p_cost = (0.0, 9.0, 200.0)
+case.generators[1].p_cost = (0.0, 2.0, 200.0)
+case.generators[2].p_cost = (0.0, 5.0, 200.0)
+#pyreto.util.plotGenCost(case.generators)
 
 # Create a power exchange auction market and specify a price cap.
 market = pyreto.SmartMarket(case, priceCap=100.0)
@@ -30,15 +36,28 @@ experiment = pyreto.discrete.MarketExperiment([], [], market)
 # generators in its portfolio.
 nOffer = 1
 
+nStates = 1
+
 # Associate a learning agent with the first generator.
-env1 = pyreto.discrete.MarketEnvironment(case.generators[:1], market,
-                                         numStates=10, numOffbids=nOffer,
-                                         markups=(10, 20, 33, 50))
-task1 = pyreto.discrete.ProfitTask(env1)
-module1 = ActionValueTable(numStates=env1.outdim, numActions=env1.indim)
-agent1 = LearningAgent(module1, Q())
-experiment.tasks.append(task1)
-experiment.agents.append(agent1)
+env = pyreto.discrete.MarketEnvironment(case.generators[:1], market,
+                                        numStates=nStates, numOffbids=nOffer,
+                                        markups=(10, 20, 33, 50))
+task = pyreto.discrete.ProfitTask(env)
+
+#print env.outdim, len(env._allActions), env.numOffbids * len(env.generators) * len(env.markups)
+
+module = ActionValueTable(numStates=env.outdim, numActions=len(env._allActions))
+
+#learner = Q()
+#learner = QLambda()
+#learner = SARSA()
+#learner = pyreto.roth_erev.RothErev(experimentation=0.55, recency=0.3)
+learner = pyreto.roth_erev.VariantRothErev(experimentation=0.55, recency=0.3)
+learner.explorer = BoltzmannExplorer(tau=100.0, decay=0.9995)
+
+agent = LearningAgent(module, learner)
+experiment.tasks.append(task)
+experiment.agents.append(agent)
 
 # Define a non-learning agent that will bid maximum power at marginal cost.
 env2 = pyreto.discrete.MarketEnvironment(case.generators[1:], market, nOffer)
@@ -48,9 +67,12 @@ experiment.tasks.append(task2)
 experiment.agents.append(agent2)
 
 x = 0
-batch = 2
+batch = 1
 while x <= 1000:
     experiment.doInteractions(batch)
+
+    print "PARAMS:", experiment.agents[0].module.params
+
     for agent in experiment.agents:
         agent.learn()
         agent.reset()
