@@ -5,6 +5,9 @@ of a power exchange auction market. """
 
 import sys
 import logging
+import scipy
+import pylab
+
 import pylon
 import pyreto.discrete
 import pyreto.roth_erev #@UnusedImport
@@ -46,16 +49,17 @@ task = pyreto.discrete.ProfitTask(env)
 
 #print env.outdim, len(env._allActions), env.numOffbids * len(env.generators) * len(env.markups)
 
-module = ActionValueTable(numStates=nStates, numActions=len(env._allActions))
+nActions = len(env._allActions)
+module = ActionValueTable(numStates=nStates, numActions=nActions)
 
-learner = Q()
+#learner = Q()
 #learner = QLambda()
-#learner = SARSA()
-#learner.explorer = BoltzmannExplorer()
+learner = SARSA(gamma=0.8)
+#learner.explorer = BoltzmannExplorer()#tau=100, decay=0.95)
 
 #learner = pyreto.roth_erev.RothErev(experimentation=0.55, recency=0.3)
 #learner = pyreto.roth_erev.VariantRothErev(experimentation=0.55, recency=0.3)
-learner.explorer = BoltzmannExplorer()#tau=100.0, decay=0.9995)
+#learner.explorer = BoltzmannExplorer(tau=100.0, decay=0.9995)
 
 agent = LearningAgent(module, learner)
 experiment.tasks.append(task)
@@ -68,14 +72,24 @@ agent2 = pyreto.util.ZeroAgent(env2.outdim, env2.indim)
 experiment.tasks.append(task2)
 experiment.agents.append(agent2)
 
+# Prepare plotting.
+pylab.gray()
+pylab.ion()
+
 x = 0
 batch = 1
 while x <= 1000:
     experiment.doInteractions(batch)
 
-    print "PARAMS:", experiment.agents[0].module.params
-
     for agent in experiment.agents:
         agent.learn()
         agent.reset()
+
+    print "PARAMS:", experiment.agents[0].module.params
+#    print experiment.agents[0].module.params.reshape(nStates,nActions).max(1)
+
+    # Draw the table for agent 1.
+    pylab.pcolor(module.params.reshape(nStates,nActions))
+    pylab.draw()
+
     x += batch

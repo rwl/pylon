@@ -80,6 +80,8 @@ class ProfitTask(Task):
 
             totalEarnings += earnings
 
+        totalEarnings = totalEarnings**2 * 0.0001
+
         logger.debug("Task reward: %.2f" % totalEarnings)
 
         return totalEarnings
