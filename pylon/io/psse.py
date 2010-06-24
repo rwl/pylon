@@ -44,6 +44,10 @@ class PSSEReader(_CaseReader):
     """
 
     def __init__(self):
+
+        #: Zero impedance line threshold tolerance.
+        self.xtol = 0.0001
+
         self.init()
 
 
@@ -154,12 +158,6 @@ class PSSEReader(_CaseReader):
         # R1-2,X1-2,SBASE1-2
         # WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD1,CONT1,RMA1,RMI1,VMA1,VMI1,NTP1,TAB1,CR1,CX1
         # WINDV2,NOMV2
-        #
-        # I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,'NAME',STAT,O1,F1,...,O4,F4
-        # R1-2,X1-2,SBASE1-2,R2-3,X2-3,SBASE2-3,R3-1,X3-1,SBASE3-1,VMSTAR,ANSTAR
-        # WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD1,CONT1,RMA1,RMI1,VMA1,VMI1,NTP1,TAB1,CR1,CX1
-        # WINDV2,NOMV2,ANG2,RATA2,RATB2,RATC2,COD2,CONT2,RMA2,RMI2,VMA2,VMI2,NTP2,TAB2,CR2,CX2
-        # WINDV3,NOMV3,ANG3,RATA3,RATB3,RATC3,COD3,CONT3,RMA3,RMI3,VMA3,VMI3,NTP3,TAB3,CR3,CX3
         trx_data = file.next().split(",")
         while trx_data[0].strip()[0] != "0":
             trx_data2 = file.next().split(",")
@@ -188,6 +186,12 @@ class PSSEReader(_CaseReader):
                 case.branches.append(l)
                 trx_data = file.next().split(",")
             else:
+                # I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,'NAME',STAT,O1,F1,...,O4,F4
+                # R1-2,X1-2,SBASE1-2,R2-3,X2-3,SBASE2-3,R3-1,X3-1,SBASE3-1,VMSTAR,ANSTAR
+                # WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD1,CONT1,RMA1,RMI1,VMA1,VMI1,NTP1,TAB1,CR1,CX1
+                # WINDV2,NOMV2,ANG2,RATA2,RATB2,RATC2,COD2,CONT2,RMA2,RMI2,VMA2,VMI2,NTP2,TAB2,CR2,CX2
+                # WINDV3,NOMV3,ANG3,RATA3,RATB3,RATC3,COD3,CONT3,RMA3,RMI3,VMA3,VMI3,NTP3,TAB3,CR3,CX3
+
                 trx_data5 = file.next().split(",") # third winding
                 # Three-winding transformers are modelled as a group of three
                 # two-winding transformers with a fictitious neutral bus.
@@ -226,7 +230,12 @@ class PSSEReader(_CaseReader):
                 l3.r = 0.5 * (r23 + r31 - r12)
                 l3.x = 0.5 * (x23 + x31 - x12)
 
-#                assert r12 == l1.r + l2.r
+                for l in [l1, l2, l3]:
+                    if abs(l.x) < 1e-5:
+                        logger.warning("Zero branch reactance [%s]." % l.name)
+                        l.x = self.xtol
+                    if abs(complex(l.r, l.x)) < 0.00001:
+                        logger.warning("Zero branch impedance [%s]." % l.name)
 
                 l1.ratio = float(trx_data3[0])
                 l1.phase_shift = float(trx_data3[2])
