@@ -49,7 +49,7 @@ class ProfitTask(DiscreteProfitTask):
     """ Defines a task for continuous sensor and action spaces.
     """
 
-    def __init__(self, environment, maxSteps=24, discount=None):
+    def __init__(self, environment, maxSteps=24, discount=None,maxMarkup=30.0):
         super(ProfitTask, self).__init__(environment)
 
         #: Maximum number of time steps.
@@ -68,7 +68,7 @@ class ProfitTask(DiscreteProfitTask):
         self.samples = 0
 
         #: Maximum markup/markdown.
-        self.maxMarkup = 30.0
+        self.maxMarkup = maxMarkup
 
         #----------------------------------------------------------------------
         #  "Task" interface:
@@ -94,6 +94,7 @@ class ProfitTask(DiscreteProfitTask):
     def performAction(self, action):
         """ Execute one action.
         """
+        print "ACTION:", action
         self.t += 1
         Task.performAction(self, action)
 #        self.addReward()

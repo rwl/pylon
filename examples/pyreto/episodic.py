@@ -17,6 +17,7 @@ from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners import ENAC
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.tools.plotting import MultilinePlotter
+from pybrain.structure import SigmoidLayer
 
 logger = logging.getLogger()
 for handler in logger.handlers: logger.removeHandler(handler)
@@ -37,6 +38,7 @@ market = pyreto.SmartMarket(case, priceCap=100.0)
 p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
        0.90, 0.88, 0.88, 0.82, 0.80, 0.78, 0.76, 0.68, 0.68, 0.68, 0.65, 0.58]
 p1h = p1h[8:14]
+p1h = [1.0, 0.95]
 
 # An experiment coordinates interactions between agents and their tasks.
 experiment = pyreto.continuous.MarketExperiment([], [], market, p1h)
@@ -51,10 +53,11 @@ for gen in case.generators[:1]:
     # submission of offers/bids to the market.
     env = pyreto.continuous.MarketEnvironment([gen], market, numOffbids)
     # Reward is defined as profit.
-    task = pyreto.continuous.ProfitTask(env, maxSteps=len(p1h))
+    task = pyreto.continuous.ProfitTask(env, maxSteps=len(p1h), maxMarkup=50.0)
     # Build an ANN for policy function approximation.
 #    net = buildNetwork(env.outdim, 7, env.indim, bias=True, outputbias=False)
-    net = buildNetwork(env.outdim, 2, env.indim, bias=False)
+    net = buildNetwork(env.outdim, env.indim, bias=False)
+    print env.outdim, env.indim, net
     # Create an agent and select an episodic learner.
     learner = ENAC()
     agent = LearningAgent(net, learner)
@@ -64,7 +67,7 @@ for gen in case.generators[:1]:
     # Adjust some parameters of the NormalExplorer.
     sigma = [20.0] * env.indim
     learner.explorer.sigma = sigma
-    #learner.learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs)
+    learner.learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
 
     # Add the task and agent to the experiment.
     experiment.tasks.append(task)
@@ -86,24 +89,29 @@ plot = MultilinePlotter(autoscale=1.1, xlim=[0, len(p1h)], ylim=[0, 1])
 # Solve an initial OPF.
 OPF(case, market.locationalAdjustment=='dc', opt={"verbose": False}).solve()
 
-weeks = 104 # number of roleouts
-days = 5 # number of samples per learning step
+weeks = 208 # number of roleouts
+days = 4 # number of samples per learning step
 for week in range(weeks):
     experiment.doEpisodes(days)
 
     # Scale sigma manually.
-    sigma = [(sig * 0.95) - 0.05 for sig in sigma]
+    sigma = [sig - abs(sig * 0.05) - 0.05 for sig in sigma]
+    print "SIGMA:", sigma
 
     for i, agent in enumerate(experiment.agents):
-        state, action, reward = \
-            agent.history.getSequence(agent.history.getNumSequences() - 1)
-        plot.addData(i, week, scipy.mean(action))
+#        state, action, reward = \
+#            agent.history.getSequence(agent.history.getNumSequences() - 1)
+        reward = agent.history["reward"]
+#        print "EPI:", scipy.mean(reward), reward
+        plot.addData(i, week, scipy.mean(reward))
 
         agent.learn()
         agent.reset()
 
         if hasattr(agent, "learner"):
             agent.learner.explorer.sigma = sigma
+
+    print "PARAMS:", experiment.agents[0].module.params
 
     plot.update()
 

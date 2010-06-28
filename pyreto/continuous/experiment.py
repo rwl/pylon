@@ -107,19 +107,19 @@ class MarketExperiment(object):
     #  "MarketExperiment" interface:
     #--------------------------------------------------------------------------
 
-    def getProfile(self):
-        """ Returns the active power profile for the load.
-        """
-        return self._profile
-
-
-    def setProfile(self, profile):
-        """ Sets the active power profile, updating the cycle iterator.
-        """
-        self._pcycle = cycle(profile)
-        self._profile = profile
-
-    profile = property(getProfile, setProfile)
+#    def getProfile(self):
+#        """ Returns the active power profile for the load.
+#        """
+#        return self._profile
+#
+#
+#    def setProfile(self, profile):
+#        """ Sets the active power profile, updating the cycle iterator.
+#        """
+#        self._pcycle = cycle(profile)
+#        self._profile = profile
+#
+#    profile = property(getProfile, setProfile)
 
     #--------------------------------------------------------------------------
     #  "EpisodicExperiment" interface:
@@ -129,10 +129,15 @@ class MarketExperiment(object):
         """ Do the given numer of episodes, and return the rewards of each
             step as a list.
         """
-        for _ in range(number):
-            # Restore original load levels.
+        for episode in range(number):
+            print "Starting episode %d." % episode
+            # Initialise the profile cycle.
+            self._pcycle = cycle(self.profile)
+
+            # Scale the initial load.
+            c = self._pcycle.next()
             for bus in self.market.case.buses:
-                bus.p_demand = self.pdemand[bus]
+                bus.p_demand = self.pdemand[bus] * c
 
             # Initialise agents and their tasks.
             for task, agent in zip(self.tasks, self.agents):
@@ -163,21 +168,22 @@ class MarketExperiment(object):
 #            if self.do_optimisation[agent]:
 #                raise Exception("When using a black-box learning algorithm, "
 #                                "only full episodes can be done.")
-            if not task.isFinished():
-                observation = task.getObservation()
-                agent.integrateObservation(observation)
 
-                action = agent.getAction()
-                task.performAction(action)
+#            if not task.isFinished():
+            observation = task.getObservation()
+            agent.integrateObservation(observation)
+
+            action = agent.getAction()
+            task.performAction(action)
 
         # Clear the market.
         self.market.run()
 
         # Reward each agent appropriately.
         for task, agent in zip(self.tasks, self.agents):
-            if not task.isFinished():
-                reward = task.getReward()
-                agent.giveReward(reward)
+#            if not task.isFinished():
+            reward = task.getReward()
+            agent.giveReward(reward)
 
         # Scale loads.
         c = self._pcycle.next()
