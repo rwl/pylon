@@ -17,7 +17,7 @@ from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners import ENAC
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.tools.plotting import MultilinePlotter
-from pybrain.structure import SigmoidLayer
+from pybrain.structure import TanhLayer, LinearLayer #@UnusedImport
 
 logger = logging.getLogger()
 for handler in logger.handlers: logger.removeHandler(handler)
@@ -26,9 +26,18 @@ logger.setLevel(logging.DEBUG)
 
 # Saved case formats are recognised by file extension.
 case = Case.load("../data/case6ww.pkl")
-case.generators[0].p_cost = (0.0, 9.0, 200.0)
-case.generators[1].p_cost = (0.0, 2.0, 200.0)
-case.generators[2].p_cost = (0.0, 5.0, 200.0)
+
+#case.generators[0].p_cost = (0.0, 9.0, 200.0)
+#case.generators[1].p_cost = (0.0, 2.0, 200.0)
+#case.generators[2].p_cost = (0.0, 5.0, 200.0)
+
+case.generators[0].p_cost = (0.0, 5.0, 200.0)
+case.generators[1].p_cost = (0.0, 7.0, 200.0)
+case.generators[2].p_cost = (0.0, 2.0, 200.0)
+case.generators[0].p_min = 0.0
+case.generators[1].p_min = 0.0
+#case.generators[2].p_min = 0.0
+
 #pyreto.util.plotGenCost(case.generators)
 
 # Construct a market and specify any desired limits.
@@ -38,7 +47,7 @@ market = pyreto.SmartMarket(case, priceCap=100.0)
 p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
        0.90, 0.88, 0.88, 0.82, 0.80, 0.78, 0.76, 0.68, 0.68, 0.68, 0.65, 0.58]
 p1h = p1h[8:14]
-p1h = [1.0, 0.95]
+p1h = [1.0]#, 0.95]
 
 # An experiment coordinates interactions between agents and their tasks.
 experiment = pyreto.continuous.MarketExperiment([], [], market, p1h)
@@ -46,6 +55,9 @@ experiment = pyreto.continuous.MarketExperiment([], [], market, p1h)
 # A participant may submit any number of offers/bids for each of the
 # generators in its portfolio.
 numOffbids = 1
+
+# Scale sigma manually?
+manual_sigma = True
 
 # Associate each generator in the case with an agent.
 for gen in case.generators[:1]:
@@ -56,8 +68,8 @@ for gen in case.generators[:1]:
     task = pyreto.continuous.ProfitTask(env, maxSteps=len(p1h), maxMarkup=50.0)
     # Build an ANN for policy function approximation.
 #    net = buildNetwork(env.outdim, 7, env.indim, bias=True, outputbias=False)
-    net = buildNetwork(env.outdim, env.indim, bias=False)
-    print env.outdim, env.indim, net
+    net = buildNetwork(env.outdim, env.indim, bias=False, outclass=TanhLayer)
+    print env.outdim, env.indim, net.params
     # Create an agent and select an episodic learner.
     learner = ENAC()
     agent = LearningAgent(net, learner)
@@ -65,8 +77,9 @@ for gen in case.generators[:1]:
     agent.name = gen.name
 
     # Adjust some parameters of the NormalExplorer.
-    sigma = [20.0] * env.indim
-    learner.explorer.sigma = sigma
+    if manual_sigma:
+        sigma = [20.0] * env.indim
+        learner.explorer.sigma = sigma
     learner.learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
 
     # Add the task and agent to the experiment.
@@ -90,25 +103,22 @@ plot = MultilinePlotter(autoscale=1.1, xlim=[0, len(p1h)], ylim=[0, 1])
 OPF(case, market.locationalAdjustment=='dc', opt={"verbose": False}).solve()
 
 weeks = 208 # number of roleouts
-days = 4 # number of samples per learning step
+days = 7 # number of samples per learning step
 for week in range(weeks):
     experiment.doEpisodes(days)
 
-    # Scale sigma manually.
-    sigma = [sig - abs(sig * 0.05) - 0.05 for sig in sigma]
-    print "SIGMA:", sigma
+    if manual_sigma:
+        sigma = [sig - abs(sig * 0.05) - 0.05 for sig in sigma]
+        print "SIGMA:", sigma
 
     for i, agent in enumerate(experiment.agents):
-#        state, action, reward = \
-#            agent.history.getSequence(agent.history.getNumSequences() - 1)
         reward = agent.history["reward"]
-#        print "EPI:", scipy.mean(reward), reward
         plot.addData(i, week, scipy.mean(reward))
 
         agent.learn()
         agent.reset()
 
-        if hasattr(agent, "learner"):
+        if manual_sigma and hasattr(agent, "learner"):
             agent.learner.explorer.sigma = sigma
 
     print "PARAMS:", experiment.agents[0].module.params

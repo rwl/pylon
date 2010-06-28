@@ -87,7 +87,7 @@ class ProfitTask(DiscreteProfitTask):
     def getObservation(self):
         """ A filtered mapping to getSample of the underlying environment. """
         sensors = super(ProfitTask, self).getObservation()
-#        print "SENSORS:", sensors
+#        print "NORMALISED SENSORS:", sensors
         return sensors
 
 

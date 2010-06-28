@@ -24,9 +24,12 @@ logger.setLevel(logging.DEBUG)
 
 # Load the electric power system model.
 case = pylon.Case.load("../data/case6ww.pkl")
-case.generators[0].p_cost = (0.0, 9.0, 200.0)
-case.generators[1].p_cost = (0.0, 2.0, 200.0)
-case.generators[2].p_cost = (0.0, 5.0, 200.0)
+case.generators[0].p_cost = (0.0, 5.0, 200.0)
+case.generators[1].p_cost = (0.0, 7.0, 200.0)
+case.generators[2].p_cost = (0.0, 2.0, 200.0)
+case.generators[0].p_min = 0.0
+case.generators[1].p_min = 0.0
+case.generators[2].p_min = 0.0
 #pyreto.util.plotGenCost(case.generators)
 
 # Create a power exchange auction market and specify a price cap.
@@ -77,7 +80,7 @@ pylab.gray()
 pylab.ion()
 
 x = 0
-batch = 1
+batch = 4
 while x <= 1000:
     experiment.doInteractions(batch)
 
