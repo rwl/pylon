@@ -25,6 +25,7 @@ See U{http://www.pserc.cornell.edu/matpower/} for more info.
 #------------------------------------------------------------------------------
 
 import logging
+import random
 
 from time import time
 
@@ -33,7 +34,7 @@ from numpy import \
 
 from scipy.sparse import lil_matrix, csr_matrix, hstack
 
-from util import _Named
+from util import _Named, fair_max
 from case import REFERENCE
 from generator import PW_LINEAR
 from solver import DCOPFSolver, PIPSSolver
@@ -444,12 +445,12 @@ class OPF(object):
         if self.dc:
             pgbas = 0        # starting index within x for active sources
             nq = 0           # number of Qg vars
-            qgbas = None     # index of 1st Qg column in Ay
+#            qgbas = None     # index of 1st Qg column in Ay
             ybas = ng        # starting index within x for y variables
         else:
             pgbas = 0
             nq = ng
-            qgbas = ng + 1 # index of 1st Qg column in Ay
+#            qgbas = ng + 1 # index of 1st Qg column in Ay
             ybas = ng + nq
 
         # Number of extra y variables.
@@ -507,6 +508,182 @@ class OPF(object):
 
         return y, ycon
 
+#------------------------------------------------------------------------------
+#  "UDOPF" class:
+#------------------------------------------------------------------------------
+
+class UDOPF(OPF):
+    """ The standard OPF formulation has no mechanism for completely shutting
+    down generators which are very expensive to operate. Instead they are
+    simply dispatched at their minimum generation limits. PYLON includes the
+    capability to run an optimal power flow combined with a unit decommitment
+    for a single time period, which allows it to shut down these expensive
+    units and find a least cost commitment and dispatch.
+
+    Solves a combined unit decommitment and optimal power flow for a
+    single time period. Uses an algorithm similar to dynamic programming.
+    It proceeds through a sequence of stages, where stage N has N generators
+    shut down, starting with N=0. In each stage, it forms a list of candidates
+    (gens at their Pmin limits) and computes the cost with each one of them
+    shut down. It selects the least cost case as the starting point for the
+    next stage, continuing until there are no more candidates to be shut down
+    or no more improvement can be gained by shutting something down.
+
+    Based on uopf.m from MATPOWER by Ray Zimmerman, developed at PSERC
+    Cornell. See U{http://www.pserc.cornell.edu/matpower/} for more info.
+
+    See also:
+      - Ray Zimmerman, "MATPOWER User's Manual", MATPOWER, PSERC Cornell,
+        version 3.2, U{http://www.pserc.cornell.edu/matpower/}, Sept, 2007
+    """
+
+    def solve(self, solver_klass=None):
+        """ Solves the combined unit decommitment / optimal power flow problem.
+        """
+        case = self.case
+        generators = case.online_generators
+
+        logger.info("Solving OPF with unit decommitment [%s]." % case.name)
+
+        t0 = time()
+
+        # 1. Begin at stage zero (N = 0), assuming all generators are on-line
+        # with all limits in place. At most one generator shutdown per stage.
+        i_stage = 0
+
+        # Check for sum(p_min) > total load, decommit as necessary.
+        online       = [g for g in generators if not g.is_load]
+        online_vload = [g for g in generators if g.is_load]
+
+        # Total dispatchable load capacity.
+        vload_capacity = sum([g.p_min for g in online_vload])
+        # Total load capacity.
+        load_capacity = sum([b.p_demand for b in case.buses]) - vload_capacity
+
+        # Minimum total online generation capacity.
+        p_min_tot = sum([g.p_min for g in online])
+
+        # Shutdown the most expensive units until the minimum generation
+        # capacity is less than the total load capacity.
+        while p_min_tot > load_capacity:
+            i_stage += 1
+            logger.debug("Entered decommitment stage %d." % i_stage)
+
+            # Find generator with the maximum average cost at Pmin.
+            avg_pmin_cost = [g.total_cost(g.p_min) / g.p_min for g in online]
+            # Select at random from maximal generators with equal cost.
+            g_idx, _ = fair_max(avg_pmin_cost)
+            generator = online[g_idx]
+
+            logger.info("Shutting down generator [%s] to satisfy all "
+                        "p_min limits." % generator.name)
+
+            # Shut down most expensive unit.
+            generator.online = False
+
+            # Update minimum generation capacity for while loop.
+            online = [g for g in case.online_generators if not g.is_load]
+            p_min_tot = sum([g.p_min for g in online])
+
+        # 2. Solve a normal OPF and save the solution as the current best.
+        solution = super(UDOPF, self).solve(solver_klass)
+
+        if not solution["converged"] == True:
+            logger.error("Non-convergent UDOPF [%s]." %
+                         solution["output"]["message"])
+            return solution
+
+        # 3. Go to the next stage, N = N + 1. Using the best solution from the
+        # previous stage as the base case for this stage, ...
+
+        # Best case so far. A list of the on-line status of all generators.
+        overall_online = [g.online for g in case.generators]
+        # The objective function value is the total system cost.
+        overall_cost = solution["f"]
+
+        # Best case for this stage.
+        stage_online = overall_online
+#        stage_cost   = overall_cost
+
+        # Shutdown at most one generator per stage.
+        while True:
+            # 4. Form a candidate list of generators with minimum
+            # generation limits binding.
+
+            # Activate generators according to the stage best.
+            for i, generator in enumerate(case.generators):
+                generator.online = stage_online[i]
+
+            # Get candidates for shutdown. Lagrangian multipliers are often
+            # very small so we round to four decimal places.
+            candidates = [g for g in case.online_generators if \
+                          (round(g.mu_pmin, 4) > 0.0) and (g.p_min > 0.0)]
+
+            if len(candidates) == 0:
+                break
+
+            # Assume no improvement during this stage.
+            done = True
+
+            i_stage += 1
+            logger.debug("Entered decommitment stage %d." % i_stage)
+
+            for candidate in candidates:
+                # 5. For each generator on the candidate list, solve an OPF to
+                # find the total system cost with the generator shut down.
+
+                # Activate generators according to the stage best.
+                for i, generator in enumerate(case.generators):
+                    generator.online = stage_online[i]
+
+                # Shutdown candidate generator.
+                candidate.online = False
+
+                logger.info("Attempting OPF with generator '%s' shutdown." %
+                    candidate.name)
+
+                # Run OPF.
+                solution = super(UDOPF, self).solve(solver_klass)
+
+                # Compare total system costs for improvement.
+                if solution["converged"] == True \
+                    and (solution["f"] < overall_cost):
+                    # 6. Replace the current best solution with this one if
+                    # it has a lower cost.
+                    overall_online = [g.online for g in case.generators]
+                    overall_cost   = solution["f"]
+                    # Check for further decommitment.
+                    done = False
+
+            if done:
+                # Decommits at this stage did not help.
+                break
+            else:
+                # 7. If any of the candidate solutions produced an improvement,
+                # return to step 3.
+
+                # Shutting something else down helps, so let's keep going.
+                logger.info("Shutting down generator '%s'.", candidate.name)
+
+                stage_online = overall_online
+#                stage_cost   = overall_cost
+
+        # 8. Use the best overall solution as the final solution.
+        for i, generator in enumerate(case.generators):
+            generator.online = overall_online[i]
+
+        # One final solve using the best case to ensure all results are
+        # up-to-date.
+        solution = super(UDOPF, self).solve(solver_klass)
+
+        # Compute elapsed time and log it.
+        elapsed = time() - t0
+
+        plural = "" if i_stage == 1 else "s"
+        logger.info("Unit decommitment OPF solved in %.3fs (%d decommitment "
+                    "stage%s)." % (elapsed, i_stage, plural))
+
+        return solution
 
 #------------------------------------------------------------------------------
 #  "OPFModel" class:

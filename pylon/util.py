@@ -25,6 +25,7 @@ from __future__ import with_statement
 
 import os.path
 import pickle
+import random
 
 from numpy import ones, array, exp, pi
 
@@ -215,6 +216,25 @@ def mfeq2(a, b, diff=1e-14):
             if feq(a[i, j], b[i, j], diff) == False:
                 return False
     return True
+
+#------------------------------------------------------------------------------
+#  "fair_max" function:
+#------------------------------------------------------------------------------
+
+def fair_max(x):
+    """ Takes a single iterable as an argument and returns the same output as
+    the built-in function max with two output parameters, except that where
+    the maximum value occurs at more than one position in the  vector, the
+    index is chosen randomly from these positions as opposed to just choosing
+    the first occurance.
+    """
+    value = max(x)
+    # List indexes of max value.
+    i = [x.index(v) for v in x if v == value]
+    # Select index randomly among occurances.
+    idx = random.choice(i)
+
+    return idx, value
 
 #------------------------------------------------------------------------------
 #  "CaseReport" class:

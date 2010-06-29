@@ -23,9 +23,7 @@ from util import CaseReport
 from dc_pf import DCPF
 from ac_pf import NewtonPF, FastDecoupledPF, XB, BX
 
-from opf import OPF
-
-from ud_opf import UDOPF
+from opf import OPF, UDOPF
 
 from estimator import StateEstimator, Measurement
 from estimator import PF, PT, QF, QT, PG, QG, VM, VA

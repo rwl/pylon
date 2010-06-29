@@ -27,16 +27,16 @@ import unittest
 
 from os.path import dirname, join
 
-from pylon.io import PickleReader
-from pylon.ud_opf import UDOPF
+from pylon.case import Case
+from pylon.opf import UDOPF
 
 #------------------------------------------------------------------------------
 #  Constants:
 #------------------------------------------------------------------------------
 
 DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
-PWL_FILE  = join(dirname(__file__), "..", "pyreto", "test", "data",
-    "auction_case.pkl")
+PWL_FILE  = join(dirname(__file__), "..", "..", "pyreto", "test", "data",
+    "t_auction_case.pkl")
 
 #------------------------------------------------------------------------------
 #  "UOPFTestCase" class:
@@ -49,7 +49,7 @@ class UOPFTestCase(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        case = self.case = PickleReader().read(DATA_FILE)
+        case = self.case = Case.load(DATA_FILE)
         self.solver = UDOPF(case, dc=True)
 
 
@@ -59,24 +59,24 @@ class UOPFTestCase(unittest.TestCase):
         solution = self.solver.solve()
         generators = self.case.generators
 
-        self.assertTrue(solution["status"] == "optimal")
+        self.assertTrue(solution["converged"] == True)
         # Generator 1 gets shutdown.
         self.assertFalse(generators[0].online)
         self.assertAlmostEqual(generators[1].p, 110.80, places=2)
         self.assertAlmostEqual(generators[2].p,  99.20, places=2)
 
-        self.assertAlmostEqual(self.solver.solver.f, 2841.59, places=2)
+        self.assertAlmostEqual(solution["f"], 2841.59, places=2)
 
 
     def test_pwl(self):
         """ Test UDOPF solver with pwl auction case.
         """
-        case = PickleReader().read(PWL_FILE)
+        case = Case.load(PWL_FILE)
         solver = UDOPF(case, dc=True)
         solution = solver.solve()
         generators = self.case.generators
 
-        self.assertTrue(solution["status"] == "optimal")
+        self.assertTrue(solution["converged"] == True)
         self.assertTrue(False not in [g.online for g in generators])
 
 
