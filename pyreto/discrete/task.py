@@ -23,6 +23,8 @@
 
 import logging
 
+from scipy import power
+
 from pybrain.rl.environments import Task
 
 #------------------------------------------------------------------------------
@@ -38,6 +40,35 @@ logger = logging.getLogger(__name__)
 class ProfitTask(Task):
     """ Defines a task with discrete observations of the clearing price.
     """
+
+    def __init__(self, environment, maxSteps=24, discount=None,maxMarkup=30.0):
+        super(ProfitTask, self).__init__(environment)
+
+        #: Maximum number of time steps.
+        self.maxSteps = maxSteps
+
+        #: Current time step.
+        self.t = 0
+
+        #----------------------------------------------------------------------
+        #  "EpisodicTask" interface:
+        #----------------------------------------------------------------------
+
+        #: Discount factor.
+        self.discount = discount
+
+        #: Track cumulative reward.
+        self.cumulativeReward = 0
+
+        #: Track the number of samples.
+        self.samples = 0
+
+        #: Maximum markup/markdown.
+        self.maxMarkup = maxMarkup
+
+    #--------------------------------------------------------------------------
+    #  "Task" interface:
+    #--------------------------------------------------------------------------
 
     def getReward(self):
         """ Returns the reward corresponding to the last action performed.
@@ -82,6 +113,8 @@ class ProfitTask(Task):
 
 #        totalEarnings = totalEarnings**2 * 0.0001
 
+        self.addReward(totalEarnings)
+
         logger.debug("Task reward: %.2f" % totalEarnings)
 
         return totalEarnings
@@ -91,6 +124,49 @@ class ProfitTask(Task):
         """ The action vector is stripped and the only element is cast to
             integer and given to the super class.
         """
+        print "ACTION:", action
+        self.t += 1
         super(ProfitTask, self).performAction(int(action[0]))
+        self.samples += 1
+
+
+#    def getReward(self):
+#        """ Returns the reward corresponding to the last action performed.
+#        """
+#        earnings = super(ProfitTask, self).getReward()
+#        self.addReward(earnings)
+#        return earnings
+
+
+    def reset(self):
+#        super(ProfitTask, self).reset()
+#        self.env.reset()
+        self.cumulativeReward = 0
+        self.samples = 0
+        self.t = 0
+
+    #--------------------------------------------------------------------------
+    #  "EpisodicTask" interface:
+    #--------------------------------------------------------------------------
+
+    def isFinished(self):
+        """ Is the current episode over?
+        """
+        if self.t >= self.maxSteps:
+            return True # maximal timesteps
+        return False
+
+
+    def addReward(self, r=None):
+        """ A filtered mapping towards performAction of the underlying
+            environment.
+        """
+        r = self.getReward() if r is None else r
+
+        # by default, the cumulative reward is just the sum over the episode
+        if self.discount:
+            self.cumulativeReward += power(self.discount, self.samples) * r
+        else:
+            self.cumulativeReward += r
 
 # EOF -------------------------------------------------------------------------

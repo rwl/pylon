@@ -148,6 +148,7 @@ class MarketExperiment(object):
                 if True in [task.isFinished() for task in self.tasks]:
                     raise ValueError
                 self._oneInteraction()
+                print "FINISHED:", [task.isFinished() for task in self.tasks]
 
     #--------------------------------------------------------------------------
     #  "Experiment" interface:

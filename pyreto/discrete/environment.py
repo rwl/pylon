@@ -74,6 +74,7 @@ class MarketEnvironment(object):
         #: "generators" property.
         self._g0 = {}
 
+        #: Initial total system demand.
         self._Pd0 = sum([b.p_demand for b in market.case.buses if b.type ==PQ])
 
         #: Portfolio of generators endowed to the agent.
@@ -259,13 +260,13 @@ class MarketEnvironment(object):
     def _getDemandSensor(self):
         Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
 
-        # Divide the range of market prices in to discrete bands.
+        # Divide the range of demand into discrete bands.
         states = linspace(0.0, self._Pd0, self.numStates + 1)
 
         for i in range(len(states) - 1):
             if states[i] <= round(Pd, 1) <= states[i + 1]:
-                logger.info("%s demand state: %d" %
-                            (self.generators[0].name, i))
+                logger.info("%s demand state: %d (%.2f)" %
+                            (self.generators[0].name, i, Pd))
                 return array([i])
         else:
             raise ValueError, "Demand greater than peak [%.3f]." % Pd

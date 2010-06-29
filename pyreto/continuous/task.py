@@ -49,26 +49,32 @@ class ProfitTask(DiscreteProfitTask):
     """ Defines a task for continuous sensor and action spaces.
     """
 
-    def __init__(self, environment, maxSteps=24, discount=None,maxMarkup=30.0):
-        super(ProfitTask, self).__init__(environment)
+    def __init__(self, environment, maxSteps=24, discount=None,
+                 maxMarkup=30.0):
+        super(ProfitTask, self).__init__(environment, maxSteps, discount,
+                                         maxMarkup)
 
-        #: Maximum number of time steps.
-        self.maxSteps = maxSteps
-
-        #: Current time step.
-        self.t = 0
-
-        #: Discount factor.
-        self.discount = discount
-
-        #: Track cumulative reward.
-        self.cumulativeReward = 0
-
-        #: Track the number of samples.
-        self.samples = 0
-
-        #: Maximum markup/markdown.
-        self.maxMarkup = maxMarkup
+#        #: Maximum number of time steps.
+#        self.maxSteps = maxSteps
+#
+#        #: Current time step.
+#        self.t = 0
+#
+#        #----------------------------------------------------------------------
+#        #  "EpisodicTask" interface:
+#        #----------------------------------------------------------------------
+#
+#        #: Discount factor.
+#        self.discount = discount
+#
+#        #: Track cumulative reward.
+#        self.cumulativeReward = 0
+#
+#        #: Track the number of samples.
+#        self.samples = 0
+#
+#        #: Maximum markup/markdown.
+#        self.maxMarkup = maxMarkup
 
         #----------------------------------------------------------------------
         #  "Task" interface:
@@ -84,11 +90,11 @@ class ProfitTask(DiscreteProfitTask):
     #  "Task" interface:
     #--------------------------------------------------------------------------
 
-    def getObservation(self):
-        """ A filtered mapping to getSample of the underlying environment. """
-        sensors = super(ProfitTask, self).getObservation()
-#        print "NORMALISED SENSORS:", sensors
-        return sensors
+#    def getObservation(self):
+#        """ A filtered mapping to getSample of the underlying environment. """
+#        sensors = super(ProfitTask, self).getObservation()
+##        print "NORMALISED SENSORS:", sensors
+#        return sensors
 
 
     def performAction(self, action):
@@ -99,46 +105,6 @@ class ProfitTask(DiscreteProfitTask):
         Task.performAction(self, action)
 #        self.addReward()
         self.samples += 1
-
-
-    def getReward(self):
-        """ Returns the reward corresponding to the last action performed.
-        """
-        earnings = super(ProfitTask, self).getReward()
-        self.addReward(earnings)
-        return earnings
-
-
-    def reset(self):
-#        super(ProfitTask, self).reset()
-#        self.env.reset()
-        self.cumulativeReward = 0
-        self.samples = 0
-        self.t = 0
-
-    #--------------------------------------------------------------------------
-    #  "EpisodicTask" interface:
-    #--------------------------------------------------------------------------
-
-    def isFinished(self):
-        """ Is the current episode over?
-        """
-        if self.t >= self.maxSteps:
-            return True # maximal timesteps
-        return False
-
-
-    def addReward(self, r=None):
-        """ A filtered mapping towards performAction of the underlying
-            environment.
-        """
-        r = self.getReward() if r is None else r
-
-        # by default, the cumulative reward is just the sum over the episode
-        if self.discount:
-            self.cumulativeReward += power(self.discount, self.samples) * r
-        else:
-            self.cumulativeReward += r
 
     #--------------------------------------------------------------------------
     #  "ProfitTask" interface:
