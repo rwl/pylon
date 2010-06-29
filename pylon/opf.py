@@ -552,7 +552,7 @@ class UDOPF(OPF):
         i_stage = 0
 
         # Check for sum(p_min) > total load, decommit as necessary.
-        online       = [g for g in generators if not g.is_load]
+        online = [g for g in generators if not g.is_load]
         online_vload = [g for g in generators if g.is_load]
 
         # Total dispatchable load capacity.
@@ -587,6 +587,8 @@ class UDOPF(OPF):
 
         # 2. Solve a normal OPF and save the solution as the current best.
         solution = super(UDOPF, self).solve(solver_klass)
+
+        logger.debug("Initial system cost: $%.3f" % solution["f"])
 
         if not solution["converged"] == True:
             logger.error("Non-convergent UDOPF [%s]." %
@@ -639,7 +641,7 @@ class UDOPF(OPF):
                 # Shutdown candidate generator.
                 candidate.online = False
 
-                logger.info("Attempting OPF with generator '%s' shutdown." %
+                logger.debug("Solving OPF with generator '%s' shutdown." %
                     candidate.name)
 
                 # Run OPF.
@@ -648,12 +650,17 @@ class UDOPF(OPF):
                 # Compare total system costs for improvement.
                 if solution["converged"] == True \
                     and (solution["f"] < overall_cost):
+                    logger.debug("System cost improvement: $%.3f ($%.3f)" %
+                                 (overall_cost - solution["f"], solution["f"]))
                     # 6. Replace the current best solution with this one if
                     # it has a lower cost.
                     overall_online = [g.online for g in case.generators]
-                    overall_cost   = solution["f"]
+                    overall_cost = solution["f"]
                     # Check for further decommitment.
                     done = False
+                else:
+                    logger.debug("Candidate OPF failed [%s]." %
+                                 solution["output"]["message"])
 
             if done:
                 # Decommits at this stage did not help.
@@ -675,6 +682,8 @@ class UDOPF(OPF):
         # One final solve using the best case to ensure all results are
         # up-to-date.
         solution = super(UDOPF, self).solve(solver_klass)
+
+        logger.debug("UDOPF system cost: $%.3f" % solution["f"])
 
         # Compute elapsed time and log it.
         elapsed = time() - t0

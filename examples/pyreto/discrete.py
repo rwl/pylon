@@ -3,9 +3,6 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 """ This example demonstrates how Pyreto can simulate a discrete representation
 of a power exchange auction market. """
 
-import matplotlib
-matplotlib.use('WXAgg')
-
 import sys
 import logging
 import pylab
@@ -31,9 +28,9 @@ case.generators[0].p_cost = (0.0, 5.0, 200.0)
 case.generators[1].p_cost = (0.0, 6.5, 200.0)
 case.generators[2].p_cost = (0.0, 2.0, 200.0)
 
-case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
-case.generators[1].p_min = 0.0
-#case.generators[2].p_min = 0.0
+#case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
+#case.generators[1].p_min = 0.0
+##case.generators[2].p_min = 0.0
 
 case.generators[1].p_max = 100.0
 case.generators[1].p_max = 70.0
@@ -42,7 +39,7 @@ case.generators[2].p_max = 70.0
 #pyreto.util.plotGenCost(case.generators)
 
 # Create a power exchange auction market and specify a price cap.
-market = pyreto.SmartMarket(case, priceCap=100.0)
+market = pyreto.SmartMarket(case, priceCap=100.0, decommit=True)
 
 # Define a 24-hour load profile with hourly values.
 #p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
@@ -62,7 +59,7 @@ nStates = 3
 # Associate a learning agent with the first generator.
 env = pyreto.discrete.MarketEnvironment(case.generators[:1], market,
                                         numStates=nStates, numOffbids=nOffer,
-                                        markups=(0, 20, 75))
+                                        markups=(20, 75))
 task = pyreto.discrete.ProfitTask(env, maxSteps=len(p1h))
 
 #print env.outdim, len(env._allActions), env.numOffbids * len(env.generators) * len(env.markups)
@@ -70,14 +67,14 @@ task = pyreto.discrete.ProfitTask(env, maxSteps=len(p1h))
 nActions = len(env._allActions)
 module = ActionValueTable(numStates=nStates, numActions=nActions)
 
-#learner = Q()
+learner = Q()
 #learner = QLambda()
 #learner = SARSA(gamma=0.8)
 #learner.explorer = BoltzmannExplorer()#tau=100, decay=0.95)
 
-#learner = pyreto.roth_erev.RothErev(experimentation=0.55, recency=0.3)
-learner = pyreto.roth_erev.VariantRothErev(experimentation=0.55, recency=0.3)
-learner.explorer = BoltzmannExplorer(epsilon=100.0, decay=0.9995)
+##learner = pyreto.roth_erev.RothErev(experimentation=0.55, recency=0.3)
+#learner = pyreto.roth_erev.VariantRothErev(experimentation=0.55, recency=0.3)
+#learner.explorer = BoltzmannExplorer(epsilon=100.0, decay=0.9995)
 
 agent = LearningAgent(module, learner)
 experiment.tasks.append(task)

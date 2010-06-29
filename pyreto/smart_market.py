@@ -304,10 +304,11 @@ class SmartMarket(object):
             if not offer.reactive:
                 # Get nodal marginal price from OPF results.
                 offer.lmbda = offer.generator.bus.p_lmbda
-                offer.totalQuantity = offer.generator.p
+                offer.totalQuantity = offer.generator.p *offer.generator.online
             else:
                 offer.lmbda = offer.generator.bus.q_lmbda
-                offer.totalQuantity = abs(offer.generator.q)
+                offer.totalQuantity = \
+                    abs(offer.generator.q) * offer.generator.online
         for bid in self.bids:
             bus = bid.vLoad.bus
 
@@ -323,14 +324,14 @@ class SmartMarket(object):
                 # Use bundled lambdas. For loads Q = pf * P.
                 bid.lmbda = bus.p_lmbda + pf * bus.q_lmbda
 
-                bid.totalQuantity = -bid.vLoad.p
+                bid.totalQuantity = -bid.vLoad.p * bid.vLoad.online
                 # Guarantee that cleared bids are <= bids.
                 gteeBidPrice = True
             else:
                 # Use unbundled lambdas.
                 bid.lmbda = bus.q_lmbda
 
-                bid.totalQuantity = abs(bid.vLoad.q)
+                bid.totalQuantity = abs(bid.vLoad.q) * bid.vLoad.online
                 # Allow cleared bids to be above bid price.
                 gteeBidPrice = False
 

@@ -519,8 +519,8 @@ class Generator(_Named):
             points = [(-x, -y) for x, y in points]
             points.reverse()
 
-        n_segs = len(points) - 1
-        logger.info("%d segment pwl cost function: %s" % (n_segs, points))
+#        n_segs = len(points) - 1
+#        logger.info("%d segment pwl cost function: %s" % (n_segs, points))
 
         return points
 
