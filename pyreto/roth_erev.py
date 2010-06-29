@@ -50,7 +50,7 @@ import random
 import scipy
 
 from pybrain.rl.learners.valuebased.valuebased import ValueBasedLearner
-from pybrain.rl.learners.valuebased import ActionValueTable
+#from pybrain.rl.learners.valuebased import ActionValueTable
 from pybrain.rl.explorers.discrete.discrete import DiscreteExplorer
 from pybrain.utilities import drawIndex #@UnusedImport
 
@@ -126,14 +126,14 @@ class RothErev(ValueBasedLearner):
             samples = [[self.dataset.getSample()]]
 
         for seq in samples:
-            for _, lastAction, reward in seq:
-                self._updatePropensities(lastAction, reward)
+            for lastState, lastAction, reward in seq:
+                self._updatePropensities(int(lastState), int(lastAction), reward)
 
     #--------------------------------------------------------------------------
     #  RothErev interface:
     #--------------------------------------------------------------------------
 
-    def _updatePropensities(self, lastAction, reward):
+    def _updatePropensities(self, lastState, lastAction, reward):
         """ Update the propensities for all actions. The propensity for last
         action chosen will be updated using the feedback value that resulted
         from performing the action.
@@ -148,13 +148,15 @@ class RothErev(ValueBasedLearner):
         phi = self.recency
 
         for action in range(self.module.numActions):
-            carryOver = (1 - phi) * self.module.getValue(0, action)
-            experience = self._experience(action, lastAction, reward)
+            carryOver = (1 - phi) * self.module.getValue(lastState, action)
+            experience = self._experience(lastState, action, lastAction,reward)
 
-            self.module.updateValue(0, action, carryOver + experience)
+            print "RE:", lastState, lastAction, action, carryOver + experience
+
+            self.module.updateValue(lastState, action, carryOver + experience)
 
 
-    def _experience(self, action, previousAction, reward):
+    def _experience(self, lastState, action, previousAction, reward):
         """ This is the standard experience function for the Roth-Erev
         algorithm. Here propensities for all actions are updated and similarity
         does not come into play. That is, all action choices are assumed to be
@@ -199,7 +201,7 @@ class VariantRothErev(RothErev):
     @see L{RothErev} for details on the original Roth-Erev algorithm.
     """
 
-    def _experience(self, action, previousAction, reward):
+    def _experience(self, previousState, action, previousAction, reward):
         """ This is an altered version of the experience function for used in
         the standard Roth-Erev algorithm.  Like in RELearner, propensities for
         all actions are updated and similarity does not come into play. If the
@@ -223,7 +225,7 @@ class VariantRothErev(RothErev):
         if action == previousAction:
             experience = reward * (1 - e)
         else:
-            propensity = self.module.getValue(0, action)
+            propensity = self.module.getValue(previousState, action)
             experience = propensity * (e / (self.module.numActions - 1))
 
         return experience
@@ -232,15 +234,15 @@ class VariantRothErev(RothErev):
 #  "PropensityTable" class:
 #------------------------------------------------------------------------------
 
-class PropensityTable(ActionValueTable):
-    """ Interface for building a stateless reinforcement learning policy. This
-    type of policy simply maintains a distribution guiding action choice
-    irrespective of the current state of the world. That is, it simply
-    maintains the propensity for selection of each action for all world states.
-    """
-
-    def __init__(self, numActions, name=None):
-        ActionValueTable.__init__(self, 1, numActions, name)
+#class PropensityTable(ActionValueTable):
+#    """ Interface for building a stateless reinforcement learning policy. This
+#    type of policy simply maintains a distribution guiding action choice
+#    irrespective of the current state of the world. That is, it simply
+#    maintains the propensity for selection of each action for all world states.
+#    """
+#
+#    def __init__(self, numActions, name=None):
+#        ActionValueTable.__init__(self, 1, numActions, name)
 
 #------------------------------------------------------------------------------
 #  "ProportionalExplorer" class:

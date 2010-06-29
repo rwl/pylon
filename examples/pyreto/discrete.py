@@ -32,7 +32,7 @@ case.generators[1].p_cost = (0.0, 6.5, 200.0)
 case.generators[2].p_cost = (0.0, 2.0, 200.0)
 
 case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
-#case.generators[1].p_min = 0.0
+case.generators[1].p_min = 0.0
 #case.generators[2].p_min = 0.0
 
 case.generators[1].p_max = 100.0
@@ -48,7 +48,7 @@ market = pyreto.SmartMarket(case, priceCap=100.0)
 #p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
 #       0.90, 0.88, 0.88, 0.82, 0.80, 0.78, 0.76, 0.68, 0.68, 0.68, 0.65, 0.58]
 #p1h = p1h[2::4]
-p1h = [0.6, 0.9]
+p1h = [0.9, 0.6]
 
 # Create an empty multi-agent experiment and then populate it.
 experiment = pyreto.continuous.MarketExperiment([], [], market, p1h)
@@ -62,7 +62,7 @@ nStates = 3
 # Associate a learning agent with the first generator.
 env = pyreto.discrete.MarketEnvironment(case.generators[:1], market,
                                         numStates=nStates, numOffbids=nOffer,
-                                        markups=(20, 50))
+                                        markups=(0, 20, 75))
 task = pyreto.discrete.ProfitTask(env, maxSteps=len(p1h))
 
 #print env.outdim, len(env._allActions), env.numOffbids * len(env.generators) * len(env.markups)
@@ -70,14 +70,14 @@ task = pyreto.discrete.ProfitTask(env, maxSteps=len(p1h))
 nActions = len(env._allActions)
 module = ActionValueTable(numStates=nStates, numActions=nActions)
 
-learner = Q()
+#learner = Q()
 #learner = QLambda()
 #learner = SARSA(gamma=0.8)
 #learner.explorer = BoltzmannExplorer()#tau=100, decay=0.95)
 
 #learner = pyreto.roth_erev.RothErev(experimentation=0.55, recency=0.3)
-#learner = pyreto.roth_erev.VariantRothErev(experimentation=0.55, recency=0.3)
-#learner.explorer = BoltzmannExplorer(tau=100.0, decay=0.9995)
+learner = pyreto.roth_erev.VariantRothErev(experimentation=0.55, recency=0.3)
+learner.explorer = BoltzmannExplorer(epsilon=100.0, decay=0.9995)
 
 agent = LearningAgent(module, learner)
 experiment.tasks.append(task)
