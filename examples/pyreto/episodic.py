@@ -34,14 +34,13 @@ case = Case.load("../data/case6ww.pkl")
 case.generators[0].p_cost = (0.0, 5.0, 200.0)
 case.generators[1].p_cost = (0.0, 7.0, 200.0)
 case.generators[2].p_cost = (0.0, 2.0, 200.0)
-case.generators[0].p_min = 0.0
-case.generators[1].p_min = 0.0
-#case.generators[2].p_min = 0.0
+
+case.generators[0].c_shutdown = 100.0
 
 #pyreto.util.plotGenCost(case.generators)
 
 # Construct a market and specify any desired limits.
-market = pyreto.SmartMarket(case, priceCap=100.0)
+market = pyreto.SmartMarket(case, priceCap=100.0, decommit=True)
 
 # Define a 24-hour load profile with hourly values.
 p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,

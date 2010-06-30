@@ -183,6 +183,8 @@ class Generator(_Named):
         p_cost = self.p_cost if p_cost is None else p_cost
         pcost_model = self.pcost_model if pcost_model is None else pcost_model
 
+        p = 0.0 if not self.online else p
+
         if pcost_model == PW_LINEAR:
             n_segments = len(p_cost) - 1
             # Iterate over the piece-wise linear segments.

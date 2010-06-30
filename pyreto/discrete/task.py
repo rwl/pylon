@@ -50,6 +50,9 @@ class ProfitTask(Task):
         #: Current time step.
         self.t = 0
 
+        #: Record of generator status for startup/shutdown costs.
+        self._gOnline = [g.online for g in environment.generators]
+
         #----------------------------------------------------------------------
         #  "EpisodicTask" interface:
         #----------------------------------------------------------------------
@@ -75,27 +78,15 @@ class ProfitTask(Task):
         """
         t = self.env.market.period
 
+        # Compute revenue minus costs.
         totalEarnings = 0.0
         for g in self.env.generators:
             # Compute costs in $ (not $/hr).
-    #        fixedCost = t * g.total_cost(0.0)
-    #        variableCost = (t * g.total_cost()) - fixedCost
-
             costs = g.total_cost(round(g.p, 4),
                                  self.env._g0[g]["p_cost"],
                                  self.env._g0[g]["pcost_model"])
 
-    #        offbids = self.env.market.getOffbids(g)
             offbids = [ob for ob in self.env._lastAction if ob.generator == g]
-
-#            print self.env._lastAction
-#            print g.name
-#            for ob in offbids:
-#                print ob.cleared
-#                print ob.accepted
-#                print ob.withheld
-#                print ob.clearedQuantity
-#                print ob.clearedPrice
 
             revenue = t * sum([ob.revenue for ob in offbids])
             if offbids:
@@ -111,20 +102,29 @@ class ProfitTask(Task):
 
             totalEarnings += earnings
 
-#        totalEarnings = totalEarnings**2 * 0.0001
+        # Startup/shutdown costs.
+        onlineCosts = 0.0
+        for i, g in enumerate(self.env.generators):
+            if self._gOnline[i] and not g.online:
+                onlineCosts += g.c_shutdown
+            elif not self._gOnline[i] and g.online:
+                onlineCosts += g.c_startup
+        self._gOnline = [g.online for g in self.env.generators]
 
-        self.addReward(totalEarnings)
+        reward = totalEarnings - onlineCosts
+        self.addReward(reward)
 
-        logger.debug("Task reward: %.2f" % totalEarnings)
+        logger.debug("Task reward: %.2f (%.2f - %.2f)" %
+                     (reward, totalEarnings, onlineCosts))
 
-        return totalEarnings
+        return reward
 
 
     def performAction(self, action):
         """ The action vector is stripped and the only element is cast to
             integer and given to the super class.
         """
-        print "ACTION:", action
+#        print "ACTION:", action
         self.t += 1
         super(ProfitTask, self).performAction(int(action[0]))
         self.samples += 1

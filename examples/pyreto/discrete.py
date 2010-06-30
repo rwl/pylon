@@ -28,6 +28,8 @@ case.generators[0].p_cost = (0.0, 5.0, 200.0)
 case.generators[1].p_cost = (0.0, 6.5, 200.0)
 case.generators[2].p_cost = (0.0, 2.0, 200.0)
 
+case.generators[0].c_shutdown = 100.0
+
 #case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
 #case.generators[1].p_min = 0.0
 ##case.generators[2].p_min = 0.0
@@ -100,7 +102,7 @@ for week in range(weeks):
         agent.learn()
         agent.reset()
 
-    print "PARAMS:", experiment.agents[0].module.params
+#    print "PARAM:",experiment.agents[0].module.params.reshape(nStates,nActions)
 #    print experiment.agents[0].module.params.reshape(nStates,nActions).max(1)
 
     # Draw the table for agent 1.

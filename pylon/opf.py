@@ -543,7 +543,7 @@ class UDOPF(OPF):
         case = self.case
         generators = case.online_generators
 
-        logger.info("Solving OPF with unit decommitment [%s]." % case.name)
+        logger.info("Solving OPF with unit de-commitment [%s]." % case.name)
 
         t0 = time()
 
@@ -567,7 +567,7 @@ class UDOPF(OPF):
         # capacity is less than the total load capacity.
         while p_min_tot > load_capacity:
             i_stage += 1
-            logger.debug("Entered decommitment stage %d." % i_stage)
+            logger.debug("De-commitment stage %d." % i_stage)
 
             # Find generator with the maximum average cost at Pmin.
             avg_pmin_cost = [g.total_cost(g.p_min) / g.p_min for g in online]
@@ -628,7 +628,7 @@ class UDOPF(OPF):
             done = True
 
             i_stage += 1
-            logger.debug("Entered decommitment stage %d." % i_stage)
+            logger.debug("De-commitment stage %d." % i_stage)
 
             for candidate in candidates:
                 # 5. For each generator on the candidate list, solve an OPF to
@@ -641,8 +641,8 @@ class UDOPF(OPF):
                 # Shutdown candidate generator.
                 candidate.online = False
 
-                logger.debug("Solving OPF with generator '%s' shutdown." %
-                    candidate.name)
+#                logger.debug("Solving OPF with generator '%s' shutdown." %
+#                    candidate.name)
 
                 # Run OPF.
                 solution = super(UDOPF, self).solve(solver_klass)
