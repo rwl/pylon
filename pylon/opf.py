@@ -605,7 +605,7 @@ class UDOPF(OPF):
 
         # Best case for this stage.
         stage_online = overall_online
-#        stage_cost   = overall_cost
+        stage_cost = overall_cost
 
         # Shutdown at most one generator per stage.
         while True:
@@ -641,8 +641,8 @@ class UDOPF(OPF):
                 # Shutdown candidate generator.
                 candidate.online = False
 
-#                logger.debug("Solving OPF with generator '%s' shutdown." %
-#                    candidate.name)
+                logger.debug("Solving OPF with generator '%s' shutdown." %
+                    candidate.name)
 
                 # Run OPF.
                 solution = super(UDOPF, self).solve(solver_klass)
@@ -651,16 +651,20 @@ class UDOPF(OPF):
                 if solution["converged"] == True \
                     and (solution["f"] < overall_cost):
                     logger.debug("System cost improvement: $%.3f ($%.3f)" %
-                                 (overall_cost - solution["f"], solution["f"]))
+                                 (stage_cost - solution["f"], solution["f"]))
                     # 6. Replace the current best solution with this one if
                     # it has a lower cost.
                     overall_online = [g.online for g in case.generators]
                     overall_cost = solution["f"]
+                    best_candidate = candidate
                     # Check for further decommitment.
                     done = False
                 else:
                     logger.debug("Candidate OPF failed [%s]." %
                                  solution["output"]["message"])
+
+                # Reactivate the candidate before deactivating the next.
+#                candidate.online = True
 
             if done:
                 # Decommits at this stage did not help.
@@ -670,10 +674,11 @@ class UDOPF(OPF):
                 # return to step 3.
 
                 # Shutting something else down helps, so let's keep going.
-                logger.info("Shutting down generator '%s'.", candidate.name)
+                logger.info("Shutting down generator '%s'.",
+                            best_candidate.name)
 
                 stage_online = overall_online
-#                stage_cost   = overall_cost
+                stage_cost = overall_cost
 
         # 8. Use the best overall solution as the final solution.
         for i, generator in enumerate(case.generators):

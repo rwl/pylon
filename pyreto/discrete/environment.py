@@ -311,8 +311,6 @@ class MarketEnvironment(object):
         self._allActions = list(xselections(markups, n))
         self._markups = markups
 
-        print "mup", self.generators[0].name, n, list(xselections(markups, n))
-
     markups = property(_getMarkups, _setMarkups)
 
 

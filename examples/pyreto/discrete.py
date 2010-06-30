@@ -34,7 +34,7 @@ case.generators[0].c_shutdown = 100.0
 #case.generators[1].p_min = 0.0
 ##case.generators[2].p_min = 0.0
 
-case.generators[1].p_max = 100.0
+case.generators[0].p_max = 100.0
 case.generators[1].p_max = 70.0
 case.generators[2].p_max = 70.0
 

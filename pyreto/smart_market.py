@@ -119,7 +119,7 @@ class SmartMarket(object):
         self.decommit = decommit
 
         #: Solver solution dictionary.
-        self._solution = {}
+        self._solution = {"f": 0.0}
 
 
     def reset(self):
@@ -285,12 +285,12 @@ class SmartMarket(object):
         else:
             solver = OPF(self.case, dc=False)#, opt={"verbose": True})
 
-        solution = self._solution = solver.solve()
+        self._solution = solver.solve()
 
-#        for g in self.case.generators:
-#            print "G:", g.online, g.p, g.q_min, g.q_max, g.bus.p_lmbda
+#        for ob in self.offers + self.bids:
+#            ob.f = solution["f"]
 
-        return solution["converged"]
+        return self._solution["converged"]
 
 
     def _nodalPrices(self, haveQ):

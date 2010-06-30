@@ -23,8 +23,6 @@
 
 import logging
 
-from scipy import power
-
 from pybrain.rl.environments import Task
 
 from pyreto.discrete.task import ProfitTask as DiscreteProfitTask
@@ -50,9 +48,12 @@ class ProfitTask(DiscreteProfitTask):
     """
 
     def __init__(self, environment, maxSteps=24, discount=None,
-                 maxMarkup=30.0):
+                 maxMarkup=30.0, fmax=2000.0):
         super(ProfitTask, self).__init__(environment, maxSteps, discount,
                                          maxMarkup)
+
+        #: Maximum total system cost.
+        self.fmax = fmax
 
 #        #: Maximum number of time steps.
 #        self.maxSteps = maxSteps
@@ -81,10 +82,10 @@ class ProfitTask(DiscreteProfitTask):
         #----------------------------------------------------------------------
 
         #: Limits for scaling of sensors.
-        self.sensor_limits = self.getSensorLimits()
+        self.sensor_limits = self._getSensorLimits()
 
         #: Limits for scaling of actors.
-        self.actor_limits = self.getActorLimits()
+        self.actor_limits = self._getActorLimits()
 
     #--------------------------------------------------------------------------
     #  "Task" interface:
@@ -100,7 +101,7 @@ class ProfitTask(DiscreteProfitTask):
     def performAction(self, action):
         """ Execute one action.
         """
-        print "ACTION:", action
+#        print "ACTION:", action
         self.t += 1
         Task.performAction(self, action)
 #        self.addReward()
@@ -110,11 +111,15 @@ class ProfitTask(DiscreteProfitTask):
     #  "ProfitTask" interface:
     #--------------------------------------------------------------------------
 
-    def getSensorLimits(self):
+    def _getSensorLimits(self):
         """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
             one tuple per parameter, giving min and max for that parameter.
         """
-        case = self.env.market.case
+        limits = self._getDemandLimits()
+        priceLimits = self._getPriceLimits()
+#        limits.extend(priceLimits)
+        logger.debug("Sensor limits: %s" % limits)
+        return limits
 
 #        limits = []
 #
@@ -146,16 +151,20 @@ class ProfitTask(DiscreteProfitTask):
 ##        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators])  # Pg_max
 ##        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators])  # Pg_min
 
-        Pdmax = sum([b.p_demand for b in case.buses])
 
-        sensorLimits = [(0.0, Pdmax)]
-
-        logger.debug("Sensor limits: %s" % sensorLimits)
-
-        return sensorLimits
+    def _getDemandLimits(self):
+        Pdmax = sum([b.p_demand for b in self.env.market.case.buses])
+        limits = (0.0, Pdmax)
+        return [limits]
 
 
-    def getActorLimits(self):
+    def _getPriceLimits(self):
+        mcpLimit = (0.0, self.env.market.priceCap)
+        sysLimit = (0.0, self.fmax)
+        return [mcpLimit, sysLimit]
+
+
+    def _getActorLimits(self):
         """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
             one tuple per parameter, giving min and max for that parameter.
         """

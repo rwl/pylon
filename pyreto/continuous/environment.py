@@ -23,10 +23,9 @@
 
 import logging
 
-from numpy import array, polyval, polyder, mean
+from numpy import array, mean, r_
 
-from pylon import PQ, POLYNOMIAL, PW_LINEAR
-from pyreto.smart_market import Offer, Bid
+from pylon import PQ
 from pyreto.discrete import MarketEnvironment as DiscreteMarketEnvironment
 
 #------------------------------------------------------------------------------
@@ -80,10 +79,17 @@ class MarketEnvironment(DiscreteMarketEnvironment):
     #  "Environment" interface:
     #--------------------------------------------------------------------------
 
-#    def getSensors(self):
-#        """ Returns the currently visible state of the world as a numpy array
-#            of doubles.
-#        """
+
+    def getSensors(self):
+        """ Returns the currently visible state of the world as a numpy array
+            of doubles.
+        """
+        demandSensors = self._getDemandSensor()
+        priceSensors = self._getPriceSensor()
+
+#        logger.info("State: %s" % r_[demandSensors, priceSensors])
+
+        return r_[demandSensors]#, priceSensors]
 
 
     def performAction(self, action):
@@ -121,7 +127,7 @@ class MarketEnvironment(DiscreteMarketEnvironment):
     def outdim(self):
         """ The number of sensor values that the environment produces.
         """
-        return 1
+        return len(self.getSensors())
 
     #--------------------------------------------------------------------------
     #  "MarketEnvironment" interface:
@@ -129,19 +135,21 @@ class MarketEnvironment(DiscreteMarketEnvironment):
 
     def _getDemandSensor(self):
         Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
-        logger.info("State: %s" % Pd)
+
         return array([Pd])
 
 
     def _getPriceSensor(self):
-        offers = [offer for offer in self._lastAction if offer.accepted]
+        offers = [offer for offer in self._lastAction]
 
         if len(offers) > 0:
             avgPrice = mean([ob.clearedPrice for ob in offers])
         else:
             avgPrice = 0.0
 
-        return array([avgPrice])
+        f = self.market._solution["f"]
+
+        return array([avgPrice, f])
 
 
 #    def _offbidMarkup(self, action):
