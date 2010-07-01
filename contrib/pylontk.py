@@ -45,8 +45,11 @@ from pylon import \
     Case, DCPF, NewtonPF, FastDecoupledPF, OPF, UDOPF
 
 from pylon.io import \
-    MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, PSATReader, \
-    CSVWriter, DotWriter, PickleReader, PickleWriter
+    MATPOWERReader, MATPOWERWriter, ReSTWriter, PSSEReader, \
+    DotWriter, PickleReader, PickleWriter
+
+from pylon.io.psat import PSATReader
+from pylon.io.excel import CSVWriter
 
 from pyreto.util import ReSTExperimentWriter
 

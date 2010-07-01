@@ -32,7 +32,7 @@ from psse import PSSEWriter
 
 from rst import ReSTWriter
 #from excel import ExcelWriter
-from excel import CSVWriter
+#from excel import CSVWriter
 from dot import DotWriter
 
 #from rdf_io import RDFReader, RDFWriter
