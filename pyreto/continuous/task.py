@@ -27,6 +27,8 @@ from pybrain.rl.environments import Task
 
 from pyreto.discrete.task import ProfitTask as DiscreteProfitTask
 
+from pylon import PQ
+
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -115,9 +117,12 @@ class ProfitTask(DiscreteProfitTask):
         """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
             one tuple per parameter, giving min and max for that parameter.
         """
-        limits = self._getDemandLimits()
-        priceLimits = self._getPriceLimits()
-#        limits.extend(priceLimits)
+        limits = []
+        limits.extend(self._getDemandLimits())
+        limits.extend(self._getPriceLimits())
+        limits.extend(self._getVoltageLimits())
+        limits.extend(self._getFlowLimits())
+
         logger.debug("Sensor limits: %s" % limits)
         return limits
 
@@ -153,7 +158,8 @@ class ProfitTask(DiscreteProfitTask):
 
 
     def _getDemandLimits(self):
-        Pdmax = sum([b.p_demand for b in self.env.market.case.buses])
+        Pdmax = sum([b.p_demand for b in self.env.market.case.buses
+                     if b.type == PQ])
         limits = (0.0, Pdmax)
         return [limits]
 
@@ -162,6 +168,24 @@ class ProfitTask(DiscreteProfitTask):
         mcpLimit = (0.0, self.env.market.priceCap)
         sysLimit = (0.0, self.fmax)
         return [mcpLimit, sysLimit]
+
+
+    def _getVoltageLimits(self):
+        limits = []
+#        Vmax = [b.v_max for b in self.env.market.case.connected_buses]
+#        Vmin = [b.v_min for b in self.env.market.case.connected_buses]
+#        limits.extend(zip(Vmax, Vmin))
+        nb = len(self.env.market.case.connected_buses)
+        limits.extend([(-180.0, 180.0)] * nb)
+        return limits
+
+
+    def _getFlowLimits(self):
+        rateA = [l.rate_a for l in self.env.market.case.online_branches]
+        neg_rateA = [-1.0 * r for r in rateA]
+        limits = zip(neg_rateA, rateA)
+#        limits.extend(zip(neg_rateA, rateA))
+        return limits
 
 
     def _getActorLimits(self):

@@ -84,12 +84,15 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         """ Returns the currently visible state of the world as a numpy array
             of doubles.
         """
-        demandSensors = self._getDemandSensor()
-        priceSensors = self._getPriceSensor()
+        sensors = array([])
+        sensors = r_[sensors, self._getDemandSensor()]
+#        sensors = r_[sensors, self._getPriceSensor()]
+#        sensors = r_[sensors, self._getBusVoltageSensor()]
+#        sensors = r_[sensors, self._getBranchFlowSensor()]
 
-#        logger.info("State: %s" % r_[demandSensors, priceSensors])
+#        logger.info("State: %s" % sensors)
 
-        return r_[demandSensors]#, priceSensors]
+        return sensors
 
 
     def performAction(self, action):
@@ -150,6 +153,18 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         f = self.market._solution["f"]
 
         return array([avgPrice, f])
+
+
+    def _getBusVoltageSensor(self):
+#        Vm = array([b.v_magnitude for b in self.market.case.connected_buses])
+        Va = array([b.v_angle for b in self.market.case.connected_buses])
+        return Va
+
+
+    def _getBranchFlowSensor(self):
+        Pf = array([l.p_from for l in self.market.case.online_branches])
+#        Qf = array([l.q_from for l in self.market.case.online_branches])
+        return Pf
 
 
 #    def _offbidMarkup(self, action):
