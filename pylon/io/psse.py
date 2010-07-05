@@ -207,9 +207,9 @@ class PSSEReader(_CaseReader):
                 l3 = Branch(tmp_bus, bus3)
 
                 b = float(trx_data[8]) # MAG2
-                l1.b = b / 3.0
-                l2.b = b / 3.0
-                l3.b = b / 3.0
+                l1.b = b# / 3.0
+#                l2.b = b / 3.0
+#                l3.b = b / 3.0
 
                 on = bool(int(trx_data[11]))
                 l1.online = on
