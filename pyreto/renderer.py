@@ -117,7 +117,7 @@ class ExperimentRenderer(Renderer):
 
 class ParticipantRenderer(Renderer):
     """ Defines a renderer that displays aspects of a market participant's
-        environment.
+    environment.
     """
     def __init__(self, outdim, indim, intermax=1000):
         """ Initialises a new ParticipantRenderer instance.

@@ -49,9 +49,9 @@ class ZeroAgent(LoggingAgent):
 
 def xselections(items, n):
     """ Takes n elements (not necessarily distinct) from the sequence, order
-        matters.
+    matters.
 
-        @see: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/190465
+    @see: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/190465
     """
     if n==0:
         yield []
@@ -91,7 +91,7 @@ def plotGenCost(generators):
 def sparklineData(data, filename):
     """ Writes reward and action data for plotting sparklines with PGF/TikZ.
 
-        @see: http://www.texample.net/tikz/examples/weather-stations-data/
+    @see: http://www.texample.net/tikz/examples/weather-stations-data/
     """
     fd = file(filename, "w+b")
     for name in data.keys():
@@ -166,7 +166,7 @@ class ReSTExperimentWriter(object):
 
     def writeDataTable(self, file, type):
         """ Writes agent data to an ReST table.  The 'type' argument may
-            be 'state', 'action' or 'reward'.
+        be 'state', 'action' or 'reward'.
         """
         agents = self.experiment.agents
         numAgents = len(self.experiment.agents)

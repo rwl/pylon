@@ -99,7 +99,7 @@ class CaseEnvironment(Environment):
 
     def getSensors(self):
         """ Returns the currently visible state of the world as a numpy array
-            of doubles.
+        of doubles.
         """
         Pd = array([b.p_demand for b in self.case.buses if b.type == PQ])
         logger.info("State: %s" % list(Pd))
@@ -227,7 +227,7 @@ class MinimiseCostTask(EpisodicTask):
 
     def getSensorLimits(self):
         """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
-            one tuple per parameter, giving min and max for that parameter.
+        one tuple per parameter, giving min and max for that parameter.
         """
         limits = []
         for i in range(len([b for b in self.env.case.buses if b.type == PQ])):
@@ -240,7 +240,7 @@ class MinimiseCostTask(EpisodicTask):
 
     def getActorLimits(self):
         """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
-            one tuple per parameter, giving min and max for that parameter.
+        one tuple per parameter, giving min and max for that parameter.
         """
         generators = [g for g in self.env.case.online_generators
                       if g.bus.type != REFERENCE]
