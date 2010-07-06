@@ -343,6 +343,8 @@ class SmartMarket(object):
             qOffers = [offer for offer in self.offers if offer.reactive]
             qBids = [bid for bid in self.bids if bid.reactive]
 
+            # Too complicated to scale with mixed bids/offers (only
+            # auction_types LAO and FIRST_PRICE allowed)
             qAuction = Auction(self.case, qOffers, qBids, self.auctionType,
                                 gteeOfferPrice, gteeBidPrice, self.limits)
             qAuction.run()

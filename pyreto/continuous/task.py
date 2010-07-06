@@ -119,9 +119,9 @@ class ProfitTask(DiscreteProfitTask):
         """
         limits = []
         limits.extend(self._getDemandLimits())
-        limits.extend(self._getPriceLimits())
-        limits.extend(self._getVoltageLimits())
-        limits.extend(self._getFlowLimits())
+#        limits.extend(self._getPriceLimits())
+#        limits.extend(self._getVoltageLimits())
+#        limits.extend(self._getFlowLimits())
 
         logger.debug("Sensor limits: %s" % limits)
         return limits
