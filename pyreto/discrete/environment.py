@@ -64,7 +64,7 @@ class MarketEnvironment(object):
     outdim = 1
 
     def __init__(self, generators, market, numStates=1, markups=None,
-                 numOffbids=1, offbidQty=False):
+                 withholds=None, numOffbids=1, offbidQty=False):
         """ Initialises the environment.
         """
         super(MarketEnvironment, self).__init__()
@@ -95,19 +95,23 @@ class MarketEnvironment(object):
 
         self._numOffbids = 0
         self._markups = ()
+        self._withholds = ()
 
         #: A participant may submit any number of offers/bids for each of the
         #: generators in its portfolio.
         self.numOffbids = numOffbids
 
-        #: Discrete percentage markups allowed on each offer/bid.
+        #: Discrete percentage markups allowed on each offer/bid price.
         self.markups = (0.0,) if markups is None else markups
+
+        #: Discrete percentages for withholding capacity.
+        self.withholds = (0.0,) if withholds is None else withholds
 
         #: A participant may offer/bid just a markup on its cost and the
         #: quantity is the maximum rated capacity of the generator divided by
         #: the number of offers/bids. Alternatively, it may also specify the
         #: quantity that is offered/bid for.
-        self.offbidQty = offbidQty
+#        self.offbidQty = offbidQty
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
@@ -129,13 +133,21 @@ class MarketEnvironment(object):
             @type action: array: [int]
         """
         self._lastAction = []
-        # Markups chosen for each generator.
-        markups = self._allActions[action]
 
-        if self.offbidQty:
-            self._offbidQuantityAndMarkup(markups)
-        else:
-            self._offbidMarkup(markups)
+        # Markups chosen for each generator.
+        a = self._allActions[action]
+
+        self._offbid(a)
+
+#        if max(sum(self.withholds)) > 0.0:
+#            # Markups chosen for each generator.
+#            actions = self._allActions[action]
+#
+#            self._offbidWithholdAndMarkup(actions)
+#        else:
+#            # Markups chosen for each generator.
+#            markups = self._allActions[action]
+#            self._offbidMarkup(markups)
 
 
     def reset(self):
@@ -148,7 +160,12 @@ class MarketEnvironment(object):
     #  "DiscreteMarketEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def _offbidMarkup(self, markups):
+    def _offbid(self, actions):
+        n = self.numOffbids * len(self.generators)
+        markups = actions[:n]
+        withholds = actions[n:]
+
+#        print "ACTIONS:", markups, withholds
 
         for i, g in enumerate(self.generators):
             ratedPMin = self._g0[g]["p_min"]
@@ -256,6 +273,9 @@ class MarketEnvironment(object):
     def _offbidQuantityAndMarkup(self, action):
         raise NotImplementedError
 
+    #--------------------------------------------------------------------------
+    #  Environment sensors:
+    #--------------------------------------------------------------------------
 
     def _getDemandSensor(self):
         Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
@@ -298,21 +318,43 @@ class MarketEnvironment(object):
             raise ValueError, ("Average price [%.3f] above price cap [%.3f]." %
                 (avgPrice, self.market.priceCap))
 
+    #--------------------------------------------------------------------------
+    #  "markups" property:
+    #--------------------------------------------------------------------------
 
     def _getMarkups(self):
-        """ Sets the list of possible markups on marginal cost allowed
-            with each offer/bid.
+        """ Sets the list of possible percentage markups on marginal cost
+        allowed with each offer/bid.
         """
         return self._markups
 
 
     def _setMarkups(self, markups):
-        n = self.numOffbids * len(self.generators)
-        self._allActions = list(xselections(markups, n))
         self._markups = markups
+        self._allActions = self._getAllActions(markups, self.withholds)
 
     markups = property(_getMarkups, _setMarkups)
 
+    #--------------------------------------------------------------------------
+    #  "withholds" property:
+    #--------------------------------------------------------------------------
+
+    def _getWithholds(self):
+        """ Sets the list of possible percentage withholds of capacity allowed
+        with each offer/bid.
+        """
+        return self._withholds
+
+
+    def _setWithholds(self, withholds):
+        self._withholds = withholds
+        self._allActions = self._getAllActions(self.markups, withholds)
+
+    withholds = property(_getWithholds, _setWithholds)
+
+    #--------------------------------------------------------------------------
+    #  "numOffbids" property:
+    #--------------------------------------------------------------------------
 
     def _getNumOffbids(self):
         """ Set the number of offers/bids submitted to the market.
@@ -321,14 +363,14 @@ class MarketEnvironment(object):
 
 
     def _setNumOffbids(self, numOffbids):
-        n = numOffbids * len(self.generators)
-        self._allActions = list(xselections(self.markups, n))
         self._numOffbids = numOffbids
-
-#        print "noff", n, list(xselections(self.markups, n))
+        self._allActions = self._getAllActions(self.markups, self.withholds)
 
     numOffbids = property(_getNumOffbids, _setNumOffbids)
 
+    #--------------------------------------------------------------------------
+    #  "generators" property:
+    #--------------------------------------------------------------------------
 
     def _getGenerators(self):
         """ Portfolio of generators endowed to the agent.
@@ -359,5 +401,19 @@ class MarketEnvironment(object):
 
     generators = property(_getGenerators, _setGenerators)
 
-# EOF -------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    #  Returns all possible actions:
+    #--------------------------------------------------------------------------
 
+    def _getAllActions(self, markups, withholds):
+        n = self.numOffbids * len(self.generators)
+        a = []
+        for w in xselections(withholds, n):
+            for m in xselections(markups, n):
+                m.extend(w)
+                a.append(m)
+
+        print "ALL ACTIONS:", a
+        return a
+
+# EOF -------------------------------------------------------------------------
