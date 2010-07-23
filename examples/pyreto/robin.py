@@ -153,23 +153,25 @@ def case6ww1():
                    outdir, dc, trial=i)
 
 def case24rts1():
+    # Percent of annual peak. Starts first week of January.
     weekly = [86.2, 90.0, 87.8, 83.4, 88.0, 84.1, 83.2, 80.6, 74.0, 73.7, 71.5,
               72.7, 75.0, 72.1, 80.0, 70.4, 87.0, 88.0, 75.4, 83.7, 85.6, 81.1,
               90.0, 88.7, 89.6, 86.1, 75.5, 81.6, 80.1, 88.0, 72.2, 80.0, 72.9,
               77.6, 72.6, 70.5, 78.0, 69.5, 72.4, 72.4, 74.3, 74.4, 80.0, 88.1,
               88.5, 90.9, 94.0, 89.0, 94.2, 97.0, 100.0, 95.2]
-    daily = [93, 100, 98, 96, 94, 77, 75] # beginning Monday
-    # Weeks 1-8 and 44-52.
+    # Percent of weekly peak. Week beginning Monday.
+    daily = [93, 100, 98, 96, 94, 77, 75]
+    # Percentage of daily peak, starting at midnight. Weeks 1-8 and 44-52:
     hourly_winter_wkdy = [67, 63, 60, 59, 59, 60, 74, 86, 95, 96, 96, 95, 95,
                           95, 93, 94, 99, 100, 100, 96, 91, 83, 73, 63]
     hourly_winter_wknd = [78, 72, 68, 66, 64, 65, 66, 70, 80, 88, 90, 91, 90,
                           88, 87, 87, 91, 100, 99, 97, 94, 92, 87, 81]
-    # Weeks 18-30.
+    # Weeks 18-30:
     hourly_summer_wkdy = [64, 60, 58, 56, 56, 58, 64, 76, 87, 95, 99, 100, 99,
                           100, 100, 97, 96, 96, 93, 92, 92, 93, 87, 72]
     hourly_summer_wknd = [74, 70, 66, 65, 64, 62, 62, 66, 81, 86, 91, 93, 93,
                           92, 91, 91, 92, 94, 95, 95, 100, 93, 88, 80]
-    # Weeks 9-17 and 31-43.
+    # Weeks 9-17 and 31-43:
     hourly_spring_autumn_wkdy = [63, 62, 60, 58, 59, 65, 72, 85, 95, 99, 100,
                                  99, 93, 92, 90, 88, 90, 92, 96, 98, 96, 90,
                                  80, 70]
@@ -177,9 +179,30 @@ def case24rts1():
                                  94, 91, 90, 90, 86, 85, 88, 92, 100, 97, 95,
                                  90, 85]
 
+    fullyear = zeros(364 * 24)
+    c = 0
+    l = [(0, 7, hourly_winter_wkdy, hourly_winter_wknd),
+         (8, 16, hourly_spring_autumn_wkdy, hourly_spring_autumn_wknd),
+         (17, 29, hourly_summer_wkdy, hourly_summer_wknd),
+         (30, 42, hourly_spring_autumn_wkdy, hourly_spring_autumn_wknd),
+         (43, 51, hourly_winter_wkdy, hourly_winter_wknd)]
+
+    for start, end, wkdy, wknd in l:
+        for w in weekly[start:end + 1]:
+            for d in daily[:5]:
+                for h in wkdy:
+                    fullyear[c] = w * (d / 100.0) * (h / 100.0)
+                    c += 1
+            for d in daily[5:]:
+                for h in wknd:
+                    fullyear[c] = w * (d / 100.0) * (h / 100.0)
+                    c += 1
+
+    alldays = [w * (d / 100.0) for w in weekly for d in daily]
+
 
 def main():
-    case6ww1()
+    case24rts1()
 
 
 if __name__ == "__main__":
