@@ -25,12 +25,11 @@ import unittest
 
 from os.path import join, dirname
 
-from scipy import array, alltrue
 from scipy.io.mmio import mmread
 
 from pylon import Case, NewtonPF, FastDecoupledPF, XB, BX
 from pylon.ac_pf import _ACPF
-#from pylon.util import mfeq2
+from pylon.util import mfeq1
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -66,12 +65,13 @@ class ACPFTest(unittest.TestCase):
         """
         solver = _ACPF(self.case)
         b, _, g, _, _, _, _ = solver._unpack_case(self.case)
+        self.case.index_buses(b)
 
         V0 = solver._initial_voltage(b, g)
 
         mpV0 = mmread(join(DATA_DIR, self.case_name, "V0.mtx")).flatten()
 
-        self.assertTrue(alltrue(V0 == mpV0))
+        self.assertTrue(mfeq1(V0, mpV0), self.case_name)
 
 
     def testNewtonV(self):
@@ -81,7 +81,7 @@ class ACPFTest(unittest.TestCase):
 
         mpV = mmread(join(DATA_DIR, self.case_name, "V_Newton.mtx")).flatten()
 
-        self.assertTrue(abs(max(solution["V"] - mpV)) < 1e-14)
+        self.assertTrue(mfeq1(solution["V"], mpV), self.case_name)
 
 
     def testFastDecoupledPFVXB(self):
@@ -92,7 +92,7 @@ class ACPFTest(unittest.TestCase):
 
         mpV = mmread(join(DATA_DIR, self.case_name, "V_XB.mtx")).flatten()
 
-        self.assertTrue(abs(max(solution["V"] - mpV)) < 1e-14)
+        self.assertTrue(mfeq1(solution["V"], mpV), self.case_name)
 
 
     def testFastDecoupledPFVBX(self):
@@ -103,7 +103,7 @@ class ACPFTest(unittest.TestCase):
 
         mpV = mmread(join(DATA_DIR, self.case_name, "V_BX.mtx")).flatten()
 
-        self.assertTrue(abs(max(solution["V"] - mpV)) < 1e-14)
+        self.assertTrue(mfeq1(solution["V"], mpV), self.case_name)
 
 #------------------------------------------------------------------------------
 #  "ACPFCase24RTSTest" class:

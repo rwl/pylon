@@ -39,8 +39,8 @@ from pylon.util import CaseReport, mfeq2
 #-------------------------------------------------------------------------------
 
 MP_DATA_FILE = join(dirname(__file__), "data", "case6ww.m")
-DATA_FILE = join(dirname(__file__), "data", "case6ww.pkl")
-PWL_FILE = join(dirname(__file__), "data", "case30pwl.pkl")
+DATA_FILE = join(dirname(__file__), "data", "case6ww","case6ww.pkl")
+PWL_FILE = join(dirname(__file__), "data", "case30pwl", "case30pwl.pkl")
 DATA_DIR = join(dirname(__file__), "data")
 
 #------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ class CaseMatrixTest(unittest.TestCase):
         super(CaseMatrixTest, self).__init__(methodName)
 
         #: Name of the folder in which the MatrixMarket data exists.
-        self.case_name = "case30pwl"
+        self.case_name = "case6ww"
 
         self.case = None
 
@@ -75,60 +75,63 @@ class CaseMatrixTest(unittest.TestCase):
 
 #        self.assertTrue(alltrue(Sbus == mpSbus))
         # FIXME: Improve accuracy.
-        self.assertTrue(abs(max(Sbus - mpSbus)) < 1e-06)
+        self.assertTrue(abs(max(Sbus - mpSbus)) < 1e-06, msg=self.case_name)
 
 
     def testYbus(self):
         """ Test bus and branch admittance matrices.
         """
+        self.case.index_buses()
         Ybus, Yf, Yt = self.case.Y
 
         mpYbus = mmread(join(DATA_DIR, self.case_name, "Ybus.mtx")).tocsr()
         mpYf = mmread(join(DATA_DIR, self.case_name, "Yf.mtx")).tocsr()
         mpYt = mmread(join(DATA_DIR, self.case_name, "Yt.mtx")).tocsr()
 
-        self.assertTrue(mfeq2(Ybus, mpYbus))
-        self.assertTrue(mfeq2(Yf, mpYf))
-        self.assertTrue(mfeq2(Yt, mpYt))
+        self.assertTrue(mfeq2(Ybus, mpYbus, diff=1e-12), self.case_name)
+        self.assertTrue(mfeq2(Yf, mpYf, diff=1e-12), self.case_name)
+        self.assertTrue(mfeq2(Yt, mpYt, diff=1e-12), self.case_name)
 
 
     def testB(self):
         """ Test FDPF B matrices.
         """
+        self.case.index_buses()
         xbBp, xbBpp = self.case.makeB(method=XB)
 
         mpxbBp = mmread(join(DATA_DIR, self.case_name, "Bp_XB.mtx")).tocsr()
         mpxbBpp = mmread(join(DATA_DIR, self.case_name, "Bpp_XB.mtx")).tocsr()
 
-        self.assertTrue(mfeq2(xbBp, mpxbBp))
-        self.assertTrue(mfeq2(xbBpp, mpxbBpp))
+        self.assertTrue(mfeq2(xbBp, mpxbBp, diff=1e-12), self.case_name)
+        self.assertTrue(mfeq2(xbBpp, mpxbBpp, diff=1e-12), self.case_name)
 
         bxBp, bxBpp = self.case.makeB(method=BX)
 
         mpbxBp = mmread(join(DATA_DIR, self.case_name, "Bp_BX.mtx")).tocsr()
         mpbxBpp = mmread(join(DATA_DIR, self.case_name, "Bpp_BX.mtx")).tocsr()
 
-        self.assertTrue(mfeq2(bxBp, mpbxBp))
-        self.assertTrue(mfeq2(bxBpp, mpbxBpp))
+        self.assertTrue(mfeq2(bxBp, mpbxBp, diff=1e-12), self.case_name)
+        self.assertTrue(mfeq2(bxBpp, mpbxBpp, diff=1e-12), self.case_name)
 
 
     def testBdc(self):
         """ Test DCPF B matrices and phase shift injection vectors.
         """
+        self.case.index_buses()
         B, Bf, Pbusinj, Pfinj = self.case.Bdc
 
         mpB = mmread(join(DATA_DIR, self.case_name, "B.mtx")).tocsr()
-        self.assertTrue(mfeq2(B, mpB))
+        self.assertTrue(mfeq2(B, mpB, diff=1e-12), self.case_name)
 
         mpBf = mmread(join(DATA_DIR, self.case_name, "Bf.mtx")).tocsr()
-        self.assertTrue(mfeq2(Bf, mpBf))
+        self.assertTrue(mfeq2(Bf, mpBf, diff=1e-12), self.case_name)
 
         mpPbusinj = mmread(join(DATA_DIR, self.case_name,
                                 "Pbusinj.mtx")).flatten()
-        self.assertTrue(abs(max(Pbusinj - mpPbusinj)) < 1e-14)
+        self.assertTrue(abs(max(Pbusinj - mpPbusinj)) < 1e-14, self.case_name)
 
         mpPfinj = mmread(join(DATA_DIR, self.case_name, "Pfinj.mtx")).flatten()
-        self.assertTrue(abs(max(Pfinj - mpPfinj)) < 1e-14)
+        self.assertTrue(abs(max(Pfinj - mpPfinj)) < 1e-14, self.case_name)
 
 
     def test_dSbus_dV(self):
@@ -142,8 +145,10 @@ class CaseMatrixTest(unittest.TestCase):
         mp_dSbus_dVm = mmread(join(DATA_DIR, self.case_name, "dSbus_dVm0.mtx"))
         mp_dSbus_dVa = mmread(join(DATA_DIR, self.case_name, "dSbus_dVa0.mtx"))
 
-        self.assertTrue(mfeq2(dSbus_dVm, mp_dSbus_dVm.tocsr(), 1e-12))
-        self.assertTrue(mfeq2(dSbus_dVa, mp_dSbus_dVa.tocsr(), 1e-12))
+        self.assertTrue(mfeq2(dSbus_dVm, mp_dSbus_dVm.tocsr(), 1e-12),
+                        self.case_name)
+        self.assertTrue(mfeq2(dSbus_dVa, mp_dSbus_dVa.tocsr(), 1e-12),
+                        self.case_name)
 
 #------------------------------------------------------------------------------
 #  "CaseMatrix24RTSTest" class:

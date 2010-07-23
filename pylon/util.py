@@ -27,7 +27,7 @@ import os.path
 import pickle
 import random
 
-from numpy import ones, array, exp, pi
+from numpy import ones, array, exp, pi, Inf
 
 from itertools import count, izip
 
@@ -204,10 +204,29 @@ def feq(a, b, diff=0.00000001):
         return 0
 
 #------------------------------------------------------------------------------
-#  Compare 2D matrices for floats for equality:
+#  Compare arrays of floats for equality:
 #------------------------------------------------------------------------------
 
-def mfeq2(a, b, diff=1e-14):
+def mfeq1(a, b, diff=1e-12):
+    if len(a) != len(b):
+        return False
+    for i in range(len(a)):
+        ai, bi = a[i], b[i]
+        if ai == Inf and bi == Inf:
+            continue
+        elif ai == -Inf and bi == -Inf:
+            continue
+        elif feq(a[i], b[i], diff) == False:
+            return False
+        else:
+            continue
+    return True
+
+#------------------------------------------------------------------------------
+#  Compare 2D matrices of floats for equality:
+#------------------------------------------------------------------------------
+
+def mfeq2(a, b, diff=1e-12):
     if a.shape != b.shape:
         return False
     rows, cols = a.shape
@@ -235,6 +254,19 @@ def fair_max(x):
     idx = random.choice(i)
 
     return idx, value
+
+#------------------------------------------------------------------------------
+#  "factorial" function:
+#------------------------------------------------------------------------------
+
+def factorial(n):
+    """ Returns the factorial of n.
+    """
+    f = 1
+    while (n > 0):
+        f = f * n
+        n = n - 1
+    return f
 
 #------------------------------------------------------------------------------
 #  "CaseReport" class:

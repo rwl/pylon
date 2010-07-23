@@ -403,8 +403,7 @@ class OPF(object):
                 jjf = array([b.from_bus._i for b in branches])[iang]
                 jjt = array([b.to_bus._i for b in branches])[iang]
                 jj = r_[jjf, jjt]
-                Aang = csr_matrix(r_[ones(nang), -ones(nang)],
-                                        (ii, jj), (nang, nb))
+                Aang = csr_matrix(r_[ones(nang), -ones(nang)], (ii, jj))
                 uang = Inf * ones(nang)
                 lang = -uang
                 lang[iangl] = array([b.ang_min * (pi / 180.0)

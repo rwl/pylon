@@ -66,7 +66,7 @@ class DCPFTest(unittest.TestCase):
 
         mpVa = mmread(join(DATA_DIR, self.case_name, "Va.mtx")).flatten()
 
-        self.assertTrue(abs(max(solver.v_angle - mpVa)) < 1e-14)
+        self.assertTrue(abs(max(solver.v_angle - mpVa)) < 1e-14,self.case_name)
 
 #------------------------------------------------------------------------------
 #  "DCPFCase24RTSTest" class:

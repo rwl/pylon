@@ -85,6 +85,8 @@ class MATPOWERReader(_CaseReader):
             file = file_or_filename
             case = self._parse_file(file)
 
+        case.index_buses()
+
         logger.info("MATPOWER file parsed in %.2fs." % (time.time() - t0))
 
         return case

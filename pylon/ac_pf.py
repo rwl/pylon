@@ -208,11 +208,9 @@ class _ACPF(object):
         V = Vm * exp(1j * Va)
 
         # Get generator set points.
-        for i, g in enumerate(generators):
-            #            Vg
-            #   V0 = ---------
-            #        |V0| . V0
-            V[g.bus._i] = g.v_magnitude / abs(V[i]) * V[i]
+        for g in generators:
+            i = g.bus._i
+            V[i] = g.v_magnitude / abs(V[i]) * V[i]
 
         return V
 

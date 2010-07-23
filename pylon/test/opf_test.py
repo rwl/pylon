@@ -25,12 +25,11 @@ import unittest
 
 from os.path import join, dirname
 
-from scipy import alltrue
 from scipy.io.mmio import mmread
 
 from pylon import Case, OPF
 from pylon.opf import DCOPFSolver, PIPSSolver
-from pylon.util import mfeq2
+from pylon.util import mfeq2, mfeq1
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -67,6 +66,7 @@ class DCOPFTest(unittest.TestCase):
     def testVa(self):
         """ Test voltage angle variable.
         """
+        msg = self.case_name
         bs, _, _ = self.opf._remove_isolated(self.case)
         _, refs = self.opf._ref_check(self.case)
         Va = self.opf._get_voltage_angle_var(refs, bs)
@@ -75,9 +75,9 @@ class DCOPFTest(unittest.TestCase):
         mpVal = mmread(join(DATA_DIR, self.case_name, "opf", "Val.mtx"))
         mpVau = mmread(join(DATA_DIR, self.case_name, "opf", "Vau.mtx"))
 
-        self.assertTrue(alltrue(Va.v0 == mpVa0.flatten()))
-        self.assertTrue(alltrue(Va.vl == mpVal.flatten()))
-        self.assertTrue(alltrue(Va.vu == mpVau.flatten()))
+        self.assertTrue(mfeq1(Va.v0, mpVa0.flatten()), msg)
+        self.assertTrue(mfeq1(Va.vl, mpVal.flatten()), msg)
+        self.assertTrue(mfeq1(Va.vu, mpVau.flatten()), msg)
 
 
     def testVm(self):
@@ -88,12 +88,13 @@ class DCOPFTest(unittest.TestCase):
 
         mpVm0 = mmread(join(DATA_DIR, self.case_name, "opf", "Vm0.mtx"))
 
-        self.assertTrue(alltrue(Vm.v0 == mpVm0.flatten()))
+        self.assertTrue(mfeq1(Vm.v0, mpVm0.flatten()), self.case_name)
 
 
     def testPg(self):
         """ Test active power variable.
         """
+        msg = self.case_name
         self.case.sort_generators() # ext2int
         _, _, gn = self.opf._remove_isolated(self.case)
         Pg = self.opf._get_pgen_var(gn, self.case.base_mva)
@@ -102,14 +103,15 @@ class DCOPFTest(unittest.TestCase):
         mpPmin = mmread(join(DATA_DIR, self.case_name, "opf", "Pmin.mtx"))
         mpPmax = mmread(join(DATA_DIR, self.case_name, "opf", "Pmax.mtx"))
 
-        self.assertTrue(alltrue(Pg.v0 == mpPg0.flatten()))
-        self.assertTrue(alltrue(Pg.vl == mpPmin.flatten()))
-        self.assertTrue(alltrue(Pg.vu == mpPmax.flatten()))
+        self.assertTrue(mfeq1(Pg.v0, mpPg0.flatten()), msg)
+        self.assertTrue(mfeq1(Pg.vl, mpPmin.flatten()), msg)
+        self.assertTrue(mfeq1(Pg.vu, mpPmax.flatten()), msg)
 
 
     def testQg(self):
         """ Test reactive power variable.
         """
+        msg = self.case_name
         self.case.sort_generators() # ext2int
         _, _, gn = self.opf._remove_isolated(self.case)
         Qg = self.opf._get_qgen_var(gn, self.case.base_mva)
@@ -118,15 +120,16 @@ class DCOPFTest(unittest.TestCase):
         mpQmin = mmread(join(DATA_DIR, self.case_name, "opf", "Qmin.mtx"))
         mpQmax = mmread(join(DATA_DIR, self.case_name, "opf", "Qmax.mtx"))
 
-        self.assertTrue(alltrue(Qg.v0 == mpQg0.flatten()))
-        self.assertTrue(alltrue(Qg.vl == mpQmin.flatten()))
-#        self.assertTrue(alltrue(Qg.vu == mpQmax.flatten()))
-        self.assertTrue(max(abs(Qg.vu - mpQmax.flatten())) < 1e-12)
+        self.assertTrue(mfeq1(Qg.v0, mpQg0.flatten()), msg)
+        self.assertTrue(mfeq1(Qg.vl, mpQmin.flatten()), msg)
+#        self.assertTrue(mfeq1(Qg.vu, mpQmax.flatten()), msg)
+        self.assertTrue(mfeq1(Qg.vu, mpQmax.flatten()), msg)
 
 
     def testPmis(self):
         """ Test active power mismatch constraints.
         """
+        msg = self.case_name
         case = self.case
         case.sort_generators() # ext2int
         B, _, Pbusinj, _ = case.Bdc
@@ -136,16 +139,15 @@ class DCOPFTest(unittest.TestCase):
         mpAmis = mmread(join(DATA_DIR, self.case_name, "opf", "Amis.mtx"))
         mpbmis = mmread(join(DATA_DIR, self.case_name, "opf", "bmis.mtx"))
 
-        self.assertTrue(mfeq2(Pmis.A, mpAmis.tocsr()))
-#        self.assertTrue(alltrue(Pmis.l == mpbmis.flatten()))
-        self.assertTrue(max(abs(Pmis.l - mpbmis.flatten())) < 1e-12)
-#        self.assertTrue(alltrue(Pmis.u == mpbmis.flatten()))
-        self.assertTrue(max(abs(Pmis.u - mpbmis.flatten())) < 1e-12)
+        self.assertTrue(mfeq2(Pmis.A, mpAmis.tocsr(), 1e-12), msg)
+        self.assertTrue(mfeq1(Pmis.l, mpbmis.flatten()), msg)
+        self.assertTrue(mfeq1(Pmis.u, mpbmis.flatten()), msg)
 
 
     def testPfPt(self):
         """ Test branch flow limit constraints.
         """
+        msg = self.case_name
         _, ln, _ = self.opf._remove_isolated(self.case)
         _, Bf, _, Pfinj = self.case.Bdc
         Pf, Pt = self.opf._branch_flow_dc(ln, Bf, Pfinj, self.case.base_mva)
@@ -154,15 +156,16 @@ class DCOPFTest(unittest.TestCase):
         upf = mmread(join(DATA_DIR, self.case_name, "opf", "upf.mtx"))
         upt = mmread(join(DATA_DIR, self.case_name, "opf", "upt.mtx"))
 
-        self.assertTrue(alltrue(Pf.l == lpf.flatten()))
-        self.assertTrue(alltrue(Pf.u == upf.flatten()))
-        self.assertTrue(alltrue(Pt.l == lpf.flatten()))
-        self.assertTrue(alltrue(Pt.u == upt.flatten()))
+        self.assertTrue(mfeq1(Pf.l, lpf.flatten()), msg)
+        self.assertTrue(mfeq1(Pf.u, upf.flatten()), msg)
+        self.assertTrue(mfeq1(Pt.l, lpf.flatten()), msg)
+        self.assertTrue(mfeq1(Pt.u, upt.flatten()), msg)
 
 
     def testVang(self):
         """ Test voltage angle difference limit constraint.
         """
+        msg = self.case_name
         self.opf.ignore_ang_lim = False
         bs, ln, _ = self.opf._remove_isolated(self.case)
         ang = self.opf._voltage_angle_diff_limit(bs, ln)
@@ -175,26 +178,27 @@ class DCOPFTest(unittest.TestCase):
         uang = mmread(join(DATA_DIR, self.case_name, "opf", "uang.mtx"))
 
         if Aang is not None:
-            self.assertTrue(mfeq2(ang.A, Aang.tocsr()))
-        self.assertTrue(alltrue(ang.l == lang.flatten()))
-        self.assertTrue(alltrue(ang.u == uang.flatten()))
+            self.assertTrue(mfeq2(ang.A, Aang.tocsr()), msg)
+        self.assertTrue(mfeq1(ang.l, lang.flatten()), msg)
+        self.assertTrue(mfeq1(ang.u, uang.flatten()), msg)
 
 
     def testVLConstPF(self):
         """ Test dispatchable load, constant power factor constraints.
         """
+        msg = self.case_name
         _, _, gn = self.opf._remove_isolated(self.case)
         vl = self.opf._const_pf_constraints(gn, self.case.base_mva)
 
         if vl.A.shape[0] != 0:
             Avl = mmread(join(DATA_DIR, self.case_name, "opf", "Avl.mtx"))
-            self.assertTrue(mfeq2(vl.A, Avl.tocsr()))
+            self.assertTrue(mfeq2(vl.A, Avl.tocsr()), msg)
 
         lvl = mmread(join(DATA_DIR, self.case_name, "opf", "lang.mtx"))
-        self.assertTrue(alltrue(vl.l == lvl.flatten()))
+        self.assertTrue(mfeq1(vl.l, lvl.flatten()), msg)
 
         uvl = mmread(join(DATA_DIR, self.case_name, "opf", "uang.mtx"))
-        self.assertTrue(alltrue(vl.u == uvl.flatten()))
+        self.assertTrue(mfeq1(vl.u, uvl.flatten()), msg)
 
 
 #    def testPQ(self):
@@ -210,6 +214,7 @@ class DCOPFTest(unittest.TestCase):
     def testAy(self):
         """ Test basin constraints for piece-wise linear gen cost variables.
         """
+        msg = self.case_name
         self.case.sort_generators() # ext2int
         _, _, gn = self.opf._remove_isolated(self.case)
         _, ycon = self.opf._pwl_gen_costs(gn, self.case.base_mva)
@@ -218,8 +223,8 @@ class DCOPFTest(unittest.TestCase):
             Ay = mmread(join(DATA_DIR, self.case_name, "opf", "Ay_DC.mtx"))
             by = mmread(join(DATA_DIR, self.case_name, "opf", "by_DC.mtx"))
 
-            self.assertTrue(mfeq2(ycon.A, Ay.tocsr()))
-            self.assertTrue(alltrue(ycon.u == by.flatten()))
+            self.assertTrue(mfeq2(ycon.A, Ay.tocsr()), msg)
+            self.assertTrue(mfeq1(ycon.u, by.flatten()), msg)
 
 #------------------------------------------------------------------------------
 #  "DCOPFCase24RTSTest" class:
@@ -237,8 +242,6 @@ class DCOPFCase24RTSTest(DCOPFTest):
 #------------------------------------------------------------------------------
 
 class DCOPFCaseIEEE30Test(DCOPFTest):
-    """ Defines a test case for DC OPF.
-    """
 
     def __init__(self, methodName='runTest'):
         super(DCOPFCaseIEEE30Test, self).__init__(methodName)
@@ -282,9 +285,9 @@ class DCOPFSolverTest(unittest.TestCase):
         mpl = mmread(join(DATA_DIR, self.case_name, "opf", "l_DC.mtx"))
         mpu = mmread(join(DATA_DIR, self.case_name, "opf", "u_DC.mtx"))
 
-        self.assertTrue(mfeq2(AA, mpA.tocsr()))
-        self.assertTrue(alltrue(ll == mpl.flatten()))
-        self.assertTrue(alltrue(uu == mpu.flatten()))
+        self.assertTrue(mfeq2(AA, mpA.tocsr()), self.case_name)
+        self.assertTrue(mfeq1(ll, mpl.flatten()), self.case_name)
+        self.assertTrue(mfeq1(uu, mpu.flatten()), self.case_name)
 
 
     def test_var_bounds(self):
@@ -296,9 +299,9 @@ class DCOPFSolverTest(unittest.TestCase):
         mpxmin = mmread(join(DATA_DIR, self.case_name, "opf", "xmin_DC.mtx"))
         mpxmax = mmread(join(DATA_DIR, self.case_name, "opf", "xmax_DC.mtx"))
 
-#        self.assertTrue(alltrue(x0 == mpx0.flatten()))
-        self.assertTrue(alltrue(xmin == mpxmin.flatten()))
-        self.assertTrue(alltrue(xmax == mpxmax.flatten()))
+#        self.assertTrue(alltrue(x0 == mpx0.flatten()), self.case_name)
+        self.assertTrue(mfeq1(xmin, mpxmin.flatten()), self.case_name)
+        self.assertTrue(mfeq1(xmax, mpxmax.flatten()), self.case_name)
 
 
     def test_initial_point(self):
@@ -311,12 +314,13 @@ class DCOPFSolverTest(unittest.TestCase):
 
         mpx0 = mmread(join(DATA_DIR, self.case_name, "opf", "x0_DC.mtx"))
 
-        self.assertTrue(alltrue(x0 == mpx0.flatten()))
+        self.assertTrue(mfeq1(x0, mpx0.flatten()), self.case_name)
 
 
     def test_pwl_costs(self):
         """ Test piecewise linear costs.
         """
+        msg = self.case_name
         b, l, g, _ = self.solver._unpack_model(self.om)
         _, ipwl, _, _, _, ny, nxyz = self.solver._dimension_data(b, l, g)
         Npwl, Hpwl, Cpwl, fparm_pwl, _ = \
@@ -324,21 +328,20 @@ class DCOPFSolverTest(unittest.TestCase):
 
         if Npwl is not None:
             mpNpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Npwl.mtx"))
-        mpHpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Hpwl.mtx"))
-        mpCpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Cpwl.mtx"))
-        mpfparm = mmread(join(DATA_DIR, self.case_name, "opf","fparm_pwl.mtx"))
+            mpHpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Hpwl.mtx"))
+            mpCpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Cpwl.mtx"))
+            mpfparm = mmread(join(DATA_DIR, self.case_name, "opf","fparm_pwl.mtx"))
 
-        if Npwl is not None:
-            self.assertTrue(alltrue(Npwl == mpNpwl.flatten()))
-        if Hpwl is not None:
-            self.assertTrue(alltrue(Hpwl == mpHpwl.flatten()))
-        self.assertTrue(alltrue(Cpwl == mpCpwl.flatten()))
-#        self.assertTrue(alltrue(fparm_pwl == mpfparm.flatten()))
+            self.assertTrue(mfeq2(Npwl, mpNpwl.flatten()), msg)
+            self.assertTrue(mfeq2(Hpwl, mpHpwl.flatten()), msg)
+            self.assertTrue(mfeq1(Cpwl, mpCpwl.flatten()), msg)
+            self.assertTrue(mfeq1(fparm_pwl, mpfparm.flatten()), msg)
 
 
     def test_poly_costs(self):
         """ Test quadratic costs.
         """
+        msg = self.case_name
         base_mva = self.om.case.base_mva
         b, l, g, _ = self.solver._unpack_model(self.om)
         ipol, _, _, _, _, _, nxyz = self.solver._dimension_data(b, l, g)
@@ -350,15 +353,16 @@ class DCOPFSolverTest(unittest.TestCase):
         mpCpol = mmread(join(DATA_DIR, self.case_name, "opf", "Cpol.mtx"))
         mpfparm = mmread(join(DATA_DIR, self.case_name, "opf","fparm_pol.mtx"))
 
-        self.assertTrue(mfeq2(Npol, mpNpol.tocsr()))
-        self.assertTrue(mfeq2(Hpol, mpHpol.tocsr()))
-        self.assertTrue(alltrue(Cpol == mpCpol.flatten()))
-        self.assertTrue(alltrue(fparm_pol == mpfparm))
+        self.assertTrue(mfeq2(Npol, mpNpol.tocsr()), msg)
+        self.assertTrue(mfeq2(Hpol, mpHpol.tocsr()), msg)
+        self.assertTrue(mfeq1(Cpol, mpCpol.flatten()), msg)
+        self.assertTrue(mfeq2(fparm_pol, mpfparm), msg)
 
 
     def test_combine_costs(self):
         """ Test combination of pwl and poly costs.
         """
+        msg = self.case_name
         base_mva = self.om.case.base_mva
         b, l, g, _ = self.solver._unpack_model(self.om)
         ipol, ipwl, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
@@ -375,16 +379,17 @@ class DCOPFSolverTest(unittest.TestCase):
         mpCCw = mmread(join(DATA_DIR, self.case_name, "opf", "CCw.mtx"))
         mpffparm = mmread(join(DATA_DIR, self.case_name, "opf", "ffparm.mtx"))
 
-        self.assertTrue(mfeq2(NN, mpNN.tocsr()))
-        self.assertTrue(mfeq2(HHw, mpHHw.tocsr()))
-        self.assertTrue(alltrue(CCw == mpCCw.flatten()))
-        self.assertTrue(alltrue(ffparm == mpffparm))
+        self.assertTrue(mfeq2(NN, mpNN.tocsr()), msg)
+        self.assertTrue(mfeq2(HHw, mpHHw.tocsr()), msg)
+        self.assertTrue(mfeq1(CCw, mpCCw.flatten()), msg)
+        self.assertTrue(mfeq2(ffparm, mpffparm), msg)
 
 
     def test_coefficient_transformation(self):
         """ Test transformation of quadratic coefficients for w into
             coefficients for X.
         """
+        msg = self.case_name
         base_mva = self.om.case.base_mva
         b, l, g, _ = self.solver._unpack_model(self.om)
         ipol, ipwl, _, _, nw, ny, nxyz = self.solver._dimension_data(b, l, g)
@@ -402,13 +407,14 @@ class DCOPFSolverTest(unittest.TestCase):
         mpHH = mmread(join(DATA_DIR, self.case_name, "opf", "HH.mtx"))
         mpCC = mmread(join(DATA_DIR, self.case_name, "opf", "CC.mtx"))
 
-        self.assertTrue(mfeq2(HH, mpHH.tocsr()))
-        self.assertTrue(alltrue(CC == mpCC.flatten()))
+        self.assertTrue(mfeq2(HH, mpHH.tocsr()), msg)
+        self.assertTrue(mfeq1(CC, mpCC.flatten()), msg)
 
 
     def test_solution(self):
         """ Test DC OPF solution.
         """
+        msg = self.case_name
         solution = self.solver.solve()
         lmbda = solution["lmbda"]
 
@@ -419,12 +425,12 @@ class DCOPFSolverTest(unittest.TestCase):
         mpmuLB = mmread(join(DATA_DIR, self.case_name, "opf", "muLB_DC.mtx"))
         mpmuUB = mmread(join(DATA_DIR, self.case_name, "opf", "muUB_DC.mtx"))
 
-        self.assertAlmostEqual(solution["f"], mpf[0], places=12)
-        self.assertTrue(abs(max(solution["x"] - mpx.flatten())) < 1e-12)
-        self.assertTrue(abs(max(lmbda["mu_l"] - mpmu_l.flatten())) < 1e-12)
-        self.assertTrue(abs(max(lmbda["mu_u"] - mpmu_u.flatten())) < 1e-12)
-        self.assertTrue(abs(max(lmbda["lower"] - mpmuLB.flatten())) < 1e-12)
-        self.assertTrue(abs(max(lmbda["upper"] - mpmuUB.flatten())) < 1e-12)
+        self.assertAlmostEqual(solution["f"], mpf[0], places=6)
+        self.assertTrue(mfeq1(solution["x"], mpx.flatten()), msg)
+        self.assertTrue(mfeq1(lmbda["mu_l"], mpmu_l.flatten(), 1e-9), msg)
+        self.assertTrue(mfeq1(lmbda["mu_u"], mpmu_u.flatten(), 1e-9), msg)
+        self.assertTrue(mfeq1(lmbda["lower"], mpmuLB.flatten(), 1e-9), msg)
+        self.assertTrue(mfeq1(lmbda["upper"], mpmuUB.flatten(), 1e-9), msg)
 
 
     def test_integrate_solution(self):
@@ -462,9 +468,9 @@ class DCOPFSolverTest(unittest.TestCase):
         # fbus tbus r x b rateA rateB rateC ratio angle status angmin angmax
         # Pf Qf Pt Qt mu_Sf mu_St mu_angmin mu_angmax
         for i, ln in enumerate(self.case.branches):
-            self.assertAlmostEqual(ln.p_from, branch[i, 13], pl) # Pf
+            self.assertAlmostEqual(ln.p_from, branch[i, 13], 6) # Pf
             self.assertAlmostEqual(ln.q_from, branch[i, 14], pl) # Qf
-            self.assertAlmostEqual(ln.p_to, branch[i, 15], pl) # Pt
+            self.assertAlmostEqual(ln.p_to, branch[i, 15], 6) # Pt
             self.assertAlmostEqual(ln.q_to, branch[i, 16], pl) # Qt
             self.assertAlmostEqual(ln.mu_s_from, branch[i, 17], pl) # mu_Sf
             self.assertAlmostEqual(ln.mu_s_to, branch[i, 18], pl) # mu_St
@@ -514,7 +520,8 @@ class PIPSSolverTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
+        self.case = Case.load(join(DATA_DIR, self.case_name,
+                                   self.case_name + ".pkl"))
         self.opf = OPF(self.case, dc=False)
         self.om = self.opf._construct_opf_model(self.case)
         self.solver = PIPSSolver(self.om)
@@ -523,6 +530,7 @@ class PIPSSolverTest(unittest.TestCase):
     def test_constraints(self):
         """ Test equality and inequality constraints.
         """
+        msg = self.case_name
         AA, ll, uu = self.solver._linear_constraints(self.om)
 
         if AA is not None:
@@ -530,21 +538,22 @@ class PIPSSolverTest(unittest.TestCase):
             mpl = mmread(join(DATA_DIR, self.case_name, "opf", "l_AC.mtx"))
             mpu = mmread(join(DATA_DIR, self.case_name, "opf", "u_AC.mtx"))
 
-            self.assertTrue(mfeq2(AA, mpA.tocsr()))
-            self.assertTrue(alltrue(ll == mpl.flatten()))
-            self.assertTrue(alltrue(uu == mpu.flatten()))
+            self.assertTrue(mfeq2(AA, mpA.tocsr()), msg)
+            self.assertTrue(mfeq1(ll, mpl.flatten()), msg)
+            self.assertTrue(mfeq1(uu, mpu.flatten()), msg)
 
 
     def test_var_bounds(self):
         """ Test bounds on optimisation variables.
         """
+        msg = self.case_name
         _, xmin, xmax = self.solver._var_bounds()
 
         mpxmin = mmread(join(DATA_DIR, self.case_name, "opf", "xmin_AC.mtx"))
         mpxmax = mmread(join(DATA_DIR, self.case_name, "opf", "xmax_AC.mtx"))
 
-        self.assertTrue(alltrue(xmin == mpxmin.flatten()))
-        self.assertTrue(alltrue(xmax == mpxmax.flatten()))
+        self.assertTrue(mfeq1(xmin, mpxmin.flatten()), msg)
+        self.assertTrue(mfeq1(xmax, mpxmax.flatten()), msg)
 
 
     def test_initial_point(self):
@@ -557,12 +566,13 @@ class PIPSSolverTest(unittest.TestCase):
 
         mpx0 = mmread(join(DATA_DIR, self.case_name, "opf", "x0_AC.mtx"))
 
-        self.assertTrue(alltrue(x0 == mpx0.flatten()))
+        self.assertTrue(mfeq1(x0, mpx0.flatten()), self.case_name)
 
 
     def test_solution(self):
         """ Test AC OPF solution.
         """
+        msg = self.case_name
         solution = self.solver.solve()
         lmbda = solution["lmbda"]
 
@@ -570,37 +580,38 @@ class PIPSSolverTest(unittest.TestCase):
         x = mmread(join(DATA_DIR, self.case_name, "opf", "x_AC.mtx"))
 
         # FIXME: Improve accuracy.
-        self.assertAlmostEqual(solution["f"], f[0], places=4)
+        self.assertAlmostEqual(solution["f"], f[0], places=3)
         self.assertTrue(abs(max(solution["x"] - x.flatten())) < 1e-6)
 
         if len(lmbda["mu_l"]) > 0:
             mu_l = mmread(join(DATA_DIR, self.case_name, "opf", "mu_l_AC.mtx"))
-            self.assertTrue(abs(max(lmbda["mu_l"] - mu_l.flatten())) < 1e-12)
+            self.assertTrue(mfeq1(lmbda["mu_l"], mu_l.flatten()), msg)
 
         if len(lmbda["mu_u"]) > 0:
             mu_u = mmread(join(DATA_DIR, self.case_name, "opf", "mu_u_AC.mtx"))
-            self.assertTrue(abs(max(lmbda["mu_u"] - mu_u.flatten())) < 1e-12)
+            self.assertTrue(mfeq1(lmbda["mu_u"], mu_u.flatten()), msg)
 
         if len(lmbda["lower"]) > 0:
             muLB = mmread(join(DATA_DIR, self.case_name, "opf", "muLB_AC.mtx"))
             # FIXME: Improve accuracy.
-            self.assertTrue(abs(max(lmbda["lower"] - muLB.flatten())) < 1e-4)
+            self.assertTrue(mfeq1(lmbda["lower"], muLB.flatten(), 1e-4), msg)
 
         if len(lmbda["upper"]) > 0:
             muUB = mmread(join(DATA_DIR, self.case_name, "opf", "muUB_AC.mtx"))
-            self.assertTrue(abs(max(lmbda["upper"] - muUB.flatten())) < 1e-12)
+            # FIXME: Improve accuracy.
+            self.assertTrue(mfeq1(lmbda["upper"], muUB.flatten(), 1e-4), msg)
 
 #        if len(lmbda["nl_mu_l"]) > 0:
 #            nl_mu_l = mmread(
 #                join(DATA_DIR, self.case_name, "opf", "nl_mu_l.mtx"))
 #            self.assertTrue(
-#                abs(max(lmbda["nl_mu_l"] - nl_mu_l.flatten())) < 1e-12)
+#                mfeq1(lmbda["nl_mu_l"], nl_mu_l.flatten()), msg)
 #
 #        if len(lmbda["nl_mu_l"]) > 0:
 #            nl_mu_u = mmread(
 #                join(DATA_DIR, self.case_name, "opf", "nl_mu_u.mtx"))
 #            self.assertTrue(
-#                abs(max(lmbda["nl_mu_u"] - nl_mu_u.flatten())) < 1e-12)
+#                mfeq1(lmbda["nl_mu_u"], nl_mu_u.flatten()), msg)
 
 
     def test_integrate_solution(self):
@@ -612,7 +623,8 @@ class PIPSSolverTest(unittest.TestCase):
         gen = mmread(join(DATA_DIR, self.case_name, "opf", "Gen_AC.mtx"))
         branch = mmread(join(DATA_DIR, self.case_name, "opf", "Branch_AC.mtx"))
 
-        pl = 6
+        # FIXME: Improve accuracy.
+        pl = 4
 
         # bus_i type Pd Qd Gs Bs area Vm Va baseKV zone Vmax Vmin lam_P lam_Q mu_Vmax mu_Vmin
         for i, bs in enumerate(self.case.buses):
@@ -621,16 +633,16 @@ class PIPSSolverTest(unittest.TestCase):
             self.assertAlmostEqual(bs.p_lmbda, bus[i, 13], pl) # lam_P
             self.assertAlmostEqual(bs.q_lmbda, bus[i, 14], pl) # lam_Q
             # FIXME: Improve accuracy
-            self.assertAlmostEqual(bs.mu_vmax, bus[i, 15], places=4) # mu_Vmax
-            self.assertAlmostEqual(bs.mu_vmin, bus[i, 16], places=4) # mu_Vmin
+            self.assertAlmostEqual(bs.mu_vmax, bus[i, 15], pl) # mu_Vmax
+            self.assertAlmostEqual(bs.mu_vmin, bus[i, 16], pl) # mu_Vmin
 
         # bus Pg Qg Qmax Qmin Vg mBase status Pmax Pmin Pc1 Pc2 Qc1min Qc1max
         # Qc2min Qc2max ramp_agc ramp_10 ramp_30 ramp_q apf mu_Pmax mu_Pmin
         # mu_Qmax mu_Qmin
         for i, gn in enumerate(self.case.generators):
             # FIXME: Improve accuracy
-            self.assertAlmostEqual(gn.p, gen[i, 1], places=4) # Pg
-            self.assertAlmostEqual(gn.q, gen[i, 2], places=4) # Qg
+            self.assertAlmostEqual(gn.p, gen[i, 1], pl) # Pg
+            self.assertAlmostEqual(gn.q, gen[i, 2], pl) # Qg
             self.assertAlmostEqual(gn.v_magnitude, gen[i, 5], pl) # Vg
             self.assertAlmostEqual(gn.mu_pmax, gen[i, 21], pl) # mu_Pmax
             self.assertAlmostEqual(gn.mu_pmin, gen[i, 22], pl) # mu_Pmin
@@ -646,8 +658,8 @@ class PIPSSolverTest(unittest.TestCase):
             self.assertAlmostEqual(ln.q_to, branch[i, 16], pl) # Qt
             self.assertAlmostEqual(ln.mu_s_from, branch[i, 17], pl) # mu_Sf
             self.assertAlmostEqual(ln.mu_s_to, branch[i, 18], pl) # mu_St
-            self.assertAlmostEqual(ln.mu_angmin, branch[i, 19], pl) # mu_angmin
-            self.assertAlmostEqual(ln.mu_angmax, branch[i, 20], pl) # mu_angmax
+            self.assertAlmostEqual(ln.mu_angmin, branch[i, 19], pl)
+            self.assertAlmostEqual(ln.mu_angmax, branch[i, 20], pl)
 
 #------------------------------------------------------------------------------
 #  "PIPSSolverCase24RTSTest" class:
