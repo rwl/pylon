@@ -52,7 +52,7 @@ class CaseMatrixTest(unittest.TestCase):
     """
 
     def __init__(self, methodName='runTest'):
-        super(CaseTest, self).__init__(methodName)
+        super(CaseMatrixTest, self).__init__(methodName)
 
         #: Name of the folder in which the MatrixMarket data exists.
         self.case_name = "case30pwl"
@@ -144,6 +144,28 @@ class CaseMatrixTest(unittest.TestCase):
 
         self.assertTrue(mfeq2(dSbus_dVm, mp_dSbus_dVm.tocsr(), 1e-12))
         self.assertTrue(mfeq2(dSbus_dVa, mp_dSbus_dVa.tocsr(), 1e-12))
+
+#------------------------------------------------------------------------------
+#  "CaseMatrix24RTSTest" class:
+#------------------------------------------------------------------------------
+
+class CaseMatrix24RTSTest(CaseMatrixTest):
+
+    def __init__(self, methodName='runTest'):
+        super(CaseMatrix24RTSTest, self).__init__(methodName)
+
+        self.case_name = "case24_ieee_rts"
+
+#------------------------------------------------------------------------------
+#  "CaseMatrixIEEE30Test" class:
+#------------------------------------------------------------------------------
+
+class CaseMatrixIEEE30Test(CaseMatrixTest):
+
+    def __init__(self, methodName='runTest'):
+        super(CaseMatrixIEEE30Test, self).__init__(methodName)
+
+        self.case_name = "case_ieee30"
 
 #------------------------------------------------------------------------------
 #  "CaseTest" class:

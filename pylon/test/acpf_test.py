@@ -30,7 +30,7 @@ from scipy.io.mmio import mmread
 
 from pylon import Case, NewtonPF, FastDecoupledPF, XB, BX
 from pylon.ac_pf import _ACPF
-from pylon.util import mfeq2
+#from pylon.util import mfeq2
 
 #------------------------------------------------------------------------------
 #  Constants:
@@ -104,6 +104,28 @@ class ACPFTest(unittest.TestCase):
         mpV = mmread(join(DATA_DIR, self.case_name, "V_BX.mtx")).flatten()
 
         self.assertTrue(abs(max(solution["V"] - mpV)) < 1e-14)
+
+#------------------------------------------------------------------------------
+#  "ACPFCase24RTSTest" class:
+#------------------------------------------------------------------------------
+
+class ACPFCase24RTSTest(ACPFTest):
+
+    def __init__(self, methodName="runTest"):
+        super(ACPFCase24RTSTest, self).__init__(methodName)
+
+        self.case_name = "case24_ieee_rts"
+
+#------------------------------------------------------------------------------
+#  "ACPFCaseIEEE30Test" class:
+#------------------------------------------------------------------------------
+
+class ACPFCaseIEEE30Test(ACPFTest):
+
+    def __init__(self, methodName="runTest"):
+        super(ACPFCaseIEEE30Test, self).__init__(methodName)
+
+        self.case_name = "case_ieee30"
 
 
 if __name__ == "__main__":

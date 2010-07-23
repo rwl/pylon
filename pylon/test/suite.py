@@ -23,13 +23,25 @@
 
 import unittest
 
-from pylon.test.case_test import CaseTest, BusTest, BranchTest
-from pylon.test.generator_test import GeneratorTest, OfferBidToPWLTest
+from pylon.test.case_test import \
+    CaseTest, BusTest, BranchTest, CaseMatrixTest, CaseMatrix24RTSTest, \
+    CaseMatrixIEEE30Test
 
-from dcpf_test import DCPFTest
-from acpf_test import ACPFTest
-from opf_test import DCOPFTest, DCOPFSolverTest, PIPSSolverTest
-from opf_model_test import OPFModelTest
+from pylon.test.generator_test import \
+    GeneratorTest, OfferBidToPWLTest
+
+from dcpf_test import \
+    DCPFTest, DCPFCase24RTSTest, DCPFCaseIEEE30Test
+from acpf_test import \
+    ACPFTest, ACPFCase24RTSTest, ACPFCaseIEEE30Test
+from opf_test import \
+    DCOPFTest, DCOPFCase24RTSTest, DCOPFCaseIEEE30Test
+from opf_test import \
+    DCOPFSolverTest, DCOPFSolverCase24RTSTest, DCOPFSolverCaseIEEE30Test
+from opf_test import \
+    PIPSSolverTest, PIPSSolverCase24RTSTest, PIPSSolvercaseIEEE30Test
+from opf_model_test import \
+    OPFModelTest
 
 from reader_test import MatpowerReaderTest, PSSEReaderTest#, PSATReaderTest
 from se_test import StateEstimatorTest
@@ -44,6 +56,9 @@ def suite():
     suite = unittest.TestSuite()
 
     suite.addTest(unittest.makeSuite(CaseTest))
+    suite.addTest(unittest.makeSuite(CaseMatrixTest))
+    suite.addTest(unittest.makeSuite(CaseMatrix24RTSTest))
+    suite.addTest(unittest.makeSuite(CaseMatrixIEEE30Test))
     suite.addTest(unittest.makeSuite(BusTest))
     suite.addTest(unittest.makeSuite(BranchTest))
 
@@ -52,10 +67,20 @@ def suite():
 
     # Solver test cases.
     suite.addTest(unittest.makeSuite(DCPFTest))
+    suite.addTest(unittest.makeSuite(DCPFCase24RTSTest))
+    suite.addTest(unittest.makeSuite(DCPFCaseIEEE30Test))
     suite.addTest(unittest.makeSuite(ACPFTest))
+    suite.addTest(unittest.makeSuite(ACPFCase24RTSTest))
+    suite.addTest(unittest.makeSuite(ACPFCaseIEEE30Test))
     suite.addTest(unittest.makeSuite(DCOPFTest))
+    suite.addTest(unittest.makeSuite(DCOPFCase24RTSTest))
+    suite.addTest(unittest.makeSuite(DCOPFCaseIEEE30Test))
     suite.addTest(unittest.makeSuite(DCOPFSolverTest))
+    suite.addTest(unittest.makeSuite(DCOPFSolverCase24RTSTest))
+    suite.addTest(unittest.makeSuite(DCOPFSolverCaseIEEE30Test))
     suite.addTest(unittest.makeSuite(PIPSSolverTest))
+    suite.addTest(unittest.makeSuite(PIPSSolverCase24RTSTest))
+    suite.addTest(unittest.makeSuite(PIPSSolvercaseIEEE30Test))
     suite.addTest(unittest.makeSuite(OPFModelTest))
 
     # Read/write test cases.

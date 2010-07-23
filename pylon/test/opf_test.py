@@ -222,6 +222,30 @@ class DCOPFTest(unittest.TestCase):
             self.assertTrue(alltrue(ycon.u == by.flatten()))
 
 #------------------------------------------------------------------------------
+#  "DCOPFCase24RTSTest" class:
+#------------------------------------------------------------------------------
+
+class DCOPFCase24RTSTest(DCOPFTest):
+
+    def __init__(self, methodName='runTest'):
+        super(DCOPFCase24RTSTest, self).__init__(methodName)
+
+        self.case_name = "case24_ieee_rts"
+
+#------------------------------------------------------------------------------
+#  "DCOPFCaseIEEE30Test" class:
+#------------------------------------------------------------------------------
+
+class DCOPFCaseIEEE30Test(DCOPFTest):
+    """ Defines a test case for DC OPF.
+    """
+
+    def __init__(self, methodName='runTest'):
+        super(DCOPFCaseIEEE30Test, self).__init__(methodName)
+
+        self.case_name = "case_ieee30"
+
+#------------------------------------------------------------------------------
 #  "DCOPFSolverTest" class:
 #------------------------------------------------------------------------------
 
@@ -448,6 +472,28 @@ class DCOPFSolverTest(unittest.TestCase):
             self.assertAlmostEqual(ln.mu_angmax, branch[i, 20], pl) # mu_angmax
 
 #------------------------------------------------------------------------------
+#  "DCOPFSolverCase24RTSTest" class:
+#------------------------------------------------------------------------------
+
+class DCOPFSolverCase24RTSTest(DCOPFSolverTest):
+
+    def __init__(self, methodName='runTest'):
+        super(DCOPFSolverCase24RTSTest, self).__init__(methodName)
+
+        self.case_name = "case24_ieee_rts"
+
+#------------------------------------------------------------------------------
+#  "DCOPFSolverCaseIEEE30Test" class:
+#------------------------------------------------------------------------------
+
+class DCOPFSolverCaseIEEE30Test(DCOPFSolverTest):
+
+    def __init__(self, methodName='runTest'):
+        super(DCOPFSolverCaseIEEE30Test, self).__init__(methodName)
+
+        self.case_name = "case_ieee30"
+
+#------------------------------------------------------------------------------
 #  "PIPSSolverTest" class:
 #------------------------------------------------------------------------------
 
@@ -602,6 +648,28 @@ class PIPSSolverTest(unittest.TestCase):
             self.assertAlmostEqual(ln.mu_s_to, branch[i, 18], pl) # mu_St
             self.assertAlmostEqual(ln.mu_angmin, branch[i, 19], pl) # mu_angmin
             self.assertAlmostEqual(ln.mu_angmax, branch[i, 20], pl) # mu_angmax
+
+#------------------------------------------------------------------------------
+#  "PIPSSolverCase24RTSTest" class:
+#------------------------------------------------------------------------------
+
+class PIPSSolverCase24RTSTest(PIPSSolverTest):
+
+    def __init__(self, methodName='runTest'):
+        super(PIPSSolverCase24RTSTest, self).__init__(methodName)
+
+        self.case_name = "case24_ieee_rts"
+
+#------------------------------------------------------------------------------
+#  "PIPSSolvercaseIEEE30Test" class:
+#------------------------------------------------------------------------------
+
+class PIPSSolvercaseIEEE30Test(PIPSSolverTest):
+
+    def __init__(self, methodName='runTest'):
+        super(PIPSSolvercaseIEEE30Test, self).__init__(methodName)
+
+        self.case_name = "case_ieee30"
 
 
 if __name__ == "__main__":

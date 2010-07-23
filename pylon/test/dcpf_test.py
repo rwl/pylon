@@ -68,6 +68,28 @@ class DCPFTest(unittest.TestCase):
 
         self.assertTrue(abs(max(solver.v_angle - mpVa)) < 1e-14)
 
+#------------------------------------------------------------------------------
+#  "DCPFCase24RTSTest" class:
+#------------------------------------------------------------------------------
+
+class DCPFCase24RTSTest(DCPFTest):
+
+    def __init__(self, methodName='runTest'):
+        super(DCPFCase24RTSTest, self).__init__(methodName)
+
+        self.case_name = "case24_ieee_rts"
+
+#------------------------------------------------------------------------------
+#  "DCPFCaseIEEE30Test" class:
+#------------------------------------------------------------------------------
+
+class DCPFCaseIEEE30Test(DCPFTest):
+
+    def __init__(self, methodName='runTest'):
+        super(DCPFCaseIEEE30Test, self).__init__(methodName)
+
+        self.case_name = "case_ieee30"
+
 
 if __name__ == "__main__":
     import logging, sys
