@@ -204,7 +204,7 @@ class MATPOWERReader(_CaseReader):
 
         for i, line in enumerate(file):
             if line.startswith("]"):
-                logger.warning("Missing cost data [%d]." % i)
+#                logger.warning("Missing cost data [%d]." % i)
                 break
 
             g = case.generators[i]
@@ -248,19 +248,19 @@ class MATPOWERReader(_CaseReader):
     def _parse_gencost_line(self, line):
         gencost_map = {1: PW_LINEAR, 2: POLYNOMIAL}
 
-        gencost_data = line.strip(";\n").split()
+        gencost_data = line.replace(";", "").strip("\n").split()
 
         model = gencost_map[int(gencost_data[0])]
         c_startup = float(gencost_data[1])
         c_shutdown = float(gencost_data[2])
         n = int(gencost_data[3])
         if model == PW_LINEAR:
-            d = gencost_data[-2 * n:]
+            d = gencost_data[4:4 + (2 * n)]
             cost = []
             for j in range(n):
                 cost.append((float(d[2 * j]), float(d[2 * j + 1])))
         else:
-            d = gencost_data[-n:]
+            d = gencost_data[4:4 + n]
             cost = tuple([float(a) for a in d])
 
         return model, c_startup, c_shutdown, cost
