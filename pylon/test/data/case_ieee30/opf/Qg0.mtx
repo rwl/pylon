@@ -1,0 +1,9 @@
+%%MatrixMarket matrix array real general
+%case_ieee30 initial reactive power set-point variable
+6 1
+-0.161
+ 0.5
+ 0.37
+ 0.373
+ 0.162
+ 0.106

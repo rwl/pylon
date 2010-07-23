@@ -1,0 +1,3 @@
+%%MatrixMarket matrix coordinate real general
+%case_ieee30 AC OPF basin constraints for piece-wise linear gen cost variables
+0 12 0

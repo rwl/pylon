@@ -57,7 +57,8 @@ class ACPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
+        self.case = Case.load(join(DATA_DIR, self.case_name,
+                                   self.case_name + ".pkl"))
 
 
     def testV0(self):

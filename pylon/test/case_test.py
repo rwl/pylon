@@ -63,7 +63,7 @@ class CaseMatrixTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        path = join(DATA_DIR, self.case_name, "case.pkl")
+        path = join(DATA_DIR, self.case_name, self.case_name + ".pkl")
         self.case = PickleReader().read(path)
 
 

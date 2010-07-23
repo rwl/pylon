@@ -1,0 +1,36 @@
+%%MatrixMarket matrix array real general
+%case24_ieee_rts reactive power set-point upper bounds
+33 1
+ 0.1
+ 0.1
+ 0.3
+ 0.3
+ 0.1
+ 0.1
+ 0.3
+ 0.3
+ 0.6
+ 0.6
+ 0.6
+ 0.8
+ 0.8
+ 0.8
+ 2
+ 0.06
+ 0.06
+ 0.06
+ 0.06
+ 0.06
+ 0.8
+ 0.8
+ 2
+ 2
+ 0.16
+ 0.16
+ 0.16
+ 0.16
+ 0.16
+ 0.16
+ 0.8
+ 0.8
+ 1.5

@@ -59,7 +59,8 @@ class DCOPFTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
+        self.case = Case.load(join(DATA_DIR, self.case_name,
+                                   self.case_name + ".pkl"))
         self.opf = OPF(self.case, dc=True)
 
 
@@ -241,7 +242,8 @@ class DCOPFSolverTest(unittest.TestCase):
     def setUp(self):
         """ The test runner will execute this method prior to each test.
         """
-        self.case = Case.load(join(DATA_DIR, self.case_name, "case.pkl"))
+        self.case = Case.load(join(DATA_DIR, self.case_name,
+                                   self.case_name + ".pkl"))
         self.opf = OPF(self.case, dc=True)
         self.om = self.opf._construct_opf_model(self.case)
         self.solver = DCOPFSolver(self.om)

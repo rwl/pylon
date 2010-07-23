@@ -1,0 +1,9 @@
+%%MatrixMarket matrix coordinate real symmetric
+%case_ieee30 quadratic objective function coefficients
+36 36 6
+31 31  768.64
+32 32  5000
+33 33  200
+34 34  200
+35 35  200
+36 36  200
