@@ -336,7 +336,7 @@ class DCOPFSolver(_Solver):
         """
         nnw = any_pwl + npol + nw
         M = csr_matrix((ffparm[:, 3], (range(nnw), range(nnw))))
-        MR = M * ffparm[:, 2]
+        MR = M * ffparm[:, 2] # FIXME: Possibly column 1.
         HMR = HHw * MR
         MN = M * NN
         HH = MN.T * HHw * MN
@@ -625,7 +625,7 @@ class PIPSSolver(_Solver):
             It = self._Yt * V
             # Branch current limits.
             h = r_[(If * conj(If)) - flow_max,
-                   (If * conj(It)) - flow_max]
+                   (It * conj(It)) - flow_max]
         else:
             i_fbus = [e.from_bus._i for e in self._ln]
             i_tbus = [e.to_bus._i for e in self._ln]
