@@ -10,24 +10,29 @@ from pyreto.roth_erev import VariantRothErev
 
 from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
+from pybrain.rl.learners import ENAC, Reinforce #@UnusedImport
 
 from common import \
     get_case6ww, setup_logging, get_discrete_task_agent, get_zero_task_agent, \
-    run_experiment, save_result
+    run_experiment, save_result, get_continuous_task_agent
 
 
 setup_logging()
 
+decommit = False
+cap = 100.0
 profile = [1.0]
 nOffer = 1
 nStates = 3
 
+# Scale sigma manually?
+manual_sigma = True
 
 def get_re_experiment(case):
     """ Returns an experiment that uses the Roth-Erev learning method.
     """
     gen = case.generators
-    market = pyreto.SmartMarket(case, priceCap=100.0, decommit=True)
+    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit)
 
     experimentation=0.55
     recency=0.3
@@ -57,7 +62,7 @@ def get_q_experiment(case):
     """ Returns an experiment that uses Q-learning.
     """
     gen = case.generators
-    market = pyreto.SmartMarket(case, priceCap=100.0, decommit=True)
+    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit)
 
     learner1 = Q() #QLambda() SARSA(gamma=0.8)
     #learner1.explorer = BoltzmannExplorer()#tau=100, decay=0.95)
@@ -66,6 +71,42 @@ def get_q_experiment(case):
 
     experiment = pyreto.continuous.MarketExperiment(
         [task1], [agent1], market, profile)
+
+    return experiment
+
+
+def get_enac_experiment(case):
+    gen = case.generators
+
+    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit)
+    experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
+
+    for g in [gen[0], gen[2]]:
+        learner = ENAC()
+#        learner = Reinforce()
+#        learner.gd.rprop = False
+        # only relevant for BP
+    #    learner.learningRate = 0.001 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
+        learner.gd.alpha = 0.0001
+    #    learner.gd.alphadecay = 0.9
+    #    learner.gd.momentum = 0.9
+        # only relevant for RP
+    #    learner.gd.deltamin = 0.0001
+
+        task, agent = get_continuous_task_agent(
+            [g], market, nOffer, 30.0, profile, learner)
+
+        # Adjust some parameters of the NormalExplorer.
+        if manual_sigma:
+            sigma = [-5.0] * task.env.indim
+            agent.learner.explorer.sigma = sigma
+
+        experiment.tasks.append(task)
+        experiment.agents.append(agent)
+
+    task, agent = get_zero_task_agent(gen[1:2], market, nOffer, profile)
+    experiment.tasks.append(task)
+    experiment.agents.append(agent)
 
     return experiment
 

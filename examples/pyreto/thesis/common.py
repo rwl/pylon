@@ -12,9 +12,12 @@ from scipy.io import mmwrite
 import pylon
 
 import pyreto.discrete
+import pyreto.continuous
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable
+from pybrain.tools.shortcuts import buildNetwork
+from pybrain.structure import TanhLayer, LinearLayer #@UnusedImport
 
 def setup_logging():
     logger = logging.getLogger()
@@ -77,6 +80,22 @@ def get_discrete_task_agent(generators, market, nStates, nOffer, markups, profil
     agent = LearningAgent(module, learner)
 
     return task, agent
+
+
+def get_continuous_task_agent(generators, market, nOffer, maxMarkup, profile, learner):
+        env = pyreto.continuous.MarketEnvironment(generators, market, nOffer)
+
+        task = pyreto.continuous.ProfitTask(env, maxSteps=len(profile),
+                                            maxMarkup=maxMarkup)
+
+        net = buildNetwork(env.outdim, 2, env.indim,
+                           bias=True, outputbias=True,
+                           hiddenclass=TanhLayer, outclass=TanhLayer)
+
+        agent = LearningAgent(net, learner)
+        agent.name = generators[0].name
+
+        return task, agent
 
 
 def get_zero_task_agent(generators, market, nOffer, profile):
