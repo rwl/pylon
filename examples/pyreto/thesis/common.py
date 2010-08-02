@@ -6,6 +6,9 @@ import os
 import sys
 import logging
 
+from numpy import zeros, c_
+from scipy.io import mmwrite
+
 import pylon
 
 import pyreto.discrete
@@ -83,3 +86,35 @@ def get_zero_task_agent(generators, market, nOffer, profile):
     task = pyreto.discrete.ProfitTask(env, maxSteps=len(profile))
     agent = pyreto.util.ZeroAgent(env.outdim, env.indim)
     return task, agent
+
+
+def run_experiment(experiment, roleouts, samples):
+    """ Runs the given experiment and returns the results.
+    """
+    na = len(experiment.agents)
+    all_action = zeros((na, 0))
+    all_reward = zeros((na, 0))
+
+    for roleout in range(roleouts):
+        experiment.doEpisodes(samples) # number of samples per learning step
+
+        epi_action = zeros((0, samples))
+        epi_reward = zeros((0, samples))
+
+        for agent in experiment.agents:
+            agent.learn()
+            agent.reset()
+
+            action = agent.history["action"]
+            reward = agent.history["reward"]
+
+            epi_action = c_[epi_action.T, action].T
+            epi_reward = c_[epi_reward.T, reward].T
+
+    return all_action, all_reward
+
+
+def save_result(result, path, comment=""):
+    """ Saves the given results to the path in MatrixMarket format.
+    """
+    mmwrite(path, result, comment)
