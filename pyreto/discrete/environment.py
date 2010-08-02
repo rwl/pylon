@@ -93,7 +93,7 @@ class MarketEnvironment(object):
         #: List of offers/bids from the previous action used by ProfitTask.
         self._lastAction = []
 
-        self._numOffbids = 0
+        self._numOffbids = 1
         self._markups = ()
         self._withholds = ()
 
@@ -413,7 +413,6 @@ class MarketEnvironment(object):
                 m.extend(w)
                 a.append(m)
 
-        print "ALL ACTIONS:", a
         return a
 
 # EOF -------------------------------------------------------------------------

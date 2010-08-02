@@ -151,8 +151,6 @@ class RothErev(ValueBasedLearner):
             carryOver = (1 - phi) * self.module.getValue(lastState, action)
             experience = self._experience(lastState, action, lastAction,reward)
 
-            print "RE:", lastState, lastAction, action, carryOver + experience
-
             self.module.updateValue(lastState, action, carryOver + experience)
 
 

@@ -12,7 +12,7 @@ matplotlib.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
 matplotlib.rc('text', usetex=True)
 
 from pylab import \
-    figure, plot, xlabel, ylabel, legend, savefig, rcParams, clf, title
+    figure, plot, xlabel, ylabel, legend, savefig, rcParams, clf, title, grid
 
 from scipy import arange, sqrt
 from scipy.io import mmread
@@ -38,7 +38,7 @@ rcParams.update(params)
 
 
 clr = ["black", "0.5", "0.8"]
-ls = ["-", ":", "--", "-."]
+ls = ["-"]#, ":", "--", "-."]
 nc, ns = len(clr), len(ls)
 
 
@@ -47,22 +47,44 @@ def plot_results(results, gi, ylab, xlab="Time (h)"):
     clf()
     for (result, lab) in results:
         x = arange(0.0, result.shape[1], 1.0)
-        plot(x, result[gi, :], color=clr[gi % nc],
-             linestyle=ls[gi % ns], label=lab)
+        plot(x, result[gi, :],
+#             color=clr[gi % nc],
+#             linestyle=ls[gi % ns],
+             label=lab)
     xlabel(xlab)
     ylabel(ylab)
     legend()
+#    grid()
 
 
 def plot5_1():
     re_action = mmread("./out/ex5_1_re_action.mtx")
     q_action = mmread("./out/ex5_1_q_action.mtx")
+    enac_action = mmread("./out/ex5_1_enac_action.mtx")
 
-    results = [(re_action, "Roth-Erev"), (q_action, "Q-Learning")]
+    actions = [(re_action, "Roth-Erev"), (q_action, "Q-Learning"),
+               (enac_action, "ENAC")]
 
-    plot_results(results, 0, "Action (\%)")
+    plot_results(actions, 0, "Action (\%)")
+    title("Generator 1 Action")
+    savefig('./out/fig5_1_g1_action.pdf')
+    plot_results(actions, 2, "Action (\%)")
+    title("Generator 2 Action")
+    savefig('./out/fig5_1_g3_action.pdf')
+
+
+    re_reward = mmread("./out/ex5_1_re_reward.mtx")
+    q_reward = mmread("./out/ex5_1_q_reward.mtx")
+    enac_reward = mmread("./out/ex5_1_enac_reward.mtx")
+
+    rewards = [(re_reward, "Roth-Erev"), (q_reward, "Q-Learning"),
+               (enac_reward, "ENAC")]
+
+    plot_results(rewards, 0, r"Reward (\verb+$+)")
+    title("Generator 1 Reward")
     savefig('./out/fig5_1_g1_reward.pdf')
-    plot_results(results, 2, "Action (\%)")
+    plot_results(rewards, 2, r"Reward (\verb+$+)")
+    title("Generator 2 Reward")
     savefig('./out/fig5_1_g3_reward.pdf')
 
 

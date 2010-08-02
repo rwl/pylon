@@ -121,14 +121,17 @@ def run_experiment(experiment, roleouts, samples):
         epi_reward = zeros((0, samples))
 
         for agent in experiment.agents:
-            agent.learn()
-            agent.reset()
-
             action = agent.history["action"]
             reward = agent.history["reward"]
 
             epi_action = c_[epi_action.T, action].T
             epi_reward = c_[epi_reward.T, reward].T
+
+            agent.learn()
+            agent.reset()
+
+        all_action = c_[all_action, epi_action]
+        all_reward = c_[all_reward, epi_reward]
 
     return all_action, all_reward
 

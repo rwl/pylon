@@ -45,7 +45,7 @@ class MarketEnvironment(DiscreteMarketEnvironment):
 
     def __init__(self, generators, market, numOffbids=1, offbidQty=False):
         super(MarketEnvironment, self).__init__(generators, market, 0, None,
-                                                numOffbids, offbidQty)
+                                                None, numOffbids, offbidQty)
 
         #: Save initial generator ratings and costs as these will be
         #: overwritten when offers/bids are submitted to the market. Set by
@@ -67,7 +67,7 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         #: quantity is the maximum rated capacity of the generator divided by
         #: the number of offers/bids. Alternatively, it may also specify the
         #: quantity that is offered/bid for.
-#        self.offbidQty = offbidQty
+        self.offbidQty = offbidQty
 
         #: List of offers/bids from the previous action.
 #        self._lastAction = []
@@ -102,10 +102,10 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         """
         self._lastAction = []
 
-        if self.offbidQty:
-            self._offbidQuantityAndMarkup(action)
-        else:
-            self._offbidMarkup(action)
+#        if self.offbidQty:
+#            self._offbidQuantityAndMarkup(action)
+#        else:
+        self._offbid(action)
 
 
 #    def reset(self):
