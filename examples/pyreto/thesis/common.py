@@ -239,7 +239,7 @@ def get_full_year():
     return fullyear
 
 
-def get_alldays():
+def get_all_days():
     """ Returns percentages of peak load for all days of the year.
     Data from the IEEE RTS.
     """

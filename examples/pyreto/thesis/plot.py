@@ -12,10 +12,15 @@ matplotlib.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
 matplotlib.rc('text', usetex=True)
 
 from pylab import \
-    figure, plot, xlabel, ylabel, legend, savefig, rcParams, clf, title, grid
+    figure, plot, xlabel, ylabel, legend, savefig, rcParams, clf, title, \
+    xlim, ylim
 
 from scipy import arange, sqrt
 from scipy.io import mmread
+
+from common import \
+    get_winter_hourly, get_summer_hourly, get_spring_autumn_hourly, \
+    get_weekly, get_daily
 
 # Set up publication quality graphs.
 #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
@@ -54,7 +59,6 @@ def plot_results(results, gi, ylab, xlab="Time (h)"):
     xlabel(xlab)
     ylabel(ylab)
     legend()
-#    grid()
 
 
 def plot5_1():
@@ -88,5 +92,57 @@ def plot5_1():
     savefig('./out/fig5_1_g3_reward.pdf')
 
 
+def plot_profiles():
+    figure()
+    clf()
+    x = arange(0.0, 52.0, 1.0)
+    plot(x, get_weekly(), color="black")
+    xlabel("Week of the year, starting January 1st")
+    ylabel("Percentage of annual peak load")
+    xlim((0.0, 51.0))
+    ylim((0.0, 100.0))
+#    title("IEEE RTS Weekly Load Profile")
+    legend()
+    savefig('./out/ieee_rts_weekly.pdf')
+
+
+    clf()
+    x = arange(1.0, 8.0, 1.0)
+    plot(x, get_daily(), color="black")
+    xlabel("Day of the week, starting Monday")
+    ylabel("Percentage of weekly peak load")
+    xlim((1.0, 7.0))
+    ylim((0.0, 100.0))
+#    title("IEEE RTS Daily Load Profile")
+    legend()
+    savefig('./out/ieee_rts_daily.pdf')
+
+
+    clf()
+    hourly_winter_wkdy, hourly_winter_wknd = get_winter_hourly()
+    hourly_summer_wkdy, hourly_summer_wknd = get_summer_hourly()
+    hourly_spring_autumn_wkdy, hourly_spring_autumn_wknd = \
+        get_spring_autumn_hourly()
+
+    x = arange(0.0, 24.0, 0.5)
+
+    plot(x, hourly_winter_wkdy + hourly_winter_wknd,
+         label="Winter (Weeks 1-8 \& 44-52)", color="black")
+    plot(x, hourly_summer_wkdy + hourly_summer_wknd,
+         label="Summer (Weeks 18-30)", color="0.4")
+    plot(x, hourly_spring_autumn_wkdy + hourly_spring_autumn_wknd,
+         label="Spring \& Autumn (Weeks 9-17 \& 31-43)", color="0.6")
+
+    xlabel("Hour of the day, starting at midnight")
+    ylabel("Percentage of daily peak load")
+    xlim((0.0, 23.0))
+    ylim((0.0, 100.0))
+#    title("IEEE RTS Hourly Load Profiles")
+    legend(loc="lower right")
+
+    savefig('./out/ieee_rts_hourly.pdf')
+
+
 if __name__ == "__main__":
-    plot5_1()
+#    plot5_1()
+    plot_profiles()
