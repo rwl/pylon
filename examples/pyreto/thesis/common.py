@@ -107,6 +107,15 @@ def get_zero_task_agent(generators, market, nOffer, profile):
     return task, agent
 
 
+def get_neg_one_task_agent(generators, market, nOffer, profile):
+    """ Returns a task-agent tuple whose action is always minus one.
+    """
+    env = pyreto.discrete.MarketEnvironment(generators, market, nOffer)
+    task = pyreto.discrete.ProfitTask(env, maxSteps=len(profile))
+    agent = pyreto.util.NegOneAgent(env.outdim, env.indim)
+    return task, agent
+
+
 def run_experiment(experiment, roleouts, samples, in_cloud=False):
     """ Runs the given experiment and returns the results.
     """

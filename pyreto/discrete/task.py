@@ -124,7 +124,6 @@ class ProfitTask(Task):
         """ The action vector is stripped and the only element is cast to
             integer and given to the super class.
         """
-#        print "ACTION:", action
         self.t += 1
         super(ProfitTask, self).performAction(int(action[0]))
         self.samples += 1

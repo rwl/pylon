@@ -14,7 +14,8 @@ from pybrain.rl.learners import ENAC, Reinforce #@UnusedImport
 
 from common import \
     get_case6ww, setup_logging, get_discrete_task_agent, get_zero_task_agent, \
-    run_experiment, save_result, get_continuous_task_agent
+    run_experiment, save_result, get_continuous_task_agent, \
+    get_neg_one_task_agent
 
 
 setup_logging()
@@ -110,7 +111,7 @@ def get_enac_experiment(case):
         experiment.tasks.append(task)
         experiment.agents.append(agent)
 
-    task, agent = get_zero_task_agent(gen[1:2], market, nOffer, profile)
+    task, agent = get_neg_one_task_agent(gen[1:2], market, nOffer, profile)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 

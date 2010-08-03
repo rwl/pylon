@@ -33,12 +33,12 @@ def get_portfolios():
     g7 = range(8, 11)
     g13 = range(11, 14)
     g14 = [14] # sync cond
-    g15 = [15, 20]
-    g16 = [20]
-    g18 = [21]
-    g21 = [22]
-    g22 = range(23, 29)
-    g23 = range(29, 32)
+    g15 = [15, 21]
+    g16 = [21]
+    g18 = [22]
+    g21 = [23]
+    g22 = range(24, 30)
+    g23 = range(30, 33)
 
     portfolios = [g1 + g2 + g7,
                   g13 + g23,

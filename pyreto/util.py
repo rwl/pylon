@@ -38,6 +38,19 @@ from pylon.generator import PW_LINEAR, POLYNOMIAL
 class ZeroAgent(LoggingAgent):
 
     def getAction(self):
+        self.lastaction = 0.0 * scipy.ones(self.outdim)
+        return self.lastaction
+
+    def learn(self):
+        pass
+
+#------------------------------------------------------------------------------
+#  "NegOneAgent" class:
+#------------------------------------------------------------------------------
+
+class NegOneAgent(LoggingAgent):
+
+    def getAction(self):
         self.lastaction = -1.0 * scipy.ones(self.outdim)
         return self.lastaction
 

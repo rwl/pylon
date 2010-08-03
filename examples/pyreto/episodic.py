@@ -104,7 +104,7 @@ takers = case.generators[1:]
 for g in takers:
     env = pyreto.continuous.MarketEnvironment([g], market, numOffbids)
     task = pyreto.continuous.ProfitTask(env, maxSteps=len(p1h))
-    agent = pyreto.util.ZeroAgent(env.outdim, env.indim)
+    agent = pyreto.util.NegOneAgent(env.outdim, env.indim)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
