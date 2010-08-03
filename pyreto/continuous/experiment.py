@@ -64,7 +64,7 @@ class MarketExperiment(object):
         self.market = market
 
         #: Load profile.
-        self._profile = None
+#        self._profile = None
         self._pcycle = None
         self.profile = [1.0] if profile is None else profile
 
