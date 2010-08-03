@@ -150,3 +150,100 @@ def save_result(result, path, comment=""):
     """ Saves the given results to the path in MatrixMarket format.
     """
     mmwrite(path, result, comment)
+
+
+def get_weekly():
+    """ Returns the percent of annual peak for eack week of a year starting the
+    first week of January.  Data from the IEEE RTS.
+    """
+    weekly = [86.2, 90.0, 87.8, 83.4, 88.0, 84.1, 83.2, 80.6, 74.0, 73.7, 71.5,
+              72.7, 75.0, 72.1, 80.0, 70.4, 87.0, 88.0, 75.4, 83.7, 85.6, 81.1,
+              90.0, 88.7, 89.6, 86.1, 75.5, 81.6, 80.1, 88.0, 72.2, 80.0, 72.9,
+              77.6, 72.6, 70.5, 78.0, 69.5, 72.4, 72.4, 74.3, 74.4, 80.0, 88.1,
+              88.5, 90.9, 94.0, 89.0, 94.2, 97.0, 100.0, 95.2]
+    return weekly
+
+
+def get_daily():
+    """ Retruns the percent of weekly peak. Week beginning Monday.
+    """
+    daily = [93, 100, 98, 96, 94, 77, 75]
+    return daily
+
+
+def get_winter_hourly():
+    """ Return the percentage of daily peak, starting at midnight.
+    Weeks 1-8 and 44-52.
+    """
+    hourly_winter_wkdy = [67, 63, 60, 59, 59, 60, 74, 86, 95, 96, 96, 95, 95,
+                          95, 93, 94, 99, 100, 100, 96, 91, 83, 73, 63]
+    hourly_winter_wknd = [78, 72, 68, 66, 64, 65, 66, 70, 80, 88, 90, 91, 90,
+                          88, 87, 87, 91, 100, 99, 97, 94, 92, 87, 81]
+    return hourly_winter_wkdy, hourly_winter_wknd
+
+
+def get_summer_hourly():
+    """ Return the percentage of daily peak, starting at midnight. Weeks 18-30.
+    """
+    hourly_summer_wkdy = [64, 60, 58, 56, 56, 58, 64, 76, 87, 95, 99, 100, 99,
+                          100, 100, 97, 96, 96, 93, 92, 92, 93, 87, 72]
+    hourly_summer_wknd = [74, 70, 66, 65, 64, 62, 62, 66, 81, 86, 91, 93, 93,
+                          92, 91, 91, 92, 94, 95, 95, 100, 93, 88, 80]
+    return hourly_summer_wkdy, hourly_summer_wknd
+
+
+def get_spring_autumn_hourly():
+    """ Return the percentage of daily peak, starting at midnight.
+    Weeks 9-17 and 31-43.
+    """
+    hourly_spring_autumn_wkdy = [63, 62, 60, 58, 59, 65, 72, 85, 95, 99, 100,
+                                 99, 93, 92, 90, 88, 90, 92, 96, 98, 96, 90,
+                                 80, 70]
+    hourly_spring_autumn_wknd = [75, 73, 69, 66, 65, 65, 68, 74, 83, 89, 92,
+                                 94, 91, 90, 90, 86, 85, 88, 92, 100, 97, 95,
+                                 90, 85]
+    return hourly_spring_autumn_wkdy, hourly_spring_autumn_wknd
+
+
+def get_full_year():
+    """ Returns percentages of peak load for all hours of the year.
+
+    @return:
+        Numpy array of doubles with length 8736.
+    """
+    weekly = get_weekly()
+    daily = get_daily()
+    hourly_winter_wkdy, hourly_winter_wknd = get_winter_hourly()
+    hourly_summer_wkdy, hourly_summer_wknd = get_summer_hourly()
+    hourly_spring_autumn_wkdy, hourly_spring_autumn_wknd = \
+        get_spring_autumn_hourly()
+
+    fullyear = zeros(364 * 24)
+    c = 0
+    l = [(0, 7, hourly_winter_wkdy, hourly_winter_wknd),
+         (8, 16, hourly_spring_autumn_wkdy, hourly_spring_autumn_wknd),
+         (17, 29, hourly_summer_wkdy, hourly_summer_wknd),
+         (30, 42, hourly_spring_autumn_wkdy, hourly_spring_autumn_wknd),
+         (43, 51, hourly_winter_wkdy, hourly_winter_wknd)]
+
+    for start, end, wkdy, wknd in l:
+        for w in weekly[start:end + 1]:
+            for d in daily[:5]:
+                for h in wkdy:
+                    fullyear[c] = w * (d / 100.0) * (h / 100.0)
+                    c += 1
+            for d in daily[5:]:
+                for h in wknd:
+                    fullyear[c] = w * (d / 100.0) * (h / 100.0)
+                    c += 1
+    return fullyear
+
+
+def get_alldays():
+    """ Returns percentages of peak load for all days of the year.
+    Data from the IEEE RTS.
+    """
+    weekly = get_weekly()
+    daily = get_daily()
+
+    return [w * (d / 100.0) for w in weekly for d in daily]
