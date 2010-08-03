@@ -122,20 +122,28 @@ if __name__ == "__main__":
 
     roleouts = 20
     samples = 1
+    in_cloud = False
 
     re_experiment = get_re_experiment(case)
-    action, reward = run_experiment(re_experiment, roleouts, samples)
-    save_result(action, "./out/ex5_1_re_action.mtx", "Experiment 5.1 Roth-Erev actions.")
-    save_result(reward, "./out/ex5_1_re_reward.mtx", "Experiment 5.1 Roth-Erev rewards.")
+    action, reward = run_experiment(re_experiment, roleouts, samples, in_cloud)
+    save_result(action, "./out/ex5_1_re_action.mtx",
+                "Experiment 5.1 Roth-Erev actions.")
+    save_result(reward, "./out/ex5_1_re_reward.mtx",
+                "Experiment 5.1 Roth-Erev rewards.")
 
 
     q_experiment = get_q_experiment(case)
-    action, reward = run_experiment(q_experiment, roleouts, samples)
-    save_result(action, "./out/ex5_1_q_action.mtx", "Experiment 5.1 Q-learning actions.")
-    save_result(reward, "./out/ex5_1_q_reward.mtx", "Experiment 5.1 Q-learning rewards.")
+    action, reward = run_experiment(q_experiment, roleouts, samples, in_cloud)
+    save_result(action, "./out/ex5_1_q_action.mtx",
+                "Experiment 5.1 Q-learning actions.")
+    save_result(reward, "./out/ex5_1_q_reward.mtx",
+                "Experiment 5.1 Q-learning rewards.")
 
 
     enac_experiment = get_enac_experiment(case)
-    action, reward = run_experiment(enac_experiment, roleouts, samples)
-    save_result(action, "./out/ex5_1_enac_action.mtx", "Experiment 5.1 ENAC actions.")
-    save_result(reward, "./out/ex5_1_enac_reward.mtx", "Experiment 5.1 ENAC rewards.")
+    action, reward = run_experiment(enac_experiment, roleouts, samples,
+                                    in_cloud)
+    save_result(action, "./out/ex5_1_enac_action.mtx",
+                "Experiment 5.1 ENAC actions.")
+    save_result(reward, "./out/ex5_1_enac_reward.mtx",
+                "Experiment 5.1 ENAC rewards.")

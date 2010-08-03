@@ -107,31 +107,41 @@ def get_zero_task_agent(generators, market, nOffer, profile):
     return task, agent
 
 
-def run_experiment(experiment, roleouts, samples):
+def run_experiment(experiment, roleouts, samples, in_cloud=False):
     """ Runs the given experiment and returns the results.
     """
-    na = len(experiment.agents)
-    all_action = zeros((na, 0))
-    all_reward = zeros((na, 0))
+    def run():
+        na = len(experiment.agents)
+        all_action = zeros((na, 0))
+        all_reward = zeros((na, 0))
 
-    for roleout in range(roleouts):
-        experiment.doEpisodes(samples) # number of samples per learning step
+        for _ in range(roleouts):
+            experiment.doEpisodes(samples) # number of samples per learning step
 
-        epi_action = zeros((0, samples))
-        epi_reward = zeros((0, samples))
+            epi_action = zeros((0, samples))
+            epi_reward = zeros((0, samples))
 
-        for agent in experiment.agents:
-            action = agent.history["action"]
-            reward = agent.history["reward"]
+            for agent in experiment.agents:
+                action = agent.history["action"]
+                reward = agent.history["reward"]
 
-            epi_action = c_[epi_action.T, action].T
-            epi_reward = c_[epi_reward.T, reward].T
+                epi_action = c_[epi_action.T, action].T
+                epi_reward = c_[epi_reward.T, reward].T
 
-            agent.learn()
-            agent.reset()
+                agent.learn()
+                agent.reset()
 
-        all_action = c_[all_action, epi_action]
-        all_reward = c_[all_reward, epi_reward]
+            all_action = c_[all_action, epi_action]
+            all_reward = c_[all_reward, epi_reward]
+
+        return all_action, all_reward
+
+    if in_cloud:
+        import cloud
+        job_id = cloud.call(run, _high_cpu=False)
+        all_action, all_reward = cloud.result(job_id)
+    else:
+        all_action, all_reward = run()
 
     return all_action, all_reward
 
