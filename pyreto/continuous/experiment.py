@@ -29,6 +29,8 @@ from itertools import cycle
 #from pybrain.rl.experiments import Experiment, EpisodicExperiment
 #from pybrain.rl.agents.optimization import OptimizationAgent
 
+from pyreto.util import weighted_choice
+
 #------------------------------------------------------------------------------
 #  Logging:
 #------------------------------------------------------------------------------
@@ -48,7 +50,7 @@ class MarketExperiment(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, tasks, agents, market, profile=None):
+    def __init__(self, tasks, agents, market, profile=None, outages=None):
         """ Initialises the market experiment.
         """
         super(MarketExperiment, self).__init__()
@@ -67,6 +69,9 @@ class MarketExperiment(object):
 #        self._profile = None
         self._pcycle = None
         self.profile = [1.0] if profile is None else profile
+
+        #: List of branch outage probabilities.
+        self.outages = outages
 
         self.stepid = 0
 
@@ -121,6 +126,17 @@ class MarketExperiment(object):
 #
 #    profile = property(getProfile, setProfile)
 
+
+    def doOutages(self):
+        """ Applies branch outtages.
+        """
+        weights = [[(False, r), (True, 1 - (r))] for r in self.outages]
+
+        for i, ln in enumerate(self.market.case.branches):
+            ln.online = weighted_choice(weights[i])
+            if ln.online == False:
+                print "Branch outage [%s] in period %d." %(ln.name,self.stepid)
+
     #--------------------------------------------------------------------------
     #  "EpisodicExperiment" interface:
     #--------------------------------------------------------------------------
@@ -131,6 +147,7 @@ class MarketExperiment(object):
         """
         for episode in range(number):
             print "Starting episode %d." % episode
+
             # Initialise the profile cycle.
             self._pcycle = cycle(self.profile)
 
@@ -159,6 +176,10 @@ class MarketExperiment(object):
         self.stepid += 1
 
         logger.info("Entering simulation period %d." % self.stepid)
+
+        # Apply branches outages.
+        if self.outages is not None:
+            self.doOutages()
 
         # Initialise the market.
         self.market.reset()

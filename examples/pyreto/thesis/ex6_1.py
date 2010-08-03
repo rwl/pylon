@@ -3,6 +3,7 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 """ This script runs the first experiment from chapter 6 of Learning to Trade
 Power by Richard Lincoln. """
 
+import random
 from numpy import zeros, c_
 
 import pyreto.continuous
@@ -49,21 +50,48 @@ def get_portfolios():
     return portfolios, sync_cond
 
 
-def do_outages(case):
-    # Outage rate (outages/year).
-    rate = [0.24, 0.51, 0.33, 0.39, 0.48, 0.38, 0.02, 0.36, 0.34, 0.33, 0.3,
-            0.44, 0.44, 0.02, 0.02, 0.02, 0.02, 0.4, 0.39, 0.4, 0.52,
-            0.49, 0.38, 0.33, 0.41, 0.41, 0.41, 0.35, 0.34, 0.32, 0.54,
-            0.35, 0.35, 0.38, 0.38, 0.34, 0.34, 0.45]
-
-
+#def weighted_choice(lst):
+#    """ Makes weighted choices.  Accepts a list of tuples with the item and
+#    probability as a pair like:
+#    >>> x = [('one', 0.25), ('two', 0.25), ('three', 0.5)]
+#    >>> y=windex(x) """
+#    n = random.uniform(0, 1)
+#    for item, weight in lst:
+#        if n < weight:
+#            break
+#        n = n - weight
+#    return item
+#
+#
+#def do_outages(case):
+#    # Outage rate (outages/year).
+#    rate = [0.24, 0.51, 0.33, 0.39, 0.48, 0.38, 0.02, 0.36, 0.34, 0.33, 0.3,
+#            0.44, 0.44, 0.02, 0.02, 0.02, 0.02, 0.4, 0.39, 0.4, 0.52,
+#            0.49, 0.38, 0.33, 0.41, 0.41, 0.41, 0.35, 0.34, 0.32, 0.54,
+#            0.35, 0.35, 0.38, 0.38, 0.34, 0.34, 0.45]
+#
+#    per = 365
+#    weights = [[(False, r / per), (True, 1 - (r / per))] for r in rate]
+#
+#    for i, ln in enumerate(case.branches):
+#        ln.online = weighted_choice(weights[i])
 
 
 def get_enac_experiment(case):
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit)
 
-    experiment = pyreto.continuous.MarketExperiment([], [], market)
+    # Outage rate (outages/year).
+    rate = [0.24, 0.51, 0.33, 0.39, 0.48, 0.38, 0.02, 0.36, 0.34, 0.33, 0.3,
+            0.44, 0.44, 0.02, 0.02, 0.02, 0.02, 0.4, 0.39, 0.4, 0.52,
+            0.49, 0.38, 0.33, 0.41, 0.41, 0.41, 0.35, 0.34, 0.32, 0.54,
+            0.35, 0.35, 0.38, 0.38, 0.34, 0.34, 0.45]
+
+    per = 365
+    outage_rate = [r / per for r in rate]
+
+    experiment = pyreto.continuous.MarketExperiment([], [], market,
+                                                    outages=outage_rate)
 
     portfolios, sync_cond = get_portfolios()
 
@@ -124,6 +152,8 @@ def run_experiment(experiment):
 
 def main():
     case = get_case24_ieee_rts()
+
+    do_outages(case)
 
     enac_experiment = get_enac_experiment(case)
 
