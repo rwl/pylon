@@ -15,7 +15,7 @@ from pybrain.rl.learners import ENAC, Reinforce #@UnusedImport
 
 from common import \
     get_case24_ieee_rts, setup_logging, run_experiment, save_result, \
-    get_continuous_task_agent, get_full_year
+    get_continuous_task_agent, get_full_year, get_zero_task_agent
 
 setup_logging()
 
@@ -26,24 +26,37 @@ nOffer = 1
 manual_sigma = True
 markupMax = 30.0
 
-g1 = range(0, 4)
-g2 = range(4, 8)
-g7 = range(8, 11)
-g13 = range(11, 14)
-g14 = [14] # sync cond
-g15 = [15, 20]
-g16 = [20]
-g18 = [21]
-g21 = [22]
-g22 = range(23, 29)
-g23 = range(29, 32)
+def get_portfolios():
+    g1 = range(0, 4)
+    g2 = range(4, 8)
+    g7 = range(8, 11)
+    g13 = range(11, 14)
+    g14 = [14] # sync cond
+    g15 = [15, 20]
+    g16 = [20]
+    g18 = [21]
+    g21 = [22]
+    g22 = range(23, 29)
+    g23 = range(29, 32)
 
-portfolios = [g1 + g2 + g7,
-              g13 + g23,
-              g15 + g16,
-              g18 + g21 + g22]
+    portfolios = [g1 + g2 + g7,
+                  g13 + g23,
+                  g15 + g16,
+                  g18 + g21 + g22]
 
-sync_cond = g14
+    sync_cond = g14
+
+    return portfolios, sync_cond
+
+
+def do_outages(case):
+    # Outage rate (outages/year).
+    rate = [0.24, 0.51, 0.33, 0.39, 0.48, 0.38, 0.02, 0.36, 0.34, 0.33, 0.3,
+            0.44, 0.44, 0.02, 0.02, 0.02, 0.02, 0.4, 0.39, 0.4, 0.52,
+            0.49, 0.38, 0.33, 0.41, 0.41, 0.41, 0.35, 0.34, 0.32, 0.54,
+            0.35, 0.35, 0.38, 0.38, 0.34, 0.34, 0.45]
+
+
 
 
 def get_enac_experiment(case):
@@ -51,6 +64,8 @@ def get_enac_experiment(case):
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit)
 
     experiment = pyreto.continuous.MarketExperiment([], [], market)
+
+    portfolios, sync_cond = get_portfolios()
 
     for gidx in portfolios:
         g = [case.generators[i] for i in gidx]
@@ -64,6 +79,9 @@ def get_enac_experiment(case):
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
+
+    # Have an agent bid at marginal cost (0.0) for the sync cond.
+    task, agent = get_zero_task_agent(sync_cond, market, nOffer, profile)
 
     return experiment
 
