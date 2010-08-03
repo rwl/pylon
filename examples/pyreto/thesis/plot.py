@@ -70,10 +70,10 @@ def plot5_1():
                (enac_action, "ENAC")]
 
     plot_results(actions, 0, "Action (\%)")
-    title("Generator 1 Action")
+#    title("Generator 1 Action")
     savefig('./out/fig5_1_g1_action.pdf')
     plot_results(actions, 2, "Action (\%)")
-    title("Generator 2 Action")
+#    title("Generator 2 Action")
     savefig('./out/fig5_1_g3_action.pdf')
 
 
@@ -85,10 +85,10 @@ def plot5_1():
                (enac_reward, "ENAC")]
 
     plot_results(rewards, 0, r"Reward (\verb+$+)")
-    title("Generator 1 Reward")
+#    title("Generator 1 Reward")
     savefig('./out/fig5_1_g1_reward.pdf')
     plot_results(rewards, 2, r"Reward (\verb+$+)")
-    title("Generator 2 Reward")
+#    title("Generator 2 Reward")
     savefig('./out/fig5_1_g3_reward.pdf')
 
 
@@ -144,5 +144,5 @@ def plot_profiles():
 
 
 if __name__ == "__main__":
-#    plot5_1()
-    plot_profiles()
+    plot5_1()
+#    plot_profiles()

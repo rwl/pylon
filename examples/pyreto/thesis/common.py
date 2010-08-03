@@ -6,7 +6,7 @@ import os
 import sys
 import logging
 
-from numpy import zeros, c_
+from numpy import zeros, c_, vectorize
 from scipy.io import mmwrite
 
 import pylon
@@ -16,6 +16,7 @@ import pyreto.continuous
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable
+from pybrain.rl.learners.directsearch.directsearch import DirectSearchLearner
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.structure import TanhLayer, LinearLayer #@UnusedImport
 
@@ -124,15 +125,25 @@ def run_experiment(experiment, roleouts, samples, in_cloud=False):
         all_action = zeros((na, 0))
         all_reward = zeros((na, 0))
 
+        # Converts to action vector in percentage markup values.
+        vmarkup = vectorize(get_markup)
+
         for _ in range(roleouts):
             experiment.doEpisodes(samples) # number of samples per learning step
 
             epi_action = zeros((0, samples))
             epi_reward = zeros((0, samples))
 
-            for agent in experiment.agents:
+            for task, agent in zip(experiment.tasks, experiment.agents):
                 action = agent.history["action"]
                 reward = agent.history["reward"]
+
+                if isinstance(agent.learner, DirectSearchLearner):
+                    action = task.denormalize(action)
+                    print "DENORMALISED:", action
+                else:
+                    action = vmarkup(action, task)
+                    print "VECTORISED:", action
 
                 epi_action = c_[epi_action.T, action].T
                 epi_reward = c_[epi_reward.T, reward].T
@@ -159,6 +170,13 @@ def save_result(result, path, comment=""):
     """ Saves the given results to the path in MatrixMarket format.
     """
     mmwrite(path, result, comment)
+
+
+def get_markup(a, task):
+    i = int(a)
+    m = task.env._allActions[i]
+    print "VECTOR", m
+    return m[0]
 
 
 def get_weekly():
