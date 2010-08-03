@@ -140,10 +140,8 @@ def run_experiment(experiment, roleouts, samples, in_cloud=False):
 
                 if isinstance(agent.learner, DirectSearchLearner):
                     action = task.denormalize(action)
-                    print "DENORMALISED:", action
                 else:
                     action = vmarkup(action, task)
-                    print "VECTORISED:", action
 
                 epi_action = c_[epi_action.T, action].T
                 epi_reward = c_[epi_reward.T, reward].T
@@ -159,7 +157,8 @@ def run_experiment(experiment, roleouts, samples, in_cloud=False):
     if in_cloud:
         import cloud
         job_id = cloud.call(run, _high_cpu=False)
-        all_action, all_reward = cloud.result(job_id)
+        result = cloud.result(job_id)
+        all_action, all_reward = result
     else:
         all_action, all_reward = run()
 
@@ -175,7 +174,6 @@ def save_result(result, path, comment=""):
 def get_markup(a, task):
     i = int(a)
     m = task.env._allActions[i]
-    print "VECTOR", m
     return m[0]
 
 

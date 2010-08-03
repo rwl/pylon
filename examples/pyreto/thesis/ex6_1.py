@@ -162,7 +162,8 @@ def main():
     if in_cloud:
         import cloud
         job_id = cloud.call(run_experiment, enac_experiment, _high_cpu=False)
-        action, reward = cloud.result(job_id)
+        result = cloud.result(job_id)
+        action, reward = result
     else:
         action, reward = run_experiment(enac_experiment)
 
