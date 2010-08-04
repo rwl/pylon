@@ -66,7 +66,14 @@ for path in BRANCH_DATA:
 #                    print "found:", pl1.findtext("./{%s}description" % ns), pl2.findtext("./{%s}description" % ns)
                     break
         else:
-            print "Placemark not found", node1_id, node2_id
+            if pl1 is None and pl2 is None:
+                print "Placemarks not found: %s, %s (%s, %s)" % (node1_id, node2_id, row[0][4], row[1][4])
+            elif pl1 is None:
+                print "Placemark not found: %s (%s) (%s)" % (node1_id, node2_id, row[0][4])
+            elif pl2 is None:
+                print "Placemark not found: %s (%s) (%s)" % (node2_id, node1_id, row[1][4])
+            else:
+                raise ValueError
 
         if pl1 is not None and pl2 is not None:
             pnt1 = pl1.find("./{%s}Point" % ns)
