@@ -28,7 +28,7 @@ matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
 matplotlib.rcParams['axes.titlesize'] = "medium"
 
-tex = False
+tex = True
 
 if tex:
     # Set up publication quality graphs.
@@ -79,19 +79,24 @@ def plot_results(results, gi, ylab, xlab="Time (h)"):
 #             linestyle=ls[gi % ns],
 #             label=lab)
 
-        ax1 = errorbar(x, y, yerr=e, fmt='ko', linestyle="None", #label=lab,
+        ax1 = errorbar(x, y, yerr=e, fmt='ko', linestyle="None", label=lab,
                        capsize=2, markersize=3)#, linewidth=0.2)
         ylabel(ylab)
-#        l = legend()
-#        l.get_frame().set_linewidth(0.5)
 
+        l = legend(loc="upper right")
+        l.get_frame().set_linewidth(0.5)
+
+        # Exploration rate plot.
         twinx()
-        plot(x, y2)
+        plot(x, y2, color="black", label=y2lab)
         ylabel(y2lab)
         if y2max is not None:
             ylim(ymax=y2max)
         if y2min is not None:
             ylim(ymin=y2min)
+
+        l = legend(loc="lower right")
+        l.get_frame().set_linewidth(0.5)
     xlabel(xlab)
 
 

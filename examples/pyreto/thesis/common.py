@@ -125,7 +125,7 @@ def run_experiment(experiment, roleouts, samples, in_cloud=False):
         na = len(experiment.agents)
         all_action = zeros((na, 0))
         all_reward = zeros((na, 0))
-        epsilon = zeros((na, roleouts)) # learning rate
+        epsilon = zeros((na, roleouts)) # exploration rate
 
         # Converts to action vector in percentage markup values.
         vmarkup = vectorize(get_markup)
