@@ -17,6 +17,7 @@ import pyreto.continuous
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable
 from pybrain.rl.learners.directsearch.directsearch import DirectSearchLearner
+from pybrain.rl.learners.valuebased.valuebased import ValueBasedLearner
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.structure import TanhLayer, LinearLayer #@UnusedImport
 
@@ -37,8 +38,8 @@ def get_case6ww():
 
     case = pylon.Case.load(path)
     case.generators[0].p_cost = (0.0, 5.0, 200.0)
-    case.generators[1].p_cost = (0.0, 6.5, 200.0)
-    case.generators[2].p_cost = (0.0, 2.0, 200.0)
+    case.generators[1].p_cost = (0.0, 2.0, 200.0)
+    case.generators[2].p_cost = (0.0, 3.0, 200.0)
 
     case.generators[0].c_shutdown = 100.0
 
@@ -47,8 +48,8 @@ def get_case6ww():
     ##case.generators[2].p_min = 0.0
 
     case.generators[0].p_max = 100.0
-    case.generators[1].p_max = 70.0
-    case.generators[2].p_max = 70.0
+    case.generators[1].p_max = 50.0
+    case.generators[2].p_max = 100.0
 
     #pyreto.util.plotGenCost(case.generators)
 
@@ -124,22 +125,28 @@ def run_experiment(experiment, roleouts, samples, in_cloud=False):
         na = len(experiment.agents)
         all_action = zeros((na, 0))
         all_reward = zeros((na, 0))
+        epsilon = zeros((na, roleouts)) # exploration rate
 
         # Converts to action vector in percentage markup values.
         vmarkup = vectorize(get_markup)
 
-        for _ in range(roleouts):
+        for roleout in range(roleouts):
             experiment.doEpisodes(samples) # number of samples per learning step
 
             epi_action = zeros((0, samples))
             epi_reward = zeros((0, samples))
 
-            for task, agent in zip(experiment.tasks, experiment.agents):
+            for i, (task, agent) in \
+            enumerate(zip(experiment.tasks, experiment.agents)):
                 action = agent.history["action"]
                 reward = agent.history["reward"]
 
                 if isinstance(agent.learner, DirectSearchLearner):
                     action = task.denormalize(action)
+                    epsilon[i, roleout] = agent.learner.explorer.sigma
+                elif isinstance(agent.learner, ValueBasedLearner):
+                    action = vmarkup(action, task)
+                    epsilon[i, roleout] = agent.learner.explorer.epsilon
                 else:
                     action = vmarkup(action, task)
 
@@ -152,17 +159,17 @@ def run_experiment(experiment, roleouts, samples, in_cloud=False):
             all_action = c_[all_action, epi_action]
             all_reward = c_[all_reward, epi_reward]
 
-        return all_action, all_reward
+        return all_action, all_reward, epsilon
 
     if in_cloud:
         import cloud
         job_id = cloud.call(run, _high_cpu=False)
         result = cloud.result(job_id)
-        all_action, all_reward = result
+        all_action, all_reward, epsilon = result
     else:
-        all_action, all_reward = run()
+        all_action, all_reward, epsilon = run()
 
-    return all_action, all_reward
+    return all_action, all_reward, epsilon
 
 
 def save_result(result, path, comment=""):
