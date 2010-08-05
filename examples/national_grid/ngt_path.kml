@@ -131,6 +131,34 @@
       </ns0:LineString>
     </ns0:Placemark>
     <ns0:Placemark>
+      <ns0:name>COYL COYW</ns0:name>
+      <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.445290185515053,55.45604431929656,0 -4.445290185515053,55.45604431929656,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>COYL COYW</ns0:name>
+      <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.445290185515053,55.45604431929656,0 -4.445290185515053,55.45604431929656,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>COYW KILS</ns0:name>
+      <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.445290185515053,55.45604431929656,0 -4.463855094935374,55.57583784687983,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>COYW KILS</ns0:name>
+      <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.445290185515053,55.45604431929656,0 -4.463855094935374,55.57583784687983,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
       <ns0:name>CRUA CRUA</ns0:name>
       <ns0:styleUrl>line275</ns0:styleUrl>
       <ns0:LineString>
@@ -264,10 +292,52 @@
       </ns0:LineString>
     </ns0:Placemark>
     <ns0:Placemark>
+      <ns0:name>ECCL STWB</ns0:name>
+      <ns0:styleUrl>line400</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-2.329860668011021,55.66941769298552,0 -1.742668520653984,54.97827647694541,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>ECCL STWB</ns0:name>
+      <ns0:styleUrl>line400</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-2.329860668011021,55.66941769298552,0 -1.742668520653984,54.97827647694541,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
       <ns0:name>ECCL TORN</ns0:name>
       <ns0:styleUrl>line400</ns0:styleUrl>
       <ns0:LineString>
         <ns0:coordinates>-2.329860668011021,55.66941769298552,0 -2.407694,55.967779,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>EKIL EKIL</ns0:name>
+      <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.177955,55.765461,0 -4.177955,55.765461,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>EKIL STHA</ns0:name>
+      <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.177955,55.765461,0 -4.081388297064154,55.75342997867718,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>EKIL EKIL</ns0:name>
+      <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.177955,55.765461,0 -4.177955,55.765461,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>EKIL STHA</ns0:name>
+      <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.177955,55.765461,0 -4.081388297064154,55.75342997867718,0</ns0:coordinates>
       </ns0:LineString>
     </ns0:Placemark>
     <ns0:Placemark>
@@ -660,6 +730,55 @@
       <ns0:styleUrl>line132</ns0:styleUrl>
       <ns0:LineString>
         <ns0:coordinates>-4.561733692562883,55.96103884504069,0 -4.376931578812361,55.92972609386191,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>COAL ELVA</ns0:name>
+      <ns0:styleUrl>line400</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-3.888577,55.58937800000001,0 -3.659598516077846,55.4340327016507,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>ELVA HARK</ns0:name>
+      <ns0:styleUrl>line400</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-3.659598516077846,55.4340327016507,0 -2.964096026479853,54.9418460496757,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>COYL AUCH</ns0:name>
+      <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.445290185515053,55.45604431929656,0 -4.980483527381787,55.06984705693386,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>GALA ECCL</ns0:name>
+      <ns0:styleUrl>line132</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-2.771460950341839,55.61033374759506,0 -2.329860668011021,55.66941769298552,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>GRNA HAWI</ns0:name>
+      <ns0:styleUrl>line132</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-3.067544444444446,54.99248611111112,0 -2.801647334633906,55.43308107755708,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>HUER KILS</ns0:name>
+      <ns0:styleUrl>line400</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.890804,55.72189,0 -4.463855094935374,55.57583784687983,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>KILS INKI</ns0:name>
+      <ns0:styleUrl>line400</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-4.463855094935374,55.57583784687983,0 -4.885826,55.898512,0</ns0:coordinates>
       </ns0:LineString>
     </ns0:Placemark>
     <ns0:Placemark>
@@ -4697,6 +4816,20 @@
     <ns0:Placemark>
       <ns0:name>STEW STEW</ns0:name>
       <ns0:styleUrl>line275</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-1.742668520653984,54.97827647694541,0 -1.742668520653984,54.97827647694541,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>STEW STWB</ns0:name>
+      <ns0:styleUrl>line400</ns0:styleUrl>
+      <ns0:LineString>
+        <ns0:coordinates>-1.742668520653984,54.97827647694541,0 -1.742668520653984,54.97827647694541,0</ns0:coordinates>
+      </ns0:LineString>
+    </ns0:Placemark>
+    <ns0:Placemark>
+      <ns0:name>STEW STWB</ns0:name>
+      <ns0:styleUrl>line400</ns0:styleUrl>
       <ns0:LineString>
         <ns0:coordinates>-1.742668520653984,54.97827647694541,0 -1.742668520653984,54.97827647694541,0</ns0:coordinates>
       </ns0:LineString>

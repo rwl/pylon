@@ -34,10 +34,10 @@ ET.SubElement(linestyle275, "{%s}width" % ns).text = "3"
 DATA_DIR = "./data/"
 
 BRANCH_DATA = [
-               os.path.join(DATA_DIR, "spt_circuit_param.csv"),
-               os.path.join(DATA_DIR, "shetl_circuit_param.csv"),
-               os.path.join(DATA_DIR, "nget_circuit_param.csv")
-               ]
+    os.path.join(DATA_DIR, "spt_circuit_param.csv"),
+    os.path.join(DATA_DIR, "shetl_circuit_param.csv"),
+    os.path.join(DATA_DIR, "nget_circuit_param.csv")
+]
 
 for path in BRANCH_DATA:
     reader = csv.reader(open(path), delimiter=',', quotechar='"')
