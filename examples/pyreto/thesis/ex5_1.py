@@ -3,7 +3,7 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 """ This script runs the first experiment from chapter 5 of Learning to Trade
 Power by Richard Lincoln. """
 
-from numpy import zeros, c_, r_, matrix, mean, std
+from numpy import zeros, mean, std
 
 from pyreto import DISCRIMINATIVE
 
@@ -70,17 +70,42 @@ def get_q_experiment(case):
     """ Returns an experiment that uses Q-learning.
     """
     gen = case.generators
-    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit)
+    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
+                                auctionType=DISCRIMINATIVE)
 
-    learner1 = Q() #QLambda() SARSA(gamma=0.8)
-    #learner1.explorer = BoltzmannExplorer()#tau=100, decay=0.95)
+    alpha = 0.3 # Learning rate.
+    gamma = 0.99 # Discount factor
+    # The closer epsilon gets to 0, the more greedy and less explorative.
+    epsilon = 0.5
+    decay = 0.995#88
+    tau = 150.0 # Boltzmann temperature.
+
+    learner1 = Q(alpha, gamma)
+#    learner1 = QLambda(alpha, gamma, qlambda=0.9)
+#    learner1 = SARSA(alpha, gamma)
+
+    learner1.explorer.epsilon = epsilon
+    learner1.explorer.decay = decay
+#    learner1.explorer = BoltzmannExplorer(tau, decay)
+
     task1, agent1 = get_discrete_task_agent(
         gen[:1], market, nStates, nOffer, (0, 10, 20, 30), profile, learner1)
 
+
+    # Passive agent.
     task2, agent2 = get_zero_task_agent(gen[1:2], market, nOffer, profile)
 
+
+    learner2 = Q(alpha, gamma)
+#    learner2 = QLambda(alpha, gamma, qlambda=0.9)
+#    learner2 = SARSA(alpha, gamma)
+
+    learner2.explorer.epsilon = epsilon
+    learner2.explorer.decay = decay
+#    learner2.explorer = BoltzmannExplorer(tau, decay)
+
     task3, agent3 = get_discrete_task_agent(
-        gen[2:3], market, nStates, nOffer, (0, 10, 20, 30), profile, Q())
+        gen[2:3], market, nStates, nOffer, (0, 10, 20, 30), profile, learner2)
 
     experiment = pyreto.continuous.MarketExperiment(
         [task1, task2, task3], [agent1, agent2, agent3], market, profile)
@@ -135,7 +160,7 @@ def run_experiments(expts, func, case, roleouts, in_cloud):
     expt_reward = zeros((expts, na, roleouts * samples))
 
     for expt in range(expts):
-        action, reward = run_experiment(
+        action, reward, epsilon = run_experiment(
             experiment, roleouts, samples, in_cloud)
 
         expt_action[expt, :, :] = action
@@ -149,30 +174,35 @@ def run_experiments(expts, func, case, roleouts, in_cloud):
     expt_reward_mean = mean(expt_reward, axis=0)
     expt_reward_std = std(expt_reward, axis=0, ddof=1)
 
-    return expt_action_mean, expt_action_std, expt_reward_mean, expt_reward_std
+    return expt_action_mean, expt_action_std, \
+           expt_reward_mean, expt_reward_std, epsilon
 
 
 def main():
     case = get_case6ww()
 
-    expts = 5
-    roleouts = 30
+    expts = 3
+    roleouts = 100
     in_cloud = False
 
-#    expt_action_mean, expt_action_std, expt_reward_mean, expt_reward_std = \
-#        run_experiments(expts, get_re_experiment, case, roleouts, in_cloud)
-#
-#    save_result(expt_action_mean, "./out/ex5_1_re_action_mean.mtx",
-#                "Experiment 5.1 Roth-Erev actions mean.")
-#    save_result(expt_action_std, "./out/ex5_1_re_action_std.mtx",
-#                "Experiment 5.1 Roth-Erev actions SD.")
-#    save_result(expt_reward_mean, "./out/ex5_1_re_reward_mean.mtx",
-#                "Experiment 5.1 Roth-Erev rewards mean.")
-#    save_result(expt_reward_std, "./out/ex5_1_re_reward_std.mtx",
-#                "Experiment 5.1 Roth-Erev rewards SD.")
+    expt_action_mean, expt_action_std, \
+    expt_reward_mean, expt_reward_std, epsilon = \
+        run_experiments(expts, get_re_experiment, case, roleouts, in_cloud)
+
+    save_result(expt_action_mean, "./out/ex5_1_re_action_mean.mtx",
+                "Experiment 5.1 Roth-Erev actions mean.")
+    save_result(expt_action_std, "./out/ex5_1_re_action_std.mtx",
+                "Experiment 5.1 Roth-Erev actions SD.")
+    save_result(expt_reward_mean, "./out/ex5_1_re_reward_mean.mtx",
+                "Experiment 5.1 Roth-Erev rewards mean.")
+    save_result(expt_reward_std, "./out/ex5_1_re_reward_std.mtx",
+                "Experiment 5.1 Roth-Erev rewards SD.")
+    save_result(epsilon, "./out/ex5_1_re_epsilon.mtx",
+                "Experiment 5.1 Roth-Erev learning rates.")
 
 
-    expt_action_mean, expt_action_std, expt_reward_mean, expt_reward_std = \
+    expt_action_mean, expt_action_std, \
+    expt_reward_mean, expt_reward_std, epsilon = \
         run_experiments(expts, get_q_experiment, case, roleouts, in_cloud)
 
     save_result(expt_action_mean, "./out/ex5_1_q_action_mean.mtx",
@@ -183,6 +213,8 @@ def main():
                 "Experiment 5.1 Q-learning rewards mean.")
     save_result(expt_reward_std, "./out/ex5_1_q_reward_std.mtx",
                 "Experiment 5.1 Q-learning rewards SD.")
+    save_result(epsilon, "./out/ex5_1_q_epsilon.mtx",
+                "Experiment 5.1 Q-learning learning rates.")
 
 
 #    enac_experiment = get_enac_experiment(case)
