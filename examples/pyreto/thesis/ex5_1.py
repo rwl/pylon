@@ -3,6 +3,8 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 """ This script runs the first experiment from chapter 5 of Learning to Trade
 Power by Richard Lincoln. """
 
+from pyreto import DISCRIMINATIVE
+
 import pyreto.continuous
 import pyreto.roth_erev #@UnusedImport
 
@@ -16,6 +18,8 @@ from common import \
     get_case6ww, setup_logging, get_discrete_task_agent, get_zero_task_agent, \
     run_experiment, save_result, get_continuous_task_agent, \
     get_neg_one_task_agent
+
+from plot import plot5_1
 
 
 setup_logging()
@@ -33,12 +37,13 @@ def get_re_experiment(case):
     """ Returns an experiment that uses the Roth-Erev learning method.
     """
     gen = case.generators
-    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit)
+    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
+                                auctionType=DISCRIMINATIVE)
 
     experimentation=0.55
     recency=0.3
     epsilon=100.0
-    decay=0.9995
+    decay=0.95#9995
 
     ##learner1 = pyreto.roth_erev.RothErev(experimentation=0.55, recency=0.3)
     learner1 = VariantRothErev(experimentation, recency)
@@ -121,9 +126,9 @@ def get_enac_experiment(case):
 if __name__ == "__main__":
     case = get_case6ww()
 
-    roleouts = 2
-    samples = 1
-    in_cloud = True
+    roleouts = 50
+    samples = len(profile)
+    in_cloud = False
 
     re_experiment = get_re_experiment(case)
     action, reward = run_experiment(re_experiment, roleouts, samples, in_cloud)
@@ -148,3 +153,5 @@ if __name__ == "__main__":
 #                "Experiment 5.1 ENAC actions.")
 #    save_result(reward, "./out/ex5_1_enac_reward.mtx",
 #                "Experiment 5.1 ENAC rewards.")
+
+    plot5_1()

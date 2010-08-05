@@ -37,8 +37,8 @@ def get_case6ww():
 
     case = pylon.Case.load(path)
     case.generators[0].p_cost = (0.0, 5.0, 200.0)
-    case.generators[1].p_cost = (0.0, 6.5, 200.0)
-    case.generators[2].p_cost = (0.0, 2.0, 200.0)
+    case.generators[1].p_cost = (0.0, 2.0, 200.0)
+    case.generators[2].p_cost = (0.0, 3.0, 200.0)
 
     case.generators[0].c_shutdown = 100.0
 
@@ -47,8 +47,8 @@ def get_case6ww():
     ##case.generators[2].p_min = 0.0
 
     case.generators[0].p_max = 100.0
-    case.generators[1].p_max = 70.0
-    case.generators[2].p_max = 70.0
+    case.generators[1].p_max = 50.0
+    case.generators[2].p_max = 100.0
 
     #pyreto.util.plotGenCost(case.generators)
 
