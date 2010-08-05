@@ -3,6 +3,8 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 """ This script runs the first experiment from chapter 5 of Learning to Trade
 Power by Richard Lincoln. """
 
+from numpy import zeros, c_, r_, matrix, mean, std
+
 from pyreto import DISCRIMINATIVE
 
 import pyreto.continuous
@@ -123,29 +125,66 @@ def get_enac_experiment(case):
     return experiment
 
 
-if __name__ == "__main__":
+def run_experiments(expts, func, case, roleouts, in_cloud):
+    samples = len(profile)
+
+    experiment = func(case)
+    na = len(experiment.agents)
+
+    expt_action = zeros((expts, na, roleouts * samples))
+    expt_reward = zeros((expts, na, roleouts * samples))
+
+    for expt in range(expts):
+        action, reward = run_experiment(
+            experiment, roleouts, samples, in_cloud)
+
+        expt_action[expt, :, :] = action
+        expt_reward[expt, :, :] = reward
+
+        experiment = func(case)
+
+    expt_action_mean = mean(expt_action, axis=0)
+    expt_action_std = std(expt_action, axis=0, ddof=1)
+
+    expt_reward_mean = mean(expt_reward, axis=0)
+    expt_reward_std = std(expt_reward, axis=0, ddof=1)
+
+    return expt_action_mean, expt_action_std, expt_reward_mean, expt_reward_std
+
+
+def main():
     case = get_case6ww()
 
-    roleouts = 50
-    samples = len(profile)
+    expts = 5
+    roleouts = 30
     in_cloud = False
 
-    re_experiment = get_re_experiment(case)
-    action, reward = run_experiment(re_experiment, roleouts, samples, in_cloud)
-    save_result(action, "./out/ex5_1_re_action.mtx",
-                "Experiment 5.1 Roth-Erev actions.")
-    save_result(reward, "./out/ex5_1_re_reward.mtx",
-                "Experiment 5.1 Roth-Erev rewards.")
+#    expt_action_mean, expt_action_std, expt_reward_mean, expt_reward_std = \
+#        run_experiments(expts, get_re_experiment, case, roleouts, in_cloud)
+#
+#    save_result(expt_action_mean, "./out/ex5_1_re_action_mean.mtx",
+#                "Experiment 5.1 Roth-Erev actions mean.")
+#    save_result(expt_action_std, "./out/ex5_1_re_action_std.mtx",
+#                "Experiment 5.1 Roth-Erev actions SD.")
+#    save_result(expt_reward_mean, "./out/ex5_1_re_reward_mean.mtx",
+#                "Experiment 5.1 Roth-Erev rewards mean.")
+#    save_result(expt_reward_std, "./out/ex5_1_re_reward_std.mtx",
+#                "Experiment 5.1 Roth-Erev rewards SD.")
 
 
-#    q_experiment = get_q_experiment(case)
-#    action, reward = run_experiment(q_experiment, roleouts, samples, in_cloud)
-#    save_result(action, "./out/ex5_1_q_action.mtx",
-#                "Experiment 5.1 Q-learning actions.")
-#    save_result(reward, "./out/ex5_1_q_reward.mtx",
-#                "Experiment 5.1 Q-learning rewards.")
-#
-#
+    expt_action_mean, expt_action_std, expt_reward_mean, expt_reward_std = \
+        run_experiments(expts, get_q_experiment, case, roleouts, in_cloud)
+
+    save_result(expt_action_mean, "./out/ex5_1_q_action_mean.mtx",
+                "Experiment 5.1 Q-learning actions mean.")
+    save_result(expt_action_std, "./out/ex5_1_q_action_std.mtx",
+                "Experiment 5.1 Q-learning actions SD.")
+    save_result(expt_reward_mean, "./out/ex5_1_q_reward_mean.mtx",
+                "Experiment 5.1 Q-learning rewards mean.")
+    save_result(expt_reward_std, "./out/ex5_1_q_reward_std.mtx",
+                "Experiment 5.1 Q-learning rewards SD.")
+
+
 #    enac_experiment = get_enac_experiment(case)
 #    action, reward = run_experiment(enac_experiment, roleouts, samples,
 #                                    in_cloud)
@@ -154,4 +193,6 @@ if __name__ == "__main__":
 #    save_result(reward, "./out/ex5_1_enac_reward.mtx",
 #                "Experiment 5.1 ENAC rewards.")
 
+if __name__ == "__main__":
+    main()
     plot5_1()

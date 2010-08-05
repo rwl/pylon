@@ -15,7 +15,7 @@ import random
 
 from pylab import \
     figure, plot, xlabel, ylabel, legend, savefig, rcParams, clf, title, \
-    xlim, ylim, show
+    xlim, ylim, show, errorbar, subplot
 
 from scipy import arange, sqrt
 from scipy.io import mmread
@@ -24,7 +24,11 @@ from common import \
     get_winter_hourly, get_summer_hourly, get_spring_autumn_hourly, \
     get_weekly, get_daily
 
-tex = False
+matplotlib.rcParams['lines.linewidth'] = 0.5
+matplotlib.rcParams['axes.linewidth'] = 0.7
+matplotlib.rcParams['axes.titlesize'] = "medium"
+
+tex = True
 
 if tex:
     # Set up publication quality graphs.
@@ -35,7 +39,7 @@ if tex:
     #inches_per_pt = 1.0 / 72.27               # Convert pt to inch
     golden_mean = (sqrt(5) - 1.0) / 2.0 # Aesthetic ratio
     fig_width = 5.5#fig_width_pt * inches_per_pt  # width in inches
-    fig_height = fig_width * golden_mean      # height in inches
+    fig_height = 7.0#fig_width * golden_mean      # height in inches
     fig_size = [fig_width, fig_height]
     params = {'backend': 'ps',
               'axes.labelsize': 10,
@@ -57,55 +61,69 @@ nc, ns = len(clr), len(ls)
 
 def plot_results(results, gi, ylab, xlab="Time (h)"):
     figure(random.randint(0, 100))
-#    clf()
-    for (result, lab) in results:
-        x = arange(0.0, result.shape[1], 1.0)
-        plot(x, result[gi, :],
+
+    nplot = len(results)
+    for i, (result_mean, result_std, lab) in enumerate(results):
+        subplot(nplot, 1, i + 1)
+
+        title(lab)
+
+        x = arange(0.0, result_mean.shape[1], 1.0)
+        y = result_mean[gi, :]
+        e = result_std[gi, :]
+#        plot(x, result_mean[gi, :],
 #             color=clr[gi % nc],
 #             linestyle=ls[gi % ns],
-             label=lab)
+#             label=lab)
+        errorbar(x, y, yerr=e, fmt='ko', linestyle="None", #label=lab,
+                 capsize=2, markersize=1.5)#, linewidth=0.2)
+        ylabel(ylab)
+#        l = legend()
+#        l.get_frame().set_linewidth(0.5)
     xlabel(xlab)
-    ylabel(ylab)
-    legend()
 
 
 def plot5_1():
-    re_action = mmread("./out/ex5_1_re_action.mtx")
-#    q_action = mmread("./out/ex5_1_q_action.mtx")
+    re_action_mean = mmread("./out/ex5_1_re_action_mean.mtx")
+    re_action_std = mmread("./out/ex5_1_re_action_std.mtx")
+    q_action_mean = mmread("./out/ex5_1_q_action_mean.mtx")
+    q_action_std = mmread("./out/ex5_1_q_action_std.mtx")
 #    enac_action = mmread("./out/ex5_1_enac_action.mtx")
 
     actions = [
-       (re_action, "Roth-Erev"),
-#       (q_action, "Q-Learning"),
+       (re_action_mean, re_action_std, "Roth-Erev"),
+       (q_action_mean, q_action_std, "Q-Learning"),
 #       (enac_action, "ENAC")
     ]
 
     plot_results(actions, 0, "Action (\%)")
-    title("Generator 1 Action")
+#    title("Generator 1 Action")
     if tex:
         savefig('./out/fig5_1_g1_action.pdf')
     plot_results(actions, 2, "Action (\%)")
-    title("Generator 2 Action")
+#    title("Generator 2 Action")
     if tex:
         savefig('./out/fig5_1_g3_action.pdf')
 
 
-    re_reward = mmread("./out/ex5_1_re_reward.mtx")
-#    q_reward = mmread("./out/ex5_1_q_reward.mtx")
+    re_reward_mean = mmread("./out/ex5_1_re_reward_mean.mtx")
+    re_reward_std = mmread("./out/ex5_1_re_reward_std.mtx")
+    q_reward_mean = mmread("./out/ex5_1_q_reward_mean.mtx")
+    q_reward_std = mmread("./out/ex5_1_q_reward_std.mtx")
 #    enac_reward = mmread("./out/ex5_1_enac_reward.mtx")
 
     rewards = [
-        (re_reward, "Roth-Erev"),
-#        (q_reward, "Q-Learning"),
+        (re_reward_mean, re_reward_std, "Roth-Erev"),
+        (q_reward_mean, q_reward_std, "Q-Learning"),
 #        (enac_reward, "ENAC")
     ]
 
     plot_results(rewards, 0, r"Reward (\verb+$+)")
-    title("Generator 1 Reward")
+#    title("Generator 1 Reward")
     if tex:
         savefig('./out/fig5_1_g1_reward.pdf')
     plot_results(rewards, 2, r"Reward (\verb+$+)")
-    title("Generator 2 Reward")
+#    title("Generator 2 Reward")
     if tex:
         savefig('./out/fig5_1_g3_reward.pdf')
 
