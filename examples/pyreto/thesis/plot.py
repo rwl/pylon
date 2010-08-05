@@ -15,7 +15,7 @@ import random
 
 from pylab import \
     figure, plot, xlabel, ylabel, legend, savefig, rcParams, clf, title, \
-    xlim, ylim, show, errorbar, subplot, twinx
+    xlim, ylim, show, errorbar, subplot, twinx, subplots_adjust
 
 from scipy import arange, sqrt
 from scipy.io import mmread
@@ -38,8 +38,8 @@ if tex:
     #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
     #inches_per_pt = 1.0 / 72.27               # Convert pt to inch
     golden_mean = (sqrt(5) - 1.0) / 2.0 # Aesthetic ratio
-    fig_width = 5.5#fig_width_pt * inches_per_pt  # width in inches
-    fig_height = 7.0#fig_width * golden_mean      # height in inches
+    fig_width = 6.15#fig_width_pt * inches_per_pt  # width in inches
+    fig_height = 10.0#fig_width * golden_mean      # height in inches
     fig_size = [fig_width, fig_height]
     params = {'backend': 'ps',
               'axes.labelsize': 10,
@@ -97,6 +97,10 @@ def plot_results(results, gi, ylab, xlab="Time (h)"):
 
         l = legend(loc="lower right")
         l.get_frame().set_linewidth(0.5)
+
+#        subplots_adjust(left=0.09, bottom=0.05, right=None,
+#                        wspace=None, hspace=None)
+
     xlabel(xlab)
 
 
