@@ -21,6 +21,7 @@ from pybrain.rl.learners.valuebased.valuebased import ValueBasedLearner
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.structure import TanhLayer, LinearLayer #@UnusedImport
 
+
 def setup_logging():
     logger = logging.getLogger()
     for handler in logger.handlers:
@@ -51,6 +52,10 @@ def get_case6ww():
     case.generators[1].p_max = 50.0
     case.generators[2].p_max = 100.0
 
+    # FIXME: Correct generator naming order.
+    for g in case.generators:
+        g.name
+
     #pyreto.util.plotGenCost(case.generators)
 
     return case
@@ -65,14 +70,20 @@ def get_case24_ieee_rts():
 
     case = pylon.Case.load(path)
 
+    # FIXME: Correct generator naming order.
+    for g in case.generators:
+        g.name
+
     return case
 
 
-def get_discrete_task_agent(generators, market, nStates, nOffer, markups, profile, learner):
+def get_discrete_task_agent(generators, market, nStates, nOffer, markups,
+                            profile, learner):
     """ Returns a tuple of task and agent for the given learner.
     """
     env = pyreto.discrete.MarketEnvironment(generators, market,
-                                            numStates=nStates, numOffbids=nOffer,
+                                            numStates=nStates,
+                                            numOffbids=nOffer,
                                             markups=markups)
     task = pyreto.discrete.ProfitTask(env, maxSteps=len(profile))
 
@@ -84,20 +95,21 @@ def get_discrete_task_agent(generators, market, nStates, nOffer, markups, profil
     return task, agent
 
 
-def get_continuous_task_agent(generators, market, nOffer, maxMarkup, profile, learner):
-        env = pyreto.continuous.MarketEnvironment(generators, market, nOffer)
+def get_continuous_task_agent(generators, market, nOffer, maxMarkup, profile,
+                              learner):
+    env = pyreto.continuous.MarketEnvironment(generators, market, nOffer)
 
-        task = pyreto.continuous.ProfitTask(env, maxSteps=len(profile),
-                                            maxMarkup=maxMarkup)
+    task = pyreto.continuous.ProfitTask(env, maxSteps=len(profile),
+                                        maxMarkup=maxMarkup)
 
-        net = buildNetwork(env.outdim, 2, env.indim,
-                           bias=True, outputbias=True,
-                           hiddenclass=TanhLayer, outclass=TanhLayer)
+    net = buildNetwork(env.outdim, 2, env.indim,
+                       bias=True, outputbias=True,
+                       hiddenclass=TanhLayer, outclass=TanhLayer)
 
-        agent = LearningAgent(net, learner)
-        agent.name = generators[0].name
+    agent = LearningAgent(net, learner)
+#    agent.name = generators[0].name
 
-        return task, agent
+    return task, agent
 
 
 def get_zero_task_agent(generators, market, nOffer, profile):
@@ -172,10 +184,26 @@ def run_experiment(experiment, roleouts, samples, in_cloud=False):
     return all_action, all_reward, epsilon
 
 
-def save_result(result, path, comment=""):
-    """ Saves the given results to the path in MatrixMarket format.
-    """
-    mmwrite(path, result, comment)
+def save_results(results, name):
+
+    expt_action_mean, expt_action_std, \
+        expt_reward_mean, expt_reward_std, epsilon = results
+
+    mmwrite("./out/ex5_1_%s_action_mean.mtx" % name.lower(),
+            expt_action_mean,
+            "Experiment 5.1 %s actions mean." % name)
+    mmwrite("./out/ex5_1_%s_action_std.mtx" % name.lower(),
+            expt_action_std,
+            "Experiment 5.1 %s actions SD." % name)
+    mmwrite("./out/ex5_1_%s_reward_mean.mtx" % name.lower(),
+            expt_reward_mean,
+            "Experiment 5.1 %s rewards mean." % name)
+    mmwrite("./out/ex5_1_%s_reward_std.mtx" % name.lower(),
+            expt_reward_std,
+            "Experiment 5.1 %s rewards SD." % name)
+    mmwrite("./out/ex5_1_%s_epsilon.mtx" % name.lower(),
+            epsilon,
+            "Experiment 5.1 %s exploration rates." % name)
 
 
 def get_markup(a, task):

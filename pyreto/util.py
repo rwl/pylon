@@ -28,8 +28,31 @@ from itertools import count, izip
 from pylab import figure, xlabel, ylabel, plot, show, legend
 
 from pybrain.rl.agents.logging import LoggingAgent
+from pybrain.rl.explorers.continuous import NormalExplorer
 
 from pylon.generator import PW_LINEAR, POLYNOMIAL
+
+#------------------------------------------------------------------------------
+#  "ManualNormalExplorer" class:
+#------------------------------------------------------------------------------
+
+class ManualNormalExplorer(NormalExplorer):
+    def __init__(self, dim, sigma=0.0, decay=0.995):
+        super(ManualNormalExplorer, self).__init__(dim, sigma)
+        self.decay = decay
+        self.manual_sigma = [sigma] * dim
+
+    def newEpisode(self):
+        self.manual_sigma = [s * self.decay for s in self.manual_sigma]
+
+    def _forwardImplementation(self, inbuf, outbuf):
+        self.sigma = self.manual_sigma
+        super(ManualNormalExplorer, self)._forwardImplementation(inbuf, outbuf)
+
+    def _backwardImplementation(self, outerr, inerr, outbuf, inbuf):
+        self.sigma = self.manual_sigma
+        super(ManualNormalExplorer, self)._backwardImplementation(
+            outerr, inerr, outbuf, inbuf)
 
 #------------------------------------------------------------------------------
 #  "ZeroAgent" class:

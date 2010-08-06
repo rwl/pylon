@@ -28,7 +28,7 @@ matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
 matplotlib.rcParams['axes.titlesize'] = "medium"
 
-tex = True
+tex = False
 
 if tex:
     # Set up publication quality graphs.
@@ -52,6 +52,8 @@ if tex:
     #          'text.latex.unicode': True,
               'figure.figsize': fig_size}
     rcParams.update(params)
+else:
+    matplotlib.rcParams['figure.figsize'] = (8, 10)
 
 
 clr = ["black", "0.5", "0.8"]
@@ -59,7 +61,7 @@ ls = ["-"]#, ":", "--", "-."]
 nc, ns = len(clr), len(ls)
 
 
-def plot_results(results, gi, ylab, xlab="Time (h)"):
+def plot_results(results, ai, ylab, xlab="Time (h)"):
     figure(random.randint(0, 100))
 
     nplot = len(results)
@@ -70,17 +72,17 @@ def plot_results(results, gi, ylab, xlab="Time (h)"):
         title(lab)
 
         x = arange(0.0, result_mean.shape[1], 1.0)
-        y = result_mean[gi, :]
-        e = result_std[gi, :]
-        y2 = epsilon[gi, :]
+        y = result_mean[ai, :]
+        e = result_std[ai, :]
+        y2 = epsilon[ai, :]
 
-#        plot(x, result_mean[gi, :],
-#             color=clr[gi % nc],
-#             linestyle=ls[gi % ns],
+#        plot(x, result_mean[ai, :],
+#             color=clr[ai % nc],
+#             linestyle=ls[ai % ns],
 #             label=lab)
 
-        ax1 = errorbar(x, y, yerr=e, fmt='ko', linestyle="None", label=lab,
-                       capsize=2, markersize=3)#, linewidth=0.2)
+        errorbar(x, y, yerr=e, fmt='ko', linestyle="None", label=lab,
+                 capsize=2, markersize=3)#, linewidth=0.2)
         ylabel(ylab)
 
         l = legend(loc="upper right")
@@ -107,27 +109,28 @@ def plot_results(results, gi, ylab, xlab="Time (h)"):
 def plot5_1():
     re_epsilon = mmread("./out/ex5_1_re_epsilon.mtx")
     q_epsilon = mmread("./out/ex5_1_q_epsilon.mtx")
+    enac_epsilon = mmread("./out/ex5_1_enac_epsilon.mtx")
 
     re_action_mean = mmread("./out/ex5_1_re_action_mean.mtx")
     re_action_std = mmread("./out/ex5_1_re_action_std.mtx")
     q_action_mean = mmread("./out/ex5_1_q_action_mean.mtx")
     q_action_std = mmread("./out/ex5_1_q_action_std.mtx")
-#    enac_action = mmread("./out/ex5_1_enac_action.mtx")
+    enac_action_mean = mmread("./out/ex5_1_enac_action_mean.mtx")
+    enac_action_std = mmread("./out/ex5_1_enac_action_std.mtx")
 
     actions = [
-       (re_action_mean, re_action_std, re_epsilon,
-        "Roth-Erev", "Boltzmann Temperature", None, None),
-       (q_action_mean, q_action_std, q_epsilon,
-        "Q-Learning", "Epsilon", 1.0, 0.0),
-#       (enac_action, "ENAC")
+        (re_action_mean, re_action_std, re_epsilon,
+         "Roth-Erev", "Boltzmann Temperature", None, None),
+        (q_action_mean, q_action_std, q_epsilon,
+         "Q-Learning", "Epsilon", 1.0, 0.0),
+        (enac_action_mean, enac_action_std, enac_epsilon,
+         "ENAC", "Sigma", None, None)
     ]
 
     plot_results(actions, 0, "Action (\%)")
-#    title("Generator 1 Action")
     if tex:
         savefig('./out/fig5_1_g1_action.pdf')
-    plot_results(actions, 2, "Action (\%)")
-#    title("Generator 2 Action")
+    plot_results(actions, 1, "Action (\%)")
     if tex:
         savefig('./out/fig5_1_g3_action.pdf')
 
@@ -136,20 +139,22 @@ def plot5_1():
 #    re_reward_std = mmread("./out/ex5_1_re_reward_std.mtx")
 #    q_reward_mean = mmread("./out/ex5_1_q_reward_mean.mtx")
 #    q_reward_std = mmread("./out/ex5_1_q_reward_std.mtx")
-##    enac_reward = mmread("./out/ex5_1_enac_reward.mtx")
+#    enac_reward_mean = mmread("./out/ex5_1_enac_reward_mean.mtx")
+#    enac_reward_std = mmread("./out/ex5_1_enac_reward_std.mtx")
 #
 #    rewards = [
-#        (re_reward_mean, re_reward_std, re_epsilon, "Roth-Erev"),
-#        (q_reward_mean, q_reward_std, q_epsilon, "Q-Learning"),
-##        (enac_reward, "ENAC")
+#        (re_reward_mean, re_reward_std, re_epsilon,
+#         "Roth-Erev", "Boltzmann Temperature", None, None),
+#        (q_reward_mean, q_reward_std, q_epsilon,
+#         "Q-Learning", "Epsilon", 1.0, 0.0),
+#        (enac_reward_mean, enac_reward_std, enac_epsilon,
+#         "ENAC", "Sigma", None, None)
 #    ]
 #
 #    plot_results(rewards, 0, r"Reward (\verb+$+)")
-##    title("Generator 1 Reward")
 #    if tex:
 #        savefig('./out/fig5_1_g1_reward.pdf')
 #    plot_results(rewards, 2, r"Reward (\verb+$+)")
-##    title("Generator 2 Reward")
 #    if tex:
 #        savefig('./out/fig5_1_g3_reward.pdf')
 
