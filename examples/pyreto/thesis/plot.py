@@ -28,7 +28,7 @@ matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
 matplotlib.rcParams['axes.titlesize'] = 10
 
-tex = True
+tex = False
 
 if tex:
     # Set up publication quality graphs.
@@ -62,11 +62,11 @@ nc, ns = len(clr), len(ls)
 
 
 def plot_results(results, ai, ylab, xlab="Time (h)"):
-    figure(random.randint(0, 100))
-
     nplot = len(results)
+
     for i, (result_mean, result_std, epsilon, lab, y2lab, y2max, y2min) in \
     enumerate(results):
+
         subplot(nplot, 1, i + 1)
 
         title(lab)
@@ -86,8 +86,8 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
                  capsize=2, markersize=3)#, linewidth=0.2)
         ylabel(ylab)
 
-        l = legend(loc="upper right")
-        l.get_frame().set_linewidth(0.5)
+#        l = legend(loc="upper right")
+#        l.get_frame().set_linewidth(0.5)
 
         # Exploration rate plot.
         twinx()
@@ -98,8 +98,8 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
         if y2min is not None:
             ylim(ymin=y2min)
 
-        l = legend(loc="lower right")
-        l.get_frame().set_linewidth(0.5)
+#        l = legend(loc="lower right")
+#        l.get_frame().set_linewidth(0.5)
 
 #        subplots_adjust(left=0.09, bottom=0.05, right=None,
 #                        wspace=None, hspace=None)
@@ -108,13 +108,13 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
 
 
 def plot5_1():
-    re_epsilon = mmread("./out/ex5_1_re_epsilon.mtx")
+    re_epsilon = mmread("./out/ex5_1_rotherev_epsilon.mtx")
     q_epsilon = mmread("./out/ex5_1_q_epsilon.mtx")
     reinforce_epsilon = mmread("./out/ex5_1_reinforce_epsilon.mtx")
     enac_epsilon = mmread("./out/ex5_1_enac_epsilon.mtx")
 
-    re_action_mean = mmread("./out/ex5_1_re_action_mean.mtx")
-    re_action_std = mmread("./out/ex5_1_re_action_std.mtx")
+    re_action_mean = mmread("./out/ex5_1_rotherev_action_mean.mtx")
+    re_action_std = mmread("./out/ex5_1_rotherev_action_std.mtx")
     q_action_mean = mmread("./out/ex5_1_q_action_mean.mtx")
     q_action_std = mmread("./out/ex5_1_q_action_std.mtx")
     reinforce_action_mean = mmread("./out/ex5_1_reinforce_action_mean.mtx")
@@ -133,40 +133,42 @@ def plot5_1():
          "ENAC", "Sigma", None, None)
     ]
 
-    plot_results(actions, 0, "Action (\%)")
-    if tex:
-        savefig('./out/fig5_1_g1_action.pdf')
-    plot_results(actions, 1, "Action (\%)")
-    if tex:
-        savefig('./out/fig5_1_g3_action.pdf')
+    for ai in [0, 1]:
+        figure(ai)
+        plot_results(actions, ai, "Action (\%)")
+        if tex:
+            savefig('./out/fig5_1_a%d_action.pdf' % ai)
+        else:
+            savefig('./out/fig5_1_a%d_action.png' % ai)
 
 
-#    re_reward_mean = mmread("./out/ex5_1_re_reward_mean.mtx")
-#    re_reward_std = mmread("./out/ex5_1_re_reward_std.mtx")
-#    q_reward_mean = mmread("./out/ex5_1_q_reward_mean.mtx")
-#    q_reward_std = mmread("./out/ex5_1_q_reward_std.mtx")
-#    reinforce_reward_mean = mmread("./out/ex5_1_reinforce_reward_mean.mtx")
-#    reinforce_reward_std = mmread("./out/ex5_1_reinforce_reward_std.mtx")
-#    enac_reward_mean = mmread("./out/ex5_1_enac_reward_mean.mtx")
-#    enac_reward_std = mmread("./out/ex5_1_enac_reward_std.mtx")
-#
-#    rewards = [
-#        (re_reward_mean, re_reward_std, re_epsilon,
-#         "Roth-Erev", "Boltzmann Temperature", None, None),
-#        (q_reward_mean, q_reward_std, q_epsilon,
-#         "Q-Learning", "Epsilon", 1.0, 0.0),
-#        (reinforce_reward_mean, reinforce_reward_std, reinforce_epsilon,
-#         "REINFORCE", "Sigma", None, None),
-#        (enac_reward_mean, enac_reward_std, enac_epsilon,
-#         "ENAC", "Sigma", None, None)
-#    ]
-#
-#    plot_results(rewards, 0, r"Reward (\verb+$+)")
-#    if tex:
-#        savefig('./out/fig5_1_g1_reward.pdf')
-#    plot_results(rewards, 1, r"Reward (\verb+$+)")
-#    if tex:
-#        savefig('./out/fig5_1_g3_reward.pdf')
+    re_reward_mean = mmread("./out/ex5_1_rotherev_reward_mean.mtx")
+    re_reward_std = mmread("./out/ex5_1_rotherev_reward_std.mtx")
+    q_reward_mean = mmread("./out/ex5_1_q_reward_mean.mtx")
+    q_reward_std = mmread("./out/ex5_1_q_reward_std.mtx")
+    reinforce_reward_mean = mmread("./out/ex5_1_reinforce_reward_mean.mtx")
+    reinforce_reward_std = mmread("./out/ex5_1_reinforce_reward_std.mtx")
+    enac_reward_mean = mmread("./out/ex5_1_enac_reward_mean.mtx")
+    enac_reward_std = mmread("./out/ex5_1_enac_reward_std.mtx")
+
+    rewards = [
+        (re_reward_mean, re_reward_std, re_epsilon,
+         "Roth-Erev", "Boltzmann Temperature", None, None),
+        (q_reward_mean, q_reward_std, q_epsilon,
+         "Q-Learning", "Epsilon", 1.0, 0.0),
+        (reinforce_reward_mean, reinforce_reward_std, reinforce_epsilon,
+         "REINFORCE", "Sigma", None, None),
+        (enac_reward_mean, enac_reward_std, enac_epsilon,
+         "ENAC", "Sigma", None, None)
+    ]
+
+    for ai in [0, 1]:
+        figure(ai + 10)
+        plot_results(rewards, ai, r"Reward (\verb+$+)")
+        if tex:
+            savefig('./out/fig5_1_a%d_reward.pdf' % ai)
+        else:
+            savefig('./out/fig5_1_a%d_reward.png' % ai)
 
     if not tex:
         show()

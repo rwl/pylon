@@ -39,10 +39,10 @@ def get_re_experiment(case):
     """
     gen = case.generators
 
-    experimentation=0.55
-    recency=0.3
-    tau=100.0
-    decay=0.95#9995
+    experimentation = 0.55
+    recency = 0.3
+    tau = 100.0
+    decay = 0.98#9995
     markups = (0, 10, 20, 30)
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
@@ -225,8 +225,8 @@ def run_experiments(expts, func, case, roleouts, in_cloud):
 def main():
     case = get_case6ww()
 
-    expts = 2
-    roleouts = 20
+    expts = 1
+    roleouts =150
     in_cloud = False
 
     results = run_experiments(expts, get_re_experiment, case, roleouts,
@@ -234,19 +234,19 @@ def main():
     save_results(results, "RothErev")
 
 
-    results = run_experiments(expts, get_q_experiment, case, roleouts,
-                              in_cloud)
-    save_results(results, "Q")
-
-
-    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
-                              in_cloud)
-    save_results(results, "REINFORCE")
-
-
-    results = run_experiments(expts, get_enac_experiment, case, roleouts,
-                              in_cloud)
-    save_results(results, "ENAC")
+#    results = run_experiments(expts, get_q_experiment, case, roleouts,
+#                              in_cloud)
+#    save_results(results, "Q")
+#
+#
+#    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+#                              in_cloud)
+#    save_results(results, "REINFORCE")
+#
+#
+#    results = run_experiments(expts, get_enac_experiment, case, roleouts,
+#                              in_cloud)
+#    save_results(results, "ENAC")
 
 
 if __name__ == "__main__":

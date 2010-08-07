@@ -31,17 +31,6 @@ def nash2d():
 #                      auctionType=DISCRIMINATIVE
                       )
 
-    #tsks = []
-    #for g in generators:
-    #    e = MarketEnvironment([g], mkt, markups=mup)
-    #    t = ProfitTask(e)
-    #    tsks.append(t)
-    #ptsks = []
-    #for g in passive:
-    #    e = MarketEnvironment([g], mkt, markups=mup)
-    #    t = ProfitTask(e)
-    #    ptsks.append(t)
-
     t1 = ProfitTask(MarketEnvironment([gens[0]], mkt, markups=mup))
     t2 = ProfitTask(MarketEnvironment([gens[1]], mkt, markups=mup))
     t3 = ProfitTask(MarketEnvironment([gens[2]], mkt, markups=mup))
@@ -54,34 +43,10 @@ def nash2d():
 
             mkt.run()
 
-    #        r[m1, m2, 0] = t1.getReward()
-    #        r[m1, m2, 1] = t2.getReward()
-
-            r[0][m1, m2] = t1.getReward()
-            r[1][m1, m2] = t2.getReward()
+            r[0][m2, m1] = t1.getReward()
+            r[1][m2, m1] = t2.getReward()
 
             mkt.reset()
-
-    #for tsk1 in tsks:
-    #    for m1 in range(nm):
-    #
-    #        for m2 in range(nm):
-    #
-    #            tsk1.env.performAction(m1)
-    #
-    #            others = [t for t in tsks if t != tsk1]
-    #            for tsk2 in others:
-    #                tsk2.env.performAction(m2)
-    #
-    #            for ptsk in ptsks:
-    #                ptsk.env.performAction(0)
-    #
-    #            mkt.run()
-    #
-    #            for ti, t in enumerate(tsks):
-    #                r[ti, m1, m2] = t.getReward()
-    #
-    #            mkt.reset()
 
     print r[0]
     print r[1]
@@ -136,7 +101,7 @@ def tex_table(a1, a2, mup):
 def main():
     r = nash2d()
 #    print tex_table(r[0], r[1], mup)
-    table = tex_table(r[1], r[0], mup)
+    table = tex_table(r[0], r[1], mup)
     print table
     fd = open("/tmp/table.tex", "w+b")
     fd.write(table)

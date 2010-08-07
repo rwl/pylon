@@ -384,8 +384,10 @@ class MarketEnvironment(object):
         for g in generators:
             # Asset capacity limits.
             g0[g] = {}
+            g0[g]["p"] = g.p
             g0[g]["p_max"] = g.p_max
             g0[g]["p_min"] = g.p_min
+            g0[g]["q"] = g.q
             g0[g]["q_max"] = g.q_max
             g0[g]["q_min"] = g.q_min
             # Marginal cost function proportional to current capacity.

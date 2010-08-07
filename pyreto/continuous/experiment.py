@@ -137,6 +137,26 @@ class MarketExperiment(object):
             if ln.online == False:
                 print "Branch outage [%s] in period %d." %(ln.name,self.stepid)
 
+    def reset_case(self):
+        """ Returns the case to its original state.
+        """
+        for bus in self.market.case.buses:
+            bus.p_demand = self.pdemand[bus]
+        for task in self.tasks:
+            for g in task.env.generators:
+                g.p = task.env._g0[g]["p"]
+                g.p_max = task.env._g0[g]["p_max"]
+                g.p_min = task.env._g0[g]["p_min"]
+                g.q = task.env._g0[g]["q"]
+                g.q_max = task.env._g0[g]["q_max"]
+                g.q_min = task.env._g0[g]["q_min"]
+                g.p_cost = task.env._g0[g]["p_cost"]
+                g.pcost_model = task.env._g0[g]["pcost_model"]
+                g.q_cost = task.env._g0[g]["q_cost"]
+                g.qcost_model = task.env._g0[g]["qcost_model"]
+                g.c_startup = task.env._g0[g]["startup"]
+                g.c_shutdown = task.env._g0[g]["shutdown"]
+
     #--------------------------------------------------------------------------
     #  "EpisodicExperiment" interface:
     #--------------------------------------------------------------------------
@@ -165,6 +185,8 @@ class MarketExperiment(object):
                 if True in [task.isFinished() for task in self.tasks]:
                     raise ValueError
                 self._oneInteraction()
+
+        self.reset_case()
 
     #--------------------------------------------------------------------------
     #  "Experiment" interface:
