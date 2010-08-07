@@ -28,7 +28,7 @@ def nash2d():
     #r = numpy.zeros([ng] + ([nm] * ng))
 
     mkt = SmartMarket(case, priceCap=999.0, decommit=False,
-#                      auctionType=DISCRIMINATIVE
+                      auctionType=DISCRIMINATIVE
                       )
 
     t1 = ProfitTask(MarketEnvironment([gens[0]], mkt, markups=mup))
@@ -64,7 +64,7 @@ def tex_table(a1, a2, mup):
     s = ""
     s += "\\begin{table}\n"
     s += "\\begin{center}\n"
-    cols = "c.{2.2}" + ("|.{3.1}.{2.1}" * (n)) + "|"
+    cols = "c.{2.2}" + ("|.{2.1}.{3.1}" * (n)) + "|"
     s += "\\begin{tabular}{%s}\n" % cols
     s += "\cline{3-10}\n"
     s += " & &\multicolumn{8}{c|}{$G_1$} \\\\\n"

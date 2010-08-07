@@ -83,7 +83,7 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
 
         errorbar(x, y, yerr=e, fmt='ko', linestyle="None",
                  label="Action/Reward",
-                 capsize=2, markersize=3)#, linewidth=0.2)
+                 capsize=0, markersize=3)#, linewidth=0.2)
         ylabel(ylab)
 
 #        l = legend(loc="upper right")

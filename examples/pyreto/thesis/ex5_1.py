@@ -32,7 +32,7 @@ cap = 100.0
 profile = [1.0]
 nOffer = 1
 nStates = 1
-manual_sigma = True # Scale sigma manually?
+
 
 def get_re_experiment(case):
     """ Returns an experiment that uses the Roth-Erev learning method.
@@ -46,7 +46,7 @@ def get_re_experiment(case):
     markups = (0, 10, 20, 30)
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-#                                auctionType=DISCRIMINATIVE
+                                auctionType=DISCRIMINATIVE
                                 )
 
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
@@ -77,14 +77,14 @@ def get_q_experiment(case):
     alpha = 0.3 # Learning rate.
     gamma = 0.99 # Discount factor
     # The closer epsilon gets to 0, the more greedy and less explorative.
-    epsilon = 0.5
-    decay = 0.995
+    epsilon = 0.9
+    decay = 0.97
     tau = 150.0 # Boltzmann temperature.
     markups = (0, 10, 20, 30)
     qlambda = 0.9
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-#                                auctionType=DISCRIMINATIVE
+                                auctionType=DISCRIMINATIVE
                                 )
 
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
@@ -120,7 +120,7 @@ def get_reinforce_experiment(case):
     decay = 0.995
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-#                                auctionType=DISCRIMINATIVE
+                                auctionType=DISCRIMINATIVE
                                 )
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
@@ -129,11 +129,11 @@ def get_reinforce_experiment(case):
         learner.gd.rprop = False
         # only relevant for BP
         learner.learningRate = 0.001 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
-        learner.gd.alpha = 0.0001
-        learner.gd.alphadecay = 0.9
-        learner.gd.momentum = 0.9
+#        learner.gd.alpha = 0.0001
+#        learner.gd.alphadecay = 0.9
+#        learner.gd.momentum = 0.9
         # only relevant for RP
-        learner.gd.deltamin = 0.0001
+#        learner.gd.deltamin = 0.0001
 
         task, agent = get_continuous_task_agent(
             [g], market, nOffer, markupMax, profile, learner)
@@ -160,7 +160,7 @@ def get_enac_experiment(case):
     decay = 0.995
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-#                                auctionType=DISCRIMINATIVE
+                                auctionType=DISCRIMINATIVE
                                 )
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
@@ -225,8 +225,8 @@ def run_experiments(expts, func, case, roleouts, in_cloud):
 def main():
     case = get_case6ww()
 
-    expts = 1
-    roleouts =150
+    expts = 3
+    roleouts = 100
     in_cloud = False
 
     results = run_experiments(expts, get_re_experiment, case, roleouts,
@@ -234,19 +234,19 @@ def main():
     save_results(results, "RothErev")
 
 
-#    results = run_experiments(expts, get_q_experiment, case, roleouts,
-#                              in_cloud)
-#    save_results(results, "Q")
-#
-#
-#    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
-#                              in_cloud)
-#    save_results(results, "REINFORCE")
-#
-#
-#    results = run_experiments(expts, get_enac_experiment, case, roleouts,
-#                              in_cloud)
-#    save_results(results, "ENAC")
+    results = run_experiments(expts, get_q_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "Q")
+
+
+    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "REINFORCE")
+
+
+    results = run_experiments(expts, get_enac_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "ENAC")
 
 
 if __name__ == "__main__":
