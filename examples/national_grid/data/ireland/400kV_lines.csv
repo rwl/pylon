@@ -1,0 +1,6 @@
+Table B-2 Characteristics of Existing 400 kV Lines,,,,,,,,
+400 kV Circuits,,,Length (km),Impedance p.u. on 100 MVA,,,Rating (MVA),
+From,To,No.,,R,X,B,Summer,Winter
+DSN,MP,1,208.5,0.004,0.047,1.049,1424,1713
+MP,OST,1,105,0.002,0.023,0.53,1424,1713
+OST,WOO,1,125,0.002,0.028,0.631,1424,1713

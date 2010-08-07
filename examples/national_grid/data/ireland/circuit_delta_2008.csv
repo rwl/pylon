@@ -1,0 +1,43 @@
+Table B-12 Changes in Circuit Characteristics Expected in 2008,,,,,,,,,,
+Change,Volt (kV),From,To,No.,Length (km),Impedance p.u. on 100 (MVA),,,Rating (MVA),
+,,,,,,R,X,B,Summer,Winter
+
+CP217 Newbridge Loop-in of the Blake-Cushaling-Maynooth 110 kV Line,,,,,,,,,,
+Add,110,BLK T,NEW,1,12.2,0.013,0.041,0.004,137,164
+Add,110,CUS,NEW,1,31.2,0.033,0.104,0.011,137,164
+Delete,110,BLK T,CUS,1,…,…,…,…,…,…
+
+CP254 Cashla Loop-in of Dalton-Galway 110 kV Line,,,,,,,,,,
+Add,110,CSH,DLT,1,55,0.081,0.179,0.017,107,126
+Add,110,CSH,GAL,4,20,0.029,0.064,0.006,107,126
+Delete,110,DLT,GAL,1,…,…,…,…,…,…
+
+CP307 Connection of Baroda 110 kV Station,,,,,,,,,,
+Add,110,BDA,MON,1,15,0.011,0.033,0.02,120,128
+Add,110,BDA,NEW,1,10,0.007,0.02,0.019,120,128
+Delete,110,MON,NEW,1,…,…,…,…,…,…
+
+CP380 Clashavoon-Clonkeen and Clonkeen-Knockearagh Line Uprate,,,,,,,,,,
+Amend,110,CLA,CKN,1,29.6,0.019,0.096,0.011,187,223
+Amend,110,CKN,KER,1,19.9,0.013,0.065,0.007,187,223
+
+CP429 Poolbeg 220 kV Interbus Reactor,,,,,,,,,,
+Add,220,PB,PB,1,…,0,0.035,…,450,450
+
+CP454 Ardnacrusha-Limerick 110 kV Line Uprate,,,,,,,,,,
+Amend,110,AA,LIM,1,11.7,0.007,0.037,0.021,187,223
+
+CP285 Looping of the Tee-Connected Kilteel 110 kV Station,,,,,,,,,,
+Add,110,KTL,MAY,1,21,0.022,0.07,0.007,137,164
+Add,110,KTL,MON,1,11.5,0.012,0.039,0.004,120,128
+Delete,110,KTL,KTL T,1,…,…,…,…,…,…
+Delete,110,KLT T,MAY,1,…,…,…,…,…,…
+Delete,110,KLT T ,MON,1,…,…,…,…,…,…
+
+CP402 Connection of Charlesland 110 kV Station,,,,,,,,,,
+Add,110,BEG,CLD,1,25,0.013,0.073,0.007,137,164
+Add,110,CKM,CLD,1,25,0.012,0.073,0.007,137,164
+Delete,110,BEG,CKM,1,…,…,…,…,…,…
+
+CP479 Connection of Athea Wind Farm into Trien 110 kV Station,,,,,,,,,,
+Add,110,ATE,TRI,1,11,0.007,0.036,0.004,187,223
