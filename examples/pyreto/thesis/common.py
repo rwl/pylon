@@ -38,19 +38,24 @@ def get_case6ww():
     path = os.path.join(path, "case6ww", "case6ww.pkl")
 
     case = pylon.Case.load(path)
-    case.generators[0].p_cost = (0.0, 5.0, 200.0)
-    case.generators[1].p_cost = (0.0, 2.0, 200.0)
-    case.generators[2].p_cost = (0.0, 3.0, 200.0)
+#    case.generators[0].p_cost = (0.0, 4.95, 200.0)
+#    case.generators[1].p_cost = (0.0, 5.5, 200.0)
+
+    case.generators[0].p_cost = (0.0, 4.5, 200.0) # 30%
+    case.generators[1].p_cost = (0.0, 5.1, 200.0) # 10%
+
+    case.generators[2].p_cost = (0.0, 6.0, 200.0) # passive
+
 
     case.generators[0].c_shutdown = 100.0
 
-    #case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
-    #case.generators[1].p_min = 0.0
-    ##case.generators[2].p_min = 0.0
+    case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
+    case.generators[1].p_min = 0.0
+    case.generators[2].p_min = 0.0
 
-    case.generators[0].p_max = 100.0
-    case.generators[1].p_max = 50.0
-    case.generators[2].p_max = 100.0
+    case.generators[0].p_max = 110.0
+    case.generators[1].p_max = 110.0
+    case.generators[2].p_max = 220.0 # passive
 
     # FIXME: Correct generator naming order.
     for g in case.generators:

@@ -164,7 +164,7 @@ def plot5_1():
 #    plot_results(rewards, 0, r"Reward (\verb+$+)")
 #    if tex:
 #        savefig('./out/fig5_1_g1_reward.pdf')
-#    plot_results(rewards, 2, r"Reward (\verb+$+)")
+#    plot_results(rewards, 1, r"Reward (\verb+$+)")
 #    if tex:
 #        savefig('./out/fig5_1_g3_reward.pdf')
 

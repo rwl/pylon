@@ -46,11 +46,12 @@ def get_re_experiment(case):
     markups = (0, 10, 20, 30)
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-                                auctionType=DISCRIMINATIVE)
+#                                auctionType=DISCRIMINATIVE
+                                )
 
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
-    for g in [gen[0], gen[2]]:
+    for g in gen[0:2]:
         #learner = RothErev(experimentation, recency)
         learner = VariantRothErev(experimentation, recency)
         learner.explorer = BoltzmannExplorer(tau, decay)
@@ -61,7 +62,7 @@ def get_re_experiment(case):
         experiment.tasks.append(task)
         experiment.agents.append(agent)
 
-    task1, agent1 = get_zero_task_agent(gen[1:2], market, nOffer, profile)
+    task1, agent1 = get_zero_task_agent(gen[2:3], market, nOffer, profile)
     experiment.tasks.append(task1)
     experiment.agents.append(agent1)
 
@@ -83,11 +84,12 @@ def get_q_experiment(case):
     qlambda = 0.9
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-                                auctionType=DISCRIMINATIVE)
+#                                auctionType=DISCRIMINATIVE
+                                )
 
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
-    for g in [gen[0], gen[2]]:
+    for g in gen[0:2]:
         learner = Q(alpha, gamma)
     #    learner = QLambda(alpha, gamma, qlambda)
     #    learner = SARSA(alpha, gamma)
@@ -103,7 +105,7 @@ def get_q_experiment(case):
         experiment.agents.append(agent)
 
     # Passive agent.
-    task, agent = get_zero_task_agent(gen[1:2], market, nOffer, profile)
+    task, agent = get_zero_task_agent(gen[2:3], market, nOffer, profile)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -118,10 +120,11 @@ def get_reinforce_experiment(case):
     decay = 0.995
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-                                auctionType=DISCRIMINATIVE)
+#                                auctionType=DISCRIMINATIVE
+                                )
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
-    for g in [gen[0], gen[2]]:
+    for g in gen[0:2]:
         learner = Reinforce()
         learner.gd.rprop = False
         # only relevant for BP
@@ -142,7 +145,7 @@ def get_reinforce_experiment(case):
         experiment.agents.append(agent)
 
     # Passive agent.
-    task, agent = get_neg_one_task_agent(gen[1:2], market, nOffer, profile)
+    task, agent = get_neg_one_task_agent(gen[2:3], market, nOffer, profile)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -157,10 +160,11 @@ def get_enac_experiment(case):
     decay = 0.995
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-                                auctionType=DISCRIMINATIVE)
+#                                auctionType=DISCRIMINATIVE
+                                )
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
-    for g in [gen[0], gen[2]]:
+    for g in gen[0:2]:
         learner = ENAC()
 #        learner = Reinforce()
 #        learner.gd.rprop = False
@@ -183,7 +187,7 @@ def get_enac_experiment(case):
         experiment.agents.append(agent)
 
     # Passive agent.
-    task, agent = get_neg_one_task_agent(gen[1:2], market, nOffer, profile)
+    task, agent = get_neg_one_task_agent(gen[2:3], market, nOffer, profile)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 

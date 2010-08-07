@@ -28,7 +28,7 @@ def nash2d():
     #r = numpy.zeros([ng] + ([nm] * ng))
 
     mkt = SmartMarket(case, priceCap=999.0, decommit=False,
-                      auctionType=DISCRIMINATIVE
+#                      auctionType=DISCRIMINATIVE
                       )
 
     #tsks = []
@@ -134,7 +134,11 @@ def tex_table(a1, a2, mup):
 def main():
     r = nash2d()
 #    print tex_table(r[0], r[1], mup)
-    print tex_table(r[1], r[0], mup)
+    table = tex_table(r[1], r[0], mup)
+    print table
+    fd = open("/tmp/table.tex", "w+b")
+    fd.write(table)
+    fd.close
 
 
 if __name__ == "__main__":
