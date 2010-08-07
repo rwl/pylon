@@ -110,6 +110,45 @@ def get_q_experiment(case):
     return experiment
 
 
+def get_reinforce_experiment(case):
+    gen = case.generators
+
+    markupMax = 30.0
+    initalSigma = 100.0
+    decay = 0.995
+
+    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
+                                auctionType=DISCRIMINATIVE)
+    experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
+
+    for g in [gen[0], gen[2]]:
+        learner = Reinforce()
+        learner.gd.rprop = False
+        # only relevant for BP
+        learner.learningRate = 0.001 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
+        learner.gd.alpha = 0.0001
+        learner.gd.alphadecay = 0.9
+        learner.gd.momentum = 0.9
+        # only relevant for RP
+        learner.gd.deltamin = 0.0001
+
+        task, agent = get_continuous_task_agent(
+            [g], market, nOffer, markupMax, profile, learner)
+
+        learner.explorer = ManualNormalExplorer(agent.module.outdim,
+                                                initalSigma, decay)
+
+        experiment.tasks.append(task)
+        experiment.agents.append(agent)
+
+    # Passive agent.
+    task, agent = get_neg_one_task_agent(gen[1:2], market, nOffer, profile)
+    experiment.tasks.append(task)
+    experiment.agents.append(agent)
+
+    return experiment
+
+
 def get_enac_experiment(case):
     gen = case.generators
 
@@ -140,17 +179,11 @@ def get_enac_experiment(case):
         learner.explorer = ManualNormalExplorer(agent.module.outdim,
                                                 initalSigma, decay)
 
-        # Adjust some parameters of the NormalExplorer.
-        if manual_sigma:
-            agent.learner.explorer.sigma = [initalSigma] * task.env.indim
-
         experiment.tasks.append(task)
         experiment.agents.append(agent)
 
     # Passive agent.
     task, agent = get_neg_one_task_agent(gen[1:2], market, nOffer, profile)
-#    experiment.tasks.insert(1, task)
-#    experiment.agents.insert(1, agent)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -188,20 +221,27 @@ def run_experiments(expts, func, case, roleouts, in_cloud):
 def main():
     case = get_case6ww()
 
-    expts = 1
-    roleouts = 30
+    expts = 2
+    roleouts = 20
     in_cloud = False
 
-    results = \
-        run_experiments(expts, get_re_experiment, case, roleouts, in_cloud)
+    results = run_experiments(expts, get_re_experiment, case, roleouts,
+                              in_cloud)
     save_results(results, "RothErev")
 
-    results = \
-        run_experiments(expts, get_q_experiment, case, roleouts, in_cloud)
+
+    results = run_experiments(expts, get_q_experiment, case, roleouts,
+                              in_cloud)
     save_results(results, "Q")
 
-    results = \
-        run_experiments(expts, get_enac_experiment, case, roleouts, in_cloud)
+
+    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "REINFORCE")
+
+
+    results = run_experiments(expts, get_enac_experiment, case, roleouts,
+                              in_cloud)
     save_results(results, "ENAC")
 
 

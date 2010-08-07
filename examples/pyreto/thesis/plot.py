@@ -26,9 +26,9 @@ from common import \
 
 matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
-matplotlib.rcParams['axes.titlesize'] = "medium"
+matplotlib.rcParams['axes.titlesize'] = 10
 
-tex = False
+tex = True
 
 if tex:
     # Set up publication quality graphs.
@@ -81,7 +81,8 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
 #             linestyle=ls[ai % ns],
 #             label=lab)
 
-        errorbar(x, y, yerr=e, fmt='ko', linestyle="None", label=lab,
+        errorbar(x, y, yerr=e, fmt='ko', linestyle="None",
+                 label="Action/Reward",
                  capsize=2, markersize=3)#, linewidth=0.2)
         ylabel(ylab)
 
@@ -109,12 +110,15 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
 def plot5_1():
     re_epsilon = mmread("./out/ex5_1_re_epsilon.mtx")
     q_epsilon = mmread("./out/ex5_1_q_epsilon.mtx")
+    reinforce_epsilon = mmread("./out/ex5_1_reinforce_epsilon.mtx")
     enac_epsilon = mmread("./out/ex5_1_enac_epsilon.mtx")
 
     re_action_mean = mmread("./out/ex5_1_re_action_mean.mtx")
     re_action_std = mmread("./out/ex5_1_re_action_std.mtx")
     q_action_mean = mmread("./out/ex5_1_q_action_mean.mtx")
     q_action_std = mmread("./out/ex5_1_q_action_std.mtx")
+    reinforce_action_mean = mmread("./out/ex5_1_reinforce_action_mean.mtx")
+    reinforce_action_std = mmread("./out/ex5_1_reinforce_action_std.mtx")
     enac_action_mean = mmread("./out/ex5_1_enac_action_mean.mtx")
     enac_action_std = mmread("./out/ex5_1_enac_action_std.mtx")
 
@@ -123,6 +127,8 @@ def plot5_1():
          "Roth-Erev", "Boltzmann Temperature", None, None),
         (q_action_mean, q_action_std, q_epsilon,
          "Q-Learning", "Epsilon", 1.0, 0.0),
+        (reinforce_action_mean, reinforce_action_std, reinforce_epsilon,
+         "REINFORCE", "Sigma", None, None),
         (enac_action_mean, enac_action_std, enac_epsilon,
          "ENAC", "Sigma", None, None)
     ]
@@ -139,6 +145,8 @@ def plot5_1():
 #    re_reward_std = mmread("./out/ex5_1_re_reward_std.mtx")
 #    q_reward_mean = mmread("./out/ex5_1_q_reward_mean.mtx")
 #    q_reward_std = mmread("./out/ex5_1_q_reward_std.mtx")
+#    reinforce_reward_mean = mmread("./out/ex5_1_reinforce_reward_mean.mtx")
+#    reinforce_reward_std = mmread("./out/ex5_1_reinforce_reward_std.mtx")
 #    enac_reward_mean = mmread("./out/ex5_1_enac_reward_mean.mtx")
 #    enac_reward_std = mmread("./out/ex5_1_enac_reward_std.mtx")
 #
@@ -147,6 +155,8 @@ def plot5_1():
 #         "Roth-Erev", "Boltzmann Temperature", None, None),
 #        (q_reward_mean, q_reward_std, q_epsilon,
 #         "Q-Learning", "Epsilon", 1.0, 0.0),
+#        (reinforce_reward_mean, reinforce_reward_std, reinforce_epsilon,
+#         "REINFORCE", "Sigma", None, None),
 #        (enac_reward_mean, enac_reward_std, enac_epsilon,
 #         "ENAC", "Sigma", None, None)
 #    ]
