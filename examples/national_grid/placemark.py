@@ -26,6 +26,11 @@ linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
 ET.SubElement(linestyle275, "{%s}color" % ns).text = "7f3030ff" # aabbggrr FF3030
 ET.SubElement(linestyle275, "{%s}width" % ns).text = "4"
 
+style275 = ET.SubElement(doc, "{%s}Style" % ns, id="line225")
+linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
+ET.SubElement(linestyle275, "{%s}color" % ns).text = "7f0030ff" # aabbggrr FF3030
+ET.SubElement(linestyle275, "{%s}width" % ns).text = "4"
+
 style275 = ET.SubElement(doc, "{%s}Style" % ns, id="line132")
 linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
 ET.SubElement(linestyle275, "{%s}color" % ns).text = "7fffbf00" # aabbggrr 00BFFF
@@ -34,15 +39,20 @@ ET.SubElement(linestyle275, "{%s}width" % ns).text = "3"
 DATA_DIR = "./data/"
 
 BRANCH_DATA = [
-    os.path.join(DATA_DIR, "spt_circuit_param.csv"),
-    os.path.join(DATA_DIR, "shetl_circuit_param.csv"),
-    os.path.join(DATA_DIR, "nget_circuit_param.csv")
+    (os.path.join(DATA_DIR, "spt_circuit_param.csv"), 1),
+    (os.path.join(DATA_DIR, "shetl_circuit_param.csv"), 1),
+    (os.path.join(DATA_DIR, "nget_circuit_param.csv"), 1),
+    (os.path.join(DATA_DIR, "ireland", "400kV_lines.csv"), 3),
+    (os.path.join(DATA_DIR, "ireland", "275kV_lines-xborder.csv"), 3),
+    (os.path.join(DATA_DIR, "ireland", "220kV_branch_data.csv"), 3),
+#    (os.path.join(DATA_DIR, "ireland", "110kV_branch_data.csv"), 3)
 ]
 
-for path in BRANCH_DATA:
+for path, headers in BRANCH_DATA:
     reader = csv.reader(open(path), delimiter=',', quotechar='"')
 
-    _ = reader.next() # skip first row
+    for _ in range(headers):
+        _ = reader.next() # skip first row
     for row in reader:
         node1_id = row[0][:4]
         node2_id = row[1][:4]
@@ -67,11 +77,14 @@ for path in BRANCH_DATA:
                     break
         else:
             if pl1 is None and pl2 is None:
-                print "Placemarks not found: %s, %s (%s, %s)" % (node1_id, node2_id, row[0][4], row[1][4])
+#                    print "Placemarks not found: %s, %s (%s, %s)" % (node1_id, node2_id, row[0][4], row[1][4])
+                print "Placemarks not found: %s, %s" % (node1_id, node2_id)
             elif pl1 is None:
-                print "Placemark not found: %s (%s) (%s)" % (node1_id, node2_id, row[0][4])
+#                    print "Placemark not found: %s (%s) (%s)" % (node1_id, node2_id, row[0][4])
+                print "Placemark not found: %s (%s)" % (node1_id, node2_id)
             elif pl2 is None:
-                print "Placemark not found: %s (%s) (%s)" % (node2_id, node1_id, row[1][4])
+#                    print "Placemark not found: %s (%s) (%s)" % (node2_id, node1_id, row[1][4])
+                print "Placemark not found: %s (%s)" % (node2_id, node1_id)
             else:
                 raise ValueError
 
