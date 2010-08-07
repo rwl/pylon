@@ -92,12 +92,14 @@ def nash2d():
 
 
 def tex_table(a1, a2, mup):
+    """ NB: Insert \newcolumntype{.}[1]{D{.}{.}{#1}} in header.
+    """
     assert a1.shape == a2.shape
     m, n = a1.shape
     s = ""
     s += "\\begin{table}\n"
     s += "\\begin{center}\n"
-    cols = "cc" + ("|cc" * (n)) + "|"
+    cols = "c.{2.2}" + ("|.{3.1}.{2.1}" * (n)) + "|"
     s += "\\begin{tabular}{%s}\n" % cols
     s += "\cline{3-10}\n"
     s += " & &\multicolumn{8}{c|}{$G_1$} \\\\\n"
@@ -109,7 +111,7 @@ def tex_table(a1, a2, mup):
     s += " \\\\\n"
     s += " &"
     for i in range(n):
-        s += " &$r_1$ &$r_2$"
+        s += " &r_1 &r_2"
     s += " \\\\\n"
     s += "\hline\n"
     s += "\multicolumn{1}{|c|}{\multirow{4}{*}{$G_2$}}"
