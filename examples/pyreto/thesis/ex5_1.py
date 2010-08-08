@@ -159,8 +159,8 @@ def get_enac_experiment(case):
 
     markupMax = 30.0
     initalSigma = 100.0
-    decay = 0.95
-    learningRate = 0.005 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
+    decay = 0.985#95
+    learningRate = 0.0005#005 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
     sigmaOffset = -5.0
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
@@ -231,7 +231,7 @@ def main():
     case = get_case6ww()
 
     expts = 1
-    roleouts = 100
+    roleouts = 300
     in_cloud = False
 
 #    results = run_experiments(expts, get_re_experiment, case, roleouts,
