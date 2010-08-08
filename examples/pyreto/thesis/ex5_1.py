@@ -117,7 +117,8 @@ def get_reinforce_experiment(case):
 
     markupMax = 30.0
     initalSigma = 100.0
-    decay = 0.995
+    decay = 0.95
+    sigmaOffset = -10.0
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=DISCRIMINATIVE
@@ -126,9 +127,9 @@ def get_reinforce_experiment(case):
 
     for g in gen[0:2]:
         learner = Reinforce()
-        learner.gd.rprop = False
+#        learner.gd.rprop = False
         # only relevant for BP
-        learner.learningRate = 0.001 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
+        learner.learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
 #        learner.gd.alpha = 0.0001
 #        learner.gd.alphadecay = 0.9
 #        learner.gd.momentum = 0.9
@@ -139,7 +140,8 @@ def get_reinforce_experiment(case):
             [g], market, nOffer, markupMax, profile, learner)
 
         learner.explorer = ManualNormalExplorer(agent.module.outdim,
-                                                initalSigma, decay)
+                                                initalSigma, decay,
+                                                sigmaOffset)
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
@@ -157,7 +159,9 @@ def get_enac_experiment(case):
 
     markupMax = 30.0
     initalSigma = 100.0
-    decay = 0.995
+    decay = 0.95
+    learningRate = 0.005 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
+    sigmaOffset = -5.0
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=DISCRIMINATIVE
@@ -169,7 +173,7 @@ def get_enac_experiment(case):
 #        learner = Reinforce()
 #        learner.gd.rprop = False
         # only relevant for BP
-    #    learner.learningRate = 0.001 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
+        learner.learningRate = learningRate
 #        learner.gd.alpha = 0.0001
     #    learner.gd.alphadecay = 0.9
     #    learner.gd.momentum = 0.9
@@ -181,7 +185,8 @@ def get_enac_experiment(case):
             [g], market, nOffer, markupMax, profile, learner)
 
         learner.explorer = ManualNormalExplorer(agent.module.outdim,
-                                                initalSigma, decay)
+                                                initalSigma, decay,
+                                                sigmaOffset)
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
@@ -225,23 +230,22 @@ def run_experiments(expts, func, case, roleouts, in_cloud):
 def main():
     case = get_case6ww()
 
-    expts = 3
+    expts = 1
     roleouts = 100
     in_cloud = False
 
-    results = run_experiments(expts, get_re_experiment, case, roleouts,
-                              in_cloud)
-    save_results(results, "RothErev")
-
-
-    results = run_experiments(expts, get_q_experiment, case, roleouts,
-                              in_cloud)
-    save_results(results, "Q")
-
-
-    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
-                              in_cloud)
-    save_results(results, "REINFORCE")
+#    results = run_experiments(expts, get_re_experiment, case, roleouts,
+#                              in_cloud)
+#    save_results(results, "RothErev")
+#
+#    results = run_experiments(expts, get_q_experiment, case, roleouts,
+#                              in_cloud)
+#    save_results(results, "Q")
+#
+#
+#    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+#                              in_cloud)
+#    save_results(results, "REINFORCE")
 
 
     results = run_experiments(expts, get_enac_experiment, case, roleouts,

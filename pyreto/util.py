@@ -37,20 +37,23 @@ from pylon.generator import PW_LINEAR, POLYNOMIAL
 #------------------------------------------------------------------------------
 
 class ManualNormalExplorer(NormalExplorer):
-    def __init__(self, dim, sigma=0.0, decay=0.995):
+    def __init__(self, dim, sigma=0.0, decay=0.995, sigmaOffset=0.0):
         super(ManualNormalExplorer, self).__init__(dim, sigma)
         self.decay = decay
-        self.manual_sigma = [sigma] * dim
+        self.sigmaOffset = sigmaOffset
+        self.manualSigma = [sigma] * dim
 
     def newEpisode(self):
-        self.manual_sigma = [s * self.decay for s in self.manual_sigma]
+        off = self.sigmaOffset
+        sigma = [((s - off) * self.decay) + off for s in self.manualSigma]
+        self.manualSigma = sigma
 
     def _forwardImplementation(self, inbuf, outbuf):
-        self.sigma = self.manual_sigma
+        self.sigma = self.manualSigma
         super(ManualNormalExplorer, self)._forwardImplementation(inbuf, outbuf)
 
     def _backwardImplementation(self, outerr, inerr, outbuf, inbuf):
-        self.sigma = self.manual_sigma
+        self.sigma = self.manualSigma
         super(ManualNormalExplorer, self)._backwardImplementation(
             outerr, inerr, outbuf, inbuf)
 
