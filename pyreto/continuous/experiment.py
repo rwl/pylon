@@ -50,7 +50,7 @@ class MarketExperiment(object):
     #  "object" interface:
     #--------------------------------------------------------------------------
 
-    def __init__(self, tasks, agents, market, profile=None, outages=None):
+    def __init__(self, tasks, agents, market, profile=None,branchOutages=None):
         """ Initialises the market experiment.
         """
         super(MarketExperiment, self).__init__()
@@ -71,7 +71,7 @@ class MarketExperiment(object):
         self.profile = [1.0] if profile is None else profile
 
         #: List of branch outage probabilities.
-        self.outages = outages
+        self.branchOutages = branchOutages
 
         self.stepid = 0
 
@@ -130,12 +130,15 @@ class MarketExperiment(object):
     def doOutages(self):
         """ Applies branch outtages.
         """
-        weights = [[(False, r), (True, 1 - (r))] for r in self.outages]
+        assert len(self.branchOutages) == len(self.market.case.branches)
+
+        weights = [[(False, r), (True, 1 - (r))] for r in self.branchOutages]
 
         for i, ln in enumerate(self.market.case.branches):
             ln.online = weighted_choice(weights[i])
             if ln.online == False:
                 print "Branch outage [%s] in period %d." %(ln.name,self.stepid)
+
 
     def reset_case(self):
         """ Returns the case to its original state.

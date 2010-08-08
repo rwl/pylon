@@ -117,9 +117,10 @@ def get_enac_experiment(case):
 def run_experiment(experiment):
     """ Runs the given experiment and returns the results.
     """
+    years = 3
     # Fixed number of roleouts and samples due to profile data.
-    roleouts = 52
-    samples = 7 # number of samples per learning step
+    roleouts = 365 * years
+    samples = 24 # number of samples per learning step
 
     na = len(experiment.agents)
     all_action = zeros((na, 0))
@@ -129,7 +130,7 @@ def run_experiment(experiment):
 
     for roleout in range(roleouts):
         # Apply new load profile before each episode (week).
-        i = roleout * samples # index of first profile value
+        i = (roleout * samples) % roleouts # index of first profile value
         experiment.profile = full_year[i: i + samples]
 
         experiment.doEpisodes(samples)

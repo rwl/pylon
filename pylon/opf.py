@@ -789,20 +789,29 @@ class OPFModel(object):
         u = -l
 
         for lin in self.lin_constraints:
+
+            print "N:", lin.N
+
             if lin.N:                   # non-zero number of rows to add
                 Ak = lin.A              # A for kth linear constrain set
                 i1 = lin.i1             # starting row index
                 iN = lin.iN             # ending row index
                 vsl = lin.vs            # var set list
                 kN = -1                 # initialize last col of Ak used
-                Ai = lil_matrix((lin.N, self.var_N))
+                Ai = lil_matrix((lin.N, self.var_N), dtype=float64)
                 for v in vsl:
                     var = self.get_var(v)
                     j1 = var.i1         # starting column in A
                     jN = var.iN         # ending column in A
                     k1 = kN + 1         # starting column in Ak
                     kN = kN + var.N     # ending column in Ak
-                    Ai[:, j1:jN + 1] = Ak[:, k1:kN + 1]
+
+                    if j1 == jN:
+                        # FIXME: Single column slicing broken in lil.
+                        for i in range(Ai.shape[0]):
+                            Ai[i, j1] = Ak[i, k1]
+                    else:
+                        Ai[:, j1:jN + 1] = Ak[:, k1:kN + 1]
 
                 A[i1:iN + 1, :] = Ai
                 l[i1:iN + 1] = lin.l
