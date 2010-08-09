@@ -18,9 +18,9 @@ from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 from pybrain.rl.learners import ENAC, Reinforce #@UnusedImport
 
 from common import \
-    get_case6ww, setup_logging, get_discrete_task_agent, get_zero_task_agent, \
-    run_experiment, save_results, get_continuous_task_agent, \
-    get_neg_one_task_agent
+    get_case6ww, get_case6ww2, setup_logging, get_discrete_task_agent, \
+    get_zero_task_agent, run_experiment, save_results, \
+    get_continuous_task_agent, get_neg_one_task_agent
 
 from plot import plot5_1
 
@@ -227,31 +227,63 @@ def run_experiments(expts, func, case, roleouts, in_cloud):
            expt_reward_mean, expt_reward_std, epsilon
 
 
-def main():
+def ex5_1():
     case = get_case6ww()
 
-    expts = 1
+    expts = 10
     roleouts = 300
     in_cloud = False
 
-#    results = run_experiments(expts, get_re_experiment, case, roleouts,
-#                              in_cloud)
-#    save_results(results, "RothErev")
-#
-#    results = run_experiments(expts, get_q_experiment, case, roleouts,
-#                              in_cloud)
-#    save_results(results, "Q")
-#
-#
-#    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
-#                              in_cloud)
-#    save_results(results, "REINFORCE")
+    results = run_experiments(expts, get_re_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "RothErev")
+
+    results = run_experiments(expts, get_q_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "Q")
+
+
+    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "REINFORCE")
 
 
     results = run_experiments(expts, get_enac_experiment, case, roleouts,
                               in_cloud)
     save_results(results, "ENAC")
 
+
+def ex5_2():
+    minor = 2
+
+    case = get_case6ww2()
+
+    expts = 10
+    roleouts = 300
+    in_cloud = False
+
+    results = run_experiments(expts, get_re_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "RothErev", minor)
+
+    results = run_experiments(expts, get_q_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "Q", minor)
+
+
+    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "REINFORCE", minor)
+
+
+    results = run_experiments(expts, get_enac_experiment, case, roleouts,
+                              in_cloud)
+    save_results(results, "ENAC", minor)
+
+
+def main():
+    ex5_1()
+    ex5_2()
 
 if __name__ == "__main__":
     main()

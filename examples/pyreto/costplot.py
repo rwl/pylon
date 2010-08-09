@@ -20,6 +20,11 @@ import pylon
 DATA_DIR = join(dirname(pylon.case.__file__), "test", "data")
 CASE = join(DATA_DIR, "case24_ieee_rts", "case24_ieee_rts.pkl")
 
+
+#matplotlib.rcParams['lines.linewidth'] = 0.5
+matplotlib.rcParams['axes.linewidth'] = 0.7
+matplotlib.rcParams['axes.titlesize'] = 10
+
 # Set up publication quality graphs.
 #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
 #inches_per_pt = 1.0 / 72.27               # Convert pt to inch
@@ -49,6 +54,7 @@ style = [('black', '-'), ('0.5', '-'), ('black', ':'), ('0.5', ':'),
 ns = len(style)
 
 pylab.figure()
+pylab.title("IEEE RTS Generator Costs")
 plots = []
 for i, gi in enumerate(g):
     generator = case.generators[gi]
@@ -62,14 +68,18 @@ for i, gi in enumerate(g):
         raise
     clr, ls = style[i]
     plots.append(pylab.plot(x, y, linestyle=ls, color=clr))
-    pylab.xlabel("P (MW)")
-    pylab.ylabel("Cost (USD/h)")
-pylab.legend(plots, ["U%.0f" % case.generators[i].p_max for i in g])
+    pylab.xlabel("$P_g$ (MW)")
+    pylab.ylabel(r"Cost (\verb+$+/h)")
+
+l = pylab.legend(plots, ["U%.0f" % case.generators[i].p_max for i in g])
+l.get_frame().set_linewidth(0.7)
 
 pylab.annotate("Oil", (90, 7000))
 pylab.annotate("Coal", (170, 3600))
 pylab.annotate("Nuclear", (210, 1800))
 
+pylab.subplots_adjust(bottom=0.11)
+
 #pylab.show()
 
-pylab.savefig('/tmp/fig1.pdf')
+pylab.savefig('/tmp/ieee_rts_gencosts.pdf')

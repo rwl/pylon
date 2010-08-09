@@ -15,7 +15,7 @@ import random
 
 from pylab import \
     figure, plot, xlabel, ylabel, legend, savefig, rcParams, clf, title, \
-    xlim, ylim, show, errorbar, subplot, twinx, subplots_adjust
+    xlim, ylim, show, errorbar, subplot, twinx, subplots_adjust, grid
 
 from scipy import arange, sqrt
 from scipy.io import mmread
@@ -28,7 +28,7 @@ matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
 matplotlib.rcParams['axes.titlesize'] = 10
 
-tex = False
+tex = True
 
 if tex:
     # Set up publication quality graphs.
@@ -107,20 +107,22 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
     xlabel(xlab)
 
 
-def plot5_1():
-    re_epsilon = mmread("./out/ex5_1_rotherev_epsilon.mtx")
-    q_epsilon = mmread("./out/ex5_1_q_epsilon.mtx")
-    reinforce_epsilon = mmread("./out/ex5_1_reinforce_epsilon.mtx")
-    enac_epsilon = mmread("./out/ex5_1_enac_epsilon.mtx")
+def plot5_X(minor):
+    re_epsilon = mmread("./out/ex5_%d_rotherev_epsilon.mtx" % minor)
+    q_epsilon = mmread("./out/ex5_%d_q_epsilon.mtx" % minor)
+    reinforce_epsilon = mmread("./out/ex5_%d_reinforce_epsilon.mtx" % minor)
+    enac_epsilon = mmread("./out/ex5_%d_enac_epsilon.mtx" % minor)
 
-    re_action_mean = mmread("./out/ex5_1_rotherev_action_mean.mtx")
-    re_action_std = mmread("./out/ex5_1_rotherev_action_std.mtx")
-    q_action_mean = mmread("./out/ex5_1_q_action_mean.mtx")
-    q_action_std = mmread("./out/ex5_1_q_action_std.mtx")
-    reinforce_action_mean = mmread("./out/ex5_1_reinforce_action_mean.mtx")
-    reinforce_action_std = mmread("./out/ex5_1_reinforce_action_std.mtx")
-    enac_action_mean = mmread("./out/ex5_1_enac_action_mean.mtx")
-    enac_action_std = mmread("./out/ex5_1_enac_action_std.mtx")
+    re_action_mean = mmread("./out/ex5_%d_rotherev_action_mean.mtx" % minor)
+    re_action_std = mmread("./out/ex5_%d_rotherev_action_std.mtx" % minor)
+    q_action_mean = mmread("./out/ex5_%d_q_action_mean.mtx" % minor)
+    q_action_std = mmread("./out/ex5_%d_q_action_std.mtx" % minor)
+    reinforce_action_mean = \
+        mmread("./out/ex5_%d_reinforce_action_mean.mtx" % minor)
+    reinforce_action_std = \
+        mmread("./out/ex5_%d_reinforce_action_std.mtx" % minor)
+    enac_action_mean = mmread("./out/ex5_%d_enac_action_mean.mtx" % minor)
+    enac_action_std = mmread("./out/ex5_%d_enac_action_std.mtx" % minor)
 
     actions = [
         (re_action_mean, re_action_std, re_epsilon,
@@ -137,19 +139,21 @@ def plot5_1():
         figure(ai)
         plot_results(actions, ai, "Action (\%)")
         if tex:
-            savefig('./out/fig5_1_a%d_action.pdf' % ai)
+            savefig('./out/fig5_%d_action_a%d.pdf' % (minor, ai + 1))
         else:
-            savefig('./out/fig5_1_a%d_action.png' % ai)
+            savefig('./out/fig5_%d_action_a%d.png' % (minor, ai + 1))
 
 
-    re_reward_mean = mmread("./out/ex5_1_rotherev_reward_mean.mtx")
-    re_reward_std = mmread("./out/ex5_1_rotherev_reward_std.mtx")
-    q_reward_mean = mmread("./out/ex5_1_q_reward_mean.mtx")
-    q_reward_std = mmread("./out/ex5_1_q_reward_std.mtx")
-    reinforce_reward_mean = mmread("./out/ex5_1_reinforce_reward_mean.mtx")
-    reinforce_reward_std = mmread("./out/ex5_1_reinforce_reward_std.mtx")
-    enac_reward_mean = mmread("./out/ex5_1_enac_reward_mean.mtx")
-    enac_reward_std = mmread("./out/ex5_1_enac_reward_std.mtx")
+    re_reward_mean = mmread("./out/ex5_%d_rotherev_reward_mean.mtx" % minor)
+    re_reward_std = mmread("./out/ex5_%d_rotherev_reward_std.mtx" % minor)
+    q_reward_mean = mmread("./out/ex5_%d_q_reward_mean.mtx" % minor)
+    q_reward_std = mmread("./out/ex5_%d_q_reward_std.mtx" % minor)
+    reinforce_reward_mean = \
+        mmread("./out/ex5_%d_reinforce_reward_mean.mtx" % minor)
+    reinforce_reward_std = \
+        mmread("./out/ex5_%d_reinforce_reward_std.mtx" % minor)
+    enac_reward_mean = mmread("./out/ex5_%d_enac_reward_mean.mtx" % minor)
+    enac_reward_std = mmread("./out/ex5_%d_enac_reward_std.mtx" % minor)
 
     rewards = [
         (re_reward_mean, re_reward_std, re_epsilon,
@@ -166,41 +170,54 @@ def plot5_1():
         figure(ai + 10)
         plot_results(rewards, ai, r"Reward (\verb+$+)")
         if tex:
-            savefig('./out/fig5_1_a%d_reward.pdf' % ai)
+            savefig('./out/fig5_%d_reward_a%d.pdf' % (minor, (ai + 1)))
         else:
-            savefig('./out/fig5_1_a%d_reward.png' % ai)
+            savefig('./out/fig5_%d_reward_a%d.png' % (minor, (ai + 1)))
 
-    if not tex:
-        show()
+#    if not tex:
+#        show()
+
+
+def plot5_1():
+    plot5_X(1)
+
+
+def plot5_2():
+    plot5_X(2)
 
 
 def plot_profiles():
     figure()
-    clf()
+    subplot(3, 1, 1)
+#    clf()
     x = arange(0.0, 52.0, 1.0)
     plot(x, get_weekly(), color="black")
-    xlabel("Week of the year, starting January 1st")
-    ylabel("Percentage of annual peak load")
+    xlabel("Week of the year (starting January 1st)")
+    ylabel("\% of annual peak load")
     xlim((0.0, 51.0))
     ylim((0.0, 100.0))
-#    title("IEEE RTS Weekly Load Profile")
+    title("IEEE RTS Weekly Load Profile")
     legend()
-    savefig('./out/ieee_rts_weekly.pdf')
+    grid()
+#    savefig('./out/ieee_rts_weekly.pdf')
 
 
-    clf()
+    subplot(3, 1, 2)
+#    clf()
     x = arange(1.0, 8.0, 1.0)
     plot(x, get_daily(), color="black")
-    xlabel("Day of the week, starting Monday")
-    ylabel("Percentage of weekly peak load")
+    xlabel("Day of the week (starting on Monday)")
+    ylabel("\% of weekly peak load")
     xlim((1.0, 7.0))
     ylim((0.0, 100.0))
-#    title("IEEE RTS Daily Load Profile")
+    title("IEEE RTS Daily Load Profile")
     legend()
-    savefig('./out/ieee_rts_daily.pdf')
+    grid()
+#    savefig('./out/ieee_rts_daily.pdf')
 
 
-    clf()
+    subplot(3, 1, 3)
+#    clf()
     hourly_winter_wkdy, hourly_winter_wknd = get_winter_hourly()
     hourly_summer_wkdy, hourly_summer_wknd = get_summer_hourly()
     hourly_spring_autumn_wkdy, hourly_spring_autumn_wknd = \
@@ -215,16 +232,21 @@ def plot_profiles():
     plot(x, hourly_spring_autumn_wkdy + hourly_spring_autumn_wknd,
          label="Spring \& Autumn (Weeks 9-17 \& 31-43)", color="0.6")
 
-    xlabel("Hour of the day, starting at midnight")
-    ylabel("Percentage of daily peak load")
+    xlabel("Hour of the day (starting at midnight)")
+    ylabel("\% of daily peak load")
     xlim((0.0, 23.0))
     ylim((0.0, 100.0))
-#    title("IEEE RTS Hourly Load Profiles")
+    title("IEEE RTS Hourly Load Profiles")
     legend(loc="lower right")
+    grid()
+#    savefig('./out/ieee_rts_hourly.pdf')
 
-    savefig('./out/ieee_rts_hourly.pdf')
+    subplots_adjust(hspace=0.35)
+
+    savefig('./out/ieee_rts_profiles.pdf')
 
 
 if __name__ == "__main__":
     plot5_1()
+    plot5_2()
 #    plot_profiles()

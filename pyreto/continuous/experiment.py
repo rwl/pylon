@@ -203,7 +203,7 @@ class MarketExperiment(object):
         logger.info("Entering simulation period %d." % self.stepid)
 
         # Apply branches outages.
-        if self.outages is not None:
+        if self.branchOutages is not None:
             self.doOutages()
 
         # Initialise the market.

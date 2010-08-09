@@ -38,15 +38,47 @@ def get_case6ww():
     path = os.path.join(path, "case6ww", "case6ww.pkl")
 
     case = pylon.Case.load(path)
-#    case.generators[0].p_cost = (0.0, 4.0, 200.0)
-#    case.generators[1].p_cost = (0.0, 3.0, 200.0)
+    case.generators[0].p_cost = (0.0, 4.0, 200.0)
+    case.generators[1].p_cost = (0.0, 3.0, 200.0)
 
-    case.generators[0].p_cost = (0.0, 5.1, 200.0) # 10%
-    case.generators[1].p_cost = (0.0, 4.5, 200.0) # 30%
+#    case.generators[0].p_cost = (0.0, 5.1, 200.0) # 10%
+#    case.generators[1].p_cost = (0.0, 4.5, 200.0) # 30%
 
     case.generators[2].p_cost = (0.0, 6.0, 200.0) # passive
 
-    case.generators[0].c_shutdown = 100.0
+#    case.generators[0].c_shutdown = 100.0
+
+    case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
+    case.generators[1].p_min = 0.0
+    case.generators[2].p_min = 0.0
+
+    case.generators[0].p_max = 110.0
+    case.generators[1].p_max = 110.0
+    case.generators[2].p_max = 220.0 # passive
+
+    # FIXME: Correct generator naming order.
+    for g in case.generators:
+        g.name
+
+    #pyreto.util.plotGenCost(case.generators)
+
+    return case
+
+
+def get_case6ww2():
+    """ Returns the 6 bus case from Wood & Wollenberg.
+    """
+    path = os.path.dirname(pylon.__file__)
+    path = os.path.join(path, "test", "data")
+    path = os.path.join(path, "case6ww", "case6ww.pkl")
+
+    case = pylon.Case.load(path)
+
+    case.generators[0].p_cost = (0.0, 5.1, 200.0) # 10%
+    case.generators[1].p_cost = (0.0, 4.5, 200.0) # 30%
+    case.generators[2].p_cost = (0.0, 6.0, 200.0) # passive
+
+#    case.generators[0].c_shutdown = 100.0
 
     case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
     case.generators[1].p_min = 0.0
@@ -188,26 +220,26 @@ def run_experiment(experiment, roleouts, samples, in_cloud=False):
     return all_action, all_reward, epsilon
 
 
-def save_results(results, name):
+def save_results(results, name, minor=1):
 
     expt_action_mean, expt_action_std, \
         expt_reward_mean, expt_reward_std, epsilon = results
 
-    mmwrite("./out/ex5_1_%s_action_mean.mtx" % name.lower(),
+    mmwrite("./out/ex5_%d_%s_action_mean.mtx" % (minor, name.lower()),
             expt_action_mean,
-            "Experiment 5.1 %s actions mean." % name)
-    mmwrite("./out/ex5_1_%s_action_std.mtx" % name.lower(),
+            "Experiment 5.%d %s actions mean." % (minor, name))
+    mmwrite("./out/ex5_%d_%s_action_std.mtx" % (minor, name.lower()),
             expt_action_std,
-            "Experiment 5.1 %s actions SD." % name)
-    mmwrite("./out/ex5_1_%s_reward_mean.mtx" % name.lower(),
+            "Experiment 5.%d %s actions SD." % (minor, name))
+    mmwrite("./out/ex5_%d_%s_reward_mean.mtx" % (minor, name.lower()),
             expt_reward_mean,
-            "Experiment 5.1 %s rewards mean." % name)
-    mmwrite("./out/ex5_1_%s_reward_std.mtx" % name.lower(),
+            "Experiment 5.%d %s rewards mean." % (minor, name))
+    mmwrite("./out/ex5_%d_%s_reward_std.mtx" % (minor, name.lower()),
             expt_reward_std,
-            "Experiment 5.1 %s rewards SD." % name)
-    mmwrite("./out/ex5_1_%s_epsilon.mtx" % name.lower(),
+            "Experiment 5.%d %s rewards SD." % (minor, name))
+    mmwrite("./out/ex5_%d_%s_epsilon.mtx" % (minor, name.lower()),
             epsilon,
-            "Experiment 5.1 %s exploration rates." % name)
+            "Experiment 5.%d %s exploration rates." % (minor, name))
 
 
 def get_markup(a, task):

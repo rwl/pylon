@@ -789,9 +789,6 @@ class OPFModel(object):
         u = -l
 
         for lin in self.lin_constraints:
-
-            print "N:", lin.N
-
             if lin.N:                   # non-zero number of rows to add
                 Ak = lin.A              # A for kth linear constrain set
                 i1 = lin.i1             # starting row index
