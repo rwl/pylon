@@ -6,7 +6,7 @@ import os
 import sys
 import logging
 
-from numpy import zeros, c_, vectorize
+from numpy import zeros
 from scipy.io import mmwrite
 
 import pylon
@@ -16,8 +16,6 @@ import pyreto.continuous
 
 from pybrain.rl.agents import LearningAgent
 from pybrain.rl.learners.valuebased import ActionValueTable
-from pybrain.rl.learners.directsearch.directsearch import DirectSearchLearner
-from pybrain.rl.learners.valuebased.valuebased import ValueBasedLearner
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.structure import TanhLayer, LinearLayer #@UnusedImport
 
@@ -31,7 +29,7 @@ def setup_logging():
 
 
 def get_case6ww():
-    """ Returns the 6 bus case from Wood & Wollenberg.
+    """ Returns the 6 bus case from Wood & Wollenberg PG&C.
     """
     path = os.path.dirname(pylon.__file__)
     path = os.path.join(path, "test", "data")
@@ -47,6 +45,8 @@ def get_case6ww():
     case.generators[2].p_cost = (0.0, 6.0, 200.0) # passive
 
 #    case.generators[0].c_shutdown = 100.0
+#    case.generators[1].c_shutdown = 100.0
+#    case.generators[2].c_shutdown = 100.0
 
     case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
     case.generators[1].p_min = 0.0
@@ -66,7 +66,7 @@ def get_case6ww():
 
 
 def get_case6ww2():
-    """ Returns the 6 bus case from Wood & Wollenberg.
+    """ Returns the 6 bus case from Wood & Wollenberg PG&C.
     """
     path = os.path.dirname(pylon.__file__)
     path = os.path.join(path, "test", "data")
@@ -79,6 +79,8 @@ def get_case6ww2():
     case.generators[2].p_cost = (0.0, 6.0, 200.0) # passive
 
 #    case.generators[0].c_shutdown = 100.0
+#    case.generators[1].c_shutdown = 100.0
+#    case.generators[2].c_shutdown = 100.0
 
     case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
     case.generators[1].p_min = 0.0
@@ -138,9 +140,16 @@ def get_continuous_task_agent(generators, market, nOffer, maxMarkup, profile,
     task = pyreto.continuous.ProfitTask(env, maxSteps=len(profile),
                                         maxMarkup=maxMarkup)
 
-    net = buildNetwork(env.outdim, 2, env.indim,
-                       bias=True, outputbias=True,
-                       hiddenclass=TanhLayer, outclass=TanhLayer)
+    net = buildNetwork(env.outdim,
+#                       4,
+                       env.indim,
+                       bias=False,
+#                       outputbias=True,
+#                       hiddenclass=TanhLayer,
+#                       outclass=TanhLayer
+                       )
+
+    net._setParameters(([1.0]))
 
     agent = LearningAgent(net, learner)
 #    agent.name = generators[0].name
@@ -166,60 +175,6 @@ def get_neg_one_task_agent(generators, market, nOffer, profile):
     return task, agent
 
 
-def run_experiment(experiment, roleouts, samples, in_cloud=False):
-    """ Runs the given experiment and returns the results.
-    """
-    def run():
-        na = len(experiment.agents)
-        all_action = zeros((na, 0))
-        all_reward = zeros((na, 0))
-        epsilon = zeros((na, roleouts)) # exploration rate
-
-        # Converts to action vector in percentage markup values.
-        vmarkup = vectorize(get_markup)
-
-        for roleout in range(roleouts):
-            experiment.doEpisodes(samples) # number of samples per learning step
-
-            epi_action = zeros((0, samples))
-            epi_reward = zeros((0, samples))
-
-            for i, (task, agent) in \
-            enumerate(zip(experiment.tasks, experiment.agents)):
-                action = agent.history["action"]
-                reward = agent.history["reward"]
-
-                if isinstance(agent.learner, DirectSearchLearner):
-                    action = task.denormalize(action)
-                    epsilon[i, roleout] = agent.learner.explorer.sigma
-                elif isinstance(agent.learner, ValueBasedLearner):
-                    action = vmarkup(action, task)
-                    epsilon[i, roleout] = agent.learner.explorer.epsilon
-                else:
-                    action = vmarkup(action, task)
-
-                epi_action = c_[epi_action.T, action].T
-                epi_reward = c_[epi_reward.T, reward].T
-
-                agent.learn()
-                agent.reset()
-
-            all_action = c_[all_action, epi_action]
-            all_reward = c_[all_reward, epi_reward]
-
-        return all_action, all_reward, epsilon
-
-    if in_cloud:
-        import cloud
-        job_id = cloud.call(run, _high_cpu=False)
-        result = cloud.result(job_id)
-        all_action, all_reward, epsilon = result
-    else:
-        all_action, all_reward, epsilon = run()
-
-    return all_action, all_reward, epsilon
-
-
 def save_results(results, name, minor=1):
 
     expt_action_mean, expt_action_std, \
@@ -240,12 +195,6 @@ def save_results(results, name, minor=1):
     mmwrite("./out/ex5_%d_%s_epsilon.mtx" % (minor, name.lower()),
             epsilon,
             "Experiment 5.%d %s exploration rates." % (minor, name))
-
-
-def get_markup(a, task):
-    i = int(a)
-    m = task.env._allActions[i]
-    return m[0]
 
 
 def get_weekly():

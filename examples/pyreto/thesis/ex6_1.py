@@ -119,8 +119,8 @@ def run_experiment(experiment):
     """
     years = 3
     # Fixed number of roleouts and samples due to profile data.
-    roleouts = 365 * years
-    samples = 24 # number of samples per learning step
+    roleouts = 52 * years
+    samples = 7 # number of samples per learning step
 
     na = len(experiment.agents)
     all_action = zeros((na, 0))

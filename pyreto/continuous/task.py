@@ -118,7 +118,8 @@ class ProfitTask(DiscreteProfitTask):
             one tuple per parameter, giving min and max for that parameter.
         """
         limits = []
-        limits.extend(self._getDemandLimits())
+        limits.extend(self._getTotalDemandLimits())
+#        limits.extend(self._getDemandLimits())
 #        limits.extend(self._getPriceLimits())
 #        limits.extend(self._getVoltageLimits())
 #        limits.extend(self._getFlowLimits())
@@ -157,11 +158,16 @@ class ProfitTask(DiscreteProfitTask):
 ##        limits.extend([(-BIGNUM, BIGNUM) for g in case.generators])  # Pg_min
 
 
-    def _getDemandLimits(self):
+    def _getTotalDemandLimits(self):
         Pdmax = sum([b.p_demand for b in self.env.market.case.buses
                      if b.type == PQ])
-        limits = (0.0, Pdmax)
-        return [limits]
+        return [(0.0, Pdmax)]
+
+
+    def _getDemandLimits(self):
+        limits = [(0.0, b.p_demand) for b in self.env.market.case.buses
+                  if b.type == PQ]
+        return limits
 
 
     def _getPriceLimits(self):

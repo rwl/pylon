@@ -85,7 +85,8 @@ class MarketEnvironment(DiscreteMarketEnvironment):
             of doubles.
         """
         sensors = array([])
-        sensors = r_[sensors, self._getDemandSensor()]
+        sensors = r_[sensors, self._getTotalDemandSensor()]
+#        sensors = r_[sensors, self._getDemandSensor()]
 #        sensors = r_[sensors, self._getPriceSensor()]
 #        sensors = r_[sensors, self._getBusVoltageSensor()]
 #        sensors = r_[sensors, self._getBranchFlowSensor()]
@@ -136,10 +137,16 @@ class MarketEnvironment(DiscreteMarketEnvironment):
     #  "MarketEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def _getDemandSensor(self):
+    def _getTotalDemandSensor(self):
         Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
 
         return array([Pd])
+
+
+    def _getDemandSensor(self):
+        Pd = [b.p_demand for b in self.market.case.buses if b.type == PQ]
+
+        return array(Pd)
 
 
     def _getPriceSensor(self):
