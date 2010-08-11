@@ -238,6 +238,10 @@ def run_experiment(experiment, roleouts, samples, in_cloud=False):
         vmarkup = vectorize(get_markup)
 
         for roleout in range(roleouts):
+            # Apply new load profile before each episode (week).
+            i = (roleout * samples) % roleouts # index of first profile value
+            experiment.profile = full_year[i: i + samples]
+
             experiment.doEpisodes(samples) # number of samples per learning step
 
             nei = samples * len(experiment.profile) # num interactions per role
@@ -327,6 +331,8 @@ def run_experiments(expts, func, case, roleouts, in_cloud, minor=1):
 
 def ex5_1():
     minor = 1
+    version = "5_1"
+
     case = get_case6ww()
 
     expts = 1
@@ -335,25 +341,26 @@ def ex5_1():
 
 #    results = run_experiments(expts, get_re_experiment, case, roleouts,
 #                              in_cloud, minor)
-#    save_results(results, "RothErev")
+#    save_results(results, "RothErev", version)
 #
 #
 #    results = run_experiments(expts, get_q_experiment, case, roleouts,
 #                              in_cloud, minor)
-#    save_results(results, "Q")
+#    save_results(results, "Q", version)
 #
 #    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
 #                              in_cloud, minor)
-#    save_results(results, "REINFORCE")
+#    save_results(results, "REINFORCE", version)
 #
 #
     results = run_experiments(expts, get_enac_experiment, case, roleouts,
                               in_cloud, minor)
-    save_results(results, "ENAC")
+    save_results(results, "ENAC", version)
 
 
 def ex5_2():
     minor = 2
+    version = "5_2"
 
     case = get_case6ww2()
 
@@ -363,22 +370,22 @@ def ex5_2():
 
     results = run_experiments(expts, get_re_experiment, case, roleouts,
                               in_cloud, minor)
-    save_results(results, "RothErev", minor)
+    save_results(results, "RothErev", version)
 
 
     results = run_experiments(expts, get_q_experiment, case, roleouts,
                               in_cloud, minor)
-    save_results(results, "Q", minor)
+    save_results(results, "Q", version)
 
 
     results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
                               in_cloud, minor)
-    save_results(results, "REINFORCE", minor)
+    save_results(results, "REINFORCE", version)
 
 
     results = run_experiments(expts, get_enac_experiment, case, roleouts,
                               in_cloud, minor)
-    save_results(results, "ENAC", minor)
+    save_results(results, "ENAC", version)
 
 
 def main():

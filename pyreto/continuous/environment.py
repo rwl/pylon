@@ -88,7 +88,8 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         sensors = r_[sensors, self._getTotalDemandSensor()]
 #        sensors = r_[sensors, self._getDemandSensor()]
 #        sensors = r_[sensors, self._getPriceSensor()]
-#        sensors = r_[sensors, self._getBusVoltageSensor()]
+#        sensors = r_[sensors, self._getBusVoltageMagnitudeSensor()]
+        sensors = r_[sensors, self._getBusVoltageLambdaSensor()]
 #        sensors = r_[sensors, self._getBranchFlowSensor()]
 
 #        logger.info("State: %s" % sensors)
@@ -138,7 +139,7 @@ class MarketEnvironment(DiscreteMarketEnvironment):
     #--------------------------------------------------------------------------
 
     def _getTotalDemandSensor(self):
-        Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
+        Pd = sum([b.p_demand for b in self.market.case.buses])
 
         return array([Pd])
 
@@ -162,10 +163,26 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         return array([avgPrice, f])
 
 
-    def _getBusVoltageSensor(self):
-#        Vm = array([b.v_magnitude for b in self.market.case.connected_buses])
+    def _getBusVoltageMagnitudeSensor(self):
+        Vm = array([b.v_magnitude for b in self.market.case.connected_buses])
+#        Va = array([b.v_angle for b in self.market.case.connected_buses])
+        return Vm
+
+
+    def _getBusVoltageAngleSensor(self):
         Va = array([b.v_angle for b in self.market.case.connected_buses])
         return Va
+
+
+    def _getBusVoltageLambdaSensor(self):
+        """ Returns an array of length nb where each value is the sum of the
+        Lagrangian multipliers on the upper and the negative of the Lagrangian
+        multipliers on the lower voltage limits. """
+        muVmin = array([b.mu_vmin for b in self.market.case.connected_buses])
+        muVmax = array([b.mu_vmax for b in self.market.case.connected_buses])
+        muVmin = -1.0 * muVmin
+        diff = muVmin + muVmax
+        return diff
 
 
     def _getBranchFlowSensor(self):

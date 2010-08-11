@@ -140,6 +140,8 @@ def get_continuous_task_agent(generators, market, nOffer, maxMarkup, profile,
     task = pyreto.continuous.ProfitTask(env, maxSteps=len(profile),
                                         maxMarkup=maxMarkup)
 
+    print env.outdim, env.indim
+
     net = buildNetwork(env.outdim,
 #                       4,
                        env.indim,
@@ -149,7 +151,7 @@ def get_continuous_task_agent(generators, market, nOffer, maxMarkup, profile,
 #                       outclass=TanhLayer
                        )
 
-    net._setParameters(([1.0]))
+#    net._setParameters(([1.0]))
 
     agent = LearningAgent(net, learner)
 #    agent.name = generators[0].name
@@ -175,26 +177,26 @@ def get_neg_one_task_agent(generators, market, nOffer, profile):
     return task, agent
 
 
-def save_results(results, name, minor=1):
+def save_results(results, name, version="1_1"):
 
     expt_action_mean, expt_action_std, \
         expt_reward_mean, expt_reward_std, epsilon = results
 
-    mmwrite("./out/ex5_%d_%s_action_mean.mtx" % (minor, name.lower()),
+    mmwrite("./out/ex%s_%s_action_mean.mtx" % (version, name.lower()),
             expt_action_mean,
-            "Experiment 5.%d %s actions mean." % (minor, name))
-    mmwrite("./out/ex5_%d_%s_action_std.mtx" % (minor, name.lower()),
+            "Experiment %s %s actions mean." % (version, name))
+    mmwrite("./out/ex%s_%s_action_std.mtx" % (version, name.lower()),
             expt_action_std,
-            "Experiment 5.%d %s actions SD." % (minor, name))
-    mmwrite("./out/ex5_%d_%s_reward_mean.mtx" % (minor, name.lower()),
+            "Experiment %s %s actions SD." % (version, name))
+    mmwrite("./out/ex%s_%s_reward_mean.mtx" % (version, name.lower()),
             expt_reward_mean,
-            "Experiment 5.%d %s rewards mean." % (minor, name))
-    mmwrite("./out/ex5_%d_%s_reward_std.mtx" % (minor, name.lower()),
+            "Experiment %s %s rewards mean." % (version, name))
+    mmwrite("./out/ex%s_%s_reward_std.mtx" % (version, name.lower()),
             expt_reward_std,
-            "Experiment 5.%d %s rewards SD." % (minor, name))
-    mmwrite("./out/ex5_%d_%s_epsilon.mtx" % (minor, name.lower()),
+            "Experiment %s %s rewards SD." % (version, name))
+    mmwrite("./out/ex%s_%s_epsilon.mtx" % (version, name.lower()),
             epsilon,
-            "Experiment 5.%d %s exploration rates." % (minor, name))
+            "Experiment %s %s exploration rates." % (version, name))
 
 
 def get_weekly():

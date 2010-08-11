@@ -28,7 +28,7 @@ matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
 matplotlib.rcParams['axes.titlesize'] = 10
 
-tex = True
+tex = False
 
 if tex:
     # Set up publication quality graphs.
@@ -184,6 +184,77 @@ def plot5_1():
 
 def plot5_2():
     plot5_X(2)
+
+
+def plot_episodes(results, ai, ylab, xlab="Hour"):
+    np = 24
+    nplot = len(results)
+
+    for i, (result_mean, result_std, epsilon, lab, y2lab, y2max, y2min) in \
+    enumerate(results):
+
+        subplot(nplot, 1, i + 1)
+
+        title(lab)
+
+        x = arange(0.0, np, 1.0)
+        y = result_mean[ai, :]
+#        e = result_std[ai, :]
+#        y2 = epsilon[ai, :]
+
+        plot(x, y,
+             color=clr[ai % nc],
+             linestyle=ls[ai % ns],
+             label=lab)
+
+#        errorbar(x, y, yerr=e, fmt='ko', linestyle="None",
+#                 label="Action/Reward",
+#                 capsize=0, markersize=3)#, linewidth=0.2)
+        ylabel(ylab)
+
+    xlabel(xlab)
+
+
+def plot6_X(minor=1):
+    re_epsilon = mmread("./out/ex6_%d_rotherev_epsilon.mtx" % minor)
+    q_epsilon = mmread("./out/ex6_%d_q_epsilon.mtx" % minor)
+    reinforce_epsilon = mmread("./out/ex6_%d_reinforce_epsilon.mtx" % minor)
+    enac_epsilon = mmread("./out/ex6_%d_enac_epsilon.mtx" % minor)
+
+
+    re_reward_mean = mmread("./out/ex6_%d_rotherev_reward_mean.mtx" % minor)
+    re_reward_std = mmread("./out/ex6_%d_rotherev_reward_std.mtx" % minor)
+    q_reward_mean = mmread("./out/ex6_%d_q_reward_mean.mtx" % minor)
+    q_reward_std = mmread("./out/ex6_%d_q_reward_std.mtx" % minor)
+    reinforce_reward_mean = \
+        mmread("./out/ex6_%d_reinforce_reward_mean.mtx" % minor)
+    reinforce_reward_std = \
+        mmread("./out/ex6_%d_reinforce_reward_std.mtx" % minor)
+    enac_reward_mean = mmread("./out/ex6_%d_enac_reward_mean.mtx" % minor)
+    enac_reward_std = mmread("./out/ex6_%d_enac_reward_std.mtx" % minor)
+
+    rewards = [
+        (re_reward_mean, re_reward_std, re_epsilon,
+         "Roth-Erev", "Boltzmann Temperature", None, None),
+        (q_reward_mean, q_reward_std, q_epsilon,
+         "Q-Learning", "Epsilon", 1.0, 0.0),
+        (reinforce_reward_mean, reinforce_reward_std, reinforce_epsilon,
+         "REINFORCE", "Sigma", None, None),
+        (enac_reward_mean, enac_reward_std, enac_epsilon,
+         "ENAC", "Sigma", None, None)
+    ]
+
+    for ai in range(4):
+        figure(ai + 10)
+        plot_episodes(rewards, ai, r"Reward (\verb+$+)")
+        if tex:
+            savefig('./out/fig6_%d_reward_a%d.pdf' % (minor, (ai + 1)))
+        else:
+            savefig('./out/fig6_%d_reward_a%d.png' % (minor, (ai + 1)))
+
+#    if not tex:
+#        show()
+
 
 
 def plot_profiles():

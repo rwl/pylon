@@ -453,7 +453,8 @@ class Generator(_Named):
             self.qcost_model = PW_LINEAR
 
         if not len(p_offers) and not len(q_offers):
-            logger.info("No valid offers for generator, shutting down.")
+            logger.info("No valid offers for generator [%s], shutting down." %
+                        self.name)
             self.online = False
 
         self._adjust_limits()

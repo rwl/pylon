@@ -4,19 +4,20 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 Power by Richard Lincoln. """
 
 import random
-from numpy import zeros, c_
+from numpy import zeros, c_, mean, std
 
 import pyreto.continuous
 
 from pyreto.roth_erev import VariantRothErev
+from pyreto.util import ManualNormalExplorer
 
 from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 from pybrain.rl.learners import ENAC, Reinforce #@UnusedImport
 
 from common import \
-    get_case24_ieee_rts, setup_logging, run_experiment, save_result, \
-    get_continuous_task_agent, get_full_year, get_zero_task_agent
+    get_case24_ieee_rts, setup_logging, save_results, \
+    get_continuous_task_agent, get_full_year, get_neg_one_task_agent
 
 setup_logging()
 
@@ -33,7 +34,7 @@ def get_portfolios():
     g7 = range(8, 11)
     g13 = range(11, 14)
     g14 = [14] # sync cond
-    g15 = [15, 21]
+    g15 = range(15, 21)
     g16 = [21]
     g18 = [22]
     g21 = [23]
@@ -82,51 +83,59 @@ def get_enac_experiment(case):
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit)
 
     # Outage rate (outages/year).
-    rate = [0.24, 0.51, 0.33, 0.39, 0.48, 0.38, 0.02, 0.36, 0.34, 0.33, 0.3,
-            0.44, 0.44, 0.02, 0.02, 0.02, 0.02, 0.4, 0.39, 0.4, 0.52,
-            0.49, 0.38, 0.33, 0.41, 0.41, 0.41, 0.35, 0.34, 0.32, 0.54,
-            0.35, 0.35, 0.38, 0.38, 0.34, 0.34, 0.45]
+#    rate = [0.24, 0.51, 0.33, 0.39, 0.48, 0.38, 0.02, 0.36, 0.34, 0.33, 0.3,
+#            0.44, 0.44, 0.02, 0.02, 0.02, 0.02, 0.4, 0.39, 0.4, 0.52,
+#            0.49, 0.38, 0.33, 0.41, 0.41, 0.41, 0.35, 0.34, 0.32, 0.54,
+#            0.35, 0.35, 0.38, 0.38, 0.34, 0.34, 0.45]
+#
+#    per = 365
+#    outage_rate = [r / per for r in rate]
 
-    per = 365
-    outage_rate = [r / per for r in rate]
+    initalSigma = 0.0
+    sigmaOffset = -4.0
+    decay = 0.995
+    learningRate = 0.001
 
-    experiment = pyreto.continuous.MarketExperiment([], [], market,
-                                                    outages=outage_rate)
+    experiment = \
+        pyreto.continuous.MarketExperiment([], [], market, branchOutages=None)
 
     portfolios, sync_cond = get_portfolios()
 
     for gidx in portfolios:
         g = [case.generators[i] for i in gidx]
 
-        task, agent = get_continuous_task_agent(
-            g, market, nOffer, markupMax, profile, ENAC())
+        learner = ENAC()
+        learner.learningRate = learningRate
 
-#        if manual_sigma:
-#            sigma = [-5.0] * task.env.indim
-#            agent.learner.explorer.sigma = sigma
+        task, agent = get_continuous_task_agent(
+            g, market, nOffer, markupMax, profile, learner)
+
+        learner.explorer = ManualNormalExplorer(agent.module.outdim,
+                                                initalSigma, decay,
+                                                sigmaOffset)
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
 
     # Have an agent bid at marginal cost (0.0) for the sync cond.
-    task, agent = get_zero_task_agent(sync_cond, market, nOffer, profile)
+    passive = [case.generators[i] for i in sync_cond]
+    passive[0].p_min = 0.001 # Avoid invalid offer withholding.
+    passive[0].p_max = 0.002
+    task, agent = get_neg_one_task_agent(passive, market, nOffer, profile)
+    experiment.tasks.append(task)
+    experiment.agents.append(agent)
 
     return experiment
 
 
-def run_experiment(experiment):
+def run_experiment(experiment, roleouts, samples, in_cloud=False):
     """ Runs the given experiment and returns the results.
     """
-    years = 3
-    # Fixed number of roleouts and samples due to profile data.
-    roleouts = 52 * years
-    samples = 7 # number of samples per learning step
-
     na = len(experiment.agents)
     all_action = zeros((na, 0))
     all_reward = zeros((na, 0))
 
-    full_year = get_full_year()
+    full_year = get_full_year() / 100.0
 
     for roleout in range(roleouts):
         # Apply new load profile before each episode (week).
@@ -151,27 +160,60 @@ def run_experiment(experiment):
     return all_action, all_reward
 
 
-def main():
+def run_experiments(expts, func, case, years, in_cloud):
+
+    experiment = func(case)
+
+    roleouts = 1#52 * years
+    samples = 1#7 # number of samples per learning step
+
+    na = len(experiment.agents)
+    ni = roleouts * samples * len(experiment.profile) # no. interactions
+
+    expt_action = zeros((expts, na, ni))
+    expt_reward = zeros((expts, na, ni))
+
+    for expt in range(expts):
+        action, reward, epsilon = \
+            run_experiment(experiment, roleouts, samples, in_cloud)
+
+        expt_action[expt, :, :] = action
+        expt_reward[expt, :, :] = reward
+
+        experiment = func(case)
+
+    print expt_action.shape
+
+    expt_action_mean = mean(expt_action, axis=0)
+    expt_action_std = std(expt_action, axis=0, ddof=1)
+
+
+    print expt_action_mean.shape
+
+
+    expt_reward_mean = mean(expt_reward, axis=0)
+    expt_reward_std = std(expt_reward, axis=0, ddof=1)
+
+    return expt_action_mean, expt_action_std, \
+           expt_reward_mean, expt_reward_std, epsilon
+
+
+def ex6_1():
+    version = "6_1"
+
     case = get_case24_ieee_rts()
 
-    do_outages(case)
-
-    enac_experiment = get_enac_experiment(case)
-
+    expts = 1
+    years = 2
     in_cloud = False
 
-    if in_cloud:
-        import cloud
-        job_id = cloud.call(run_experiment, enac_experiment, _high_cpu=False)
-        result = cloud.result(job_id)
-        action, reward = result
-    else:
-        action, reward = run_experiment(enac_experiment)
+    results = \
+        run_experiments(expts, get_enac_experiment, case, years, in_cloud)
+    save_results(results, "ENAC", version)
 
-    save_result(action, "./out/ex6_1_enac_action.mtx",
-                "Experiment 6.1 ENAC actions.")
-    save_result(reward, "./out/ex6_1_enac_reward.mtx",
-                "Experiment 6.1 ENAC rewards.")
+
+def main():
+    ex6_1()
 
 
 if __name__ == "__main__":

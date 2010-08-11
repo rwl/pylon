@@ -36,12 +36,6 @@ from pylon import PQ
 logger = logging.getLogger(__name__)
 
 #------------------------------------------------------------------------------
-#  Constants:
-#------------------------------------------------------------------------------
-
-BIGNUM = 1e04
-
-#------------------------------------------------------------------------------
 #  "ProfitTask" class:
 #------------------------------------------------------------------------------
 
@@ -96,7 +90,7 @@ class ProfitTask(DiscreteProfitTask):
 #    def getObservation(self):
 #        """ A filtered mapping to getSample of the underlying environment. """
 #        sensors = super(ProfitTask, self).getObservation()
-##        print "NORMALISED SENSORS:", sensors
+#        print "NORMALISED SENSORS:", sensors
 #        return sensors
 
 
@@ -121,7 +115,9 @@ class ProfitTask(DiscreteProfitTask):
         limits.extend(self._getTotalDemandLimits())
 #        limits.extend(self._getDemandLimits())
 #        limits.extend(self._getPriceLimits())
-#        limits.extend(self._getVoltageLimits())
+#        limits.extend(self._getVoltageMagnitudeLimits())
+#        limits.extend(self._getVoltageAngleLimits())
+        limits.extend(self._getVoltageLambdaLimits())
 #        limits.extend(self._getFlowLimits())
 
         logger.debug("Sensor limits: %s" % limits)
@@ -159,8 +155,7 @@ class ProfitTask(DiscreteProfitTask):
 
 
     def _getTotalDemandLimits(self):
-        Pdmax = sum([b.p_demand for b in self.env.market.case.buses
-                     if b.type == PQ])
+        Pdmax = sum([b.p_demand for b in self.env.market.case.buses])
         return [(0.0, Pdmax)]
 
 
@@ -176,14 +171,26 @@ class ProfitTask(DiscreteProfitTask):
         return [mcpLimit, sysLimit]
 
 
-    def _getVoltageLimits(self):
+    def _getVoltageMagnitudeLimits(self):
         limits = []
-#        Vmax = [b.v_max for b in self.env.market.case.connected_buses]
-#        Vmin = [b.v_min for b in self.env.market.case.connected_buses]
-#        limits.extend(zip(Vmax, Vmin))
+        Vmax = [b.v_max for b in self.env.market.case.connected_buses]
+        Vmin = [b.v_min for b in self.env.market.case.connected_buses]
+        limits.extend(zip(Vmax, Vmin))
+#        nb = len(self.env.market.case.connected_buses)
+#        limits.extend([(-180.0, 180.0)] * nb)
+        return limits
+
+
+    def _getVoltageAngleLimits(self):
+        limits = []
         nb = len(self.env.market.case.connected_buses)
         limits.extend([(-180.0, 180.0)] * nb)
         return limits
+
+
+    def _getVoltageLambdaLimits(self):
+        nb = len(self.env.market.case.connected_buses)
+        return [None] * nb
 
 
     def _getFlowLimits(self):
