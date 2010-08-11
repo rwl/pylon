@@ -45,7 +45,7 @@ BRANCH_DATA = [
     (os.path.join(DATA_DIR, "ireland", "400kV_lines.csv"), 3),
     (os.path.join(DATA_DIR, "ireland", "275kV_lines-xborder.csv"), 3),
     (os.path.join(DATA_DIR, "ireland", "220kV_branch_data.csv"), 3),
-#    (os.path.join(DATA_DIR, "ireland", "110kV_branch_data.csv"), 3)
+    (os.path.join(DATA_DIR, "ireland", "110kV_branch_data.csv"), 3)
 ]
 
 for path, headers in BRANCH_DATA:
@@ -77,13 +77,13 @@ for path, headers in BRANCH_DATA:
                     break
         else:
             if pl1 is None and pl2 is None:
-#                    print "Placemarks not found: %s, %s (%s, %s)" % (node1_id, node2_id, row[0][4], row[1][4])
+#                print "Placemarks not found: %s, %s (%s, %s)" % (node1_id, node2_id, row[0][4], row[1][4])
                 print "Placemarks not found: %s, %s" % (node1_id, node2_id)
             elif pl1 is None:
-#                    print "Placemark not found: %s (%s) (%s)" % (node1_id, node2_id, row[0][4])
+#                print "Placemark not found: %s (%s) (%s)" % (node1_id, node2_id, row[0][4])
                 print "Placemark not found: %s (%s)" % (node1_id, node2_id)
             elif pl2 is None:
-#                    print "Placemark not found: %s (%s) (%s)" % (node2_id, node1_id, row[1][4])
+#                print "Placemark not found: %s (%s) (%s)" % (node2_id, node1_id, row[1][4])
                 print "Placemark not found: %s (%s)" % (node2_id, node1_id)
             else:
                 raise ValueError
