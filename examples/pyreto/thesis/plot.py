@@ -187,7 +187,7 @@ def plot5_2():
 
 
 def plot_episodes(results, ai, ylab, xlab="Hour"):
-    np = 24
+    maxSteps = 24
     nplot = len(results)
 
     for i, (result_mean, result_std, epsilon, lab, y2lab, y2max, y2min) in \
@@ -197,14 +197,14 @@ def plot_episodes(results, ai, ylab, xlab="Hour"):
 
         title(lab)
 
-        x = arange(0.0, np, 1.0)
+        x = arange(0.0, maxSteps, 1.0)
         y = result_mean[ai, :]
 #        e = result_std[ai, :]
 #        y2 = epsilon[ai, :]
 
         plot(x, y,
-             color=clr[ai % nc],
-             linestyle=ls[ai % ns],
+#             color=clr[ai % nc],
+#             linestyle=ls[ai % ns],
              label=lab)
 
 #        errorbar(x, y, yerr=e, fmt='ko', linestyle="None",

@@ -21,6 +21,7 @@ from common import \
 
 setup_logging()
 
+locAdj = "dc"#"dc"
 decommit = False
 cap = 100.0
 profile = [1.0] * 7
@@ -80,7 +81,8 @@ def get_portfolios():
 
 def get_enac_experiment(case):
 
-    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit)
+    market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
+                                locationalAdjustment=locAdj)
 
     # Outage rate (outages/year).
 #    rate = [0.24, 0.51, 0.33, 0.39, 0.48, 0.38, 0.02, 0.36, 0.34, 0.33, 0.3,
@@ -161,39 +163,37 @@ def get_enac_experiment(case):
 #    return all_action, all_reward
 
 
-def run_experiments(expts, func, case, years, in_cloud):
+def run_years(func, case, years, in_cloud):
 
     experiment = func(case)
 
     roleouts = 1#364 * years #52 * years
-    episodes = 1#7 # number of samples per learning step
+    episodes = 2#7 # number of samples per learning step
 
     full_year = get_full_year() / 100.0
     dynProfile = full_year.reshape((364, 24))
+    maxSteps = dynProfile.shape[1]
 
     na = len(experiment.agents)
-    ni = roleouts * episodes * dynProfile.size # no. interactions
+#    ni = roleouts * episodes * maxSteps # no. interactions
 
-    expt_action = zeros((expts, na, ni))
-    expt_reward = zeros((expts, na, ni))
+#    expt_reward = zeros((na, ni))
 
-    for expt in range(expts):
-        action, reward, epsilon = \
-            run_experiment(experiment, roleouts, episodes, in_cloud,dynProfile)
+    _, reward, epsilon = \
+        run_experiment(experiment, roleouts, episodes, in_cloud, dynProfile)
 
-        expt_action[expt, :, :] = action
-        expt_reward[expt, :, :] = reward
+#    expt_reward[expt, :, :] = reward
 
-        experiment = func(case)
+    experiment = func(case)
 
-    expt_action_mean = mean(expt_action, axis=0)
-    expt_action_std = std(expt_action, axis=0, ddof=1)
+    reward_mean = zeros((na, maxSteps))
+    reward_std = zeros((na, maxSteps))
 
-    expt_reward_mean = mean(expt_reward, axis=0)
-    expt_reward_std = std(expt_reward, axis=0, ddof=1)
+    for s in range(maxSteps):
+        reward_mean[:, s] = mean(reward[:, s::maxSteps], axis=1)
+        reward_std[:, s] = std(reward[:, s::maxSteps], axis=1, ddof=1)
 
-    return expt_action_mean, expt_action_std, \
-           expt_reward_mean, expt_reward_std, epsilon
+    return (None, None, reward_mean, reward_std, epsilon)
 
 
 def ex6_1():
@@ -201,12 +201,11 @@ def ex6_1():
 
     case = get_case24_ieee_rts()
 
-    expts = 1
     years = 2
     in_cloud = False
 
     results = \
-        run_experiments(expts, get_enac_experiment, case, years, in_cloud)
+        run_years(get_enac_experiment, case, years, in_cloud)
     save_results(results, "ENAC", version)
 
 

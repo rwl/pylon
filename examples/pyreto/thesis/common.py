@@ -209,7 +209,7 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
 
             experiment.doEpisodes(episodes) # number of samples per learning step
 
-            nei = episodes * len(experiment.profile) # num interactions per role
+            nei = episodes * maxsteps # num interactions per role
             epi_action = zeros((0, nei))
             epi_reward = zeros((0, nei))
 
@@ -222,7 +222,7 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
                     if isinstance(agent.learner, DirectSearchLearner):
                         action[j, :] = task.denormalize(action[j, :])
                         k = nei * roleout
-                        epsilon[i, k:k + nei] = agent.learner.explorer.sigma
+                        epsilon[i, k:k + nei] = agent.learner.explorer.sigma[0]
                     elif isinstance(agent.learner, ValueBasedLearner):
                         action[j, :] = vmarkup(action[j, :], task)
                         k = nei * roleout
@@ -230,17 +230,17 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
                     else:
                         action = vmarkup(action, task)
 
-#                print "EIP", epsilon
-#                print action.flatten().shape
+#                print "EPIA:", epi_action.shape, action[:, 0].shape
 
-                epi_action = c_[epi_action.T, action.flatten()].T
+                # FIXME: Only stores action[0] for all interactions.
+                epi_action = c_[epi_action.T, action[:, 0].flatten()].T
                 epi_reward = c_[epi_reward.T, reward.flatten()].T
 
                 agent.learn()
                 agent.reset()
 
-                if hasattr(agent, "module"):
-                    print "PARAMS:", agent.module.params
+#                if hasattr(agent, "module"):
+#                    print "PARAMS:", agent.module.params
 
             all_action = c_[all_action, epi_action]
             all_reward = c_[all_reward, epi_reward]
@@ -269,21 +269,30 @@ def save_results(results, name, version="1_1"):
     expt_action_mean, expt_action_std, \
         expt_reward_mean, expt_reward_std, epsilon = results
 
-    mmwrite("./out/ex%s_%s_action_mean.mtx" % (version, name.lower()),
-            expt_action_mean,
-            "Experiment %s %s actions mean." % (version, name))
-    mmwrite("./out/ex%s_%s_action_std.mtx" % (version, name.lower()),
-            expt_action_std,
-            "Experiment %s %s actions SD." % (version, name))
-    mmwrite("./out/ex%s_%s_reward_mean.mtx" % (version, name.lower()),
-            expt_reward_mean,
-            "Experiment %s %s rewards mean." % (version, name))
-    mmwrite("./out/ex%s_%s_reward_std.mtx" % (version, name.lower()),
-            expt_reward_std,
-            "Experiment %s %s rewards SD." % (version, name))
-    mmwrite("./out/ex%s_%s_epsilon.mtx" % (version, name.lower()),
-            epsilon,
-            "Experiment %s %s exploration rates." % (version, name))
+    if expt_action_mean is not None:
+        mmwrite("./out/ex%s_%s_action_mean.mtx" % (version, name.lower()),
+                expt_action_mean,
+                "Experiment %s %s actions mean." % (version, name))
+
+    if expt_action_std is not None:
+        mmwrite("./out/ex%s_%s_action_std.mtx" % (version, name.lower()),
+                expt_action_std,
+                "Experiment %s %s actions SD." % (version, name))
+
+    if expt_reward_mean is not None:
+        mmwrite("./out/ex%s_%s_reward_mean.mtx" % (version, name.lower()),
+                expt_reward_mean,
+                "Experiment %s %s rewards mean." % (version, name))
+
+    if expt_reward_std is not None:
+        mmwrite("./out/ex%s_%s_reward_std.mtx" % (version, name.lower()),
+                expt_reward_std,
+                "Experiment %s %s rewards SD." % (version, name))
+
+    if epsilon is not None:
+        mmwrite("./out/ex%s_%s_epsilon.mtx" % (version, name.lower()),
+                epsilon,
+                "Experiment %s %s exploration rates." % (version, name))
 
 
 def get_weekly():
