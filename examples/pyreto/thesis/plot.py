@@ -15,7 +15,9 @@ import random
 
 from pylab import \
     figure, plot, xlabel, ylabel, legend, savefig, rcParams, clf, title, \
-    xlim, ylim, show, errorbar, subplot, twinx, subplots_adjust, grid
+    xlim, ylim, show, errorbar, subplot, twinx, subplots_adjust, grid, gca
+
+from matplotlib.ticker import IndexLocator, FixedLocator
 
 from scipy import arange, sqrt
 from scipy.io import mmread
@@ -28,7 +30,7 @@ matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
 matplotlib.rcParams['axes.titlesize'] = 10
 
-tex = False
+tex = True
 
 if tex:
     # Set up publication quality graphs.
@@ -190,58 +192,61 @@ def plot_episodes(results, ai, ylab, xlab="Hour"):
     maxSteps = 24
     nplot = len(results)
 
-    for i, (result_mean, result_std, epsilon, lab, y2lab, y2max, y2min) in \
-    enumerate(results):
+    for i, (result_mean, result_std, lab) in enumerate(results):
 
-        subplot(nplot, 1, i + 1)
+        ax = subplot(nplot, 1, i + 1)
 
         title(lab)
 
         x = arange(0.0, maxSteps, 1.0)
         y = result_mean[ai, :]
-#        e = result_std[ai, :]
+        e = result_std[ai, :]
 #        y2 = epsilon[ai, :]
 
-        plot(x, y,
+#        plot(x, y,
 #             color=clr[ai % nc],
 #             linestyle=ls[ai % ns],
-             label=lab)
+#             label=lab)
 
-#        errorbar(x, y, yerr=e, fmt='ko', linestyle="None",
-#                 label="Action/Reward",
-#                 capsize=0, markersize=3)#, linewidth=0.2)
+        errorbar(x, y, yerr=e, fmt='kx', linestyle="None",
+                 label="Reward",
+                 capsize=3, markersize=5)#, linewidth=0.2)
         ylabel(ylab)
+
+        xlim((0, 23))
+        ax.yaxis.grid(True)
+        locator = FixedLocator(range(0, 24))
+        ax.xaxis.set_major_locator(locator)      #minor x-axis ticks
 
     xlabel(xlab)
 
 
 def plot6_X(minor=1):
-    re_epsilon = mmread("./out/ex6_%d_rotherev_epsilon.mtx" % minor)
-    q_epsilon = mmread("./out/ex6_%d_q_epsilon.mtx" % minor)
-    reinforce_epsilon = mmread("./out/ex6_%d_reinforce_epsilon.mtx" % minor)
+#    re_epsilon = mmread("./out/ex6_%d_rotherev_epsilon.mtx" % minor)
+#    q_epsilon = mmread("./out/ex6_%d_q_epsilon.mtx" % minor)
+#    reinforce_epsilon = mmread("./out/ex6_%d_reinforce_epsilon.mtx" % minor)
     enac_epsilon = mmread("./out/ex6_%d_enac_epsilon.mtx" % minor)
 
 
-    re_reward_mean = mmread("./out/ex6_%d_rotherev_reward_mean.mtx" % minor)
-    re_reward_std = mmread("./out/ex6_%d_rotherev_reward_std.mtx" % minor)
-    q_reward_mean = mmread("./out/ex6_%d_q_reward_mean.mtx" % minor)
-    q_reward_std = mmread("./out/ex6_%d_q_reward_std.mtx" % minor)
-    reinforce_reward_mean = \
-        mmread("./out/ex6_%d_reinforce_reward_mean.mtx" % minor)
-    reinforce_reward_std = \
-        mmread("./out/ex6_%d_reinforce_reward_std.mtx" % minor)
+#    re_reward_mean = mmread("./out/ex6_%d_rotherev_reward_mean.mtx" % minor)
+#    re_reward_std = mmread("./out/ex6_%d_rotherev_reward_std.mtx" % minor)
+#    q_reward_mean = mmread("./out/ex6_%d_q_reward_mean.mtx" % minor)
+#    q_reward_std = mmread("./out/ex6_%d_q_reward_std.mtx" % minor)
+#    reinforce_reward_mean = \
+#        mmread("./out/ex6_%d_reinforce_reward_mean.mtx" % minor)
+#    reinforce_reward_std = \
+#        mmread("./out/ex6_%d_reinforce_reward_std.mtx" % minor)
     enac_reward_mean = mmread("./out/ex6_%d_enac_reward_mean.mtx" % minor)
     enac_reward_std = mmread("./out/ex6_%d_enac_reward_std.mtx" % minor)
 
     rewards = [
-        (re_reward_mean, re_reward_std, re_epsilon,
-         "Roth-Erev", "Boltzmann Temperature", None, None),
-        (q_reward_mean, q_reward_std, q_epsilon,
-         "Q-Learning", "Epsilon", 1.0, 0.0),
-        (reinforce_reward_mean, reinforce_reward_std, reinforce_epsilon,
-         "REINFORCE", "Sigma", None, None),
-        (enac_reward_mean, enac_reward_std, enac_epsilon,
-         "ENAC", "Sigma", None, None)
+#        (re_reward_mean, re_reward_std, re_epsilon,
+#         "Roth-Erev", "Boltzmann Temperature", None, None),
+#        (q_reward_mean, q_reward_std, q_epsilon,
+#         "Q-Learning", "Epsilon", 1.0, 0.0),
+#        (reinforce_reward_mean, reinforce_reward_std, reinforce_epsilon,
+#         "REINFORCE", "Sigma", None, None),
+        (enac_reward_mean, enac_reward_std, "ENAC")
     ]
 
     for ai in range(4):
@@ -255,6 +260,9 @@ def plot6_X(minor=1):
 #    if not tex:
 #        show()
 
+
+def plot6_1():
+    plot6_X(1)
 
 
 def plot_profiles():
@@ -318,6 +326,7 @@ def plot_profiles():
 
 
 if __name__ == "__main__":
-    plot5_1()
-    plot5_2()
+#    plot5_1()
+#    plot5_2()
+    plot6_1()
 #    plot_profiles()

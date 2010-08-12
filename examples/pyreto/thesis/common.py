@@ -402,3 +402,15 @@ def get_all_days():
     daily = get_daily()
 
     return [w * (d / 100.0) for w in weekly for d in daily]
+
+
+def get_outages():
+    # Outage rate (outages/year).
+    rate = [0.24, 0.51, 0.33, 0.39, 0.48, 0.38, 0.02, 0.36, 0.34, 0.33, 0.3,
+            0.44, 0.44, 0.02, 0.02, 0.02, 0.02, 0.4, 0.39, 0.4, 0.52,
+            0.49, 0.38, 0.33, 0.41, 0.41, 0.41, 0.35, 0.34, 0.32, 0.54,
+            0.35, 0.35, 0.38, 0.38, 0.34, 0.34, 0.45]
+
+    per = 365
+    outage_rate = [r / per for r in rate]
+    return outage_rate
