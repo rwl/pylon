@@ -16,7 +16,7 @@ from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 from pybrain.rl.learners import ENAC, Reinforce #@UnusedImport
 
 from common import \
-    get_case24_ieee_rts, setup_logging, save_results, \
+    get_case24_ieee_rts, setup_logging, save_results, run_experiment, \
     get_continuous_task_agent, get_full_year, get_neg_one_task_agent
 
 setup_logging()
@@ -91,6 +91,7 @@ def get_enac_experiment(case):
 #    per = 365
 #    outage_rate = [r / per for r in rate]
 
+    maxSteps = 24 # hours
     initalSigma = 0.0
     sigmaOffset = -4.0
     decay = 0.995
@@ -108,7 +109,7 @@ def get_enac_experiment(case):
         learner.learningRate = learningRate
 
         task, agent = get_continuous_task_agent(
-            g, market, nOffer, markupMax, profile, learner)
+            g, market, nOffer, markupMax, maxSteps, learner)
 
         learner.explorer = ManualNormalExplorer(agent.module.outdim,
                                                 initalSigma, decay,
@@ -121,75 +122,72 @@ def get_enac_experiment(case):
     passive = [case.generators[i] for i in sync_cond]
     passive[0].p_min = 0.001 # Avoid invalid offer withholding.
     passive[0].p_max = 0.002
-    task, agent = get_neg_one_task_agent(passive, market, nOffer, profile)
+    task, agent = get_neg_one_task_agent(passive, market, nOffer, maxSteps)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
     return experiment
 
 
-def run_experiment(experiment, roleouts, samples, in_cloud=False):
-    """ Runs the given experiment and returns the results.
-    """
-    na = len(experiment.agents)
-    all_action = zeros((na, 0))
-    all_reward = zeros((na, 0))
-
-    full_year = get_full_year() / 100.0
-
-    for roleout in range(roleouts):
-        # Apply new load profile before each episode (week).
-        i = (roleout * samples) % roleouts # index of first profile value
-        experiment.profile = full_year[i: i + samples]
-
-        experiment.doEpisodes(samples)
-
-        epi_action = zeros((0, samples))
-        epi_reward = zeros((0, samples))
-
-        for agent in experiment.agents:
-            epi_action = c_[epi_action.T, agent.history["action"]].T
-            epi_reward = c_[epi_reward.T, agent.history["reward"]].T
-
-            agent.learn()
-            agent.reset()
-
-        all_action = c_[all_action, epi_action]
-        all_reward = c_[all_reward, epi_reward]
-
-    return all_action, all_reward
+#def run_experiment(experiment, roleouts, samples, in_cloud=False):
+#    """ Runs the given experiment and returns the results.
+#    """
+#    na = len(experiment.agents)
+#    all_action = zeros((na, 0))
+#    all_reward = zeros((na, 0))
+#
+#    full_year = get_full_year() / 100.0
+#
+#    for roleout in range(roleouts):
+#        # Apply new load profile before each episode (week).
+#        i = (roleout * samples) % roleouts # index of first profile value
+#        experiment.profile = full_year[i: i + samples]
+#
+#        experiment.doEpisodes(samples)
+#
+#        epi_action = zeros((0, samples))
+#        epi_reward = zeros((0, samples))
+#
+#        for agent in experiment.agents:
+#            epi_action = c_[epi_action.T, agent.history["action"]].T
+#            epi_reward = c_[epi_reward.T, agent.history["reward"]].T
+#
+#            agent.learn()
+#            agent.reset()
+#
+#        all_action = c_[all_action, epi_action]
+#        all_reward = c_[all_reward, epi_reward]
+#
+#    return all_action, all_reward
 
 
 def run_experiments(expts, func, case, years, in_cloud):
 
     experiment = func(case)
 
-    roleouts = 1#52 * years
-    samples = 1#7 # number of samples per learning step
+    roleouts = 1#364 * years #52 * years
+    episodes = 1#7 # number of samples per learning step
+
+    full_year = get_full_year() / 100.0
+    dynProfile = full_year.reshape((364, 24))
 
     na = len(experiment.agents)
-    ni = roleouts * samples * len(experiment.profile) # no. interactions
+    ni = roleouts * episodes * dynProfile.size # no. interactions
 
     expt_action = zeros((expts, na, ni))
     expt_reward = zeros((expts, na, ni))
 
     for expt in range(expts):
         action, reward, epsilon = \
-            run_experiment(experiment, roleouts, samples, in_cloud)
+            run_experiment(experiment, roleouts, episodes, in_cloud,dynProfile)
 
         expt_action[expt, :, :] = action
         expt_reward[expt, :, :] = reward
 
         experiment = func(case)
 
-    print expt_action.shape
-
     expt_action_mean = mean(expt_action, axis=0)
     expt_action_std = std(expt_action, axis=0, ddof=1)
-
-
-    print expt_action_mean.shape
-
 
     expt_reward_mean = mean(expt_reward, axis=0)
     expt_reward_std = std(expt_reward, axis=0, ddof=1)

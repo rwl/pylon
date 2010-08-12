@@ -7,6 +7,8 @@ import sys
 import logging
 import pylab
 
+from scipy import array
+
 import pylon
 import pyreto.discrete
 import pyreto.continuous
@@ -47,7 +49,7 @@ market = pyreto.SmartMarket(case, priceCap=100.0, decommit=True)
 #p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
 #       0.90, 0.88, 0.88, 0.82, 0.80, 0.78, 0.76, 0.68, 0.68, 0.68, 0.65, 0.58]
 #p1h = p1h[2::4]
-p1h = [0.9]#, 0.6]
+p1h = array([0.9])#, 0.6]
 
 # Create an empty multi-agent experiment and then populate it.
 experiment = pyreto.continuous.MarketExperiment([], [], market, p1h)

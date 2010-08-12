@@ -3,7 +3,7 @@ __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 """ This script runs the first experiment from chapter 5 of Learning to Trade
 Power by Richard Lincoln. """
 
-from numpy import zeros, mean, std, c_, vectorize
+from numpy import array, zeros, mean, std
 
 from pyreto import DISCRIMINATIVE
 
@@ -13,16 +13,13 @@ import pyreto.roth_erev #@UnusedImport
 from pyreto.roth_erev import VariantRothErev
 from pyreto.util import ManualNormalExplorer
 
-from pybrain.rl.learners.directsearch.directsearch import DirectSearchLearner
-from pybrain.rl.learners.valuebased.valuebased import ValueBasedLearner
-
 from pybrain.rl.explorers import BoltzmannExplorer #@UnusedImport
 from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 from pybrain.rl.learners import ENAC, Reinforce #@UnusedImport
 
 from common import \
     get_case6ww, get_case6ww2, setup_logging, get_discrete_task_agent, \
-    get_zero_task_agent, save_results, \
+    get_zero_task_agent, save_results, run_experiment, \
     get_continuous_task_agent, get_neg_one_task_agent
 
 from plot import plot5_1
@@ -42,7 +39,8 @@ def get_re_experiment(case, minor=1):
     """
     gen = case.generators
 
-    profile = [1.0]
+    profile = array([1.0])
+    maxSteps = len(profile)
     experimentation = 0.55
     recency = 0.3
     tau = 100.0
@@ -61,12 +59,12 @@ def get_re_experiment(case, minor=1):
         learner.explorer = BoltzmannExplorer(tau, decay)
 
         task, agent = get_discrete_task_agent(
-            [g], market, nStates, nOffer, markups, profile, learner)
+            [g], market, nStates, nOffer, markups, maxSteps, learner)
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
 
-    task1, agent1 = get_zero_task_agent(gen[2:3], market, nOffer, profile)
+    task1, agent1 = get_zero_task_agent(gen[2:3], market, nOffer, maxSteps)
     experiment.tasks.append(task1)
     experiment.agents.append(agent1)
 
@@ -78,7 +76,8 @@ def get_q_experiment(case, minor=1):
     """
     gen = case.generators
 
-    profile = [1.0]
+    profile = array([1.0])
+    maxSteps = len(profile)
     alpha = 0.3 # Learning rate.
     gamma = 0.99 # Discount factor
     # The closer epsilon gets to 0, the more greedy and less explorative.
@@ -121,7 +120,8 @@ def get_reinforce_experiment(case, minor=1):
     gen = case.generators
 
     markupMax = 30.0
-    profile = [1.0, 1.0]
+    profile = array([1.0, 1.0])
+    maxSteps = len(profile)
     initalSigma = 0.0
 #    decay = 0.95
 #    learningRate = 0.0005#005 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
@@ -153,7 +153,7 @@ def get_reinforce_experiment(case, minor=1):
 #        learner.gd.deltamin = 0.0001
 
         task, agent = get_continuous_task_agent(
-            [g], market, nOffer, markupMax, profile, learner)
+            [g], market, nOffer, markupMax, maxSteps, learner)
 
         learner.explorer = ManualNormalExplorer(agent.module.outdim,
                                                 initalSigma, decay,
@@ -163,7 +163,7 @@ def get_reinforce_experiment(case, minor=1):
         experiment.agents.append(agent)
 
     # Passive agent.
-    task, agent = get_neg_one_task_agent(gen[2:3], market, nOffer, profile)
+    task, agent = get_neg_one_task_agent(gen[2:3], market, nOffer, maxSteps)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -174,7 +174,8 @@ def get_enac_experiment(case, minor=1):
     gen = case.generators
 
     markupMax = 30.0
-    profile = [1.0, 1.0]
+    profile = array([1.0, 1.0])
+    maxSteps = len(profile)
     initalSigma = 0.0
     sigmaOffset = -4.0
 
@@ -206,7 +207,7 @@ def get_enac_experiment(case, minor=1):
 
 
         task, agent = get_continuous_task_agent(
-            [g], market, nOffer, markupMax, profile, learner)
+            [g], market, nOffer, markupMax, maxSteps, learner)
 
         learner.explorer = ManualNormalExplorer(agent.module.outdim,
                                                 initalSigma, decay,
@@ -216,103 +217,29 @@ def get_enac_experiment(case, minor=1):
         experiment.agents.append(agent)
 
     # Passive agent.
-    task, agent = get_neg_one_task_agent(gen[2:3], market, nOffer, profile)
+    task, agent = get_neg_one_task_agent(gen[2:3], market, nOffer, maxSteps)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
     return experiment
 
 
-def run_experiment(experiment, roleouts, samples, in_cloud=False):
-    """ Runs the given experiment and returns the results.
-    """
-    def run():
-        na = len(experiment.agents)
-        ni = roleouts * samples * len(experiment.profile)
-
-        all_action = zeros((na, 0))
-        all_reward = zeros((na, 0))
-        epsilon = zeros((na, ni)) # exploration rate
-
-        # Converts to action vector in percentage markup values.
-        vmarkup = vectorize(get_markup)
-
-        for roleout in range(roleouts):
-            # Apply new load profile before each episode (week).
-            i = (roleout * samples) % roleouts # index of first profile value
-            experiment.profile = full_year[i: i + samples]
-
-            experiment.doEpisodes(samples) # number of samples per learning step
-
-            nei = samples * len(experiment.profile) # num interactions per role
-            epi_action = zeros((0, nei))
-            epi_reward = zeros((0, nei))
-
-            for i, (task, agent) in \
-            enumerate(zip(experiment.tasks, experiment.agents)):
-                action = agent.history["action"]
-                reward = agent.history["reward"]
-
-                for j in range(nei):
-                    if isinstance(agent.learner, DirectSearchLearner):
-                        action[j, :] = task.denormalize(action[j, :])
-                        k = nei * roleout
-                        epsilon[i, k:k + nei] = agent.learner.explorer.sigma
-                    elif isinstance(agent.learner, ValueBasedLearner):
-                        action[j, :] = vmarkup(action[j, :], task)
-                        k = nei * roleout
-                        epsilon[i, k:k + nei] = agent.learner.explorer.epsilon
-                    else:
-                        action = vmarkup(action, task)
-
-#                print "EIP", epsilon
-#                print action.flatten().shape
-
-                epi_action = c_[epi_action.T, action.flatten()].T
-                epi_reward = c_[epi_reward.T, reward.flatten()].T
-
-                agent.learn()
-                agent.reset()
-
-                if hasattr(agent, "module"):
-                    print "PARAMS:", agent.module.params
-
-            all_action = c_[all_action, epi_action]
-            all_reward = c_[all_reward, epi_reward]
-
-        return all_action, all_reward, epsilon
-
-    if in_cloud:
-        import cloud
-        job_id = cloud.call(run, _high_cpu=False)
-        result = cloud.result(job_id)
-        all_action, all_reward, epsilon = result
-    else:
-        all_action, all_reward, epsilon = run()
-
-    return all_action, all_reward, epsilon
-
-
-def get_markup(a, task):
-    i = int(a)
-    m = task.env._allActions[i]
-    return m[0]
-
-
 def run_experiments(expts, func, case, roleouts, in_cloud, minor=1):
 
     experiment = func(case, minor)
 
+    profile = experiment.profile
+    maxSteps = len(profile) # num profile values
     na = len(experiment.agents)
-    samples = 3
-    ni = roleouts * samples * len(experiment.profile) # no. interactions
+    episodes = 3
+    ni = roleouts * episodes * maxSteps # no. interactions
 
     expt_action = zeros((expts, na, ni))
     expt_reward = zeros((expts, na, ni))
 
     for expt in range(expts):
         action, reward, epsilon = \
-            run_experiment(experiment, roleouts, samples, in_cloud)
+            run_experiment(experiment, roleouts, episodes, in_cloud)
 
         expt_action[expt, :, :] = action
         expt_reward[expt, :, :] = reward
