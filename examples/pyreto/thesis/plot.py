@@ -30,7 +30,7 @@ matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
 matplotlib.rcParams['axes.titlesize'] = 10
 
-tex = True
+tex = False
 
 if tex:
     # Set up publication quality graphs.

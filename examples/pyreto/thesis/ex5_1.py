@@ -28,6 +28,7 @@ from plot import plot5_1
 setup_logging()
 
 decommit = False
+auctionType = DISCRIMINATIVE #FIRST_PRICE
 cap = 100.0
 #profile = [1.0, 1.0]
 nOffer = 1
@@ -48,8 +49,7 @@ def get_re_experiment(case, minor=1):
     markups = (0, 10, 20, 30)
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-                                auctionType=DISCRIMINATIVE
-                                )
+                                auctionType=auctionType)
 
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
@@ -88,8 +88,7 @@ def get_q_experiment(case, minor=1):
     qlambda = 0.9
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-                                auctionType=DISCRIMINATIVE
-                                )
+                                auctionType=auctionType)
 
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
@@ -98,9 +97,9 @@ def get_q_experiment(case, minor=1):
     #    learner = QLambda(alpha, gamma, qlambda)
     #    learner = SARSA(alpha, gamma)
 
-#        learner.explorer.epsilon = epsilon
-#        learner.explorer.decay = decay
-        learner.explorer = BoltzmannExplorer(tau, decay)
+        learner.explorer.epsilon = epsilon
+        learner.explorer.decay = decay
+#        learner.explorer = BoltzmannExplorer(tau, decay)
 
         task, agent = get_discrete_task_agent(
             [g], market, nStates, nOffer, markups, profile, learner)
@@ -120,7 +119,7 @@ def get_reinforce_experiment(case, minor=1):
     gen = case.generators
 
     markupMax = 30.0
-    profile = array([1.0, 1.0])
+    profile = array([1.0])
     maxSteps = len(profile)
     initalSigma = 0.0
 #    decay = 0.95
@@ -128,8 +127,8 @@ def get_reinforce_experiment(case, minor=1):
     sigmaOffset = -5.0
 
     if minor == 1:
-        decay = 0.98#75#95
-        learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
+        decay = 0.999#75#95
+        learningRate = 0.02 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
     elif minor == 2:
         decay = 0.985
         learningRate = 0.0005
@@ -137,8 +136,7 @@ def get_reinforce_experiment(case, minor=1):
         raise ValueError
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-                                auctionType=DISCRIMINATIVE
-                                )
+                                auctionType=auctionType)
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
     for g in gen[0:2]:
@@ -174,7 +172,7 @@ def get_enac_experiment(case, minor=1):
     gen = case.generators
 
     markupMax = 30.0
-    profile = array([1.0, 1.0])
+    profile = array([1.0])
     maxSteps = len(profile)
     initalSigma = 0.0
     sigmaOffset = -4.0
@@ -189,8 +187,7 @@ def get_enac_experiment(case, minor=1):
         raise ValueError
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
-                                auctionType=DISCRIMINATIVE
-                                )
+                                auctionType=auctionType)
     experiment = pyreto.continuous.MarketExperiment([], [], market, profile)
 
     for g in gen[0:2]:
@@ -224,14 +221,13 @@ def get_enac_experiment(case, minor=1):
     return experiment
 
 
-def run_experiments(expts, func, case, roleouts, in_cloud, minor=1):
+def run_experiments(expts, func, case, roleouts, episodes, in_cloud, minor=1):
 
     experiment = func(case, minor)
 
     profile = experiment.profile
     maxSteps = len(profile) # num profile values
     na = len(experiment.agents)
-    episodes = 3
     ni = roleouts * episodes * maxSteps # no. interactions
 
     expt_action = zeros((expts, na, ni))
@@ -263,26 +259,31 @@ def ex5_1():
     case = get_case6ww()
 
     expts = 1
-    roleouts = 20
+    roleouts = 120
+    episodes = 1 # samples per learning step
     in_cloud = False
 
 #    results = run_experiments(expts, get_re_experiment, case, roleouts,
-#                              in_cloud, minor)
+#                              episodes, in_cloud, minor)
 #    save_results(results, "RothErev", version)
 #
 #
 #    results = run_experiments(expts, get_q_experiment, case, roleouts,
-#                              in_cloud, minor)
+#                              episodes, in_cloud, minor)
 #    save_results(results, "Q", version)
 #
-#    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
-#                              in_cloud, minor)
-#    save_results(results, "REINFORCE", version)
+#
+    roleouts = 50
+    episodes = 5 # samples per learning step
+
+    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+                              episodes, in_cloud, minor)
+    save_results(results, "REINFORCE", version)
 #
 #
-    results = run_experiments(expts, get_enac_experiment, case, roleouts,
-                              in_cloud, minor)
-    save_results(results, "ENAC", version)
+#    results = run_experiments(expts, get_enac_experiment, case, roleouts,
+#                              episodes, in_cloud, minor)
+#    save_results(results, "ENAC", version)
 
 
 def ex5_2():
@@ -293,25 +294,26 @@ def ex5_2():
 
     expts = 10
     roleouts = 300
+    episodes = 1 # samples per learning step
     in_cloud = False
 
     results = run_experiments(expts, get_re_experiment, case, roleouts,
-                              in_cloud, minor)
+                              episodes, in_cloud, minor)
     save_results(results, "RothErev", version)
 
 
     results = run_experiments(expts, get_q_experiment, case, roleouts,
-                              in_cloud, minor)
+                              episodes, in_cloud, minor)
     save_results(results, "Q", version)
 
 
     results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
-                              in_cloud, minor)
+                              episodes, in_cloud, minor)
     save_results(results, "REINFORCE", version)
 
 
     results = run_experiments(expts, get_enac_experiment, case, roleouts,
-                              in_cloud, minor)
+                              episodes, in_cloud, minor)
     save_results(results, "ENAC", version)
 
 

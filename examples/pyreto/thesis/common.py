@@ -6,7 +6,7 @@ import os
 import sys
 import logging
 
-from numpy import zeros, array, c_, vectorize
+from numpy import zeros, array, c_, vectorize, copy
 from scipy.io import mmwrite
 
 import pylon
@@ -154,7 +154,7 @@ def get_continuous_task_agent(generators, market, nOffer, maxMarkup, maxSteps,
 #                       outclass=TanhLayer
                        )
 
-#    net._setParameters(([1.0]))
+    net._setParameters(([-0.5]))
 
     agent = LearningAgent(net, learner)
 #    agent.name = generators[0].name
@@ -186,7 +186,7 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
     """
     def run():
         if dynProfile is None:
-            maxsteps = len(experiment.profile)
+            maxsteps = len(experiment.profile) # episode length
         else:
             maxsteps = dynProfile.shape[1]
         na = len(experiment.agents)
@@ -205,7 +205,7 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
                 i = roleout * episodes # index of first profile value
                 experiment.profile = dynProfile[i:i + episodes, :]
 
-            print "PROFILE:", experiment.profile
+            print "PROFILE:", experiment.profile, episodes
 
             experiment.doEpisodes(episodes) # number of samples per learning step
 
@@ -215,8 +215,8 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
 
             for i, (task, agent) in \
             enumerate(zip(experiment.tasks, experiment.agents)):
-                action = agent.history["action"]
-                reward = agent.history["reward"]
+                action = copy(agent.history["action"])
+                reward = copy(agent.history["reward"])
 
                 for j in range(nei):
                     if isinstance(agent.learner, DirectSearchLearner):
@@ -230,8 +230,6 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
                     else:
                         action = vmarkup(action, task)
 
-#                print "EPIA:", epi_action.shape, action[:, 0].shape
-
                 # FIXME: Only stores action[0] for all interactions.
                 epi_action = c_[epi_action.T, action[:, 0].flatten()].T
                 epi_reward = c_[epi_reward.T, reward.flatten()].T
@@ -239,8 +237,8 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
                 agent.learn()
                 agent.reset()
 
-#                if hasattr(agent, "module"):
-#                    print "PARAMS:", agent.module.params
+                if hasattr(agent, "module"):
+                    print "PARAMS:", agent.module.params
 
             all_action = c_[all_action, epi_action]
             all_reward = c_[all_reward, epi_reward]
