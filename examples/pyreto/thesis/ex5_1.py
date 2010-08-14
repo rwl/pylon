@@ -45,7 +45,7 @@ def get_re_experiment(case, minor=1):
     experimentation = 0.55
     recency = 0.3
     tau = 100.0
-    decay = 0.98#9995
+    decay = 0.99#9995
     markups = (0, 10, 20, 30)
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
@@ -119,7 +119,7 @@ def get_reinforce_experiment(case, minor=1):
     gen = case.generators
 
     markupMax = 30.0
-    profile = array([1.0])
+    profile = array([1.0, 1.0])
     maxSteps = len(profile)
     initalSigma = 0.0
 #    decay = 0.95
@@ -127,8 +127,8 @@ def get_reinforce_experiment(case, minor=1):
     sigmaOffset = -5.0
 
     if minor == 1:
-        decay = 0.999#75#95
-        learningRate = 0.02 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
+        decay = 0.998#75#95
+        learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
     elif minor == 2:
         decay = 0.985
         learningRate = 0.0005
@@ -172,14 +172,14 @@ def get_enac_experiment(case, minor=1):
     gen = case.generators
 
     markupMax = 30.0
-    profile = array([1.0])
+    profile = array([1.0, 1.0])
     maxSteps = len(profile)
     initalSigma = 0.0
     sigmaOffset = -4.0
 
     if minor == 1:
-        decay = 0.995
-        learningRate = 0.001 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
+        decay = 0.999
+        learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
     elif minor == 2:
         decay = 0.985
         learningRate = 0.0005
@@ -258,11 +258,12 @@ def ex5_1():
 
     case = get_case6ww()
 
-    expts = 1
-    roleouts = 120
-    episodes = 1 # samples per learning step
+    expts = 8
     in_cloud = False
 
+#    roleouts = 300
+#    episodes = 1 # samples per learning step
+#
 #    results = run_experiments(expts, get_re_experiment, case, roleouts,
 #                              episodes, in_cloud, minor)
 #    save_results(results, "RothErev", version)
@@ -273,17 +274,20 @@ def ex5_1():
 #    save_results(results, "Q", version)
 #
 #
-    roleouts = 50
+#    roleouts = 30
+#    episodes = 5 # samples per learning step
+#
+#    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+#                              episodes, in_cloud, minor)
+#    save_results(results, "REINFORCE", version)
+#
+#
+    roleouts = 30
     episodes = 5 # samples per learning step
 
-    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+    results = run_experiments(expts, get_enac_experiment, case, roleouts,
                               episodes, in_cloud, minor)
-    save_results(results, "REINFORCE", version)
-#
-#
-#    results = run_experiments(expts, get_enac_experiment, case, roleouts,
-#                              episodes, in_cloud, minor)
-#    save_results(results, "ENAC", version)
+    save_results(results, "ENAC", version)
 
 
 def ex5_2():

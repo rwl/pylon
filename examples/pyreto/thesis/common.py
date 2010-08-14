@@ -154,7 +154,7 @@ def get_continuous_task_agent(generators, market, nOffer, maxMarkup, maxSteps,
 #                       outclass=TanhLayer
                        )
 
-    net._setParameters(([-0.5]))
+    net._setParameters(([0.0]))
 
     agent = LearningAgent(net, learner)
 #    agent.name = generators[0].name
@@ -234,11 +234,11 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
                 epi_action = c_[epi_action.T, action[:, 0].flatten()].T
                 epi_reward = c_[epi_reward.T, reward.flatten()].T
 
-                agent.learn()
-                agent.reset()
-
                 if hasattr(agent, "module"):
                     print "PARAMS:", agent.module.params
+
+                agent.learn()
+                agent.reset()
 
             all_action = c_[all_action, epi_action]
             all_reward = c_[all_reward, epi_reward]
