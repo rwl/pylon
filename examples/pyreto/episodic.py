@@ -50,7 +50,7 @@ market = pyreto.SmartMarket(case, priceCap=100.0, decommit=True)
 #p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
 #       0.90, 0.88, 0.88, 0.82, 0.80, 0.78, 0.76, 0.68, 0.68, 0.68, 0.65, 0.58]
 #p1h = p1h[8:14]
-p1h = [0.65] * 5#, 0.95]
+p1h = scipy.array([0.65] * 5)#, 0.95]
 
 # An experiment coordinates interactions between agents and their tasks.
 experiment = pyreto.continuous.MarketExperiment([], [], market, p1h)

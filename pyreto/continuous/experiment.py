@@ -26,6 +26,8 @@ import logging
 
 from itertools import cycle
 
+from scipy import array
+
 #from pybrain.rl.experiments import Experiment, EpisodicExperiment
 #from pybrain.rl.agents.optimization import OptimizationAgent
 
@@ -65,10 +67,11 @@ class MarketExperiment(object):
         #: Market to which agents submit offers/bids.
         self.market = market
 
-        #: Load profile.
+        #: Load profile.  Either a 1D array used for all episodes or a 2D array
+        #  where the number of rows equals the number of episodes.
 #        self._profile = None
         self._pcycle = None
-        self.profile = [1.0] if profile is None else profile
+        self.profile = array([1.0]) if profile is None else profile
 
         #: List of branch outage probabilities.
         self.branchOutages = branchOutages
@@ -172,7 +175,11 @@ class MarketExperiment(object):
             print "Starting episode %d." % episode
 
             # Initialise the profile cycle.
-            self._pcycle = cycle(self.profile)
+            if len(self.profile.shape) == 1: # 1D array
+                self._pcycle = cycle(self.profile)
+            else:
+                assert self.profile.shape[0] >= number
+                self._pcycle = cycle(self.profile[episode, :])
 
             # Scale the initial load.
             c = self._pcycle.next()
