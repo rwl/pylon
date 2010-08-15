@@ -5,7 +5,7 @@ Power by Richard Lincoln. """
 
 from numpy import array, zeros, mean, std
 
-from pyreto import DISCRIMINATIVE
+from pyreto import DISCRIMINATIVE, FIRST_PRICE #@UnusedImport
 
 import pyreto.continuous
 import pyreto.roth_erev #@UnusedImport
@@ -22,7 +22,7 @@ from common import \
     get_zero_task_agent, save_results, run_experiment, \
     get_continuous_task_agent, get_neg_one_task_agent
 
-from plot import plot5_1
+from plot import plot5_1, plot5_2 #@UnusedImport
 
 
 setup_logging()
@@ -78,14 +78,28 @@ def get_q_experiment(case, minor=1):
 
     profile = array([1.0])
     maxSteps = len(profile)
-    alpha = 0.3 # Learning rate.
-    gamma = 0.99 # Discount factor
-    # The closer epsilon gets to 0, the more greedy and less explorative.
-    epsilon = 0.9
-    decay = 0.97
-    tau = 150.0 # Boltzmann temperature.
     markups = (0, 10, 20, 30)
-    qlambda = 0.9
+
+    if minor == 1:
+        alpha = 0.3 # Learning rate.
+        gamma = 0.99 # Discount factor
+        # The closer epsilon gets to 0, the more greedy and less explorative.
+        epsilon = 0.9
+        decay = 0.97
+
+        tau = 150.0 # Boltzmann temperature.
+        qlambda = 0.9
+    elif minor == 2:
+        alpha = 0.1 # Learning rate.
+        gamma = 0.99 # Discount factor
+        # The closer epsilon gets to 0, the more greedy and less explorative.
+        epsilon = 0.9
+        decay = 0.99
+
+        tau = 150.0 # Boltzmann temperature.
+        qlambda = 0.9
+    else:
+        raise ValueError
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=auctionType)
@@ -102,13 +116,13 @@ def get_q_experiment(case, minor=1):
 #        learner.explorer = BoltzmannExplorer(tau, decay)
 
         task, agent = get_discrete_task_agent(
-            [g], market, nStates, nOffer, markups, profile, learner)
+            [g], market, nStates, nOffer, markups, maxSteps, learner)
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
 
     # Passive agent.
-    task, agent = get_zero_task_agent(gen[2:3], market, nOffer, profile)
+    task, agent = get_zero_task_agent(gen[2:3], market, nOffer, maxSteps)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -130,8 +144,8 @@ def get_reinforce_experiment(case, minor=1):
         decay = 0.998#75#95
         learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
     elif minor == 2:
-        decay = 0.985
-        learningRate = 0.0005
+        decay = 0.999
+        learningRate = 0.01
     else:
         raise ValueError
 
@@ -181,8 +195,8 @@ def get_enac_experiment(case, minor=1):
         decay = 0.999
         learningRate = 0.01 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
     elif minor == 2:
-        decay = 0.985
-        learningRate = 0.0005
+        decay = 0.997
+        learningRate = 0.005
     else:
         raise ValueError
 
@@ -261,27 +275,27 @@ def ex5_1():
     expts = 8
     in_cloud = False
 
-#    roleouts = 300
-#    episodes = 1 # samples per learning step
-#
-#    results = run_experiments(expts, get_re_experiment, case, roleouts,
-#                              episodes, in_cloud, minor)
-#    save_results(results, "RothErev", version)
-#
-#
-#    results = run_experiments(expts, get_q_experiment, case, roleouts,
-#                              episodes, in_cloud, minor)
-#    save_results(results, "Q", version)
-#
-#
-#    roleouts = 30
-#    episodes = 5 # samples per learning step
-#
-#    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
-#                              episodes, in_cloud, minor)
-#    save_results(results, "REINFORCE", version)
-#
-#
+    roleouts = 300
+    episodes = 1 # samples per learning step
+
+    results = run_experiments(expts, get_re_experiment, case, roleouts,
+                              episodes, in_cloud, minor)
+    save_results(results, "RothErev", version)
+
+
+    results = run_experiments(expts, get_q_experiment, case, roleouts,
+                              episodes, in_cloud, minor)
+    save_results(results, "Q", version)
+
+
+    roleouts = 30
+    episodes = 5 # samples per learning step
+
+    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+                              episodes, in_cloud, minor)
+    save_results(results, "REINFORCE", version)
+
+
     roleouts = 30
     episodes = 5 # samples per learning step
 
@@ -296,35 +310,39 @@ def ex5_2():
 
     case = get_case6ww2()
 
-    expts = 10
-    roleouts = 300
-    episodes = 1 # samples per learning step
+    expts = 8
     in_cloud = False
 
-    results = run_experiments(expts, get_re_experiment, case, roleouts,
-                              episodes, in_cloud, minor)
-    save_results(results, "RothErev", version)
+    roleouts = 300
+    episodes = 1 # samples per learning step
 
+#    results = run_experiments(expts, get_re_experiment, case, roleouts,
+#                              episodes, in_cloud, minor)
+#    save_results(results, "RothErev", version)
+#
+#
+#    results = run_experiments(expts, get_q_experiment, case, roleouts,
+#                              episodes, in_cloud, minor)
+#    save_results(results, "Q", version)
+#
+#
+    roleouts, episodes = 200, 5
 
-    results = run_experiments(expts, get_q_experiment, case, roleouts,
-                              episodes, in_cloud, minor)
-    save_results(results, "Q", version)
-
-
-    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
-                              episodes, in_cloud, minor)
-    save_results(results, "REINFORCE", version)
-
-
+#    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+#                              episodes, in_cloud, minor)
+#    save_results(results, "REINFORCE", version)
+#
+#
     results = run_experiments(expts, get_enac_experiment, case, roleouts,
                               episodes, in_cloud, minor)
     save_results(results, "ENAC", version)
 
 
 def main():
-    ex5_1()
-#    ex5_2()
+#    ex5_1()
+#    plot5_1()
+    ex5_2()
+    plot5_2()
 
 if __name__ == "__main__":
     main()
-    plot5_1()

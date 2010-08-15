@@ -81,9 +81,9 @@ def get_case6ww2():
     case.generators[1].p_cost = (0.0, 4.5, 200.0) # 30%
     case.generators[2].p_cost = (0.0, 6.0, 200.0) # passive
 
-#    case.generators[0].c_shutdown = 100.0
-#    case.generators[1].c_shutdown = 100.0
-#    case.generators[2].c_shutdown = 100.0
+    case.generators[0].c_shutdown = 100.0
+    case.generators[1].c_shutdown = 100.0
+    case.generators[2].c_shutdown = 100.0
 
     case.generators[0].p_min = 0.0 # TODO: Unit-decommitment.
     case.generators[1].p_min = 0.0
@@ -142,8 +142,6 @@ def get_continuous_task_agent(generators, market, nOffer, maxMarkup, maxSteps,
 
     task = pyreto.continuous.ProfitTask(env, maxSteps=maxSteps,
                                         maxMarkup=maxMarkup)
-
-    print env.outdim, env.indim
 
     net = buildNetwork(env.outdim,
 #                       4,
