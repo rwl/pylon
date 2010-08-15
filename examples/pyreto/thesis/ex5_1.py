@@ -310,7 +310,7 @@ def ex5_2():
 
     case = get_case6ww2()
 
-    expts = 8
+    expts = 5
     in_cloud = False
 
     roleouts = 300
@@ -326,13 +326,15 @@ def ex5_2():
 #    save_results(results, "Q", version)
 #
 #
-    roleouts, episodes = 200, 5
+    roleouts, episodes = 100, 5
 
-#    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
-#                              episodes, in_cloud, minor)
-#    save_results(results, "REINFORCE", version)
+    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+                              episodes, in_cloud, minor)
+    save_results(results, "REINFORCE", version)
 #
 #
+    roleouts, episodes = 50, 10
+
     results = run_experiments(expts, get_enac_experiment, case, roleouts,
                               episodes, in_cloud, minor)
     save_results(results, "ENAC", version)
