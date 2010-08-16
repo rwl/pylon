@@ -64,7 +64,8 @@ class MarketEnvironment(object):
     outdim = 1
 
     def __init__(self, generators, market, numStates=1, markups=None,
-                 withholds=None, numOffbids=1, offbidQty=False):
+                 withholds=None, numOffbids=1, offbidQty=False,
+                 Pd0=None, Pd_min=0.0):
         """ Initialises the environment.
         """
         super(MarketEnvironment, self).__init__()
@@ -75,7 +76,14 @@ class MarketEnvironment(object):
         self._g0 = {}
 
         #: Initial total system demand.
-        self._Pd0 = sum([b.p_demand for b in market.case.buses if b.type ==PQ])
+        if Pd0 is None:
+#            self._Pd0 = sum([b.p_demand for b in market.case.buses if b.type ==PQ])
+            self._Pd0 = sum([b.p_demand for b in market.case.buses])
+        else:
+            self._Pd0 = Pd0
+
+        #: Minimum total system demand. Used to define states.
+        self.Pd_min = Pd_min
 
         #: Portfolio of generators endowed to the agent.
         self._generators = None
@@ -278,10 +286,12 @@ class MarketEnvironment(object):
     #--------------------------------------------------------------------------
 
     def _getDemandSensor(self):
-        Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
+        Pd = sum([b.p_demand for b in self.market.case.buses])
 
         # Divide the range of demand into discrete bands.
-        states = linspace(0.0, self._Pd0, self.numStates + 1)
+        states = linspace(self.Pd_min, self._Pd0, self.numStates + 1)
+
+        print "STATES:", self._Pd0, states
 
         for i in range(len(states) - 1):
             if states[i] <= round(Pd, 1) <= states[i + 1]:
@@ -289,7 +299,7 @@ class MarketEnvironment(object):
                             (self.generators[0].name, i, Pd))
                 return array([i])
         else:
-            raise ValueError, "Demand greater than peak [%.3f]." % Pd
+            raise ValueError, "No state defined for system demand [%.3f]." % Pd
 
 
     def _getPriceSensor(self):

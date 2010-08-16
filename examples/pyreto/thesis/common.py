@@ -119,13 +119,15 @@ def get_case24_ieee_rts():
 
 
 def get_discrete_task_agent(generators, market, nStates, nOffer, markups,
-                            maxSteps, learner):
+                            maxSteps, learner, Pd0=None, Pd_min=0.0):
     """ Returns a tuple of task and agent for the given learner.
     """
     env = pyreto.discrete.MarketEnvironment(generators, market,
                                             numStates=nStates,
                                             numOffbids=nOffer,
-                                            markups=markups)
+                                            markups=markups,
+                                            Pd0=Pd0,
+                                            Pd_min=Pd_min)
     task = pyreto.discrete.ProfitTask(env, maxSteps=maxSteps)
 
     nActions = len(env._allActions)
@@ -176,6 +178,18 @@ def get_neg_one_task_agent(generators, market, nOffer, maxSteps):
     task = pyreto.discrete.ProfitTask(env, maxSteps=maxSteps)
     agent = pyreto.util.NegOneAgent(env.outdim, env.indim)
     return task, agent
+
+
+def get_pd_min(case, profile):
+    l = min(profile)
+    Pd_min = sum([b.p_demand * l for b in case.buses])
+    return Pd_min
+
+
+def get_pd_max(case, profile):
+    u = max(profile)
+    Pd_max = sum([b.p_demand * u for b in case.buses])
+    return Pd_max
 
 
 def run_experiment(experiment, roleouts, episodes, in_cloud=False,

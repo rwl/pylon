@@ -18,22 +18,24 @@ from pybrain.rl.learners import ENAC, Reinforce #@UnusedImport
 from common import \
     get_case24_ieee_rts, setup_logging, save_results, run_experiment, \
     get_continuous_task_agent, get_full_year, get_neg_one_task_agent, \
-    get_discrete_task_agent, get_zero_task_agent
+    get_discrete_task_agent, get_zero_task_agent, get_pd_min, get_pd_max
 
 setup_logging()
 
 locAdj = "dc"#"dc"
 decommit = False
 auctionType = FIRST_PRICE#DISCRIMINATIVE
+profile = get_full_year() / 100.0
 cap = 9999.0
 nOffer = 1
 nStates = 10
+markups = (0, 15, 30)
 markupMax = 30.0
 maxSteps = 24 # hours
 
 
 def get_portfolios():
-    """ Returns a tuple of active ans passive portfolio indexes.
+    """ Returns a tuple of active and passive portfolio indexes.
     """
     g1 = range(0, 4)
     g2 = range(4, 8)
@@ -64,8 +66,10 @@ def get_re_experiment(case, minor=1):
     recency = 0.3
     tau = 100.0
     decay = 0.98#9995
-    markups = (0, 10, 20, 30)
-#    nStates = 1 # stateful RE?
+#    nStates = 1 # stateless RE?
+
+    Pd0 = get_pd_max(case, profile)
+    Pd_min = get_pd_min(case, profile)
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=auctionType)
@@ -81,7 +85,7 @@ def get_re_experiment(case, minor=1):
         learner.explorer = BoltzmannExplorer(tau, decay)
 
         task, agent = get_discrete_task_agent(
-            [g], market, nStates, nOffer, markups, maxSteps, learner)
+            g, market, nStates, nOffer, markups, maxSteps, learner, Pd0,Pd_min)
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
@@ -139,15 +143,11 @@ def get_enac_experiment(case):
     return experiment
 
 
-def run_years(func, case, years, in_cloud):
+def run_years(func, case, years, roleouts, episodes, in_cloud):
 
     experiment = func(case)
 
-    roleouts = 1#364 * years #52 * years
-    episodes = 2#7 # number of samples per learning step
-
-    full_year = get_full_year() / 100.0
-    dynProfile = full_year.reshape((364, maxSteps))
+    dynProfile = profile.reshape((364, maxSteps))
 #    maxSteps = dynProfile.shape[1]
 
     na = len(experiment.agents)
@@ -177,16 +177,18 @@ def ex6_1():
 
     case = get_case24_ieee_rts()
 
-    years = 2
     in_cloud = False
+    years = 1
+    roleouts = 1#364 * years #52 * years
+    episodes = 2#7 # number of samples per learning step
 
     results = \
-        run_years(get_re_experiment, case, years, in_cloud)
+        run_years(get_re_experiment, case, years, roleouts, episodes, in_cloud)
     save_results(results, "Stateful Roth-Erev", version)
 
-    results = \
-        run_years(get_enac_experiment, case, years, in_cloud)
-    save_results(results, "ENAC", version)
+#    results = \
+#        run_years(get_enac_experiment, case, years, roleouts,episodes,in_cloud)
+#    save_results(results, "ENAC", version)
 
 
 def main():

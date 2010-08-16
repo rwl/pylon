@@ -160,7 +160,7 @@ class ProfitTask(DiscreteProfitTask):
 
     def _getTotalDemandLimits(self):
         Pdmax = sum([b.p_demand for b in self.env.market.case.buses])
-        return [(0.0, Pdmax)]
+        return [(self.env.Pd_min, Pdmax)]
 
 
     def _getDemandLimits(self):
