@@ -19,6 +19,8 @@ import pylon
 
 DATA_DIR = join(dirname(pylon.case.__file__), "test", "data")
 CASE = join(DATA_DIR, "case24_ieee_rts", "case24_ieee_rts.pkl")
+#DATA_DIR = join(dirname(__file__), "data")
+#CASE = join(DATA_DIR, "case24_ieee_rts3.pkl")
 
 
 #matplotlib.rcParams['lines.linewidth'] = 0.5
@@ -47,14 +49,15 @@ pylab.rcParams.update(params)
 case = pylon.Case.load(CASE)
 
 #g = [0,2,8,11,15,20,22,24,32]
-g = [15,0,24,2,8,20,11,32,22]
+g = [24,2,8,20,11,32,22]
+#g = [(9, 50), (0, 76), (2, 100), (5, 155), (3, 197), (11, 350), (7, 400)]
 
 style = [('black', '-'), ('0.5', '-'), ('black', ':'), ('0.5', ':'),
     ('black', '--'), ('0.5', '--'), ('black', '-.'), ('0.5', '-.'), ('0.8', '-')]
 ns = len(style)
 
 pylab.figure()
-pylab.title("IEEE RTS Generator Costs")
+pylab.title("IEEE RTS Generator Cost Functions")
 plots = []
 for i, gi in enumerate(g):
     generator = case.generators[gi]
@@ -67,11 +70,13 @@ for i, gi in enumerate(g):
     else:
         raise
     clr, ls = style[i]
-    plots.append(pylab.plot(x, y, linestyle=ls, color=clr))
+    plots.append(pylab.plot(x, y, linestyle=ls, color=clr,
+                            label="U%s" % int(generator.p_max)))
     pylab.xlabel("$P_g$ (MW)")
     pylab.ylabel(r"Cost (\verb+$+/h)")
 
-l = pylab.legend(plots, ["U%.0f" % case.generators[i].p_max for i in g])
+l = pylab.legend(loc="upper right")
+#plots, ["U%.0f" % case.generators[i].p_max for i in g])
 l.get_frame().set_linewidth(0.7)
 
 pylab.annotate("Oil", (90, 7000))

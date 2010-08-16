@@ -43,7 +43,7 @@ case.generators[2].p_max = 70.0
 #pyreto.util.plotGenCost(case.generators)
 
 # Create a power exchange auction market and specify a price cap.
-market = pyreto.SmartMarket(case, priceCap=100.0, decommit=True)
+market = pyreto.SmartMarket(case, priceCap=100.0, decommit=False)
 
 # Define a 24-hour load profile with hourly values.
 #p1h = [0.52, 0.54, 0.52, 0.50, 0.52, 0.57, 0.60, 0.71, 0.89, 0.85, 0.88, 0.94,
@@ -63,7 +63,7 @@ nStates = 3
 # Associate a learning agent with the first generator.
 env = pyreto.discrete.MarketEnvironment(case.generators[:1], market,
                                         numStates=nStates, numOffbids=nOffer,
-                                        markups=(20, 75))
+                                        markups=(20, 75), withholds=(0, 50))
 task = pyreto.discrete.ProfitTask(env, maxSteps=len(p1h))
 
 #print env.outdim, len(env._allActions), env.numOffbids * len(env.generators) * len(env.markups)

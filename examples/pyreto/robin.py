@@ -65,9 +65,9 @@ def roundrobin(case, learners, profile, m, nb, ns, mx, weeks, days,
                 module = ActionValueTable(numStates=nstates, numActions=na)
 
             elif isinstance(learner, DirectSearchLearner):
-                env = continuous.MarketEnvironment(gens, market, nb)
+                env = continuous.MarketEnvironment(gens, market, nb, mx)
 
-                task = continuous.ProfitTask(env, maxSteps=np, maxMarkup=mx)
+                task = continuous.ProfitTask(env, maxSteps=np)
 
                 module = buildNetwork(env.outdim, 2, env.indim,
                                       bias=True, outputbias=True,

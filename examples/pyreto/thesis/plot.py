@@ -30,7 +30,7 @@ matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
 matplotlib.rcParams['axes.titlesize'] = 10
 
-tex = False
+tex = True
 
 if tex:
     # Set up publication quality graphs.
@@ -316,7 +316,8 @@ def plot_profiles():
     xlim((0.0, 23.0))
     ylim((0.0, 100.0))
     title("IEEE RTS Hourly Load Profiles")
-    legend(loc="lower right")
+    l = legend(loc="lower right")
+    l.get_frame().set_linewidth(0.7)
     grid()
 #    savefig('./out/ieee_rts_hourly.pdf')
 
@@ -326,7 +327,7 @@ def plot_profiles():
 
 
 if __name__ == "__main__":
-    plot5_1()
-#    plot5_2()
+#    plot5_1()
+    plot5_2()
 #    plot6_1()
 #    plot_profiles()

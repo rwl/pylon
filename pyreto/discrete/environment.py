@@ -25,7 +25,7 @@ import logging
 
 from scipy import array, linspace, mean, polyval, polyder
 
-from pylon import POLYNOMIAL, PW_LINEAR, PQ
+from pylon import POLYNOMIAL, PW_LINEAR
 
 from pyreto.smart_market import Offer, Bid
 from pyreto.util import xselections
@@ -64,7 +64,7 @@ class MarketEnvironment(object):
     outdim = 1
 
     def __init__(self, generators, market, numStates=1, markups=None,
-                 withholds=None, numOffbids=1, offbidQty=False):
+                 withholds=None, numOffbids=1, Pd0=None, Pd_min=0.0):
         """ Initialises the environment.
         """
         super(MarketEnvironment, self).__init__()
@@ -75,7 +75,14 @@ class MarketEnvironment(object):
         self._g0 = {}
 
         #: Initial total system demand.
-        self._Pd0 = sum([b.p_demand for b in market.case.buses if b.type ==PQ])
+        if Pd0 is None:
+#            self._Pd0 = sum([b.p_demand for b in market.case.buses if b.type ==PQ])
+            self._Pd0 = sum([b.p_demand for b in market.case.buses])
+        else:
+            self._Pd0 = Pd0
+
+        #: Minimum total system demand. Used to define states.
+        self.Pd_min = Pd_min
 
         #: Portfolio of generators endowed to the agent.
         self._generators = None
@@ -107,12 +114,6 @@ class MarketEnvironment(object):
         #: Discrete percentages for withholding capacity.
         self.withholds = (0.0,) if withholds is None else withholds
 
-        #: A participant may offer/bid just a markup on its cost and the
-        #: quantity is the maximum rated capacity of the generator divided by
-        #: the number of offers/bids. Alternatively, it may also specify the
-        #: quantity that is offered/bid for.
-#        self.offbidQty = offbidQty
-
     #--------------------------------------------------------------------------
     #  "Environment" interface:
     #--------------------------------------------------------------------------
@@ -135,19 +136,16 @@ class MarketEnvironment(object):
         self._lastAction = []
 
         # Markups chosen for each generator.
-        a = self._allActions[action]
+        actions = self._allActions[action]
 
-        self._offbid(a)
+        n = self.numOffbids * len(self.generators)
+        markups = actions[:n]
+        withholds = actions[n:]
 
-#        if max(sum(self.withholds)) > 0.0:
-#            # Markups chosen for each generator.
-#            actions = self._allActions[action]
-#
-#            self._offbidWithholdAndMarkup(actions)
-#        else:
-#            # Markups chosen for each generator.
-#            markups = self._allActions[action]
-#            self._offbidMarkup(markups)
+        print "ALL ACTIONS:", self._allActions
+        print "ACTIONS:", markups, withholds
+
+        self._offbid(markups, withholds)
 
 
     def reset(self):
@@ -160,13 +158,10 @@ class MarketEnvironment(object):
     #  "DiscreteMarketEnvironment" interface:
     #--------------------------------------------------------------------------
 
-    def _offbid(self, actions):
-        n = self.numOffbids * len(self.generators)
-        markups = actions[:n]
-        withholds = actions[n:]
-
-#        print "ACTIONS:", markups, withholds
-
+    def _offbid(self, markups, withholds):
+        """ Converts arrays of percentage price markups and capacity withholds
+        into offers/bids and submits them to the marketplace.
+        """
         for i, g in enumerate(self.generators):
             ratedPMin = self._g0[g]["p_min"]
             ratedPMax = self._g0[g]["p_max"]
@@ -175,6 +170,8 @@ class MarketEnvironment(object):
 
             # Index of the first markup in 'markups' for generator 'i'.
             k = i * (len(markups) / len(self.generators))
+            # Index of the first withhold in 'withholds' for generator 'i'.
+            kk = i * (len(withholds) / len(self.generators))
 
             # Determine the cost at zero output.
             if margPCostModel == POLYNOMIAL:
@@ -194,6 +191,11 @@ class MarketEnvironment(object):
 #            p0 = 0.0
 #            c0 = costNoLoad
             for j in range(self.numOffbids):
+                wh = withholds[kk+j]
+                qty = qty * ((100.0 - wh) / 100.0)
+
+                print "QUANTITY:", qty
+
                 totQty += qty
 
                 # The markups are cumulative to ensure cost function convexity.
@@ -278,10 +280,10 @@ class MarketEnvironment(object):
     #--------------------------------------------------------------------------
 
     def _getDemandSensor(self):
-        Pd = sum([b.p_demand for b in self.market.case.buses if b.type == PQ])
+        Pd = sum([b.p_demand for b in self.market.case.buses])
 
         # Divide the range of demand into discrete bands.
-        states = linspace(0.0, self._Pd0, self.numStates + 1)
+        states = linspace(self.Pd_min, self._Pd0, self.numStates + 1)
 
         for i in range(len(states) - 1):
             if states[i] <= round(Pd, 1) <= states[i + 1]:
@@ -289,7 +291,7 @@ class MarketEnvironment(object):
                             (self.generators[0].name, i, Pd))
                 return array([i])
         else:
-            raise ValueError, "Demand greater than peak [%.3f]." % Pd
+            raise ValueError, "No state defined for system demand [%.3f]." % Pd
 
 
     def _getPriceSensor(self):

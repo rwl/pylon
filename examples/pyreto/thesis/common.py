@@ -11,6 +11,8 @@ from scipy.io import mmwrite
 
 import pylon
 
+from pylon.util import pickle_matpower_cases
+
 import pyreto.discrete
 import pyreto.continuous
 
@@ -118,14 +120,57 @@ def get_case24_ieee_rts():
     return case
 
 
+def get_case24_ieee_rts2():
+    """ Returns the 24 bus IEEE Reliability Test System with U12 and U20
+    generators removed.
+    """
+    path = os.path.dirname(__file__)
+    path = os.path.join(path, 'data', "case24_ieee_rts2.pkl")
+
+    case = pylon.Case.load(path)
+
+    # FIXME: Correct generator naming order.
+    for g in case.generators:
+        g.name
+
+    return case
+
+
+def get_case24_ieee_rts3():
+    """ Returns the 24 bus IEEE Reliability Test System with U12 and U20
+    generators removed and generators of the same type at the same bus
+    aggregated.
+    """
+    path = os.path.dirname(__file__)
+    path = os.path.join(path, 'data', "case24_ieee_rts3.pkl")
+
+    case = pylon.Case.load(path)
+
+    # FIXME: Correct generator naming order.
+    for g in case.generators:
+        g.name
+
+    return case
+
+
+def pickle_cases():
+    data_dir = os.path.dirname(__file__)
+    case_paths = [os.path.join(data_dir, 'data', 'case24_ieee_rts2.m'),
+                  os.path.join(data_dir, 'data', 'case24_ieee_rts3.m')]
+
+    pickle_matpower_cases(case_paths)
+
+
 def get_discrete_task_agent(generators, market, nStates, nOffer, markups,
-                            maxSteps, learner):
+        withholds, maxSteps, learner, Pd0=None, Pd_min=0.0):
     """ Returns a tuple of task and agent for the given learner.
     """
     env = pyreto.discrete.MarketEnvironment(generators, market,
                                             numStates=nStates,
                                             numOffbids=nOffer,
-                                            markups=markups)
+                                            markups=markups,
+                                            Pd0=Pd0,
+                                            Pd_min=Pd_min)
     task = pyreto.discrete.ProfitTask(env, maxSteps=maxSteps)
 
     nActions = len(env._allActions)
@@ -136,12 +181,12 @@ def get_discrete_task_agent(generators, market, nStates, nOffer, markups,
     return task, agent
 
 
-def get_continuous_task_agent(generators, market, nOffer, maxMarkup, maxSteps,
-                              learner):
-    env = pyreto.continuous.MarketEnvironment(generators, market, nOffer)
+def get_continuous_task_agent(generators, market, nOffer, maxMarkup,
+        maxWithhold, maxSteps, learner):
+    env = pyreto.continuous.MarketEnvironment(generators, market, nOffer,
+                                              maxMarkup, maxWithhold)
 
-    task = pyreto.continuous.ProfitTask(env, maxSteps=maxSteps,
-                                        maxMarkup=maxMarkup)
+    task = pyreto.continuous.ProfitTask(env, maxSteps=maxSteps)
 
     net = buildNetwork(env.outdim,
 #                       4,
@@ -176,6 +221,18 @@ def get_neg_one_task_agent(generators, market, nOffer, maxSteps):
     task = pyreto.discrete.ProfitTask(env, maxSteps=maxSteps)
     agent = pyreto.util.NegOneAgent(env.outdim, env.indim)
     return task, agent
+
+
+def get_pd_min(case, profile):
+    l = min(profile)
+    Pd_min = sum([b.p_demand * l for b in case.buses])
+    return Pd_min
+
+
+def get_pd_max(case, profile):
+    u = max(profile)
+    Pd_max = sum([b.p_demand * u for b in case.buses])
+    return Pd_max
 
 
 def run_experiment(experiment, roleouts, episodes, in_cloud=False,
