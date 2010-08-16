@@ -43,42 +43,22 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         participant's environment.
     """
 
-    def __init__(self, generators, market, numOffbids=1, offbidQty=False):
-        super(MarketEnvironment, self).__init__(generators, market, 0, None,
-                                                None, numOffbids, offbidQty)
+    def __init__(self, generators, market, numOffbids=1, maxMarkup=0.0,
+            maxWithhold=None):
+        """ A market environment has a portfolios of generation and a market.
+        """
+        super(MarketEnvironment, self).__init__(generators, market,
+            numStates=0, markups=None, withholds=None, numOffbids=numOffbids)
 
-        #: Save initial generator ratings and costs as these will be
-        #: overwritten when offers/bids are submitted to the market. Set by
-        #: "generators" property.
-#        self._g0 = {}
+        #: Maximum price markup.
+        self.maxMarkup = maxMarkup
 
-        #: Portfolio of generators endowed to the agent.
-#        self._generators = None
-#        self.generators = generators
-
-        #: Auction that clears offer and bids using OPF results.
-#        self.market = market
-
-        #: A participant may submit any number of offers/bids for each of the
-        #: generators in its portfolio.
-#        self.numOffbids = numOffbids
-
-        #: A participant may offer/bid just a markup on its cost and the
-        #: quantity is the maximum rated capacity of the generator divided by
-        #: the number of offers/bids. Alternatively, it may also specify the
-        #: quantity that is offered/bid for.
-        self.offbidQty = offbidQty
-
-        #: List of offers/bids from the previous action.
-#        self._lastAction = []
-
-        #: Initialise the environment.
-#        self.reset()
+        #: Maximum quantity withhold.
+        self.maxWithhold = maxWithhold
 
     #--------------------------------------------------------------------------
     #  "Environment" interface:
     #--------------------------------------------------------------------------
-
 
     def getSensors(self):
         """ Returns the currently visible state of the world as a numpy array
@@ -100,21 +80,22 @@ class MarketEnvironment(DiscreteMarketEnvironment):
     def performAction(self, action):
         """ Performs an action on the world that changes it's internal state.
             @param action: an action that should be executed in the Environment
-            @type action: array: [ g1_qty, g1_prc, g2_qty, g2_prc, ... ]
+            @type action: array: [ g1_prc, g2_prc, g1_qty, g2_qty, ... ]
         """
         self._lastAction = []
 
-#        if self.offbidQty:
-#            self._offbidQuantityAndMarkup(action)
-#        else:
-        self._offbid(action)
+        print "ACT:", action
 
+        n = self.numOffbids * len(self.generators)
 
-#    def reset(self):
-#        """ Re-initialises the participant's environment.
-#        """
-#        self._lastAction = []
-#        self.market.reset()
+        if self.maxWithhold is not None:
+            markups = action[:n]
+            withholds = action[n:]
+        else:
+            markups = action
+            withholds = [0.0] * n
+
+        self._offbid(markups, withholds)
 
 
     @property
@@ -123,7 +104,7 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         """
         indim = self.numOffbids * len(self.generators)
 
-        if self.offbidQty:
+        if self.maxWithhold is not None:
             return indim * 2
         else:
             return indim
@@ -133,6 +114,13 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         """ The number of sensor values that the environment produces.
         """
         return len(self.getSensors())
+
+
+#    def reset(self):
+#        """ Re-initialises the market environment.
+#        """
+#        self._lastAction = []
+#        self.market.reset()
 
     #--------------------------------------------------------------------------
     #  "MarketEnvironment" interface:
@@ -263,35 +251,5 @@ class MarketEnvironment(DiscreteMarketEnvironment):
 #                        % (prc, -qty, g.name, mk))
 #
 #        return self._lastAction
-
-
-#    def _getGenerators(self):
-#        """ Portfolio of generators endowed to the agent.
-#        """
-#        return self._generators
-#
-#
-#    def _setGenerators(self, generators):
-#        # Update the record of initial ratings and costs.
-#        g0 = {}
-#        for g in generators:
-#            # Asset capacity limits.
-#            g0[g] = {}
-#            g0[g]["p_max"] = g.p_max
-#            g0[g]["p_min"] = g.p_min
-#            g0[g]["q_max"] = g.q_max
-#            g0[g]["q_min"] = g.q_min
-#            # Marginal cost function proportional to current capacity.
-#            g0[g]["p_cost"] = g.p_cost
-#            g0[g]["pcost_model"] = g.pcost_model
-#            g0[g]["q_cost"] = g.q_cost
-#            g0[g]["qcost_model"] = g.qcost_model
-#            # Amortised fixed costs.
-#            g0[g]["startup"] = g.c_startup
-#            g0[g]["shutdown"] = g.c_shutdown
-#        self._g0 = g0
-#        self._generators = generators
-#
-#    generators = property(_getGenerators, _setGenerators)
 
 # EOF -------------------------------------------------------------------------

@@ -32,7 +32,9 @@ cap = 9999.0
 nOffer = 1
 nStates = 10
 markups = (0, 30)
+withholds = (0, 50)
 markupMax = 30.0
+withholdMax = 50.0
 maxSteps = 24 # hours
 
 
@@ -137,8 +139,8 @@ def get_re_experiment(case, minor=1):
         learner = VariantRothErev(experimentation, recency)
         learner.explorer = BoltzmannExplorer(tau, decay)
 
-        task, agent = get_discrete_task_agent(
-            g, market, nStates, nOffer, markups, maxSteps, learner, Pd0,Pd_min)
+        task, agent = get_discrete_task_agent(g, market, nStates, nOffer,
+            markups, withholds, maxSteps, learner, Pd0, Pd_min)
 
         print "ALL ACTIONS:", len(task.env._allActions)
 
@@ -177,8 +179,8 @@ def get_enac_experiment(case):
         learner = ENAC()
         learner.learningRate = learningRate
 
-        task, agent = get_continuous_task_agent(
-            g, market, nOffer, markupMax, maxSteps, learner)
+        task, agent = get_continuous_task_agent(g, market, nOffer, markupMax,
+                                                withholdMax, maxSteps, learner)
 
         learner.explorer = ManualNormalExplorer(agent.module.outdim,
                                                 initalSigma, decay,

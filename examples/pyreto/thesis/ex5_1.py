@@ -31,6 +31,12 @@ decommit = False
 auctionType = DISCRIMINATIVE #FIRST_PRICE
 cap = 100.0
 #profile = [1.0, 1.0]
+
+markups = (0, 10, 20, 30)
+withholds = None
+markupMax = 30.0
+withholdMax = None
+
 nOffer = 1
 nStates = 1
 
@@ -46,7 +52,6 @@ def get_re_experiment(case, minor=1):
     recency = 0.3
     tau = 100.0
     decay = 0.99#9995
-    markups = (0, 10, 20, 30)
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=auctionType)
@@ -58,8 +63,8 @@ def get_re_experiment(case, minor=1):
         learner = VariantRothErev(experimentation, recency)
         learner.explorer = BoltzmannExplorer(tau, decay)
 
-        task, agent = get_discrete_task_agent(
-            [g], market, nStates, nOffer, markups, maxSteps, learner)
+        task, agent = get_discrete_task_agent([g], market, nStates, nOffer,
+            markups, withholds, maxSteps, learner)
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
@@ -78,7 +83,6 @@ def get_q_experiment(case, minor=1):
 
     profile = array([1.0])
     maxSteps = len(profile)
-    markups = (0, 10, 20, 30)
 
     if minor == 1:
         alpha = 0.3 # Learning rate.
@@ -115,8 +119,8 @@ def get_q_experiment(case, minor=1):
         learner.explorer.decay = decay
 #        learner.explorer = BoltzmannExplorer(tau, decay)
 
-        task, agent = get_discrete_task_agent(
-            [g], market, nStates, nOffer, markups, maxSteps, learner)
+        task, agent = get_discrete_task_agent([g], market, nStates, nOffer,
+            markups, withholds, maxSteps, learner)
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
@@ -132,7 +136,6 @@ def get_q_experiment(case, minor=1):
 def get_reinforce_experiment(case, minor=1):
     gen = case.generators
 
-    markupMax = 30.0
     profile = array([1.0, 1.0])
     maxSteps = len(profile)
     initalSigma = 0.0
@@ -164,8 +167,8 @@ def get_reinforce_experiment(case, minor=1):
         # only relevant for RP
 #        learner.gd.deltamin = 0.0001
 
-        task, agent = get_continuous_task_agent(
-            [g], market, nOffer, markupMax, maxSteps, learner)
+        task, agent = get_continuous_task_agent([g], market, nOffer, markupMax,
+                                                withholdMax, maxSteps, learner)
 
         learner.explorer = ManualNormalExplorer(agent.module.outdim,
                                                 initalSigma, decay,
@@ -185,7 +188,6 @@ def get_reinforce_experiment(case, minor=1):
 def get_enac_experiment(case, minor=1):
     gen = case.generators
 
-    markupMax = 30.0
     profile = array([1.0, 1.0])
     maxSteps = len(profile)
     initalSigma = 0.0
@@ -217,8 +219,8 @@ def get_enac_experiment(case, minor=1):
     #    learner.gd.deltamin = 0.0001
 
 
-        task, agent = get_continuous_task_agent(
-            [g], market, nOffer, markupMax, maxSteps, learner)
+        task, agent = get_continuous_task_agent([g], market, nOffer, markupMax,
+                                                withholdMax, maxSteps, learner)
 
         learner.explorer = ManualNormalExplorer(agent.module.outdim,
                                                 initalSigma, decay,

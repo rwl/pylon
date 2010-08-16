@@ -43,35 +43,8 @@ class ProfitTask(DiscreteProfitTask):
     """ Defines a task for continuous sensor and action spaces.
     """
 
-    def __init__(self, environment, maxSteps=24, discount=None,
-                 maxMarkup=30.0, fmax=2000.0):
-        super(ProfitTask, self).__init__(environment, maxSteps, discount,
-                                         maxMarkup)
-
-        #: Maximum total system cost.
-        self.fmax = fmax
-
-#        #: Maximum number of time steps.
-#        self.maxSteps = maxSteps
-#
-#        #: Current time step.
-#        self.t = 0
-#
-#        #----------------------------------------------------------------------
-#        #  "EpisodicTask" interface:
-#        #----------------------------------------------------------------------
-#
-#        #: Discount factor.
-#        self.discount = discount
-#
-#        #: Track cumulative reward.
-#        self.cumulativeReward = 0
-#
-#        #: Track the number of samples.
-#        self.samples = 0
-#
-#        #: Maximum markup/markdown.
-#        self.maxMarkup = maxMarkup
+    def __init__(self, environment, maxSteps=24, discount=None):
+        super(ProfitTask, self).__init__(environment, maxSteps, discount)
 
         #----------------------------------------------------------------------
         #  "Task" interface:
@@ -110,6 +83,26 @@ class ProfitTask(DiscreteProfitTask):
     #--------------------------------------------------------------------------
     #  "ProfitTask" interface:
     #--------------------------------------------------------------------------
+
+    def _getActorLimits(self):
+        """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
+            one tuple per parameter, giving min and max for that parameter.
+        """
+        actorLimits = []
+
+        for _ in range(self.env.numOffbids):
+            for _ in self.env.generators:
+                actorLimits.append((0.0, self.env.maxMarkup))
+
+        for _ in range(self.env.numOffbids):
+            for _ in self.env.generators:
+                if self.env.maxWithhold is not None:
+                    actorLimits.append((0.0, self.env.maxWithhold))
+
+        logger.debug("Actor limits: %s" % actorLimits)
+
+        return actorLimits
+
 
     def _getSensorLimits(self):
         """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
@@ -203,24 +196,5 @@ class ProfitTask(DiscreteProfitTask):
         limits = zip(neg_rateA, rateA)
 #        limits.extend(zip(neg_rateA, rateA))
         return limits
-
-
-    def _getActorLimits(self):
-        """ Returns a list of 2-tuples, e.g. [(-3.14, 3.14), (-0.001, 0.001)],
-            one tuple per parameter, giving min and max for that parameter.
-        """
-        numOffbids = self.env.numOffbids
-        offbidQty = self.env.offbidQty
-
-        actorLimits = []
-        for _ in range(numOffbids):
-            for g in self.env.generators:
-                if offbidQty:
-                    actorLimits.append((0.0, self.env._g0[g]["p_max"]))
-                actorLimits.append((0.0, self.maxMarkup))
-
-        logger.debug("Actor limits: %s" % actorLimits)
-
-        return actorLimits
 
 # EOF -------------------------------------------------------------------------

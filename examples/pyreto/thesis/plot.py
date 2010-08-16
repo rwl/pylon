@@ -316,7 +316,8 @@ def plot_profiles():
     xlim((0.0, 23.0))
     ylim((0.0, 100.0))
     title("IEEE RTS Hourly Load Profiles")
-    legend(loc="lower right")
+    l = legend(loc="lower right")
+    l.get_frame().set_linewidth(0.7)
     grid()
 #    savefig('./out/ieee_rts_hourly.pdf')
 

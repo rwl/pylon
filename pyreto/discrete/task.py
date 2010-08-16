@@ -41,7 +41,7 @@ class ProfitTask(Task):
     """ Defines a task with discrete observations of the clearing price.
     """
 
-    def __init__(self, environment, maxSteps=24, discount=None,maxMarkup=30.0):
+    def __init__(self, environment, maxSteps=24, discount=None):
         super(ProfitTask, self).__init__(environment)
 
         #: Maximum number of time steps.
@@ -65,9 +65,6 @@ class ProfitTask(Task):
 
         #: Track the number of samples.
         self.samples = 0
-
-        #: Maximum markup/markdown.
-        self.maxMarkup = maxMarkup
 
     #--------------------------------------------------------------------------
     #  "Task" interface:

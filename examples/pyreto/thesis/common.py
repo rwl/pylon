@@ -162,7 +162,7 @@ def pickle_cases():
 
 
 def get_discrete_task_agent(generators, market, nStates, nOffer, markups,
-                            maxSteps, learner, Pd0=None, Pd_min=0.0):
+        withholds, maxSteps, learner, Pd0=None, Pd_min=0.0):
     """ Returns a tuple of task and agent for the given learner.
     """
     env = pyreto.discrete.MarketEnvironment(generators, market,
@@ -181,12 +181,12 @@ def get_discrete_task_agent(generators, market, nStates, nOffer, markups,
     return task, agent
 
 
-def get_continuous_task_agent(generators, market, nOffer, maxMarkup, maxSteps,
-                              learner):
-    env = pyreto.continuous.MarketEnvironment(generators, market, nOffer)
+def get_continuous_task_agent(generators, market, nOffer, maxMarkup,
+        maxWithhold, maxSteps, learner):
+    env = pyreto.continuous.MarketEnvironment(generators, market, nOffer,
+                                              maxMarkup, maxWithhold)
 
-    task = pyreto.continuous.ProfitTask(env, maxSteps=maxSteps,
-                                        maxMarkup=maxMarkup)
+    task = pyreto.continuous.ProfitTask(env, maxSteps=maxSteps)
 
     net = buildNetwork(env.outdim,
 #                       4,

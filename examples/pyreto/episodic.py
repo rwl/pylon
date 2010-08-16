@@ -66,9 +66,10 @@ manual_sigma = True
 for gen in case.generators[:1]:
     # The environment provides market and case sensor values and handles
     # submission of offers/bids to the market.
-    env = pyreto.continuous.MarketEnvironment([gen], market, numOffbids)
+    env = pyreto.continuous.MarketEnvironment([gen], market, numOffbids,
+                                              maxMarkup=60.0, maxWithhold=50.0)
     # Reward is defined as profit.
-    task = pyreto.continuous.ProfitTask(env, maxSteps=len(p1h), maxMarkup=60.0)
+    task = pyreto.continuous.ProfitTask(env, maxSteps=len(p1h))
     # Build an ANN for policy function approximation.
 #    net = buildNetwork(env.outdim, 7, env.indim, bias=True, outputbias=False)
     net = buildNetwork(env.outdim, 2, env.indim,
@@ -82,7 +83,7 @@ for gen in case.generators[:1]:
     learner.gd.rprop = False
     # only relevant for BP
 #    learner.learningRate = 0.001 # (0.1-0.001, down to 1e-7 for RNNs, default: 0.1)
-    learner.gd.alpha = 0.0001
+    learner.gd.alpha = 0.01
 #    learner.gd.alphadecay = 0.9
 #    learner.gd.momentum = 0.9
     # only relevant for RP
