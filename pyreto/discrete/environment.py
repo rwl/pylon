@@ -173,7 +173,8 @@ class MarketEnvironment(object):
         markups = actions[:n]
         withholds = actions[n:]
 
-#        print "ACTIONS:", markups, withholds
+        print "ALL ACTIONS:", self._allActions
+        print "ACTIONS:", markups, withholds
 
         for i, g in enumerate(self.generators):
             ratedPMin = self._g0[g]["p_min"]
@@ -183,6 +184,8 @@ class MarketEnvironment(object):
 
             # Index of the first markup in 'markups' for generator 'i'.
             k = i * (len(markups) / len(self.generators))
+            # Index of the first withhold in 'withholds' for generator 'i'.
+            kk = i * (len(withholds) / len(self.generators))
 
             # Determine the cost at zero output.
             if margPCostModel == POLYNOMIAL:
@@ -202,6 +205,11 @@ class MarketEnvironment(object):
 #            p0 = 0.0
 #            c0 = costNoLoad
             for j in range(self.numOffbids):
+                wh = withholds[kk+j]
+                qty = qty * ((100.0 - wh) / 100.0)
+
+                print "QUANTITY:", qty
+
                 totQty += qty
 
                 # The markups are cumulative to ensure cost function convexity.
