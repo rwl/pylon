@@ -26,7 +26,7 @@ linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
 ET.SubElement(linestyle275, "{%s}color" % ns).text = "7f3030ff" # aabbggrr FF3030
 ET.SubElement(linestyle275, "{%s}width" % ns).text = "4"
 
-style275 = ET.SubElement(doc, "{%s}Style" % ns, id="line225")
+style275 = ET.SubElement(doc, "{%s}Style" % ns, id="line220")
 linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
 ET.SubElement(linestyle275, "{%s}color" % ns).text = "7f0030ff" # aabbggrr FF3030
 ET.SubElement(linestyle275, "{%s}width" % ns).text = "4"
@@ -39,16 +39,17 @@ ET.SubElement(linestyle275, "{%s}width" % ns).text = "3"
 DATA_DIR = "./data/"
 
 BRANCH_DATA = [
-    (os.path.join(DATA_DIR, "spt_circuit_param.csv"), 1),
-    (os.path.join(DATA_DIR, "shetl_circuit_param.csv"), 1),
-    (os.path.join(DATA_DIR, "nget_circuit_param.csv"), 1),
-    (os.path.join(DATA_DIR, "ireland", "400kV_lines.csv"), 3),
-    (os.path.join(DATA_DIR, "ireland", "275kV_lines-xborder.csv"), 3),
-    (os.path.join(DATA_DIR, "ireland", "220kV_branch_data.csv"), 3),
-    (os.path.join(DATA_DIR, "ireland", "110kV_branch_data.csv"), 3)
+    (os.path.join(DATA_DIR, "spt_circuit_param.csv"), 1, None),
+    (os.path.join(DATA_DIR, "shetl_circuit_param.csv"), 1, None),
+    (os.path.join(DATA_DIR, "nget_circuit_param.csv"), 1, None),
+    (os.path.join(DATA_DIR, "ireland", "400kV_lines.csv"), 3, "line400"),
+    (os.path.join(DATA_DIR, "ireland", "275kV_lines-xborder.csv"), 3, "line275"),
+    (os.path.join(DATA_DIR, "ireland", "220kV_branch_data.csv"), 3, "line220"),
+#    (os.path.join(DATA_DIR, "ireland", "110kV_branch_data.csv"), 3, "line110"),
+    (os.path.join(DATA_DIR, "nie", "275kV_lines.csv"), 2, "line275")
 ]
 
-for path, headers in BRANCH_DATA:
+for path, headers, style in BRANCH_DATA:
     reader = csv.reader(open(path), delimiter=',', quotechar='"')
 
     for _ in range(headers):
@@ -78,13 +79,13 @@ for path, headers in BRANCH_DATA:
         else:
             if pl1 is None and pl2 is None:
 #                print "Placemarks not found: %s, %s (%s, %s)" % (node1_id, node2_id, row[0][4], row[1][4])
-                print "Placemarks not found: %s, %s" % (node1_id, node2_id)
+                print "Placemarks not found: %s, %s   %s" % (node1_id, node2_id, style)
             elif pl1 is None:
 #                print "Placemark not found: %s (%s) (%s)" % (node1_id, node2_id, row[0][4])
-                print "Placemark not found: %s (%s)" % (node1_id, node2_id)
+                print "Placemark not found: %s (%s)   %s" % (node1_id, node2_id, style)
             elif pl2 is None:
 #                print "Placemark not found: %s (%s) (%s)" % (node2_id, node1_id, row[1][4])
-                print "Placemark not found: %s (%s)" % (node2_id, node1_id)
+                print "Placemark not found: %s (%s)   %s" % (node2_id, node1_id, style)
             else:
                 raise ValueError
 
@@ -99,13 +100,16 @@ for path, headers in BRANCH_DATA:
             name = "%s %s" % (node1_id, node2_id)
             ET.SubElement(pl_pth, "{%s}name" % ns).text = name
 
-            if len(row[0]) > 4:
-                if row[0][4] == "4":
-                    ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = "line400"
-                elif row[0][4] == "2":
-                    ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = "line275"
-                elif row[0][4] == "1":
-                    ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = "line132"
+            if style is None:
+                if len(row[0]) > 4:
+                    if row[0][4] == "4":
+                        ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = "line400"
+                    elif row[0][4] == "2":
+                        ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = "line275"
+                    elif row[0][4] == "1":
+                        ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = "line132"
+            else:
+                ET.SubElement(pl_pth, "{%s}styleUrl" % ns).text = style
 
             ls = ET.SubElement(pl_pth, "{%s}LineString" % ns)
 
