@@ -310,7 +310,7 @@ def ex5_2():
 
     case = get_case6ww2()
 
-    expts = 5
+    expts = 1
     in_cloud = False
 
     roleouts = 300
