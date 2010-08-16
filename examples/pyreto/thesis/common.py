@@ -11,6 +11,8 @@ from scipy.io import mmwrite
 
 import pylon
 
+from pylon.util import pickle_matpower_cases
+
 import pyreto.discrete
 import pyreto.continuous
 
@@ -116,6 +118,47 @@ def get_case24_ieee_rts():
         g.name
 
     return case
+
+
+def get_case24_ieee_rts2():
+    """ Returns the 24 bus IEEE Reliability Test System with U12 and U20
+    generators removed.
+    """
+    path = os.path.dirname(__file__)
+    path = os.path.join(path, 'data', "case24_ieee_rts2.pkl")
+
+    case = pylon.Case.load(path)
+
+    # FIXME: Correct generator naming order.
+    for g in case.generators:
+        g.name
+
+    return case
+
+
+def get_case24_ieee_rts3():
+    """ Returns the 24 bus IEEE Reliability Test System with U12 and U20
+    generators removed and generators of the same type at the same bus
+    aggregated.
+    """
+    path = os.path.dirname(__file__)
+    path = os.path.join(path, 'data', "case24_ieee_rts3.pkl")
+
+    case = pylon.Case.load(path)
+
+    # FIXME: Correct generator naming order.
+    for g in case.generators:
+        g.name
+
+    return case
+
+
+def pickle_cases():
+    data_dir = os.path.dirname(__file__)
+    case_paths = [os.path.join(data_dir, 'data', 'case24_ieee_rts2.m'),
+                  os.path.join(data_dir, 'data', 'case24_ieee_rts3.m')]
+
+    pickle_matpower_cases(case_paths)
 
 
 def get_discrete_task_agent(generators, market, nStates, nOffer, markups,

@@ -16,9 +16,11 @@ from pybrain.rl.learners import Q, QLambda, SARSA #@UnusedImport
 from pybrain.rl.learners import ENAC, Reinforce #@UnusedImport
 
 from common import \
-    get_case24_ieee_rts, setup_logging, save_results, run_experiment, \
+    get_case24_ieee_rts, get_case24_ieee_rts2, get_case24_ieee_rts3, \
+    setup_logging, save_results, run_experiment, \
     get_continuous_task_agent, get_full_year, get_neg_one_task_agent, \
-    get_discrete_task_agent, get_zero_task_agent, get_pd_min, get_pd_max
+    get_discrete_task_agent, get_zero_task_agent, get_pd_min, get_pd_max, \
+    pickle_cases
 
 setup_logging()
 
@@ -29,30 +31,81 @@ profile = get_full_year() / 100.0
 cap = 9999.0
 nOffer = 1
 nStates = 10
-markups = (0, 15, 30)
+markups = (0, 30)
 markupMax = 30.0
 maxSteps = 24 # hours
 
 
-def get_portfolios():
-    """ Returns a tuple of active and passive portfolio indexes.
-    """
-    g1 = range(0, 4)
-    g2 = range(4, 8)
-    g7 = range(8, 11)
-    g13 = range(11, 14)
-    g14 = [14] # sync cond
-    g15 = range(15, 21)
-    g16 = [21]
-    g18 = [22]
-    g21 = [23]
-    g22 = range(24, 30)
-    g23 = range(30, 33)
+#def get_portfolios():
+#    """ Returns a tuple of active and passive portfolio indexes.
+#    """
+#    g1 = range(0, 4)
+#    g2 = range(4, 8)
+#    g7 = range(8, 11)
+#    g13 = range(11, 14)
+#    g14 = [14] # sync cond
+#    g15 = range(15, 21)
+#    g16 = [21]
+#    g18 = [22]
+#    g21 = [23]
+#    g22 = range(24, 30)
+#    g23 = range(30, 33)
+#
+#    portfolios = [g1 + g2 + g7,
+#                  g13 + g23,
+#                  g15 + g16,
+#                  g18 + g21 + g22]
+#
+#    passive = g14 # sync_cond
+#
+#    return portfolios, passive
+#
+#
+#def get_portfolios2():
+#    """ Returns portfolios with U12 and U20 generators removed.
+#    """
+#    g1 = range(0, 2)
+#    g2 = range(2, 4)
+#    g7 = range(4, 7)
+#    g13 = range(7, 10)
+#    g14 = [10] # sync cond
+#    g15 = [11]
+#    g16 = [12]
+#    g18 = [13]
+#    g21 = [14]
+#    g22 = range(15, 21)
+#    g23 = range(21, 24)
+#
+#    portfolios = [g1 + g2 + g7,
+#                  g13 + g23,
+#                  g15 + g16,
+#                  g18 + g21 + g22]
+#
+#    passive = g14 # sync_cond
+#
+#    return portfolios, passive
 
-    portfolios = [g1 + g2 + g7,
-                  g13 + g23,
-                  g15 + g16,
-                  g18 + g21 + g22]
+
+def get_portfolios3():
+    """ Returns portfolios with U12 and U20 generators removed and generators
+    of the same type at the same bus aggregated.
+    """
+    g1 = [0]
+    g2 = [1]
+    g7 = [2]
+    g13 = [3]
+    g14 = [4] # sync cond
+    g15 = [5]
+    g16 = [6]
+    g18 = [7]
+    g21 = [8]
+    g22 = [9]
+    g23 = [10, 11]
+
+    portfolios = [g1 + g15 + g18,
+                  g2 + g16 + g21,
+                  g13 + g22,
+                  g7 + g23]
 
     passive = g14 # sync_cond
 
@@ -76,7 +129,7 @@ def get_re_experiment(case, minor=1):
 
     experiment = pyreto.continuous.MarketExperiment([], [], market)
 
-    portfolios, sync_cond = get_portfolios()
+    portfolios, sync_cond = get_portfolios3()
 
     for gidx in portfolios:
         g = [case.generators[i] for i in gidx]
@@ -86,6 +139,8 @@ def get_re_experiment(case, minor=1):
 
         task, agent = get_discrete_task_agent(
             g, market, nStates, nOffer, markups, maxSteps, learner, Pd0,Pd_min)
+
+        print "ALL ACTIONS:", len(task.env._allActions)
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
@@ -114,7 +169,7 @@ def get_enac_experiment(case):
     experiment = \
         pyreto.continuous.MarketExperiment([], [], market, branchOutages=None)
 
-    portfolios, sync_cond = get_portfolios()
+    portfolios, sync_cond = get_portfolios3()
 
     for gidx in portfolios:
         g = [case.generators[i] for i in gidx]
@@ -175,7 +230,7 @@ def run_years(func, case, years, roleouts, episodes, in_cloud):
 def ex6_1():
     version = "6_1"
 
-    case = get_case24_ieee_rts()
+    case = get_case24_ieee_rts3()
 
     in_cloud = False
     years = 1
@@ -192,6 +247,7 @@ def ex6_1():
 
 
 def main():
+#    pickle_cases()
     ex6_1()
 
 

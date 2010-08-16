@@ -291,8 +291,6 @@ class MarketEnvironment(object):
         # Divide the range of demand into discrete bands.
         states = linspace(self.Pd_min, self._Pd0, self.numStates + 1)
 
-        print "STATES:", self._Pd0, states
-
         for i in range(len(states) - 1):
             if states[i] <= round(Pd, 1) <= states[i + 1]:
                 logger.info("%s demand state: %d (%.2f)" %
