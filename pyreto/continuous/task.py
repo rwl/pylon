@@ -27,7 +27,7 @@ from pybrain.rl.environments import Task
 
 from pyreto.discrete.task import ProfitTask as DiscreteProfitTask
 
-from pylon import PQ
+from pylon import PQ, PV
 
 #------------------------------------------------------------------------------
 #  Logging:
@@ -112,6 +112,7 @@ class ProfitTask(DiscreteProfitTask):
         limits.extend(self._getTotalDemandLimits())
 #        limits.extend(self._getDemandLimits())
 #        limits.extend(self._getPriceLimits())
+        limits.extend(self._getVoltageSensorLimits())
 #        limits.extend(self._getVoltageMagnitudeLimits())
 #        limits.extend(self._getVoltageAngleLimits())
 #        limits.extend(self._getVoltageLambdaLimits())
@@ -168,11 +169,22 @@ class ProfitTask(DiscreteProfitTask):
         return [mcpLimit, sysLimit]
 
 
+    def _getVoltageSensorLimits(self):
+        limits = []
+        for bus in self.env.market.case.connected_buses:
+            if bus.type == PV:
+                limits.append(None)
+            else:
+                limits.append((bus.v_min, bus.v_max))
+
+        return limits
+
+
     def _getVoltageMagnitudeLimits(self):
         limits = []
         Vmax = [b.v_max for b in self.env.market.case.connected_buses]
         Vmin = [b.v_min for b in self.env.market.case.connected_buses]
-        limits.extend(zip(Vmax, Vmin))
+        limits.extend(zip(Vmin, Vmax))
 #        nb = len(self.env.market.case.connected_buses)
 #        limits.extend([(-180.0, 180.0)] * nb)
         return limits

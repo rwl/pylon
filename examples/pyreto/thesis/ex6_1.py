@@ -28,7 +28,6 @@ from plot import plot6_1
 
 setup_logging()
 
-locAdj = "ac"#"dc"
 decommit = False
 auctionType = FIRST_PRICE#DISCRIMINATIVE
 profile = get_full_year() / 100.0
@@ -119,6 +118,8 @@ def get_portfolios3():
 
 def get_passive_experiment(case, minor=1):
 
+    locAdj = "dc"
+
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=auctionType,
                                 locationalAdjustment=locAdj)
@@ -148,10 +149,11 @@ def get_passive_experiment(case, minor=1):
 def get_re_experiment(case, minor=1):
     """ Returns an experiment that uses the Roth-Erev learning method.
     """
+    locAdj = "dc"
     experimentation = 0.55
     recency = 0.3
     tau = 100.0
-    decay = 0.999#98
+    decay = 0.999
     nStates = 1 # stateless RE?
 
     Pd0 = get_pd_max(case, profile)
@@ -192,12 +194,13 @@ def get_re_experiment(case, minor=1):
 
 def get_q_experiment(case, minor=1):
 
+    locAdj = "dc"
     nStates = 10
-    alpha = 0.3 # Learning rate.
+    alpha = 0.2 # Learning rate.
     gamma = 0.99 # Discount factor
     # The closer epsilon gets to 0, the more greedy and less explorative.
     epsilon = 0.9
-    decay = 0.97
+    decay = 0.999
 
     Pd0 = get_pd_max(case, profile)
     Pd_min = get_pd_min(case, profile)
@@ -235,14 +238,16 @@ def get_q_experiment(case, minor=1):
 
 def get_reinforce_experiment(case):
 
+    locAdj = "ac"
+    initalSigma = 0.0
+    sigmaOffset = -5.0
+    decay = 0.995
+    learningRate = 0.01
+
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=auctionType,
                                 locationalAdjustment=locAdj)
 
-    initalSigma = 0.0
-    sigmaOffset = -4.0
-    decay = 0.999
-    learningRate = 0.001
 
     experiment = \
         pyreto.continuous.MarketExperiment([], [], market, branchOutages=None)
@@ -278,14 +283,15 @@ def get_reinforce_experiment(case):
 
 def get_enac_experiment(case):
 
+    locAdj = "ac"
+    initalSigma = 0.0
+    sigmaOffset = -5.0
+    decay = 0.995
+    learningRate = 0.005
+
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=auctionType,
                                 locationalAdjustment=locAdj)
-
-    initalSigma = 0.0
-    sigmaOffset = -4.0
-    decay = 0.999
-    learningRate = 0.001
 
     experiment = \
         pyreto.continuous.MarketExperiment([], [], market, branchOutages=None)
@@ -355,8 +361,8 @@ def ex6_1():
 
     in_cloud = False
     years = 1
-    roleouts = 1#364 * years
-    episodes = 1#7 # number of days per learning step
+    roleouts = 364 * years
+    episodes = 1 # number of days per learning step
 
     t0 = time()
 
@@ -366,24 +372,38 @@ def ex6_1():
     save_rewards(rewards, "passive", version)
     t_passive = time()
 
-#    rewards, results = run_years(get_re_experiment, case, roleouts,
-#                                 episodes, in_cloud)
-#    save_results(results, "RothErev", version)
-#    save_rewards(rewards, "RothErev", version)
+    rewards, results = run_years(get_re_experiment, case, roleouts,
+                                 episodes, in_cloud)
+    save_results(results, "RothErev", version)
+    save_rewards(rewards, "RothErev", version)
     t_re = time()
 
+    rewards, results = run_years(get_q_experiment, case, roleouts,
+                                 episodes, in_cloud)
+    save_results(results, "Q", version)
+    save_rewards(rewards, "Q", version)
+    t_q = time()
 
-    roleouts = 52#52 * years
-    episodes = 7#7 # number of days per learning step
 
-#    rewards, results = run_years(get_enac_experiment, case, roleouts,
-#                                 episodes,in_cloud)
-#    save_results(results, "ENAC", version)
-#    save_rewards(rewards, "ENAC", version)
+    roleouts = 52 * years
+    episodes = 7 # number of days per learning step
+
+    rewards, results = run_years(get_reinforce_experiment, case, roleouts,
+                                 episodes,in_cloud)
+    save_results(results, "REINFORCE", version)
+    save_rewards(rewards, "REINFORCE", version)
+    t_reinforce = time()
+
+    rewards, results = run_years(get_enac_experiment, case, roleouts,
+                                 episodes,in_cloud)
+    save_results(results, "ENAC", version)
+    save_rewards(rewards, "ENAC", version)
     t_enac = time()
 
     print "Roth-Erev completed in %.2fs." % (t_re - t_passive)
-    print "ENAC completed in %.2fs." % (t_enac - t_re)
+    print "Q-learning completed in %.2fs." % (t_q - t_re)
+    print "REINFORCE completed in %.2fs." % (t_reinforce - t_q)
+    print "ENAC completed in %.2fs." % (t_enac - t_reinforce)
     print "Experiment 6.1 completed in %.2fs." % (time() - t0)
 
 

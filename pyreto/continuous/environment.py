@@ -23,9 +23,9 @@
 
 import logging
 
-from numpy import array, mean, r_
+from numpy import array, mean, r_, zeros
 
-from pylon import PQ
+from pylon import PQ, PV
 from pyreto.discrete import MarketEnvironment as DiscreteMarketEnvironment
 
 #------------------------------------------------------------------------------
@@ -68,11 +68,12 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         sensors = r_[sensors, self._getTotalDemandSensor()]
 #        sensors = r_[sensors, self._getDemandSensor()]
 #        sensors = r_[sensors, self._getPriceSensor()]
+        sensors = r_[sensors, self._getBusVoltageSensor()]
 #        sensors = r_[sensors, self._getBusVoltageMagnitudeSensor()]
 #        sensors = r_[sensors, self._getBusVoltageLambdaSensor()]
 #        sensors = r_[sensors, self._getBranchFlowSensor()]
 
-#        logger.info("State: %s" % sensors)
+        logger.info("State: %s" % sensors)
 
         return sensors
 
@@ -149,6 +150,17 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         f = self.market._solution["f"]
 
         return array([avgPrice, f])
+
+
+    def _getBusVoltageSensor(self):
+        sensor = zeros(len(self.market.case.connected_buses))
+        for i, bus in enumerate(self.market.case.connected_buses):
+            if bus.type == PV:
+                sensor[i] = -bus.mu_vmin + bus.mu_vmax
+            else:
+                sensor[i] = bus.v_magnitude
+
+        return sensor
 
 
     def _getBusVoltageMagnitudeSensor(self):

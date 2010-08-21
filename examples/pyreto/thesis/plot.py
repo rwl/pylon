@@ -55,7 +55,13 @@ if tex:
               'figure.figsize': fig_size}
     rcParams.update(params)
 else:
-    matplotlib.rcParams['figure.figsize'] = (8, 10)
+    params = {'axes.labelsize': 10,
+              'text.fontsize': 10,
+              'legend.fontsize': 8,
+              'xtick.labelsize': 8,
+              'ytick.labelsize': 8,
+              'figure.figsize': (8, 10)}
+    rcParams.update(params)
 
 
 clr = ["black", "0.5", "0.8"]
@@ -194,15 +200,18 @@ def plot_episodes(results, ai, ylab, xlab="Hour"):
     maxSteps = 24
     nplot = len(results)
 
-    for i, (result_mean, result_std, lab) in enumerate(results):
+    for i, (result_mean, result_std,
+            passive_mean, passive_std, lab) in enumerate(results):
 
         ax = subplot(nplot, 1, i + 1)
 
-        title("Agent %d (%s)" % (ai + 1, lab))
+#        title("Agent %d (%s)" % (ai + 1, lab))
 
         x = arange(0.0, maxSteps, 1.0)
         y = result_mean[ai, :]
         e = result_std[ai, :]
+        py = passive_mean[ai, :]
+        pe = passive_std[ai, :]
 #        y2 = epsilon[ai, :]
 
 #        plot(x, y,
@@ -211,14 +220,23 @@ def plot_episodes(results, ai, ylab, xlab="Hour"):
 #             label=lab)
 
         errorbar(x, y, yerr=e, fmt='kx', linestyle="None",
-                 label="Reward",
+                 label="Agent %d (%s)" % (ai + 1, lab),
                  capsize=3, markersize=5)#, linewidth=0.2)
         ylabel(ylab)
+
+        errorbar(x, py, yerr=pe, fmt='ko', linestyle="None",
+                 label="Marginal Cost",
+                 capsize=1, markersize=3)#, linewidth=0.2)
+
+        ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y')
 
         xlim((0, 23))
         ax.yaxis.grid(True)
         locator = FixedLocator(range(0, 24))
         ax.xaxis.set_major_locator(locator)      #minor x-axis ticks
+
+        l = legend(loc="upper left")
+        l.get_frame().set_linewidth(0.5)
 
     xlabel(xlab)
 
@@ -229,49 +247,53 @@ def plot6_X(minor=1):
 #    reinforce_epsilon = mmread("./out/ex6_%d_reinforce_epsilon.mtx" % minor)
 #    enac_epsilon = mmread("./out/ex6_%d_enac_epsilon.mtx" % minor)
 
-
+    passive_reward_mean = mmread("./out/ex6_%d_passive_reward_mean.mtx" % minor)
+    passive_reward_std = mmread("./out/ex6_%d_passive_reward_std.mtx" % minor)
     re_reward_mean = mmread("./out/ex6_%d_rotherev_reward_mean.mtx" % minor)
     re_reward_std = mmread("./out/ex6_%d_rotherev_reward_std.mtx" % minor)
-#    q_reward_mean = mmread("./out/ex6_%d_q_reward_mean.mtx" % minor)
-#    q_reward_std = mmread("./out/ex6_%d_q_reward_std.mtx" % minor)
-#    reinforce_reward_mean = \
-#        mmread("./out/ex6_%d_reinforce_reward_mean.mtx" % minor)
-#    reinforce_reward_std = \
-#        mmread("./out/ex6_%d_reinforce_reward_std.mtx" % minor)
+    q_reward_mean = mmread("./out/ex6_%d_q_reward_mean.mtx" % minor)
+    q_reward_std = mmread("./out/ex6_%d_q_reward_std.mtx" % minor)
+    reinforce_reward_mean = \
+        mmread("./out/ex6_%d_reinforce_reward_mean.mtx" % minor)
+    reinforce_reward_std = \
+        mmread("./out/ex6_%d_reinforce_reward_std.mtx" % minor)
     enac_reward_mean = mmread("./out/ex6_%d_enac_reward_mean.mtx" % minor)
     enac_reward_std = mmread("./out/ex6_%d_enac_reward_std.mtx" % minor)
 
-    if False:
-        def average(reward):
-            na = reward.shape[0]
-            maxSteps = 24
-
-            reward_mean = zeros((na, maxSteps))
-            reward_std = zeros((na, maxSteps))
-
-            roleouts = 1 # num of final weeks to average
-            episodes = 2
-            reward = reward[:, -maxSteps * episodes * roleouts:]
-
-            for s in range(maxSteps):
-                reward_mean[:, s] = mean(reward[:, s::maxSteps], axis=1)
-                reward_std[:, s] = std(reward[:, s::maxSteps], axis=1, ddof=1)
-
-            return reward_mean, reward_std
-
-        re_rewards = mmread("./out/ex6_%d_rotherev_all_rewards.mtx" % minor)
-        enac_rewards = mmread("./out/ex6_%d_enac_all_rewards.mtx" % minor)
-
-        re_reward_mean, re_reward_std = average(re_rewards)
-        enac_reward_mean, enac_reward_std = average(enac_rewards)
+#    if False:
+#        def average(reward):
+#            na = reward.shape[0]
+#            maxSteps = 24
+#
+#            reward_mean = zeros((na, maxSteps))
+#            reward_std = zeros((na, maxSteps))
+#
+#            roleouts = 1 # num of final weeks to average
+#            episodes = 2
+#            reward = reward[:, -maxSteps * episodes * roleouts:]
+#
+#            for s in range(maxSteps):
+#                reward_mean[:, s] = mean(reward[:, s::maxSteps], axis=1)
+#                reward_std[:, s] = std(reward[:, s::maxSteps], axis=1, ddof=1)
+#
+#            return reward_mean, reward_std
+#
+#        re_rewards = mmread("./out/ex6_%d_rotherev_all_rewards.mtx" % minor)
+#        enac_rewards = mmread("./out/ex6_%d_enac_all_rewards.mtx" % minor)
+#
+#        re_reward_mean, re_reward_std = average(re_rewards)
+#        enac_reward_mean, enac_reward_std = average(enac_rewards)
 
     rewards = [
-        (re_reward_mean, re_reward_std, "Roth-Erev"),
-#        (q_reward_mean, q_reward_std, q_epsilon,
-#         "Q-Learning", "Epsilon", 1.0, 0.0),
-#        (reinforce_reward_mean, reinforce_reward_std, reinforce_epsilon,
-#         "REINFORCE", "Sigma", None, None),
-        (enac_reward_mean, enac_reward_std, "ENAC")
+#        (passive_reward_mean, passive_reward_std, "Passive"),
+        (re_reward_mean, re_reward_std,
+         passive_reward_mean, passive_reward_std, "Roth-Erev"),
+        (q_reward_mean, q_reward_std,
+         passive_reward_mean, passive_reward_std, "Q-Learning"),
+        (reinforce_reward_mean, reinforce_reward_std,
+         passive_reward_mean, passive_reward_std, "REINFORCE"),
+        (enac_reward_mean, enac_reward_std,
+         passive_reward_mean, passive_reward_std, "ENAC")
     ]
 
     for ai in range(4):
