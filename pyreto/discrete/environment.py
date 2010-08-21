@@ -142,8 +142,8 @@ class MarketEnvironment(object):
         markups = actions[:n]
         withholds = actions[n:]
 
-        print "ALL ACTIONS:", self._allActions
-        print "ACTIONS:", markups, withholds
+#        print "ALL ACTIONS:", self._allActions
+#        print "ACTIONS:", markups, withholds
 
         self._offbid(markups, withholds)
 
@@ -194,8 +194,6 @@ class MarketEnvironment(object):
                 wh = withholds[kk+j]
                 qty = qty * ((100.0 - wh) / 100.0)
 
-                print "QUANTITY:", qty
-
                 totQty += qty
 
                 # The markups are cumulative to ensure cost function convexity.
@@ -228,16 +226,18 @@ class MarketEnvironment(object):
 
                     self._lastAction.append(offer)
 
-                    logger.info("%.2fMW offered at %.2f$/MWh for %s (%.1f%%)."
-                        % (qty, prc, g.name, mk))
+                    logger.info(
+                        "%.2fMW offered at %.2f$/MWh for %s (%.1f%%, %.1f%%)."
+                        % (qty, prc, g.name, mk, wh))
                 else:
                     bid = Bid(g, -qty, prc, costNoLoad)
                     self.market.bids.append(bid)
 
                     self._lastAction.append(bid)
 
-                    logger.info("%.2f$/MWh bid for %.2fMW for %s (%.1f%%)."
-                        % (prc, -qty, g.name, mk))
+                    logger.info(
+                        "%.2f$/MWh bid for %.2fMW for %s (%.1f%%, %.1f%%)."
+                        % (prc, -qty, g.name, mk, wh))
 
         return self._lastAction
 

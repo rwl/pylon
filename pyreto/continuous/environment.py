@@ -84,7 +84,7 @@ class MarketEnvironment(DiscreteMarketEnvironment):
         """
         self._lastAction = []
 
-        print "ACT:", action
+#        print "ACT:", action
 
         n = self.numOffbids * len(self.generators)
 

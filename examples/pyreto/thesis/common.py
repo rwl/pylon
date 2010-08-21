@@ -197,7 +197,7 @@ def get_continuous_task_agent(generators, market, nOffer, maxMarkup,
 #                       outclass=TanhLayer
                        )
 
-    net._setParameters(([0.0]))
+#    net._setParameters(([0.0]))
 
     agent = LearningAgent(net, learner)
 #    agent.name = generators[0].name
@@ -346,6 +346,13 @@ def save_results(results, name, version="1_1"):
         mmwrite("./out/ex%s_%s_epsilon.mtx" % (version, name.lower()),
                 epsilon,
                 "Experiment %s %s exploration rates." % (version, name))
+
+
+def save_rewards(rewards, name, version):
+
+    mmwrite("./out/ex%s_%s_all_rewards.mtx" % (version, name.lower()),
+            rewards,
+            "Experiment %s %s all rewards." % (version, name))
 
 
 def get_weekly():

@@ -19,7 +19,7 @@ from pylab import \
 
 from matplotlib.ticker import IndexLocator, FixedLocator
 
-from scipy import arange, sqrt
+from scipy import arange, sqrt, zeros, mean, std
 from scipy.io import mmread
 
 from common import \
@@ -30,7 +30,7 @@ matplotlib.rcParams['lines.linewidth'] = 0.5
 matplotlib.rcParams['axes.linewidth'] = 0.7
 matplotlib.rcParams['axes.titlesize'] = 10
 
-tex = True
+tex = False
 
 if tex:
     # Set up publication quality graphs.
@@ -142,6 +142,7 @@ def plot5_X(minor):
         plot_results(actions, ai, "Action (\%)")
         if tex:
             savefig('./out/fig5_%d_action_a%d.pdf' % (minor, ai + 1))
+#            savefig('./out/fig5_%d_action_a%d.eps' % (minor, ai + 1))
         else:
             savefig('./out/fig5_%d_action_a%d.png' % (minor, ai + 1))
 
@@ -173,6 +174,7 @@ def plot5_X(minor):
         plot_results(rewards, ai, r"Reward (\verb+$+)")
         if tex:
             savefig('./out/fig5_%d_reward_a%d.pdf' % (minor, (ai + 1)))
+#            savefig('./out/fig5_%d_reward_a%d.eps' % (minor, (ai + 1)))
         else:
             savefig('./out/fig5_%d_reward_a%d.png' % (minor, (ai + 1)))
 
@@ -196,7 +198,7 @@ def plot_episodes(results, ai, ylab, xlab="Hour"):
 
         ax = subplot(nplot, 1, i + 1)
 
-        title(lab)
+        title("Agent %d (%s)" % (ai + 1, lab))
 
         x = arange(0.0, maxSteps, 1.0)
         y = result_mean[ai, :]
@@ -225,11 +227,11 @@ def plot6_X(minor=1):
 #    re_epsilon = mmread("./out/ex6_%d_rotherev_epsilon.mtx" % minor)
 #    q_epsilon = mmread("./out/ex6_%d_q_epsilon.mtx" % minor)
 #    reinforce_epsilon = mmread("./out/ex6_%d_reinforce_epsilon.mtx" % minor)
-    enac_epsilon = mmread("./out/ex6_%d_enac_epsilon.mtx" % minor)
+#    enac_epsilon = mmread("./out/ex6_%d_enac_epsilon.mtx" % minor)
 
 
-#    re_reward_mean = mmread("./out/ex6_%d_rotherev_reward_mean.mtx" % minor)
-#    re_reward_std = mmread("./out/ex6_%d_rotherev_reward_std.mtx" % minor)
+    re_reward_mean = mmread("./out/ex6_%d_rotherev_reward_mean.mtx" % minor)
+    re_reward_std = mmread("./out/ex6_%d_rotherev_reward_std.mtx" % minor)
 #    q_reward_mean = mmread("./out/ex6_%d_q_reward_mean.mtx" % minor)
 #    q_reward_std = mmread("./out/ex6_%d_q_reward_std.mtx" % minor)
 #    reinforce_reward_mean = \
@@ -239,9 +241,32 @@ def plot6_X(minor=1):
     enac_reward_mean = mmread("./out/ex6_%d_enac_reward_mean.mtx" % minor)
     enac_reward_std = mmread("./out/ex6_%d_enac_reward_std.mtx" % minor)
 
+    if False:
+        def average(reward):
+            na = reward.shape[0]
+            maxSteps = 24
+
+            reward_mean = zeros((na, maxSteps))
+            reward_std = zeros((na, maxSteps))
+
+            roleouts = 1 # num of final weeks to average
+            episodes = 2
+            reward = reward[:, -maxSteps * episodes * roleouts:]
+
+            for s in range(maxSteps):
+                reward_mean[:, s] = mean(reward[:, s::maxSteps], axis=1)
+                reward_std[:, s] = std(reward[:, s::maxSteps], axis=1, ddof=1)
+
+            return reward_mean, reward_std
+
+        re_rewards = mmread("./out/ex6_%d_rotherev_all_rewards.mtx" % minor)
+        enac_rewards = mmread("./out/ex6_%d_enac_all_rewards.mtx" % minor)
+
+        re_reward_mean, re_reward_std = average(re_rewards)
+        enac_reward_mean, enac_reward_std = average(enac_rewards)
+
     rewards = [
-#        (re_reward_mean, re_reward_std, re_epsilon,
-#         "Roth-Erev", "Boltzmann Temperature", None, None),
+        (re_reward_mean, re_reward_std, "Roth-Erev"),
 #        (q_reward_mean, q_reward_std, q_epsilon,
 #         "Q-Learning", "Epsilon", 1.0, 0.0),
 #        (reinforce_reward_mean, reinforce_reward_std, reinforce_epsilon,
@@ -254,6 +279,7 @@ def plot6_X(minor=1):
         plot_episodes(rewards, ai, r"Reward (\verb+$+)")
         if tex:
             savefig('./out/fig6_%d_reward_a%d.pdf' % (minor, (ai + 1)))
+#            savefig('./out/fig6_%d_reward_a%d.eps' % (minor, (ai + 1)))
         else:
             savefig('./out/fig6_%d_reward_a%d.png' % (minor, (ai + 1)))
 
@@ -328,6 +354,6 @@ def plot_profiles():
 
 if __name__ == "__main__":
 #    plot5_1()
-    plot5_2()
-#    plot6_1()
+#    plot5_2()
+    plot6_1()
 #    plot_profiles()
