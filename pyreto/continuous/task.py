@@ -112,7 +112,9 @@ class ProfitTask(DiscreteProfitTask):
         limits.extend(self._getTotalDemandLimits())
 #        limits.extend(self._getDemandLimits())
 #        limits.extend(self._getPriceLimits())
-        limits.extend(self._getVoltageSensorLimits())
+
+#        limits.extend(self._getVoltageSensorLimits())
+
 #        limits.extend(self._getVoltageMagnitudeLimits())
 #        limits.extend(self._getVoltageAngleLimits())
 #        limits.extend(self._getVoltageLambdaLimits())

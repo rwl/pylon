@@ -285,13 +285,22 @@ class MarketEnvironment(object):
         # Divide the range of demand into discrete bands.
         states = linspace(self.Pd_min, self._Pd0, self.numStates + 1)
 
+#        print "STATES:", states
+
         for i in range(len(states) - 1):
             if states[i] <= round(Pd, 1) <= states[i + 1]:
                 logger.info("%s demand state: %d (%.2f)" %
                             (self.generators[0].name, i, Pd))
                 return array([i])
         else:
-            raise ValueError, "No state defined for system demand [%.3f]." % Pd
+#            raise ValueError, "No state defined for system demand [%.3f]." % Pd
+            if Pd < states[0]:
+                return array([0])
+            elif Pd > states[-1]:
+                return array([self.numStates - 1])
+            else:
+                logger.error("No state defined for system demand [%.3f]." % Pd)
+                return array([0])
 
 
     def _getPriceSensor(self):

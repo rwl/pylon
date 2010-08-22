@@ -260,29 +260,29 @@ def plot6_X(minor=1):
     enac_reward_mean = mmread("./out/ex6_%d_enac_reward_mean.mtx" % minor)
     enac_reward_std = mmread("./out/ex6_%d_enac_reward_std.mtx" % minor)
 
-#    if False:
-#        def average(reward):
-#            na = reward.shape[0]
-#            maxSteps = 24
-#
-#            reward_mean = zeros((na, maxSteps))
-#            reward_std = zeros((na, maxSteps))
-#
-#            roleouts = 1 # num of final weeks to average
-#            episodes = 2
-#            reward = reward[:, -maxSteps * episodes * roleouts:]
-#
-#            for s in range(maxSteps):
-#                reward_mean[:, s] = mean(reward[:, s::maxSteps], axis=1)
-#                reward_std[:, s] = std(reward[:, s::maxSteps], axis=1, ddof=1)
-#
-#            return reward_mean, reward_std
-#
-#        re_rewards = mmread("./out/ex6_%d_rotherev_all_rewards.mtx" % minor)
-#        enac_rewards = mmread("./out/ex6_%d_enac_all_rewards.mtx" % minor)
-#
-#        re_reward_mean, re_reward_std = average(re_rewards)
-#        enac_reward_mean, enac_reward_std = average(enac_rewards)
+    if False:
+        def average(reward):
+            na = reward.shape[0]
+            maxSteps = 24
+
+            reward_mean = zeros((na, maxSteps))
+            reward_std = zeros((na, maxSteps))
+
+            roleouts = 8 * 7 # num of final episodes to average
+            episodes = 1
+            reward = reward[:, -maxSteps * episodes * roleouts:]
+
+            for s in range(maxSteps):
+                reward_mean[:, s] = mean(reward[:, s::maxSteps], axis=1)
+                reward_std[:, s] = std(reward[:, s::maxSteps], axis=1, ddof=1)
+
+            return reward_mean, reward_std
+
+        re_rewards = mmread("./out/ex6_%d_rotherev_all_rewards.mtx" % minor)
+        enac_rewards = mmread("./out/ex6_%d_enac_all_rewards.mtx" % minor)
+
+        re_reward_mean, re_reward_std = average(re_rewards)
+        enac_reward_mean, enac_reward_std = average(enac_rewards)
 
     rewards = [
 #        (passive_reward_mean, passive_reward_std, "Passive"),

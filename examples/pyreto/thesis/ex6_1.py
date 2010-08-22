@@ -195,7 +195,7 @@ def get_re_experiment(case, minor=1):
 def get_q_experiment(case, minor=1):
 
     locAdj = "dc"
-    nStates = 10
+    nStates = 3
     alpha = 0.2 # Learning rate.
     gamma = 0.99 # Discount factor
     # The closer epsilon gets to 0, the more greedy and less explorative.
@@ -238,7 +238,7 @@ def get_q_experiment(case, minor=1):
 
 def get_reinforce_experiment(case):
 
-    locAdj = "ac"
+    locAdj = "dc"
     initalSigma = 0.0
     sigmaOffset = -5.0
     decay = 0.995
@@ -283,7 +283,7 @@ def get_reinforce_experiment(case):
 
 def get_enac_experiment(case):
 
-    locAdj = "ac"
+    locAdj = "dc"
     initalSigma = 0.0
     sigmaOffset = -5.0
     decay = 0.995
@@ -366,22 +366,22 @@ def ex6_1():
 
     t0 = time()
 
-    rewards, results = run_years(get_passive_experiment, case, roleouts,
-                                 episodes, in_cloud)
-    save_results(results, "passive", version)
-    save_rewards(rewards, "passive", version)
+#    rewards, results = run_years(get_passive_experiment, case, roleouts,
+#                                 episodes, in_cloud)
+#    save_results(results, "passive", version)
+#    save_rewards(rewards, "passive", version)
     t_passive = time()
 
-    rewards, results = run_years(get_re_experiment, case, roleouts,
-                                 episodes, in_cloud)
-    save_results(results, "RothErev", version)
-    save_rewards(rewards, "RothErev", version)
+#    rewards, results = run_years(get_re_experiment, case, roleouts,
+#                                 episodes, in_cloud)
+#    save_results(results, "RothErev", version)
+#    save_rewards(rewards, "RothErev", version)
     t_re = time()
 
-    rewards, results = run_years(get_q_experiment, case, roleouts,
-                                 episodes, in_cloud)
-    save_results(results, "Q", version)
-    save_rewards(rewards, "Q", version)
+#    rewards, results = run_years(get_q_experiment, case, roleouts,
+#                                 episodes, in_cloud)
+#    save_results(results, "Q", version)
+#    save_rewards(rewards, "Q", version)
     t_q = time()
 
 
