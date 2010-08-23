@@ -69,7 +69,7 @@ class MarketEnvironment(DiscreteMarketEnvironment):
 #        sensors = r_[sensors, self._getDemandSensor()]
 #        sensors = r_[sensors, self._getPriceSensor()]
 
-#        sensors = r_[sensors, self._getBusVoltageSensor()]
+        sensors = r_[sensors, self._getBusVoltageSensor()]
 
 #        sensors = r_[sensors, self._getBusVoltageMagnitudeSensor()]
 #        sensors = r_[sensors, self._getBusVoltageLambdaSensor()]

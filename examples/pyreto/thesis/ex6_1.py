@@ -238,7 +238,7 @@ def get_q_experiment(case, minor=1):
 
 def get_reinforce_experiment(case):
 
-    locAdj = "dc"
+    locAdj = "ac"
     initalSigma = 0.0
     sigmaOffset = -5.0
     decay = 0.995
@@ -283,7 +283,7 @@ def get_reinforce_experiment(case):
 
 def get_enac_experiment(case):
 
-    locAdj = "dc"
+    locAdj = "ac"
     initalSigma = 0.0
     sigmaOffset = -5.0
     decay = 0.995
