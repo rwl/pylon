@@ -149,7 +149,7 @@ def get_passive_experiment(case, minor=1):
 def get_re_experiment(case, minor=1):
     """ Returns an experiment that uses the Roth-Erev learning method.
     """
-    locAdj = "dc"
+    locAdj = "ac"
     experimentation = 0.55
     recency = 0.3
     tau = 100.0
@@ -194,7 +194,7 @@ def get_re_experiment(case, minor=1):
 
 def get_q_experiment(case, minor=1):
 
-    locAdj = "dc"
+    locAdj = "ac"
     nStates = 3
     alpha = 0.2 # Learning rate.
     gamma = 0.99 # Discount factor
@@ -372,32 +372,32 @@ def ex6_1():
 #    save_rewards(rewards, "passive", version)
     t_passive = time()
 
-#    rewards, results = run_years(get_re_experiment, case, roleouts,
-#                                 episodes, in_cloud)
-#    save_results(results, "RothErev", version)
-#    save_rewards(rewards, "RothErev", version)
+    rewards, results = run_years(get_re_experiment, case, roleouts,
+                                 episodes, in_cloud)
+    save_results(results, "RothErev", version)
+    save_rewards(rewards, "RothErev", version)
     t_re = time()
 
-#    rewards, results = run_years(get_q_experiment, case, roleouts,
-#                                 episodes, in_cloud)
-#    save_results(results, "Q", version)
-#    save_rewards(rewards, "Q", version)
+    rewards, results = run_years(get_q_experiment, case, roleouts,
+                                 episodes, in_cloud)
+    save_results(results, "Q", version)
+    save_rewards(rewards, "Q", version)
     t_q = time()
 
 
     roleouts = 52 * years
     episodes = 7 # number of days per learning step
 
-    rewards, results = run_years(get_reinforce_experiment, case, roleouts,
-                                 episodes,in_cloud)
-    save_results(results, "REINFORCE", version)
-    save_rewards(rewards, "REINFORCE", version)
+#    rewards, results = run_years(get_reinforce_experiment, case, roleouts,
+#                                 episodes,in_cloud)
+#    save_results(results, "REINFORCE", version)
+#    save_rewards(rewards, "REINFORCE", version)
     t_reinforce = time()
 
-    rewards, results = run_years(get_enac_experiment, case, roleouts,
-                                 episodes,in_cloud)
-    save_results(results, "ENAC", version)
-    save_rewards(rewards, "ENAC", version)
+#    rewards, results = run_years(get_enac_experiment, case, roleouts,
+#                                 episodes,in_cloud)
+#    save_results(results, "ENAC", version)
+#    save_rewards(rewards, "ENAC", version)
     t_enac = time()
 
     print "Roth-Erev completed in %.2fs." % (t_re - t_passive)
