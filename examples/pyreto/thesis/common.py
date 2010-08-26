@@ -169,6 +169,7 @@ def get_discrete_task_agent(generators, market, nStates, nOffer, markups,
                                             numStates=nStates,
                                             numOffbids=nOffer,
                                             markups=markups,
+                                            withholds=withholds,
                                             Pd0=Pd0,
                                             Pd_min=Pd_min)
     task = pyreto.discrete.ProfitTask(env, maxSteps=maxSteps)
