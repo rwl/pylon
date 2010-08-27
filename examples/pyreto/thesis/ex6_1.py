@@ -154,7 +154,7 @@ def get_re_experiment(case, minor=1):
     recency = 0.3
     tau = 100.0
     decay = 0.999
-    nStates = 1 # stateless RE?
+    nStates = 3 # stateless RE?
 
     Pd0 = get_pd_max(case, profile)
     Pd_min = get_pd_min(case, profile)
@@ -185,7 +185,7 @@ def get_re_experiment(case, minor=1):
     passive = [case.generators[i] for i in sync_cond]
     passive[0].p_min = 0.001 # Avoid invalid offer withholding.
     passive[0].p_max = 0.002
-    task, agent = get_zero_task_agent(passive, market, nOffer, maxSteps)
+    task, agent = get_zero_task_agent(passive, market, 1, maxSteps)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -231,7 +231,7 @@ def get_q_experiment(case, minor=1):
     passive = [case.generators[i] for i in sync_cond]
     passive[0].p_min = 0.001 # Avoid invalid offer withholding.
     passive[0].p_max = 0.002
-    task, agent = get_zero_task_agent(passive, market, nOffer, maxSteps)
+    task, agent = get_zero_task_agent(passive, market, 1, maxSteps)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -276,7 +276,7 @@ def get_reinforce_experiment(case):
     passive = [case.generators[i] for i in sync_cond]
     passive[0].p_min = 0.001 # Avoid invalid offer withholding.
     passive[0].p_max = 0.002
-    task, agent = get_neg_one_task_agent(passive, market, nOffer, maxSteps)
+    task, agent = get_neg_one_task_agent(passive, market, 1, maxSteps)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -320,7 +320,7 @@ def get_enac_experiment(case):
     passive = [case.generators[i] for i in sync_cond]
     passive[0].p_min = 0.001 # Avoid invalid offer withholding.
     passive[0].p_max = 0.002
-    task, agent = get_neg_one_task_agent(passive, market, nOffer, maxSteps)
+    task, agent = get_neg_one_task_agent(passive, market, 1, maxSteps)
     experiment.tasks.append(task)
     experiment.agents.append(agent)
 
@@ -374,10 +374,10 @@ def ex6_1():
 #    save_rewards(rewards, "passive", version)
     t_passive = time()
 
-#    rewards, results = run_years(get_re_experiment, case, roleouts,
-#                                 episodes, in_cloud)
-#    save_results(results, "RothErev", version)
-#    save_rewards(rewards, "RothErev", version)
+    rewards, results = run_years(get_re_experiment, case, roleouts,
+                                 episodes, in_cloud)
+    save_results(results, "StatefulRE", version)
+    save_rewards(rewards, "StatefulRE", version)
     t_re = time()
 
 #    rewards, results = run_years(get_q_experiment, case, roleouts,
@@ -396,10 +396,10 @@ def ex6_1():
 #    save_rewards(rewards, "REINFORCE", version)
     t_reinforce = time()
 
-    rewards, results = run_years(get_enac_experiment, case, roleouts,
-                                 episodes,in_cloud)
-    save_results(results, "ENAC", version)
-    save_rewards(rewards, "ENAC", version)
+#    rewards, results = run_years(get_enac_experiment, case, roleouts,
+#                                 episodes,in_cloud)
+#    save_results(results, "ENAC", version)
+#    save_rewards(rewards, "ENAC", version)
     t_enac = time()
 
     print "Roth-Erev completed in %.2fs." % (t_re - t_passive)
