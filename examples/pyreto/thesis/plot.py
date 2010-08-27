@@ -19,43 +19,60 @@ from pylab import \
 
 from matplotlib.ticker import IndexLocator, FixedLocator
 
-from scipy import arange, sqrt, zeros, mean, std
+from scipy import arange, sqrt, zeros, mean, std, r_
 from scipy.io import mmread
 
 from common import \
     get_winter_hourly, get_summer_hourly, get_spring_autumn_hourly, \
     get_weekly, get_daily
 
-matplotlib.rcParams['lines.linewidth'] = 0.5
-matplotlib.rcParams['axes.linewidth'] = 0.7
-matplotlib.rcParams['axes.titlesize'] = 10
+tex = True
+paper = False
 
-tex = False
+if not paper:
+    matplotlib.rcParams['lines.linewidth'] = 0.5
+    matplotlib.rcParams['axes.linewidth'] = 0.7
 
 if tex:
     # Set up publication quality graphs.
     matplotlib.rc('font', **{'family': 'serif',
                              'serif': ['Computer Modern Roman']})
 
-    #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
-    #inches_per_pt = 1.0 / 72.27               # Convert pt to inch
-    golden_mean = (sqrt(5) - 1.0) / 2.0 # Aesthetic ratio
-    fig_width = 6.15#fig_width_pt * inches_per_pt  # width in inches
-    fig_height = 10.0#fig_width * golden_mean      # height in inches
-    fig_size = [fig_width, fig_height]
-    params = {'backend': 'ps',
-              'axes.labelsize': 10,
-              'text.fontsize': 10,
-              'legend.fontsize': 8,
-              'xtick.labelsize': 8,
-              'ytick.labelsize': 8,
-              'text.usetex': True,
-    #          'markup': 'tex',
-    #          'text.latex.unicode': True,
-              'figure.figsize': fig_size}
-    rcParams.update(params)
+    if paper:
+        fig_width = 6.15 # width in inches
+        fig_height = 8.5 # height in inches
+        params = {'backend': 'ps',
+                  'axes.titlesize': 12,
+                  'axes.labelsize': 10,
+                  'text.fontsize': 10,
+                  'legend.fontsize': 10,
+                  'xtick.labelsize': 10,
+                  'ytick.labelsize': 10,
+                  'text.usetex': True,
+                  'figure.figsize': [fig_width, fig_height]}
+        rcParams.update(params)
+    else:
+        #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
+        #inches_per_pt = 1.0 / 72.27               # Convert pt to inch
+        golden_mean = (sqrt(5) - 1.0) / 2.0 # Aesthetic ratio
+        fig_width = 6.15#fig_width_pt * inches_per_pt  # width in inches
+        fig_height = 10.0#fig_width * golden_mean      # height in inches
+        fig_size = [fig_width, fig_height]
+        params = {'backend': 'ps',
+                  'axes.titlesize': 10,
+                  'axes.labelsize': 10,
+                  'text.fontsize': 10,
+                  'legend.fontsize': 8,
+                  'xtick.labelsize': 8,
+                  'ytick.labelsize': 8,
+                  'text.usetex': True,
+        #          'markup': 'tex',
+        #          'text.latex.unicode': True,
+                  'figure.figsize': fig_size}
+        rcParams.update(params)
 else:
-    params = {'axes.labelsize': 10,
+    params = {'axes.titlesize': 10,
+              'axes.labelsize': 10,
               'text.fontsize': 8,
               'legend.fontsize': 8,
               'xtick.labelsize': 8,
@@ -393,11 +410,11 @@ def plot_profiles():
 
     x = arange(0.0, 24.0, 0.5)
 
-    plot(x, hourly_winter_wkdy + hourly_winter_wknd,
+    plot(x, r_[hourly_winter_wkdy, hourly_winter_wknd],
          label="Winter (Weeks 1-8 \& 44-52)", color="black")
-    plot(x, hourly_summer_wkdy + hourly_summer_wknd,
+    plot(x, r_[hourly_summer_wkdy, hourly_summer_wknd],
          label="Summer (Weeks 18-30)", color="0.4")
-    plot(x, hourly_spring_autumn_wkdy + hourly_spring_autumn_wknd,
+    plot(x, r_[hourly_spring_autumn_wkdy, hourly_spring_autumn_wknd],
          label="Spring \& Autumn (Weeks 9-17 \& 31-43)", color="0.6")
 
     xlabel("Hour of the day (starting at midnight)")
@@ -406,7 +423,7 @@ def plot_profiles():
     ylim((0.0, 100.0))
     title("IEEE RTS Hourly Load Profiles")
     l = legend(loc="lower right")
-    l.get_frame().set_linewidth(0.7)
+#    l.get_frame().set_linewidth(0.7)
     grid()
 #    savefig('./out/ieee_rts_hourly.pdf')
 
@@ -418,5 +435,5 @@ def plot_profiles():
 if __name__ == "__main__":
 #    plot5_1()
 #    plot5_2()
-    plot6_1()
-#    plot_profiles()
+#    plot6_1()
+    plot_profiles()

@@ -22,10 +22,11 @@ CASE = join(DATA_DIR, "case24_ieee_rts", "case24_ieee_rts.pkl")
 #DATA_DIR = join(dirname(__file__), "data")
 #CASE = join(DATA_DIR, "case24_ieee_rts3.pkl")
 
+paper = False
 
-#matplotlib.rcParams['lines.linewidth'] = 0.5
-matplotlib.rcParams['axes.linewidth'] = 0.7
-matplotlib.rcParams['axes.titlesize'] = 10
+if not paper:
+    #matplotlib.rcParams['lines.linewidth'] = 0.5
+    matplotlib.rcParams['axes.linewidth'] = 0.7
 
 # Set up publication quality graphs.
 #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
@@ -34,17 +35,30 @@ golden_mean = (pylab.sqrt(5) - 1.0) / 2.0 # Aesthetic ratio
 fig_width = 5.5#fig_width_pt * inches_per_pt  # width in inches
 fig_height = fig_width * golden_mean      # height in inches
 fig_size = [fig_width, fig_height]
-params = {'backend': 'ps',
-          'axes.labelsize': 10,
-          'text.fontsize': 10,
-          'legend.fontsize': 8,
-          'xtick.labelsize': 8,
-          'ytick.labelsize': 8,
-          'text.usetex': True,
-#          'markup': 'tex',
-#          'text.latex.unicode': True,
-          'figure.figsize': fig_size}
-pylab.rcParams.update(params)
+if paper:
+    params = {'backend': 'ps',
+              'axes.titlesize': 12,
+              'axes.labelsize': 12,
+              'text.fontsize': 12,
+              'legend.fontsize': 10,
+              'xtick.labelsize': 10,
+              'ytick.labelsize': 10,
+              'text.usetex': True,
+              'figure.figsize': fig_size}
+    pylab.rcParams.update(params)
+else:
+    params = {'backend': 'ps',
+              'axes.titlesize': 10,
+              'axes.labelsize': 10,
+              'text.fontsize': 10,
+              'legend.fontsize': 8,
+              'xtick.labelsize': 8,
+              'ytick.labelsize': 8,
+              'text.usetex': True,
+    #          'markup': 'tex',
+    #          'text.latex.unicode': True,
+              'figure.figsize': fig_size}
+    pylab.rcParams.update(params)
 
 case = pylon.Case.load(CASE)
 
@@ -56,9 +70,8 @@ style = [('black', '-'), ('0.5', '-'), ('black', ':'), ('0.5', ':'),
     ('black', '--'), ('0.5', '--'), ('black', '-.'), ('0.5', '-.'), ('0.8', '-')]
 ns = len(style)
 
-pylab.figure()
+fig = pylab.figure()
 pylab.title("IEEE RTS Generator Cost Functions")
-plots = []
 for i, gi in enumerate(g):
     generator = case.generators[gi]
     if generator.pcost_model == pylon.PW_LINEAR:
@@ -70,21 +83,24 @@ for i, gi in enumerate(g):
     else:
         raise
     clr, ls = style[i]
-    plots.append(pylab.plot(x, y, linestyle=ls, color=clr,
-                            label="U%s" % int(generator.p_max)))
-    pylab.xlabel("$P_g$ (MW)")
+    pylab.plot(x, y, linestyle=ls, color=clr,
+                            label="U%s" % int(generator.p_max))
+    pylab.xlabel("Generator set-point (MW)")
     pylab.ylabel(r"Cost (\verb+$+/h)")
 
 l = pylab.legend(loc="upper right")
-#plots, ["U%.0f" % case.generators[i].p_max for i in g])
-l.get_frame().set_linewidth(0.7)
+if not paper:
+    l.get_frame().set_linewidth(0.7)
+
+
+fig = fig.gca().ticklabel_format(style='sci', scilimits=(0,0), axis='y')
 
 pylab.annotate("Oil", (90, 7000))
 pylab.annotate("Coal", (170, 3600))
 pylab.annotate("Nuclear", (210, 1800))
 
-pylab.subplots_adjust(bottom=0.11)
+pylab.subplots_adjust(bottom=0.12)
 
 #pylab.show()
 
-pylab.savefig('/tmp/ieee_rts_gencosts.pdf')
+pylab.savefig('./out/ieee_rts_gencosts.pdf')
