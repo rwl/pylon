@@ -56,7 +56,7 @@ if tex:
     rcParams.update(params)
 else:
     params = {'axes.labelsize': 10,
-              'text.fontsize': 10,
+              'text.fontsize': 8,
               'legend.fontsize': 8,
               'xtick.labelsize': 8,
               'ytick.labelsize': 8,
@@ -241,6 +241,42 @@ def plot_episodes(results, ai, ylab, xlab="Hour"):
     xlabel(xlab)
 
 
+def plot_agents(rewards, ylab, xlab="Hour"):
+    maxSteps = 24
+    nplots = 4
+    fmt = ["w^", "wo", "ks", "kv"]
+
+    for i in range(nplots):
+        ax = subplot(nplots, 1, i + 1)
+#        title("Agent %d" % (i + 1))
+        ylabel(ylab)
+
+        x = arange(0.0, maxSteps, 1.0)
+
+        for j, (result_mean, _, _, _, lab) in enumerate(rewards):
+
+            y = result_mean[i, :]
+
+            plot(x, y, fmt[j], linestyle="None",
+#                 markerfacecolor='white',
+                 markersize=5,
+#                 color=clr[ai % nc],
+#                 linestyle=ls[ai % ns],
+                 label="A%s (%s)" % (i + 1, lab))
+
+            ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y')
+
+            xlim((0, 23))
+#            ax.yaxis.grid(True)
+            locator = FixedLocator(range(0, 24))
+            ax.xaxis.set_major_locator(locator)      #minor x-axis ticks
+
+            l = legend(loc="upper left")
+            l.get_frame().set_linewidth(0.5)
+
+    xlabel(xlab)
+
+
 def plot6_X(minor=1):
 #    re_epsilon = mmread("./out/ex6_%d_rotherev_epsilon.mtx" % minor)
 #    q_epsilon = mmread("./out/ex6_%d_q_epsilon.mtx" % minor)
@@ -296,14 +332,19 @@ def plot6_X(minor=1):
          passive_reward_mean, passive_reward_std, "ENAC")
     ]
 
-    for ai in range(4):
-        figure(ai + 10)
-        plot_episodes(rewards, ai, r"Reward (\verb+$+)")
-        if tex:
-            savefig('./out/fig6_%d_reward_a%d.pdf' % (minor, (ai + 1)))
-#            savefig('./out/fig6_%d_reward_a%d.eps' % (minor, (ai + 1)))
-        else:
-            savefig('./out/fig6_%d_reward_a%d.png' % (minor, (ai + 1)))
+#    for ai in range(4):
+#        figure(ai + 10)
+#        plot_episodes(rewards, ai, r"Reward (\verb+$+)")
+#        if tex:
+#            savefig('./out/fig6_%d_reward_a%d.pdf' % (minor, (ai + 1)))
+##            savefig('./out/fig6_%d_reward_a%d.eps' % (minor, (ai + 1)))
+#        else:
+#            savefig('./out/fig6_%d_reward_a%d.png' % (minor, (ai + 1)))
+
+
+    figure(909)
+    plot_agents(rewards, r"Reward (\verb+$+)")
+    savefig('./out/fig6_%d_rewards.png' % minor)
 
 #    if not tex:
 #        show()
