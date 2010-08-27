@@ -396,10 +396,10 @@ def ex6_1():
 #    save_rewards(rewards, "REINFORCE", version)
     t_reinforce = time()
 
-#    rewards, results = run_years(get_enac_experiment, case, roleouts,
-#                                 episodes,in_cloud)
-#    save_results(results, "ENAC", version)
-#    save_rewards(rewards, "ENAC", version)
+    rewards, results = run_years(get_enac_experiment, case, roleouts,
+                                 episodes,in_cloud)
+    save_results(results, "ENAC", version)
+    save_rewards(rewards, "ENAC", version)
     t_enac = time()
 
     print "Roth-Erev completed in %.2fs." % (t_re - t_passive)
