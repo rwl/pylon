@@ -26,7 +26,7 @@ from common import \
     get_winter_hourly, get_summer_hourly, get_spring_autumn_hourly, \
     get_weekly, get_daily
 
-tex = True
+tex = False
 paper = False
 
 if not paper:
@@ -371,6 +371,59 @@ def plot6_1():
     plot6_X(1)
 
 
+def plot6_2():
+    q1 = mmread("./out/ex6_2/ex6_2-1_q_reward_mean.mtx")
+    reinforce1 = mmread("./out/ex6_2/ex6_2-1_reinforce_reward_mean.mtx")
+    enac1 = mmread("./out/ex6_2/ex6_2-1_enac_reward_mean.mtx")
+
+#    q2 = mmread("./out/ex6_2/ex6_2-2_q_reward_mean.mtx")
+    reinforce2 = mmread("./out/ex6_2/ex6_2-2_reinforce_reward_mean.mtx")
+    enac2 = mmread("./out/ex6_2/ex6_2-2_enac_reward_mean.mtx")
+
+    maxSteps = 24
+    nplots = 4
+    fmt = ["wo", "ks", "kv"]
+
+    x = arange(0.0, maxSteps, 1.0)
+
+    def plot62(results, i, n):
+        ax = subplot(nplots, 1, n)
+
+        for k, (r, lab) in enumerate(results):
+            plot(x, r[i, :], fmt[k], linestyle="None", markersize=5, label=lab)
+
+        ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y')
+
+        xlim((0, 23))
+        locator = FixedLocator(range(0, 24))
+        ax.xaxis.set_major_locator(locator)      #minor x-axis ticks
+
+        ylabel(r"Reward (\verb+$+)")
+
+        l = legend(loc="upper left")
+        l.get_frame().set_linewidth(0.5)
+
+    results1 = [(q1, "Q"), (reinforce1, "REINFORCE"), (enac1, "ENAC")]
+    results2 = [(q1, "Q"), (reinforce2, "REINFORCE"), (enac2, "ENAC")]
+
+    figure()
+    plot62(results1, i=1, n=1)
+    title("Agent 2 with demand only state")
+    plot62(results2, i=1, n=2)
+    title("Agent 2 with demand and bus voltage state")
+#    xlabel("Hour")
+#    savefig('./out/ex6_2/fig6_2_agent2.png')
+
+#    figure()
+    plot62(results1, i=3, n=3)
+    title("Agent 4 with demand only state")
+    plot62(results2, i=3, n=4)
+    title("Agent 4 with demand and bus voltage state")
+    xlabel("Hour")
+#    savefig('./out/ex6_2/fig6_2_agent4.png')
+    savefig('./out/ex6_2/fig6_2.png')
+
+
 def plot_profiles():
     figure()
     subplot(3, 1, 1)
@@ -436,4 +489,5 @@ if __name__ == "__main__":
 #    plot5_1()
 #    plot5_2()
 #    plot6_1()
-    plot_profiles()
+    plot6_2()
+#    plot_profiles()
