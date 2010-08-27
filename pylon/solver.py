@@ -171,13 +171,20 @@ class _Solver(object):
                    if b.type == REFERENCE]
         x0 = (xmin + xmax) / 2.0
 
+
         x0[Va.i1:Va.iN + 1] = va_refs[0] # Angles set to first reference angle.
 
         if ny > 0:
             yvar = self.om.get_var("y")
+
             # Largest y-value in CCV data
-            c = [y for g in generators for _,y in g.p_cost if
-                 g.pcost_model == PW_LINEAR]
+            c = []
+            for g in generators:
+                if g.pcost_model == PW_LINEAR:
+                    for _, y in g.p_cost:
+                        c.append(y)
+
+
             x0[yvar.i1:yvar.iN + 1] = max(c) * 1.1
 
         return x0
