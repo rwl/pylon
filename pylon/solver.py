@@ -171,7 +171,6 @@ class _Solver(object):
                    if b.type == REFERENCE]
         x0 = (xmin + xmax) / 2.0
 
-
         x0[Va.i1:Va.iN + 1] = va_refs[0] # Angles set to first reference angle.
 
         if ny > 0:
@@ -267,7 +266,7 @@ class DCOPFSolver(_Solver):
             Npwl = csr_matrix((ones(ny), (zeros(ny), array(ipwl) + y.i1)))
             Hpwl = csr_matrix((1, 1))
             Cpwl = array([1])
-            fparm_pwl = array([[1, 0, 0, 1]])
+            fparm_pwl = array([[1., 0., 0., 1.]])
         else:
             Npwl = None#zeros((0, nxyz))
             Hpwl = None#array([])
