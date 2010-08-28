@@ -258,12 +258,12 @@ def plot_episodes(results, ai, ylab, xlab="Hour"):
     xlabel(xlab)
 
 
-def plot_agents(rewards, ylab, xlab="Hour"):
+def plot_agents(rewards, ylab, agents=[0,1,2,3], xlab="Hour"):
     maxSteps = 24
-    nplots = 4
+    nplots = len(agents)
     fmt = ["w^", "wo", "ks", "kv"]
 
-    for i in range(nplots):
+    for i, ai in enumerate(agents):
         ax = subplot(nplots, 1, i + 1)
 #        title("Agent %d" % (i + 1))
         ylabel(ylab)
@@ -279,7 +279,7 @@ def plot_agents(rewards, ylab, xlab="Hour"):
                  markersize=5,
 #                 color=clr[ai % nc],
 #                 linestyle=ls[ai % ns],
-                 label="A%s (%s)" % (i + 1, lab))
+                 label="A%s (%s)" % (ai + 1, lab))
 
             ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y')
 
@@ -302,8 +302,12 @@ def plot6_X(minor=1):
 
     passive_reward_mean = mmread("./out/ex6_%d_passive_reward_mean.mtx" % minor)
     passive_reward_std = mmread("./out/ex6_%d_passive_reward_std.mtx" % minor)
+
     re_reward_mean = mmread("./out/ex6_%d_rotherev_reward_mean.mtx" % minor)
     re_reward_std = mmread("./out/ex6_%d_rotherev_reward_std.mtx" % minor)
+#    re_reward_mean = mmread("./out/ex6_%d_statefulre_reward_mean.mtx" % minor)
+#    re_reward_std = mmread("./out/ex6_%d_statefulre_reward_std.mtx" % minor)
+
     q_reward_mean = mmread("./out/ex6_%d_q_reward_mean.mtx" % minor)
     q_reward_std = mmread("./out/ex6_%d_q_reward_std.mtx" % minor)
     reinforce_reward_mean = \
@@ -367,8 +371,28 @@ def plot6_X(minor=1):
 #        show()
 
 
-def plot6_1():
+def plot6_0():
     plot6_X(1)
+
+
+def plot6_1():
+    fig_width = 6.15 # width in inches
+    fig_height = 5.0 # height in inches
+    params = {'figure.figsize': [fig_width, fig_height]}
+    rcParams.update(params)
+
+    re_mean = mmread("./out/ex6_1/ex6_1_rotherev_reward_mean.mtx")
+    sre_mean = mmread("./out/ex6_1/ex6_1_statefulre_reward_mean.mtx")
+    q_mean = mmread("./out/ex6_1/ex6_1_q_reward_mean.mtx")
+
+    rewards = [
+        (re_mean, None, None, None, "Roth-Erev"),
+        (q_mean, None, None, None, "Q-Learning"),
+        (sre_mean, None, None, None, "Stateful RE")
+    ]
+    figure()
+    plot_agents(rewards, r"Reward (\verb+$+)", agents=[1, 3])
+    savefig('./out/ex6_1/fig6_1.png')
 
 
 def plot6_2():
@@ -488,6 +512,6 @@ def plot_profiles():
 if __name__ == "__main__":
 #    plot5_1()
 #    plot5_2()
-#    plot6_1()
-    plot6_2()
+    plot6_1()
+#    plot6_2()
 #    plot_profiles()
