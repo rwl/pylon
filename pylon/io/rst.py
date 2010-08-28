@@ -283,7 +283,12 @@ class ReSTWriter(_CaseWriter):
             file.write("%8.2f" % each.p_max + " ")
             file.write("%8.2f" % each.p_min + " ")
             if each.pcost_model == POLYNOMIAL:
-                file.write("%4.2f %4.1f %4.0f" % each.p_cost)
+                if len(each.p_cost) == 3:
+                    file.write("%4.2f %4.1f %4.0f" % each.p_cost)
+                elif len(each.p_cost) == 2:
+                    file.write("0.0 %4.1f %4.0f" % each.p_cost)
+                elif len(each.p_cost) == 1:
+                    file.write("0.0  0.0 %4.0f" % each.p_cost)
             file.write("\n")
 
         # Totals.

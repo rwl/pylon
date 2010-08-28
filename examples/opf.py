@@ -13,10 +13,13 @@ from pylon import Case, OPF
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 # Define a path to the data file.
-CASE_FILE = join(dirname(pylon.case.__file__), "test", "data", "case30pwl.pkl")
+CASE_FILE = join(dirname(pylon.case.__file__), "test", "data", "case30pwl",
+                 "case30pwl.pkl")
 
 # Load the data file.
 case = Case.load(CASE_FILE)
+
+case.generators[2].pwl_to_poly()
 
 # Use DC formulation?
 dc = False

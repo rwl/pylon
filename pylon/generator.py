@@ -197,6 +197,7 @@ class Generator(_Named):
                     result = m*p + c
                     break
             else:
+#                print "TOTC:", self.name, p, self.p_max, p_cost
                 raise ValueError, "Value [%f] outwith pwl cost curve." % p
                 # Use the last segment for values outwith the cost curve.
 #                result = m*p + c
@@ -269,7 +270,7 @@ class Generator(_Named):
             return
 
 
-    def poly_to_pwl(self, n_points=10):
+    def poly_to_pwl(self, n_points=4):
         """ Sets the piece-wise linear cost attribute, converting the
         polynomial cost variable by evaluating at zero and then at n_points
         evenly spaced points between p_min and p_max.

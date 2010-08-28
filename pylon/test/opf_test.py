@@ -49,7 +49,7 @@ class DCOPFTest(unittest.TestCase):
         super(DCOPFTest, self).__init__(methodName)
 
         #: Name of the folder in which the MatrixMarket data exists.
-        self.case_name = "case30pwl"
+        self.case_name = "case6ww"
 
         self.case = None
         self.opf = None
@@ -249,6 +249,17 @@ class DCOPFCaseIEEE30Test(DCOPFTest):
         self.case_name = "case_ieee30"
 
 #------------------------------------------------------------------------------
+#  "DCOPFCase30PWLTest" class:
+#------------------------------------------------------------------------------
+
+class DCOPFCase30PWLTest(DCOPFTest):
+
+    def __init__(self, methodName='runTest'):
+        super(DCOPFCase30PWLTest, self).__init__(methodName)
+
+        self.case_name = "case30pwl"
+
+#------------------------------------------------------------------------------
 #  "DCOPFSolverTest" class:
 #------------------------------------------------------------------------------
 
@@ -271,6 +282,7 @@ class DCOPFSolverTest(unittest.TestCase):
         """
         self.case = Case.load(join(DATA_DIR, self.case_name,
                                    self.case_name + ".pkl"))
+        self.case.sort_generators() # ext2int
         self.opf = OPF(self.case, dc=True)
         self.om = self.opf._construct_opf_model(self.case)
         self.solver = DCOPFSolver(self.om)
@@ -314,7 +326,7 @@ class DCOPFSolverTest(unittest.TestCase):
 
         mpx0 = mmread(join(DATA_DIR, self.case_name, "opf", "x0_DC.mtx"))
 
-        self.assertTrue(mfeq1(x0, mpx0.flatten()), self.case_name)
+        self.assertTrue(mfeq1(x0, mpx0.flatten(), 1e-9), self.case_name)
 
 
     def test_pwl_costs(self):
@@ -332,10 +344,10 @@ class DCOPFSolverTest(unittest.TestCase):
             mpCpwl = mmread(join(DATA_DIR, self.case_name, "opf", "Cpwl.mtx"))
             mpfparm = mmread(join(DATA_DIR, self.case_name, "opf","fparm_pwl.mtx"))
 
-            self.assertTrue(mfeq2(Npwl, mpNpwl.flatten()), msg)
-            self.assertTrue(mfeq2(Hpwl, mpHpwl.flatten()), msg)
+            self.assertTrue(mfeq2(Npwl, mpNpwl.tocsr()), msg)
+            self.assertTrue(mfeq2(Hpwl.todense(), mpHpwl), msg)
             self.assertTrue(mfeq1(Cpwl, mpCpwl.flatten()), msg)
-            self.assertTrue(mfeq1(fparm_pwl, mpfparm.flatten()), msg)
+            self.assertTrue(mfeq1(fparm_pwl.flatten(), mpfparm.flatten()), msg)
 
 
     def test_poly_costs(self):
@@ -348,15 +360,16 @@ class DCOPFSolverTest(unittest.TestCase):
         Npol, Hpol, Cpol, fparm_pol, _, _ = \
             self.solver._quadratic_costs(g, ipol, nxyz, base_mva)
 
-        mpNpol = mmread(join(DATA_DIR, self.case_name, "opf", "Npol.mtx"))
-        mpHpol = mmread(join(DATA_DIR, self.case_name, "opf", "Hpol.mtx"))
-        mpCpol = mmread(join(DATA_DIR, self.case_name, "opf", "Cpol.mtx"))
-        mpfparm = mmread(join(DATA_DIR, self.case_name, "opf","fparm_pol.mtx"))
+        if Npol is not None:
+            mpNpol = mmread(join(DATA_DIR, self.case_name, "opf", "Npol.mtx"))
+            mpHpol = mmread(join(DATA_DIR, self.case_name, "opf", "Hpol.mtx"))
+            mpCpol = mmread(join(DATA_DIR, self.case_name, "opf", "Cpol.mtx"))
+            mpfparm = mmread(join(DATA_DIR, self.case_name, "opf","fparm_pol.mtx"))
 
-        self.assertTrue(mfeq2(Npol, mpNpol.tocsr()), msg)
-        self.assertTrue(mfeq2(Hpol, mpHpol.tocsr()), msg)
-        self.assertTrue(mfeq1(Cpol, mpCpol.flatten()), msg)
-        self.assertTrue(mfeq2(fparm_pol, mpfparm), msg)
+            self.assertTrue(mfeq2(Npol, mpNpol.tocsr()), msg)
+            self.assertTrue(mfeq2(Hpol, mpHpol.tocsr()), msg)
+            self.assertTrue(mfeq1(Cpol, mpCpol.flatten()), msg)
+            self.assertTrue(mfeq2(fparm_pol, mpfparm), msg)
 
 
     def test_combine_costs(self):
@@ -425,12 +438,14 @@ class DCOPFSolverTest(unittest.TestCase):
         mpmuLB = mmread(join(DATA_DIR, self.case_name, "opf", "muLB_DC.mtx"))
         mpmuUB = mmread(join(DATA_DIR, self.case_name, "opf", "muUB_DC.mtx"))
 
+        diff = 1e-09
+
         self.assertAlmostEqual(solution["f"], mpf[0], places=6)
-        self.assertTrue(mfeq1(solution["x"], mpx.flatten()), msg)
-        self.assertTrue(mfeq1(lmbda["mu_l"], mpmu_l.flatten(), 1e-9), msg)
-        self.assertTrue(mfeq1(lmbda["mu_u"], mpmu_u.flatten(), 1e-9), msg)
-        self.assertTrue(mfeq1(lmbda["lower"], mpmuLB.flatten(), 1e-9), msg)
-        self.assertTrue(mfeq1(lmbda["upper"], mpmuUB.flatten(), 1e-9), msg)
+        self.assertTrue(mfeq1(solution["x"], mpx.flatten(), diff), msg)
+        self.assertTrue(mfeq1(lmbda["mu_l"], mpmu_l.flatten(), diff), msg)
+        self.assertTrue(mfeq1(lmbda["mu_u"], mpmu_u.flatten(), diff), msg)
+        self.assertTrue(mfeq1(lmbda["lower"], mpmuLB.flatten(), diff), msg)
+        self.assertTrue(mfeq1(lmbda["upper"], mpmuUB.flatten(), diff), msg)
 
 
     def test_integrate_solution(self):
@@ -442,7 +457,7 @@ class DCOPFSolverTest(unittest.TestCase):
         gen = mmread(join(DATA_DIR, self.case_name, "opf", "Gen_DC.mtx"))
         branch = mmread(join(DATA_DIR, self.case_name, "opf", "Branch_DC.mtx"))
 
-        pl = 12
+        pl = 2
 
         # bus_i type Pd Qd Gs Bs area Vm Va baseKV zone Vmax Vmin lam_P lam_Q mu_Vmax mu_Vmin
         for i, bs in enumerate(self.case.buses):
@@ -468,9 +483,9 @@ class DCOPFSolverTest(unittest.TestCase):
         # fbus tbus r x b rateA rateB rateC ratio angle status angmin angmax
         # Pf Qf Pt Qt mu_Sf mu_St mu_angmin mu_angmax
         for i, ln in enumerate(self.case.branches):
-            self.assertAlmostEqual(ln.p_from, branch[i, 13], 6) # Pf
+            self.assertAlmostEqual(ln.p_from, branch[i, 13], pl) # Pf
             self.assertAlmostEqual(ln.q_from, branch[i, 14], pl) # Qf
-            self.assertAlmostEqual(ln.p_to, branch[i, 15], 6) # Pt
+            self.assertAlmostEqual(ln.p_to, branch[i, 15], pl) # Pt
             self.assertAlmostEqual(ln.q_to, branch[i, 16], pl) # Qt
             self.assertAlmostEqual(ln.mu_s_from, branch[i, 17], pl) # mu_Sf
             self.assertAlmostEqual(ln.mu_s_to, branch[i, 18], pl) # mu_St
@@ -500,6 +515,17 @@ class DCOPFSolverCaseIEEE30Test(DCOPFSolverTest):
         self.case_name = "case_ieee30"
 
 #------------------------------------------------------------------------------
+#  "DCOPFSolverCase30PWLTest" class:
+#------------------------------------------------------------------------------
+
+class DCOPFSolverCase30PWLTest(DCOPFSolverTest):
+
+    def __init__(self, methodName='runTest'):
+        super(DCOPFSolverCase30PWLTest, self).__init__(methodName)
+
+        self.case_name = "case30pwl"
+
+#------------------------------------------------------------------------------
 #  "PIPSSolverTest" class:
 #------------------------------------------------------------------------------
 
@@ -522,6 +548,7 @@ class PIPSSolverTest(unittest.TestCase):
         """
         self.case = Case.load(join(DATA_DIR, self.case_name,
                                    self.case_name + ".pkl"))
+        self.case.sort_generators() # ext2int
         self.opf = OPF(self.case, dc=False)
         self.om = self.opf._construct_opf_model(self.case)
         self.solver = PIPSSolver(self.om)
@@ -579,27 +606,29 @@ class PIPSSolverTest(unittest.TestCase):
         f = mmread(join(DATA_DIR, self.case_name, "opf", "f_AC.mtx"))
         x = mmread(join(DATA_DIR, self.case_name, "opf", "x_AC.mtx"))
 
+        diff = 1e-4
+
         # FIXME: Improve accuracy.
         self.assertAlmostEqual(solution["f"], f[0], places=3)
-        self.assertTrue(abs(max(solution["x"] - x.flatten())) < 1e-6)
+        self.assertTrue(mfeq1(solution["x"], x.flatten(), diff))
 
         if len(lmbda["mu_l"]) > 0:
             mu_l = mmread(join(DATA_DIR, self.case_name, "opf", "mu_l_AC.mtx"))
-            self.assertTrue(mfeq1(lmbda["mu_l"], mu_l.flatten()), msg)
+            self.assertTrue(mfeq1(lmbda["mu_l"], mu_l.flatten(), diff), msg)
 
         if len(lmbda["mu_u"]) > 0:
             mu_u = mmread(join(DATA_DIR, self.case_name, "opf", "mu_u_AC.mtx"))
-            self.assertTrue(mfeq1(lmbda["mu_u"], mu_u.flatten()), msg)
+            self.assertTrue(mfeq1(lmbda["mu_u"], mu_u.flatten(), diff), msg)
 
         if len(lmbda["lower"]) > 0:
             muLB = mmread(join(DATA_DIR, self.case_name, "opf", "muLB_AC.mtx"))
             # FIXME: Improve accuracy.
-            self.assertTrue(mfeq1(lmbda["lower"], muLB.flatten(), 1e-4), msg)
+            self.assertTrue(mfeq1(lmbda["lower"], muLB.flatten(), diff), msg)
 
         if len(lmbda["upper"]) > 0:
             muUB = mmread(join(DATA_DIR, self.case_name, "opf", "muUB_AC.mtx"))
             # FIXME: Improve accuracy.
-            self.assertTrue(mfeq1(lmbda["upper"], muUB.flatten(), 1e-4), msg)
+            self.assertTrue(mfeq1(lmbda["upper"], muUB.flatten(), diff), msg)
 
 #        if len(lmbda["nl_mu_l"]) > 0:
 #            nl_mu_l = mmread(
@@ -664,7 +693,6 @@ class PIPSSolverTest(unittest.TestCase):
 #------------------------------------------------------------------------------
 #  "PIPSSolverCase24RTSTest" class:
 #------------------------------------------------------------------------------
-
 class PIPSSolverCase24RTSTest(PIPSSolverTest):
 
     def __init__(self, methodName='runTest'):
@@ -682,6 +710,17 @@ class PIPSSolvercaseIEEE30Test(PIPSSolverTest):
         super(PIPSSolvercaseIEEE30Test, self).__init__(methodName)
 
         self.case_name = "case_ieee30"
+
+#------------------------------------------------------------------------------
+#  "PIPSSolvercase30PWLTest" class:
+#------------------------------------------------------------------------------
+
+class PIPSSolvercase30PWLTest(PIPSSolverTest):
+
+    def __init__(self, methodName='runTest'):
+        super(PIPSSolvercase30PWLTest, self).__init__(methodName)
+
+        self.case_name = "case30pwl"
 
 
 if __name__ == "__main__":
