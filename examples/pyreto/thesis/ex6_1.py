@@ -7,6 +7,8 @@ from time import time
 
 from numpy import zeros, mean, std
 
+from pylon import PQ
+
 import pyreto.continuous
 from pyreto import DISCRIMINATIVE, FIRST_PRICE #@UnusedImport
 
@@ -32,11 +34,11 @@ decommit = False
 auctionType = FIRST_PRICE#DISCRIMINATIVE
 profile = get_full_year() / 100.0
 cap = 9999.0
-nOffer = 1
-markups = (0, 15, 30)
-withholds = (0, 25, 50)
+nOffer = 2
+markups = (0, 30)
+withholds = (0, 20)
 markupMax = 30.0
-withholdMax = 50.0
+withholdMax = 20.0
 maxSteps = 24 # hours
 
 
@@ -136,6 +138,8 @@ def get_passive_experiment(case, minor=1):
         experiment.tasks.append(task)
         experiment.agents.append(agent)
 
+#    del case.generators[4]
+#    case.buses[13].type = PQ
     passive = [case.generators[i] for i in sync_cond]
     passive[0].p_min = 0.001 # Avoid invalid offer withholding.
     passive[0].p_max = 0.002
@@ -176,7 +180,7 @@ def get_re_experiment(case, minor=1):
         task, agent = get_discrete_task_agent(g, market, nStates, nOffer,
             markups, withholds, maxSteps, learner, Pd0, Pd_min)
 
-        print "ALL ACTIONS:", len(task.env._allActions)
+        print "ALL ACTIONS:", len(task.env._allActions) * nStates
 
         experiment.tasks.append(task)
         experiment.agents.append(agent)
@@ -374,10 +378,10 @@ def ex6_1():
 #    save_rewards(rewards, "passive", version)
     t_passive = time()
 
-    rewards, results = run_years(get_re_experiment, case, roleouts,
-                                 episodes, in_cloud)
-    save_results(results, "StatefulRE", version)
-    save_rewards(rewards, "StatefulRE", version)
+#    rewards, results = run_years(get_re_experiment, case, roleouts,
+#                                 episodes, in_cloud)
+#    save_results(results, "StatefulRE", version)
+#    save_rewards(rewards, "StatefulRE", version)
     t_re = time()
 
 #    rewards, results = run_years(get_q_experiment, case, roleouts,

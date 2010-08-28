@@ -150,6 +150,8 @@ def get_case24_ieee_rts3():
     for g in case.generators:
         g.name
 
+        g.p = 0.0
+
     return case
 
 
@@ -261,7 +263,7 @@ def run_experiment(experiment, roleouts, episodes, in_cloud=False,
                 i = roleout * episodes # index of first profile value
                 experiment.profile = dynProfile[i:i + episodes, :]
 
-            print "PROFILE:", experiment.profile, episodes
+#            print "PROFILE:", experiment.profile, episodes
 
             experiment.doEpisodes(episodes) # number of samples per learning step
 

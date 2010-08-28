@@ -69,7 +69,7 @@ class MarketEnvironment(DiscreteMarketEnvironment):
 #        sensors = r_[sensors, self._getDemandSensor()]
 #        sensors = r_[sensors, self._getPriceSensor()]
 
-#        sensors = r_[sensors, self._getBusVoltageSensor()]
+        sensors = r_[sensors, self._getBusVoltageSensor()]
 
 #        sensors = r_[sensors, self._getBusVoltageMagnitudeSensor()]
 #        sensors = r_[sensors, self._getBusVoltageLambdaSensor()]
@@ -86,8 +86,6 @@ class MarketEnvironment(DiscreteMarketEnvironment):
             @type action: array: [ g1_prc, g2_prc, g1_qty, g2_qty, ... ]
         """
         self._lastAction = []
-
-#        print "ACT:", action
 
         n = self.numOffbids * len(self.generators)
 

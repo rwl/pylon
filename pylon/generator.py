@@ -191,16 +191,20 @@ class Generator(_Named):
             for i in range(n_segments):
                 x1, y1 = p_cost[i]
                 x2, y2 = p_cost[i + 1]
+                m = (y2 - y1) / (x2 - x1)
+                c = y1 - m * x1
                 if x1 <= p <= x2:
-                    m = (y2 - y1) / (x2 - x1)
-                    c = y1 - m * x1
                     result = m*p + c
                     break
             else:
 #                print "TOTC:", self.name, p, self.p_max, p_cost
-                raise ValueError, "Value [%f] outwith pwl cost curve." % p
+
+#                raise ValueError, "Value [%f] outwith pwl cost curve." % p
+
                 # Use the last segment for values outwith the cost curve.
-#                result = m*p + c
+                logger.error("Value [%f] outside pwl cost curve [%s]." %
+                             (p, p_cost[-1][0]))
+                result = m*p + c
         elif pcost_model == POLYNOMIAL:
 #            result = p_cost[-1]
 #            for i in range(1, len(p_cost)):
