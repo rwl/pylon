@@ -303,10 +303,10 @@ def plot6_X(minor=1):
     passive_reward_mean = mmread("./out/ex6_%d_passive_reward_mean.mtx" % minor)
     passive_reward_std = mmread("./out/ex6_%d_passive_reward_std.mtx" % minor)
 
-    re_reward_mean = mmread("./out/ex6_%d_rotherev_reward_mean.mtx" % minor)
-    re_reward_std = mmread("./out/ex6_%d_rotherev_reward_std.mtx" % minor)
-#    re_reward_mean = mmread("./out/ex6_%d_statefulre_reward_mean.mtx" % minor)
-#    re_reward_std = mmread("./out/ex6_%d_statefulre_reward_std.mtx" % minor)
+#    re_reward_mean = mmread("./out/ex6_%d_rotherev_reward_mean.mtx" % minor)
+#    re_reward_std = mmread("./out/ex6_%d_rotherev_reward_std.mtx" % minor)
+    re_reward_mean = mmread("./out/ex6_%d_statefulre_reward_mean.mtx" % minor)
+    re_reward_std = mmread("./out/ex6_%d_statefulre_reward_std.mtx" % minor)
 
     q_reward_mean = mmread("./out/ex6_%d_q_reward_mean.mtx" % minor)
     q_reward_std = mmread("./out/ex6_%d_q_reward_std.mtx" % minor)
@@ -512,6 +512,7 @@ def plot_profiles():
 if __name__ == "__main__":
 #    plot5_1()
 #    plot5_2()
-    plot6_1()
+    plot6_0()
+#    plot6_1()
 #    plot6_2()
 #    plot_profiles()

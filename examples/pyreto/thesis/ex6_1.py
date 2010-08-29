@@ -35,7 +35,7 @@ auctionType = FIRST_PRICE#DISCRIMINATIVE
 profile = get_full_year() / 100.0
 cap = 9999.0
 nOffer = 2
-markups = (0, 30)
+markups = (0, 15, 30)
 withholds = (0, 20)
 markupMax = 30.0
 withholdMax = 20.0
@@ -248,7 +248,7 @@ def get_reinforce_experiment(case):
     initalSigma = 0.0
     sigmaOffset = -5.0
     decay = 0.995
-    learningRate = 0.01
+    learningRate = 0.005
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=auctionType,
@@ -378,10 +378,10 @@ def ex6_1():
 #    save_rewards(rewards, "passive", version)
     t_passive = time()
 
-#    rewards, results = run_years(get_re_experiment, case, roleouts,
-#                                 episodes, in_cloud)
-#    save_results(results, "StatefulRE", version)
-#    save_rewards(rewards, "StatefulRE", version)
+    rewards, results = run_years(get_re_experiment, case, roleouts,
+                                 episodes, in_cloud)
+    save_results(results, "StatefulRE", version)
+    save_rewards(rewards, "StatefulRE", version)
     t_re = time()
 
 #    rewards, results = run_years(get_q_experiment, case, roleouts,
