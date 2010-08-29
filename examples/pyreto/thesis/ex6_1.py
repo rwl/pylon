@@ -416,7 +416,7 @@ def ex6_1():
 def main():
 #    pickle_cases()
     ex6_1()
-    plot6_1()
+#    plot6_1()
 
 
 if __name__ == "__main__":
