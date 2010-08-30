@@ -26,15 +26,20 @@ linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
 ET.SubElement(linestyle275, "{%s}color" % ns).text = "7f3030ff" # aabbggrr FF3030
 ET.SubElement(linestyle275, "{%s}width" % ns).text = "4"
 
-style275 = ET.SubElement(doc, "{%s}Style" % ns, id="line220")
-linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
-ET.SubElement(linestyle275, "{%s}color" % ns).text = "7f0030ff" # aabbggrr FF3030
-ET.SubElement(linestyle275, "{%s}width" % ns).text = "4"
+style220 = ET.SubElement(doc, "{%s}Style" % ns, id="line220")
+linestyle220 = ET.SubElement(style220, "{%s}LineStyle" % ns)
+ET.SubElement(linestyle220, "{%s}color" % ns).text = "7f0030ff" # aabbggrr FF3030
+ET.SubElement(linestyle220, "{%s}width" % ns).text = "4"
 
-style275 = ET.SubElement(doc, "{%s}Style" % ns, id="line132")
-linestyle275 = ET.SubElement(style275, "{%s}LineStyle" % ns)
-ET.SubElement(linestyle275, "{%s}color" % ns).text = "7fffbf00" # aabbggrr 00BFFF
-ET.SubElement(linestyle275, "{%s}width" % ns).text = "3"
+style132 = ET.SubElement(doc, "{%s}Style" % ns, id="line132")
+linestyle132 = ET.SubElement(style132, "{%s}LineStyle" % ns)
+ET.SubElement(linestyle132, "{%s}color" % ns).text = "7fffbf00" # aabbggrr 00BFFF
+ET.SubElement(linestyle132, "{%s}width" % ns).text = "3"
+
+style110 = ET.SubElement(doc, "{%s}Style" % ns, id="line110")
+linestyle110 = ET.SubElement(style110, "{%s}LineStyle" % ns)
+ET.SubElement(linestyle110, "{%s}color" % ns).text = "7fbbbf00" # aabbggrr 00BFFF
+ET.SubElement(linestyle110, "{%s}width" % ns).text = "2"
 
 DATA_DIR = "./data/"
 
@@ -46,7 +51,8 @@ BRANCH_DATA = [
     (os.path.join(DATA_DIR, "ireland", "275kV_lines-xborder.csv"), 3, "line275"),
     (os.path.join(DATA_DIR, "ireland", "220kV_branch_data.csv"), 3, "line220"),
 #    (os.path.join(DATA_DIR, "ireland", "110kV_branch_data.csv"), 3, "line110"),
-    (os.path.join(DATA_DIR, "nie", "275kV_lines.csv"), 2, "line275")
+    (os.path.join(DATA_DIR, "nie", "275kV_lines.csv"), 2, "line275"),
+    (os.path.join(DATA_DIR, "nie", "110kV_lines.csv"), 2, "line110")
 ]
 
 for path, headers, style in BRANCH_DATA:
