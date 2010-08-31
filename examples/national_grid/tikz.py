@@ -11,7 +11,8 @@ MERC_SCALE = 1e5
 
 NGT_PATH = "national_grid.kmz"
 NGT_PATH_PATH = "ngt_path.kml"
-OUT_PATH = "/home/rwl/latex/workspace/tikz/tikz/"
+CITIES_PATH = "uk_cities.kmz"
+OUT_PATH = "/home/rwl/latex/tikz/tikz/"
 
 # Mercator projection algorithms by Paulo Silva
 def deg_rad(ang):
@@ -137,10 +138,35 @@ def write_generator_tex():
     write_generators(NGT_PATH, generators_fd)
     generators_fd.close()
 
+def write_city_tex():
+    cities_path = os.path.join(OUT_PATH, "cities.tex")
+
+    file = zipfile.ZipFile(CITIES_PATH, "r")
+    tree = ET.parse(file.open("doc.kml")) # Python 2.6
+    root = tree.getroot()
+
+    cities_fd = open(cities_path, "w+b")
+    cities_fd.write("% Cities\n")
+
+    for placemark in root.findall(".//{%s}Placemark" % NS_KML):
+        name = placemark.findtext("./{%s}name" % NS_KML)
+
+        point = placemark.find("./{%s}Point" % NS_KML)
+        coords = point.findtext("./{%s}coordinates" % NS_KML)
+        x, y, _ = [float(a) for a in coords.split(",")]
+        mx, my = merc_x(x) / MERC_SCALE, merc_y(y) / MERC_SCALE
+
+        cities_fd.write('\\node [city] at (%.16f, %.16f) {%s};\n' %
+                        (mx, my, name))
+
+    cities_fd.close()
+
+
 def main():
 #    write_boundary_tex()
     write_branch_tex()
 #    write_generator_tex()
+#    write_city_tex()
 
 if __name__ == "__main__":
     main()

@@ -26,8 +26,8 @@ from common import \
     get_winter_hourly, get_summer_hourly, get_spring_autumn_hourly, \
     get_weekly, get_daily
 
-tex = False
-paper = False
+tex = True
+paper = True
 
 if not paper:
     matplotlib.rcParams['lines.linewidth'] = 0.5
@@ -258,14 +258,14 @@ def plot_episodes(results, ai, ylab, xlab="Hour"):
     xlabel(xlab)
 
 
-def plot_agents(rewards, ylab, agents=[0,1,2,3], xlab="Hour"):
+def plot_agents(rewards, ylab, agents=[0,1,2,3], xlab="Hour",
+                fmt=["w^", "wo", "ks", "kv"]):
     maxSteps = 24
     nplots = len(agents)
-    fmt = ["w^", "wo", "ks", "kv"]
 
     for i, ai in enumerate(agents):
         ax = subplot(nplots, 1, i + 1)
-#        title("Agent %d" % (i + 1))
+        title("Agent %d" % (ai + 1))
         ylabel(ylab)
 
         x = arange(0.0, maxSteps, 1.0)
@@ -274,18 +274,27 @@ def plot_agents(rewards, ylab, agents=[0,1,2,3], xlab="Hour"):
 
             y = result_mean[i, :]
 
+            if paper:
+                msize = 3
+            else:
+                msize = 5
             plot(x, y, fmt[j], linestyle="None",
 #                 markerfacecolor='white',
-                 markersize=5,
+                 markersize=msize,
 #                 color=clr[ai % nc],
 #                 linestyle=ls[ai % ns],
-                 label="A%s (%s)" % (ai + 1, lab))
+                 label="%s" % (lab)
+#                 label="A%s (%s)" % (ai + 1, lab)
+            )
 
             ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y')
 
             xlim((0, 23))
 #            ax.yaxis.grid(True)
-            locator = FixedLocator(range(0, 24))
+            if paper:
+                locator = FixedLocator(range(0, 24, 2))
+            else:
+                locator = FixedLocator(range(0, 24))
             ax.xaxis.set_major_locator(locator)      #minor x-axis ticks
 
             l = legend(loc="upper left")
@@ -376,10 +385,22 @@ def plot6_0():
 
 
 def plot6_1():
-    fig_width = 6.15 # width in inches
-    fig_height = 5.0 # height in inches
-    params = {'figure.figsize': [fig_width, fig_height]}
-    rcParams.update(params)
+    if paper:
+        fig_width = 3.0 # width in inches
+        fig_height = 4.0 # height in inches
+        params = {'axes.titlesize': 8,
+                  'axes.labelsize': 6,
+                  'text.fontsize': 6,
+                  'legend.fontsize': 5,
+                  'xtick.labelsize': 6,
+                  'ytick.labelsize': 6,
+                  'figure.figsize': [fig_width, fig_height]}
+        rcParams.update(params)
+    else:
+        fig_width = 6.15 # width in inches
+        fig_height = 5.0 # height in inches
+        params = {'figure.figsize': [fig_width, fig_height]}
+        rcParams.update(params)
 
     re_mean = mmread("./out/ex6_1/ex6_1_rotherev_reward_mean.mtx")
     sre_mean = mmread("./out/ex6_1/ex6_1_statefulre_reward_mean.mtx")
@@ -391,11 +412,32 @@ def plot6_1():
         (sre_mean, None, None, None, "Stateful RE")
     ]
     figure()
-    plot_agents(rewards, r"Reward (\verb+$+)", agents=[1, 3])
-    savefig('./out/ex6_1/fig6_1.png')
+    plot_agents(rewards, r"Reward (\verb+$+)", agents=[0, 3],
+                fmt=["w^", "wo", "kp"])
+
+    if tex:
+        if paper:
+            subplots_adjust(bottom=0.07, top=0.94, hspace=0.25)
+        else:
+            subplots_adjust(hspace=0.3)
+        savefig('./out/ex6_1/fig6_1.pdf')
+    else:
+        savefig('./out/ex6_1/fig6_1.png')
 
 
 def plot6_2():
+    if paper:
+        fig_width = 3.0 # width in inches
+        fig_height = 5.5 # height in inches
+        params = {'axes.titlesize': 6,
+                  'axes.labelsize': 6,
+                  'text.fontsize': 6,
+                  'legend.fontsize': 5,
+                  'xtick.labelsize': 6,
+                  'ytick.labelsize': 6,
+                  'figure.figsize': [fig_width, fig_height]}
+        rcParams.update(params)
+
     q1 = mmread("./out/ex6_2/ex6_2-1_q_reward_mean.mtx")
     reinforce1 = mmread("./out/ex6_2/ex6_2-1_reinforce_reward_mean.mtx")
     enac1 = mmread("./out/ex6_2/ex6_2-1_enac_reward_mean.mtx")
@@ -412,14 +454,22 @@ def plot6_2():
 
     def plot62(results, i, n):
         ax = subplot(nplots, 1, n)
+        if paper:
+            msize = 3
+        else:
+            msize = 5
 
         for k, (r, lab) in enumerate(results):
-            plot(x, r[i, :], fmt[k], linestyle="None", markersize=5, label=lab)
+            plot(x, r[i, :], fmt[k], linestyle="None", markersize=msize,
+                 label=lab)
 
         ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y')
 
         xlim((0, 23))
-        locator = FixedLocator(range(0, 24))
+        if paper:
+            locator = FixedLocator(range(0, 24, 2))
+        else:
+            locator = FixedLocator(range(0, 24))
         ax.xaxis.set_major_locator(locator)      #minor x-axis ticks
 
         ylabel(r"Reward (\verb+$+)")
@@ -427,25 +477,75 @@ def plot6_2():
         l = legend(loc="upper left")
         l.get_frame().set_linewidth(0.5)
 
-    results1 = [(q1, "Q"), (reinforce1, "REINFORCE"), (enac1, "ENAC")]
-    results2 = [(q1, "Q"), (reinforce2, "REINFORCE"), (enac2, "ENAC")]
+    results1 = [(q1, "Q-learning"), (reinforce1, "REINFORCE"), (enac1, "ENAC")]
+    results2 = [(q1, "Q-learning"), (reinforce2, "REINFORCE"), (enac2, "ENAC")]
 
     figure()
     plot62(results1, i=1, n=1)
-    title("Agent 2 with demand only state")
+    title("Agent 1 (demand forecast only)")
     plot62(results2, i=1, n=2)
-    title("Agent 2 with demand and bus voltage state")
+    title("Agent 1 (demand and bus voltage)")
 #    xlabel("Hour")
-#    savefig('./out/ex6_2/fig6_2_agent2.png')
+#    if tex:
+#        savefig('./out/ex6_2/fig6_2_agent1.pdf')
 
 #    figure()
     plot62(results1, i=3, n=3)
-    title("Agent 4 with demand only state")
+    title("Agent 4 (demand forecast only)")
     plot62(results2, i=3, n=4)
-    title("Agent 4 with demand and bus voltage state")
+    title("Agent 4 (demand and bus voltage)")
     xlabel("Hour")
-#    savefig('./out/ex6_2/fig6_2_agent4.png')
-    savefig('./out/ex6_2/fig6_2.png')
+#    if tex:
+#        savefig('./out/ex6_2/fig6_2_agent4.pdf')
+
+    subplots_adjust(hspace=0.3)
+
+    if tex:
+        if paper:
+            subplots_adjust(bottom=0.05, top=0.96)
+        savefig('./out/ex6_2/fig6_2.pdf')
+    else:
+        savefig('./out/ex6_2/fig6_2.png')
+
+
+def plot6_3():
+    if paper:
+        fig_width = 3.0 # width in inches
+        fig_height = 4.0 # height in inches
+        params = {'axes.titlesize': 8,
+                  'axes.labelsize': 6,
+                  'text.fontsize': 6,
+                  'legend.fontsize': 6,
+                  'xtick.labelsize': 6,
+                  'ytick.labelsize': 6,
+                  'figure.figsize': [fig_width, fig_height]}
+        rcParams.update(params)
+    else:
+        fig_width = 6.15 # width in inches
+        fig_height = 5.0 # height in inches
+        params = {'figure.figsize': [fig_width, fig_height]}
+        rcParams.update(params)
+
+    q_mean = mmread("./out/ex6_3/ex6_3_q_reward_mean.mtx")
+    enac_mean = mmread("./out/ex6_3/ex6_3_enac_reward_mean.mtx")
+
+    rewards = [
+        (q_mean, None, None, None, "Q-Learning"),
+        (enac_mean, None, None, None, "ENAC")
+    ]
+    figure()
+    plot_agents(rewards, r"Reward (\verb+$+)", agents=[0, 3], fmt=["wo", "kv"])
+
+    subplots_adjust(hspace=0.3)
+
+    if tex:
+        if paper:
+            subplots_adjust(bottom=0.07, top=0.94, hspace=0.25)
+        else:
+            subplots_adjust(hspace=0.3)
+        savefig('./out/ex6_3/fig6_3.pdf')
+    else:
+        savefig('./out/ex6_3/fig6_3.png')
 
 
 def plot_profiles():
@@ -512,7 +612,8 @@ def plot_profiles():
 if __name__ == "__main__":
 #    plot5_1()
 #    plot5_2()
-    plot6_0()
+#    plot6_0()
 #    plot6_1()
 #    plot6_2()
+    plot6_3()
 #    plot_profiles()
