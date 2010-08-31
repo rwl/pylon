@@ -199,7 +199,7 @@ def get_re_experiment(case, minor=1):
 def get_q_experiment(case, minor=1):
 
     locAdj = "ac"
-    nStates = 3
+    nStates = 6
     alpha = 0.2 # Learning rate.
     gamma = 0.99 # Discount factor
     # The closer epsilon gets to 0, the more greedy and less explorative.
@@ -378,16 +378,16 @@ def ex6_1():
 #    save_rewards(rewards, "passive", version)
     t_passive = time()
 
-    rewards, results = run_years(get_re_experiment, case, roleouts,
-                                 episodes, in_cloud)
-    save_results(results, "StatefulRE", version)
-    save_rewards(rewards, "StatefulRE", version)
+#    rewards, results = run_years(get_re_experiment, case, roleouts,
+#                                 episodes, in_cloud)
+#    save_results(results, "StatefulRE", version)
+#    save_rewards(rewards, "StatefulRE", version)
     t_re = time()
 
-#    rewards, results = run_years(get_q_experiment, case, roleouts,
-#                                 episodes, in_cloud)
-#    save_results(results, "Q", version)
-#    save_rewards(rewards, "Q", version)
+    rewards, results = run_years(get_q_experiment, case, roleouts,
+                                 episodes, in_cloud)
+    save_results(results, "Q", version)
+    save_rewards(rewards, "Q", version)
     t_q = time()
 
 
