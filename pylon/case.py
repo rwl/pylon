@@ -66,7 +66,7 @@ class Bus(_Named):
         #: Bus type: 'PQ', 'PV', 'ref' and 'isolated' (default: 'PQ')
         self.type = type
 
-        #: Base voltage.
+        #: Base voltage (kV).
         self.v_base = v_base
 
         #: Voltage magnitude initial guess (pu).
@@ -79,9 +79,9 @@ class Bus(_Named):
         #: Minimum voltage magnitude (pu).
         self.v_min = v_min
 
-        #: Total fixed active power load at this bus.
+        #: Total fixed active power load at this bus (MW).
         self.p_demand = p_demand
-        #: Total fixed reactive power load at this bus.
+        #: Total fixed reactive power load at this bus (MVAr).
         self.q_demand = q_demand
 
         #: Shunt conductance (MW (demanded) at V = 1.0 p.u.).
@@ -973,7 +973,7 @@ class Case(_Named, _Serializable):
     def save_csv(self, fd):
         """ Saves the case as a series of Comma-Separated Values.
         """
-        from pylon.io import CSVWriter
+        from pylon.io.excel import CSVWriter
         CSVWriter(self).write(fd)
 
 
