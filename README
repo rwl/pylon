@@ -32,9 +32,12 @@ Refer to the documentation for detailed usage information or type::
 
   $ pylon --help
 
--------
-License
--------
+---------------------
+License and Copyright
+---------------------
+
+Copyright (C) 1996-2010 Power System Engineering Research Center (PSERC)
+Copyright (C) 2010 Richard Lincoln
 
 Pylon is licensed under the `Apache License`_ version 2.0.
 

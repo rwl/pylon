@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2010 Richard Lincoln
+# Copyright (C) 2007-2010 Richard Lincoln
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ class PSSEReader(_CaseReader):
         """
         case = Case()
         file.seek(0)
-        case.base_mva = float(file.next().split(",")[1])
+        case.base_mva = float(file.next().split(",")[1].split("/")[0])
         case.name = "%s %s" % (file.next().strip(), file.next().strip())
 
         bustype_map = {1: "PQ", 2: "PV", 3: "ref", 4: "isolated"}
@@ -150,7 +150,7 @@ class PSSEReader(_CaseReader):
             l.rate_a = float(branch_data[6])
             l.rate_b = float(branch_data[7])
             l.rate_c = float(branch_data[8])
-            l.online = bool(int(branch_data[13]))
+#            l.online = bool(int(branch_data[13]))
             case.branches.append(l)
             branch_data = file.next().split(",")
 

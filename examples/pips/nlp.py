@@ -1,3 +1,6 @@
+# Copyright (C) 1996-2010 Power System Engineering Research Center (PSERC)
+# Copyright (C) 2007-2010 Richard Lincoln
+
 __author__ = 'Richard Lincoln, r.w.lincoln@gmail.com'
 
 """ This example demonstrates how to use the Python Interior Point Solver using

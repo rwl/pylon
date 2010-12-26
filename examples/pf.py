@@ -10,11 +10,13 @@ import pylon
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 # Data files format if recognised according to file extension.
-case = pylon.Case.load("data/case30pwl.m")
+case = pylon.Case.load("/tmp/temp1.raw")
 
 # Pass the case to the solver and solve.
-pylon.NewtonPF(case, iter_max=20).solve()
+#pylon.NewtonPF(case, iter_max=20).solve()
 #pylon.FastDecoupledPF(case, method="XB").solve()
 
 # Print a report to screen.
-case.save_rst(sys.stdout)
+#case.save_rst(sys.stdout)
+
+case.save_matpower("/tmp/temp1.m")

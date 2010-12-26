@@ -1,5 +1,6 @@
 #------------------------------------------------------------------------------
-# Copyright (C) 2010 Richard Lincoln
+# Copyright (C) 1996-2010 Power System Engineering Research Center (PSERC)
+# Copyright (C) 2007-2010 Richard Lincoln
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
