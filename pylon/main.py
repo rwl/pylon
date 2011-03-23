@@ -116,7 +116,7 @@ def main():
     """ Parses the command line and call Pylon with the correct data.
     """
     parser = optparse.OptionParser(usage="usage: pylon [options] input_file",
-                                   version="%prog 0.4.2")
+                                   version="%prog 0.4.4")
 
     parser.add_option("-o", "--output", dest="output", metavar="FILE",
         help="Write the solution report to FILE.")

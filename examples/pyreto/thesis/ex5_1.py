@@ -22,7 +22,7 @@ from common import \
     get_zero_task_agent, save_results, run_experiment, \
     get_continuous_task_agent, get_neg_one_task_agent
 
-from plot import plot5_1, plot5_2 #@UnusedImport
+from plot import plot5_1, plot5_2, plot5_3, plot5_4 #@UnusedImport
 
 
 setup_logging()
@@ -149,6 +149,12 @@ def get_reinforce_experiment(case, minor=1):
     elif minor == 2:
         decay = 0.999
         learningRate = 0.01
+    elif minor == 3:
+        decay = 0.998#75#95
+        learningRate = 0.05
+    elif minor == 4:
+        decay = 0.998#75#95
+        learningRate = 0.005
     else:
         raise ValueError
 
@@ -199,8 +205,14 @@ def get_enac_experiment(case, minor=1):
     elif minor == 2:
         decay = 0.997
         learningRate = 0.005
+    elif minor == 3:
+        decay = 0.999
+        learningRate = 0.05
+    elif minor == 4:
+        decay = 0.999
+        learningRate = 0.005
     else:
-        raise ValueError
+        raise ValueError, "Invalid minor version: %d" % minor
 
     market = pyreto.SmartMarket(case, priceCap=cap, decommit=decommit,
                                 auctionType=auctionType)
@@ -277,17 +289,17 @@ def ex5_1():
     expts = 8
     in_cloud = False
 
-    roleouts = 300
-    episodes = 1 # samples per learning step
-
-    results = run_experiments(expts, get_re_experiment, case, roleouts,
-                              episodes, in_cloud, minor)
-    save_results(results, "RothErev", version)
-
-
-    results = run_experiments(expts, get_q_experiment, case, roleouts,
-                              episodes, in_cloud, minor)
-    save_results(results, "Q", version)
+#    roleouts = 300
+#    episodes = 1 # samples per learning step
+#
+#    results = run_experiments(expts, get_re_experiment, case, roleouts,
+#                              episodes, in_cloud, minor)
+#    save_results(results, "RothErev", version)
+#
+#
+#    results = run_experiments(expts, get_q_experiment, case, roleouts,
+#                              episodes, in_cloud, minor)
+#    save_results(results, "Q", version)
 
 
     roleouts = 30
@@ -342,11 +354,65 @@ def ex5_2():
     save_results(results, "ENAC", version)
 
 
+def ex5_3():
+    minor = 3
+    version = "5_3"
+
+    case = get_case6ww()
+
+    expts = 10
+    in_cloud = False
+
+    roleouts = 30
+    episodes = 5 # samples per learning step
+
+    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+                              episodes, in_cloud, minor)
+    save_results(results, "REINFORCE", version)
+
+
+    roleouts = 30
+    episodes = 5 # samples per learning step
+
+    results = run_experiments(expts, get_enac_experiment, case, roleouts,
+                              episodes, in_cloud, minor)
+    save_results(results, "ENAC", version)
+
+
+def ex5_4():
+    minor = 4
+    version = "5_4"
+
+    case = get_case6ww()
+
+    expts = 10
+    in_cloud = False
+
+    roleouts = 30
+    episodes = 5 # samples per learning step
+
+    results = run_experiments(expts, get_reinforce_experiment, case, roleouts,
+                              episodes, in_cloud, minor)
+    save_results(results, "REINFORCE", version)
+
+
+    roleouts = 30
+    episodes = 5 # samples per learning step
+
+    results = run_experiments(expts, get_enac_experiment, case, roleouts,
+                              episodes, in_cloud, minor)
+    save_results(results, "ENAC", version)
+
+
 def main():
 #    ex5_1()
 #    plot5_1()
-    ex5_2()
-    plot5_2()
+#    ex5_2()
+#    plot5_2()
+    ex5_3()
+    plot5_3()
+    ex5_4()
+    plot5_4()
 
 if __name__ == "__main__":
     main()

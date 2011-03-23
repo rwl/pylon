@@ -86,7 +86,8 @@ for i, gi in enumerate(g):
     pylab.plot(x, y, linestyle=ls, color=clr,
                             label="U%s" % int(generator.p_max))
     pylab.xlabel("Generator set-point (MW)")
-    pylab.ylabel(r"Cost (\verb+$+/h)")
+#    pylab.ylabel(r"Cost (\verb+$+/h)")
+    pylab.ylabel(r"Cost (USD/h)")
 
 l = pylab.legend(loc="upper right")
 if not paper:
@@ -103,4 +104,5 @@ pylab.subplots_adjust(bottom=0.12)
 
 #pylab.show()
 
-pylab.savefig('./out/ieee_rts_gencosts.pdf')
+#pylab.savefig('./out/ieee_rts_gencosts.pdf')
+pylab.savefig('/tmp/ieee_rts_gencosts.eps')

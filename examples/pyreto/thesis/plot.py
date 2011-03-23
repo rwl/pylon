@@ -26,8 +26,8 @@ from common import \
     get_winter_hourly, get_summer_hourly, get_spring_autumn_hourly, \
     get_weekly, get_daily
 
-tex = True
-paper = True
+tex = False
+paper = False
 
 if not paper:
     matplotlib.rcParams['lines.linewidth'] = 0.5
@@ -94,6 +94,9 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
 
         subplot(nplot, 1, i + 1)
 
+        if i == nplot-1:
+            xlabel(xlab)
+
         title(lab)
 
         x = arange(0.0, result_mean.shape[1], 1.0)
@@ -107,12 +110,12 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
 #             label=lab)
 
         errorbar(x, y, yerr=e, fmt='ko', linestyle="None",
-                 label="Action/Reward",
+                 label=ylab,
                  capsize=0, markersize=3)#, linewidth=0.2)
         ylabel(ylab)
 
-#        l = legend(loc="upper right")
-#        l.get_frame().set_linewidth(0.5)
+        l = legend(loc="upper right")
+        l.get_frame().set_linewidth(0.5)
 
         # Exploration rate plot.
         twinx()
@@ -123,13 +126,12 @@ def plot_results(results, ai, ylab, xlab="Time (h)"):
         if y2min is not None:
             ylim(ymin=y2min)
 
-#        l = legend(loc="lower right")
-#        l.get_frame().set_linewidth(0.5)
+        l = legend(loc="lower right")
+        l.get_frame().set_linewidth(0.5)
 
 #        subplots_adjust(left=0.09, bottom=0.05, right=None,
 #                        wspace=None, hspace=None)
 
-    xlabel(xlab)
 
 
 def plot5_X(minor):
@@ -162,7 +164,7 @@ def plot5_X(minor):
 
     for ai in [0, 1]:
         figure(ai)
-        plot_results(actions, ai, "Action (\%)")
+        plot_results(actions, ai, "Action (\%)", "Market Period")
         if tex:
             savefig('./out/fig5_%d_action_a%d.pdf' % (minor, ai + 1))
 #            savefig('./out/fig5_%d_action_a%d.eps' % (minor, ai + 1))
@@ -194,7 +196,7 @@ def plot5_X(minor):
 
     for ai in [0, 1]:
         figure(ai + 10)
-        plot_results(rewards, ai, r"Reward (\verb+$+)")
+        plot_results(rewards, ai, r"Reward (\verb+$+)", "Market Period")
         if tex:
             savefig('./out/fig5_%d_reward_a%d.pdf' % (minor, (ai + 1)))
 #            savefig('./out/fig5_%d_reward_a%d.eps' % (minor, (ai + 1)))
@@ -211,6 +213,45 @@ def plot5_1():
 
 def plot5_2():
     plot5_X(2)
+
+
+def plot5_1X(minor):
+    params = {'figure.figsize': [6.15, 5.0]}
+    rcParams.update(params)
+
+    reinforce_epsilon = mmread("./out/ex5_%d_reinforce_epsilon.mtx" % minor)
+    enac_epsilon = mmread("./out/ex5_%d_enac_epsilon.mtx" % minor)
+
+    reinforce_action_mean = \
+        mmread("./out/ex5_%d_reinforce_action_mean.mtx" % minor)
+    reinforce_action_std = \
+        mmread("./out/ex5_%d_reinforce_action_std.mtx" % minor)
+    enac_action_mean = mmread("./out/ex5_%d_enac_action_mean.mtx" % minor)
+    enac_action_std = mmread("./out/ex5_%d_enac_action_std.mtx" % minor)
+
+    actions = [
+        (reinforce_action_mean, reinforce_action_std, reinforce_epsilon,
+         "REINFORCE", "Sigma", None, None),
+        (enac_action_mean, enac_action_std, enac_epsilon,
+         "ENAC", "Sigma", None, None)
+    ]
+
+    for ai in [0, 1]:
+        figure(ai)
+        plot_results(actions, ai, "Action (\%)", "Market Period")
+        if tex:
+            savefig('./out/fig5_%d_action_a%d.pdf' % (minor, ai + 1))
+#            savefig('./out/fig5_%d_action_a%d.eps' % (minor, ai + 1))
+        else:
+            savefig('./out/fig5_%d_action_a%d.png' % (minor, ai + 1))
+
+
+def plot5_3():
+    plot5_1X(3)
+
+
+def plot5_4():
+    plot5_1X(4)
 
 
 def plot_episodes(results, ai, ylab, xlab="Hour"):
@@ -606,14 +647,17 @@ def plot_profiles():
 
     subplots_adjust(hspace=0.35)
 
-    savefig('./out/ieee_rts_profiles.pdf')
+#    savefig('./out/ieee_rts_profiles.pdf')
+    savefig('/tmp/ieee_rts_profiles.eps')
 
 
 if __name__ == "__main__":
 #    plot5_1()
 #    plot5_2()
+#    plot5_3()
+    plot5_4()
 #    plot6_0()
 #    plot6_1()
 #    plot6_2()
-    plot6_3()
+#    plot6_3()
 #    plot_profiles()
