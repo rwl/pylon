@@ -1,5 +1,0 @@
-Licensee,"System Voltage","Capacitive Rating (MVAr)","Inductive Rating (MVAr)","Slope (p.u.)","Target Voltage Range (kV)"
-NGET,132,60,0,0.05,"0.9pu - 1.1pu"
-NGET,275,150,75,0.05,0.833333333333333
-NGET,275,150,106,0.05,0.833333333333333
-NGET,400,150,75,0.05,0.904761904761905

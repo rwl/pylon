@@ -1,9 +1,0 @@
-"Site Name",Node,"Unit Number","Mvar Generation","Mvar Absorption","Compensation Type","Connection Voltage (kV)"
-DOUNREAY,DOUN10,1,,42,"Shunt Reactor",132
-KINTORE,KINT10,1,,60,"Shunt Reactor",132
-KINTORE,KINT10,2,,60,"Shunt Reactor",132
-TEALING,TEAL10,1,,30,"Shunt Reactor",132
-TEALING,TEAL10,3,,30,"Shunt Reactor",132
-TEALING,TEAL21,1,225,75,SVC,275
-TEALING,TEAL10,1,45,,"Mechanically Switched Capacitor",132
-TEALING,TEAL10,2,45,,"Mechanically Switched Capacitor",132

@@ -2,42 +2,13 @@
 Pylon
 -----
 
-Pylon is a free software package for simulation of electric power systems and
-energy markets.  Its purpose is to provide a simple yet powerful tool for
-electric power Engineers that is not tied to proprietary software and can be
-used and extended easily.
-
-Pylon's features currently include:
-
-* DC and AC (Newton's method & Fast Decoupled) power flow,
-* DC and AC optimal power flow,
-* State estimation,
-* PSS/E, MATPOWER_ and PSAT_ data file parsers, and
-* Agent-based market simultaion using reinforcement learning methods.
-
------------
-Quick start
------------
-
-With Python_, setuptools_ and SciPy_ installed, run::
-
-  # easy_install pylon
-
-Pylon performs an AC power flow and prints a ReStructuredText_ report by
-default::
-
-  $ pylon data_file.raw
-
-Refer to the documentation for detailed usage information or type::
-
-  $ pylon --help
+Pylon is a Traits based GUI for PYPOWER.
 
 ---------------------
 License and Copyright
 ---------------------
 
-Copyright (C) 1996-2010 Power System Engineering Research Center (PSERC)
-Copyright (C) 2010 Richard Lincoln
+Copyright (C) 2011 Richard Lincoln
 
 Pylon is licensed under the `Apache License`_ version 2.0.
 
@@ -47,19 +18,15 @@ Credits
 
 Pylon is developed by Richard Lincoln (r.w.lincoln@gmail.com).
 
-Pylon is a port of MATPOWER_ to the Python programming language.
+Pylon is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published
+by the Free Software Foundation, either version 3 of the License,
+or (at your option) any later version.
 
-Pylon was originally funded by the `EPSRC
-<http://www.epsrc.ac.uk/default.htm>`_ through `Grant GR/T28836/01
-<http://gow.epsrc.ac.uk/ViewGrant.aspx?GrantRef=GR/T28836/01>`_ for the
-SUPERGEN `Highly Distributed Power Systems <http://www.supergen-hdps.org>`_
-consortium.
+Pylon is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY], without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-.. _Python: http://www.python.org
-.. _Setuptools: http://peak.telecommunity.com/DevCenter/setuptools
-.. _SciPy: http://www.scipy.org
-.. _MATPOWER: http://www.pserc.cornell.edu/matpower/
-.. _PSAT: http://www.power.uwaterloo.ca/~fmilano/psat.htm
-.. _ReStructuredText: http://docutils.sf.net/rst.html
-.. _`Apache License`: http://www.apache.org/licenses/LICENSE-2.0.html
-
+You should have received a copy of the GNU General Public License
+along with Pylon. If not, see <http://www.gnu.org/licenses/>.

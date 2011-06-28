@@ -1,7 +1,3 @@
-include examples/*.py
-include doc/pylon.pdf
 include LICENSE
-include NOTICE
 include README
 recursive-include examples/data *.m *.raw *.pkl *.mtx
-recursive-include pylon *.m *.raw *.pkl *.mtx
