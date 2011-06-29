@@ -17,8 +17,9 @@ from numpy import zeros
 
 from traits.api import HasTraits, Int, Enum, Float, Bool, List
 
-from pypower.idx_bus import BUS_I, BUS_TYPE, PD, QD, GS, BS, BUS_AREA, VM, VA, \
-    BASE_KV, ZONE, VMAX, VMIN, LAM_P, LAM_Q, MU_VMAX, MU_VMIN
+from pypower.idx_bus import \
+    BUS_I, BUS_TYPE, PD, QD, GS, BS, BUS_AREA, VM, VA, BASE_KV, \
+    ZONE, VMAX, VMIN, LAM_P, LAM_Q, MU_VMAX, MU_VMIN
 
 
 class Bus(HasTraits):
@@ -111,6 +112,8 @@ class Cost(HasTraits):
 
 
 class Case(HasTraits):
+    base_mva = Float(desc='')
+
     buses = List(Bus)
     generators = List(Generator)
     branches = List(Branch)

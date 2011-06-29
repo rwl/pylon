@@ -15,69 +15,51 @@
 
 from os.path import join, dirname, expanduser
 
-from traits.api import Instance, File, Bool
+from traits.api import Instance, File, Bool, HasTraits
 
-from traits.ui.api import \
+from traitsui.api import \
     View, Handler, UIInfo, Group, Item, TableEditor, InstanceEditor, \
     Label, Tabbed, HGroup, VGroup, ModelView, FileEditor, StatusItem, \
     spring
 
-from traits.ui.menu import NoButtons, OKCancelButtons, Separator
+from traitsui.menu import NoButtons, OKCancelButtons, Separator
 
 from pyface.image_resource import ImageResource
 
 import pylon
 from pylon.case import Case
 from pylon.menu import menubar, toolbar
+from pylon.tree import case_tree_editor
 
 ICON_LOCATION = join(dirname(pylon.__file__), "images")
 
 FRAME_ICON = ImageResource("frame.ico", search_path=[ICON_LOCATION])
 
 
-class CaseView(ModelView):
-    case = Instance(Case)
+class CaseView(HasTraits):
+    case = Instance(Case, Case())
 
     file = File(
         value=expanduser("~"),
         desc="case data location"
     )
 
-    show_tree = Bool(True)
-
     traits_view = View(
-        HGroup(
-            Item(
-                name="model",
-                editor=case_tree_editor,
-                show_label=False,
-                id=".tree_editor",
-                width=.2,
-                visible_when="show_tree==True"
-            ),
-            Item(
-                name="graph_image",
-                show_label=False,
-                width=.8,
-                visible_when="fast_draw==True"
-            ),
-            Item(
-                name="graph",
-                show_label=False,
-                width=.8,
-                visible_when="fast_draw==False"
-            ),
-            id=".split",
-#            layout="split"
+        Item(
+            name="case",
+            editor=case_tree_editor,
+            show_label=False,
+            id=".tree_editor",
+            width=.2,
         ),
         id="case_vm.view",
         title="Pylon",
-        icon=FRAME_ICON,
+#        icon=FRAME_ICON,
         resizable=True,
         style="custom",
     #    buttons=NoButtons,
-        width=.81,
-        height=.81,
+        width=.5,
+        height=.5,
         kind="live",
         buttons=NoButtons,
         menubar=menubar,
@@ -98,10 +80,19 @@ class CaseView(ModelView):
         ),
         id="case_mv.file_view",
         title="Select a file",
-        icon=FRAME_ICON,
+#        icon=FRAME_ICON,
         resizable=True,
         style="simple",
         width=.3,
         kind="livemodal",
         buttons=OKCancelButtons
     )
+
+
+def main():
+    model_view = CaseView()
+    model_view.configure_traits()
+
+
+if __name__ == '__main__':
+    main()

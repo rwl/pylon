@@ -19,9 +19,9 @@ from enthought.pyface.image_resource import ImageResource
 
 from enthought.traits.ui.menu import MenuBar, ToolBar, Menu, Action
 
-import pylon
+import pylon.case
 
-ICON_LOCATION = join(dirname(pylon.__file__), "images")
+ICON_LOCATION = join(dirname(pylon.case.__file__), "images")
 
 ## File actions
 

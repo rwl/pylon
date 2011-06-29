@@ -13,60 +13,65 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from traits.ui.api import TreeEditor, TreeNode, View, Item
+from traitsui.api import TreeEditor, TreeNode, View
 
-from pylon.case import Case, Bus, Generator, Branch, Cost
+from pylon.case import Case, Bus, Generator, Branch, Area, Cost
+
+from pylon.view import \
+    case_view, buses_view, generators_view, branches_view, areas_view, \
+    costs_view, bus_view, gen_view, branch_view, area_view, cost_view
 
 no_view = View()
 
-network_tree_editor = TreeEditor(
+case_tree_editor = TreeEditor(
     nodes=[
         TreeNode(
             node_for=[Case],
-            auto_open=True, children="", label="name",
-            view=minimal_view,
+            auto_open=True, children="", label="=Case",
+            view=case_view,
         ),
+
         TreeNode(
-            node_for=[Case], auto_open=True,
+            node_for=[Case], auto_open=False,
             children="buses", label="=Buses",
             view=buses_view, add=[Bus]
         ),
         TreeNode(
-            node_for=[Case], auto_open=True,
+            node_for=[Case], auto_open=False,
             children="branches", label="=Branches",
-            view=branches_view,
+            view=branches_view, add=[Branch],
         ),
         TreeNode(
             node_for=[Case], auto_open=False,
-            children="generators", label="=_generators",
-            view=all_generators_view,
+            children="generators", label="=Generators",
+            view=generators_view, add=[Generator],
         ),
         TreeNode(
             node_for=[Case], auto_open=False,
-            children="loads", label="=_loads",
-            view=all_loads_view
+            children="areas", label="=Areas",
+            view=areas_view, add=[Area],
         ),
         TreeNode(
-            node_for=[Bus], label="name", view=bus_view
+            node_for=[Case], auto_open=False,
+            children="costs", label="=Costs",
+            view=costs_view, add=[Cost],
+        ),
+
+        TreeNode(
+            node_for=[Bus], label="bus_i", view=bus_view
         ),
         TreeNode(
-            node_for=[Bus], children="generators", label="=Generators",
-            view=generators_view, add=[Generator]
+            node_for=[Generator], label="gen_bus", view=gen_view
         ),
         TreeNode(
-            node_for=[Bus], children="loads", label="=Loads",
-            view=loads_view, add=[Load]
+            node_for=[Branch], label="f_bus", view=branch_view
         ),
         TreeNode(
-            node_for=[Branch], auto_open=True, label="name",
-            view=branch_view
+            node_for=[Area], label="area_i", view=area_view
         ),
         TreeNode(
-            node_for=[Generator], label="name", view=generator_view
-        ),
-        TreeNode(
-            node_for=[Load], label="name", view=load_view
-        ),
+            node_for=[Cost], label="", view=cost_view
+        )
     ],
     orientation="horizontal"
 )
