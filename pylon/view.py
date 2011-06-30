@@ -20,9 +20,11 @@ from traits.api import \
 
 from traitsui.api import \
     View, Group, Item, InstanceEditor, Tabbed, TreeEditor, \
-    TreeNode, Label, VGroup, HGroup, spring
+    TreeNode, Label, VGroup, HGroup, spring, RangeEditor
 
-from traitsui.menu import NoButtons, OKCancelButtons
+from traitsui.menu import \
+    NoButtons, OKCancelButtons, OKButton, CancelButton, HelpButton
+
 from pyface.image_resource import ImageResource
 
 from pylon.table import \
@@ -32,7 +34,7 @@ from pylon.table import \
 #FRAME_ICON = ImageResource("frame.ico")
 
 case_view = View(
-    Group(
+    VGroup(
         Item(name="base_mva", label="Base MVA", style="simple")
     ),
     id="pylon.view.case_view",
@@ -234,4 +236,79 @@ cost_view = View(
     Item(name="shutdown"),
     Item(name="ncost"),
     Item(name="cost"),
+)
+
+prefs_view = View(
+    Tabbed(
+        Group(
+            Item(name="pf_alg", label='Algorithm', enabled_when='pf_dc==False'),
+            Item(name="pf_tol", label='Tolerance', enabled_when='pf_dc==False'),
+            Group(
+                Item(name="pf_max_it",
+                    label='Newton\'s method',
+                    enabled_when='pf_alg=="Newton\'s method" and pf_dc==False'),
+                Item(name="pf_max_it_fd",
+                    label='Fast-Decoupled',
+                    enabled_when='pf_alg=="Fast-Decoupled (XB version)" or pf_alg=="Fast-Decoupled (BX version)" and pf_dc==False'),
+                Item(name="pf_max_it_gs",
+                    label='Gauss Seidel',
+                    enabled_when='pf_alg=="Gauss Seidel" and pf_dc==False'),
+                show_border=True,
+                label='Maximum iterations'
+            ),
+            Item(name="enforce_q_lims", enabled_when='pf_dc==False'),
+            Item(name="pf_dc", label='DC'),
+            label="Power Flow",
+        ),
+        Group(
+            Item(name="opf_alg", label='Algorithm'),
+            Item(name="opf_poly2pwl_pts", editor=RangeEditor(low=2, high=100, mode='spinner')),
+            Item(name="opf_violation"),
+            Item(name="opf_flow_lim"),
+            Item(name="opf_ignore_ang_lim"),
+            Item(name="opf_alg_dc"),
+            label="OPF",
+        ),
+        Group(
+            Item(name="verbose"),
+            Item(name="out_all"),
+            Item(name="out_sys_sum"),
+            Item(name="out_area_sum"),
+            Item(name="out_bus"),
+            Item(name="out_branch"),
+            Item(name="out_gen"),
+            Group(
+                Item(name="out_all_lim", label='All'),
+                Item(name="out_v_lim", label='Bus voltage'),
+                Item(name="out_line_lim", label='Line flow'),
+                Item(name="out_pg_lim", label='Pg limit'),
+                Item(name="out_qg_lim", label='Qg limit'),
+                show_border=True,
+                label='Constraint info'
+            ),
+            Item(name="out_raw"),
+            Item(name="return_raw_der"),
+            label="Output",
+        ),
+        Group(
+            Group(
+                Item(name="pdipm_feastol", label='Fesibility (equality)'),
+                Item(name="pdipm_gradtol", label='Gradient'),
+                Item(name="pdipm_comptol", label='Complementary (inequality)'),
+                Item(name="pdipm_costtol", label='Optimality'),
+                show_border=True,
+                label='Tolerances'
+            ),
+            Item(name="pdipm_max_it"),
+            Item(name="scpdipm_red_it", editor=RangeEditor(low=1, high=100, mode='spinner')),
+            label="PDIPM",
+        ),
+    ),
+    id="pylon.view.prefs_view",
+#    icon=FRAME_ICON,
+    resizable=False,
+    title='Preferences',
+#    style="custom",
+    kind="livemodal", buttons=[OKButton, CancelButton, HelpButton],
+#    width=.81, height=.81
 )

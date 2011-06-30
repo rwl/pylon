@@ -15,7 +15,7 @@
 
 from numpy import zeros
 
-from traits.api import HasTraits, Int, Enum, Float, Bool, List
+from traits.api import HasTraits, Int, Enum, Float, Bool, List, Trait, Range
 
 from pypower.idx_bus import \
     BUS_I, BUS_TYPE, PD, QD, GS, BS, BUS_AREA, VM, VA, BASE_KV, \
@@ -112,13 +112,14 @@ class Cost(HasTraits):
 
 
 class Case(HasTraits):
-    base_mva = Float(desc='')
+    base_mva = Float(100.0, desc='')
 
     buses = List(Bus)
     generators = List(Generator)
     branches = List(Branch)
     areas = List(Area)
     costs = List(Cost)
+
 
     def to_ppc(self):
         ppc = {}
@@ -129,10 +130,161 @@ class Case(HasTraits):
                 ppc['buses'][i, trait.idx] = getattr(bus, attr)
 
 
-    def from_ppc(self, ppc):
+
+
+    @classmethod
+    def from_ppc(cls, ppc):
+        case = Case()
+
         if 'buses' in ppc:
             nb, ncol = ppc['buses'].shape
             for i in range(nb):
                 bus = Bus()
                 for attr, trait in bus.traits({'idx': lambda idx: idx < ncol}):
                     setattr(bus, attr, ppc['buses'][i, trait.idx])
+                case.buses.append(bus)
+
+
+class Preferences(HasTraits):
+    pf_alg = Trait('Newton\'s method',
+            {'Newton\'s method': 1,
+             'Fast-Decoupled (XB version)': 2,
+             'Fast-Decoupled (BX version)': 3,
+             'Gauss Seidel': 4},
+            desc='power flow algorithm',
+            label='PF Algorithm')
+
+    pf_tol = Float(1e-8, desc='termination tolerance on per unit P & Q mismatch',
+                   label='PF Tolerance')
+
+    pf_max_it = Int(10, desc="maximum number of iterations for Newton\'s method",
+                    label='Maximum iterations')
+
+    pf_max_it_fd = Int(30, desc='maximum number of iterations for fast decoupled method',
+                       label='Maximum iterations (Fast-Decoupled)')
+
+    pf_max_it_gs = Int(1000, desc='maximum number of iterations for Gauss-Seidel method',
+                       label='Maximum iterations (Gauss Seidel)')
+
+    enforce_q_lims = Bool(False, desc='enforce gen reactive power limits, at expense of |V|',
+                          label='Enforce Q limits')
+
+    pf_dc = Bool(False, desc='use DC power flow formulation',
+                 label='DC PF')
+
+    ## OPF Options
+
+    opf_alg = Trait('PIPS',
+            {'PIPS': 540,
+             'SC-PIPS': 545},
+            desc='algorithm to use for OPF',
+            label='OPF Algorithm')
+
+    opf_poly2pwl_pts = Int(10,
+            desc='number of evaluation points to use when converting from polynomial to piece-wise linear costs)',
+            label='poly2pwl points')
+
+    opf_violation = Float(5e-6,
+            desc='constraint violation tolerance',
+            label='Violation tolerance')
+
+    opf_flow_lim = Trait('Apparent power (S)',
+            {'Apparent power (S)': 0,
+             'Active power (P)': 1,
+             'Current magnitude (I)': 2},
+            desc='qty to limit for branch flow constraints',
+            label='Flow limit')
+
+    opf_ignore_ang_lim = Bool(False,
+            desc='ignore angle difference limits for branches even if specified',
+            label='Ignore angle limits')
+
+    opf_alg_dc = Trait('PIPS',
+            {'PIPS': 200,
+             'PIPS-sc': 250,
+             'IPOPT': 400,
+             'CPLEX': 500,
+             'MOSEK': 600},
+            desc='solver to use for DC OPF',
+            label='DC OPF algorithm')
+
+    ## Output options
+
+    verbose = Range(0, 3, 1, desc='amount of progress info printed')
+
+    out_all = Range(-1, 1, 0,
+            desc='controls printing of results',
+            label='Output all')
+
+    out_sys_sum = Bool(True,
+            desc='print system summary',
+            label='System summary')
+
+    out_area_sum = Bool(False,
+            desc='print area summaries',
+            label='Area summary')
+
+    out_bus = Bool(True,
+            desc='print bus detail',
+            label='Bus detail')
+
+    out_branch = Bool(True,
+            desc='print branch detail',
+            label='Branch detail')
+
+    out_gen = Bool(False,
+            desc='print generator detail',
+            label='Generator detail')
+
+    out_all_lim = Range(-1, 2, -1,
+            desc='control constraint info output',
+            label='Constraint info')
+
+    out_v_lim = Range(0, 2, 1,
+            desc='control output of voltage limit info',
+            label='Voltage limit info')
+
+    out_line_lim = Range(0, 2, 1,
+            desc='control output of line limit info',
+            label='Line limit info')
+
+    out_pg_lim = Range(0, 2, 1,
+            desc='control output of gen P limit info',
+            label='P limit info')
+
+    out_qg_lim = Range(0, 2, 1,
+            desc='control output of gen Q limit info',
+            label='Q limit info')
+
+    out_raw = Bool(False,
+            desc='print raw data',
+            label='Raw data')
+
+    return_raw_der = Bool(False,
+            desc='return constraint and derivative info',
+            label='Raw derivative info')
+
+    # PDIPM options
+
+    pdipm_feastol = Float(0.0,
+            desc='feasibility (equality) tolerance',
+            label='Feasibility tolerance')
+
+    pdipm_gradtol = Float(1e-6,
+            desc='gradient tolerance',
+            label='Gradient tolerance')
+
+    pdipm_comptol = Float(1e-6,
+            desc='complementary condition (inequality) tolerance',
+            label='complementary condition tolerance')
+
+    pdipm_costtol = Float(1e-6, desc='optimality tolerance',
+            label='Optimality tolerance')
+
+    pdipm_max_it = Range(1, 1000, 150,
+            desc='maximum number of iterations',
+            label='Maximum iterations')
+
+    scpdipm_red_it = Range(1, 100, 20,
+            desc='maximum number of reductions per iteration',
+            label='Maximum reductions')

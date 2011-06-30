@@ -28,7 +28,7 @@ ICON_LOCATION = join(dirname(pylon.case.__file__), "images")
 new_action = Action(
     name="&New",
     accelerator="Ctrl+N",
-    action="new",
+    action="on_new",
     image=ImageResource("new.png", search_path=[ICON_LOCATION]),
     tooltip="New (Ctrl+N)"
 )
@@ -36,7 +36,7 @@ new_action = Action(
 open_action = Action(
     name="&Open",
     accelerator="Ctrl+O",
-    action="open",
+    action="on_open",
     image=ImageResource("open.png", search_path=[ICON_LOCATION]),
     tooltip="Open (Ctrl+O)"
 )
@@ -47,6 +47,14 @@ save_action = Action(
     action="save",
     image=ImageResource("save.png", search_path=[ICON_LOCATION]),
     tooltip="Save (Ctrl+S)"
+)
+
+saveas_action = Action(
+    name="&Save As...",
+    accelerator="Ctrl+Shift+S",
+    action="save",
+    image=ImageResource("save_as.png", search_path=[ICON_LOCATION]),
+    tooltip="Save As (Ctrl+Shift+S)"
 )
 
 # The standard "revert all changes" action
@@ -72,6 +80,7 @@ file_menu = Menu(
     "_",
     open_action,
     save_action,
+    saveas_action,
     RevertAction,
     "_",
     CloseAction,
@@ -105,7 +114,7 @@ RedoAction = Action(
 preferences_action = Action(
     name="&Preferences...",
 #    accelerator="Ctrl+E",
-    action="preferences",
+    action="on_preferences",
     image=ImageResource("preferences.png", search_path=[ICON_LOCATION]),
     tooltip="Preferences"
 )
