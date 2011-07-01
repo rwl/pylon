@@ -15,16 +15,23 @@
 
 from numpy import zeros
 
-from traits.api import HasTraits, Int, Enum, Float, Bool, List, Trait, Range
+from traits.api import \
+    HasTraits, Int, Enum, Float, Bool, List, Trait, Range, Property, String
 
 from pypower.idx_bus import \
     BUS_I, BUS_TYPE, PD, QD, GS, BS, BUS_AREA, VM, VA, BASE_KV, \
     ZONE, VMAX, VMIN, LAM_P, LAM_Q, MU_VMAX, MU_VMIN
 
 
+BUS_TYPE_MAP = {1: 'PQ', 2: 'PV', 3: 'REF', 4: 'NONE'}
+
+
 class Bus(HasTraits):
     bus_i = Int(desc='bus number', label='i', idx=BUS_I)
-    bus_type = Enum('PQ', 'PV', 'REF', 'NONE', label='type', idx=BUS_TYPE)
+    bus_type = Trait('PQ',
+            {'PQ': 1, 'PV': 2, 'REF': 3, 'NONE': 4},
+            label='type',
+            idx=BUS_TYPE)
     Pd = Float(desc='real power demand (MW)', idx=PD)
     Qd = Float(desc='reactive power demand (MVAr)', idx=QD)
     Gs = Float(desc='shunt conductance (MW at V = 1.0 p.u.)', idx=GS)
@@ -41,6 +48,11 @@ class Bus(HasTraits):
     lam_Q = Float(desc='Lagrange multiplier on reactive power mismatch (u/MVAr)', idx=LAM_Q)
     mu_Vmax = Float(desc='Kuhn-Tucker multiplier on upper voltage limit (u/p.u.)', idx=MU_VMAX)
     mu_Vmin = Float(desc='Kuhn-Tucker multiplier on lower voltage limit (u/p.u.)', idx=MU_VMIN)
+
+    repr = Property(String)
+
+    def _get_repr(self):
+        return '%d - %s' % (self.bus_i, self.bus_type)
 
 
 class Generator(HasTraits):
@@ -127,6 +139,8 @@ class Case(HasTraits):
         ppc['buses'] = zeros((len(self.buses, MU_VMIN + 1)))
         for i, bus in enumerate(self.buses):
             for attr, trait in bus.traits().iteritems():
+                if attr == 'bus_type':
+                    pass
                 ppc['buses'][i, trait.idx] = getattr(bus, attr)
 
 
@@ -136,13 +150,20 @@ class Case(HasTraits):
     def from_ppc(cls, ppc):
         case = Case()
 
-        if 'buses' in ppc:
-            nb, ncol = ppc['buses'].shape
+        if 'bus' in ppc:
+            nb, ncol = ppc['bus'].shape
             for i in range(nb):
                 bus = Bus()
-                for attr, trait in bus.traits({'idx': lambda idx: idx < ncol}):
-                    setattr(bus, attr, ppc['buses'][i, trait.idx])
+                for attr, trait in bus.traits(idx=lambda idx: idx < ncol).iteritems():
+                    if attr == 'bus_type':
+                        bus.bus_type = BUS_TYPE_MAP[ ppc['bus'][i, trait.idx] ]
+                    elif trait.is_trait_type(Int):
+                        setattr(bus, attr, int( ppc['bus'][i, trait.idx] ))
+                    elif trait.is_trait_type(Float):
+                        setattr(bus, attr, ppc['bus'][i, trait.idx])
                 case.buses.append(bus)
+
+        return case
 
 
 class Preferences(HasTraits):

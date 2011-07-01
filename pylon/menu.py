@@ -74,11 +74,30 @@ CloseAction = Action(
     tooltip="Exit (Alt+X)"
 )
 
+test_case_menu = Menu(
+    Action(name="case4gs", action="on_case4gs"),
+    Action(name="case6ww", action="on_case6ww"),
+    Action(name="case9", action="on_case9"),
+    Action(name="case9Q", action="on_case9Q"),
+    Action(name="case14", action="on_case14"),
+    Action(name="case24_ieee_rts", action="on_case24_ieee_rts"),
+    Action(name="case30", action="on_case30"),
+    Action(name="case30pwl", action="on_case30pwl"),
+    Action(name="case30Q", action="on_case30Q"),
+    Action(name="case39", action="on_case39"),
+    Action(name="case57", action="on_case57"),
+    Action(name="case118", action="on_case118"),
+    Action(name="case300", action="on_case300"),
+    name='&Test Case'
+)
+
 file_menu = Menu(
     "|", # Hack suggested by Brennan Williams to achieve correct ordering
     new_action,
     "_",
     open_action,
+    test_case_menu,
+    '_',
     save_action,
     saveas_action,
     RevertAction,
@@ -156,11 +175,27 @@ view_menu = Menu(
 
 ## Run menu
 
+pf_action = Action(
+    name="&Power Flow",
+    accelerator="F10",
+    action="on_runpf",
+#    image=ImageResource("blank.png", search_path=[ICON_LOCATION]),
+    tooltip="Run Power Flow (F10)"
+)
+
+opf_action = Action(
+    name="&OPF",
+    accelerator="F11",
+    action="on_runopf",
+#    image=ImageResource("blank.png", search_path=[ICON_LOCATION]),
+    tooltip="Run OPF (F11)"
+)
+
 dcopf_action = Action(
     name="DC &OPF",
     accelerator="F12",
-    action="dcopf",
-    image=ImageResource("blank.png", search_path=[ICON_LOCATION]),
+    action="on_rundcopf",
+#    image=ImageResource("blank.png", search_path=[ICON_LOCATION]),
     tooltip="Run DC OPF (F12)"
 )
 
@@ -187,7 +222,7 @@ menubar = MenuBar(
     file_menu,
     Menu("|", UndoAction, RedoAction, "_", preferences_action, name="&Edit"),
     view_menu,
-    Menu("|", dcopf_action, name="&Run"),
+    Menu("|", pf_action, '_', opf_action, dcopf_action, name="&Run"),
 #    Menu(dot_action, name="&Graph"),
     Menu("|", HelpAction, "_", about_action, name="&Help"),
 )
@@ -205,6 +240,7 @@ toolbar = ToolBar(
     UndoAction,
     RedoAction,
     "_",
+    preferences_action,
     show_tool_names=False,
 #    show_divider=False
 )

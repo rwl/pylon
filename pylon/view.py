@@ -249,7 +249,7 @@ prefs_view = View(
                     enabled_when='pf_alg=="Newton\'s method" and pf_dc==False'),
                 Item(name="pf_max_it_fd",
                     label='Fast-Decoupled',
-                    enabled_when='pf_alg=="Fast-Decoupled (XB version)" or pf_alg=="Fast-Decoupled (BX version)" and pf_dc==False'),
+                    enabled_when='(pf_alg=="Fast-Decoupled (XB version)" or pf_alg=="Fast-Decoupled (BX version)") and (pf_dc==False)'),
                 Item(name="pf_max_it_gs",
                     label='Gauss Seidel',
                     enabled_when='pf_alg=="Gauss Seidel" and pf_dc==False'),

@@ -15,7 +15,7 @@
 
 from os.path import join, dirname, expanduser
 
-from traits.api import Instance, File, Bool, HasTraits, String
+from traits.api import Instance, File, Bool, HasTraits, String, Enum
 
 from traitsui.api import \
     View, Handler, UIInfo, Group, Item, TableEditor, InstanceEditor, \
@@ -26,7 +26,11 @@ from traitsui.menu import NoButtons, OKCancelButtons, Separator
 
 from pyface.image_resource import ImageResource
 
-from pypower import loadcase, savecase, ppver
+from pypower import loadcase, savecase, ppver, runpf, runopf, rundcopf
+
+from pypower import \
+    case4gs, case6ww, case9, case9Q, case14, case24_ieee_rts, case30, \
+    case30pwl, case30Q, case39, case57, case118, case300
 
 import pylon
 from pylon.case import Case, Preferences
@@ -49,9 +53,10 @@ class CaseView(HasTraits):
         desc="case data location"
     )
 
-    status = String('Ready')
+    status = Enum('Ready', 'Solving', 'Converged')
 
     ppver = String
+    pycim_ver = String
 
     traits_view = View(
         Item(
@@ -76,7 +81,8 @@ class CaseView(HasTraits):
         statusbar=[
             StatusItem(name="status", width=0.5),
 #            StatusItem(name="info.ui.title", width=85),
-            StatusItem(name="ppver", width=85)
+            StatusItem(name='ppver', width=70),
+            StatusItem(name="pycim_ver", width=100)
         ],
 #        dock="vertical"
     )
@@ -98,7 +104,7 @@ class CaseView(HasTraits):
         buttons=OKCancelButtons
     )
 
-    def _default_ppver(self):
+    def _ppver_default(self):
         v = ppver('all')
         return v['Version']
 
@@ -108,6 +114,46 @@ class CaseView(HasTraits):
 #            return
 
         self.case = Case()
+
+
+    def on_case4gs(self):
+        self.case = Case.from_ppc(case4gs())
+
+    def on_case6ww(self):
+        self.case = Case.from_ppc(case6ww())
+
+    def on_case9(self):
+        self.case = Case.from_ppc(case9())
+
+    def on_case9Q(self):
+        self.case = Case.from_ppc(case9Q())
+
+    def on_case14(self):
+        self.case = Case.from_ppc(case14())
+
+    def on_case24_ieee_rts(self):
+        self.case = Case.from_ppc(case24_ieee_rts())
+
+    def on_case30(self):
+        self.case = Case.from_ppc(case30())
+
+    def on_case30pwl(self):
+        self.case = Case.from_ppc(case30pwl())
+
+    def on_case30Q(self):
+        self.case = Case.from_ppc(case30Q())
+
+    def on_case39(self):
+        self.case = Case.from_ppc(case39())
+
+    def on_case57(self):
+        self.case = Case.from_ppc(case57())
+
+    def on_case118(self):
+        self.case = Case.from_ppc(case118())
+
+    def on_case300(self):
+        self.case = Case.from_ppc(case300())
 
 
     def on_open(self, info):
@@ -136,6 +182,18 @@ class CaseView(HasTraits):
 
     def on_preferences(self):
         self.prefs.edit_traits(view=prefs_view)#parent=info.ui.control)
+
+
+    def on_runpf(self):
+        runpf(self.case.to_ppc(), self.prefs.to_ppopt())
+
+
+    def on_runopf(self):
+        runopf(self.case.to_ppc(), self.prefs.to_ppopt())
+
+
+    def on_rundcopf(self):
+        rundcopf(self.case.to_ppc(), self.prefs.to_ppopt())
 
 
 def main():

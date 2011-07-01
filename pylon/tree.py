@@ -58,7 +58,7 @@ case_tree_editor = TreeEditor(
         ),
 
         TreeNode(
-            node_for=[Bus], label="bus_i", view=bus_view
+            node_for=[Bus], label="repr", view=bus_view
         ),
         TreeNode(
             node_for=[Generator], label="gen_bus", view=gen_view
