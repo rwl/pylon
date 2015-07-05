@@ -28,7 +28,7 @@ import optparse
 
 from pylon.io import \
     MATPOWERReader, PSSEReader, MATPOWERWriter, ReSTWriter, \
-    PickleReader, PickleWriter
+    PickleReader, PickleWriter, PSSEWriter
 
 from pylon import DCPF, NewtonPF, FastDecoupledPF, OPF, UDOPF
 
@@ -170,13 +170,20 @@ def main():
         logger.setLevel(logging.ERROR)
 
     # Output.
+    outext = {'psse': '.raw', 'matpower': '.m'}
     if options.output:
         if options.output == "-":
             outfile = sys.stdout
             logger.setLevel(logging.CRITICAL) # must stay quiet
 #            options.output_type = "none"
         else:
-            outfile = open(options.output, "wb")
+           outfile = open(options.output, "wb")
+    elif options.output_type is not None:
+        if options.output_type in outext.keys():
+            inname, ext = os.path.splitext(args[0])
+            outfile = inname + outext[options.output_type]
+        else:
+            outfile = sys.stdout
     else:
         outfile = sys.stdout
 #        if not options.no_report:
@@ -236,6 +243,8 @@ def main():
         # Output writer selection.
         if options.output_type == "matpower":
             writer = MATPOWERWriter(case)
+        elif options.output_type == "psse":
+            writer = PSSEWriter(case)
         elif options.output_type == "rst":
             writer = ReSTWriter(case)
         elif options.output_type == "csv":
@@ -254,6 +263,7 @@ def main():
             solver.solve()
         if options.output_type != "none":
             writer.write(outfile)
+            print('Output file {0} written'.format(outfile))
     else:
         logger.critical("Unable to read case data.")
 
