@@ -177,7 +177,7 @@ def main():
             logger.setLevel(logging.CRITICAL) # must stay quiet
 #            options.output_type = "none"
         else:
-           outfile = open(options.output, "wb")
+            outfile = open(options.output, "wb")
     elif options.output_type is not None:
         if options.output_type in outext.keys():
             inname, ext = os.path.splitext(args[0])
