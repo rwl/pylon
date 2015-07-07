@@ -85,7 +85,7 @@ class MATPOWERReader(_CaseReader):
             file = file_or_filename
             case = self._parse_file(file)
 
-        case.index_buses()
+        # case.index_buses()  # re-indexed bus_id=0 has ambiguity in PSS/E Raw file
 
         logger.info("MATPOWER file parsed in %.2fs." % (time.time() - t0))
 
@@ -136,6 +136,7 @@ class MATPOWERReader(_CaseReader):
             i = int(bus_data[0])
             self._bus_map[i] = bus
             bus._i = i
+            bus.name = 'Bus-'+str(i)  # forced bus name 
 
             bus.type = bustype_map[int(bus_data[1])]
             bus.p_demand = float(bus_data[2])

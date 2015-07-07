@@ -110,6 +110,7 @@ class PSSEReader(_CaseReader):
             bus.b_shunt = float(bus_data[5])
             bus.v_magnitude = float(bus_data[8])
             bus.v_angle = float(bus_data[9])
+            # bus.area = 1;  # hcui7 added
             case.buses.append(bus)
             bus_data = file.next().split(",")
 
@@ -391,9 +392,9 @@ class PSSEWriter(_CaseWriter):
         timestr = time.strftime("%Y%m%d%H%M", time.gmtime())
         file.write("%d, %8.2f, 30 / PSS(tm)E-30 RAW created by Pylon (%s).\n" %
                    (change_code, s_base, timestr))
-        file.write(" %s\n" % self.case.name)
-        file.write(" %d BUSES, %d BRANCHES\n" %
-                   (len(self.case.buses), len(self.case.branches)))
+        file.write("Modified by Hantao Cui, CURENT, UTK\n ")
+        file.write("%s, %d BUSES, %d BRANCHES\n" %
+                   (self.case.name, len(self.case.buses), len(self.case.branches)))
 
 
     def write_bus_data(self, file):
@@ -406,6 +407,10 @@ class PSSEWriter(_CaseWriter):
 
         for bus in self.case.buses:
             vals = [getattr(bus, a) for a in bus_attrs]
+            if float(vals[6]) == 0.0:
+                vals[6] = 1  # default AREA: 1
+            if float(vals[7])==0.0:
+                vals[7] = 1  # default ZONE: 1
             d = {PQ: 1, PV: 2, REFERENCE: 3, ISOLATED: 4}
             vals[3] = d[vals[3]]
             vals.append(1)
@@ -423,6 +428,10 @@ class PSSEWriter(_CaseWriter):
         for bus in self.case.buses:
             if bus.p_demand > 0.0 or bus.q_demand > 0.0:
                 vals = [getattr(bus, a) for a in load_attrs]
+                if float(vals[1])==0.0:
+                    vals[1] = 1  # default AREA: 1
+                if float(vals[2])==0.0:
+                    vals[2] = 1  # default ZONE: 1
                 vals.insert(1, 1) # STATUS
                 vals.insert(1, "1 ") # ID
                 vals.extend([0., 0., 0., 0.])
@@ -448,7 +457,7 @@ class PSSEWriter(_CaseWriter):
             vals.append(generator.v_magnitude)
             vals.append(0) # IREG
             vals.append(generator.base_mva)
-            vals.extend([0., 0., 0., 0., 0.])
+            vals.extend([0., 1., 0., 0., 0.])
             vals.append(generator.online)
             vals.append(100.0) # RMPCT
             vals.append(generator.p_max)
@@ -470,7 +479,8 @@ class PSSEWriter(_CaseWriter):
         for branch in self.case.branches:
             if feq(branch.ratio, 0.0):
                 vals = [getattr(branch, a) for a in branch_attr]
-
+                if float(vals[1])<0.001:
+                    vals[1] = 0.001  # small reactance, todo: increase decimal
                 vals.insert(0, "1 ")
                 vals.insert(0, branch.to_bus._i)
                 vals.insert(0, branch.from_bus._i)
@@ -504,7 +514,7 @@ class PSSEWriter(_CaseWriter):
                                                    self.case.base_mva))
 
                 line3 = []
-                line3.append(branch.from_bus.v_base)
+                line3.append(branch.ratio) # Winding-1 RATIO
                 line3.append(0.0)
                 line3.append(branch.phase_shift)
                 line3.append(branch.rate_a)
@@ -516,7 +526,7 @@ class PSSEWriter(_CaseWriter):
                 file.write("%7.5f,%8.3f,%8.3f,%8.2f,%8.2f,%8.2f,%d,%7d,%8.5f,"
                     "%8.5f,%8.5f,%8.5f,%4d,%2d,%8.5f,%8.5f\n" % tuple(line3))
 
-                file.write("%7.5f,%8.3f\n" % (branch.to_bus.v_base, 0.0))
+                file.write("%7.5f,%8.3f\n" % (1.0, 0.0))  # Winding-2 RATIO: 1
 
         file.write(""" 0 / END OF TRANSFORMER DATA, BEGIN AREA INTERCHANGE DATA
  0 / END OF AREA INTERCHANGE DATA, BEGIN TWO-TERMINAL DC DATA
